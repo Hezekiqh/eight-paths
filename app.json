@@ -45,6 +45,13 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "backgroundColor": "#0F1117"
+    "backgroundColor": "#0F1117",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fed23284-5679-49f5-9ac0-39f0e560c53c"
+      }
+    },
+    "owner": "goofsan"
   }
 }
