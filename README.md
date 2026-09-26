@@ -1,56 +1,53 @@
-# Welcome to your Expo app 👋
+# Eight Paths
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An iOS habit tracker dressed as an RPG. Every habit is a recurring quest for one of eight classes (Warrior, Noble, Mage, Cleric, Monk, Bard, Artificer, Ranger), each tied to a wellness dimension, and a daily radar chart shows how your party is growing. See [SPEC.md](SPEC.md) for the full spec.
 
-## Get started
+Fully local: Expo + TypeScript, Zustand persisted to AsyncStorage. No backend, no accounts, no entitlements.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run it
 
 ```bash
-npm run reset-project
+npm install
+npx expo start        # press i for the iOS simulator, or scan the QR code with Expo Go
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Checks
 
-### Other setup steps
+```bash
+npm test              # game rules, store and radar geometry (Jest)
+npx tsc --noEmit
+npx expo lint
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Where things live
 
-## Learn more
+| Path | What |
+| --- | --- |
+| `src/game/` | Pure game rules: XP, levels, streaks, rest tokens, dimming, radar windows, reminder planning. Unit tested in `__tests__/`. |
+| `src/store/` | Zustand store (`index.ts`), derived views (`selectors.ts`) and the hooks screens read from (`hooks.ts`). |
+| `src/app/` | Expo Router screens: onboarding, the three tabs, quest editor, change class, class sheet. |
+| `src/components/` | UI pieces, including the hand-rolled SVG radar in `radar/`. |
+| `src/notifications/` | Schedules the evening nudge two weeks ahead, skipping days you've already played. |
+| `plugins/` | Config plugin that strips the push entitlement `expo-notifications` adds (local notifications don't need it). |
 
-To learn more about developing your project with Expo, look at the following resources:
+## Ship to TestFlight
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+One-time setup (needs an Apple Developer account):
 
-## Join the community
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest init          # links the project and writes its EAS project ID into app.json
+```
 
-Join our community of developers creating universal apps.
+Then, each release:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx eas-cli@latest build --platform ios --profile production
+npx eas-cli@latest submit --platform ios --latest
+```
+
+The first build walks you through creating signing credentials and the App Store Connect app record. Build numbers are managed remotely and bump automatically. Export compliance is pre-answered (`usesNonExemptEncryption: false`).
+
+To try a build on the simulator without Apple credentials: `npx eas-cli@latest build --platform ios --profile simulator`.
+
+The bundle ID is `com.hezekiahhopkins.eightpaths`; change `ios.bundleIdentifier` in `app.json` before the first build if you want a different one.

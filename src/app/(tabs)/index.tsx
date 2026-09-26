@@ -13,7 +13,6 @@ import { useGameStore } from '@/store';
 import {
   useClassInfo,
   usePlayer,
-  useSettleOnDayChange,
   useToday,
   useTodayQuestGroups,
   useTutorialQuest,
@@ -24,7 +23,6 @@ type Banner = { key: string; dimension: Dimension; gain: XpGain };
 
 export default function TodayScreen() {
   const today = useToday();
-  useSettleOnDayChange(today);
 
   const player = usePlayer();
   const classInfo = useClassInfo();

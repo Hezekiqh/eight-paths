@@ -7,6 +7,7 @@ import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
 import { XpBar } from '@/components/xp-bar';
 import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
+import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
 import {
   useClassInfo,
@@ -130,7 +131,10 @@ export default function CharacterScreen() {
               themeVariant="dark"
               accentColor={classInfo.color}
               minuteInterval={5}
-              onValueChange={(_, date) => setNotificationTime(formatTime(date.getHours(), date.getMinutes()))}
+              onValueChange={(_, date) => {
+                setNotificationTime(formatTime(date.getHours(), date.getMinutes()));
+                ensureReminderPermission();
+              }}
             />
           }
         />

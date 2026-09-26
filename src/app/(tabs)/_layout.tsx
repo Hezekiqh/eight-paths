@@ -1,8 +1,13 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
+import { useReminderSync, useSettleOnDayChange, useToday } from '@/store/hooks';
 import { colors } from '@/theme';
 
 export default function TabsLayout() {
+  const today = useToday();
+  useSettleOnDayChange(today);
+  useReminderSync(today);
+
   return (
     <NativeTabs
       tintColor={colors.grid}

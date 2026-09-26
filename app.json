@@ -10,7 +10,10 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "supportsTablet": false,
-      "bundleIdentifier": "com.hezekiahhopkins.eightpaths"
+      "bundleIdentifier": "com.hezekiahhopkins.eightpaths",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -32,10 +35,11 @@
         {
           "backgroundColor": "#0F1117",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 200
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "./plugins/without-push-entitlement"
     ],
     "experiments": {
       "typedRoutes": true,

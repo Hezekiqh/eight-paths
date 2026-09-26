@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 import { toDateKey, type RadarFilter } from '@/game';
+import { syncReminders } from '@/notifications';
 
 import { useGameStore, type GameData } from './index';
 import {
@@ -10,6 +11,7 @@ import {
   selectClassInfo,
   selectDimensionStats,
   selectOverallProgress,
+  selectPlayedToday,
   selectQuest,
   selectRadar,
   selectTodayQuestGroups,
@@ -97,4 +99,19 @@ export function useSettleOnDayChange(today: string) {
   useEffect(() => {
     if (hasPlayer) settle(today);
   }, [settle, hasPlayer, today]);
+}
+
+/**
+ * Keeps the scheduled evening reminders in step with the player's chosen
+ * time and whether they've already played today.
+ */
+export function useReminderSync(today: string) {
+  const data = useGameData();
+  const notificationTime = data.player?.notificationTime ?? '20:00';
+  const enabled = data.player?.tutorialComplete ?? false;
+  const playedToday = useMemo(() => selectPlayedToday(data, today), [data, today]);
+
+  useEffect(() => {
+    syncReminders({ today, notificationTime, playedToday, enabled });
+  }, [today, notificationTime, playedToday, enabled]);
 }

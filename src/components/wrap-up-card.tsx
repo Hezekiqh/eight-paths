@@ -1,9 +1,9 @@
-import * as Notifications from 'expo-notifications';
 import { SymbolView } from 'expo-symbols';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import type { ClassInfo } from '@/game';
+import { ensureReminderPermission } from '@/notifications';
 import { colors, radius, spacing } from '@/theme';
 
 type Props = {
@@ -16,7 +16,7 @@ type Props = {
 export function WrapUpCard({ visible, info, onClose }: Props) {
   const finish = async () => {
     try {
-      await Notifications.requestPermissionsAsync();
+      await ensureReminderPermission();
     } finally {
       onClose();
     }

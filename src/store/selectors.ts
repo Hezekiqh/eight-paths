@@ -108,3 +108,7 @@ export function selectTutorialQuest(data: GameData, today: string): QuestView | 
 export function selectQuest(data: GameData, id: string | undefined): Quest | null {
   return data.quests.find((q) => q.id === id) ?? null;
 }
+
+export function selectPlayedToday(data: GameData, today: string): boolean {
+  return data.completions.some((c) => c.date === today);
+}

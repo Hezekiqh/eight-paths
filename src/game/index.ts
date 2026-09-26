@@ -7,3 +7,4 @@ export * from './rest';
 export * from './streaks';
 export * from './types';
 export * from './xp';
+export * from './reminders';
