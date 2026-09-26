@@ -3,6 +3,7 @@ import {
   DIMENSIONS,
   TUTORIAL_QUEST_ID,
   completionFor,
+  describeSchedule,
   dimOpacityByDimension,
   dimensionStreak,
   habitStreak,
@@ -36,6 +37,7 @@ export type QuestView = {
   info: ClassInfo;
   doneToday: boolean;
   streak: number;
+  schedule: string;
 };
 
 export function selectDimensionStats(data: GameData, today: string): DimensionStats[] {
@@ -62,6 +64,7 @@ function toQuestView(data: GameData, quest: Quest, today: string): QuestView {
     info: CLASSES[quest.dimension],
     doneToday: completionFor(data.completions, quest.id, today) !== undefined,
     streak: habitStreak(quest, data.completions, data.restDays, today),
+    schedule: describeSchedule(quest.repeatDays),
   };
 }
 
@@ -81,7 +84,9 @@ export function selectTodayQuestGroups(data: GameData, today: string): QuestGrou
 
 export function selectAllQuestGroups(data: GameData, today: string): QuestGroup[] {
   return groupByDimension(
-    data.quests.filter((q) => q.active).map((q) => toQuestView(data, q, today)),
+    data.quests
+      .filter((q) => q.active && q.id !== TUTORIAL_QUEST_ID)
+      .map((q) => toQuestView(data, q, today)),
   );
 }
 
@@ -98,4 +103,8 @@ export function selectTutorialQuest(data: GameData, today: string): QuestView | 
   if (!data.player || data.player.tutorialComplete) return null;
   const quest = data.quests.find((q) => q.id === TUTORIAL_QUEST_ID);
   return quest ? toQuestView(data, quest, today) : null;
+}
+
+export function selectQuest(data: GameData, id: string | undefined): Quest | null {
+  return data.quests.find((q) => q.id === id) ?? null;
 }

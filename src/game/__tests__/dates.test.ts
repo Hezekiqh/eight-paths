@@ -1,4 +1,4 @@
-import { addDays, dayOfWeek, daysBetween, toDateKey } from '../dates';
+import { addDays, dayOfWeek, daysBetween, formatTime, parseTime, toDateKey } from '../dates';
 
 describe('dates', () => {
   it('formats local dates as YYYY-MM-DD', () => {
@@ -20,5 +20,18 @@ describe('dates', () => {
   it('knows the day of the week', () => {
     expect(dayOfWeek('2024-01-01')).toBe(1); // Monday
     expect(dayOfWeek('2024-01-07')).toBe(0); // Sunday
+  });
+});
+
+describe('reminder times', () => {
+  it('round-trips HH:MM', () => {
+    expect(parseTime('20:00')).toEqual({ hour: 20, minute: 0 });
+    expect(parseTime('7:05')).toEqual({ hour: 7, minute: 5 });
+    expect(formatTime(7, 5)).toBe('07:05');
+  });
+
+  it('falls back to 20:00 for bad input', () => {
+    expect(parseTime('25:00')).toEqual({ hour: 20, minute: 0 });
+    expect(parseTime('soon')).toEqual({ hour: 20, minute: 0 });
   });
 });

@@ -1,4 +1,4 @@
-import { WEEKDAYS, questsForDay, toggleCompletion } from '../quests';
+import { WEEKDAYS, describeSchedule, questsForDay, scheduleKind, toggleCompletion } from '../quests';
 import { done, quest } from './helpers';
 
 describe('questsForDay', () => {
@@ -30,5 +30,18 @@ describe('toggleCompletion', () => {
     const r = toggleCompletion([yesterday], quest(), 'social', today, 'new');
     expect(r.kind).toBe('completed');
     expect(r.completions).toHaveLength(2);
+  });
+});
+
+describe('describeSchedule', () => {
+  it('names common schedules', () => {
+    expect(describeSchedule([0, 1, 2, 3, 4, 5, 6])).toBe('Daily');
+    expect(describeSchedule([5, 4, 3, 2, 1])).toBe('Weekdays');
+    expect(describeSchedule([])).toBe('Never');
+  });
+
+  it('lists custom days Monday first', () => {
+    expect(describeSchedule([0, 3, 1])).toBe('Mon · Wed · Sun');
+    expect(scheduleKind([0, 6])).toBe('custom');
   });
 });

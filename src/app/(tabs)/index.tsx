@@ -1,10 +1,10 @@
 import * as Haptics from 'expo-haptics';
-import { SymbolView } from 'expo-symbols';
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { ClassHeader } from '@/components/class-header';
 import { QuestCard } from '@/components/quest-card';
+import { RadarCard } from '@/components/radar/radar-card';
 import { Screen } from '@/components/screen';
 import { WrapUpCard } from '@/components/wrap-up-card';
 import { TUTORIAL_QUEST_ID, type Dimension, type XpGain } from '@/game';
@@ -75,28 +75,21 @@ export default function TodayScreen() {
             <Text style={styles.hint}>Complete your first quest to earn XP as a {classInfo.className}.</Text>
             <QuestCard view={tutorial} pinned onPress={() => onToggle(tutorial.quest.id)} />
           </View>
-        ) : groups.length === 0 ? (
-          <Text style={styles.hint}>No quests scheduled today. Add some from the Quests tab.</Text>
         ) : (
+          <RadarCard today={today} classInfo={classInfo} />
+        )}
+        {!tutorial && groups.length === 0 && (
+          <Text style={styles.hint}>No quests scheduled today. Add some from the Quests tab.</Text>
+        )}
+        {!tutorial &&
           groups.map((group) => (
             <View key={group.dimension} style={styles.group}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityHint={`About the ${group.info.className} class`}
-                onPress={() => router.push(`/class/${group.dimension}`)}
-                style={({ pressed }) => [styles.groupHeader, pressed && { opacity: 0.6 }]}>
-                <SymbolView name={group.info.symbol} tintColor={group.info.color} size={16} />
-                <Text style={[styles.groupTitle, { color: group.info.color }]}>
-                  {group.info.className.toUpperCase()}
-                </Text>
-                <SymbolView name="info.circle" tintColor={colors.textFaint} size={14} />
-              </Pressable>
+              <ClassHeader info={group.info} />
               {group.quests.map((view) => (
                 <QuestCard key={view.quest.id} view={view} onPress={() => onToggle(view.quest.id)} />
               ))}
             </View>
-          ))
-        )}
+          ))}
       </Screen>
       {banner && <XpBanner key={banner.key} dimension={banner.dimension} gain={banner.gain} onDone={onBannerDone} />}
       <WrapUpCard visible={wrapUpVisible} info={classInfo} onClose={() => setWrapUpVisible(false)} />
@@ -110,6 +103,4 @@ const styles = StyleSheet.create({
   greeting: { color: colors.text, fontSize: 20, fontWeight: '700' },
   hint: { color: colors.textMuted, fontSize: 15, lineHeight: 21 },
   group: { gap: spacing.sm, marginBottom: spacing.sm },
-  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
-  groupTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 1.2 },
 });

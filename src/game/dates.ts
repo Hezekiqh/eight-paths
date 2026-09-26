@@ -34,3 +34,17 @@ export function daysBetween(from: string, to: string): number {
 export function dayOfWeek(key: string): number {
   return new Date(keyToUtc(key)).getUTCDay();
 }
+
+/** Parses 'HH:MM' (24-hour); falls back to 20:00 for anything malformed. */
+export function parseTime(time: string): { hour: number; minute: number } {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time);
+  if (!match) return { hour: 20, minute: 0 };
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return { hour: 20, minute: 0 };
+  return { hour, minute };
+}
+
+export function formatTime(hour: number, minute: number): string {
+  return `${pad(hour)}:${pad(minute)}`;
+}

@@ -10,6 +10,7 @@ import {
   selectClassInfo,
   selectDimensionStats,
   selectOverallProgress,
+  selectQuest,
   selectRadar,
   selectTodayQuestGroups,
   selectTutorialQuest,
@@ -77,6 +78,11 @@ export function useHydrated(): boolean {
     (onChange) => useGameStore.persist.onFinishHydration(onChange),
     () => useGameStore.persist.hasHydrated(),
   );
+}
+
+export function useQuest(id: string | undefined) {
+  const data = useGameData();
+  return useMemo(() => selectQuest(data, id), [data, id]);
 }
 
 export function useRadar(filter: RadarFilter, today: string) {

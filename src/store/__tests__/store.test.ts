@@ -1,5 +1,10 @@
 import { useGameStore, initialData } from '../index';
-import { selectDimensionStats, selectOverallProgress, selectTodayQuestGroups } from '../selectors';
+import {
+  selectAllQuestGroups,
+  selectDimensionStats,
+  selectOverallProgress,
+  selectTodayQuestGroups,
+} from '../selectors';
 
 const today = '2026-09-26';
 
@@ -73,6 +78,20 @@ describe('game store', () => {
     expect(s.player?.tutorialComplete).toBe(true);
     expect(s.quests.find((q) => q.id === 'tutorial')?.active).toBe(false);
     expect(selectTodayQuestGroups(s, today).flatMap((g) => g.quests.map((v) => v.quest.id))).not.toContain('tutorial');
+  });
+
+  it('lists every active quest except the tutorial, with its schedule', () => {
+    start();
+    const views = selectAllQuestGroups(useGameStore.getState(), today).flatMap((g) => g.quests);
+    expect(views.map((v) => v.quest.title)).toEqual(['Move 30 min', 'Read 20 min']);
+    expect(views[0].schedule).toBe('Daily');
+  });
+
+  it('edits a quest in place', () => {
+    start();
+    const move = useGameStore.getState().quests[2];
+    useGameStore.getState().updateQuest(move.id, { title: ' Lift ', dimension: 'physical', repeatDays: [5, 1, 3] });
+    expect(useGameStore.getState().quests[2]).toMatchObject({ id: move.id, title: 'Lift', repeatDays: [1, 3, 5] });
   });
 
   it('settles missed days with a rest token', () => {

@@ -47,3 +47,24 @@ export function toggleCompletion(
   };
   return { kind: 'completed', completions: [...completions, completion], completion };
 }
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export type ScheduleKind = 'daily' | 'weekdays' | 'custom';
+
+export function scheduleKind(repeatDays: number[]): ScheduleKind {
+  const days = [...repeatDays].sort().join(',');
+  if (days === DAILY.join(',')) return 'daily';
+  if (days === WEEKDAYS.join(',')) return 'weekdays';
+  return 'custom';
+}
+
+/** "Daily", "Weekdays", or the days in week order starting Monday, e.g. "Mon · Wed · Fri". */
+export function describeSchedule(repeatDays: number[]): string {
+  const kind = scheduleKind(repeatDays);
+  if (kind === 'daily') return 'Daily';
+  if (kind === 'weekdays') return 'Weekdays';
+  if (repeatDays.length === 0) return 'Never';
+  const mondayFirst = [1, 2, 3, 4, 5, 6, 0].filter((d) => repeatDays.includes(d));
+  return mondayFirst.map((d) => DAY_NAMES[d]).join(' · ');
+}
