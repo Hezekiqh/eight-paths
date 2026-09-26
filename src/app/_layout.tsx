@@ -5,11 +5,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ErrorScreen } from '@/components/error-screen';
 import { useGameStore } from '@/store';
 import { useHydrated } from '@/store/hooks';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
+
+/** Any screen that throws shows this instead of a blank screen. */
+export { ErrorScreen as ErrorBoundary };
 
 const navTheme = {
   ...DarkTheme,

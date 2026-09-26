@@ -21,6 +21,7 @@ import {
 } from '@/game';
 
 import { newId } from './ids';
+import { SAVE_VERSION, migrateSave, sanitizeSave } from './migrations';
 
 export type GameData = {
   player: Player | null;
@@ -178,8 +179,12 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: 'eight-paths',
-      version: 1,
+      version: SAVE_VERSION,
       storage: createJSONStorage(() => AsyncStorage),
+      // Without `migrate`, a version bump would discard the whole save.
+      migrate: (persisted, version) => migrateSave(persisted, version),
+      // Repair every load, not just upgrades, so a damaged save still opens.
+      merge: (persisted, current) => ({ ...current, ...sanitizeSave(persisted) }),
       partialize: ({ player, quests, completions, restDays, lastSettledDate }) => ({
         player,
         quests,

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
-import { toDateKey, type RadarFilter } from '@/game';
+import { msUntilNextMidnight, toDateKey, type RadarFilter } from '@/game';
 import { syncReminders } from '@/notifications';
 
 import { useGameStore, type GameData } from './index';
@@ -18,14 +18,29 @@ import {
   selectTutorialQuest,
 } from './selectors';
 
-/** Today's date key; refreshes when the app returns to the foreground. */
+/**
+ * Today's date key. Rolls over at local midnight even while the app stays
+ * open, and re-checks whenever the app returns to the foreground (timers
+ * don't run while it's suspended).
+ */
 export function useToday(): string {
   const [today, setToday] = useState(() => toDateKey(new Date()));
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const refresh = () => {
+      setToday(toDateKey(new Date()));
+      clearTimeout(timer);
+      // A second of slack so the timer never fires just before midnight.
+      timer = setTimeout(refresh, msUntilNextMidnight(new Date()) + 1000);
+    };
+    timer = setTimeout(refresh, msUntilNextMidnight(new Date()) + 1000);
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') setToday(toDateKey(new Date()));
+      if (state === 'active') refresh();
     });
-    return () => sub.remove();
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+    };
   }, []);
   return today;
 }

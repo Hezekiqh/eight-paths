@@ -48,3 +48,10 @@ export function parseTime(time: string): { hour: number; minute: number } {
 export function formatTime(hour: number, minute: number): string {
   return `${pad(hour)}:${pad(minute)}`;
 }
+
+/** Milliseconds from `now` until the next local midnight (always > 0). */
+export function msUntilNextMidnight(now: Date): number {
+  const next = new Date(now);
+  next.setHours(24, 0, 0, 0);
+  return next.getTime() - now.getTime();
+}
