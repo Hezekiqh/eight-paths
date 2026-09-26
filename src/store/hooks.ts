@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -12,6 +12,7 @@ import {
   selectOverallProgress,
   selectRadar,
   selectTodayQuestGroups,
+  selectTutorialQuest,
 } from './selectors';
 
 /** Today's date key; refreshes when the app returns to the foreground. */
@@ -63,6 +64,19 @@ export function useTodayQuestGroups(today: string) {
 export function useAllQuestGroups(today: string) {
   const data = useGameData();
   return useMemo(() => selectAllQuestGroups(data, today), [data, today]);
+}
+
+export function useTutorialQuest(today: string) {
+  const data = useGameData();
+  return useMemo(() => selectTutorialQuest(data, today), [data, today]);
+}
+
+/** True once the persisted game has loaded from storage. */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    (onChange) => useGameStore.persist.onFinishHydration(onChange),
+    () => useGameStore.persist.hasHydrated(),
+  );
 }
 
 export function useRadar(filter: RadarFilter, today: string) {

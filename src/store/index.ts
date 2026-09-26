@@ -5,6 +5,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   DAILY,
   STARTING_REST_TOKENS,
+  TUTORIAL_QUEST_ID,
+  TUTORIAL_QUEST_TITLE,
   describeXpGain,
   settleRestDays,
   toDateKey,
@@ -37,7 +39,7 @@ export type StartGameInput = {
 };
 
 export type ToggleOutcome =
-  | { kind: 'completed'; dimension: Dimension; gain: XpGain }
+  | { kind: 'completed'; completionId: string; dimension: Dimension; gain: XpGain }
   | { kind: 'undone' }
   | { kind: 'ignored' };
 
@@ -83,6 +85,14 @@ export const useGameStore = create<GameState>()(
       ...initialData,
 
       startGame: ({ name, classDimension, quests }, today = todayKey()) => {
+        const tutorial: Quest = {
+          id: TUTORIAL_QUEST_ID,
+          title: TUTORIAL_QUEST_TITLE,
+          dimension: classDimension,
+          repeatDays: [],
+          active: true,
+          createdAt: new Date().toISOString(),
+        };
         set({
           ...initialData,
           player: {
@@ -93,7 +103,7 @@ export const useGameStore = create<GameState>()(
             tutorialComplete: false,
             notificationTime: '20:00',
           },
-          quests: quests.map((q) => makeQuest({ ...q, repeatDays: DAILY })),
+          quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
         });
       },
 
@@ -109,6 +119,7 @@ export const useGameStore = create<GameState>()(
         if (result.kind === 'completed') {
           return {
             kind: 'completed',
+            completionId: result.completion.id,
             dimension: quest.dimension,
             gain: describeXpGain(xpBefore, result.completion.xp),
           };
@@ -137,7 +148,14 @@ export const useGameStore = create<GameState>()(
         set((s) => (s.player ? { player: { ...s.player, classDimension } } : s)),
 
       completeTutorial: () =>
-        set((s) => (s.player ? { player: { ...s.player, tutorialComplete: true } } : s)),
+        set((s) =>
+          s.player
+            ? {
+                player: { ...s.player, tutorialComplete: true },
+                quests: s.quests.map((q) => (q.id === TUTORIAL_QUEST_ID ? { ...q, active: false } : q)),
+              }
+            : s,
+        ),
 
       settle: (today = todayKey()) => {
         const { player, completions, restDays, lastSettledDate } = get();

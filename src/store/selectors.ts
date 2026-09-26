@@ -1,6 +1,7 @@
 import {
   CLASSES,
   DIMENSIONS,
+  TUTORIAL_QUEST_ID,
   completionFor,
   dimOpacityByDimension,
   dimensionStreak,
@@ -90,4 +91,11 @@ export function selectRadar(data: GameData, filter: RadarFilter, today: string):
 
 export function selectClassInfo(data: GameData): ClassInfo | null {
   return data.player ? CLASSES[data.player.classDimension] : null;
+}
+
+/** The pinned tutorial quest while onboarding is unfinished, else null. */
+export function selectTutorialQuest(data: GameData, today: string): QuestView | null {
+  if (!data.player || data.player.tutorialComplete) return null;
+  const quest = data.quests.find((q) => q.id === TUTORIAL_QUEST_ID);
+  return quest ? toQuestView(data, quest, today) : null;
 }

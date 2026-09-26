@@ -5,6 +5,10 @@ import type { Completion, Dimension, Quest } from './types';
 export const DAILY = [0, 1, 2, 3, 4, 5, 6];
 export const WEEKDAYS = [1, 2, 3, 4, 5];
 
+/** The pinned onboarding quest: never scheduled, retired once completed. */
+export const TUTORIAL_QUEST_ID = 'tutorial';
+export const TUTORIAL_QUEST_TITLE = 'Begin your journey';
+
 export function questsForDay(quests: Quest[], date: string): Quest[] {
   return quests.filter((q) => q.active && isScheduledOn(q, date));
 }

@@ -24,14 +24,16 @@ describe('game store', () => {
     start();
     const s = useGameStore.getState();
     expect(s.player).toMatchObject({ name: 'Ada', classDimension: 'intellectual', restTokens: 1, onboardedAt: today });
-    expect(s.quests.every((q) => q.repeatDays.length === 7)).toBe(true);
+    const [tutorial, ...starters] = s.quests;
+    expect(tutorial).toMatchObject({ id: 'tutorial', dimension: 'intellectual', repeatDays: [], active: true });
+    expect(starters.every((q) => q.repeatDays.length === 7)).toBe(true);
     for (const stat of selectDimensionStats(s, today)) expect(stat.progress.level).toBe(5);
     expect(selectOverallProgress(s).level).toBe(5);
   });
 
   it('completes and undoes a quest, reporting the XP gain', () => {
     start();
-    const read = useGameStore.getState().quests[0];
+    const read = useGameStore.getState().quests[1];
     const outcome = useGameStore.getState().toggleQuest(read.id, today);
     expect(outcome.kind).toBe('completed');
     if (outcome.kind === 'completed') expect(outcome.gain.gained).toBe(13);
@@ -45,7 +47,7 @@ describe('game store', () => {
 
   it('reports a level-up', () => {
     start();
-    const move = useGameStore.getState().quests[1];
+    const move = useGameStore.getState().quests[2];
     for (let day = 1; day <= 9; day += 1) {
       useGameStore.getState().toggleQuest(move.id, `2026-09-${String(day).padStart(2, '0')}`);
     }
@@ -56,10 +58,21 @@ describe('game store', () => {
 
   it('archives quests out of today', () => {
     start();
-    const read = useGameStore.getState().quests[0];
+    const read = useGameStore.getState().quests[1];
     useGameStore.getState().archiveQuest(read.id);
     const groups = selectTodayQuestGroups(useGameStore.getState(), today);
     expect(groups.map((g) => g.dimension)).toEqual(['physical']);
+  });
+
+  it('completes the tutorial for class XP, then retires it', () => {
+    start();
+    const outcome = useGameStore.getState().toggleQuest('tutorial', today);
+    expect(outcome.kind === 'completed' && outcome.gain.gained).toBe(13);
+    useGameStore.getState().completeTutorial();
+    const s = useGameStore.getState();
+    expect(s.player?.tutorialComplete).toBe(true);
+    expect(s.quests.find((q) => q.id === 'tutorial')?.active).toBe(false);
+    expect(selectTodayQuestGroups(s, today).flatMap((g) => g.quests.map((v) => v.quest.id))).not.toContain('tutorial');
   });
 
   it('settles missed days with a rest token', () => {
