@@ -103,3 +103,40 @@ describe('game store', () => {
     expect(s.lastSettledDate).toBe('2026-09-27');
   });
 });
+
+describe('loading a saved game', () => {
+  const AsyncStorage = jest.requireMock('@react-native-async-storage/async-storage');
+
+  const saved = {
+    player: {
+      name: 'Ada',
+      classDimension: 'intellectual',
+      restTokens: 2,
+      onboardedAt: '2026-09-01',
+      tutorialComplete: true,
+      notificationTime: '21:30',
+    },
+    quests: [],
+    completions: [{ id: 'c1', questId: 'q1', dimension: 'intellectual', date: '2026-09-02', xp: 13 }],
+    restDays: [],
+    lastSettledDate: '2026-09-02',
+  };
+
+  it('keeps progress from an older save version', async () => {
+    await AsyncStorage.setItem('eight-paths', JSON.stringify({ state: saved, version: 0 }));
+    await useGameStore.persist.rehydrate();
+    const s = useGameStore.getState();
+    expect(s.player?.notificationTime).toBe('21:30');
+    expect(s.completions).toHaveLength(1);
+  });
+
+  it('opens a partly damaged save instead of losing it', async () => {
+    const damaged = { ...saved, completions: [...saved.completions, { junk: true }], restDays: 'oops' };
+    await AsyncStorage.setItem('eight-paths', JSON.stringify({ state: damaged, version: 1 }));
+    await useGameStore.persist.rehydrate();
+    const s = useGameStore.getState();
+    expect(s.player?.name).toBe('Ada');
+    expect(s.completions).toHaveLength(1);
+    expect(s.restDays).toEqual([]);
+  });
+});

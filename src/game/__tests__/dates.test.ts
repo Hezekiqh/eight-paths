@@ -1,4 +1,4 @@
-import { addDays, dayOfWeek, daysBetween, formatTime, parseTime, toDateKey } from '../dates';
+import { addDays, dayOfWeek, daysBetween, formatTime, msUntilNextMidnight, parseTime, toDateKey } from '../dates';
 
 describe('dates', () => {
   it('formats local dates as YYYY-MM-DD', () => {
@@ -33,5 +33,16 @@ describe('reminder times', () => {
   it('falls back to 20:00 for bad input', () => {
     expect(parseTime('25:00')).toEqual({ hour: 20, minute: 0 });
     expect(parseTime('soon')).toEqual({ hour: 20, minute: 0 });
+  });
+});
+
+describe('msUntilNextMidnight', () => {
+  it('counts down to the next local midnight', () => {
+    expect(msUntilNextMidnight(new Date(2026, 8, 26, 23, 59, 0))).toBe(60_000);
+    expect(msUntilNextMidnight(new Date(2026, 8, 26, 12, 0, 0))).toBe(12 * 3_600_000);
+  });
+
+  it('is a full day, not zero, exactly at midnight', () => {
+    expect(msUntilNextMidnight(new Date(2026, 8, 27, 0, 0, 0))).toBe(24 * 3_600_000);
   });
 });
