@@ -1,3 +1,5 @@
+import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16';
+import { Jersey10_400Regular, useFonts } from '@expo-google-fonts/jersey-10';
 import { DarkTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router/stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -30,12 +32,15 @@ const navTheme = {
 export default function RootLayout() {
   const hydrated = useHydrated();
   const onboarded = useGameStore((s) => s.player !== null);
+  // If the font fails to load, carry on with the system font rather than a blank screen.
+  const [fontsLoaded, fontError] = useFonts({ DotGothic16_400Regular, Jersey10_400Regular });
+  const ready = hydrated && (fontsLoaded || fontError !== null);
 
   useEffect(() => {
-    if (hydrated) SplashScreen.hideAsync();
-  }, [hydrated]);
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
-  if (!hydrated) return null;
+  if (!ready) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

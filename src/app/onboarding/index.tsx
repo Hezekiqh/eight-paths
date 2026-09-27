@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { Button } from '@/components/button';
 import { OnboardingStep } from '@/components/onboarding-step';
 import { DEFAULT_PLAYER_NAME, useOnboardingDraft } from '@/store/onboarding';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 export default function WelcomeScreen() {
   const name = useOnboardingDraft((s) => s.name);
@@ -37,16 +37,14 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  label: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  label: { color: colors.text, fontSize: 21, fontFamily: fonts.semibold },
   input: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...windowStyle,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 18,
     padding: spacing.lg,
   },
   restore: { alignSelf: 'center', paddingVertical: spacing.sm },
-  restoreText: { color: colors.textMuted, fontSize: 15, textDecorationLine: 'underline' },
+  restoreText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, textDecorationLine: 'underline' },
 });

@@ -13,7 +13,7 @@ import {
   useToday,
 } from '@/store/hooks';
 import type { HistoryDay } from '@/store/selectors';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 const WEEKS = 17;
 const CELL_GAP = 4;
@@ -65,9 +65,9 @@ export default function JourneyScreen() {
   const next = milestones.find((m) => !m.reached);
 
   return (
-    <Screen title="Journey">
+    <Screen>
       <Text style={styles.lede}>
-        Every day you show up counts, even the small ones. This is the proof.
+        * Every day you show up counts, even the small ones. This is the proof.
       </Text>
 
       <View style={styles.tiles}>
@@ -151,32 +151,31 @@ export default function JourneyScreen() {
 }
 
 const styles = StyleSheet.create({
-  lede: { color: colors.textMuted, fontSize: 15, lineHeight: 21, marginBottom: spacing.md },
+  lede: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, marginBottom: spacing.md },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tile: {
     flexBasis: '48%',
     flexGrow: 1,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    ...windowStyle,
     padding: spacing.lg,
     gap: 2,
   },
-  tileLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
-  tileValue: { color: colors.text, fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  tileDetail: { color: colors.textMuted, fontSize: 12 },
-  section: { color: colors.textMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, marginTop: spacing.lg },
-  card: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md, marginTop: spacing.sm },
+  tileLabel: { color: colors.textMuted, fontSize: 14, fontFamily: fonts.bold, letterSpacing: 1 },
+  tileValue: { color: colors.text, fontSize: 36, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
+  tileDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
+  section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.lg },
+  card: { ...windowStyle, padding: spacing.lg, gap: spacing.md, marginTop: spacing.sm },
   heatmap: { flexDirection: 'row', justifyContent: 'center' },
   legend: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
-  legendText: { color: colors.textMuted, fontSize: 11 },
+  legendText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 11 },
   legendCell: { width: 12, height: 12, borderRadius: 3 },
   legendRest: { borderWidth: 1.5, backgroundColor: colors.cardRaised, marginLeft: spacing.sm },
   compareRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  compareLabel: { flex: 1, color: colors.text, fontSize: 15 },
-  compareBefore: { color: colors.textMuted, fontSize: 15, fontVariant: ['tabular-nums'] },
-  compareNow: { color: colors.text, fontSize: 15, fontWeight: '800', fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
+  compareLabel: { flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 15 },
+  compareBefore: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, fontVariant: ['tabular-nums'] },
+  compareNow: { color: colors.text, fontSize: 20, fontFamily: fonts.bold, fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   badge: { minWidth: 44, height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
-  badgeText: { fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  badgeCaption: { color: colors.textMuted, fontSize: 13 },
+  badgeText: { fontSize: 18, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
+  badgeCaption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
 });

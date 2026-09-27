@@ -8,11 +8,12 @@ import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
 import { useGameStore } from '@/store';
 import {
   DEFAULT_PLAYER_NAME,
+  STARTER_QUEST_TIP_ABOVE,
   starterQuestsFrom,
   useOnboardingDraft,
   type StarterKey,
 } from '@/store/onboarding';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 export default function StarterQuestsScreen() {
   const { name, classDimension, selected, toggleStarter, reset } = useOnboardingDraft();
@@ -34,12 +35,29 @@ export default function StarterQuestsScreen() {
     <OnboardingStep
       step={3}
       title="Choose your starting quests"
-      subtitle="One quest per class to begin. Tap a class to see more."
-      footer={<Button title="Start" color={accent} disabled={!classDimension} onPress={start} />}>
+      subtitle="Start small. We've picked three quick ones. You can add more anytime, and a few you actually do beat a long list you don't."
+      footer={
+        <View style={styles.footer}>
+          <Text style={[styles.count, selected.length > STARTER_QUEST_TIP_ABOVE && { color: accent }]}>
+            {selected.length > STARTER_QUEST_TIP_ABOVE
+              ? `${selected.length} quests. Most people who stick with it start with 3 to 5.`
+              : `${selected.length} ${selected.length === 1 ? 'quest' : 'quests'} selected`}
+          </Text>
+          <Button
+            title="Start"
+            color={accent}
+            disabled={!classDimension || selected.length === 0}
+            onPress={start}
+          />
+        </View>
+      }>
       {DIMENSIONS.map((d) => {
         const info = CLASSES[d];
         const isOpen = expanded === d;
-        const habits = isOpen ? info.starterHabits : info.starterHabits.slice(0, 1);
+        // Collapsed rows show the first quest plus anything already picked.
+        const habits = info.starterHabits
+          .map((title, i) => ({ title, i }))
+          .filter(({ i }) => isOpen || i === 0 || selected.includes(`${d}:${i}`));
         return (
           <View key={d} style={styles.row}>
             <Pressable
@@ -57,7 +75,7 @@ export default function StarterQuestsScreen() {
                 size={14}
               />
             </Pressable>
-            {habits.map((title, i) => {
+            {habits.map(({ title, i }) => {
               const key: StarterKey = `${d}:${i}`;
               const checked = selected.includes(key);
               return (
@@ -82,10 +100,10 @@ export default function StarterQuestsScreen() {
 }
 
 const styles = StyleSheet.create({
-  row: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xs },
+  row: { ...windowStyle, padding: spacing.md, gap: spacing.xs },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
-  rowTitle: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '700' },
-  rowClass: { color: colors.textMuted, fontWeight: '500' },
+  rowTitle: { flex: 1, color: colors.text, fontSize: 21, fontFamily: fonts.bold },
+  rowClass: { color: colors.textMuted, fontFamily: fonts.medium },
   habit: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm, paddingLeft: spacing.xs },
   box: {
     width: 22,
@@ -95,5 +113,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  habitTitle: { color: colors.text, fontSize: 15 },
+  habitTitle: { color: colors.text, fontFamily: fonts.regular, fontSize: 15 },
+  footer: { gap: spacing.sm },
+  count: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'center' },
 });

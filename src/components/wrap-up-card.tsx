@@ -4,7 +4,7 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/button';
 import type { ClassInfo } from '@/game';
 import { ensureReminderPermission } from '@/notifications';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 type Props = {
   visible: boolean;
@@ -51,14 +51,12 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    ...windowStyle,
     padding: spacing.xl,
     gap: spacing.md,
     alignItems: 'center',
   },
-  title: { color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  body: { color: colors.textMuted, fontSize: 16, lineHeight: 22, textAlign: 'center' },
+  title: { color: colors.text, fontSize: 29, fontFamily: fonts.bold, textAlign: 'center' },
+  body: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, textAlign: 'center' },
   button: { alignSelf: 'stretch', marginTop: spacing.sm },
 });

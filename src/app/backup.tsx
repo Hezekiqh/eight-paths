@@ -5,7 +5,7 @@ import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, V
 import { ModalHeader } from '@/components/modal-header';
 import { useGameStore } from '@/store';
 import { useClassInfo } from '@/store/hooks';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 /** Paste a backup made with "Back up progress" to restore it on this phone. */
 export default function RestoreBackup() {
@@ -73,13 +73,10 @@ export default function RestoreBackup() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, gap: spacing.md },
-  note: { color: colors.textMuted, fontSize: 15, lineHeight: 21 },
+  note: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },
   input: {
     minHeight: 180,
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...windowStyle,
     color: colors.text,
     fontSize: 13,
     fontFamily: 'Menlo',
@@ -87,5 +84,5 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: { backgroundColor: colors.cardRaised, borderRadius: radius.md, padding: spacing.md },
-  errorText: { color: '#FF6B81', fontSize: 14 },
+  errorText: { color: '#FF6B81', fontFamily: fonts.regular, fontSize: 14 },
 });

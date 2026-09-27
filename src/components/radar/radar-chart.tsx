@@ -10,7 +10,7 @@ import Animated, {
 import Svg, { Line, Polygon } from 'react-native-svg';
 
 import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
-import { colors } from '@/theme';
+import { colors, fonts } from '@/theme';
 
 import { pointOnAxis, polygonPoints } from './geometry';
 
@@ -135,5 +135,5 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
 
 const styles = StyleSheet.create({
   label: { position: 'absolute', width: LABEL_WIDTH, height: 40, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  labelText: { color: colors.text, fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+  labelText: { color: colors.text, fontSize: 14, fontFamily: fonts.bold, letterSpacing: 0.3 },
 });

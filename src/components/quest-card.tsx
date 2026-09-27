@@ -2,7 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { QuestView } from '@/store/selectors';
-import { colors, radius, spacing } from '@/theme';
+import { FRAME, colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 type Props = {
   view: QuestView;
@@ -19,11 +19,11 @@ export function QuestCard({ view, onPress, pinned }: Props) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        pinned && { borderColor: info.color, borderWidth: 1.5 },
+        pinned && { borderColor: info.color },
         pressed && { opacity: 0.8 },
       ]}>
       <View style={[styles.check, { borderColor: info.color }, done && { backgroundColor: info.color }]}>
-        {done && <SymbolView name="checkmark" tintColor={colors.background} size={16} weight="bold" />}
+        {done && <SymbolView name="heart.fill" tintColor={colors.background} size={15} />}
       </View>
       <View style={styles.body}>
         {pinned && <Text style={[styles.pinned, { color: info.color }]}>PINNED QUEST</Text>}
@@ -44,23 +44,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    ...windowStyle,
     padding: spacing.lg,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
   },
   check: {
     width: 28,
     height: 28,
-    borderRadius: radius.pill,
-    borderWidth: 2,
+    borderRadius: radius.sm,
+    borderWidth: FRAME,
     alignItems: 'center',
     justifyContent: 'center',
   },
   body: { flex: 1, gap: 2 },
-  pinned: { fontSize: 11, fontWeight: '800', letterSpacing: 1 },
-  title: { color: colors.text, fontSize: 17, fontWeight: '600' },
+  pinned: { fontSize: 14, fontFamily: fonts.bold, letterSpacing: 1 },
+  title: { color: colors.text, fontSize: 22, fontFamily: fonts.semibold },
   done: { color: colors.textMuted, textDecorationLine: 'line-through' },
-  meta: { color: colors.textMuted, fontSize: 13 },
+  meta: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
 });

@@ -2,7 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ClassInfo } from '@/game';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing } from '@/theme';
 
 type Props = { info: ClassInfo; compact?: boolean };
 
@@ -43,10 +43,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardRaised,
   },
   titles: { flex: 1, gap: 2 },
-  className: { fontSize: 28, fontWeight: '800' },
-  classNameCompact: { fontSize: 22 },
-  epithet: { color: colors.textMuted, fontSize: 14, fontStyle: 'italic', letterSpacing: 0.3 },
-  lore: { color: colors.text, fontSize: 16, lineHeight: 23 },
+  className: { fontSize: 36, fontFamily: fonts.bold },
+  classNameCompact: { fontSize: 29 },
+  epithet: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, fontStyle: 'italic', letterSpacing: 0.3 },
+  lore: { color: colors.text, fontFamily: fonts.regular, fontSize: 16, lineHeight: 23 },
   growth: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -56,5 +56,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     padding: spacing.md,
   },
-  growthText: { flex: 1, color: colors.textMuted, fontSize: 14, lineHeight: 20 },
+  growthText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
 });

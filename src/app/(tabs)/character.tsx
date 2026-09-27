@@ -18,7 +18,7 @@ import {
   useToday,
 } from '@/store/hooks';
 import type { DimensionStats } from '@/store/selectors';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 function ClassProgressRow({ stats }: { stats: DimensionStats }) {
   const { info, progress, streak, consistency, opacity } = stats;
@@ -87,7 +87,7 @@ export default function CharacterScreen() {
   reminder.setHours(hour, minute, 0, 0);
 
   return (
-    <Screen title="Character">
+    <Screen>
       <View style={[styles.hero, { borderColor: classInfo.color }]}>
         <View style={styles.heroTop}>
           <View style={[styles.emblem, { borderColor: classInfo.color }]}>
@@ -195,9 +195,7 @@ export default function CharacterScreen() {
 
 const styles = StyleSheet.create({
   hero: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    ...windowStyle,
     padding: spacing.lg,
     gap: spacing.md,
   },
@@ -212,26 +210,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardRaised,
   },
   heroText: { flex: 1, gap: 2 },
-  name: { color: colors.text, fontSize: 22, fontWeight: '800' },
-  heroClass: { fontSize: 15, fontWeight: '700' },
-  epithet: { color: colors.textMuted, fontStyle: 'italic', fontWeight: '500' },
+  name: { color: colors.text, fontSize: 29, fontFamily: fonts.bold },
+  heroClass: { fontSize: 20, fontFamily: fonts.bold },
+  epithet: { color: colors.textMuted, fontStyle: 'italic', fontFamily: fonts.medium },
   overallTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  overallLevel: { color: colors.text, fontSize: 20, fontWeight: '800' },
-  overallXp: { color: colors.textMuted, fontSize: 13, fontVariant: ['tabular-nums'] },
+  overallLevel: { color: colors.text, fontSize: 26, fontFamily: fonts.bold },
+  overallXp: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, fontVariant: ['tabular-nums'] },
   tokens: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   tokenIcons: { flexDirection: 'row', gap: spacing.xs },
-  tokenText: { flex: 1, color: colors.textMuted, fontSize: 13, lineHeight: 18 },
-  section: { color: colors.textMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, marginTop: spacing.md },
-  list: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
+  tokenText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.md },
+  list: { ...windowStyle, overflow: 'hidden' },
   classRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   classRowInner: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   classBody: { flex: 1, gap: 6 },
   classTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  className: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  classDetail: { color: colors.textMuted, fontSize: 12 },
-  classLevel: { color: colors.textMuted, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  className: { color: colors.text, fontSize: 21, fontFamily: fonts.bold },
+  classDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
+  classLevel: { color: colors.textMuted, fontSize: 18, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 34, justifyContent: 'flex-end' },
-  streakText: { color: colors.textFaint, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  streakText: { color: colors.textFaint, fontSize: 18, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 52 },
-  disclaimer: { color: colors.textFaint, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: spacing.sm },
+  disclaimer: { color: colors.textFaint, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: spacing.sm },
 });

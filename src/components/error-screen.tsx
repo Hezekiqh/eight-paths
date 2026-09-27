@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 /**
  * Shown instead of a blank screen when a screen throws. Progress is saved
@@ -32,8 +32,8 @@ export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'center' },
-  text: { color: colors.textMuted, fontSize: 16, lineHeight: 22, textAlign: 'center' },
+  title: { color: colors.text, fontSize: 31, fontFamily: fonts.bold, textAlign: 'center' },
+  text: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, textAlign: 'center' },
   detail: { color: colors.textFaint, fontSize: 12, fontFamily: 'Menlo', textAlign: 'center' },
   footer: { padding: spacing.xl },
 });

@@ -8,7 +8,6 @@ import {
   consistencyWindows,
   daysShownUp,
   nextMilestone,
-  questsDueOn,
   restDaySet,
   showUpStreak,
   describeSchedule,
@@ -47,7 +46,6 @@ export type DimensionStats = {
 export type QuestView = {
   quest: Quest;
   info: ClassInfo;
-  /** Done on the day being viewed (today, or yesterday while backfilling). */
   done: boolean;
   streak: number;
   schedule: string;
@@ -145,11 +143,11 @@ export function selectOverallProgress(data: GameData): LevelProgress {
   return overallLevelFromXp(totalXp(data.completions));
 }
 
-function toQuestView(data: GameData, quest: Quest, today: string, day = today): QuestView {
+function toQuestView(data: GameData, quest: Quest, today: string): QuestView {
   return {
     quest,
     info: CLASSES[quest.dimension],
-    done: completionFor(data.completions, quest.id, day) !== undefined,
+    done: completionFor(data.completions, quest.id, today) !== undefined,
     streak: habitStreak(quest, data.completions, data.restDays, today),
     schedule: describeSchedule(quest.repeatDays),
   };
@@ -167,12 +165,6 @@ export type QuestGroup = ReturnType<typeof groupByDimension>[number];
 
 export function selectTodayQuestGroups(data: GameData, today: string): QuestGroup[] {
   return groupByDimension(questsForDay(data.quests, today).map((q) => toQuestView(data, q, today)));
-}
-
-/** Quests that were due yesterday, for logging them late. */
-export function selectYesterdayQuestGroups(data: GameData, today: string): QuestGroup[] {
-  const yesterday = addDays(today, -1);
-  return groupByDimension(questsDueOn(data.quests, yesterday).map((q) => toQuestView(data, q, today, yesterday)));
 }
 
 export function selectAllQuestGroups(data: GameData, today: string): QuestGroup[] {

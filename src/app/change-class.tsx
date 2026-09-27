@@ -7,7 +7,7 @@ import { ModalHeader } from '@/components/modal-header';
 import { CLASSES, type Dimension } from '@/game';
 import { useGameStore } from '@/store';
 import { usePlayer } from '@/store/hooks';
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 export default function ChangeClass() {
   const player = usePlayer();
@@ -44,5 +44,5 @@ export default function ChangeClass() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl * 2 },
-  note: { color: colors.textMuted, fontSize: 15, lineHeight: 21 },
+  note: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },
 });

@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
+import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 type Props<T extends string> = {
   options: readonly { value: T; label: string }[];
@@ -25,8 +26,11 @@ export function Segmented<T extends string>({ options, value, onChange, color }:
               Haptics.selectionAsync();
               onChange(o.value);
             }}
-            style={[styles.segment, selected && { backgroundColor: colors.cardRaised, borderColor: color }]}>
-            <Text style={[styles.label, selected && { color: colors.text }]}>{o.label}</Text>
+            style={styles.segment}>
+            <View style={styles.labelRow}>
+              {selected && <SymbolView name="heart.fill" tintColor={color} size={11} />}
+              <Text style={[styles.label, selected && { color }]}>{o.label.toUpperCase()}</Text>
+            </View>
           </Pressable>
         );
       })}
@@ -37,17 +41,10 @@ export function Segmented<T extends string>({ options, value, onChange, color }:
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: radius.pill,
+    ...windowStyle,
     padding: 3,
   },
-  segment: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  label: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
+  segment: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  label: { color: colors.textMuted, fontSize: 18, fontFamily: fonts.bold, letterSpacing: 1 },
 });

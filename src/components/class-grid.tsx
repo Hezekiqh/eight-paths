@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ClassLore } from '@/components/class-lore';
 import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 type Props = {
   selected: Dimension | null;
@@ -48,14 +48,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.lg,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    ...windowStyle,
   },
-  className: { color: colors.text, fontSize: 17, fontWeight: '700', marginTop: spacing.xs },
+  className: { color: colors.text, fontSize: 22, fontFamily: fonts.bold, marginTop: spacing.xs },
   epithet: {
     color: colors.textMuted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     fontStyle: 'italic',
     textAlign: 'center',
@@ -63,9 +61,7 @@ const styles = StyleSheet.create({
   },
   lore: {
     marginTop: spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    ...windowStyle,
     padding: spacing.lg,
   },
 });

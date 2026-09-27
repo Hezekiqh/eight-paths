@@ -1,34 +1,47 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { TabList, TabSlot, TabTrigger, Tabs } from 'expo-router/ui';
+import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useReminderSync, useSettleOnDayChange, useToday } from '@/store/hooks';
-import { colors } from '@/theme';
+import { FRAME, colors, spacing } from '@/theme';
 
 export default function TabsLayout() {
   const today = useToday();
   useSettleOnDayChange(today);
   useReminderSync(today);
+  const insets = useSafeAreaInsets();
 
   return (
-    <NativeTabs
-      tintColor={colors.grid}
-      backgroundColor={colors.background}
-      labelStyle={{ default: { color: colors.textMuted }, selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="hexagon.fill" md="hexagon" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="journey">
-        <NativeTabs.Trigger.Label>Journey</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="map.fill" md="map" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="character">
-        <NativeTabs.Trigger.Label>Character</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="person.crop.circle.fill" md="person" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="quests">
-        <NativeTabs.Trigger.Label>Quests</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="scroll.fill" md="list" />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs style={styles.root}>
+      <TabSlot />
+      <TabList style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+        <TabTrigger name="index" href="/" asChild>
+          <RetroTabButton label="Today" symbol="hexagon.fill" />
+        </TabTrigger>
+        <TabTrigger name="journey" href="/journey" asChild>
+          <RetroTabButton label="Journey" symbol="map.fill" />
+        </TabTrigger>
+        <TabTrigger name="character" href="/character" asChild>
+          <RetroTabButton label="Character" symbol="person.crop.circle.fill" />
+        </TabTrigger>
+        <TabTrigger name="quests" href="/quests" asChild>
+          <RetroTabButton label="Quests" symbol="scroll.fill" />
+        </TabTrigger>
+      </TabList>
+    </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.background },
+  // A menu window pinned to the bottom: framed on top, flush with the screen edges.
+  bar: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderTopWidth: FRAME,
+    borderColor: colors.frame,
+    paddingTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+});

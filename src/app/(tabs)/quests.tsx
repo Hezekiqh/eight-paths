@@ -8,7 +8,7 @@ import { Screen } from '@/components/screen';
 import { useGameStore } from '@/store';
 import { useAllQuestGroups, useClassInfo, useToday } from '@/store/hooks';
 import type { QuestView } from '@/store/selectors';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 function QuestRow({ view }: { view: QuestView }) {
   const archiveQuest = useGameStore((s) => s.archiveQuest);
@@ -56,7 +56,6 @@ export default function QuestsScreen() {
 
   return (
     <Screen
-      title="Quests"
       action={
         <Pressable
           accessibilityRole="button"
@@ -71,7 +70,7 @@ export default function QuestsScreen() {
         <Text style={styles.empty}>No active quests. Tap + to add one.</Text>
       ) : (
         <>
-          <Text style={styles.tip}>Tap a quest to edit it, or swipe left to archive.</Text>
+          <Text style={styles.tip}>* Tap a quest to edit it, or swipe left to archive.</Text>
           {groups.map((group) => (
             <View key={group.dimension} style={styles.group}>
               <ClassHeader info={group.info} />
@@ -88,23 +87,22 @@ export default function QuestsScreen() {
 
 const styles = StyleSheet.create({
   add: { width: 36, height: 36, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  tip: { color: colors.textFaint, fontSize: 13 },
-  empty: { color: colors.textMuted, fontSize: 15 },
+  tip: { color: colors.textFaint, fontFamily: fonts.regular, fontSize: 13 },
+  empty: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15 },
   group: { gap: spacing.sm, marginBottom: spacing.sm },
   swipe: { borderRadius: radius.lg, backgroundColor: '#7A2E38' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    ...windowStyle,
     padding: spacing.lg,
   },
   body: { flex: 1, gap: 2 },
-  title: { color: colors.text, fontSize: 17, fontWeight: '600' },
-  meta: { color: colors.textMuted, fontSize: 13 },
+  title: { color: colors.text, fontSize: 22, fontFamily: fonts.semibold },
+  meta: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  streakText: { color: colors.textFaint, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  streakText: { color: colors.textFaint, fontSize: 20, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   archive: { width: 96, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  archiveText: { color: colors.text, fontSize: 13, fontWeight: '700' },
+  archiveText: { color: colors.text, fontSize: 17, fontFamily: fonts.bold },
 });

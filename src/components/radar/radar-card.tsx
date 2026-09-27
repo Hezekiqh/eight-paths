@@ -4,7 +4,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Segmented } from '@/components/segmented';
 import { DIMENSIONS, type ClassInfo, type Dimension, type RadarFilter } from '@/game';
 import { useDimensionStats, useRadar } from '@/store/hooks';
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 import { RadarChart } from './radar-chart';
 
@@ -55,5 +55,5 @@ export function RadarCard({ today, classInfo }: Props) {
 const styles = StyleSheet.create({
   card: { gap: spacing.sm, marginBottom: spacing.md },
   chart: { alignItems: 'center' },
-  caption: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
+  caption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center' },
 });

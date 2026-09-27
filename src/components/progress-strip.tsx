@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Consistency } from '@/game';
 import type { ProgressSummary } from '@/store/selectors';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 export function formatRate(c: Consistency): string {
   return c.rate === null ? '—' : `${Math.round(c.rate * 100)}%`;
@@ -59,18 +59,17 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    ...windowStyle,
     padding: spacing.lg,
     gap: spacing.lg,
     marginBottom: spacing.md,
   },
   main: { flex: 1, gap: 2 },
-  label: { color: colors.textMuted, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
-  big: { fontSize: 34, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  change: { color: colors.textMuted, fontSize: 13 },
+  label: { color: colors.textMuted, fontSize: 14, fontFamily: fonts.bold, letterSpacing: 1 },
+  big: { fontSize: 44, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
+  change: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
   side: { gap: spacing.sm },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statValue: { color: colors.text, fontSize: 16, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  statLabel: { color: colors.textMuted, fontSize: 12 },
+  statValue: { color: colors.text, fontSize: 21, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
+  statLabel: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
 });

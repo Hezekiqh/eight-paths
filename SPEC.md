@@ -204,7 +204,8 @@ The app should mirror consistent effort honestly and make progress visible early
 | Path streaks | Any day without a completion breaks it | Only a day with a quest due, nothing done in the Path and no rest token breaks it. Best streak is kept |
 | Showing up | Not tracked | Lifetime **days shown up**, a showing-up streak (current and best), milestones at 1, 3, 7, 14, 21, 30, 50, 75, 100… days, and a banner for a new record streak |
 | History | Radar only | **Journey** tab: stat tiles, a 17-week heatmap, last 30 days vs the 30 before, milestones |
-| Late logging | Same-day undo only | Yesterday can be logged or undone until noon; the rest-token ledger is rebuilt so a spent token is refunded |
+| Visual style | Dark neon, rounded cards, system font, teal accents | Retro RPG (Undertale, EarthBound, Baldur's Gate): night-indigo background, square windows with thick bone-white frames and hard drop shadows, adventurer's gold accents and radar grid, DotGothic16 for body text and Jersey 10 for headings and numbers, heart checkmarks and a heart cursor on menus and the custom retro tab bar (`expo-router/ui` headless tabs), "* " narration on hints, and a pixel-art icon (gold octagon, heart). Tokens live in `src/theme` (`windowStyle`, `fonts`) |
+| Starting quests | One per class pre-checked (8) | Three pre-checked: the class's first quest plus two quick wins (Drink water, Gratitude list, or Message a friend). Picking more than 5 shows a gentle tip |
 | Archiving | `active: false` | Also stamps `archivedAt`, so past due days still count toward consistency |
 | Backup | None | Character → Back up progress (share sheet, JSON). Restore by pasting, from Character or onboarding ("New phone?") |
 

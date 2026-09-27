@@ -94,25 +94,6 @@ describe('game store', () => {
     expect(useGameStore.getState().quests[2]).toMatchObject({ id: move.id, title: 'Lift', repeatDays: [1, 3, 5] });
   });
 
-  it('lets yesterday be logged until noon, refunding a spent rest token', () => {
-    start();
-    const read = useGameStore.getState().quests[1];
-    useGameStore.getState().settle('2026-09-27');
-    expect(useGameStore.getState().player?.restTokens).toBe(0);
-
-    const morning = new Date(2026, 8, 27, 9, 0);
-    const outcome = useGameStore.getState().toggleQuest(read.id, '2026-09-27', today, morning);
-    expect(outcome.kind).toBe('completed');
-    const s = useGameStore.getState();
-    expect(s.completions.map((c) => c.date)).toEqual([today]);
-    expect(s.player?.restTokens).toBe(1);
-    expect(s.restDays).toEqual([]);
-
-    const afternoon = new Date(2026, 8, 27, 13, 0);
-    expect(useGameStore.getState().toggleQuest(read.id, '2026-09-27', today, afternoon).kind).toBe('ignored');
-    expect(useGameStore.getState().toggleQuest(read.id, '2026-09-27', '2026-09-25', morning).kind).toBe('ignored');
-  });
-
   it('celebrates the first day shown up', () => {
     start();
     const outcome = useGameStore.getState().toggleQuest('tutorial', today);

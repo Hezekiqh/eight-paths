@@ -45,3 +45,4 @@ describe('describeSchedule', () => {
     expect(scheduleKind([0, 6])).toBe('custom');
   });
 });
+

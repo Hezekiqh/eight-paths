@@ -8,7 +8,7 @@ import { Segmented } from '@/components/segmented';
 import { CLASSES, DAILY, DIMENSIONS, WEEKDAYS, scheduleKind, type Dimension, type ScheduleKind } from '@/game';
 import { useGameStore } from '@/store';
 import { usePlayer, useQuest } from '@/store/hooks';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 const SCHEDULES = [
   { value: 'daily', label: 'Daily' },
@@ -149,13 +149,11 @@ export default function QuestEditor() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl * 2 },
-  label: { color: colors.textMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, marginTop: spacing.sm },
+  label: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.sm },
   input: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...windowStyle,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 17,
     padding: spacing.lg,
   },
@@ -166,13 +164,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.card,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    ...windowStyle,
   },
-  classChipText: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  classChipText: { color: colors.text, fontSize: 20, fontFamily: fonts.semibold },
+  hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   days: { flexDirection: 'row', justifyContent: 'space-between' },
   day: {
     width: 42,
@@ -183,7 +178,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayText: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  dayText: { color: colors.text, fontSize: 20, fontFamily: fonts.bold },
   archive: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -192,5 +187,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     paddingVertical: spacing.md,
   },
-  archiveText: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
+  archiveText: { color: colors.textMuted, fontSize: 20, fontFamily: fonts.semibold },
 });

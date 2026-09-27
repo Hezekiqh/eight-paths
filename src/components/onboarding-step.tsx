@@ -2,7 +2,7 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 type Props = PropsWithChildren<{
   step: number;
@@ -31,9 +31,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   content: { padding: spacing.xl, paddingTop: spacing.xxl + spacing.lg, gap: spacing.sm },
-  step: { color: colors.grid, fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
-  title: { color: colors.text, fontSize: 30, fontWeight: '800' },
-  subtitle: { color: colors.textMuted, fontSize: 16, lineHeight: 22 },
+  step: { color: colors.grid, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.5 },
+  title: { color: colors.text, fontSize: 39, fontFamily: fonts.bold },
+  subtitle: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22 },
   body: { marginTop: spacing.lg, gap: spacing.md },
   footer: { paddingHorizontal: spacing.xl, paddingBottom: spacing.lg },
 });

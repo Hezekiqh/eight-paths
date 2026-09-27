@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 type Props = {
   title: string;
@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  cancel: { color: colors.textMuted, fontSize: 17 },
-  title: { color: colors.text, fontSize: 17, fontWeight: '700' },
-  action: { fontSize: 17, fontWeight: '700' },
+  cancel: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 17 },
+  title: { color: colors.text, fontSize: 22, fontFamily: fonts.bold },
+  action: { fontSize: 22, fontFamily: fonts.bold },
   disabled: { opacity: 0.35 },
 });

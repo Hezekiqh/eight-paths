@@ -3,7 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import type { ClassInfo } from '@/game';
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 /** Section header naming a class; tapping it opens the class sheet. */
 export function ClassHeader({ info }: { info: ClassInfo }) {
@@ -22,5 +22,5 @@ export function ClassHeader({ info }: { info: ClassInfo }) {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
-  title: { fontSize: 13, fontWeight: '800', letterSpacing: 1.2 },
+  title: { fontSize: 17, fontFamily: fonts.bold, letterSpacing: 1.2 },
 });

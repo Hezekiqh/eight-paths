@@ -29,6 +29,12 @@ export function XpBar({ fill, color, height = 8, opacity = 1 }: Props) {
 }
 
 const styles = StyleSheet.create({
-  track: { backgroundColor: colors.cardRaised, borderRadius: radius.pill, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: radius.pill },
+  track: {
+    backgroundColor: colors.background,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    borderColor: colors.textFaint,
+    overflow: 'hidden',
+  },
+  fill: { height: '100%' },
 });

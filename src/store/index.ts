@@ -5,7 +5,6 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   DAILY,
   STARTING_REST_TOKENS,
-  canLogDay,
   daysShownUp,
   milestoneCrossed,
   showUpStreak,
@@ -55,8 +54,8 @@ export type ImportResult = { ok: true } | { ok: false; error: string };
 
 type Actions = {
   startGame: (input: StartGameInput, today?: string) => void;
-  /** Toggles `questId` on `day` (default today); yesterday is loggable until noon. */
-  toggleQuest: (questId: string, today?: string, day?: string, now?: Date) => ToggleOutcome;
+  /** Toggles `questId` for today. Past days are final. */
+  toggleQuest: (questId: string, today?: string) => ToggleOutcome;
   addQuest: (draft: QuestDraft) => void;
   updateQuest: (id: string, draft: QuestDraft) => void;
   archiveQuest: (id: string) => void;
@@ -82,16 +81,6 @@ export const initialData: GameData = {
 const todayKey = () => toDateKey(new Date());
 
 const BACKUP_APP = 'eight-paths';
-
-/** Rebuilds the rest ledger from scratch; it's fully determined by the completions. */
-function rebuildLedger(player: Player, completions: Completion[], today: string) {
-  return settleRestDays(
-    { restTokens: STARTING_REST_TOKENS, restDays: [], lastSettledDate: null },
-    completions,
-    player.onboardedAt,
-    today,
-  );
-}
 
 function describeMilestone(
   data: Pick<GameData, 'completions' | 'restDays'>,
@@ -152,26 +141,14 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      toggleQuest: (questId, today = todayKey(), day = today, now = new Date()) => {
+      toggleQuest: (questId, today = todayKey()) => {
         const { player, quests, completions, restDays } = get();
         const quest = quests.find((q) => q.id === questId);
-        if (!player || !quest || !canLogDay(day, today, now)) return { kind: 'ignored' };
+        if (!player || !quest) return { kind: 'ignored' };
 
         const xpBefore = xpByDimension(completions)[quest.dimension];
-        const result = toggleCompletion(completions, quest, player.classDimension, day, newId());
-        if (day === today) {
-          set({ completions: result.completions });
-        } else {
-          // A logged or undone past day can change whether a rest token was
-          // spent (or earned) at midnight, so settle the ledger again.
-          const ledger = rebuildLedger(player, result.completions, today);
-          set({
-            completions: result.completions,
-            player: { ...player, restTokens: ledger.restTokens },
-            restDays: ledger.restDays,
-            lastSettledDate: ledger.lastSettledDate,
-          });
-        }
+        const result = toggleCompletion(completions, quest, player.classDimension, today, newId());
+        set({ completions: result.completions });
 
         if (result.kind === 'completed') {
           return {

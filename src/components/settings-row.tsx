@@ -3,7 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 type Props = {
   icon: SFSymbol;
@@ -47,6 +47,6 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   text: { flex: 1, gap: 2 },
-  title: { color: colors.text, fontSize: 16, fontWeight: '600' },
-  subtitle: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  title: { color: colors.text, fontSize: 21, fontFamily: fonts.semibold },
+  subtitle: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
 });
