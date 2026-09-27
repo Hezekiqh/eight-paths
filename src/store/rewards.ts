@@ -18,7 +18,13 @@ export const DROP_XP = 20;
 export const GOAL_XP = 25;
 
 type Changes = Partial<GameData>;
-export type RewardResult = { changes: Changes; title: string; detail: string };
+export type RewardResult = {
+  changes: Changes;
+  title: string;
+  detail: string;
+  /** Worth a bigger buzz: a shard or a new character. */
+  big?: boolean;
+};
 
 const pick = <T>(items: readonly T[], seed: string) => items[Math.floor(seededRoll(seed) * items.length)];
 
@@ -62,6 +68,7 @@ function dropReward(data: GameData, id: string, today: string): RewardResult {
     const joined = shards >= SHARDS_TO_UNLOCK;
     return {
       changes: { shards: { ...data.shards, [found.id]: shards } },
+      big: true,
       title: joined ? `${found.name} joins your collection!` : `Shard of ${found.name}`,
       detail: joined
         ? `You gathered every shard. ${found.name} is ready to swap into your party.`

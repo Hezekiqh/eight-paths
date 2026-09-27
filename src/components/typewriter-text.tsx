@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, type StyleProp, type TextStyle } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
+import { haptics } from '@/haptics';
+
 /** Milliseconds per letter, and the extra beat after punctuation. */
 const LETTER_MS = 28;
 const PAUSES: Record<string, number> = { '.': 260, '!': 260, '?': 260, ',': 120, ':': 160, ';': 160 };
@@ -31,7 +33,11 @@ export function TypewriterText({ text, style, start = true, instant = false, onD
   useEffect(() => {
     if (all || !start || shown >= text.length) return;
     const delay = LETTER_MS + (PAUSES[text[shown - 1]] ?? 0);
-    const id = setTimeout(() => setShown((n) => n + 1), shown === 0 ? 0 : delay);
+    const id = setTimeout(() => {
+      // A tiny click per letter, like a dialogue blip; spaces stay silent for rhythm.
+      if (text[shown].trim()) haptics.tick();
+      setShown((n) => n + 1);
+    }, shown === 0 ? 0 : delay);
     return () => clearTimeout(id);
   }, [all, start, shown, text]);
 

@@ -1,7 +1,7 @@
-import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 type Props<T extends string> = {
@@ -23,7 +23,7 @@ export function Segmented<T extends string>({ options, value, onChange, color }:
             accessibilityState={{ selected }}
             onPress={() => {
               if (selected) return;
-              Haptics.selectionAsync();
+              haptics.select();
               onChange(o.value);
             }}
             style={styles.segment}>

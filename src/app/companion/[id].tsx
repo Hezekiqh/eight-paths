@@ -1,11 +1,11 @@
-import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { Button } from '@/components/button';
 import { CharacterPortrait } from '@/components/character-portrait';
+import { NoteBox } from '@/components/note-box';
 import { TypewriterText } from '@/components/typewriter-text';
 import { XpBar } from '@/components/xp-bar';
 import { CLASSES } from '@/game';
@@ -34,7 +34,7 @@ export default function CompanionSheet() {
   const current = collection.party[companion.dimension].companion;
 
   const swapIn = () => {
-    if (swapCharacter(companion.id)) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (swapCharacter(companion.id)) haptics.success();
   };
 
   return (
@@ -79,24 +79,17 @@ export default function CompanionSheet() {
             </View>
           </Pressable>
           {inParty ? (
-            <View style={[styles.note, { borderColor: info.color }]}>
-              <SymbolView name="heart.fill" tintColor={colors.gold} size={16} />
-              <Text style={styles.noteText}>
-                In your party. {info.dimensionLabel} habits level up {companion.name}.
-              </Text>
-            </View>
+            <NoteBox symbol="heart.fill" color={info.color} iconColor={colors.gold}>
+              {`In your party. ${info.dimensionLabel} habits level up ${companion.name}.`}
+            </NoteBox>
           ) : (
             <Button title={`Swap in for ${current.name}`} color={info.color} onPress={swapIn} />
           )}
         </>
       ) : (
-        <View style={[styles.note, { borderColor: colors.border }]}>
-          <SymbolView name="lock.fill" tintColor={colors.textMuted} size={16} />
-          <Text style={styles.noteText}>
-            Unlocks at {info.className} Path Lv {companion.unlockLevel}. You’re Lv {pathLevel}: keep up your{' '}
-            {info.dimensionLabel.toLowerCase()} habits to meet them.
-          </Text>
-        </View>
+        <NoteBox symbol="lock.fill" color={colors.border} iconColor={colors.textMuted}>
+          {`Unlocks at ${info.className} Path Lv ${companion.unlockLevel}. You’re Lv ${pathLevel}: keep up your ${info.dimensionLabel.toLowerCase()} habits to meet them.`}
+        </NoteBox>
       )}
     </View>
   );
@@ -128,14 +121,4 @@ const styles = StyleSheet.create({
   lore: { gap: spacing.md },
   quote: { borderLeftWidth: 3, paddingLeft: spacing.md },
   quoteText: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 16, lineHeight: 24 },
-  note: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'flex-start',
-    backgroundColor: colors.cardRaised,
-    borderLeftWidth: 3,
-    borderRadius: radius.sm,
-    padding: spacing.md,
-  },
-  noteText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
 });

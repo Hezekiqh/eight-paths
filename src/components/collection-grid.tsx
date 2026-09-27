@@ -7,6 +7,7 @@ import { CharacterPortrait } from '@/components/character-portrait';
 import { CLASSES } from '@/game';
 import type { CollectionEntry } from '@/store/selectors';
 import { formatNumber } from '@/story/companions';
+import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 const COLUMNS = 4;
@@ -21,7 +22,10 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
       accessibilityLabel={`${formatNumber(companion.number)}, ${companion.name}, ${
         unlocked ? (inParty ? 'in your party' : info.className) : 'locked'
       }`}
-      onPress={() => router.push(`/companion/${companion.id}`)}
+      onPress={() => {
+        haptics.tap();
+        router.push(`/companion/${companion.id}`);
+      }}
       style={({ pressed }) => [styles.card, { width }, pressed && { backgroundColor: colors.cardRaised }]}>
       {inParty && <SymbolView name="heart.fill" tintColor={colors.gold} size={10} style={styles.partyMark} />}
       <View style={styles.portrait}>
@@ -56,7 +60,11 @@ export function CollectionGrid({ entries }: { entries: CollectionEntry[] }) {
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}>
+            onMomentumScrollEnd={(e) => {
+              const next = Math.round(e.nativeEvent.contentOffset.x / width);
+              if (next !== page) haptics.select();
+              setPage(next);
+            }}>
             {pages.map((items, i) => (
               <View key={i} style={[styles.page, { width }]}>
                 {items.map((entry) => (

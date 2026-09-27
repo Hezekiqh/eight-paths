@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -33,6 +33,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   1: (save) => ({ ...save, party: DEFAULT_PARTY }),
   // v3 adds objectives, goals, shards and bonus XP; all start empty.
   2: (save) => save,
+  // v4 adds the Vibration setting to the player; sanitizeSave turns it on.
+  3: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -54,6 +56,7 @@ function cleanPlayer(raw: unknown): Player | null {
     onboardedAt: isDateKey(raw.onboardedAt) ? raw.onboardedAt : '1970-01-01',
     tutorialComplete: raw.tutorialComplete === true,
     notificationTime: formatTime(time.hour, time.minute),
+    hapticsEnabled: raw.hapticsEnabled !== false,
   };
 }
 

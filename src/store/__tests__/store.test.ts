@@ -275,4 +275,20 @@ describe('loading a saved game', () => {
     expect(physical().xp).toBe(0);
     expect(useGameStore.getState().goals[0].completedAt).toBeUndefined();
   });
+
+  it('remembers the Vibration setting', () => {
+    start();
+    expect(useGameStore.getState().player!.hapticsEnabled).toBe(true);
+    useGameStore.getState().setHapticsEnabled(false);
+    expect(useGameStore.getState().player!.hapticsEnabled).toBe(false);
+  });
+
+  it('says when the party member levels up, not just the Path', () => {
+    start();
+    const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
+    // Quill starts at level 5 and needs 30 XP; each Mage quest earns 13.
+    const outcomes = ['2026-09-24', '2026-09-25', '2026-09-26'].map((d) => useGameStore.getState().toggleQuest(read.id, d));
+    const levelled = outcomes.map((o) => o.kind === 'completed' && o.characterLeveledUp);
+    expect(levelled).toEqual([false, false, true]);
+  });
 });

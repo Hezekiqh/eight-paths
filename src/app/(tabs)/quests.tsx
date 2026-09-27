@@ -8,6 +8,7 @@ import { Screen } from '@/components/screen';
 import { useGameStore } from '@/store';
 import { useAllQuestGroups, useClassInfo, useToday } from '@/store/hooks';
 import type { QuestView } from '@/store/selectors';
+import { haptics } from '@/haptics';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 function QuestRow({ view }: { view: QuestView }) {
@@ -24,7 +25,10 @@ function QuestRow({ view }: { view: QuestView }) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Archive ${quest.title}`}
-          onPress={() => archiveQuest(quest.id)}
+          onPress={() => {
+            haptics.tap();
+            archiveQuest(quest.id);
+          }}
           style={styles.archive}>
           <SymbolView name="archivebox.fill" tintColor={colors.text} size={20} />
           <Text style={styles.archiveText}>Archive</Text>
@@ -33,7 +37,10 @@ function QuestRow({ view }: { view: QuestView }) {
       <Pressable
         accessibilityRole="button"
         accessibilityHint="Edit quest"
-        onPress={() => router.push({ pathname: '/quest-editor', params: { id: quest.id } })}
+        onPress={() => {
+          haptics.tap();
+          router.push({ pathname: '/quest-editor', params: { id: quest.id } });
+        }}
         style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.cardRaised }]}>
         <View style={styles.body}>
           <Text style={styles.title}>{quest.title}</Text>
@@ -60,7 +67,10 @@ export default function QuestsScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add quest"
-          onPress={() => router.push('/quest-editor')}
+          onPress={() => {
+            haptics.tap();
+            router.push('/quest-editor');
+          }}
           hitSlop={12}
           style={[styles.add, { backgroundColor: accent }]}>
           <SymbolView name="plus" tintColor={colors.background} size={18} weight="bold" />

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ClassLore } from '@/components/class-lore';
 import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
+import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 type Props = {
@@ -23,7 +24,10 @@ export function ClassGrid({ selected, onSelect }: Props) {
               key={d}
               accessibilityRole="radio"
               accessibilityState={{ selected: isSelected }}
-              onPress={() => onSelect(d)}
+              onPress={() => {
+                haptics.select();
+                onSelect(d);
+              }}
               style={[styles.card, isSelected && { borderColor: info.color, backgroundColor: colors.cardRaised }]}>
               <SymbolView name={info.symbol} tintColor={info.color} size={30} />
               <Text style={[styles.className, isSelected && { color: info.color }]}>{info.className}</Text>

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CLASSES, daysBetween, type Goal } from '@/game';
 import { GOAL_XP } from '@/store/rewards';
+import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 function describeDue(dueDate: string, today: string): string {
@@ -42,7 +43,10 @@ export function GoalRow({ goal, today, onToggle }: { goal: Goal; today: string; 
       <Pressable
         accessibilityRole="button"
         accessibilityHint="Edit goal"
-        onPress={() => router.push({ pathname: '/goal-editor', params: { id: goal.id } })}
+        onPress={() => {
+          haptics.tap();
+          router.push({ pathname: '/goal-editor', params: { id: goal.id } });
+        }}
         style={styles.body}>
         <Text style={[styles.title, done && styles.titleDone]}>{goal.title}</Text>
         {detail ? <Text style={[styles.detail, info && !done && { color: info.color }]}>{detail}</Text> : null}

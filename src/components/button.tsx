@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { FRAME, colors, fonts, radius, spacing } from '@/theme';
 
 type Props = {
@@ -17,7 +18,10 @@ export function Button({ title, onPress, color = colors.grid, disabled, variant 
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        haptics.tap();
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.base,
         solid ? { backgroundColor: color, borderColor: colors.frame } : { borderColor: color },

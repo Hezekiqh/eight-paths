@@ -1,8 +1,8 @@
-import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { monthOf, shiftMonth } from '@/game';
 import { useCalendar } from '@/store/hooks';
 import type { CalendarDay } from '@/store/selectors';
@@ -71,7 +71,7 @@ export function ActivityCalendar({ today, color }: { today: string; color: strin
   const canForward = month < calendar.currentMonth;
 
   const go = (delta: number) => {
-    Haptics.selectionAsync();
+    haptics.select();
     setMonth((m) => shiftMonth(m, delta));
   };
 

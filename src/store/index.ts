@@ -70,7 +70,15 @@ export type StartGameInput = {
 export type Milestone = { title: string; detail: string };
 
 export type ToggleOutcome =
-  | { kind: 'completed'; completionId: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null }
+  | {
+      kind: 'completed';
+      completionId: string;
+      dimension: Dimension;
+      gain: XpGain;
+      milestone: Milestone | null;
+      /** The party member on this Path reached a new level. */
+      characterLeveledUp: boolean;
+    }
   | { kind: 'undone' }
   | { kind: 'ignored' };
 
@@ -84,6 +92,7 @@ type Actions = {
   updateQuest: (id: string, draft: QuestDraft) => void;
   archiveQuest: (id: string) => void;
   setNotificationTime: (time: string) => void;
+  setHapticsEnabled: (on: boolean) => void;
   changeClass: (dimension: Dimension) => void;
   /** Puts an unlocked character in their Path's party slot. False if they're still locked. */
   swapCharacter: (id: CharacterId) => boolean;
@@ -185,6 +194,7 @@ export const useGameStore = create<GameState>()(
             onboardedAt: today,
             tutorialComplete: false,
             notificationTime: '20:00',
+            hapticsEnabled: true,
           },
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
         });
@@ -208,7 +218,11 @@ export const useGameStore = create<GameState>()(
           characterId: party[quest.dimension],
         };
         set({ completions: result.completions.map((c) => (c === result.completion ? completion : c)) });
+        const characterXp = [...completions, ...xpGrants]
+          .filter((c) => (c.characterId ?? DEFAULT_PARTY[c.dimension]) === completion.characterId)
+          .reduce((sum, c) => sum + c.xp, 0);
         return {
+          characterLeveledUp: describeXpGain(characterXp, completion.xp).leveledUp,
           kind: 'completed',
           completionId: completion.id,
           dimension: quest.dimension,
@@ -235,6 +249,9 @@ export const useGameStore = create<GameState>()(
 
       setNotificationTime: (notificationTime) =>
         set((s) => (s.player ? { player: { ...s.player, notificationTime } } : s)),
+
+      setHapticsEnabled: (hapticsEnabled) =>
+        set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
 
       changeClass: (classDimension) =>
         set((s) => (s.player ? { player: { ...s.player, classDimension } } : s)),

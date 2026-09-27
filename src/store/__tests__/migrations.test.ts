@@ -9,6 +9,7 @@ const player = {
   onboardedAt: '2026-09-01',
   tutorialComplete: true,
   notificationTime: '20:00',
+  hapticsEnabled: true,
 };
 const quest = {
   id: 'q1',

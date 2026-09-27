@@ -1,7 +1,7 @@
-import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { ClassHeader } from '@/components/class-header';
 import { ProgressStrip } from '@/components/progress-strip';
 import { QuestCard } from '@/components/quest-card';
@@ -42,11 +42,8 @@ export default function TodayScreen() {
   const onToggle = (questId: string) => {
     const outcome = toggleQuest(questId, today);
     if (outcome.kind === 'completed') {
-      Haptics.notificationAsync(
-        outcome.gain.leveledUp
-          ? Haptics.NotificationFeedbackType.Success
-          : Haptics.NotificationFeedbackType.Warning,
-      );
+      if (outcome.gain.leveledUp || outcome.characterLeveledUp) haptics.celebrate();
+      else haptics.nudge();
       setBanner({
         key: outcome.completionId,
         dimension: outcome.dimension,
@@ -58,7 +55,7 @@ export default function TodayScreen() {
         setWrapUpPending(true);
       }
     } else if (outcome.kind === 'undone') {
-      Haptics.selectionAsync();
+      haptics.select();
       setBanner(null);
     }
   };

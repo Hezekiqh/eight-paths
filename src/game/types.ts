@@ -18,6 +18,8 @@ export type Player = {
   onboardedAt: string;
   tutorialComplete: boolean;
   notificationTime: string;
+  /** Vibration on taps, typing and level-ups. */
+  hapticsEnabled: boolean;
 };
 
 export type Quest = {

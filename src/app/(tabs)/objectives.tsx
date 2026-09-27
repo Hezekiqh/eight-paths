@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
@@ -6,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { haptics } from '@/haptics';
 import { GoalRow } from '@/components/goal-row';
 import { ObjectiveRow } from '@/components/objective-row';
 import { BOOST_MULTIPLIER, CLASSES, isObjectiveDone } from '@/game';
@@ -46,7 +46,8 @@ export default function ObjectivesScreen() {
   const claim = (o: ObjectiveView) => {
     const reward = claimObjective(o.id, today);
     if (!reward) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (reward.big) haptics.celebrate();
+    else haptics.success();
     Alert.alert(reward.title, reward.detail);
   };
 
@@ -69,7 +70,7 @@ export default function ObjectivesScreen() {
               accessibilityState={{ selected }}
               accessibilityLabel={count ? `${c.label}, ${count} to claim` : c.label}
               onPress={() => {
-                if (!selected) Haptics.selectionAsync();
+                if (!selected) haptics.select();
                 setCategory(c.key);
               }}
               style={[styles.menuItem, selected && styles.menuItemSelected]}>
@@ -103,7 +104,10 @@ export default function ObjectivesScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="New goal"
-              onPress={() => router.push('/goal-editor')}
+              onPress={() => {
+                haptics.tap();
+                router.push('/goal-editor');
+              }}
               style={({ pressed }) => [styles.add, pressed && { opacity: 0.7 }]}>
               <SymbolView name="plus" tintColor={colors.background} size={18} weight="bold" />
             </Pressable>
@@ -119,7 +123,16 @@ export default function ObjectivesScreen() {
           ) : (
             <View style={styles.list}>
               {[...open, ...finished].map((g) => (
-                <GoalRow key={g.id} goal={g} today={today} onToggle={() => toggleGoal(g.id, today)} />
+                <GoalRow
+                  key={g.id}
+                  goal={g}
+                  today={today}
+                  onToggle={() => {
+                    if (g.completedAt) haptics.select();
+                    else haptics.success();
+                    toggleGoal(g.id, today);
+                  }}
+                />
               ))}
             </View>
           )

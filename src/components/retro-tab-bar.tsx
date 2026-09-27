@@ -1,9 +1,9 @@
-import * as Haptics from 'expo-haptics';
 import type { TabTriggerSlotProps } from 'expo-router/ui';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { forwardRef } from 'react';
 import { Pressable, StyleSheet, View, type View as ViewType } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { colors, spacing } from '@/theme';
 
 type Props = TabTriggerSlotProps & {
@@ -28,7 +28,7 @@ export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButto
       ref={ref}
       {...props}
       onPress={(e) => {
-        if (!isFocused) Haptics.selectionAsync();
+        if (!isFocused) haptics.select();
         onPress?.(e);
       }}
       accessibilityRole="tab"

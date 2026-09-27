@@ -4,8 +4,9 @@ import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
+import { ClassChips } from '@/components/class-chips';
 import { ModalHeader } from '@/components/modal-header';
-import { CLASSES, DIMENSIONS, addDays, toDateKey, type Dimension } from '@/game';
+import { CLASSES, addDays, toDateKey, type Dimension } from '@/game';
 import { useGameStore } from '@/store';
 import { useGoals, useToday } from '@/store/hooks';
 import { GOAL_XP } from '@/store/rewards';
@@ -77,23 +78,7 @@ export default function GoalEditor() {
         />
 
         <Text style={styles.label}>Path (optional)</Text>
-        <View style={styles.classes}>
-          {DIMENSIONS.map((d) => {
-            const c = CLASSES[d];
-            const selected = d === dimension;
-            return (
-              <Pressable
-                key={d}
-                accessibilityRole="radio"
-                accessibilityState={{ selected }}
-                onPress={() => setDimension(selected ? undefined : d)}
-                style={[styles.classChip, selected && { borderColor: c.color, backgroundColor: colors.cardRaised }]}>
-                <SymbolView name={c.symbol} tintColor={c.color} size={18} />
-                <Text style={[styles.classChipText, selected && { color: c.color }]}>{c.className}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <ClassChips value={dimension} onChange={setDimension} optional />
         <Text style={styles.hint}>
           {dimension
             ? `Finishing it earns ${GOAL_XP} ${CLASSES[dimension].className} XP. Tap again to clear.`
@@ -136,16 +121,6 @@ const styles = StyleSheet.create({
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl * 2 },
   label: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.sm },
   input: { ...windowStyle, color: colors.text, fontFamily: fonts.regular, fontSize: 17, padding: spacing.lg },
-  classes: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  classChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    ...windowStyle,
-  },
-  classChipText: { color: colors.text, fontSize: 20, fontFamily: fonts.semibold },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   dueRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   delete: {

@@ -3,9 +3,10 @@ import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { ClassChips } from '@/components/class-chips';
 import { ModalHeader } from '@/components/modal-header';
 import { Segmented } from '@/components/segmented';
-import { CLASSES, DAILY, DIMENSIONS, WEEKDAYS, scheduleKind, type Dimension, type ScheduleKind } from '@/game';
+import { CLASSES, DAILY, WEEKDAYS, scheduleKind, type Dimension, type ScheduleKind } from '@/game';
 import { useGameStore } from '@/store';
 import { usePlayer, useQuest } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
@@ -96,23 +97,7 @@ export default function QuestEditor() {
         />
 
         <Text style={styles.label}>Class</Text>
-        <View style={styles.classes}>
-          {DIMENSIONS.map((d) => {
-            const c = CLASSES[d];
-            const selected = d === dimension;
-            return (
-              <Pressable
-                key={d}
-                accessibilityRole="radio"
-                accessibilityState={{ selected }}
-                onPress={() => setDimension(d)}
-                style={[styles.classChip, selected && { borderColor: c.color, backgroundColor: colors.cardRaised }]}>
-                <SymbolView name={c.symbol} tintColor={c.color} size={18} />
-                <Text style={[styles.classChipText, selected && { color: c.color }]}>{c.className}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <ClassChips value={dimension} onChange={(d) => d && setDimension(d)} />
         <Text style={styles.hint}>{info.growth}</Text>
 
         <Text style={styles.label}>Repeat</Text>
@@ -157,16 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     padding: spacing.lg,
   },
-  classes: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  classChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    ...windowStyle,
-  },
-  classChipText: { color: colors.text, fontSize: 20, fontFamily: fonts.semibold },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   days: { flexDirection: 'row', justifyContent: 'space-between' },
   day: {

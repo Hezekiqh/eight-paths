@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import type { ClassInfo } from '@/game';
+import { haptics } from '@/haptics';
 import { colors, fonts, spacing } from '@/theme';
 
 /** Section header naming a class; tapping it opens the class sheet. */
@@ -11,7 +12,10 @@ export function ClassHeader({ info }: { info: ClassInfo }) {
     <Pressable
       accessibilityRole="button"
       accessibilityHint={`About the ${info.className} class`}
-      onPress={() => router.push(`/class/${info.dimension}`)}
+      onPress={() => {
+        haptics.tap();
+        router.push(`/class/${info.dimension}`);
+      }}
       style={({ pressed }) => [styles.header, pressed && { opacity: 0.6 }]}>
       <SymbolView name={info.symbol} tintColor={info.color} size={16} />
       <Text style={[styles.title, { color: info.color }]}>{info.className.toUpperCase()}</Text>

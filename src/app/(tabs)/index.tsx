@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CharacterPortrait } from '@/components/character-portrait';
 import { CollectionGrid } from '@/components/collection-grid';
@@ -21,6 +21,7 @@ import {
   useToday,
 } from '@/store/hooks';
 import type { CollectionEntry, DimensionStats } from '@/store/selectors';
+import { haptics } from '@/haptics';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 function ClassProgressRow({ stats, member }: { stats: DimensionStats; member: CollectionEntry }) {
@@ -36,7 +37,10 @@ function ClassProgressRow({ stats, member }: { stats: DimensionStats; member: Co
     <Pressable
       accessibilityRole="button"
       accessibilityHint={`About ${companion.name}`}
-      onPress={() => router.push(`/companion/${companion.id}`)}
+      onPress={() => {
+        haptics.tap();
+        router.push(`/companion/${companion.id}`);
+      }}
       style={({ pressed }) => [styles.classRow, pressed && { backgroundColor: colors.cardRaised }]}>
       <View style={[styles.classRowInner, { opacity }]}>
         <View style={styles.portrait}>
@@ -86,6 +90,7 @@ export default function CharacterScreen() {
   const stats = useDimensionStats(today);
   const collection = useCollection();
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
+  const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const exportSave = useGameStore((s) => s.exportSave);
 
   const shareBackup = () => {
@@ -172,6 +177,23 @@ export default function CharacterScreen() {
                 setNotificationTime(formatTime(date.getHours(), date.getMinutes()));
                 ensureReminderPermission();
               }}
+            />
+          }
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="iphone.radiowaves.left.and.right"
+          iconColor={classInfo.color}
+          title="Vibration"
+          subtitle="Taps, typing and level-ups"
+          accessory={
+            <Switch
+              value={player.hapticsEnabled}
+              onValueChange={(on) => {
+                setHapticsEnabled(on);
+                if (on) haptics.success();
+              }}
+              trackColor={{ true: classInfo.color }}
             />
           }
         />

@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { NoteBox } from '@/components/note-box';
 import type { ClassInfo } from '@/game';
 import { colors, fonts, radius, spacing } from '@/theme';
 
@@ -22,10 +23,9 @@ export function ClassLore({ info, compact }: Props) {
         </View>
       </View>
       <Text style={styles.lore}>{info.lore}</Text>
-      <View style={[styles.growth, { borderColor: info.color }]}>
-        <SymbolView name="arrow.up.circle.fill" tintColor={info.color} size={18} />
-        <Text style={styles.growthText}>{info.growth}</Text>
-      </View>
+      <NoteBox symbol="arrow.up.circle.fill" color={info.color}>
+        {info.growth}
+      </NoteBox>
     </View>
   );
 }
@@ -47,14 +47,4 @@ const styles = StyleSheet.create({
   classNameCompact: { fontSize: 29 },
   epithet: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, fontStyle: 'italic', letterSpacing: 0.3 },
   lore: { color: colors.text, fontFamily: fonts.regular, fontSize: 16, lineHeight: 23 },
-  growth: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'flex-start',
-    backgroundColor: colors.cardRaised,
-    borderLeftWidth: 3,
-    borderRadius: radius.sm,
-    padding: spacing.md,
-  },
-  growthText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
 });

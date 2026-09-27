@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { haptics } from '@/haptics';
 import { colors, fonts, spacing } from '@/theme';
 
 type Props = {
@@ -30,7 +31,10 @@ export function SettingsRow({ icon, iconColor = colors.textMuted, title, subtitl
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={onPress}
+      onPress={() => {
+        haptics.tap();
+        onPress();
+      }}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.cardRaised }]}>
       {content}
     </Pressable>
