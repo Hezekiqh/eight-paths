@@ -5,12 +5,14 @@ import { useShallow } from 'zustand/react/shallow';
 import { msUntilNextMidnight, toDateKey, type RadarFilter } from '@/game';
 import { syncReminders } from '@/notifications';
 
-import { useGameStore, type GameData } from './index';
+import { pickData, useGameStore, type GameData } from './index';
 import {
   selectAllQuestGroups,
   selectClassInfo,
+  selectCollection,
+  selectObjectives,
   selectDimensionStats,
-  selectHistory,
+  selectCalendar,
   selectMilestones,
   selectMonthComparison,
   selectOverallProgress,
@@ -51,13 +53,7 @@ export function useToday(): string {
 
 function useGameData(): GameData {
   return useGameStore(
-    useShallow(({ player, quests, completions, restDays, lastSettledDate }) => ({
-      player,
-      quests,
-      completions,
-      restDays,
-      lastSettledDate,
-    })),
+    useShallow(pickData),
   );
 }
 
@@ -67,6 +63,18 @@ export function useClassInfo() {
   const data = useGameData();
   return useMemo(() => selectClassInfo(data), [data]);
 }
+
+export function useCollection() {
+  const data = useGameData();
+  return useMemo(() => selectCollection(data), [data]);
+}
+
+export function useObjectives(today: string) {
+  const data = useGameData();
+  return useMemo(() => selectObjectives(data, today), [data, today]);
+}
+
+export const useGoals = () => useGameStore((s) => s.goals);
 
 export function useDimensionStats(today: string) {
   const data = useGameData();
@@ -93,9 +101,9 @@ export function useMonthComparison(today: string) {
   return useMemo(() => selectMonthComparison(data, today), [data, today]);
 }
 
-export function useHistory(today: string, weeks: number) {
+export function useCalendar(month: string, today: string) {
   const data = useGameData();
-  return useMemo(() => selectHistory(data, today, weeks), [data, today, weeks]);
+  return useMemo(() => selectCalendar(data, month, today), [data, month, today]);
 }
 
 export function useMilestones() {

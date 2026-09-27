@@ -1,6 +1,8 @@
 import { useGameStore, initialData } from '../index';
 import {
   selectAllQuestGroups,
+  selectCollection,
+  selectObjectives,
   selectDimensionStats,
   selectOverallProgress,
   selectTodayQuestGroups,
@@ -180,5 +182,97 @@ describe('loading a saved game', () => {
     expect(s.player?.name).toBe('Ada');
     expect(s.completions).toHaveLength(1);
     expect(s.restDays).toEqual([]);
+  });
+
+  it('levels whoever is in the party, and only lets unlocked characters join', () => {
+    start();
+    const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
+    useGameStore.getState().toggleQuest(read.id, today);
+    expect(useGameStore.getState().completions.at(-1)?.characterId).toBe('quill');
+
+    // Ottilie needs Mage Path Lv 10; a new player is Lv 5.
+    expect(useGameStore.getState().swapCharacter('ottilie')).toBe(false);
+    expect(useGameStore.getState().party.intellectual).toBe('quill');
+
+    const early = useGameStore.getState().completions.filter((c) => c.dimension === 'intellectual');
+    useGameStore.setState({
+      completions: [...early, ...Array.from({ length: 30 }, (_, i) => ({ ...early[0], id: `x${i}`, xp: 13 }))],
+    });
+    expect(useGameStore.getState().swapCharacter('ottilie')).toBe(true);
+
+    const tomorrow = '2026-09-27';
+    useGameStore.getState().toggleQuest(read.id, tomorrow);
+    const collection = selectCollection(useGameStore.getState());
+    const xpOf = (id: string) => collection.entries.find((e) => e.companion.id === id)!;
+    expect(collection.party.intellectual.companion.id).toBe('ottilie');
+    expect(xpOf('ottilie').progress).toMatchObject({ level: 5, xpIntoLevel: 13 });
+    expect(xpOf('quill').progress.level).toBeGreaterThan(9);
+  });
+
+  it('claims a finished objective once, and a boost doubles that Path for the day', () => {
+    start();
+    const { quests } = useGameStore.getState();
+    const read = quests.find((q) => q.title === 'Read 20 min')!;
+    const move = quests.find((q) => q.title === 'Move 30 min')!;
+    const objectives = () => selectObjectives(useGameStore.getState(), today);
+
+    const path = objectives().daily.find((o) => o.reward.kind === 'boost')!;
+    expect(useGameStore.getState().claimObjective(path.id, today)).toBeNull(); // not done yet
+
+    const first = path.dimension === 'physical' ? move : read;
+    useGameStore.getState().toggleQuest(first.id, today);
+    expect(objectives().unclaimed).toBeGreaterThan(0);
+    const reward = useGameStore.getState().claimObjective(path.id, today)!;
+    expect(reward.title).toMatch(/2× (Warrior|Mage) XP/);
+    expect(useGameStore.getState().claimObjective(path.id, today)).toBeNull(); // already claimed
+    expect(objectives().boosted).toEqual([path.dimension]);
+
+    // Undo and redo: the boost now doubles it.
+    const normal = useGameStore.getState().completions.at(-1)!.xp;
+    useGameStore.getState().toggleQuest(first.id, today);
+    useGameStore.getState().toggleQuest(first.id, today);
+    expect(useGameStore.getState().completions.at(-1)!.xp).toBe(normal * 2);
+  });
+
+  it('gives a grace day, or bonus XP when tokens are full', () => {
+    start();
+    const move = useGameStore.getState().quests.find((q) => q.title === 'Move 30 min')!;
+    const days = ['2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25'];
+    for (const d of days) useGameStore.getState().toggleQuest(move.id, d);
+    const grace = selectObjectives(useGameStore.getState(), today).weekly[0];
+    expect(grace.progress).toBe(5);
+
+    useGameStore.setState((s) => ({ player: { ...s.player!, restTokens: 3 } }));
+    const reward = useGameStore.getState().claimObjective(grace.id, today)!;
+    expect(reward.title).toMatch(/XP/);
+    expect(useGameStore.getState().xpGrants).toHaveLength(1);
+    expect(useGameStore.getState().player!.restTokens).toBe(3);
+  });
+
+  it('unlocks a character early with enough shards', () => {
+    start();
+    expect(useGameStore.getState().swapCharacter('dessa')).toBe(false);
+    useGameStore.setState({ shards: { dessa: 3 } });
+    expect(useGameStore.getState().swapCharacter('dessa')).toBe(true);
+    expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(9);
+  });
+
+  it('awards goal XP to the Path and takes it back when undone', () => {
+    start();
+    const { addGoal, toggleGoal } = useGameStore.getState();
+    addGoal({ title: '  Run a 5K ', dimension: 'physical' });
+    addGoal({ title: 'Call Mum' });
+    const [run, call] = useGameStore.getState().goals;
+    expect(run.title).toBe('Run a 5K');
+
+    toggleGoal(run.id, today);
+    toggleGoal(call.id, today);
+    const physical = () => selectDimensionStats(useGameStore.getState(), today).find((d) => d.dimension === 'physical')!;
+    expect(physical().xp).toBe(25);
+    expect(useGameStore.getState().xpGrants).toHaveLength(1);
+
+    toggleGoal(run.id, today);
+    expect(physical().xp).toBe(0);
+    expect(useGameStore.getState().goals[0].completedAt).toBeUndefined();
   });
 });

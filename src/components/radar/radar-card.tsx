@@ -55,5 +55,5 @@ export function RadarCard({ today, classInfo }: Props) {
 const styles = StyleSheet.create({
   card: { gap: spacing.sm, marginBottom: spacing.md },
   chart: { alignItems: 'center' },
-  caption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center' },
+  caption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'center' },
 });

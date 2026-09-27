@@ -71,5 +71,5 @@ const styles = StyleSheet.create({
   side: { gap: spacing.sm },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statValue: { color: colors.text, fontSize: 21, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
-  statLabel: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
+  statLabel: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
 });

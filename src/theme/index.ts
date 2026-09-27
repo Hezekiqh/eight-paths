@@ -17,7 +17,8 @@ export const colors = {
   gold: '#F2C14E',
   text: '#F3ECDD',
   textMuted: '#A79FBC',
-  textFaint: '#5E5775',
+  /** Still passes contrast (5.2:1 on cards) so faint text stays readable. */
+  textFaint: '#8A82A3',
   danger: '#FF5C6C',
 } as const;
 
@@ -39,16 +40,18 @@ export const radius = {
 } as const;
 
 /**
- * Loaded in the root layout; use these instead of fontWeight. Body text is
- * DotGothic16 (a dot-matrix JRPG face); headings, titles and numbers are
- * Jersey 10, whose digits stay readable at every size. Jersey runs small, so
- * its sizes are about 1.3× what a system font would use.
+ * Pixel faces for flavour, the system font for reading. Headings, titles and
+ * numbers are Jersey 10, whose digits stay readable at every size (it runs
+ * small, so its sizes are about 1.3× a system font's). Body text is SF Pro:
+ * pixel fonts blur below their native size. DotGothic16 is kept for dialogue
+ * boxes, only ever at 16 (its pixel grid) and never italic.
  */
 export const fonts = {
-  regular: 'DotGothic16_400Regular',
-  medium: 'DotGothic16_400Regular',
+  regular: 'System',
+  medium: 'System',
   semibold: 'Jersey10_400Regular',
   bold: 'Jersey10_400Regular',
+  dialogue: 'DotGothic16_400Regular',
 } as const;
 
 /** Frame thickness for windows and buttons. */

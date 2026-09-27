@@ -1,4 +1,6 @@
-import { migrateSave, sanitizeSave, type Migration } from '../migrations';
+import { DEFAULT_PARTY } from '@/story/companions';
+
+import { MIGRATIONS, migrateSave, sanitizeSave, type Migration } from '../migrations';
 
 const player = {
   name: 'Ada',
@@ -16,13 +18,31 @@ const quest = {
   active: true,
   createdAt: '2026-09-01T12:00:00.000Z',
 };
-const completion = { id: 'c1', questId: 'q1', dimension: 'intellectual', date: '2026-09-02', xp: 13 };
+const completion = {
+  id: 'c1',
+  questId: 'q1',
+  dimension: 'intellectual',
+  date: '2026-09-02',
+  xp: 13,
+  characterId: 'quill',
+};
 const valid = {
   player,
   quests: [quest],
   completions: [completion],
   restDays: [{ date: '2026-09-03', dimension: 'all' }],
   lastSettledDate: '2026-09-03',
+  party: { ...DEFAULT_PARTY, intellectual: 'ottilie' },
+  xpGrants: [
+    { id: 'g1', date: '2026-09-02', dimension: 'physical', xp: 20, characterId: 'brannoc', source: 'drop' },
+  ],
+  boosts: [{ date: '2026-09-03', dimension: 'intellectual' }],
+  shards: { thane: 2 },
+  claimed: ['daily:2026-09-03:show-up'],
+  goals: [
+    { id: 'goal1', title: 'Run a 5K', dimension: 'physical', dueDate: '2026-12-01', createdAt: '2026-09-01' },
+    { id: 'goal2', title: 'Call Mum', createdAt: '2026-09-01', completedAt: '2026-09-02' },
+  ],
 };
 
 describe('sanitizeSave', () => {
@@ -38,6 +58,12 @@ describe('sanitizeSave', () => {
         completions: [],
         restDays: [],
         lastSettledDate: null,
+        party: DEFAULT_PARTY,
+        xpGrants: [],
+        boosts: [],
+        shards: {},
+        claimed: [],
+        goals: [],
       });
     }
   });
@@ -89,6 +115,23 @@ describe('migrateSave', () => {
     const from2 = migrateSave(valid, 2, steps, 3);
     expect(from2.lastSettledDate).toBe('2026-09-03');
     expect(from2.quests).toEqual([]);
+  });
+
+  it('upgrades a v1 save: core companions hold every slot and get credit for past XP', () => {
+    const { party: _, ...v1 } = valid;
+    const upgraded = migrateSave(
+      { ...v1, completions: [{ ...completion, characterId: undefined }] },
+      1,
+      MIGRATIONS,
+      2,
+    );
+    expect(upgraded.party).toEqual(DEFAULT_PARTY);
+    expect(upgraded.completions[0].characterId).toBe('quill');
+  });
+
+  it('keeps each party slot on its own Path', () => {
+    const party = sanitizeSave({ ...valid, party: { intellectual: 'brannoc', physical: 'dessa', social: 'nobody' } }).party;
+    expect(party).toEqual({ ...DEFAULT_PARTY, physical: 'dessa' });
   });
 
   it('keeps what it understands from a newer save', () => {

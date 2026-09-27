@@ -5,6 +5,13 @@ import {
   TUTORIAL_QUEST_ID,
   addDays,
   completionFor,
+  monthName,
+  monthOf,
+  monthWeeks,
+  dailyObjectives,
+  isObjectiveDone,
+  weeklyObjectives,
+  type Objective,
   consistencyWindows,
   daysShownUp,
   nextMilestone,
@@ -29,8 +36,51 @@ import {
   type RadarData,
   type RadarFilter,
 } from '@/game';
+import { DEFAULT_PARTY, ROSTER, isUnlocked, type CharacterId, type Companion } from '@/story/companions';
 
 import type { GameData } from './index';
+
+export type CollectionEntry = {
+  companion: Companion;
+  unlocked: boolean;
+  inParty: boolean;
+  /** The character's own level: XP earned on their Path while in the party. */
+  progress: LevelProgress;
+  /** The level of the Path they walk, which is what unlocks them. */
+  pathLevel: number;
+  /** Shards found toward unlocking them early. */
+  shards: number;
+};
+
+export type Collection = {
+  /** Everyone, in collection order. */
+  entries: CollectionEntry[];
+  party: Record<Dimension, CollectionEntry>;
+  unlockedCount: number;
+};
+
+export function selectCollection(data: GameData): Collection {
+  const pathXp = xpByDimension(allXp(data));
+  const earned = new Map<string, number>();
+  for (const c of allXp(data)) {
+    const id = c.characterId ?? DEFAULT_PARTY[c.dimension];
+    earned.set(id, (earned.get(id) ?? 0) + c.xp);
+  }
+  const entries = ROSTER.map((companion) => ({
+    companion,
+    unlocked: isUnlocked(companion, pathXp[companion.dimension], data.shards[companion.id]),
+    shards: data.shards[companion.id] ?? 0,
+    inParty: data.party[companion.dimension] === companion.id,
+    progress: levelFromXp(earned.get(companion.id) ?? 0),
+    pathLevel: levelFromXp(pathXp[companion.dimension]).level,
+  }));
+  const byId = new Map<CharacterId, CollectionEntry>(entries.map((e) => [e.companion.id, e]));
+  return {
+    entries,
+    party: Object.fromEntries(DIMENSIONS.map((d) => [d, byId.get(data.party[d])!])) as Record<Dimension, CollectionEntry>,
+    unlockedCount: entries.filter((e) => e.unlocked).length,
+  };
+}
 
 export type DimensionStats = {
   dimension: Dimension;
@@ -51,8 +101,11 @@ export type QuestView = {
   schedule: string;
 };
 
+/** Everything that counts toward levels: quest completions plus bonus XP. */
+const allXp = (data: GameData) => [...data.completions, ...data.xpGrants];
+
 export function selectDimensionStats(data: GameData, today: string): DimensionStats[] {
-  const xp = xpByDimension(data.completions);
+  const xp = xpByDimension(allXp(data));
   const since = data.player?.onboardedAt ?? today;
   const opacity = dimOpacityByDimension(data.quests, data.completions, data.restDays, today);
   return DIMENSIONS.map((dimension) => ({
@@ -107,28 +160,57 @@ export function selectMonthComparison(data: GameData, today: string): WindowComp
   };
 }
 
-export type HistoryDay = {
+export type CalendarDay = {
   date: string;
+  /** Day of the month, 1–31. */
+  day: number;
   count: number;
   rest: boolean;
-  /** After today, or before the game started. */
+  /** After today, or before the game started: nothing could happen then. */
   outside: boolean;
 };
 
-/** `weeks` full weeks (Sunday to Saturday) ending with the current one. */
-export function selectHistory(data: GameData, today: string, weeks: number): HistoryDay[][] {
+export type CalendarMonth = {
+  month: string;
+  title: string;
+  /** Sunday-first rows; null pads the days of neighbouring months. */
+  weeks: (CalendarDay | null)[][];
+  /** Days shown up this month, out of the days that have happened since starting. */
+  shownUp: number;
+  possible: number;
+  /** The first month with any play, so the calendar knows where to stop. */
+  firstMonth: string;
+  currentMonth: string;
+};
+
+export function selectCalendar(data: GameData, month: string, today: string): CalendarMonth {
   const counts = new Map<string, number>();
   for (const c of data.completions) counts.set(c.date, (counts.get(c.date) ?? 0) + 1);
   const rest = restDaySet(data.restDays);
   const since = data.completions.reduce((min, c) => (c.date < min ? c.date : min), data.player?.onboardedAt ?? today);
-  const weekday = new Date(`${today}T12:00:00`).getDay();
-  const firstSunday = addDays(today, -weekday - 7 * (weeks - 1));
-  return Array.from({ length: weeks }, (_, w) =>
-    Array.from({ length: 7 }, (_, d) => {
-      const date = addDays(firstSunday, w * 7 + d);
-      return { date, count: counts.get(date) ?? 0, rest: rest.has(date), outside: date > today || date < since };
-    }),
+  const weeks = monthWeeks(month).map((week) =>
+    week.map((date) =>
+      date
+        ? {
+            date,
+            day: Number(date.slice(8)),
+            count: counts.get(date) ?? 0,
+            rest: rest.has(date),
+            outside: date > today || date < since,
+          }
+        : null,
+    ),
   );
+  const days = weeks.flat().filter((d): d is CalendarDay => d !== null && !d.outside);
+  return {
+    month,
+    title: monthName(month),
+    weeks,
+    shownUp: days.filter((d) => d.count > 0).length,
+    possible: days.length,
+    firstMonth: monthOf(since),
+    currentMonth: monthOf(today),
+  };
 }
 
 export type MilestoneView = { days: number; reached: boolean };
@@ -140,7 +222,7 @@ export function selectMilestones(data: GameData): MilestoneView[] {
 }
 
 export function selectOverallProgress(data: GameData): LevelProgress {
-  return overallLevelFromXp(totalXp(data.completions));
+  return overallLevelFromXp(totalXp(allXp(data)));
 }
 
 function toQuestView(data: GameData, quest: Quest, today: string): QuestView {
@@ -196,4 +278,29 @@ export function selectQuest(data: GameData, id: string | undefined): Quest | nul
 
 export function selectPlayedToday(data: GameData, today: string): boolean {
   return data.completions.some((c) => c.date === today);
+}
+
+export type ObjectiveView = Objective & { claimed: boolean };
+
+export type Objectives = {
+  daily: ObjectiveView[];
+  weekly: ObjectiveView[];
+  /** Finished but not yet claimed, for the tab badge. */
+  unclaimed: number;
+  /** Paths with double XP for the rest of today. */
+  boosted: Dimension[];
+};
+
+export function selectObjectives(data: GameData, today: string): Objectives {
+  const view = (o: Objective): ObjectiveView => ({ ...o, claimed: data.claimed.includes(o.id) });
+  const daily = data.player
+    ? dailyObjectives(data.quests, data.completions, today, data.player.classDimension).map(view)
+    : [];
+  const weekly = data.player ? weeklyObjectives(data.quests, data.completions, today).map(view) : [];
+  return {
+    daily,
+    weekly,
+    unclaimed: [...daily, ...weekly].filter((o) => isObjectiveDone(o) && !o.claimed).length,
+    boosted: data.boosts.filter((b) => b.date === today).map((b) => b.dimension),
+  };
 }

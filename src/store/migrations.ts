@@ -3,12 +3,17 @@ import {
   MAX_REST_TOKENS,
   formatTime,
   parseTime,
+  type Boost,
   type Completion,
   type Dimension,
+  type Goal,
+  type XpGrant,
   type Player,
   type Quest,
   type RestDay,
 } from '@/game';
+
+import { COMPANIONS, DEFAULT_PARTY, isCharacterId, type CharacterId } from '@/story/companions';
 
 import type { GameData } from './index';
 
@@ -16,13 +21,19 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 3;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
 
 /** Keyed by the version being migrated FROM: `1: (v1) => v2`. */
-export const MIGRATIONS: Record<number, Migration> = {};
+export const MIGRATIONS: Record<number, Migration> = {
+  // v2 adds the party. Everything earned so far was earned with the core
+  // companions: sanitizeSave credits them on completions with no character.
+  1: (save) => ({ ...save, party: DEFAULT_PARTY }),
+  // v3 adds objectives, goals, shards and bonus XP; all start empty.
+  2: (save) => save,
+};
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -75,7 +86,75 @@ function cleanCompletion(raw: unknown): Completion | null {
   ) {
     return null;
   }
-  return { id: raw.id, questId: raw.questId, dimension: raw.dimension, date: raw.date, xp: raw.xp };
+  return {
+    id: raw.id,
+    questId: raw.questId,
+    dimension: raw.dimension,
+    date: raw.date,
+    xp: raw.xp,
+    // Unknown or missing: credit the core companion, who held every slot first.
+    characterId: isCharacterId(raw.characterId) ? raw.characterId : DEFAULT_PARTY[raw.dimension],
+  };
+}
+
+/** A character only stands on their own Path; anything else falls back to the core companion. */
+function cleanParty(raw: unknown): Record<Dimension, CharacterId> {
+  const save = isObject(raw) ? raw : {};
+  return Object.fromEntries(
+    DIMENSIONS.map((d) => {
+      const id = save[d];
+      return [d, isCharacterId(id) && COMPANIONS[id].dimension === d ? id : DEFAULT_PARTY[d]];
+    }),
+  ) as Record<Dimension, CharacterId>;
+}
+
+function cleanGrant(raw: unknown): XpGrant | null {
+  if (
+    !isObject(raw) ||
+    typeof raw.id !== 'string' ||
+    !isDateKey(raw.date) ||
+    !isDimension(raw.dimension) ||
+    typeof raw.xp !== 'number' ||
+    !Number.isFinite(raw.xp) ||
+    raw.xp < 0 ||
+    (raw.source !== 'drop' && raw.source !== 'goal')
+  ) {
+    return null;
+  }
+  return {
+    id: raw.id,
+    date: raw.date,
+    dimension: raw.dimension,
+    xp: raw.xp,
+    characterId: isCharacterId(raw.characterId) ? raw.characterId : DEFAULT_PARTY[raw.dimension],
+    source: raw.source,
+  };
+}
+
+function cleanBoost(raw: unknown): Boost | null {
+  if (!isObject(raw) || !isDateKey(raw.date) || !isDimension(raw.dimension)) return null;
+  return { date: raw.date, dimension: raw.dimension };
+}
+
+function cleanGoal(raw: unknown): Goal | null {
+  if (!isObject(raw) || typeof raw.id !== 'string' || typeof raw.title !== 'string') return null;
+  return {
+    id: raw.id,
+    title: raw.title,
+    ...(isDimension(raw.dimension) ? { dimension: raw.dimension } : {}),
+    ...(isDateKey(raw.dueDate) ? { dueDate: raw.dueDate } : {}),
+    createdAt: isDateKey(raw.createdAt) ? raw.createdAt : '1970-01-01',
+    ...(isDateKey(raw.completedAt) ? { completedAt: raw.completedAt } : {}),
+  };
+}
+
+function cleanShards(raw: unknown): Partial<Record<CharacterId, number>> {
+  if (!isObject(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw).filter(
+      ([id, n]) => isCharacterId(id) && typeof n === 'number' && Number.isInteger(n) && n > 0,
+    ),
+  );
 }
 
 function cleanRestDay(raw: unknown): RestDay | null {
@@ -100,6 +179,12 @@ export function sanitizeSave(raw: unknown): GameData {
     completions: keep(asArray(save.completions), cleanCompletion),
     restDays: keep(asArray(save.restDays), cleanRestDay),
     lastSettledDate: isDateKey(save.lastSettledDate) ? save.lastSettledDate : null,
+    party: cleanParty(save.party),
+    xpGrants: keep(asArray(save.xpGrants), cleanGrant),
+    boosts: keep(asArray(save.boosts), cleanBoost),
+    shards: cleanShards(save.shards),
+    claimed: asArray(save.claimed).filter((c): c is string => typeof c === 'string'),
+    goals: keep(asArray(save.goals), cleanGoal),
   };
 }
 

@@ -1,35 +1,27 @@
 import { SymbolView } from 'expo-symbols';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import { ActivityCalendar } from '@/components/activity-calendar';
 import { describeChange, formatRate } from '@/components/progress-strip';
 import { Screen } from '@/components/screen';
 import type { Consistency } from '@/game';
 import {
   useClassInfo,
-  useHistory,
   useMilestones,
   useMonthComparison,
   useProgressSummary,
   useToday,
 } from '@/store/hooks';
-import type { HistoryDay } from '@/store/selectors';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
-const WEEKS = 17;
-const CELL_GAP = 4;
+/** Milestone badges per row, so rows line up as a grid. */
+const BADGE_COLUMNS = 7;
 
-/** Class colour at an opacity that grows with how much was done that day. */
-function cellColor(day: HistoryDay, color: string): string {
-  if (day.outside) return 'transparent';
-  if (day.count === 0) return colors.cardRaised;
-  if (day.count === 1) return `${color}59`;
-  if (day.count <= 3) return `${color}A6`;
-  return color;
-}
+type TileProps = { label: string; value: string; detail?: string | null; width: number };
 
-function Tile({ label, value, detail }: { label: string; value: string; detail?: string | null }) {
+function Tile({ label, value, detail, width }: TileProps) {
   return (
-    <View style={styles.tile}>
+    <View style={[styles.tile, { width }]}>
       <Text style={styles.tileLabel}>{label}</Text>
       <Text style={styles.tileValue}>{value}</Text>
       {detail ? <Text style={styles.tileDetail}>{detail}</Text> : null}
@@ -55,13 +47,13 @@ export default function JourneyScreen() {
   const classInfo = useClassInfo();
   const summary = useProgressSummary(today);
   const month = useMonthComparison(today);
-  const history = useHistory(today, WEEKS);
   const milestones = useMilestones();
   const { width } = useWindowDimensions();
 
   if (!classInfo) return null;
   const color = classInfo.color;
-  const cell = Math.floor((Math.min(width, 440) - spacing.lg * 4 - CELL_GAP * (WEEKS - 1)) / WEEKS);
+  // Two tiles a row, sized exactly: flex sizing let long tiles push past the screen edge.
+  const tile = Math.floor((width - spacing.lg * 2 - spacing.sm) / 2);
   const next = milestones.find((m) => !m.reached);
 
   return (
@@ -72,55 +64,30 @@ export default function JourneyScreen() {
 
       <View style={styles.tiles}>
         <Tile
+          width={tile}
           label="DAYS SHOWN UP"
           value={String(summary.daysShownUp)}
           detail={summary.nextMilestone ? `Next milestone: ${summary.nextMilestone}` : 'Every milestone reached'}
         />
-        <Tile label="SHOWING-UP STREAK" value={`${summary.showUp.current}`} detail={`Best ever: ${summary.showUp.best}`} />
+        <Tile width={tile} label="STREAK" value={`${summary.showUp.current}`} detail={`Best ever: ${summary.showUp.best}`} />
+      </View>
+      <View style={styles.tiles}>
         <Tile
+          width={tile}
           label="THIS WEEK"
           value={rate(summary.week.current)}
           detail={describeChange(summary.week.current, summary.week.previous, 'week')}
         />
         <Tile
+          width={tile}
           label="THIS MONTH"
           value={rate(summary.month.current)}
           detail={describeChange(summary.month.current, summary.month.previous, 'month')}
         />
       </View>
 
-      <Text style={styles.section}>LAST {WEEKS} WEEKS</Text>
-      <View style={styles.card}>
-        <View style={[styles.heatmap, { gap: CELL_GAP }]}>
-          {history.map((week) => (
-            <View key={week[0].date} style={{ gap: CELL_GAP }}>
-              {week.map((day) => (
-                <View
-                  key={day.date}
-                  accessibilityLabel={`${day.date}: ${day.count} completed${day.rest ? ', rest day' : ''}`}
-                  style={[
-                    { width: cell, height: cell, borderRadius: 3, backgroundColor: cellColor(day, color) },
-                    day.rest && { borderWidth: 1.5, borderColor: color },
-                    day.date === today && { borderWidth: 1.5, borderColor: colors.text },
-                  ]}
-                />
-              ))}
-            </View>
-          ))}
-        </View>
-        <View style={styles.legend}>
-          <Text style={styles.legendText}>Less</Text>
-          {[0, 1, 2, 4].map((count) => (
-            <View
-              key={count}
-              style={[styles.legendCell, { backgroundColor: cellColor({ date: '', count, rest: false, outside: false }, color) }]}
-            />
-          ))}
-          <Text style={styles.legendText}>More</Text>
-          <View style={[styles.legendCell, styles.legendRest, { borderColor: color }]} />
-          <Text style={styles.legendText}>Rest day</Text>
-        </View>
-      </View>
+      <Text style={styles.section}>CALENDAR</Text>
+      <ActivityCalendar today={today} color={color} />
 
       <Text style={styles.section}>LAST 30 DAYS VS THE 30 BEFORE</Text>
       <View style={styles.card}>
@@ -133,10 +100,10 @@ export default function JourneyScreen() {
       <View style={styles.card}>
         <View style={styles.badges}>
           {milestones.map((m) => (
-            <View
-              key={m.days}
-              style={[styles.badge, m.reached ? { backgroundColor: color } : { borderColor: color, borderWidth: 1.5 }]}>
-              <Text style={[styles.badgeText, { color: m.reached ? colors.background : color }]}>{m.days}</Text>
+            <View key={m.days} style={styles.badgeSlot}>
+              <View style={[styles.badge, m.reached ? { backgroundColor: color } : { borderColor: color, borderWidth: 1.5 }]}>
+                <Text style={[styles.badgeText, { color: m.reached ? colors.background : color }]}>{m.days}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -152,30 +119,24 @@ export default function JourneyScreen() {
 
 const styles = StyleSheet.create({
   lede: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, marginBottom: spacing.md },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  tiles: { flexDirection: 'row', gap: spacing.sm },
   tile: {
-    flexBasis: '48%',
-    flexGrow: 1,
     ...windowStyle,
     padding: spacing.lg,
     gap: 2,
   },
   tileLabel: { color: colors.textMuted, fontSize: 14, fontFamily: fonts.bold, letterSpacing: 1 },
   tileValue: { color: colors.text, fontSize: 36, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
-  tileDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
+  tileDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
   section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.lg },
   card: { ...windowStyle, padding: spacing.lg, gap: spacing.md, marginTop: spacing.sm },
-  heatmap: { flexDirection: 'row', justifyContent: 'center' },
-  legend: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
-  legendText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 11 },
-  legendCell: { width: 12, height: 12, borderRadius: 3 },
-  legendRest: { borderWidth: 1.5, backgroundColor: colors.cardRaised, marginLeft: spacing.sm },
   compareRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   compareLabel: { flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 15 },
   compareBefore: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, fontVariant: ['tabular-nums'] },
   compareNow: { color: colors.text, fontSize: 20, fontFamily: fonts.bold, fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  badge: { minWidth: 44, height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -3, rowGap: spacing.sm },
+  badgeSlot: { width: `${100 / BADGE_COLUMNS}%`, paddingHorizontal: 3 },
+  badge: { height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   badgeText: { fontSize: 18, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   badgeCaption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
 });

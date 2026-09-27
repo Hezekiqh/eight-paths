@@ -37,6 +37,32 @@ export type Completion = {
   dimension: Dimension;
   date: string;
   xp: number;
+  /** Who was in this Path's party slot, and so earned the XP as well. */
+  characterId?: string;
 };
 
 export type RestDay = { date: string; dimension: Dimension | 'all' };
+
+/** XP that didn't come from a quest: objective drops and finished goals. */
+export type XpGrant = {
+  id: string;
+  date: string;
+  dimension: Dimension;
+  xp: number;
+  characterId?: string;
+  source: 'drop' | 'goal';
+};
+
+/** Double XP on one Path for the rest of `date`. */
+export type Boost = { date: string; dimension: Dimension };
+
+/** A goal the player wrote for themselves. */
+export type Goal = {
+  id: string;
+  title: string;
+  /** The Path it belongs to; finishing it earns XP there. */
+  dimension?: Dimension;
+  dueDate?: string;
+  createdAt: string;
+  completedAt?: string;
+};

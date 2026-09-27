@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   epithet: {
     color: colors.textMuted,
     fontFamily: fonts.regular,
-    fontSize: 12,
+    fontSize: 13,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingHorizontal: spacing.sm,

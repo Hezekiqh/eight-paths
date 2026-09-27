@@ -12,6 +12,8 @@ type Props = {
    * the ×12 files then shrink by a whole number on both 2× and 3× screens.
    */
   scale?: number;
+  /** Paints every pixel this color: a silhouette. */
+  tint?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -20,7 +22,7 @@ type Props = {
  * The whole strip sits inside a one-frame window and slides along it, which
  * keeps every frame in a single image. Holds on frame one for Reduce Motion.
  */
-export function PixelSprite({ sheet, scale = 1, style }: Props) {
+export function PixelSprite({ sheet, scale = 1, tint, style }: Props) {
   const reduceMotion = useReducedMotion();
   const [tick, setTick] = useState(0);
   const animated = sheet.frames > 1 && !reduceMotion;
@@ -39,6 +41,7 @@ export function PixelSprite({ sheet, scale = 1, style }: Props) {
       <Image
         source={sheet.source}
         contentFit="fill"
+        tintColor={tint}
         style={{ width: width * sheet.frames, height, transform: [{ translateX: -frame * width }] }}
       />
     </View>

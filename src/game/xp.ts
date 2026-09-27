@@ -59,13 +59,16 @@ export function emptyDimensionRecord<T>(value: T): Record<Dimension, T> {
   return Object.fromEntries(DIMENSIONS.map((d) => [d, value])) as Record<Dimension, T>;
 }
 
-export function xpByDimension(completions: Completion[]): Record<Dimension, number> {
+/** Anything that carries XP on a Path: completions and grants. */
+type XpSource = Pick<Completion, 'dimension' | 'xp'>;
+
+export function xpByDimension(completions: XpSource[]): Record<Dimension, number> {
   const totals = emptyDimensionRecord(0);
   for (const c of completions) totals[c.dimension] += c.xp;
   return totals;
 }
 
-export function totalXp(completions: Completion[]): number {
+export function totalXp(completions: XpSource[]): number {
   return completions.reduce((sum, c) => sum + c.xp, 0);
 }
 

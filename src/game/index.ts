@@ -11,3 +11,5 @@ export * from './streaks';
 export * from './types';
 export * from './xp';
 export * from './reminders';
+export * from './objectives';
+export * from './calendar';

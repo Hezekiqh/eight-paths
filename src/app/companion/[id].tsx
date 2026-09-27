@@ -1,44 +1,103 @@
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { CHARACTER_ART } from '@/art/sprites';
-import { PixelSprite } from '@/components/pixel-sprite';
+import { Button } from '@/components/button';
+import { CharacterPortrait } from '@/components/character-portrait';
+import { TypewriterText } from '@/components/typewriter-text';
+import { XpBar } from '@/components/xp-bar';
 import { CLASSES } from '@/game';
-import { COMPANIONS, isCharacterId } from '@/story/companions';
+import { useGameStore } from '@/store';
+import { useCollection } from '@/store/hooks';
+import { formatNumber, isCharacterId, type CharacterKind } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
+
+const KIND_LABEL: Record<CharacterKind, string> = {
+  core: 'Companion',
+  recruit: 'Recruit',
+  steward: 'Steward of the Crown',
+};
 
 export default function CompanionSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const collection = useCollection();
+  const swapCharacter = useGameStore((s) => s.swapCharacter);
+  const [bioDone, setBioDone] = useState(false);
+  const [skipped, setSkipped] = useState(false);
   if (!isCharacterId(id)) return null;
-  const companion = COMPANIONS[id];
+
+  const entry = collection.entries.find((e) => e.companion.id === id)!;
+  const { companion, unlocked, inParty, progress, pathLevel } = entry;
   const info = CLASSES[companion.dimension];
-  const art = CHARACTER_ART[id];
+  const current = collection.party[companion.dimension].companion;
+
+  const swapIn = () => {
+    if (swapCharacter(companion.id)) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
 
   return (
     <View style={styles.sheet}>
       <View style={styles.header}>
-        <View style={[styles.portrait, art && styles.portraitSprite, { borderColor: info.color }]}>
-          {art ? (
-            <PixelSprite sheet={art.idle} scale={2} />
-          ) : (
-            <SymbolView name={info.symbol} tintColor={info.color} size={36} />
-          )}
+        <View style={[styles.portrait, { borderColor: unlocked ? info.color : colors.border }]}>
+          <CharacterPortrait companion={companion} locked={!unlocked} scale={2} />
         </View>
         <View style={styles.titles}>
+          <Text style={[styles.number, { color: unlocked ? info.color : colors.textFaint }]}>
+            {formatNumber(companion.number)} · {KIND_LABEL[companion.kind]}
+          </Text>
           <Text style={styles.name}>{companion.name}</Text>
-          {companion.fullName && <Text style={styles.fullName}>{companion.fullName}</Text>}
+          {unlocked && companion.fullName && <Text style={styles.fullName}>{companion.fullName}</Text>}
           <Text style={[styles.className, { color: info.color }]}>
             {info.className} · {info.dimensionLabel} Path
           </Text>
         </View>
       </View>
-      <Text style={styles.bio}>{companion.bio}</Text>
-      <Text style={[styles.quote, { borderColor: info.color }]}>“{companion.quote}”</Text>
-      <View style={[styles.growth, { borderColor: info.color }]}>
-        <SymbolView name="arrow.up.circle.fill" tintColor={info.color} size={18} />
-        <Text style={styles.growthText}>{info.growth}</Text>
-      </View>
+
+      {unlocked ? (
+        <>
+          <View style={styles.level}>
+            <View style={styles.levelTop}>
+              <Text style={styles.levelText}>Lv {progress.level}</Text>
+              <Text style={styles.xpText}>
+                {progress.xpIntoLevel} / {progress.xpForNext} XP
+              </Text>
+            </View>
+            <XpBar fill={progress.xpIntoLevel / progress.xpForNext} color={info.color} height={8} />
+          </View>
+          {/* Lore types out like a dialogue box; a tap shows it all. */}
+          <Pressable accessibilityHint="Shows all the text" onPress={() => setSkipped(true)} style={styles.lore}>
+            <TypewriterText text={companion.bio} style={styles.bio} instant={skipped} onDone={() => setBioDone(true)} />
+            <View style={[styles.quote, { borderColor: info.color }]}>
+              <TypewriterText
+                text={`“${companion.quote}”`}
+                style={styles.quoteText}
+                start={bioDone}
+                instant={skipped}
+              />
+            </View>
+          </Pressable>
+          {inParty ? (
+            <View style={[styles.note, { borderColor: info.color }]}>
+              <SymbolView name="heart.fill" tintColor={colors.gold} size={16} />
+              <Text style={styles.noteText}>
+                In your party. {info.dimensionLabel} habits level up {companion.name}.
+              </Text>
+            </View>
+          ) : (
+            <Button title={`Swap in for ${current.name}`} color={info.color} onPress={swapIn} />
+          )}
+        </>
+      ) : (
+        <View style={[styles.note, { borderColor: colors.border }]}>
+          <SymbolView name="lock.fill" tintColor={colors.textMuted} size={16} />
+          <Text style={styles.noteText}>
+            Unlocks at {info.className} Path Lv {companion.unlockLevel}. You’re Lv {pathLevel}: keep up your{' '}
+            {info.dimensionLabel.toLowerCase()} habits to meet them.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -52,26 +111,24 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: radius.md,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: spacing.sm,
     backgroundColor: colors.cardRaised,
   },
-  /** Sprites stand on the bottom edge rather than float in the middle. */
-  portraitSprite: { justifyContent: 'flex-end', paddingBottom: spacing.sm },
   titles: { flex: 1, gap: 2 },
+  number: { fontFamily: fonts.bold, fontSize: 16, fontVariant: ['tabular-nums'] },
   name: { color: colors.text, fontSize: 36, fontFamily: fonts.bold },
   fullName: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14 },
   className: { fontSize: 20, fontFamily: fonts.bold },
-  bio: { color: colors.text, fontFamily: fonts.regular, fontSize: 16, lineHeight: 23 },
-  quote: {
-    color: colors.textMuted,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    lineHeight: 21,
-    fontStyle: 'italic',
-    borderLeftWidth: 3,
-    paddingLeft: spacing.md,
-  },
-  growth: {
+  level: { gap: 6 },
+  levelTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  levelText: { color: colors.text, fontSize: 22, fontFamily: fonts.bold },
+  xpText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, fontVariant: ['tabular-nums'] },
+  bio: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 16, lineHeight: 24 },
+  lore: { gap: spacing.md },
+  quote: { borderLeftWidth: 3, paddingLeft: spacing.md },
+  quoteText: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 16, lineHeight: 24 },
+  note: {
     flexDirection: 'row',
     gap: spacing.sm,
     alignItems: 'flex-start',
@@ -80,5 +137,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     padding: spacing.md,
   },
-  growthText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  noteText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
 });
