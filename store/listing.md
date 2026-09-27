@@ -55,7 +55,7 @@ LEVEL UP FAST, THEN FOR LIFE
 Your first quests level you up almost every time. Keep going and you can reach Level 100 in about three months of steady play, and then a second climb begins. Every tenth level is a milestone worth celebrating.
 
 WAKE 100 CHARACTERS
-Keep a Path strong and new characters join your collection: recruits, rivals who serve the Crown, and legends waiting at the end of each Path. 100 in all, each with their own lore. Swap anyone into your party and level them up.
+Keep a Path strong and new characters join your collection: recruits, rivals who think the world is better left asleep, and legends waiting at the end of each Path. Over 100 in all, each with their own lore. Swap anyone into your party and level them up.
 
 OBJECTIVES AND REWARDS
 Fresh daily and weekly objectives built from your own quests. Claim random drops, grace days that protect a streak and double-XP boosts. Add personal goals like "Run a 5K" and earn XP when you finish them.

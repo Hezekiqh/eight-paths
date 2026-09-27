@@ -17,7 +17,7 @@ import { colors, fonts, radius, spacing } from '@/theme';
 const KIND_LABEL: Record<CharacterKind, string> = {
   core: 'Companion',
   recruit: 'Recruit',
-  steward: 'Steward of the Crown',
+  steward: 'Rival',
   legend: 'Legend',
 };
 

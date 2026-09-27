@@ -109,7 +109,7 @@ export const FINANCIAL = {
     dimension: 'financial',
     kind: 'recruit',
     unlockLevel: 30,
-    bio: 'A miner turned banker, still in her yellow hard hat with its little lamp, flashing one gold tooth when she grins. She knows exactly how hard every coin was to dig up, and spends accordingly.',
+    bio: 'The Gold Queen: a mining magnate who owned every seam for a hundred miles and still wears her yellow hard hat to parties. Loud, generous and ruthless in a contract, she flashes one gold tooth when she grins.',
     quote: 'Dig slow. Spend slower.',
   },
   ambrose: {

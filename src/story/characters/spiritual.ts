@@ -49,7 +49,7 @@ export const SPIRITUAL = {
     dimension: 'spiritual',
     kind: 'recruit',
     unlockLevel: 7,
-    bio: 'A quiet child in a grey cloak who follows candlelight the way moths do. Moth listens more than anyone in the camp and notices the small things everyone else walks past.',
+    bio: 'A quiet temple child in a grey cloak who follows candlelight the way moths do. Moth listens more than anyone and notices the small things everyone else walks past, and once watched a stranger pray at the temple long after everyone else had gone home.',
     quote: 'Shh. Listen to the quiet.',
   },
   tuck: {

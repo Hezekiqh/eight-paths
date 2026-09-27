@@ -2,8 +2,9 @@ import type { Dimension } from '@/game';
 
 /**
  * Where a character comes from. The core eight walk the story with the
- * player; recruits are woken along the way; stewards serve the Crown until
- * the player earns their company; legends crown each Path's ladder. Only
+ * player; recruits are woken along the way; stewards (shown as "Rival") are
+ * woken like anyone else but side with the world as it is, until the player
+ * changes their mind; legends crown each Path's ladder. Only
  * core companions have story arcs.
  */
 export type CharacterKind = 'core' | 'recruit' | 'steward' | 'legend';

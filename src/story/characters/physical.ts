@@ -21,7 +21,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 10,
-    bio: 'A courier who ran messages between towns until the roads went quiet. Wiry and sunburnt, she laces her boots twice and treats every hill as a personal challenge.',
+    bio: 'A courier who ran messages between towns until the roads went quiet. Wiry and sunburnt, she laces her boots twice, treats every hill as a personal challenge, and still carries one sealed letter she has never delivered.',
     quote: 'Last one to the top carries the soup.',
   },
   plush: {
@@ -42,7 +42,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 20,
-    bio: 'A retired blacksmith with forearms like hams and a bad knee he refuses to discuss. He stretches every morning, loudly, and expects the whole camp to join in.',
+    bio: 'A retired royal blacksmith with forearms like hams and a bad knee he refuses to discuss. He forged a great many swords in his day, and is proudest of the one that was never used.',
     quote: "Slow is fine. Stopping isn't.",
   },
   tobin: {
@@ -86,7 +86,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 23,
-    bio: 'A retired guard captain in dented chainmail and a helmet with one proud red plume. She drills the whole camp at dawn with a voice like a trumpet, then quietly checks that everyone ate breakfast.',
+    bio: 'A guard captain in dented chainmail and a helmet with one proud red plume. She drills the whole camp at dawn with a voice like a trumpet, checks that everyone ate breakfast, and never lets anyone out of her sight. Not again.',
     quote: 'Form up. Stretch first. Complain after.',
   },
   kofi: {
@@ -108,7 +108,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 30,
-    bio: 'A river swimmer with a dark bob and a towel always slung over one shoulder, who crossed the cold Mirrorlake every morning for twenty years. Calm, quiet and faintly smug about her circulation.',
+    bio: 'A field medic with a dark bob and a towel always slung over one shoulder, who once swam supplies across the cold Mirrorlake when every bridge was down. Calm, unsentimental and faintly smug about her circulation.',
     quote: 'Cold water, clear head.',
   },
   sable: {
