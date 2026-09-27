@@ -72,7 +72,7 @@ writeFileSync(path, PNG.sync.write(out));
 
 const frameWidth = sheet.width / frames;
 console.log(`Wrote ${path} (${frames} frame${frames === 1 ? '' : 's'} of ${frameWidth}×${sheet.height}, ×${scale})`);
-console.log('\nAdd to src/art/sprites.ts:\n');
+console.log('\nAdd to ART in src/art/sprites.ts (it replaces the stand-in):\n');
 console.log(
   `${name}: { source: require('@/assets/sprites/${character}/${name}.png'), width: ${frameWidth}, height: ${sheet.height}, frames: ${frames}${frames > 1 ? ', fps: 4' : ''} },`,
 );

@@ -18,6 +18,7 @@ const KIND_LABEL: Record<CharacterKind, string> = {
   core: 'Companion',
   recruit: 'Recruit',
   steward: 'Steward of the Crown',
+  legend: 'Legend',
 };
 
 export default function CompanionSheet() {
