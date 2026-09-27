@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
+import { CHARACTER_ART } from '@/art/sprites';
+import { PixelSprite } from '@/components/pixel-sprite';
 import { formatRate } from '@/components/progress-strip';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
@@ -10,6 +12,7 @@ import { XpBar } from '@/components/xp-bar';
 import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
 import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
+import { COMPANIONS, DEFAULT_PARTY } from '@/story/companions';
 import {
   useClassInfo,
   useDimensionStats,
@@ -22,6 +25,8 @@ import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 function ClassProgressRow({ stats }: { stats: DimensionStats }) {
   const { info, progress, streak, consistency, opacity } = stats;
+  const companion = COMPANIONS[DEFAULT_PARTY[info.dimension]];
+  const art = CHARACTER_ART[companion.id];
   const detail = [
     consistency.rate === null ? 'Nothing due in 30 days' : `${formatRate(consistency)} consistent · 30 days`,
     streak.best > 0 && `best ${streak.best}`,
@@ -31,14 +36,18 @@ function ClassProgressRow({ stats }: { stats: DimensionStats }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityHint={`About the ${info.className} class`}
-      onPress={() => router.push(`/class/${info.dimension}`)}
+      accessibilityHint={`About ${companion.name}`}
+      onPress={() => router.push(`/companion/${companion.id}`)}
       style={({ pressed }) => [styles.classRow, pressed && { backgroundColor: colors.cardRaised }]}>
       <View style={[styles.classRowInner, { opacity }]}>
-        <SymbolView name={info.symbol} tintColor={info.color} size={22} />
+        <View style={styles.portrait}>
+          {art ? <PixelSprite sheet={art.idle} /> : <SymbolView name={info.symbol} tintColor={info.color} size={22} />}
+        </View>
         <View style={styles.classBody}>
           <View style={styles.classTop}>
-            <Text style={styles.className}>{info.className}</Text>
+            <Text style={styles.className} numberOfLines={1}>
+              {companion.name} <Text style={[styles.classTag, { color: info.color }]}>{info.className}</Text>
+            </Text>
             <Text style={styles.classLevel}>Lv {progress.level}</Text>
           </View>
           <XpBar fill={progress.xpIntoLevel / progress.xpForNext} color={info.color} height={6} />
@@ -223,9 +232,11 @@ const styles = StyleSheet.create({
   list: { ...windowStyle, overflow: 'hidden' },
   classRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   classRowInner: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  portrait: { width: 32, alignItems: 'center' },
   classBody: { flex: 1, gap: 6 },
-  classTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  className: { color: colors.text, fontSize: 21, fontFamily: fonts.bold },
+  classTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.sm },
+  className: { flexShrink: 1, color: colors.text, fontSize: 21, fontFamily: fonts.bold },
+  classTag: { fontSize: 17 },
   classDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
   classLevel: { color: colors.textMuted, fontSize: 18, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 34, justifyContent: 'flex-end' },

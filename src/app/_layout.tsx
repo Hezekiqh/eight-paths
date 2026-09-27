@@ -29,6 +29,15 @@ const navTheme = {
   },
 };
 
+/** A bottom sheet sized to its content, for lore about a class or companion. */
+const sheetOptions = {
+  presentation: 'formSheet',
+  sheetAllowedDetents: 'fitToContents',
+  sheetGrabberVisible: true,
+  sheetCornerRadius: 24,
+  contentStyle: { backgroundColor: colors.card },
+} as const;
+
 export default function RootLayout() {
   const hydrated = useHydrated();
   const onboarded = useGameStore((s) => s.player !== null);
@@ -60,16 +69,8 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" />
           </Stack.Protected>
           <Stack.Screen name="backup" options={{ presentation: 'modal' }} />
-          <Stack.Screen
-            name="class/[dimension]"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: 'fitToContents',
-              sheetGrabberVisible: true,
-              sheetCornerRadius: 24,
-              contentStyle: { backgroundColor: colors.card },
-            }}
-          />
+          <Stack.Screen name="class/[dimension]" options={sheetOptions} />
+          <Stack.Screen name="companion/[id]" options={sheetOptions} />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>
