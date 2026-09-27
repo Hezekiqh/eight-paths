@@ -5,6 +5,7 @@ export const OCCUPATIONAL = {
   tamsin: {
     number: 84,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Tamsin',
     fullName: 'Tamsin Brasse',
     dimension: 'occupational',
@@ -16,6 +17,7 @@ export const OCCUPATIONAL = {
   rivet: {
     number: 12,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Wick',
     fullName: 'Wick Rivet',
     dimension: 'occupational',
@@ -27,6 +29,7 @@ export const OCCUPATIONAL = {
   greta: {
     number: 88,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Greta',
     fullName: 'Greta Hammerfall',
     dimension: 'occupational',
@@ -38,6 +41,7 @@ export const OCCUPATIONAL = {
   sprocket: {
     number: 96,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Sprocket',
     dimension: 'occupational',
     kind: 'recruit',
@@ -48,6 +52,7 @@ export const OCCUPATIONAL = {
   hilde: {
     number: 74,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Hilde',
     fullName: 'Hilde Anvil',
     dimension: 'occupational',
@@ -59,6 +64,7 @@ export const OCCUPATIONAL = {
   joss: {
     number: 64,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Joss',
     fullName: 'Joss Furrow',
     dimension: 'occupational',
@@ -70,6 +76,7 @@ export const OCCUPATIONAL = {
   babette: {
     number: 50,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Chef Babette',
     dimension: 'occupational',
     kind: 'recruit',
@@ -80,6 +87,7 @@ export const OCCUPATIONAL = {
   wilbur: {
     number: 85,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Wilbur',
     fullName: 'Wilbur Planewright',
     dimension: 'occupational',
@@ -91,6 +99,7 @@ export const OCCUPATIONAL = {
   oskar: {
     number: 63,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Oskar',
     fullName: 'Scrivener Oskar',
     dimension: 'occupational',
@@ -102,6 +111,7 @@ export const OCCUPATIONAL = {
   rosa: {
     number: 59,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Rosa',
     fullName: 'Rosa Gearheart',
     dimension: 'occupational',
@@ -113,6 +123,7 @@ export const OCCUPATIONAL = {
   morrow: {
     number: 4,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Old Morrow',
     dimension: 'occupational',
     kind: 'recruit',
@@ -123,6 +134,7 @@ export const OCCUPATIONAL = {
   adaeze: {
     number: 83,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Guildmaster Adaeze',
     dimension: 'occupational',
     kind: 'recruit',

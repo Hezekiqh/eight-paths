@@ -12,6 +12,19 @@ export type CharacterKind = 'core' | 'recruit' | 'steward' | 'legend';
 /** Stars, 1 to 5. Everyone in the original roster is 5★; later characters can be rarer or commoner. */
 export type Rarity = 1 | 2 | 3 | 4 | 5;
 
+/** A D&D-style moral compass: who they were in the ancient world. */
+export type Alignment =
+  | 'Lawful Good'
+  | 'Neutral Good'
+  | 'Chaotic Good'
+  | 'Lawful Neutral'
+  | 'True Neutral'
+  | 'Neutral'
+  | 'Chaotic Neutral'
+  | 'Lawful Evil'
+  | 'Neutral Evil'
+  | 'Chaotic Evil';
+
 export type CharacterData = {
   /**
    * Collection number, deliberately scattered across Paths. Fixed forever once
@@ -19,6 +32,7 @@ export type CharacterData = {
    */
   number: number;
   rarity: Rarity;
+  alignment: Alignment;
   /** What everyone calls them. */
   name: string;
   /** Their full name, when it differs from `name`. */

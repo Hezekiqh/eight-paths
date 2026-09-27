@@ -5,6 +5,7 @@ export const EMOTIONAL = {
   oren: {
     number: 72,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Oren',
     fullName: 'Oren Stillwater',
     dimension: 'emotional',
@@ -16,6 +17,7 @@ export const EMOTIONAL = {
   juniper: {
     number: 42,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Juniper',
     fullName: 'Juniper Wick',
     dimension: 'emotional',
@@ -27,6 +29,7 @@ export const EMOTIONAL = {
   corwin: {
     number: 95,
     rarity: 5,
+    alignment: 'Lawful Evil',
     name: 'Captain Corwin',
     dimension: 'emotional',
     kind: 'steward',
@@ -37,6 +40,7 @@ export const EMOTIONAL = {
   lark: {
     number: 94,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Lark',
     dimension: 'emotional',
     kind: 'recruit',
@@ -47,6 +51,7 @@ export const EMOTIONAL = {
   dot: {
     number: 45,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Dot',
     dimension: 'emotional',
     kind: 'recruit',
@@ -57,6 +62,7 @@ export const EMOTIONAL = {
   rowan: {
     number: 16,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Rowan',
     fullName: 'Rowan Ashdown',
     dimension: 'emotional',
@@ -68,6 +74,7 @@ export const EMOTIONAL = {
   mireille: {
     number: 22,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Mireille',
     dimension: 'emotional',
     kind: 'recruit',
@@ -78,6 +85,7 @@ export const EMOTIONAL = {
   teodor: {
     number: 86,
     rarity: 5,
+    alignment: 'True Neutral',
     name: 'Teodor',
     fullName: 'Teodor Grim',
     dimension: 'emotional',
@@ -89,6 +97,7 @@ export const EMOTIONAL = {
   nell: {
     number: 43,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Nell',
     fullName: 'Nell Honeysuckle',
     dimension: 'emotional',
@@ -100,6 +109,7 @@ export const EMOTIONAL = {
   bartholomew: {
     number: 7,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Bartholomew',
     dimension: 'emotional',
     kind: 'recruit',
@@ -110,6 +120,7 @@ export const EMOTIONAL = {
   iris: {
     number: 79,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Iris',
     fullName: 'Iris Calloway',
     dimension: 'emotional',
@@ -121,6 +132,7 @@ export const EMOTIONAL = {
   willa: {
     number: 54,
     rarity: 5,
+    alignment: 'Neutral',
     name: 'Willa',
     fullName: 'Willa Stillpond',
     dimension: 'emotional',
@@ -132,6 +144,7 @@ export const EMOTIONAL = {
   kaito: {
     number: 40,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Master Kaito',
     dimension: 'emotional',
     kind: 'legend',

@@ -5,6 +5,7 @@ export const FINANCIAL = {
   ysolde: {
     number: 31,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Ysolde',
     fullName: 'Ysolde Marrow',
     dimension: 'financial',
@@ -16,6 +17,7 @@ export const FINANCIAL = {
   penny: {
     number: 33,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Penny',
     fullName: 'Penny Vell',
     dimension: 'financial',
@@ -27,6 +29,7 @@ export const FINANCIAL = {
   tithe: {
     number: 24,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Countess Tithe',
     fullName: 'Countess Constance Tithe',
     dimension: 'financial',
@@ -38,6 +41,7 @@ export const FINANCIAL = {
   aubrey: {
     number: 46,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Lord Aubrey',
     fullName: 'Lord Aubrey Finch',
     dimension: 'financial',
@@ -49,6 +53,7 @@ export const FINANCIAL = {
   wendel: {
     number: 41,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Wendel',
     fullName: 'Wendel Coin',
     dimension: 'financial',
@@ -60,6 +65,7 @@ export const FINANCIAL = {
   saoirse: {
     number: 60,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Saoirse',
     fullName: 'Saoirse Thrift',
     dimension: 'financial',
@@ -71,6 +77,7 @@ export const FINANCIAL = {
   hamish: {
     number: 47,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Hamish',
     fullName: 'Hamish Budge',
     dimension: 'financial',
@@ -82,6 +89,7 @@ export const FINANCIAL = {
   priya: {
     number: 97,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Priya',
     fullName: 'Priya Ledgerlight',
     dimension: 'financial',
@@ -93,6 +101,7 @@ export const FINANCIAL = {
   gus: {
     number: 56,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Gus',
     fullName: 'Gus Tallow',
     dimension: 'financial',
@@ -104,6 +113,7 @@ export const FINANCIAL = {
   mirela: {
     number: 21,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Mirela',
     fullName: 'Mirela Goldvein',
     dimension: 'financial',
@@ -115,6 +125,7 @@ export const FINANCIAL = {
   ambrose: {
     number: 77,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Ambrose',
     fullName: 'Ambrose Tally',
     dimension: 'financial',
@@ -126,6 +137,7 @@ export const FINANCIAL = {
   marchbank: {
     number: 89,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Lady Marchbank',
     dimension: 'financial',
     kind: 'recruit',
@@ -136,6 +148,7 @@ export const FINANCIAL = {
   fennick: {
     number: 101,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Old Man Fennick',
     dimension: 'financial',
     kind: 'recruit',
@@ -146,6 +159,7 @@ export const FINANCIAL = {
   opaline: {
     number: 102,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Duchess Opaline',
     fullName: 'Duchess Opaline Sparrowgold',
     dimension: 'financial',
@@ -157,6 +171,7 @@ export const FINANCIAL = {
   silas: {
     number: 103,
     rarity: 5,
+    alignment: 'Lawful Evil',
     name: 'Silas Crane',
     dimension: 'financial',
     kind: 'recruit',
@@ -167,6 +182,7 @@ export const FINANCIAL = {
   penrose: {
     number: 104,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Midas and Minnow',
     fullName: 'Midas and Minnow Penrose',
     dimension: 'financial',
@@ -178,6 +194,7 @@ export const FINANCIAL = {
   barnabus: {
     number: 105,
     rarity: 5,
+    alignment: 'Neutral Evil',
     name: 'Barnabus Hoard',
     dimension: 'financial',
     kind: 'recruit',

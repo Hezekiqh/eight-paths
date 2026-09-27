@@ -5,6 +5,7 @@ export const SPIRITUAL = {
   wren: {
     number: 75,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Sister Wren',
     dimension: 'spiritual',
     kind: 'core',
@@ -15,6 +16,7 @@ export const SPIRITUAL = {
   hollis: {
     number: 69,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Hollis',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -25,6 +27,7 @@ export const SPIRITUAL = {
   honeywell: {
     number: 99,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Lucian Honeywell',
     dimension: 'spiritual',
     kind: 'steward',
@@ -35,6 +38,7 @@ export const SPIRITUAL = {
   sage: {
     number: 66,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Mother Sage',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -45,6 +49,7 @@ export const SPIRITUAL = {
   moth: {
     number: 71,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Moth',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -55,6 +60,7 @@ export const SPIRITUAL = {
   tuck: {
     number: 80,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Brother Tuck',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -65,6 +71,7 @@ export const SPIRITUAL = {
   zahra: {
     number: 73,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Zahra',
     fullName: 'Zahra of the Dunes',
     dimension: 'spiritual',
@@ -76,6 +83,7 @@ export const SPIRITUAL = {
   clementine: {
     number: 5,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Clementine',
     fullName: 'Clementine Chime',
     dimension: 'spiritual',
@@ -87,6 +95,7 @@ export const SPIRITUAL = {
   ansel: {
     number: 39,
     rarity: 5,
+    alignment: 'True Neutral',
     name: 'Ansel the Hermit',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -97,6 +106,7 @@ export const SPIRITUAL = {
   lumen: {
     number: 10,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Lumen',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -107,6 +117,7 @@ export const SPIRITUAL = {
   ilse: {
     number: 38,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Abbess Ilse',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -117,6 +128,7 @@ export const SPIRITUAL = {
   oona: {
     number: 14,
     rarity: 5,
+    alignment: 'Neutral',
     name: 'Oona',
     fullName: 'Oona Farsight',
     dimension: 'spiritual',

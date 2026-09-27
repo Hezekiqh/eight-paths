@@ -10,7 +10,7 @@ import { SOCIAL } from './characters/social';
 import { SPIRITUAL } from './characters/spiritual';
 import type { CharacterData } from './characters/types';
 
-export type { CharacterKind, Rarity } from './characters/types';
+export type { Alignment, CharacterKind, Rarity } from './characters/types';
 
 /**
  * The Path levels that unlock each Path's characters, in order after its core
@@ -70,3 +70,15 @@ export const SHARDS_TO_UNLOCK = 3;
 export function isUnlocked(companion: Companion, pathXp: number, shards = 0): boolean {
   return levelFromXp(pathXp).level >= companion.unlockLevel || shards >= SHARDS_TO_UNLOCK;
 }
+
+/** The ancient realm each Path's people came from (LORE.md). */
+export const REALMS: Record<Dimension, string> = {
+  physical: 'The Warrior Kingdom',
+  financial: 'The Merchant City',
+  intellectual: 'The Academy',
+  spiritual: 'The Temple of the Three',
+  emotional: 'The Still Valley',
+  social: 'The Festival City',
+  occupational: 'The Guild City',
+  environmental: 'The Wildwood',
+};

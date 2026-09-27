@@ -5,6 +5,7 @@ export const SOCIAL = {
   pip: {
     number: 82,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Pip',
     fullName: 'Pip Larkspur',
     dimension: 'social',
@@ -16,6 +17,7 @@ export const SOCIAL = {
   marigold: {
     number: 9,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Marigold',
     fullName: 'Marigold Tumble',
     dimension: 'social',
@@ -27,6 +29,7 @@ export const SOCIAL = {
   marisol: {
     number: 13,
     rarity: 5,
+    alignment: 'Neutral Evil',
     name: 'Marisol Vane',
     dimension: 'social',
     kind: 'steward',
@@ -37,6 +40,7 @@ export const SOCIAL = {
   barnaby: {
     number: 34,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Barnaby',
     fullName: 'Barnaby Crumb',
     dimension: 'social',
@@ -48,6 +52,7 @@ export const SOCIAL = {
   fitz: {
     number: 15,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Fitz',
     fullName: 'Fitz Tattle',
     dimension: 'social',
@@ -59,6 +64,7 @@ export const SOCIAL = {
   amara: {
     number: 98,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Amara',
     fullName: 'Amara Bright',
     dimension: 'social',
@@ -70,6 +76,7 @@ export const SOCIAL = {
   duke: {
     number: 61,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Duke',
     dimension: 'social',
     kind: 'recruit',
@@ -80,6 +87,7 @@ export const SOCIAL = {
   ruth: {
     number: 53,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Ruth',
     fullName: 'Ruth Letterly',
     dimension: 'social',
@@ -91,6 +99,7 @@ export const SOCIAL = {
   bastian: {
     number: 67,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Bastian',
     fullName: 'Bastian Drum',
     dimension: 'social',
@@ -102,6 +111,7 @@ export const SOCIAL = {
   lola: {
     number: 35,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Lola',
     fullName: 'Lola Marchetti',
     dimension: 'social',
@@ -113,6 +123,7 @@ export const SOCIAL = {
   kitkat: {
     number: 3,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Kit and Kat',
     dimension: 'social',
     kind: 'recruit',
@@ -123,6 +134,7 @@ export const SOCIAL = {
   oyelaran: {
     number: 100,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Ambassador Oyelaran',
     dimension: 'social',
     kind: 'recruit',

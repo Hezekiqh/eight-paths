@@ -5,6 +5,7 @@ export const INTELLECTUAL = {
   quill: {
     number: 87,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Quill',
     fullName: 'Quilliana Fenwhistle',
     dimension: 'intellectual',
@@ -16,6 +17,7 @@ export const INTELLECTUAL = {
   ottilie: {
     number: 55,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Ottilie',
     fullName: 'Ottilie Page',
     dimension: 'intellectual',
@@ -27,6 +29,7 @@ export const INTELLECTUAL = {
   thane: {
     number: 92,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Magister Thane',
     fullName: 'Magister Oriel Thane',
     dimension: 'intellectual',
@@ -38,6 +41,7 @@ export const INTELLECTUAL = {
   bramble: {
     number: 58,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Professor Bramble',
     fullName: 'Professor Mungo Bramble',
     dimension: 'intellectual',
@@ -49,6 +53,7 @@ export const INTELLECTUAL = {
   nib: {
     number: 20,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Nib',
     fullName: 'Nib Wickett',
     dimension: 'intellectual',
@@ -60,6 +65,7 @@ export const INTELLECTUAL = {
   astra: {
     number: 70,
     rarity: 5,
+    alignment: 'Neutral',
     name: 'Astra',
     fullName: 'Astra Voss',
     dimension: 'intellectual',
@@ -71,6 +77,7 @@ export const INTELLECTUAL = {
   felix: {
     number: 93,
     rarity: 5,
+    alignment: 'Chaotic Evil',
     name: 'Felix',
     fullName: 'Felix Rook',
     dimension: 'intellectual',
@@ -82,6 +89,7 @@ export const INTELLECTUAL = {
   hana: {
     number: 90,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Hana',
     fullName: 'Hana Mori',
     dimension: 'intellectual',
@@ -93,6 +101,7 @@ export const INTELLECTUAL = {
   quimby: {
     number: 28,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Doctor Quimby',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -103,6 +112,7 @@ export const INTELLECTUAL = {
   lyra: {
     number: 23,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Lyra',
     fullName: 'Lyra Inkwell',
     dimension: 'intellectual',
@@ -114,6 +124,7 @@ export const INTELLECTUAL = {
   solomon: {
     number: 19,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Old Solomon',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -124,6 +135,7 @@ export const INTELLECTUAL = {
   hoot: {
     number: 29,
     rarity: 5,
+    alignment: 'Neutral',
     name: 'Professor Hoot',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -134,6 +146,7 @@ export const INTELLECTUAL = {
   elowen: {
     number: 76,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Archmage Elowen',
     dimension: 'intellectual',
     kind: 'legend',

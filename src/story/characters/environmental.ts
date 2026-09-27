@@ -5,6 +5,7 @@ export const ENVIRONMENTAL = {
   moss: {
     number: 52,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Moss',
     dimension: 'environmental',
     kind: 'core',
@@ -15,6 +16,7 @@ export const ENVIRONMENTAL = {
   fern: {
     number: 27,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Fern',
     fullName: 'Fern Ashby',
     dimension: 'environmental',
@@ -26,6 +28,7 @@ export const ENVIRONMENTAL = {
   brimsby: {
     number: 65,
     rarity: 5,
+    alignment: 'Neutral',
     name: 'Mother Brimsby',
     dimension: 'environmental',
     kind: 'steward',
@@ -36,6 +39,7 @@ export const ENVIRONMENTAL = {
   tully: {
     number: 32,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Old Tully',
     dimension: 'environmental',
     kind: 'recruit',
@@ -46,6 +50,7 @@ export const ENVIRONMENTAL = {
   sprout: {
     number: 18,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Sprout',
     dimension: 'environmental',
     kind: 'recruit',
@@ -56,6 +61,7 @@ export const ENVIRONMENTAL = {
   cora: {
     number: 11,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Cora',
     fullName: 'Cora Glen',
     dimension: 'environmental',
@@ -67,6 +73,7 @@ export const ENVIRONMENTAL = {
   rufus: {
     number: 6,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Rufus',
     dimension: 'environmental',
     kind: 'recruit',
@@ -77,6 +84,7 @@ export const ENVIRONMENTAL = {
   wynn: {
     number: 91,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Wynn',
     fullName: 'Wynn Rainmaker',
     dimension: 'environmental',
@@ -88,6 +96,7 @@ export const ENVIRONMENTAL = {
   tala: {
     number: 25,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Tala',
     fullName: 'Tala Riverstone',
     dimension: 'environmental',
@@ -99,6 +108,7 @@ export const ENVIRONMENTAL = {
   hugo: {
     number: 17,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Hugo',
     fullName: 'Hugo Thornbeard',
     dimension: 'environmental',
@@ -110,6 +120,7 @@ export const ENVIRONMENTAL = {
   antler: {
     number: 49,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Old Antler',
     dimension: 'environmental',
     kind: 'recruit',
@@ -120,6 +131,7 @@ export const ENVIRONMENTAL = {
   ivy: {
     number: 48,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Ivy',
     fullName: 'Ivy Greenmantle',
     dimension: 'environmental',
@@ -131,6 +143,7 @@ export const ENVIRONMENTAL = {
   warden: {
     number: 30,
     rarity: 5,
+    alignment: 'True Neutral',
     name: 'The Green Warden',
     dimension: 'environmental',
     kind: 'legend',

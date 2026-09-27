@@ -5,6 +5,7 @@ export const PHYSICAL = {
   brannoc: {
     number: 8,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Brannoc',
     fullName: 'Brannoc Hale',
     dimension: 'physical',
@@ -16,6 +17,7 @@ export const PHYSICAL = {
   dessa: {
     number: 81,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Dessa',
     fullName: 'Dessa Quickstep',
     dimension: 'physical',
@@ -27,6 +29,7 @@ export const PHYSICAL = {
   plush: {
     number: 62,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Baron Plush',
     fullName: 'Baron Aldric Plush',
     dimension: 'physical',
@@ -38,6 +41,7 @@ export const PHYSICAL = {
   harrow: {
     number: 36,
     rarity: 5,
+    alignment: 'Lawful Neutral',
     name: 'Old Harrow',
     dimension: 'physical',
     kind: 'recruit',
@@ -48,6 +52,7 @@ export const PHYSICAL = {
   tobin: {
     number: 1,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Tobin',
     fullName: 'Tobin Fleet',
     dimension: 'physical',
@@ -59,6 +64,7 @@ export const PHYSICAL = {
   marta: {
     number: 57,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Marta',
     fullName: 'Marta Oakhand',
     dimension: 'physical',
@@ -70,6 +76,7 @@ export const PHYSICAL = {
   bo: {
     number: 44,
     rarity: 5,
+    alignment: 'Chaotic Neutral',
     name: 'Bo',
     fullName: 'Bo Tumble',
     dimension: 'physical',
@@ -81,6 +88,7 @@ export const PHYSICAL = {
   ingrid: {
     number: 37,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Captain Ingrid',
     fullName: 'Captain Ingrid Vale',
     dimension: 'physical',
@@ -92,6 +100,7 @@ export const PHYSICAL = {
   kofi: {
     number: 51,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Kofi',
     fullName: 'Kofi Stone',
     dimension: 'physical',
@@ -103,6 +112,7 @@ export const PHYSICAL = {
   yuki: {
     number: 78,
     rarity: 5,
+    alignment: 'Neutral Good',
     name: 'Yuki',
     fullName: 'Yuki Hollowbrook',
     dimension: 'physical',
@@ -114,6 +124,7 @@ export const PHYSICAL = {
   sable: {
     number: 2,
     rarity: 5,
+    alignment: 'Neutral Evil',
     name: 'Sable',
     dimension: 'physical',
     kind: 'recruit',
@@ -124,6 +135,7 @@ export const PHYSICAL = {
   nana: {
     number: 26,
     rarity: 5,
+    alignment: 'Chaotic Good',
     name: 'Nana Birch',
     dimension: 'physical',
     kind: 'recruit',
@@ -134,6 +146,7 @@ export const PHYSICAL = {
   aurelio: {
     number: 68,
     rarity: 5,
+    alignment: 'Lawful Good',
     name: 'Aurelio',
     fullName: 'Aurelio the Unbowed',
     dimension: 'physical',

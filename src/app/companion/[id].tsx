@@ -11,7 +11,7 @@ import { XpBar } from '@/components/xp-bar';
 import { CLASSES } from '@/game';
 import { useGameStore } from '@/store';
 import { useCollection } from '@/store/hooks';
-import { formatNumber, isCharacterId, type CharacterKind } from '@/story/companions';
+import { REALMS, formatNumber, isCharacterId, type CharacterKind } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 const KIND_LABEL: Record<CharacterKind, string> = {
@@ -63,6 +63,9 @@ export default function CompanionSheet() {
           {unlocked && companion.fullName && <Text style={styles.fullName}>{companion.fullName}</Text>}
           <Text style={[styles.className, { color: info.color }]}>
             {info.className} · {info.dimensionLabel} Path
+          </Text>
+          <Text style={styles.realm}>
+            {REALMS[companion.dimension]} · {companion.alignment}
           </Text>
         </View>
       </View>
@@ -135,6 +138,7 @@ const styles = StyleSheet.create({
   name: { color: colors.text, fontSize: 36, fontFamily: fonts.bold },
   fullName: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14 },
   className: { fontSize: 20, fontFamily: fonts.bold },
+  realm: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
   level: { gap: 6 },
   levelTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   levelText: { color: colors.text, fontSize: 22, fontFamily: fonts.bold },

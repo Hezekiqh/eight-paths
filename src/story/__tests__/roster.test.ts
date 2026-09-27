@@ -13,6 +13,10 @@ describe('roster', () => {
     expect(firstTen.size).toBeGreaterThan(3);
   });
 
+  it('gives everyone an alignment', () => {
+    for (const c of ROSTER) expect(c.alignment).toMatch(/^(Lawful|Neutral|Chaotic|True)/);
+  });
+
   it('gives everyone a rarity from 1 to 5 stars', () => {
     for (const c of ROSTER) expect([1, 2, 3, 4, 5]).toContain(c.rarity);
   });
