@@ -14,6 +14,8 @@ type Props = {
   scale?: number;
   /** Paints every pixel this color: a silhouette. */
   tint?: string;
+  /** False holds the first frame, for sprites shown many at a time. */
+  animate?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -22,10 +24,10 @@ type Props = {
  * The whole strip sits inside a one-frame window and slides along it, which
  * keeps every frame in a single image. Holds on frame one for Reduce Motion.
  */
-export function PixelSprite({ sheet, scale = 1, tint, style }: Props) {
+export function PixelSprite({ sheet, scale = 1, tint, animate = true, style }: Props) {
   const reduceMotion = useReducedMotion();
   const [tick, setTick] = useState(0);
-  const animated = sheet.frames > 1 && !reduceMotion;
+  const animated = animate && sheet.frames > 1 && !reduceMotion;
   const frame = animated ? tick % sheet.frames : 0;
 
   useEffect(() => {

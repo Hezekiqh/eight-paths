@@ -29,7 +29,7 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
       style={({ pressed }) => [styles.card, { width }, pressed && { backgroundColor: colors.cardRaised }]}>
       {inParty && <SymbolView name="heart.fill" tintColor={colors.gold} size={10} style={styles.partyMark} />}
       <View style={styles.portrait}>
-        <CharacterPortrait companion={companion} locked={!unlocked} />
+        <CharacterPortrait companion={companion} locked={!unlocked} animate={false} />
       </View>
       <Text style={[styles.number, { color: unlocked ? info.color : colors.textFaint }]}>
         {formatNumber(companion.number)}
