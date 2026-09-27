@@ -3,15 +3,19 @@ import type { CharacterData } from './types';
 /** The Physical Path's characters. */
 export const PHYSICAL = {
   brannoc: {
+    number: 8,
+    rarity: 5,
     name: 'Brannoc',
     fullName: 'Brannoc Hale',
     dimension: 'physical',
     kind: 'core',
     unlockLevel: 0,
-    bio: 'A giant with a braided red beard, armor that no longer fits and a greatsword he calls Sweetheart. Loud, loyal and brave to a fault, he turns everything into a competition and would charge a castle before asking whose it was.',
-    quote: 'Right! Who needs hitting?',
+    bio: 'A giant with a braided red beard, armor that no longer fits and a greatsword he calls Sweetheart. He is the strongest man you will ever meet, and he will tell you so, loudly, from behind the nearest wall. Brannoc talks like a champion and runs like a rabbit.',
+    quote: 'Right! Who needs hitting? …Not you. You look strong.',
   },
   dessa: {
+    number: 81,
+    rarity: 5,
     name: 'Dessa',
     fullName: 'Dessa Quickstep',
     dimension: 'physical',
@@ -21,6 +25,8 @@ export const PHYSICAL = {
     quote: 'Last one to the top carries the soup.',
   },
   plush: {
+    number: 62,
+    rarity: 5,
     name: 'Baron Plush',
     fullName: 'Baron Aldric Plush',
     dimension: 'physical',
@@ -30,6 +36,8 @@ export const PHYSICAL = {
     quote: "Oh, don't get up. Nobody's getting up. That's the lovely part.",
   },
   harrow: {
+    number: 36,
+    rarity: 5,
     name: 'Old Harrow',
     dimension: 'physical',
     kind: 'recruit',
@@ -38,15 +46,19 @@ export const PHYSICAL = {
     quote: "Slow is fine. Stopping isn't.",
   },
   tobin: {
+    number: 1,
+    rarity: 5,
     name: 'Tobin',
     fullName: 'Tobin Fleet',
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 7,
-    bio: 'A skinny kid in patched shorts and a red headband who used to run errands barefoot across three villages. He treats every road as a racetrack and every stranger as a possible rival, and he loses gracefully about half the time.',
-    quote: 'Race you. No, really. Race me.',
+    bio: 'A skinny kid in patched shorts and a red headband who treats every road as a racetrack and every stranger as a rival. He is fast, fearless and utterly convinced that Brannoc is the bravest man alive. Nobody has managed to talk him out of it.',
+    quote: "Brannoc didn't run. He carried me. That's different.",
   },
   marta: {
+    number: 57,
+    rarity: 5,
     name: 'Marta',
     fullName: 'Marta Oakhand',
     dimension: 'physical',
@@ -56,6 +68,8 @@ export const PHYSICAL = {
     quote: "A hundred swings a day. The tree doesn't care how I feel.",
   },
   bo: {
+    number: 44,
+    rarity: 5,
     name: 'Bo',
     fullName: 'Bo Tumble',
     dimension: 'physical',
@@ -65,6 +79,8 @@ export const PHYSICAL = {
     quote: 'Hands, then feet. Then hands again!',
   },
   ingrid: {
+    number: 37,
+    rarity: 5,
     name: 'Captain Ingrid',
     fullName: 'Captain Ingrid Vale',
     dimension: 'physical',
@@ -74,6 +90,8 @@ export const PHYSICAL = {
     quote: 'Form up. Stretch first. Complain after.',
   },
   kofi: {
+    number: 51,
+    rarity: 5,
     name: 'Kofi',
     fullName: 'Kofi Stone',
     dimension: 'physical',
@@ -83,6 +101,8 @@ export const PHYSICAL = {
     quote: 'Sorry in advance.',
   },
   yuki: {
+    number: 78,
+    rarity: 5,
     name: 'Yuki',
     fullName: 'Yuki Hollowbrook',
     dimension: 'physical',
@@ -92,6 +112,8 @@ export const PHYSICAL = {
     quote: 'Cold water, clear head.',
   },
   sable: {
+    number: 2,
+    rarity: 5,
     name: 'Sable',
     dimension: 'physical',
     kind: 'recruit',
@@ -100,6 +122,8 @@ export const PHYSICAL = {
     quote: 'Again. Slower. Now faster.',
   },
   nana: {
+    number: 26,
+    rarity: 5,
     name: 'Nana Birch',
     dimension: 'physical',
     kind: 'recruit',
@@ -108,6 +132,8 @@ export const PHYSICAL = {
     quote: 'My knees are old. My feet never got the letter.',
   },
   aurelio: {
+    number: 68,
+    rarity: 5,
     name: 'Aurelio',
     fullName: 'Aurelio the Unbowed',
     dimension: 'physical',

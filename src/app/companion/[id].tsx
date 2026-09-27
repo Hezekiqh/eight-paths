@@ -40,6 +40,17 @@ export default function CompanionSheet() {
 
   return (
     <View style={styles.sheet}>
+      {/* Rarity, card-style: big white stars in the top-right corner. */}
+      <View
+        style={styles.rarity}
+        accessible
+        accessibilityLabel={`${companion.rarity} star${companion.rarity === 1 ? '' : 's'}`}>
+        {Array.from({ length: companion.rarity }, (_, i) => (
+          <Text key={i} style={styles.rarityStar}>
+            ★
+          </Text>
+        ))}
+      </View>
       <View style={styles.header}>
         <View style={[styles.portrait, { borderColor: unlocked ? info.color : colors.border }]}>
           <CharacterPortrait companion={companion} locked={!unlocked} scale={2} />
@@ -99,6 +110,16 @@ export default function CompanionSheet() {
 const styles = StyleSheet.create({
   sheet: { backgroundColor: colors.card, padding: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  rarity: { position: 'absolute', top: spacing.sm, right: spacing.lg, flexDirection: 'row', gap: 1 },
+  // White in every theme, like printed stars; the dark outline keeps them visible on light paper.
+  rarityStar: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    lineHeight: 30,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
   portrait: {
     width: 88,
     height: 112,

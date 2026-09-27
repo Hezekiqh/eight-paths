@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Environmental Path's characters. */
 export const ENVIRONMENTAL = {
   moss: {
+    number: 52,
+    rarity: 5,
     name: 'Moss',
     dimension: 'environmental',
     kind: 'core',
@@ -11,6 +13,8 @@ export const ENVIRONMENTAL = {
     quote: "Tuft says you're alright. Tuft is usually wrong. We'll see.",
   },
   fern: {
+    number: 27,
+    rarity: 5,
     name: 'Fern',
     fullName: 'Fern Ashby',
     dimension: 'environmental',
@@ -20,6 +24,8 @@ export const ENVIRONMENTAL = {
     quote: "They're not angry. They're busy. Big difference.",
   },
   brimsby: {
+    number: 65,
+    rarity: 5,
     name: 'Mother Brimsby',
     dimension: 'environmental',
     kind: 'steward',
@@ -28,6 +34,8 @@ export const ENVIRONMENTAL = {
     quote: 'Eat, eat. There is always more. There will always be more.',
   },
   tully: {
+    number: 32,
+    rarity: 5,
     name: 'Old Tully',
     dimension: 'environmental',
     kind: 'recruit',
@@ -36,6 +44,8 @@ export const ENVIRONMENTAL = {
     quote: 'The river gives if you let it. Mostly it gives boots.',
   },
   sprout: {
+    number: 18,
+    rarity: 5,
     name: 'Sprout',
     dimension: 'environmental',
     kind: 'recruit',
@@ -44,6 +54,8 @@ export const ENVIRONMENTAL = {
     quote: 'I grow a little every day. Watch! ...Okay, not that fast.',
   },
   cora: {
+    number: 11,
+    rarity: 5,
     name: 'Cora',
     fullName: 'Cora Glen',
     dimension: 'environmental',
@@ -53,6 +65,8 @@ export const ENVIRONMENTAL = {
     quote: 'Count the sheep, not the worries.',
   },
   rufus: {
+    number: 6,
+    rarity: 5,
     name: 'Rufus',
     dimension: 'environmental',
     kind: 'recruit',
@@ -61,6 +75,8 @@ export const ENVIRONMENTAL = {
     quote: "One person's trash is my whole hobby.",
   },
   wynn: {
+    number: 91,
+    rarity: 5,
     name: 'Wynn',
     fullName: 'Wynn Rainmaker',
     dimension: 'environmental',
@@ -70,6 +86,8 @@ export const ENVIRONMENTAL = {
     quote: "Rain isn't bad weather. It's the sky watering its garden.",
   },
   tala: {
+    number: 25,
+    rarity: 5,
     name: 'Tala',
     fullName: 'Tala Riverstone',
     dimension: 'environmental',
@@ -79,6 +97,8 @@ export const ENVIRONMENTAL = {
     quote: 'Leave it better than you found it. Every bend.',
   },
   hugo: {
+    number: 17,
+    rarity: 5,
     name: 'Hugo',
     fullName: 'Hugo Thornbeard',
     dimension: 'environmental',
@@ -88,6 +108,8 @@ export const ENVIRONMENTAL = {
     quote: 'Snip. Breathe. Snip.',
   },
   antler: {
+    number: 49,
+    rarity: 5,
     name: 'Old Antler',
     dimension: 'environmental',
     kind: 'recruit',
@@ -96,6 +118,8 @@ export const ENVIRONMENTAL = {
     quote: '(He bows his head. The forest goes quiet.)',
   },
   ivy: {
+    number: 48,
+    rarity: 5,
     name: 'Ivy',
     fullName: 'Ivy Greenmantle',
     dimension: 'environmental',
@@ -105,6 +129,8 @@ export const ENVIRONMENTAL = {
     quote: 'Everything is connected. Especially your shoelaces. Tie them.',
   },
   warden: {
+    number: 30,
+    rarity: 5,
     name: 'The Green Warden',
     dimension: 'environmental',
     kind: 'legend',

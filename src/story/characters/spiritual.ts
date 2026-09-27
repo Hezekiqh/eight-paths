@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Spiritual Path's characters. */
 export const SPIRITUAL = {
   wren: {
+    number: 75,
+    rarity: 5,
     name: 'Sister Wren',
     dimension: 'spiritual',
     kind: 'core',
@@ -11,6 +13,8 @@ export const SPIRITUAL = {
     quote: "I don't know. But I'll walk with you while we find out.",
   },
   hollis: {
+    number: 69,
+    rarity: 5,
     name: 'Hollis',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -19,6 +23,8 @@ export const SPIRITUAL = {
     quote: 'Someone should ring it. Might as well be me.',
   },
   honeywell: {
+    number: 99,
+    rarity: 5,
     name: 'Lucian Honeywell',
     dimension: 'spiritual',
     kind: 'steward',
@@ -27,6 +33,8 @@ export const SPIRITUAL = {
     quote: 'Why wait for meaning when you can have delight right now?',
   },
   sage: {
+    number: 66,
+    rarity: 5,
     name: 'Mother Sage',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -35,6 +43,8 @@ export const SPIRITUAL = {
     quote: 'Sit. The answer walks slower than you.',
   },
   moth: {
+    number: 71,
+    rarity: 5,
     name: 'Moth',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -43,6 +53,8 @@ export const SPIRITUAL = {
     quote: 'Shh. Listen to the quiet.',
   },
   tuck: {
+    number: 80,
+    rarity: 5,
     name: 'Brother Tuck',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -51,6 +63,8 @@ export const SPIRITUAL = {
     quote: 'Every cup is a small thank-you.',
   },
   zahra: {
+    number: 73,
+    rarity: 5,
     name: 'Zahra',
     fullName: 'Zahra of the Dunes',
     dimension: 'spiritual',
@@ -60,6 +74,8 @@ export const SPIRITUAL = {
     quote: 'The road is the prayer.',
   },
   clementine: {
+    number: 5,
+    rarity: 5,
     name: 'Clementine',
     fullName: 'Clementine Chime',
     dimension: 'spiritual',
@@ -69,6 +85,8 @@ export const SPIRITUAL = {
     quote: 'Every bell has one true note. So do you.',
   },
   ansel: {
+    number: 39,
+    rarity: 5,
     name: 'Ansel the Hermit',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -77,6 +95,8 @@ export const SPIRITUAL = {
     quote: 'I left to find myself. Turns out I was home.',
   },
   lumen: {
+    number: 10,
+    rarity: 5,
     name: 'Lumen',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -85,6 +105,8 @@ export const SPIRITUAL = {
     quote: "I shine. That's the whole trick.",
   },
   ilse: {
+    number: 38,
+    rarity: 5,
     name: 'Abbess Ilse',
     dimension: 'spiritual',
     kind: 'recruit',
@@ -93,6 +115,8 @@ export const SPIRITUAL = {
     quote: 'Every name, every morning.',
   },
   oona: {
+    number: 14,
+    rarity: 5,
     name: 'Oona',
     fullName: 'Oona Farsight',
     dimension: 'spiritual',

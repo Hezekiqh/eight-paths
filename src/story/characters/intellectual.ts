@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Intellectual Path's characters. */
 export const INTELLECTUAL = {
   quill: {
+    number: 87,
+    rarity: 5,
     name: 'Quill',
     fullName: 'Quilliana Fenwhistle',
     dimension: 'intellectual',
@@ -12,6 +14,8 @@ export const INTELLECTUAL = {
     quote: "Technically, and I say this with love, you're wrong.",
   },
   ottilie: {
+    number: 55,
+    rarity: 5,
     name: 'Ottilie',
     fullName: 'Ottilie Page',
     dimension: 'intellectual',
@@ -21,6 +25,8 @@ export const INTELLECTUAL = {
     quote: "I haven't read that one yet. Isn't that wonderful?",
   },
   thane: {
+    number: 92,
+    rarity: 5,
     name: 'Magister Thane',
     fullName: 'Magister Oriel Thane',
     dimension: 'intellectual',
@@ -30,6 +36,8 @@ export const INTELLECTUAL = {
     quote: "Please don't ask. I've already answered.",
   },
   bramble: {
+    number: 58,
+    rarity: 5,
     name: 'Professor Bramble',
     fullName: 'Professor Mungo Bramble',
     dimension: 'intellectual',
@@ -39,6 +47,8 @@ export const INTELLECTUAL = {
     quote: 'Fascinating. Wrong, but fascinating.',
   },
   nib: {
+    number: 20,
+    rarity: 5,
     name: 'Nib',
     fullName: 'Nib Wickett',
     dimension: 'intellectual',
@@ -48,6 +58,8 @@ export const INTELLECTUAL = {
     quote: 'Why? No, but WHY?',
   },
   astra: {
+    number: 70,
+    rarity: 5,
     name: 'Astra',
     fullName: 'Astra Voss',
     dimension: 'intellectual',
@@ -57,6 +69,8 @@ export const INTELLECTUAL = {
     quote: 'The sky is a book that turns its own pages.',
   },
   felix: {
+    number: 93,
+    rarity: 5,
     name: 'Felix',
     fullName: 'Felix Rook',
     dimension: 'intellectual',
@@ -66,6 +80,8 @@ export const INTELLECTUAL = {
     quote: 'Check. Hm. That was me.',
   },
   hana: {
+    number: 90,
+    rarity: 5,
     name: 'Hana',
     fullName: 'Hana Mori',
     dimension: 'intellectual',
@@ -75,6 +91,8 @@ export const INTELLECTUAL = {
     quote: 'Sorry. Désolé. Gomen. You get the idea.',
   },
   quimby: {
+    number: 28,
+    rarity: 5,
     name: 'Doctor Quimby',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -83,6 +101,8 @@ export const INTELLECTUAL = {
     quote: "Wash your hands. That's most of medicine.",
   },
   lyra: {
+    number: 23,
+    rarity: 5,
     name: 'Lyra',
     fullName: 'Lyra Inkwell',
     dimension: 'intellectual',
@@ -92,6 +112,8 @@ export const INTELLECTUAL = {
     quote: "If it isn't on the map, go and put it there.",
   },
   solomon: {
+    number: 19,
+    rarity: 5,
     name: 'Old Solomon',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -100,6 +122,8 @@ export const INTELLECTUAL = {
     quote: 'I read with my ears now. Much less eyestrain.',
   },
   hoot: {
+    number: 29,
+    rarity: 5,
     name: 'Professor Hoot',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -108,6 +132,8 @@ export const INTELLECTUAL = {
     quote: 'Whooo asked? You did. Excellent.',
   },
   elowen: {
+    number: 76,
+    rarity: 5,
     name: 'Archmage Elowen',
     dimension: 'intellectual',
     kind: 'legend',

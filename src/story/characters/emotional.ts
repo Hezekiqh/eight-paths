@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Emotional Path's characters. */
 export const EMOTIONAL = {
   oren: {
+    number: 72,
+    rarity: 5,
     name: 'Oren',
     fullName: 'Oren Stillwater',
     dimension: 'emotional',
@@ -12,6 +14,8 @@ export const EMOTIONAL = {
     quote: 'Breathe first. Then we decide who to punch.',
   },
   juniper: {
+    number: 42,
+    rarity: 5,
     name: 'Juniper',
     fullName: 'Juniper Wick',
     dimension: 'emotional',
@@ -21,6 +25,8 @@ export const EMOTIONAL = {
     quote: 'Cracked is still a cup.',
   },
   corwin: {
+    number: 95,
+    rarity: 5,
     name: 'Captain Corwin',
     dimension: 'emotional',
     kind: 'steward',
@@ -29,6 +35,8 @@ export const EMOTIONAL = {
     quote: "I'm not angry. I'm correct.",
   },
   lark: {
+    number: 94,
+    rarity: 5,
     name: 'Lark',
     dimension: 'emotional',
     kind: 'recruit',
@@ -37,6 +45,8 @@ export const EMOTIONAL = {
     quote: 'In for four. Out for four. There. Better.',
   },
   dot: {
+    number: 45,
+    rarity: 5,
     name: 'Dot',
     dimension: 'emotional',
     kind: 'recruit',
@@ -45,6 +55,8 @@ export const EMOTIONAL = {
     quote: 'Today I am a four out of five. Mostly.',
   },
   rowan: {
+    number: 16,
+    rarity: 5,
     name: 'Rowan',
     fullName: 'Rowan Ashdown',
     dimension: 'emotional',
@@ -54,6 +66,8 @@ export const EMOTIONAL = {
     quote: 'Panic later. Water now.',
   },
   mireille: {
+    number: 22,
+    rarity: 5,
     name: 'Mireille',
     dimension: 'emotional',
     kind: 'recruit',
@@ -62,6 +76,8 @@ export const EMOTIONAL = {
     quote: "(She mimes a hug. It's a very good one.)",
   },
   teodor: {
+    number: 86,
+    rarity: 5,
     name: 'Teodor',
     fullName: 'Teodor Grim',
     dimension: 'emotional',
@@ -71,6 +87,8 @@ export const EMOTIONAL = {
     quote: 'Grief is just love with nowhere to go. I give it somewhere.',
   },
   nell: {
+    number: 43,
+    rarity: 5,
     name: 'Nell',
     fullName: 'Nell Honeysuckle',
     dimension: 'emotional',
@@ -80,6 +98,8 @@ export const EMOTIONAL = {
     quote: "The roses know everything. They're very discreet.",
   },
   bartholomew: {
+    number: 7,
+    rarity: 5,
     name: 'Bartholomew',
     dimension: 'emotional',
     kind: 'recruit',
@@ -88,6 +108,8 @@ export const EMOTIONAL = {
     quote: 'Hug? Hug.',
   },
   iris: {
+    number: 79,
+    rarity: 5,
     name: 'Iris',
     fullName: 'Iris Calloway',
     dimension: 'emotional',
@@ -97,6 +119,8 @@ export const EMOTIONAL = {
     quote: 'Some days are heavy. I carry them, and set them down at night.',
   },
   willa: {
+    number: 54,
+    rarity: 5,
     name: 'Willa',
     fullName: 'Willa Stillpond',
     dimension: 'emotional',
@@ -106,6 +130,8 @@ export const EMOTIONAL = {
     quote: 'The fish come when you stop needing them to.',
   },
   kaito: {
+    number: 40,
+    rarity: 5,
     name: 'Master Kaito',
     dimension: 'emotional',
     kind: 'legend',

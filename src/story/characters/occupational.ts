@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Occupational Path's characters. Its steward is not collectible (STORY.md §6). */
 export const OCCUPATIONAL = {
   tamsin: {
+    number: 84,
+    rarity: 5,
     name: 'Tamsin',
     fullName: 'Tamsin Brasse',
     dimension: 'occupational',
@@ -12,6 +14,8 @@ export const OCCUPATIONAL = {
     quote: 'Broken. Good. Something to do.',
   },
   rivet: {
+    number: 12,
+    rarity: 5,
     name: 'Wick',
     fullName: 'Wick Rivet',
     dimension: 'occupational',
@@ -21,6 +25,8 @@ export const OCCUPATIONAL = {
     quote: "Small jobs. Every night. That's the trick.",
   },
   greta: {
+    number: 88,
+    rarity: 5,
     name: 'Greta',
     fullName: 'Greta Hammerfall',
     dimension: 'occupational',
@@ -30,6 +36,8 @@ export const OCCUPATIONAL = {
     quote: 'One stone. Then the next one.',
   },
   sprocket: {
+    number: 96,
+    rarity: 5,
     name: 'Sprocket',
     dimension: 'occupational',
     kind: 'recruit',
@@ -38,6 +46,8 @@ export const OCCUPATIONAL = {
     quote: 'I only broke it a little!',
   },
   hilde: {
+    number: 74,
+    rarity: 5,
     name: 'Hilde',
     fullName: 'Hilde Anvil',
     dimension: 'occupational',
@@ -47,6 +57,8 @@ export const OCCUPATIONAL = {
     quote: "Hit it while it's hot. Rest while it cools.",
   },
   joss: {
+    number: 64,
+    rarity: 5,
     name: 'Joss',
     fullName: 'Joss Furrow',
     dimension: 'occupational',
@@ -56,6 +68,8 @@ export const OCCUPATIONAL = {
     quote: "Seeds don't plant themselves. I've asked.",
   },
   babette: {
+    number: 50,
+    rarity: 5,
     name: 'Chef Babette',
     dimension: 'occupational',
     kind: 'recruit',
@@ -64,6 +78,8 @@ export const OCCUPATIONAL = {
     quote: 'Everything in its place, including you.',
   },
   wilbur: {
+    number: 85,
+    rarity: 5,
     name: 'Wilbur',
     fullName: 'Wilbur Planewright',
     dimension: 'occupational',
@@ -73,6 +89,8 @@ export const OCCUPATIONAL = {
     quote: 'Measure twice. Cut once. Measure again, to be safe.',
   },
   oskar: {
+    number: 63,
+    rarity: 5,
     name: 'Oskar',
     fullName: 'Scrivener Oskar',
     dimension: 'occupational',
@@ -82,6 +100,8 @@ export const OCCUPATIONAL = {
     quote: 'One page a night makes a library in a lifetime.',
   },
   rosa: {
+    number: 59,
+    rarity: 5,
     name: 'Rosa',
     fullName: 'Rosa Gearheart',
     dimension: 'occupational',
@@ -91,6 +111,8 @@ export const OCCUPATIONAL = {
     quote: 'It walks! Mostly forward!',
   },
   morrow: {
+    number: 4,
+    rarity: 5,
     name: 'Keeper Morrow',
     dimension: 'occupational',
     kind: 'recruit',
@@ -99,6 +121,8 @@ export const OCCUPATIONAL = {
     quote: "Someone has to keep the light. Why not the one who's awake?",
   },
   adaeze: {
+    number: 83,
+    rarity: 5,
     name: 'Guildmaster Adaeze',
     dimension: 'occupational',
     kind: 'recruit',

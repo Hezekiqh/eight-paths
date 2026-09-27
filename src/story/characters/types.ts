@@ -8,7 +8,16 @@ import type { Dimension } from '@/game';
  */
 export type CharacterKind = 'core' | 'recruit' | 'steward' | 'legend';
 
+/** Stars, 1 to 5. Everyone in the original roster is 5★; later characters can be rarer or commoner. */
+export type Rarity = 1 | 2 | 3 | 4 | 5;
+
 export type CharacterData = {
+  /**
+   * Collection number, deliberately scattered across Paths. Fixed forever once
+   * given: new characters take the next free number, never renumber others.
+   */
+  number: number;
+  rarity: Rarity;
   /** What everyone calls them. */
   name: string;
   /** Their full name, when it differs from `name`. */

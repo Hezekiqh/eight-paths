@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Financial Path's characters. */
 export const FINANCIAL = {
   ysolde: {
+    number: 31,
+    rarity: 5,
     name: 'Ysolde',
     fullName: 'Ysolde Marrow',
     dimension: 'financial',
@@ -12,6 +14,8 @@ export const FINANCIAL = {
     quote: 'Charming. Now, what does it cost?',
   },
   penny: {
+    number: 33,
+    rarity: 5,
     name: 'Penny',
     fullName: 'Penny Vell',
     dimension: 'financial',
@@ -21,6 +25,8 @@ export const FINANCIAL = {
     quote: "A copper saved is a copper you don't have to find.",
   },
   tithe: {
+    number: 24,
+    rarity: 5,
     name: 'Countess Tithe',
     fullName: 'Countess Constance Tithe',
     dimension: 'financial',
@@ -30,6 +36,8 @@ export const FINANCIAL = {
     quote: 'Nothing is free, darling. Least of all hope.',
   },
   aubrey: {
+    number: 46,
+    rarity: 5,
     name: 'Lord Aubrey',
     fullName: 'Lord Aubrey Finch',
     dimension: 'financial',
@@ -39,6 +47,8 @@ export const FINANCIAL = {
     quote: "I've made a ledger. It's terrifying.",
   },
   wendel: {
+    number: 41,
+    rarity: 5,
     name: 'Wendel',
     fullName: 'Wendel Coin',
     dimension: 'financial',
@@ -48,6 +58,8 @@ export const FINANCIAL = {
     quote: 'Two for the bridge. One for the troll. Kidding. No troll.',
   },
   saoirse: {
+    number: 60,
+    rarity: 5,
     name: 'Saoirse',
     fullName: 'Saoirse Thrift',
     dimension: 'financial',
@@ -57,6 +69,8 @@ export const FINANCIAL = {
     quote: 'Why buy new when the old one has stories?',
   },
   hamish: {
+    number: 47,
+    rarity: 5,
     name: 'Hamish',
     fullName: 'Hamish Budge',
     dimension: 'financial',
@@ -66,6 +80,8 @@ export const FINANCIAL = {
     quote: 'The second pig is a long-term investment.',
   },
   priya: {
+    number: 97,
+    rarity: 5,
     name: 'Priya',
     fullName: 'Priya Ledgerlight',
     dimension: 'financial',
@@ -75,6 +91,8 @@ export const FINANCIAL = {
     quote: "Numbers don't lie. People do, a bit.",
   },
   gus: {
+    number: 56,
+    rarity: 5,
     name: 'Gus',
     fullName: 'Gus Tallow',
     dimension: 'financial',
@@ -84,6 +102,8 @@ export const FINANCIAL = {
     quote: 'Every stub becomes a new candle.',
   },
   mirela: {
+    number: 21,
+    rarity: 5,
     name: 'Mirela',
     fullName: 'Mirela Goldvein',
     dimension: 'financial',
@@ -93,6 +113,8 @@ export const FINANCIAL = {
     quote: 'Dig slow. Spend slower.',
   },
   ambrose: {
+    number: 77,
+    rarity: 5,
     name: 'Ambrose',
     fullName: 'Ambrose Tally',
     dimension: 'financial',
@@ -102,6 +124,8 @@ export const FINANCIAL = {
     quote: "I guard it. I don't want it. That's the whole job.",
   },
   marchbank: {
+    number: 89,
+    rarity: 5,
     name: 'Lady Marchbank',
     dimension: 'financial',
     kind: 'recruit',

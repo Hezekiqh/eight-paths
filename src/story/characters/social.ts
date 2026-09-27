@@ -3,6 +3,8 @@ import type { CharacterData } from './types';
 /** The Social Path's characters. */
 export const SOCIAL = {
   pip: {
+    number: 82,
+    rarity: 5,
     name: 'Pip',
     fullName: 'Pip Larkspur',
     dimension: 'social',
@@ -12,6 +14,8 @@ export const SOCIAL = {
     quote: "Good news: I've made a friend! Bad news: it's a goose.",
   },
   marigold: {
+    number: 9,
+    rarity: 5,
     name: 'Marigold',
     fullName: 'Marigold Tumble',
     dimension: 'social',
@@ -21,6 +25,8 @@ export const SOCIAL = {
     quote: 'Catch! No? Good. Now we are talking.',
   },
   marisol: {
+    number: 13,
+    rarity: 5,
     name: 'Marisol Vane',
     dimension: 'social',
     kind: 'steward',
@@ -29,6 +35,8 @@ export const SOCIAL = {
     quote: 'Oh, your life is lovely. I will take it from here.',
   },
   barnaby: {
+    number: 34,
+    rarity: 5,
     name: 'Barnaby',
     fullName: 'Barnaby Crumb',
     dimension: 'social',
@@ -38,6 +46,8 @@ export const SOCIAL = {
     quote: 'Extra bun. You look like you need one.',
   },
   fitz: {
+    number: 15,
+    rarity: 5,
     name: 'Fitz',
     fullName: 'Fitz Tattle',
     dimension: 'social',
@@ -47,6 +57,8 @@ export const SOCIAL = {
     quote: "Hear ye! Someone's awake! It's you!",
   },
   amara: {
+    number: 98,
+    rarity: 5,
     name: 'Amara',
     fullName: 'Amara Bright',
     dimension: 'social',
@@ -56,6 +68,8 @@ export const SOCIAL = {
     quote: "Everyone belongs at the table. I'll find the chair.",
   },
   duke: {
+    number: 61,
+    rarity: 5,
     name: 'Duke',
     dimension: 'social',
     kind: 'recruit',
@@ -64,6 +78,8 @@ export const SOCIAL = {
     quote: "Woof. (Translation: you're family now.)",
   },
   ruth: {
+    number: 53,
+    rarity: 5,
     name: 'Ruth',
     fullName: 'Ruth Letterly',
     dimension: 'social',
@@ -73,6 +89,8 @@ export const SOCIAL = {
     quote: "Write to someone today. I'll carry it.",
   },
   bastian: {
+    number: 67,
+    rarity: 5,
     name: 'Bastian',
     fullName: 'Bastian Drum',
     dimension: 'social',
@@ -82,6 +100,8 @@ export const SOCIAL = {
     quote: 'Everyone walks better in time.',
   },
   lola: {
+    number: 35,
+    rarity: 5,
     name: 'Lola',
     fullName: 'Lola Marchetti',
     dimension: 'social',
@@ -91,6 +111,8 @@ export const SOCIAL = {
     quote: 'Sit! Eat! Tell me everything!',
   },
   kitkat: {
+    number: 3,
+    rarity: 5,
     name: 'Kit and Kat',
     dimension: 'social',
     kind: 'recruit',
@@ -99,6 +121,8 @@ export const SOCIAL = {
     quote: "We're a... ...package deal.",
   },
   oyelaran: {
+    number: 100,
+    rarity: 5,
     name: 'Ambassador Oyelaran',
     dimension: 'social',
     kind: 'recruit',

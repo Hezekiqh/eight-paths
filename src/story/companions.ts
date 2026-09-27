@@ -1,4 +1,4 @@
-import { DIMENSIONS, levelFromXp, type Dimension } from '@/game';
+import { levelFromXp, type Dimension } from '@/game';
 
 import { EMOTIONAL } from './characters/emotional';
 import { ENVIRONMENTAL } from './characters/environmental';
@@ -10,7 +10,7 @@ import { SOCIAL } from './characters/social';
 import { SPIRITUAL } from './characters/spiritual';
 import type { CharacterData } from './characters/types';
 
-export type { CharacterKind } from './characters/types';
+export type { CharacterKind, Rarity } from './characters/types';
 
 /**
  * The Path levels that unlock each Path's characters, in order after its core
@@ -39,19 +39,12 @@ const CHARACTERS = {
 
 export type CharacterId = keyof typeof CHARACTERS;
 
-export type Companion = CharacterData & {
-  id: CharacterId;
-  /** Collection number, from 1: grouped by Path, then by unlock level. */
-  number: number;
-};
+export type Companion = CharacterData & { id: CharacterId };
 
-/** Everyone, in collection order. */
+/** Everyone, in collection-number order. */
 export const ROSTER: Companion[] = (Object.entries(CHARACTERS) as [CharacterId, CharacterData][])
   .map(([id, data]) => ({ ...data, id }))
-  .sort(
-    (a, b) => DIMENSIONS.indexOf(a.dimension) - DIMENSIONS.indexOf(b.dimension) || a.unlockLevel - b.unlockLevel,
-  )
-  .map((c, i) => ({ ...c, number: i + 1 }));
+  .sort((a, b) => a.number - b.number);
 
 export const COMPANIONS = Object.fromEntries(ROSTER.map((c) => [c.id, c])) as Record<CharacterId, Companion>;
 
