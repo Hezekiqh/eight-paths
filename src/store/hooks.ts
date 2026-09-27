@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { router } from 'expo-router';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -161,4 +162,37 @@ export function useReminderSync(today: string) {
   useEffect(() => {
     syncReminders({ today, notificationTime, playedToday, enabled });
   }, [today, notificationTime, playedToday, enabled]);
+}
+
+/** How long a new character waits before their reveal, so the XP banner shows first. */
+const REVEAL_DELAY_MS = 2200;
+
+/**
+ * Plays the reveal cutscene for each newly unlocked character, one at a time.
+ * On an older save (revealed is null) everyone already unlocked counts as met.
+ */
+export function useRevealQueue() {
+  const collection = useCollection();
+  const revealed = useGameStore((s) => s.revealed);
+  const hasPlayer = useGameStore((s) => s.player !== null);
+  const markRevealed = useGameStore((s) => s.markRevealed);
+  const showing = useRef<string | null>(null);
+  const unlocked = collection.entries.filter((e) => e.unlocked).map((e) => e.companion.id);
+  const next = revealed === null ? undefined : unlocked.find((id) => !revealed.includes(id));
+
+  useEffect(() => {
+    if (!hasPlayer) return;
+    if (revealed === null) {
+      markRevealed(unlocked);
+      return;
+    }
+    if (!next || showing.current === next) return;
+    const timer = setTimeout(() => {
+      showing.current = next;
+      router.push({ pathname: '/reveal/[id]', params: { id: next } });
+    }, REVEAL_DELAY_MS);
+    return () => clearTimeout(timer);
+    // `unlocked` is derived from the collection; `next` captures what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPlayer, revealed === null, next, markRevealed]);
 }

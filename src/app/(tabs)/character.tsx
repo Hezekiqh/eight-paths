@@ -12,6 +12,7 @@ import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
+import { ROSTER } from '@/story/companions';
 import { colors, fonts, radius, spacing, windowStyle, theme } from '@/theme';
 
 function openSupport() {
@@ -164,6 +165,22 @@ export default function CharacterScreen() {
           subtitle="Call or text 988 · Suicide & Crisis Lifeline (US)"
           onPress={openSupport}
         />
+        {/* Development builds only: never ships to the App Store. */}
+        {__DEV__ && (
+          <>
+            <View style={styles.divider} />
+            <SettingsRow
+              icon="zap"
+              iconColor={classInfo.color}
+              title="Test character reveal (dev)"
+              subtitle="Plays the reveal for a random character. Doesn't change your save."
+              onPress={() => {
+                const pick = ROSTER[Math.floor(Math.random() * ROSTER.length)];
+                router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
+              }}
+            />
+          </>
+        )}
       </View>
       <Text style={styles.disclaimer}>
         Eight Paths is a habit game. It is not a medical, clinical or mental health service.

@@ -17,6 +17,7 @@ const ICONS = [
   'upload',
   'download',
   'chevron-right',
+  'zap',
 ];
 
 const entries = ICONS.map((name) => {

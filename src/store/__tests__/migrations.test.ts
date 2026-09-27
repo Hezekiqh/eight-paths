@@ -44,6 +44,7 @@ const valid = {
     { id: 'goal1', title: 'Run a 5K', dimension: 'physical', dueDate: '2026-12-01', createdAt: '2026-09-01' },
     { id: 'goal2', title: 'Call Mum', createdAt: '2026-09-01', completedAt: '2026-09-02' },
   ],
+  revealed: ['brannoc', 'quill', 'ottilie'],
 };
 
 describe('sanitizeSave', () => {
@@ -65,6 +66,7 @@ describe('sanitizeSave', () => {
         shards: {},
         claimed: [],
         goals: [],
+        revealed: null,
       });
     }
   });
@@ -128,6 +130,11 @@ describe('migrateSave', () => {
     );
     expect(upgraded.party).toEqual(DEFAULT_PARTY);
     expect(upgraded.completions[0].characterId).toBe('quill');
+  });
+
+  it('upgrades a v4 save to count everyone already unlocked as met (revealed: null)', () => {
+    const { revealed: _, ...v4 } = valid;
+    expect(migrateSave(v4, 4, MIGRATIONS, 5).revealed).toBeNull();
   });
 
   it('keeps each party slot on its own Path', () => {

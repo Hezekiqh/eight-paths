@@ -302,4 +302,13 @@ describe('loading a saved game', () => {
     const last = outcomes[9];
     expect(last.kind === 'completed' && last.milestone?.title).toBe('Level 10');
   });
+
+  it('starts with the core eight revealed and records new reveals once', () => {
+    start();
+    expect(useGameStore.getState().revealed).toHaveLength(8);
+    useGameStore.getState().markRevealed(['dessa', 'dessa', 'brannoc']);
+    const revealed = useGameStore.getState().revealed!;
+    expect(revealed).toHaveLength(9);
+    expect(revealed).toContain('dessa');
+  });
 });

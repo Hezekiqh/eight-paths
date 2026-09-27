@@ -11,15 +11,8 @@ import { XpBar } from '@/components/xp-bar';
 import { CLASSES } from '@/game';
 import { useGameStore } from '@/store';
 import { useCollection } from '@/store/hooks';
-import { REALMS, formatNumber, isCharacterId, type CharacterKind } from '@/story/companions';
+import { KIND_LABEL, REALMS, formatNumber, isCharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
-
-const KIND_LABEL: Record<CharacterKind, string> = {
-  core: 'Companion',
-  recruit: 'Recruit',
-  steward: 'Rival',
-  legend: 'Legend',
-};
 
 export default function CompanionSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();

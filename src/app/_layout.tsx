@@ -72,6 +72,10 @@ export default function RootLayout() {
           <Stack.Screen name="backup" options={{ presentation: 'modal' }} />
           <Stack.Screen name="class/[dimension]" options={sheetOptions} />
           <Stack.Screen name="companion/[id]" options={sheetOptions} />
+          <Stack.Screen
+            name="reveal/[id]"
+            options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
+          />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>

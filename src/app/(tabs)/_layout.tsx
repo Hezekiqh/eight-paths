@@ -3,12 +3,13 @@ import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RetroTabButton } from '@/components/retro-tab-bar';
-import { useObjectives, useReminderSync, useSettleOnDayChange, useToday } from '@/store/hooks';
+import { useObjectives, useReminderSync, useRevealQueue, useSettleOnDayChange, useToday } from '@/store/hooks';
 import { FRAME, colors, spacing } from '@/theme';
 
 export default function TabsLayout() {
   const today = useToday();
   useSettleOnDayChange(today);
+  useRevealQueue();
   useReminderSync(today);
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);

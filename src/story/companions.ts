@@ -8,7 +8,7 @@ import { OCCUPATIONAL } from './characters/occupational';
 import { PHYSICAL } from './characters/physical';
 import { SOCIAL } from './characters/social';
 import { SPIRITUAL } from './characters/spiritual';
-import type { CharacterData } from './characters/types';
+import type { CharacterData, CharacterKind } from './characters/types';
 
 export type { Alignment, CharacterKind, Rarity } from './characters/types';
 
@@ -81,4 +81,12 @@ export const REALMS: Record<Dimension, string> = {
   social: 'The Festival City',
   occupational: 'The Guild City',
   environmental: 'The Wildwood',
+};
+
+/** How each kind of character is labelled in the app. */
+export const KIND_LABEL: Record<CharacterKind, string> = {
+  core: 'Companion',
+  recruit: 'Recruit',
+  steward: 'Rival',
+  legend: 'Legend',
 };

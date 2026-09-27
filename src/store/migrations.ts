@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -35,6 +35,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   2: (save) => save,
   // v4 adds the Vibration setting to the player; sanitizeSave turns it on.
   3: (save) => save,
+  // v5 adds reveal tracking; null means "count everyone already unlocked as met".
+  4: (save) => ({ ...save, revealed: null }),
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -188,6 +190,7 @@ export function sanitizeSave(raw: unknown): GameData {
     shards: cleanShards(save.shards),
     claimed: asArray(save.claimed).filter((c): c is string => typeof c === 'string'),
     goals: keep(asArray(save.goals), cleanGoal),
+    revealed: Array.isArray(save.revealed) ? save.revealed.filter(isCharacterId) : null,
   };
 }
 

@@ -57,6 +57,11 @@ export type GameData = {
   /** Objectives whose reward has been claimed (recent ones only). */
   claimed: string[];
   goals: Goal[];
+  /**
+   * Characters whose reveal cutscene has played. Null until first filled in:
+   * saves from before reveals existed count everyone already unlocked as met.
+   */
+  revealed: CharacterId[] | null;
 };
 
 export type GoalDraft = Pick<Goal, 'title' | 'dimension' | 'dueDate'>;
@@ -108,6 +113,8 @@ type Actions = {
   deleteGoal: (id: string) => void;
   /** Marks a goal done (earning its XP) or not done (returning it). */
   toggleGoal: (id: string, today?: string) => void;
+  /** Records that `ids` have been revealed (their cutscene played, or they predate reveals). */
+  markRevealed: (ids: CharacterId[]) => void;
   completeTutorial: () => void;
   settle: (today?: string) => void;
   resetGame: () => void;
@@ -129,12 +136,27 @@ export const initialData: GameData = {
   shards: {},
   claimed: [],
   goals: [],
+  revealed: null,
 };
 
 /** Every saved field, for persisting and backups. */
 export function pickData(s: GameData): GameData {
-  const { player, quests, completions, restDays, lastSettledDate, party, xpGrants, boosts, shards, claimed, goals } = s;
-  return { player, quests, completions, restDays, lastSettledDate, party, xpGrants, boosts, shards, claimed, goals };
+  const { player, quests, completions, restDays, lastSettledDate, party, xpGrants, boosts, shards, claimed, goals, revealed } =
+    s;
+  return {
+    player,
+    quests,
+    completions,
+    restDays,
+    lastSettledDate,
+    party,
+    xpGrants,
+    boosts,
+    shards,
+    claimed,
+    goals,
+    revealed,
+  };
 }
 
 const todayKey = () => toDateKey(new Date());
@@ -213,6 +235,8 @@ export const useGameStore = create<GameState>()(
             hapticsEnabled: true,
           },
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
+          // The core eight are there from the start: no reveal needed.
+          revealed: Object.values(DEFAULT_PARTY),
         });
       },
 
@@ -333,6 +357,9 @@ export const useGameStore = create<GameState>()(
             : xpGrants,
         });
       },
+
+      markRevealed: (ids) =>
+        set((s) => ({ revealed: [...new Set([...(s.revealed ?? []), ...ids])] })),
 
       completeTutorial: () =>
         set((s) =>
