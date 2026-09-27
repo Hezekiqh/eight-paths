@@ -11,7 +11,7 @@ type Props = {
   variant?: 'solid' | 'ghost';
 };
 
-export function Button({ title, onPress, color = colors.grid, disabled, variant = 'solid' }: Props) {
+export function Button({ title, onPress, color = colors.accent, disabled, variant = 'solid' }: Props) {
   const solid = variant === 'solid';
   return (
     <Pressable
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     borderWidth: FRAME,
     paddingVertical: spacing.lg,
     alignItems: 'center',
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 1,
     shadowRadius: 0,
     shadowOffset: { width: 4, height: 4 },

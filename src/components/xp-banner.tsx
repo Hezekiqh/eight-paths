@@ -12,7 +12,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { CharacterPortrait } from '@/components/character-portrait';
 import { CLASSES, type Dimension, type XpGain } from '@/game';
+import { useGameStore } from '@/store';
+import { COMPANIONS } from '@/story/companions';
 import type { Milestone } from '@/store';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
@@ -43,6 +46,8 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
   const [level, setLevel] = useState(before.level);
   const [xpLabel, setXpLabel] = useState(`${before.xpIntoLevel} / ${before.xpForNext} XP`);
 
+  const member = COMPANIONS[useGameStore((s) => s.party[dimension])];
+  const hop = useSharedValue(0);
   const width = useSharedValue(before.xpIntoLevel / before.xpForNext);
   const flash = useSharedValue(0);
 
@@ -67,6 +72,20 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
         filled,
         withSequence(withTiming(1, { duration: FLASH_MS / 2 }), withTiming(0, { duration: FLASH_MS / 2 })),
       );
+      // The party member cheers: three little hops as the level lands.
+      const up = { duration: 120, easing: Easing.out(Easing.quad) };
+      const down = { duration: 120, easing: Easing.in(Easing.quad) };
+      hop.value = withDelay(
+        filled,
+        withSequence(
+          withTiming(-10, up),
+          withTiming(0, down),
+          withTiming(-10, up),
+          withTiming(0, down),
+          withTiming(-10, up),
+          withTiming(0, down),
+        ),
+      );
       timers.push(setTimeout(() => setLevel(after.level), filled));
       timers.push(setTimeout(() => setXpLabel(`${after.xpIntoLevel} / ${after.xpForNext} XP`), filled + FLASH_MS));
       timers.push(setTimeout(onDone, filled + FLASH_MS + FILL_MS + hold));
@@ -80,8 +99,13 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fillStyle = useAnimatedStyle(() => ({ width: `${width.value * 100}%` }));
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${width.value * 100}%`,
+  }));
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+  const hopStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: hop.value }],
+  }));
   const levelledNow = leveledUp && level === after.level;
 
   return (
@@ -91,7 +115,9 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
       style={[styles.wrap, { bottom: spacing.lg }]}>
       <Pressable onPress={onDone} style={[styles.card, { borderColor: info.color }]}>
         <View style={styles.header}>
-          <SymbolView name={info.symbol} tintColor={info.color} size={22} />
+          <Animated.View style={hopStyle}>
+            <CharacterPortrait companion={member} />
+          </Animated.View>
           <Text style={[styles.title, levelledNow && { color: info.color }]}>
             {levelledNow ? `${info.className} — Level ${level}` : `${info.className} · Level ${level}`}
           </Text>
@@ -123,13 +149,23 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  header: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
   title: { flex: 1, color: colors.text, fontSize: 22, fontFamily: fonts.bold },
   gain: { fontSize: 22, fontFamily: fonts.bold },
-  track: { height: 12, backgroundColor: colors.cardRaised, borderRadius: radius.pill, overflow: 'hidden' },
+  track: {
+    height: 12,
+    backgroundColor: colors.cardRaised,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
   fill: { height: '100%', borderRadius: radius.pill },
-  flash: { backgroundColor: '#FFFFFF', borderRadius: radius.pill },
-  xp: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'right' },
+  flash: { backgroundColor: colors.card, borderRadius: radius.pill },
+  xp: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    textAlign: 'right',
+  },
   milestone: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,5 +176,9 @@ const styles = StyleSheet.create({
   },
   milestoneText: { flex: 1, gap: 2 },
   milestoneTitle: { color: colors.text, fontSize: 21, fontFamily: fonts.bold },
-  milestoneDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
+  milestoneDetail: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+  },
 });

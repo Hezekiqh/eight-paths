@@ -14,10 +14,10 @@ export type { CharacterKind } from './characters/types';
 
 /**
  * The Path levels that unlock each Path's characters, in order after its core
- * companion. Days to reach them doing one quest a day on that Path (two a day
- * halves it): Lv 7 ≈ 1 week, 10 ≈ 3½ weeks, 15 ≈ 2½ months, 20 ≈ 5 months,
- * 30 ≈ 10 months, 40 ≈ 15 months, 50 ≈ 20 months. Paths with a legend use
- * the whole ladder; the rest stop at 40.
+ * companion. Tasks on that Path needed to reach them (so days, at one a day):
+ * Lv 7 = 3, 10 = 15, 13 = 34, 15 = 49, 18 = 75, 20 = 95, 23 = 125, 26 = 155,
+ * 30 = 195, 35 = 245, 40 = 295, 50 = 395. Paths with a legend use the whole
+ * ladder; the rest stop at 40.
  */
 export const UNLOCK_LADDER = [7, 10, 13, 15, 18, 20, 23, 26, 30, 35, 40, 50] as const;
 

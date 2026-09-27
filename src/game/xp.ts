@@ -1,36 +1,54 @@
 import { DIMENSIONS, type Completion, type Dimension } from './types';
 
+/** Every task is worth the same, so a level reads as a count of tasks. */
 export const BASE_XP = 10;
-export const CLASS_BONUS = 1.25;
 export const START_LEVEL = 5;
-export const OVERALL_SCALE = 4;
 
-/** Completions per Path per day that earn full XP; later ones earn half, so padding doesn't pay. */
-export const FULL_XP_PER_PATH_PER_DAY = 3;
+/** Only the first this-many completions each day earn XP; more still count for streaks. */
+export const DAILY_XP_TASKS = 10;
 
-/** The level curve stops getting steeper here, so progress never grinds to a halt. */
-export const LEVEL_XP_CAP = 150;
+/** Tasks per level stop growing here, so progress never grinds to a halt. */
+export const MAX_TASKS_PER_LEVEL = 10;
 
-/**
- * `earlierInPathThatDay` is how many completions this Path already has on
- * the same day.
- */
-export function xpForCompletion(
-  dimension: Dimension,
-  classDimension: Dimension,
-  earlierInPathThatDay = 0,
-): number {
-  const full = dimension === classDimension ? Math.ceil(BASE_XP * CLASS_BONUS) : BASE_XP;
-  return earlierInPathThatDay < FULL_XP_PER_PATH_PER_DAY ? full : Math.ceil(full / 2);
+/** `earlierToday` is how many completions the player already has today, on any Path. */
+export function xpForCompletion(earlierToday = 0): number {
+  return earlierToday < DAILY_XP_TASKS ? BASE_XP : 0;
 }
 
 /**
- * XP needed to go from `level` to `level + 1`: 30 at level 5, +10 per level,
- * capped at 150. Never steeper than the 1.0 curve (20 × L), so recomputing
- * an existing save can only raise its levels.
+ * Tasks needed to go from `level` to `level + 1`. Quick at the start (1 task
+ * at level 5, then 2, 3, 4, 5), then one more every two levels until it
+ * settles at 10 tasks a level from level 18 on.
  */
-export function xpToNextLevel(level: number, scale = 1): number {
-  return Math.min(30 + 10 * (level - START_LEVEL), LEVEL_XP_CAP) * scale;
+export function tasksToNextLevel(level: number): number {
+  if (level < 10) return Math.max(1, level - (START_LEVEL - 1));
+  return Math.min(6 + Math.floor((level - 10) / 2), MAX_TASKS_PER_LEVEL);
+}
+
+/**
+ * XP needed to go from `level` to `level + 1`: 10 XP per task. Gentler than
+ * every earlier curve at every level, so recomputing an old save can only
+ * raise its levels.
+ */
+export function xpToNextLevel(level: number): number {
+  return tasksToNextLevel(level) * BASE_XP;
+}
+
+/** The overall level where the first climb ends and the second begins. */
+export const FIRST_CLIMB_LEVEL = 100;
+
+/**
+ * Tasks for the overall level, which counts every task on every Path. Tuned so
+ * someone doing about 4 tasks a day reaches level 100 in about 90 days (365
+ * tasks): 2 a level until 15, 3 until 40, 4 until 70, 5 until 100. Then the
+ * second climb: 6 a level, one more every 5 levels, settling at 15.
+ */
+export function tasksToNextOverallLevel(level: number): number {
+  if (level < 15) return 2;
+  if (level < 40) return 3;
+  if (level < 70) return 4;
+  if (level < FIRST_CLIMB_LEVEL) return 5;
+  return Math.min(6 + Math.floor((level - FIRST_CLIMB_LEVEL) / 5), 15);
 }
 
 export type LevelProgress = {
@@ -41,18 +59,24 @@ export type LevelProgress = {
   xpForNext: number;
 };
 
-export function levelFromXp(totalXp: number, scale = 1): LevelProgress {
+function climb(totalXp: number, xpFor: (level: number) => number): LevelProgress {
   let level = START_LEVEL;
   let remaining = Math.max(0, totalXp);
-  while (remaining >= xpToNextLevel(level, scale)) {
-    remaining -= xpToNextLevel(level, scale);
+  while (remaining >= xpFor(level)) {
+    remaining -= xpFor(level);
     level += 1;
   }
-  return { level, xpIntoLevel: remaining, xpForNext: xpToNextLevel(level, scale) };
+  return { level, xpIntoLevel: remaining, xpForNext: xpFor(level) };
 }
 
+/** A Path's (or a character's) level from its XP. */
+export function levelFromXp(totalXp: number): LevelProgress {
+  return climb(totalXp, xpToNextLevel);
+}
+
+/** The player's overall level from all their XP. */
 export function overallLevelFromXp(totalXp: number): LevelProgress {
-  return levelFromXp(totalXp, OVERALL_SCALE);
+  return climb(totalXp, (level) => tasksToNextOverallLevel(level) * BASE_XP);
 }
 
 export function emptyDimensionRecord<T>(value: T): Record<Dimension, T> {

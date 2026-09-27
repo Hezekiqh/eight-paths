@@ -43,7 +43,7 @@ describe('game store', () => {
     const read = useGameStore.getState().quests[1];
     const outcome = useGameStore.getState().toggleQuest(read.id, today);
     expect(outcome.kind).toBe('completed');
-    if (outcome.kind === 'completed') expect(outcome.gain.gained).toBe(13);
+    if (outcome.kind === 'completed') expect(outcome.gain.gained).toBe(10);
 
     const groups = selectTodayQuestGroups(useGameStore.getState(), today);
     expect(groups.find((g) => g.dimension === 'intellectual')?.quests[0].done).toBe(true);
@@ -52,12 +52,9 @@ describe('game store', () => {
     expect(useGameStore.getState().completions).toHaveLength(0);
   });
 
-  it('reports a level-up', () => {
+  it('levels up on the very first task', () => {
     start();
     const move = useGameStore.getState().quests[2];
-    for (let day = 1; day <= 2; day += 1) {
-      useGameStore.getState().toggleQuest(move.id, `2026-09-${String(day).padStart(2, '0')}`);
-    }
     const outcome = useGameStore.getState().toggleQuest(move.id, today);
     expect(outcome.kind === 'completed' && outcome.gain.leveledUp).toBe(true);
     if (outcome.kind === 'completed') expect(outcome.gain.after.level).toBe(6);
@@ -74,7 +71,7 @@ describe('game store', () => {
   it('completes the tutorial for class XP, then retires it', () => {
     start();
     const outcome = useGameStore.getState().toggleQuest('tutorial', today);
-    expect(outcome.kind === 'completed' && outcome.gain.gained).toBe(13);
+    expect(outcome.kind === 'completed' && outcome.gain.gained).toBe(10);
     useGameStore.getState().completeTutorial();
     const s = useGameStore.getState();
     expect(s.player?.tutorialComplete).toBe(true);
@@ -105,17 +102,17 @@ describe('game store', () => {
     expect(second.kind === 'completed' && second.milestone).toBeNull();
   });
 
-  it('halves XP past three completions in one Path per day', () => {
+  it('stops giving XP after the first 10 tasks of the day, on any Path', () => {
     start();
-    for (const title of ['A', 'B', 'C', 'D']) {
-      useGameStore.getState().addQuest({ title, dimension: 'physical', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+    for (let i = 0; i < 12; i += 1) {
+      useGameStore.getState().addQuest({ title: `Q${i}`, dimension: i % 2 ? 'physical' : 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
     }
-    const ids = useGameStore.getState().quests.slice(-4).map((q) => q.id);
+    const ids = useGameStore.getState().quests.slice(-12).map((q) => q.id);
     const gains = ids.map((id) => {
       const o = useGameStore.getState().toggleQuest(id, today);
-      return o.kind === 'completed' ? o.gain.gained : 0;
+      return o.kind === 'completed' ? o.gain.gained : -1;
     });
-    expect(gains).toEqual([10, 10, 10, 5]);
+    expect(gains).toEqual([10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0]);
   });
 
   it('stamps the archive date so past days still count as due', () => {
@@ -205,7 +202,7 @@ describe('loading a saved game', () => {
     const collection = selectCollection(useGameStore.getState());
     const xpOf = (id: string) => collection.entries.find((e) => e.companion.id === id)!;
     expect(collection.party.intellectual.companion.id).toBe('ottilie');
-    expect(xpOf('ottilie').progress).toMatchObject({ level: 5, xpIntoLevel: 13 });
+    expect(xpOf('ottilie').progress).toMatchObject({ level: 6, xpIntoLevel: 0 });
     expect(xpOf('quill').progress.level).toBeGreaterThan(9);
   });
 
@@ -268,7 +265,7 @@ describe('loading a saved game', () => {
     toggleGoal(run.id, today);
     toggleGoal(call.id, today);
     const physical = () => selectDimensionStats(useGameStore.getState(), today).find((d) => d.dimension === 'physical')!;
-    expect(physical().xp).toBe(25);
+    expect(physical().xp).toBe(30);
     expect(useGameStore.getState().xpGrants).toHaveLength(1);
 
     toggleGoal(run.id, today);
@@ -286,9 +283,23 @@ describe('loading a saved game', () => {
   it('says when the party member levels up, not just the Path', () => {
     start();
     const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
-    // Quill starts at level 5 and needs 30 XP; each Mage quest earns 13.
+    // Quill levels on the 1st task (5→6), then needs 2 more (6→7).
     const outcomes = ['2026-09-24', '2026-09-25', '2026-09-26'].map((d) => useGameStore.getState().toggleQuest(read.id, d));
     const levelled = outcomes.map((o) => o.kind === 'completed' && o.characterLeveledUp);
-    expect(levelled).toEqual([false, false, true]);
+    expect(levelled).toEqual([true, false, true]);
+  });
+
+  it('reports overall level-ups and makes every tenth level a milestone', () => {
+    start();
+    // Overall level 10 takes 10 tasks (2 a level from 5).
+    for (let i = 0; i < 10; i += 1) {
+      useGameStore.getState().addQuest({ title: `Q${i}`, dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+    }
+    const ids = useGameStore.getState().quests.slice(-10).map((q) => q.id);
+    const outcomes = ids.map((id) => useGameStore.getState().toggleQuest(id, today));
+    const ups = outcomes.map((o) => (o.kind === 'completed' ? o.overallLevelUp : undefined));
+    expect(ups).toEqual([null, 6, null, 7, null, 8, null, 9, null, 10]);
+    const last = outcomes[9];
+    expect(last.kind === 'completed' && last.milestone?.title).toBe('Level 10');
   });
 });

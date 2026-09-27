@@ -85,7 +85,7 @@ export function ActivityCalendar({ today, color }: { today: string; color: strin
           disabled={!canBack}
           onPress={() => go(-1)}
           hitSlop={12}>
-          <SymbolView name="chevron.left" tintColor={canBack ? colors.gold : colors.border} size={18} weight="bold" />
+          <SymbolView name="chevron.left" tintColor={canBack ? colors.accent : colors.border} size={18} weight="bold" />
         </Pressable>
         <Text style={styles.title}>{calendar.title.toUpperCase()}</Text>
         <Pressable
@@ -95,7 +95,7 @@ export function ActivityCalendar({ today, color }: { today: string; color: strin
           disabled={!canForward}
           onPress={() => go(1)}
           hitSlop={12}>
-          <SymbolView name="chevron.right" tintColor={canForward ? colors.gold : colors.border} size={18} weight="bold" />
+          <SymbolView name="chevron.right" tintColor={canForward ? colors.accent : colors.border} size={18} weight="bold" />
         </Pressable>
       </View>
 

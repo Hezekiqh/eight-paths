@@ -27,7 +27,7 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
         router.push(`/companion/${companion.id}`);
       }}
       style={({ pressed }) => [styles.card, { width }, pressed && { backgroundColor: colors.cardRaised }]}>
-      {inParty && <SymbolView name="heart.fill" tintColor={colors.gold} size={10} style={styles.partyMark} />}
+      {inParty && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} style={styles.partyMark} />}
       <View style={styles.portrait}>
         <CharacterPortrait companion={companion} locked={!unlocked} animate={false} />
       </View>
@@ -103,6 +103,6 @@ const styles = StyleSheet.create({
   lockedName: { color: colors.textFaint },
   pager: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: spacing.sm },
   dot: { width: 6, height: 6, backgroundColor: colors.border },
-  dotActive: { backgroundColor: colors.gold, width: 12 },
+  dotActive: { backgroundColor: colors.accent, width: 12 },
   pageText: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14, marginLeft: spacing.xs },
 });

@@ -1,6 +1,6 @@
 import { isScheduledOn } from './schedule';
 import { xpForCompletion } from './xp';
-import type { Completion, Dimension, Quest } from './types';
+import type { Completion, Quest } from './types';
 
 export const DAILY = [0, 1, 2, 3, 4, 5, 6];
 export const WEEKDAYS = [1, 2, 3, 4, 5];
@@ -29,7 +29,6 @@ export type ToggleResult =
 export function toggleCompletion(
   completions: Completion[],
   quest: Quest,
-  classDimension: Dimension,
   today: string,
   newId: string,
 ): ToggleResult {
@@ -43,11 +42,7 @@ export function toggleCompletion(
     questId: quest.id,
     dimension: quest.dimension,
     date: today,
-    xp: xpForCompletion(
-      quest.dimension,
-      classDimension,
-      completions.filter((c) => c.dimension === quest.dimension && c.date === today).length,
-    ),
+    xp: xpForCompletion(completions.filter((c) => c.date === today).length),
   };
   return { kind: 'completed', completions: [...completions, completion], completion };
 }

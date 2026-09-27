@@ -15,7 +15,7 @@ export default function ChangeClass() {
   const [selected, setSelected] = useState<Dimension | null>(player?.classDimension ?? null);
 
   if (!player) return null;
-  const color = selected ? CLASSES[selected].color : colors.grid;
+  const color = selected ? CLASSES[selected].color : colors.accent;
 
   const save = () => {
     if (selected) changeClass(selected);

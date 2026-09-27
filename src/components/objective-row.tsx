@@ -12,7 +12,7 @@ const REWARD_SYMBOL = { drop: 'shippingbox.fill', grace: 'moon.stars.fill', boos
 /** One objective: progress, its reward, and a Claim button once it's done. */
 export function ObjectiveRow({ objective, onClaim }: { objective: ObjectiveView; onClaim: () => void }) {
   const done = isObjectiveDone(objective);
-  const color = objective.dimension ? CLASSES[objective.dimension].color : colors.gold;
+  const color = objective.dimension ? CLASSES[objective.dimension].color : colors.accent;
   return (
     <View style={[styles.row, objective.claimed && styles.claimed]}>
       <View style={styles.body}>
@@ -24,7 +24,7 @@ export function ObjectiveRow({ objective, onClaim }: { objective: ObjectiveView;
         </View>
         <XpBar fill={objective.progress / objective.target} color={color} height={6} />
         <View style={styles.reward}>
-          <SymbolView name={REWARD_SYMBOL[objective.reward.kind]} tintColor={colors.gold} size={14} />
+          <SymbolView name={REWARD_SYMBOL[objective.reward.kind]} tintColor={colors.accent} size={14} />
           <Text style={styles.rewardText}>{describeReward(objective.reward)}</Text>
         </View>
       </View>
@@ -56,14 +56,14 @@ const styles = StyleSheet.create({
   title: { flex: 1, color: colors.text, fontFamily: fonts.bold, fontSize: 21 },
   count: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, fontVariant: ['tabular-nums'] },
   reward: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  rewardText: { color: colors.gold, fontFamily: fonts.regular, fontSize: 13 },
+  rewardText: { color: colors.accent, fontFamily: fonts.regular, fontSize: 13 },
   status: { width: 88, alignItems: 'center', gap: 2 },
   statusText: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14 },
   claim: {
     width: 88,
     paddingVertical: spacing.md,
     alignItems: 'center',
-    backgroundColor: colors.gold,
+    backgroundColor: colors.accent,
     borderWidth: 2,
     borderColor: colors.frame,
   },

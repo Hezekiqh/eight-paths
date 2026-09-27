@@ -11,7 +11,7 @@ import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 export default function RestoreBackup() {
   const importSave = useGameStore((s) => s.importSave);
   const hasProgress = useGameStore((s) => s.player !== null);
-  const color = useClassInfo()?.color ?? colors.grid;
+  const color = useClassInfo()?.color ?? colors.accent;
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -84,5 +84,5 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: { backgroundColor: colors.cardRaised, borderRadius: radius.md, padding: spacing.md },
-  errorText: { color: '#FF6B81', fontFamily: fonts.regular, fontSize: 14 },
+  errorText: { color: colors.danger, fontFamily: fonts.regular, fontSize: 14 },
 });

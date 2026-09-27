@@ -73,7 +73,7 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
             key={r}
             points={polygonPoints(DIMENSIONS.map(() => r), radius, center)}
             fill="none"
-            stroke={colors.grid}
+            stroke={colors.accent}
             strokeOpacity={r === 1 ? 0.55 : 0.2}
             strokeWidth={r === 1 ? 1.5 : 1}
           />
@@ -87,7 +87,7 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
               y1={center}
               x2={end.x}
               y2={end.y}
-              stroke={colors.grid}
+              stroke={colors.accent}
               strokeOpacity={0.35 * opacity[d]}
               strokeWidth={1}
             />

@@ -36,7 +36,7 @@ export function GoalRow({ goal, today, onToggle }: { goal: Goal; today: string; 
         hitSlop={8}>
         <SymbolView
           name={done ? 'checkmark.square.fill' : 'square'}
-          tintColor={done ? (info?.color ?? colors.gold) : colors.textMuted}
+          tintColor={done ? (info?.color ?? colors.accent) : colors.textMuted}
           size={26}
         />
       </Pressable>

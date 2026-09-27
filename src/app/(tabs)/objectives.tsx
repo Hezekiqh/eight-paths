@@ -8,18 +8,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { haptics } from '@/haptics';
 import { GoalRow } from '@/components/goal-row';
 import { ObjectiveRow } from '@/components/objective-row';
+import { ThemePicker } from '@/components/theme-picker';
 import { BOOST_MULTIPLIER, CLASSES, isObjectiveDone } from '@/game';
 import { useGameStore } from '@/store';
 import { useGoals, useObjectives, useToday } from '@/store/hooks';
 import type { ObjectiveView } from '@/store/selectors';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
-type Category = 'daily' | 'weekly' | 'personal';
+type Category = 'daily' | 'weekly' | 'personal' | 'themes';
 
 const CATEGORIES: { key: Category; label: string; symbol: SymbolViewProps['name']; blurb: string }[] = [
   { key: 'daily', label: 'Daily', symbol: 'sun.max.fill', blurb: 'New objectives every morning.' },
   { key: 'weekly', label: 'Weekly', symbol: 'calendar', blurb: 'Runs Monday to Sunday.' },
   { key: 'personal', label: 'Personal', symbol: 'pencil.and.scribble', blurb: 'Goals you set yourself.' },
+  { key: 'themes', label: 'Themes', symbol: 'paintpalette.fill', blurb: 'Make the game your own.' },
 ];
 
 /** Turns the phone sideways while this tab is open, like a handheld console. */
@@ -52,7 +54,7 @@ export default function ObjectivesScreen() {
   };
 
   const waiting = (key: Category) =>
-    key === 'personal' ? 0 : objectives[key].filter((o) => isObjectiveDone(o) && !o.claimed).length;
+    key === 'personal' || key === 'themes' ? 0 : objectives[key].filter((o) => isObjectiveDone(o) && !o.claimed).length;
   const current = CATEGORIES.find((c) => c.key === category)!;
   const open = goals.filter((g) => !g.completedAt);
   const finished = goals.filter((g) => g.completedAt);
@@ -75,9 +77,9 @@ export default function ObjectivesScreen() {
               }}
               style={[styles.menuItem, selected && styles.menuItemSelected]}>
               <View style={styles.cursorSlot}>
-                {selected && <SymbolView name="heart.fill" tintColor={colors.gold} size={10} />}
+                {selected && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} />}
               </View>
-              <SymbolView name={c.symbol} tintColor={selected ? colors.gold : colors.textMuted} size={selected ? 24 : 20} />
+              <SymbolView name={c.symbol} tintColor={selected ? colors.accent : colors.textMuted} size={selected ? 24 : 20} />
               <Text style={[styles.menuLabel, selected && styles.menuLabelSelected]}>{c.label.toUpperCase()}</Text>
               {count > 0 && <Text style={styles.menuCount}>{count}</Text>}
             </Pressable>
@@ -97,7 +99,9 @@ export default function ObjectivesScreen() {
       <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent}>
         <View style={styles.panelHeader}>
           <View>
-            <Text style={styles.panelTitle}>{current.label} objectives</Text>
+            <Text style={styles.panelTitle}>
+              {category === 'themes' ? 'Themes' : `${current.label} objectives`}
+            </Text>
             <Text style={styles.blurb}>{current.blurb}</Text>
           </View>
           {category === 'personal' && (
@@ -114,7 +118,9 @@ export default function ObjectivesScreen() {
           )}
         </View>
 
-        {category === 'personal' ? (
+        {category === 'themes' ? (
+          <ThemePicker />
+        ) : category === 'personal' ? (
           goals.length === 0 ? (
             <Text style={styles.empty}>
               Write down something you&apos;re working toward: run a 5K, pay off a card, call home more. Pick a
@@ -152,13 +158,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, flexDirection: 'row', backgroundColor: colors.background },
   menu: { width: 210, paddingVertical: spacing.lg, paddingLeft: spacing.md, gap: spacing.xs },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md, paddingRight: spacing.sm },
-  menuItemSelected: { backgroundColor: colors.card, borderColor: colors.gold, borderWidth: 2 },
+  menuItemSelected: { backgroundColor: colors.card, borderColor: colors.accent, borderWidth: 2 },
   cursorSlot: { width: 16, alignItems: 'flex-end' },
   menuLabel: { flex: 1, color: colors.textMuted, fontFamily: fonts.bold, fontSize: 20, letterSpacing: 1.2 },
-  menuLabelSelected: { color: colors.gold, fontSize: 24 },
+  menuLabelSelected: { color: colors.accent, fontSize: 24 },
   menuCount: {
     color: colors.background,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.accent,
     fontFamily: fonts.bold,
     fontSize: 16,
     paddingHorizontal: 6,
@@ -171,7 +177,7 @@ const styles = StyleSheet.create({
   panelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   panelTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 30 },
   blurb: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
-  add: { ...windowStyle, backgroundColor: colors.gold, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  add: { ...windowStyle, backgroundColor: colors.accent, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   list: { gap: spacing.sm },
   empty: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
 });

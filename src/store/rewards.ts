@@ -12,10 +12,10 @@ import { ROSTER, SHARDS_TO_UNLOCK, isUnlocked } from '@/story/companions';
 
 import type { GameData } from './index';
 
-/** Bonus XP from a drop, or from a grace day when the player's tokens are full. */
+/** Bonus XP from a drop (two tasks' worth), or from a grace day when tokens are full. */
 export const DROP_XP = 20;
-/** XP for finishing a personal goal that belongs to a Path. */
-export const GOAL_XP = 25;
+/** XP for finishing a personal goal that belongs to a Path: three tasks' worth. */
+export const GOAL_XP = 30;
 
 type Changes = Partial<GameData>;
 export type RewardResult = {

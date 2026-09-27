@@ -1,14 +1,15 @@
 import type { TabTriggerSlotProps } from 'expo-router/ui';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { forwardRef } from 'react';
 import { Pressable, StyleSheet, View, type View as ViewType } from 'react-native';
 
+import { PixelIcon } from '@/components/pixel-icon';
+import type { PixelIconName } from '@/components/pixel-icons';
 import { haptics } from '@/haptics';
 import { colors, spacing } from '@/theme';
 
 type Props = TabTriggerSlotProps & {
   label: string;
-  symbol: SymbolViewProps['name'];
+  icon: PixelIconName;
   /** Shows a gold dot: something here is waiting for the player. */
   badge?: boolean;
 };
@@ -19,10 +20,10 @@ type Props = TabTriggerSlotProps & {
  * an option in an old RPG battle menu.
  */
 export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButton(
-  { label, symbol, badge, isFocused, onPress, ...props },
+  { label, icon, badge, isFocused, onPress, ...props },
   ref,
 ) {
-  const tint = isFocused ? colors.gold : colors.textMuted;
+  const tint = isFocused ? colors.accent : colors.textMuted;
   return (
     <Pressable
       ref={ref}
@@ -36,8 +37,12 @@ export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButto
       accessibilityLabel={badge ? `${label}, rewards to claim` : label}
       style={styles.tab}>
       <View>
-        {isFocused && <SymbolView name="heart.fill" tintColor={colors.gold} size={10} style={styles.cursor} />}
-        <SymbolView name={symbol} tintColor={tint} size={26} />
+        {isFocused && (
+          <View style={styles.cursor}>
+            <PixelIcon name="heart" color={colors.accent} size={12} />
+          </View>
+        )}
+        <PixelIcon name={icon} color={tint} size={24} />
         {badge && <View style={styles.badge} />}
       </View>
     </Pressable>
@@ -47,14 +52,14 @@ export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButto
 const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
   /** Sits left of the icon without nudging it off centre. */
-  cursor: { position: 'absolute', left: -16, top: 8 },
+  cursor: { position: 'absolute', left: -16, top: 6 },
   badge: {
     position: 'absolute',
     top: -2,
     right: -6,
     width: 9,
     height: 9,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.accent,
     borderWidth: 1.5,
     borderColor: colors.card,
   },

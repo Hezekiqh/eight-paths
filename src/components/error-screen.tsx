@@ -14,7 +14,7 @@ export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.body}>
-        <SymbolView name="exclamationmark.shield.fill" tintColor={colors.grid} size={48} />
+        <SymbolView name="exclamationmark.shield.fill" tintColor={colors.accent} size={48} />
         <Text style={styles.title}>Something went wrong</Text>
         <Text style={styles.text}>
           Your progress is saved on this device and hasn&apos;t been lost. Try again, and if this keeps

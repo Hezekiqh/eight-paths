@@ -26,21 +26,22 @@ export default function TabsLayout() {
             paddingRight: Math.max(insets.right, spacing.sm),
           },
         ]}>
-        {/* Character is the index route, so the app opens on it. */}
+        {/* Today is the index route, so the app opens on it. */}
         <TabTrigger name="index" href="/" asChild>
-          <RetroTabButton label="Character" symbol="person.crop.circle.fill" />
+          <RetroTabButton label="Today" icon="sun" />
         </TabTrigger>
-        <TabTrigger name="today" href="/today" asChild>
-          <RetroTabButton label="Today" symbol="hexagon.fill" />
+        <TabTrigger name="character" href="/character" asChild>
+          <RetroTabButton label="Character" icon="user" />
         </TabTrigger>
         <TabTrigger name="journey" href="/journey" asChild>
-          <RetroTabButton label="Journey" symbol="map.fill" />
-        </TabTrigger>
-        <TabTrigger name="objectives" href="/objectives" asChild>
-          <RetroTabButton label="Objectives" symbol="gamecontroller.fill" badge={unclaimed > 0} />
+          <RetroTabButton label="Journey" icon="map" />
         </TabTrigger>
         <TabTrigger name="quests" href="/quests" asChild>
-          <RetroTabButton label="Quests" symbol="scroll.fill" />
+          <RetroTabButton label="Quests" icon="script" />
+        </TabTrigger>
+        {/* Last, since opening it turns the phone sideways. */}
+        <TabTrigger name="objectives" href="/objectives" asChild>
+          <RetroTabButton label="Objectives" icon="gamepad" badge={unclaimed > 0} />
         </TabTrigger>
       </TabList>
     </Tabs>

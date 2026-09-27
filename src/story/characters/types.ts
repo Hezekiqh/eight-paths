@@ -1,4 +1,4 @@
-import type { Dimension } from "@/game";
+import type { Dimension } from '@/game';
 
 /**
  * Where a character comes from. The core eight walk the story with the
@@ -6,7 +6,7 @@ import type { Dimension } from "@/game";
  * the player earns their company; legends crown each Path's ladder. Only
  * core companions have story arcs.
  */
-export type CharacterKind = "core" | "recruit" | "steward" | "legend";
+export type CharacterKind = 'core' | 'recruit' | 'steward' | 'legend';
 
 export type CharacterData = {
   /** What everyone calls them. */

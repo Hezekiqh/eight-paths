@@ -19,7 +19,7 @@ export default function StarterQuestsScreen() {
   const { name, classDimension, selected, toggleStarter, reset } = useOnboardingDraft();
   const startGame = useGameStore((s) => s.startGame);
   const [expanded, setExpanded] = useState<Dimension | null>(null);
-  const accent = classDimension ? CLASSES[classDimension].color : colors.grid;
+  const accent = classDimension ? CLASSES[classDimension].color : colors.accent;
 
   const start = () => {
     if (!classDimension) return;

@@ -12,22 +12,22 @@ describe('questsForDay', () => {
 describe('toggleCompletion', () => {
   const today = '2026-09-26';
 
-  it('completes with class-aware XP', () => {
-    const r = toggleCompletion([], quest(), 'physical', today, 'new');
+  it('completes for 10 XP', () => {
+    const r = toggleCompletion([], quest(), today, 'new');
     expect(r.kind).toBe('completed');
-    expect(r.completions).toEqual([{ id: 'new', questId: 'q1', dimension: 'physical', date: today, xp: 13 }]);
+    expect(r.completions).toEqual([{ id: 'new', questId: 'q1', dimension: 'physical', date: today, xp: 10 }]);
   });
 
   it('undoes a same-day completion', () => {
-    const first = toggleCompletion([], quest(), 'social', today, 'new');
-    const second = toggleCompletion(first.completions, quest(), 'social', today, 'x');
+    const first = toggleCompletion([], quest(), today, 'new');
+    const second = toggleCompletion(first.completions, quest(), today, 'x');
     expect(second.kind).toBe('undone');
     expect(second.completions).toEqual([]);
   });
 
   it('never touches a previous day', () => {
     const yesterday = done('2026-09-25');
-    const r = toggleCompletion([yesterday], quest(), 'social', today, 'new');
+    const r = toggleCompletion([yesterday], quest(), today, 'new');
     expect(r.kind).toBe('completed');
     expect(r.completions).toHaveLength(2);
   });

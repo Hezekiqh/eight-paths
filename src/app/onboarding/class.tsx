@@ -10,7 +10,7 @@ import { colors } from '@/theme';
 export default function ClassScreen() {
   const selected = useOnboardingDraft((s) => s.classDimension);
   const setClass = useOnboardingDraft((s) => s.setClass);
-  const accent = selected ? CLASSES[selected].color : colors.grid;
+  const accent = selected ? CLASSES[selected].color : colors.accent;
 
   return (
     <OnboardingStep

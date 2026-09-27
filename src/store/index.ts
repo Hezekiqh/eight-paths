@@ -15,6 +15,9 @@ import {
   toDateKey,
   toggleCompletion,
   xpByDimension,
+  FIRST_CLIMB_LEVEL,
+  overallLevelFromXp,
+  totalXp,
   BOOST_MULTIPLIER,
   addDays,
   dailyObjectives,
@@ -78,6 +81,8 @@ export type ToggleOutcome =
       milestone: Milestone | null;
       /** The party member on this Path reached a new level. */
       characterLeveledUp: boolean;
+      /** The overall level just reached, if this task crossed one. */
+      overallLevelUp: number | null;
     }
   | { kind: 'undone' }
   | { kind: 'ignored' };
@@ -135,6 +140,17 @@ export function pickData(s: GameData): GameData {
 const todayKey = () => toDateKey(new Date());
 
 const BACKUP_APP = 'eight-paths';
+
+/** Every tenth overall level is a milestone; level 100 ends the first climb. */
+function describeLevelMilestone(level: number | null): Milestone | null {
+  if (level === null || level % 10 !== 0) return null;
+  if (level === FIRST_CLIMB_LEVEL) {
+    return { title: 'Level 100', detail: 'The first climb is done. From here, every level asks a little more.' };
+  }
+  return level < FIRST_CLIMB_LEVEL
+    ? { title: `Level ${level}`, detail: `${FIRST_CLIMB_LEVEL - level} levels to go to 100.` }
+    : { title: `Level ${level}`, detail: 'Still climbing. Every one of these was earned.' };
+}
 
 function describeMilestone(
   data: Pick<GameData, 'completions' | 'restDays'>,
@@ -206,7 +222,7 @@ export const useGameStore = create<GameState>()(
         if (!player || !quest) return { kind: 'ignored' };
 
         const xpBefore = xpByDimension([...completions, ...xpGrants])[quest.dimension];
-        const result = toggleCompletion(completions, quest, player.classDimension, today, newId());
+        const result = toggleCompletion(completions, quest, today, newId());
         if (result.kind !== 'completed') {
           set({ completions: result.completions });
           return { kind: result.kind };
@@ -218,6 +234,9 @@ export const useGameStore = create<GameState>()(
           characterId: party[quest.dimension],
         };
         set({ completions: result.completions.map((c) => (c === result.completion ? completion : c)) });
+        const xpBeforeAll = totalXp([...completions, ...xpGrants]);
+        const levelAfter = overallLevelFromXp(xpBeforeAll + completion.xp).level;
+        const overallLevelUp = levelAfter > overallLevelFromXp(xpBeforeAll).level ? levelAfter : null;
         const characterXp = [...completions, ...xpGrants]
           .filter((c) => (c.characterId ?? DEFAULT_PARTY[c.dimension]) === completion.characterId)
           .reduce((sum, c) => sum + c.xp, 0);
@@ -227,7 +246,10 @@ export const useGameStore = create<GameState>()(
           completionId: completion.id,
           dimension: quest.dimension,
           gain: describeXpGain(xpBefore, completion.xp),
-          milestone: describeMilestone({ completions, restDays }, result.completions, player.onboardedAt, today),
+          overallLevelUp,
+          milestone:
+            describeLevelMilestone(overallLevelUp) ??
+            describeMilestone({ completions, restDays }, result.completions, player.onboardedAt, today),
         };
       },
 

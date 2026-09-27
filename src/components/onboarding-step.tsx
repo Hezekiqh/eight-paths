@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   content: { padding: spacing.xl, paddingTop: spacing.xxl + spacing.lg, gap: spacing.sm },
-  step: { color: colors.grid, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.5 },
+  step: { color: colors.accent, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.5 },
   title: { color: colors.text, fontSize: 39, fontFamily: fonts.bold },
   subtitle: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22 },
   body: { marginTop: spacing.lg, gap: spacing.md },

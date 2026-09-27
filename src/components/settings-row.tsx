@@ -1,13 +1,13 @@
-import type { SFSymbol } from 'expo-symbols';
-import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PixelIcon } from '@/components/pixel-icon';
+import type { PixelIconName } from '@/components/pixel-icons';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing } from '@/theme';
 
 type Props = {
-  icon: SFSymbol;
+  icon: PixelIconName;
   iconColor?: string;
   title: string;
   subtitle?: string;
@@ -19,12 +19,12 @@ type Props = {
 export function SettingsRow({ icon, iconColor = colors.textMuted, title, subtitle, onPress, accessory }: Props) {
   const content = (
     <>
-      <SymbolView name={icon} tintColor={iconColor} size={20} />
+      <PixelIcon name={icon} color={iconColor} size={24} />
       <View style={styles.text}>
         <Text style={styles.title}>{title}</Text>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
-      {accessory ?? (onPress && <SymbolView name="chevron.right" tintColor={colors.textFaint} size={14} />)}
+      {accessory ?? (onPress && <PixelIcon name="chevron-right" color={colors.textFaint} size={24} />)}
     </>
   );
   if (!onPress) return <View style={styles.row}>{content}</View>;

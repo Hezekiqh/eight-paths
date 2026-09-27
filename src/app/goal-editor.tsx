@@ -10,7 +10,7 @@ import { CLASSES, addDays, toDateKey, type Dimension } from '@/game';
 import { useGameStore } from '@/store';
 import { useGoals, useToday } from '@/store/hooks';
 import { GOAL_XP } from '@/store/rewards';
-import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { colors, fonts, spacing, windowStyle, theme } from '@/theme';
 
 const keyToDate = (key: string) => {
   const [y, m, d] = key.split('-').map(Number);
@@ -29,7 +29,7 @@ export default function GoalEditor() {
   const [dimension, setDimension] = useState<Dimension | undefined>(existing?.dimension);
   const [dueDate, setDueDate] = useState<string | undefined>(existing?.dueDate);
 
-  const color = dimension ? CLASSES[dimension].color : colors.gold;
+  const color = dimension ? CLASSES[dimension].color : colors.accent;
   const canSave = title.trim().length > 0;
 
   const save = () => {
@@ -98,7 +98,7 @@ export default function GoalEditor() {
             value={keyToDate(dueDate)}
             mode="date"
             display="inline"
-            themeVariant="dark"
+            themeVariant={theme.dark ? 'dark' : 'light'}
             accentColor={color}
             minimumDate={keyToDate(today)}
             onValueChange={(_, date) => setDueDate(toDateKey(date))}

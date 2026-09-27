@@ -1,6 +1,6 @@
 import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16';
 import { Jersey10_400Regular, useFonts } from '@expo-google-fonts/jersey-10';
-import { DarkTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router/stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorScreen } from '@/components/error-screen';
 import { useGameStore } from '@/store';
 import { useHydrated } from '@/store/hooks';
-import { colors } from '@/theme';
+import { colors, theme } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,14 +18,14 @@ SplashScreen.preventAutoHideAsync();
 export { ErrorScreen as ErrorBoundary };
 
 const navTheme = {
-  ...DarkTheme,
+  ...(theme.dark ? DarkTheme : DefaultTheme),
   colors: {
-    ...DarkTheme.colors,
+    ...(theme.dark ? DarkTheme : DefaultTheme).colors,
     background: colors.background,
     card: colors.background,
     text: colors.text,
     border: colors.border,
-    primary: colors.grid,
+    primary: colors.accent,
   },
 };
 
@@ -54,7 +54,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={navTheme}>
-        <StatusBar style="light" />
+        <StatusBar style={theme.dark ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
             headerShown: false,

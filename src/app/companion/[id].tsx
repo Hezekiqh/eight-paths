@@ -80,7 +80,7 @@ export default function CompanionSheet() {
             </View>
           </Pressable>
           {inParty ? (
-            <NoteBox symbol="heart.fill" color={info.color} iconColor={colors.gold}>
+            <NoteBox symbol="heart.fill" color={info.color} iconColor={colors.accent}>
               {`In your party. ${info.dimensionLabel} habits level up ${companion.name}.`}
             </NoteBox>
           ) : (

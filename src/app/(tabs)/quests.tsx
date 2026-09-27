@@ -59,7 +59,7 @@ export default function QuestsScreen() {
   const today = useToday();
   const groups = useAllQuestGroups(today);
   const classInfo = useClassInfo();
-  const accent = classInfo?.color ?? colors.grid;
+  const accent = classInfo?.color ?? colors.accent;
 
   return (
     <Screen
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   tip: { color: colors.textFaint, fontFamily: fonts.regular, fontSize: 13 },
   empty: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15 },
   group: { gap: spacing.sm, marginBottom: spacing.sm },
-  swipe: { borderRadius: radius.lg, backgroundColor: '#7A2E38' },
+  swipe: { borderRadius: radius.lg, backgroundColor: colors.danger },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
