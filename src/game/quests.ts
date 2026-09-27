@@ -1,4 +1,5 @@
-import { isScheduledOn } from './streaks';
+import { addDays } from './dates';
+import { isDueOn, isScheduledOn } from './schedule';
 import { xpForCompletion } from './xp';
 import type { Completion, Dimension, Quest } from './types';
 
@@ -13,6 +14,20 @@ export function questsForDay(quests: Quest[], date: string): Quest[] {
   return quests.filter((q) => q.active && isScheduledOn(q, date));
 }
 
+/** Quests that were due on a past `date` (still-live or since archived). */
+export function questsDueOn(quests: Quest[], date: string): Quest[] {
+  return quests.filter((q) => isDueOn(q, date));
+}
+
+/** Yesterday can still be logged until this hour today. */
+export const BACKFILL_UNTIL_HOUR = 12;
+
+/** Whether completions on `date` can still be added or undone. */
+export function canLogDay(date: string, today: string, now: Date): boolean {
+  if (date === today) return true;
+  return date === addDays(today, -1) && now.getHours() < BACKFILL_UNTIL_HOUR;
+}
+
 export function completionFor(completions: Completion[], questId: string, date: string) {
   return completions.find((c) => c.questId === questId && c.date === date);
 }
@@ -23,8 +38,8 @@ export type ToggleResult =
   | { kind: 'ignored'; completions: Completion[] };
 
 /**
- * Completes `quest` for `today`, or undoes today's completion if it exists.
- * Past days are never touched, so undo is same-day only.
+ * Completes `quest` on `today` (the day being logged), or undoes that day's
+ * completion if it exists. Callers decide which days are still loggable.
  */
 export function toggleCompletion(
   completions: Completion[],
@@ -43,7 +58,11 @@ export function toggleCompletion(
     questId: quest.id,
     dimension: quest.dimension,
     date: today,
-    xp: xpForCompletion(quest.dimension, classDimension),
+    xp: xpForCompletion(
+      quest.dimension,
+      classDimension,
+      completions.filter((c) => c.dimension === quest.dimension && c.date === today).length,
+    ),
   };
   return { kind: 'completed', completions: [...completions, completion], completion };
 }

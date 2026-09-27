@@ -3,15 +3,34 @@ import { DIMENSIONS, type Completion, type Dimension } from './types';
 export const BASE_XP = 10;
 export const CLASS_BONUS = 1.25;
 export const START_LEVEL = 5;
-export const OVERALL_SCALE = 8;
+export const OVERALL_SCALE = 4;
 
-export function xpForCompletion(dimension: Dimension, classDimension: Dimension): number {
-  return dimension === classDimension ? Math.ceil(BASE_XP * CLASS_BONUS) : BASE_XP;
+/** Completions per Path per day that earn full XP; later ones earn half, so padding doesn't pay. */
+export const FULL_XP_PER_PATH_PER_DAY = 3;
+
+/** The level curve stops getting steeper here, so progress never grinds to a halt. */
+export const LEVEL_XP_CAP = 150;
+
+/**
+ * `earlierInPathThatDay` is how many completions this Path already has on
+ * the same day.
+ */
+export function xpForCompletion(
+  dimension: Dimension,
+  classDimension: Dimension,
+  earlierInPathThatDay = 0,
+): number {
+  const full = dimension === classDimension ? Math.ceil(BASE_XP * CLASS_BONUS) : BASE_XP;
+  return earlierInPathThatDay < FULL_XP_PER_PATH_PER_DAY ? full : Math.ceil(full / 2);
 }
 
-/** XP needed to go from `level` to `level + 1`. */
+/**
+ * XP needed to go from `level` to `level + 1`: 30 at level 5, +10 per level,
+ * capped at 150. Never steeper than the 1.0 curve (20 × L), so recomputing
+ * an existing save can only raise its levels.
+ */
 export function xpToNextLevel(level: number, scale = 1): number {
-  return 20 * level * scale;
+  return Math.min(30 + 10 * (level - START_LEVEL), LEVEL_XP_CAP) * scale;
 }
 
 export type LevelProgress = {

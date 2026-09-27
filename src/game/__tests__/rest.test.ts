@@ -1,6 +1,6 @@
 import { addDays } from '../dates';
 import { settleRestDays, type RestLedger } from '../rest';
-import { dimensionStreak } from '../streaks';
+import { showUpStreak } from '../streaks';
 import { done } from './helpers';
 
 const start = '2026-09-01';
@@ -23,7 +23,7 @@ describe('settleRestDays', () => {
     expect(ledger.restDays).toEqual([{ date: '2026-09-02', dimension: 'all' }]);
     expect(ledger.lastSettledDate).toBe('2026-09-03');
     // …and every streak survives.
-    expect(dimensionStreak(cs, ledger.restDays, 'physical', '2026-09-04')).toBe(2);
+    expect(showUpStreak(cs, ledger.restDays, start, '2026-09-04').current).toBe(2);
   });
 
   it('lets streaks reset when no token is left', () => {
@@ -31,7 +31,7 @@ describe('settleRestDays', () => {
     const ledger = settleRestDays(fresh, cs, start, '2026-09-05');
     expect(ledger.restTokens).toBe(0);
     expect(ledger.restDays).toHaveLength(1);
-    expect(dimensionStreak(cs, ledger.restDays, 'physical', '2026-09-05')).toBe(1);
+    expect(showUpStreak(cs, ledger.restDays, start, '2026-09-05').current).toBe(1);
   });
 
   it('earns a token for each 7-day active run', () => {

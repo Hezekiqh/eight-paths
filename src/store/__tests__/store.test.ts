@@ -44,7 +44,7 @@ describe('game store', () => {
     if (outcome.kind === 'completed') expect(outcome.gain.gained).toBe(13);
 
     const groups = selectTodayQuestGroups(useGameStore.getState(), today);
-    expect(groups.find((g) => g.dimension === 'intellectual')?.quests[0].doneToday).toBe(true);
+    expect(groups.find((g) => g.dimension === 'intellectual')?.quests[0].done).toBe(true);
 
     expect(useGameStore.getState().toggleQuest(read.id, today).kind).toBe('undone');
     expect(useGameStore.getState().completions).toHaveLength(0);
@@ -53,7 +53,7 @@ describe('game store', () => {
   it('reports a level-up', () => {
     start();
     const move = useGameStore.getState().quests[2];
-    for (let day = 1; day <= 9; day += 1) {
+    for (let day = 1; day <= 2; day += 1) {
       useGameStore.getState().toggleQuest(move.id, `2026-09-${String(day).padStart(2, '0')}`);
     }
     const outcome = useGameStore.getState().toggleQuest(move.id, today);
@@ -92,6 +92,67 @@ describe('game store', () => {
     const move = useGameStore.getState().quests[2];
     useGameStore.getState().updateQuest(move.id, { title: ' Lift ', dimension: 'physical', repeatDays: [5, 1, 3] });
     expect(useGameStore.getState().quests[2]).toMatchObject({ id: move.id, title: 'Lift', repeatDays: [1, 3, 5] });
+  });
+
+  it('lets yesterday be logged until noon, refunding a spent rest token', () => {
+    start();
+    const read = useGameStore.getState().quests[1];
+    useGameStore.getState().settle('2026-09-27');
+    expect(useGameStore.getState().player?.restTokens).toBe(0);
+
+    const morning = new Date(2026, 8, 27, 9, 0);
+    const outcome = useGameStore.getState().toggleQuest(read.id, '2026-09-27', today, morning);
+    expect(outcome.kind).toBe('completed');
+    const s = useGameStore.getState();
+    expect(s.completions.map((c) => c.date)).toEqual([today]);
+    expect(s.player?.restTokens).toBe(1);
+    expect(s.restDays).toEqual([]);
+
+    const afternoon = new Date(2026, 8, 27, 13, 0);
+    expect(useGameStore.getState().toggleQuest(read.id, '2026-09-27', today, afternoon).kind).toBe('ignored');
+    expect(useGameStore.getState().toggleQuest(read.id, '2026-09-27', '2026-09-25', morning).kind).toBe('ignored');
+  });
+
+  it('celebrates the first day shown up', () => {
+    start();
+    const outcome = useGameStore.getState().toggleQuest('tutorial', today);
+    expect(outcome.kind === 'completed' && outcome.milestone?.title).toBe('Day one');
+    const read = useGameStore.getState().quests[1];
+    const second = useGameStore.getState().toggleQuest(read.id, today);
+    expect(second.kind === 'completed' && second.milestone).toBeNull();
+  });
+
+  it('halves XP past three completions in one Path per day', () => {
+    start();
+    for (const title of ['A', 'B', 'C', 'D']) {
+      useGameStore.getState().addQuest({ title, dimension: 'physical', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+    }
+    const ids = useGameStore.getState().quests.slice(-4).map((q) => q.id);
+    const gains = ids.map((id) => {
+      const o = useGameStore.getState().toggleQuest(id, today);
+      return o.kind === 'completed' ? o.gain.gained : 0;
+    });
+    expect(gains).toEqual([10, 10, 10, 5]);
+  });
+
+  it('stamps the archive date so past days still count as due', () => {
+    start();
+    const read = useGameStore.getState().quests[1];
+    useGameStore.getState().archiveQuest(read.id);
+    expect(useGameStore.getState().quests[1].archivedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('round-trips a backup and rejects junk', () => {
+    start();
+    useGameStore.getState().toggleQuest('tutorial', today);
+    const backup = useGameStore.getState().exportSave();
+    useGameStore.setState(initialData);
+    expect(useGameStore.getState().importSave('hello').ok).toBe(false);
+    expect(useGameStore.getState().importSave('{"app":"other","version":1}').ok).toBe(false);
+    expect(useGameStore.getState().importSave(backup).ok).toBe(true);
+    const s = useGameStore.getState();
+    expect(s.player?.name).toBe('Ada');
+    expect(s.completions).toHaveLength(1);
   });
 
   it('settles missed days with a rest token', () => {

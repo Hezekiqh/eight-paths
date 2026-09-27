@@ -1,59 +1,85 @@
-import { addDays, dayOfWeek } from './dates';
+import { addDays } from './dates';
+import { isDueOn, isScheduledOn, restDaySet } from './schedule';
 import type { Completion, Dimension, Quest, RestDay } from './types';
 
-function isRestDay(restDays: RestDay[], date: string, dimension: Dimension): boolean {
-  return restDays.some((r) => r.date === date && (r.dimension === 'all' || r.dimension === dimension));
+export type Streak = { current: number; best: number };
+
+/** 'hit' extends a streak, 'skip' leaves it alone, 'miss' breaks it. */
+export type DayStatus = 'hit' | 'skip' | 'miss';
+
+/**
+ * Walks every day from `start` to `today`. Today can only help: it counts
+ * once it's a hit and never breaks the streak before the day is over.
+ */
+export function runStreak(start: string, today: string, status: (day: string) => DayStatus): Streak {
+  let current = 0;
+  let best = 0;
+  for (let day = start; day <= today; day = addDays(day, 1)) {
+    const s = status(day);
+    if (s === 'hit') {
+      current += 1;
+      best = Math.max(best, current);
+    } else if (s === 'miss' && day !== today) {
+      current = 0;
+    }
+  }
+  return { current, best };
+}
+
+function earliest(start: string, completions: Completion[]): string {
+  return completions.reduce((min, c) => (c.date < min ? c.date : min), start);
 }
 
 /**
- * Consecutive days, ending today, with at least one completion in `dimension`.
- * Today counts only once it has a completion, so the streak isn't broken
- * before the day is over. Rest days are skipped: they neither add nor break.
+ * Days showing up: any completion is a hit, and only a day with nothing
+ * done (and no rest token) is a miss.
+ */
+export function showUpStreak(completions: Completion[], restDays: RestDay[], start: string, today: string): Streak {
+  const active = new Set(completions.map((c) => c.date));
+  const rest = restDaySet(restDays);
+  return runStreak(earliest(start, completions), today, (day) =>
+    active.has(day) ? 'hit' : rest.has(day) ? 'skip' : 'miss',
+  );
+}
+
+/**
+ * A Path's streak. A completion in the Path is a hit. A day only breaks it
+ * when one of the Path's quests was due, nothing in the Path was done, and
+ * no rest token covered it. Days with nothing due are skipped, so a
+ * Mon/Wed/Fri habit isn't punished on the weekend.
  */
 export function dimensionStreak(
   completions: Completion[],
   restDays: RestDay[],
+  quests: Quest[],
   dimension: Dimension,
+  start: string,
   today: string,
-): number {
-  const activeDays = new Set(completions.filter((c) => c.dimension === dimension).map((c) => c.date));
-  if (activeDays.size === 0) return 0;
-
-  let streak = 0;
-  let day = activeDays.has(today) ? today : addDays(today, -1);
-  for (;;) {
-    if (activeDays.has(day)) streak += 1;
-    else if (!isRestDay(restDays, day, dimension)) break;
-    day = addDays(day, -1);
-  }
-  return streak;
-}
-
-export function isScheduledOn(quest: Quest, date: string): boolean {
-  return quest.repeatDays.includes(dayOfWeek(date));
+): Streak {
+  const inPath = completions.filter((c) => c.dimension === dimension);
+  const active = new Set(inPath.map((c) => c.date));
+  const rest = restDaySet(restDays, dimension);
+  const pathQuests = quests.filter((q) => q.dimension === dimension);
+  return runStreak(earliest(start, inPath), today, (day) => {
+    if (active.has(day)) return 'hit';
+    if (rest.has(day)) return 'skip';
+    return pathQuests.some((q) => isDueOn(q, day)) ? 'miss' : 'skip';
+  });
 }
 
 /**
  * Consecutive scheduled days, ending today, on which `quest` was completed.
  * Unscheduled days and rest days are skipped; today is skipped until done.
  */
-export function habitStreak(
-  quest: Quest,
-  completions: Completion[],
-  restDays: RestDay[],
-  today: string,
-): number {
+export function habitStreak(quest: Quest, completions: Completion[], restDays: RestDay[], today: string): number {
   if (quest.repeatDays.length === 0) return 0;
   const doneDays = new Set(completions.filter((c) => c.questId === quest.id).map((c) => c.date));
   if (doneDays.size === 0) return 0;
-
-  const earliest = [...doneDays].sort()[0];
-  let streak = 0;
-  for (let day = today; day >= earliest; day = addDays(day, -1)) {
-    if (!isScheduledOn(quest, day)) continue;
-    if (doneDays.has(day)) streak += 1;
-    else if (day === today || isRestDay(restDays, day, quest.dimension)) continue;
-    else break;
-  }
-  return streak;
+  const rest = restDaySet(restDays, quest.dimension);
+  const first = [...doneDays].sort()[0];
+  return runStreak(first, today, (day) => {
+    if (!isScheduledOn(quest, day)) return 'skip';
+    if (doneDays.has(day)) return 'hit';
+    return rest.has(day) ? 'skip' : 'miss';
+  }).current;
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
-import { msUntilNextMidnight, toDateKey, type RadarFilter } from '@/game';
+import { BACKFILL_UNTIL_HOUR, addDays, canLogDay, msUntilNextMidnight, toDateKey, type RadarFilter } from '@/game';
 import { syncReminders } from '@/notifications';
 
 import { useGameStore, type GameData } from './index';
@@ -10,12 +10,17 @@ import {
   selectAllQuestGroups,
   selectClassInfo,
   selectDimensionStats,
+  selectHistory,
+  selectMilestones,
+  selectMonthComparison,
   selectOverallProgress,
+  selectProgressSummary,
   selectPlayedToday,
   selectQuest,
   selectRadar,
   selectTodayQuestGroups,
   selectTutorialQuest,
+  selectYesterdayQuestGroups,
 } from './selectors';
 
 /**
@@ -77,6 +82,48 @@ export function useOverallProgress() {
 export function useTodayQuestGroups(today: string) {
   const data = useGameData();
   return useMemo(() => selectTodayQuestGroups(data, today), [data, today]);
+}
+
+export function useYesterdayQuestGroups(today: string) {
+  const data = useGameData();
+  return useMemo(() => selectYesterdayQuestGroups(data, today), [data, today]);
+}
+
+export function useProgressSummary(today: string) {
+  const data = useGameData();
+  return useMemo(() => selectProgressSummary(data, today), [data, today]);
+}
+
+export function useMonthComparison(today: string) {
+  const data = useGameData();
+  return useMemo(() => selectMonthComparison(data, today), [data, today]);
+}
+
+export function useHistory(today: string, weeks: number) {
+  const data = useGameData();
+  return useMemo(() => selectHistory(data, today, weeks), [data, today, weeks]);
+}
+
+export function useMilestones() {
+  const data = useGameData();
+  return useMemo(() => selectMilestones(data), [data]);
+}
+
+/**
+ * Whether yesterday can still be logged. Re-renders at the cutoff so the
+ * option disappears on its own.
+ */
+export function useCanBackfill(today: string): boolean {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const cutoff = new Date();
+    cutoff.setHours(BACKFILL_UNTIL_HOUR, 0, 0, 0);
+    const ms = cutoff.getTime() - Date.now();
+    if (ms <= 0) return;
+    const timer = setTimeout(() => setTick((t) => t + 1), ms + 1000);
+    return () => clearTimeout(timer);
+  }, [today]);
+  return canLogDay(addDays(today, -1), today, new Date());
 }
 
 export function useAllQuestGroups(today: string) {

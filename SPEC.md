@@ -190,6 +190,24 @@ Expo + TypeScript, fully local, no entitlements: nothing here should slow App St
 
 **Support link.** Character → Settings includes a "Get support" row linking to the 988 Suicide & Crisis Lifeline (call or text 988, US). The app makes no medical or clinical claims.
 
+## Progress 1.1
+
+The app should mirror consistent effort honestly and make progress visible early. These rules replace the matching 1.0 rules above.
+
+| Area | 1.0 | 1.1 |
+| --- | --- | --- |
+| Level curve | 20 × L per level (L5→6 = 100 XP) | 30 at L5, +10 per level, capped at 150 (L5→6 = 30 XP, three completions). Never steeper than 1.0, so recomputed saves only gain levels |
+| Overall level | Same curve × 8 (800 XP to L6) | Same curve × 4 (120 XP to L6) |
+| XP padding | Every completion full XP | First 3 completions per Path per day earn full XP; later ones earn half |
+| Headline number | XP on the radar | **Consistency**: due quest-days done ÷ due, over 7 and 30 days, compared with the window before. Rest days excused; today counts only once done |
+| Dimming | Days since last completion | **Missed scheduled days** since last completion (3 → 50%, 7 → 25%). Paths with no quests never dim |
+| Path streaks | Any day without a completion breaks it | Only a day with a quest due, nothing done in the Path and no rest token breaks it. Best streak is kept |
+| Showing up | Not tracked | Lifetime **days shown up**, a showing-up streak (current and best), milestones at 1, 3, 7, 14, 21, 30, 50, 75, 100… days, and a banner for a new record streak |
+| History | Radar only | **Journey** tab: stat tiles, a 17-week heatmap, last 30 days vs the 30 before, milestones |
+| Late logging | Same-day undo only | Yesterday can be logged or undone until noon; the rest-token ledger is rebuilt so a spent token is refunded |
+| Archiving | `active: false` | Also stamps `archivedAt`, so past due days still count toward consistency |
+| Backup | None | Character → Back up progress (share sheet, JSON). Restore by pasting, from Character or onboarding ("New phone?") |
+
 ## Later (not in the POC)
 
 Parked so they aren't lost; none of these block this weekend's build.

@@ -11,23 +11,23 @@ type Props = {
 };
 
 export function QuestCard({ view, onPress, pinned }: Props) {
-  const { quest, info, doneToday, streak } = view;
+  const { quest, info, done, streak } = view;
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked: doneToday }}
+      accessibilityState={{ checked: done }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
         pinned && { borderColor: info.color, borderWidth: 1.5 },
         pressed && { opacity: 0.8 },
       ]}>
-      <View style={[styles.check, { borderColor: info.color }, doneToday && { backgroundColor: info.color }]}>
-        {doneToday && <SymbolView name="checkmark" tintColor={colors.background} size={16} weight="bold" />}
+      <View style={[styles.check, { borderColor: info.color }, done && { backgroundColor: info.color }]}>
+        {done && <SymbolView name="checkmark" tintColor={colors.background} size={16} weight="bold" />}
       </View>
       <View style={styles.body}>
         {pinned && <Text style={[styles.pinned, { color: info.color }]}>PINNED QUEST</Text>}
-        <Text style={[styles.title, doneToday && styles.done]}>{quest.title}</Text>
+        <Text style={[styles.title, done && styles.done]}>{quest.title}</Text>
         {(pinned || streak > 0) && (
           <Text style={styles.meta}>
             {[pinned && info.className, streak > 0 && `${streak}-day streak`].filter(Boolean).join(' · ')}

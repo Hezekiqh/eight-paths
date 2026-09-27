@@ -17,6 +17,10 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="hexagon.fill" md="hexagon" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="journey">
+        <NativeTabs.Trigger.Label>Journey</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="map.fill" md="map" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="character">
         <NativeTabs.Trigger.Label>Character</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.crop.circle.fill" md="person" />

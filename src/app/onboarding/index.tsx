@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, TextInput } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 
 import { Button } from '@/components/button';
 import { OnboardingStep } from '@/components/onboarding-step';
@@ -29,6 +29,9 @@ export default function WelcomeScreen() {
         onSubmitEditing={() => router.push('/onboarding/class')}
         maxLength={24}
       />
+      <Pressable accessibilityRole="button" onPress={() => router.push('/backup')} hitSlop={8} style={styles.restore}>
+        <Text style={styles.restoreText}>New phone? Restore from a backup</Text>
+      </Pressable>
     </OnboardingStep>
   );
 }
@@ -44,4 +47,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     padding: spacing.lg,
   },
+  restore: { alignSelf: 'center', paddingVertical: spacing.sm },
+  restoreText: { color: colors.textMuted, fontSize: 15, textDecorationLine: 'underline' },
 });

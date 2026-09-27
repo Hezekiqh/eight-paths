@@ -54,6 +54,7 @@ export default function RootLayout() {
           <Stack.Protected guard={!onboarded}>
             <Stack.Screen name="onboarding" />
           </Stack.Protected>
+          <Stack.Screen name="backup" options={{ presentation: 'modal' }} />
           <Stack.Screen
             name="class/[dimension]"
             options={{

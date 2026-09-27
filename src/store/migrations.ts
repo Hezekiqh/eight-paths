@@ -58,6 +58,7 @@ function cleanQuest(raw: unknown): Quest | null {
     repeatDays: [...new Set(days)].sort(),
     active: raw.active !== false,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date(0).toISOString(),
+    ...(isDateKey(raw.archivedAt) ? { archivedAt: raw.archivedAt } : {}),
   };
 }
 

@@ -1,8 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
+import { formatRate } from '@/components/progress-strip';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
 import { XpBar } from '@/components/xp-bar';
@@ -20,7 +21,13 @@ import type { DimensionStats } from '@/store/selectors';
 import { colors, radius, spacing } from '@/theme';
 
 function ClassProgressRow({ stats }: { stats: DimensionStats }) {
-  const { info, progress, streak, opacity } = stats;
+  const { info, progress, streak, consistency, opacity } = stats;
+  const detail = [
+    consistency.rate === null ? 'Nothing due in 30 days' : `${formatRate(consistency)} consistent · 30 days`,
+    streak.best > 0 && `best ${streak.best}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <Pressable
       accessibilityRole="button"
@@ -35,10 +42,11 @@ function ClassProgressRow({ stats }: { stats: DimensionStats }) {
             <Text style={styles.classLevel}>Lv {progress.level}</Text>
           </View>
           <XpBar fill={progress.xpIntoLevel / progress.xpForNext} color={info.color} height={6} />
+          <Text style={styles.classDetail}>{detail}</Text>
         </View>
         <View style={styles.streak}>
-          <SymbolView name="flame.fill" tintColor={streak > 0 ? info.color : colors.textFaint} size={14} />
-          <Text style={[styles.streakText, streak > 0 && { color: colors.text }]}>{streak}</Text>
+          <SymbolView name="flame.fill" tintColor={streak.current > 0 ? info.color : colors.textFaint} size={14} />
+          <Text style={[styles.streakText, streak.current > 0 && { color: colors.text }]}>{streak.current}</Text>
         </View>
       </View>
     </Pressable>
@@ -64,6 +72,13 @@ export default function CharacterScreen() {
   const overall = useOverallProgress();
   const stats = useDimensionStats(today);
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
+  const exportSave = useGameStore((s) => s.exportSave);
+
+  const shareBackup = () => {
+    Share.share({ title: 'Eight Paths backup', message: exportSave() }).catch(() =>
+      Alert.alert('Backup failed', 'The share sheet could not open. Please try again.'),
+    );
+  };
 
   if (!player || !classInfo) return null;
 
@@ -148,6 +163,22 @@ export default function CharacterScreen() {
         />
         <View style={styles.divider} />
         <SettingsRow
+          icon="square.and.arrow.up"
+          iconColor={classInfo.color}
+          title="Back up progress"
+          subtitle="Save a copy to Notes, Files or email. Your progress only lives on this phone."
+          onPress={shareBackup}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="arrow.down.doc"
+          iconColor={classInfo.color}
+          title="Restore from backup"
+          subtitle="Replace this phone's progress with a backup"
+          onPress={() => router.push('/backup')}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
           icon="heart.fill"
           iconColor="#FF6B81"
           title="Get support"
@@ -197,6 +228,7 @@ const styles = StyleSheet.create({
   classBody: { flex: 1, gap: 6 },
   classTop: { flexDirection: 'row', justifyContent: 'space-between' },
   className: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  classDetail: { color: colors.textMuted, fontSize: 12 },
   classLevel: { color: colors.textMuted, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 34, justifyContent: 'flex-end' },
   streakText: { color: colors.textFaint, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },

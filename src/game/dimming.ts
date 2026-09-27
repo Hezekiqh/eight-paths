@@ -1,39 +1,53 @@
-import { daysBetween } from './dates';
+import { addDays } from './dates';
 import { emptyDimensionRecord } from './xp';
-import { DIMENSIONS, type Completion, type Dimension } from './types';
+import { createdDay, isDueOn, restDaySet } from './schedule';
+import { DIMENSIONS, type Completion, type Dimension, type Quest, type RestDay } from './types';
 
-export const DIM_AFTER_DAYS = 3;
-export const FADE_AFTER_DAYS = 7;
+export const DIM_AFTER_MISSED = 3;
+export const FADE_AFTER_MISSED = 7;
 
-export function opacityForIdleDays(idleDays: number): number {
-  if (idleDays >= FADE_AFTER_DAYS) return 0.25;
-  if (idleDays >= DIM_AFTER_DAYS) return 0.5;
+export function opacityForMissedDays(missed: number): number {
+  if (missed >= FADE_AFTER_MISSED) return 0.25;
+  if (missed >= DIM_AFTER_MISSED) return 0.5;
   return 1;
 }
 
 /**
- * Days since the last completion in each dimension. A dimension that has
- * never been completed counts from `since` (the onboarding date).
+ * Scheduled days missed in each Path since its last completion. Only days
+ * when one of the Path's quests was due count (rest days don't), so a
+ * Path you're keeping up on its own schedule never dims, and a Path with no
+ * quests never does either. Today never counts; it isn't over yet.
  */
-export function idleDaysByDimension(
+export function missedDaysByDimension(
+  quests: Quest[],
   completions: Completion[],
-  since: string,
+  restDays: RestDay[],
   today: string,
 ): Record<Dimension, number> {
-  const last = emptyDimensionRecord(since);
-  for (const c of completions) if (c.date > last[c.dimension]) last[c.dimension] = c.date;
-  const idle = emptyDimensionRecord(0);
-  for (const d of DIMENSIONS) idle[d] = Math.max(0, daysBetween(last[d], today));
-  return idle;
+  const missed = emptyDimensionRecord(0);
+  for (const d of DIMENSIONS) {
+    const pathQuests = quests.filter((q) => q.dimension === d);
+    if (pathQuests.length === 0) continue;
+    const active = new Set(completions.filter((c) => c.dimension === d).map((c) => c.date));
+    if (active.has(today)) continue;
+    const rest = restDaySet(restDays, d);
+    const firstDay = pathQuests.map(createdDay).sort()[0];
+    for (let day = addDays(today, -1); day >= firstDay && missed[d] < FADE_AFTER_MISSED; day = addDays(day, -1)) {
+      if (active.has(day)) break;
+      if (!rest.has(day) && pathQuests.some((q) => isDueOn(q, day))) missed[d] += 1;
+    }
+  }
+  return missed;
 }
 
 export function dimOpacityByDimension(
+  quests: Quest[],
   completions: Completion[],
-  since: string,
+  restDays: RestDay[],
   today: string,
 ): Record<Dimension, number> {
-  const idle = idleDaysByDimension(completions, since, today);
+  const missed = missedDaysByDimension(quests, completions, restDays, today);
   const opacity = emptyDimensionRecord(1);
-  for (const d of DIMENSIONS) opacity[d] = opacityForIdleDays(idle[d]);
+  for (const d of DIMENSIONS) opacity[d] = opacityForMissedDays(missed[d]);
   return opacity;
 }

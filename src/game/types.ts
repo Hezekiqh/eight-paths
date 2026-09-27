@@ -27,6 +27,8 @@ export type Quest = {
   repeatDays: number[];
   active: boolean;
   createdAt: string;
+  /** Date key the quest was archived; days from then on no longer count as due. */
+  archivedAt?: string;
 };
 
 export type Completion = {

@@ -5,6 +5,10 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   DAILY,
   STARTING_REST_TOKENS,
+  canLogDay,
+  daysShownUp,
+  milestoneCrossed,
+  showUpStreak,
   TUTORIAL_QUEST_ID,
   TUTORIAL_QUEST_TITLE,
   describeXpGain,
@@ -39,14 +43,20 @@ export type StartGameInput = {
   quests: { title: string; dimension: Dimension }[];
 };
 
+/** Something worth celebrating beyond the XP bar. */
+export type Milestone = { title: string; detail: string };
+
 export type ToggleOutcome =
-  | { kind: 'completed'; completionId: string; dimension: Dimension; gain: XpGain }
+  | { kind: 'completed'; completionId: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null }
   | { kind: 'undone' }
   | { kind: 'ignored' };
 
+export type ImportResult = { ok: true } | { ok: false; error: string };
+
 type Actions = {
   startGame: (input: StartGameInput, today?: string) => void;
-  toggleQuest: (questId: string, today?: string) => ToggleOutcome;
+  /** Toggles `questId` on `day` (default today); yesterday is loggable until noon. */
+  toggleQuest: (questId: string, today?: string, day?: string, now?: Date) => ToggleOutcome;
   addQuest: (draft: QuestDraft) => void;
   updateQuest: (id: string, draft: QuestDraft) => void;
   archiveQuest: (id: string) => void;
@@ -55,6 +65,8 @@ type Actions = {
   completeTutorial: () => void;
   settle: (today?: string) => void;
   resetGame: () => void;
+  exportSave: () => string;
+  importSave: (text: string) => ImportResult;
 };
 
 export type GameState = GameData & Actions;
@@ -68,6 +80,38 @@ export const initialData: GameData = {
 };
 
 const todayKey = () => toDateKey(new Date());
+
+const BACKUP_APP = 'eight-paths';
+
+/** Rebuilds the rest ledger from scratch; it's fully determined by the completions. */
+function rebuildLedger(player: Player, completions: Completion[], today: string) {
+  return settleRestDays(
+    { restTokens: STARTING_REST_TOKENS, restDays: [], lastSettledDate: null },
+    completions,
+    player.onboardedAt,
+    today,
+  );
+}
+
+function describeMilestone(
+  data: Pick<GameData, 'completions' | 'restDays'>,
+  after: Completion[],
+  start: string,
+  today: string,
+): Milestone | null {
+  const days = milestoneCrossed(daysShownUp(data.completions), daysShownUp(after));
+  if (days !== null) {
+    return days === 1
+      ? { title: 'Day one', detail: 'You showed up. Every journey starts exactly like this.' }
+      : { title: `${days} days shown up`, detail: 'Every one of them counted.' };
+  }
+  const before = showUpStreak(data.completions, data.restDays, start, today);
+  const now = showUpStreak(after, data.restDays, start, today);
+  if (now.best > before.best && now.best >= 3 && before.best > 0) {
+    return { title: `New record: ${now.best}-day streak`, detail: `Your best ever run of showing up.` };
+  }
+  return null;
+}
 
 function makeQuest(draft: QuestDraft): Quest {
   return {
@@ -108,14 +152,26 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      toggleQuest: (questId, today = todayKey()) => {
-        const { player, quests, completions } = get();
+      toggleQuest: (questId, today = todayKey(), day = today, now = new Date()) => {
+        const { player, quests, completions, restDays } = get();
         const quest = quests.find((q) => q.id === questId);
-        if (!player || !quest) return { kind: 'ignored' };
+        if (!player || !quest || !canLogDay(day, today, now)) return { kind: 'ignored' };
 
         const xpBefore = xpByDimension(completions)[quest.dimension];
-        const result = toggleCompletion(completions, quest, player.classDimension, today, newId());
-        set({ completions: result.completions });
+        const result = toggleCompletion(completions, quest, player.classDimension, day, newId());
+        if (day === today) {
+          set({ completions: result.completions });
+        } else {
+          // A logged or undone past day can change whether a rest token was
+          // spent (or earned) at midnight, so settle the ledger again.
+          const ledger = rebuildLedger(player, result.completions, today);
+          set({
+            completions: result.completions,
+            player: { ...player, restTokens: ledger.restTokens },
+            restDays: ledger.restDays,
+            lastSettledDate: ledger.lastSettledDate,
+          });
+        }
 
         if (result.kind === 'completed') {
           return {
@@ -123,6 +179,7 @@ export const useGameStore = create<GameState>()(
             completionId: result.completion.id,
             dimension: quest.dimension,
             gain: describeXpGain(xpBefore, result.completion.xp),
+            milestone: describeMilestone({ completions, restDays }, result.completions, player.onboardedAt, today),
           };
         }
         return { kind: result.kind };
@@ -140,7 +197,9 @@ export const useGameStore = create<GameState>()(
         })),
 
       archiveQuest: (id) =>
-        set((s) => ({ quests: s.quests.map((q) => (q.id === id ? { ...q, active: false } : q)) })),
+        set((s) => ({
+          quests: s.quests.map((q) => (q.id === id ? { ...q, active: false, archivedAt: todayKey() } : q)),
+        })),
 
       setNotificationTime: (notificationTime) =>
         set((s) => (s.player ? { player: { ...s.player, notificationTime } } : s)),
@@ -176,6 +235,33 @@ export const useGameStore = create<GameState>()(
       },
 
       resetGame: () => set(initialData),
+
+      exportSave: () => {
+        const { player, quests, completions, restDays, lastSettledDate } = get();
+        return JSON.stringify({
+          app: BACKUP_APP,
+          version: SAVE_VERSION,
+          exportedAt: new Date().toISOString(),
+          data: { player, quests, completions, restDays, lastSettledDate },
+        });
+      },
+
+      importSave: (text) => {
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(text.trim());
+        } catch {
+          return { ok: false, error: "That doesn't look like an Eight Paths backup. Paste the whole thing." };
+        }
+        const backup = parsed as { app?: unknown; version?: unknown; data?: unknown } | null;
+        if (!backup || backup.app !== BACKUP_APP || typeof backup.version !== 'number') {
+          return { ok: false, error: "That doesn't look like an Eight Paths backup." };
+        }
+        const data = migrateSave(backup.data, backup.version);
+        if (!data.player) return { ok: false, error: 'That backup has no character in it.' };
+        set(data);
+        return { ok: true };
+      },
     }),
     {
       name: 'eight-paths',

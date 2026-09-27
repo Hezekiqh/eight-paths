@@ -14,6 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CLASSES, type Dimension, type XpGain } from '@/game';
+import type { Milestone } from '@/store';
 import { colors, radius, spacing } from '@/theme';
 
 const FADE_IN_MS = 300;
@@ -25,15 +26,19 @@ const FILL_EASING = Easing.inOut(Easing.cubic);
 type Props = {
   dimension: Dimension;
   gain: XpGain;
+  milestone?: Milestone | null;
   onDone: () => void;
 };
+
+/** Extra time on screen so a milestone can be read. */
+const MILESTONE_HOLD_MS = 1800;
 
 /**
  * Fades in after a completion and fills the dimension's XP bar. On a
  * level-up the bar maxes out, flashes, announces the level, and refills
  * from the carry-over XP.
  */
-export function XpBanner({ dimension, gain, onDone }: Props) {
+export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
   const info = CLASSES[dimension];
   const insets = useSafeAreaInsets();
   const { before, after, leveledUp } = gain;
@@ -48,6 +53,7 @@ export function XpBanner({ dimension, gain, onDone }: Props) {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     const fill = { duration: FILL_MS, easing: FILL_EASING };
+    const hold = HOLD_MS + (milestone ? MILESTONE_HOLD_MS : 0);
     const filled = FADE_IN_MS + FILL_MS;
 
     if (leveledUp) {
@@ -65,11 +71,11 @@ export function XpBanner({ dimension, gain, onDone }: Props) {
       );
       timers.push(setTimeout(() => setLevel(after.level), filled));
       timers.push(setTimeout(() => setXpLabel(`${after.xpIntoLevel} / ${after.xpForNext} XP`), filled + FLASH_MS));
-      timers.push(setTimeout(onDone, filled + FLASH_MS + FILL_MS + HOLD_MS));
+      timers.push(setTimeout(onDone, filled + FLASH_MS + FILL_MS + hold));
     } else {
       width.value = withDelay(FADE_IN_MS, withTiming(afterFill, fill));
       timers.push(setTimeout(() => setXpLabel(`${after.xpIntoLevel} / ${after.xpForNext} XP`), filled));
-      timers.push(setTimeout(onDone, filled + HOLD_MS));
+      timers.push(setTimeout(onDone, filled + hold));
     }
     return () => timers.forEach(clearTimeout);
     // The banner is keyed per completion, so this runs once per gain.
@@ -98,6 +104,15 @@ export function XpBanner({ dimension, gain, onDone }: Props) {
           <Animated.View style={[StyleSheet.absoluteFill, styles.flash, flashStyle]} />
         </View>
         <Text style={styles.xp}>{xpLabel}</Text>
+        {milestone && (
+          <Animated.View entering={FadeIn.delay(FADE_IN_MS + FILL_MS).duration(400)} style={styles.milestone}>
+            <SymbolView name="sparkles" tintColor={info.color} size={20} />
+            <View style={styles.milestoneText}>
+              <Text style={styles.milestoneTitle}>{milestone.title}</Text>
+              <Text style={styles.milestoneDetail}>{milestone.detail}</Text>
+            </View>
+          </Animated.View>
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -123,4 +138,15 @@ const styles = StyleSheet.create({
   fill: { height: '100%', borderRadius: radius.pill },
   flash: { backgroundColor: '#FFFFFF', borderRadius: radius.pill },
   xp: { color: colors.textMuted, fontSize: 13, textAlign: 'right' },
+  milestone: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+  },
+  milestoneText: { flex: 1, gap: 2 },
+  milestoneTitle: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  milestoneDetail: { color: colors.textMuted, fontSize: 13 },
 });
