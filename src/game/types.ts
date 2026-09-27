@@ -20,6 +20,8 @@ export type Player = {
   notificationTime: string;
   /** Vibration on taps, typing and level-ups. */
   hapticsEnabled: boolean;
+  /** Objectives tab turns sideways like a handheld console; upright by default. */
+  objectivesLandscape: boolean;
 };
 
 export type Quest = {

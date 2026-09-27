@@ -10,6 +10,7 @@ const player = {
   tutorialComplete: true,
   notificationTime: '20:00',
   hapticsEnabled: true,
+  objectivesLandscape: false,
 };
 const quest = {
   id: 'q1',

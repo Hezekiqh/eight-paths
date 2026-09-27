@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -37,6 +37,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   3: (save) => save,
   // v5 adds reveal tracking; null means "count everyone already unlocked as met".
   4: (save) => ({ ...save, revealed: null }),
+  // v6 adds the Objectives layout choice to the player; sanitizeSave defaults it to upright.
+  5: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -59,6 +61,7 @@ function cleanPlayer(raw: unknown): Player | null {
     tutorialComplete: raw.tutorialComplete === true,
     notificationTime: formatTime(time.hour, time.minute),
     hapticsEnabled: raw.hapticsEnabled !== false,
+    objectivesLandscape: raw.objectivesLandscape === true,
   };
 }
 

@@ -24,20 +24,27 @@ const CATEGORIES: { key: Category; label: string; symbol: SymbolViewProps['name'
   { key: 'themes', label: 'Themes', symbol: 'paintpalette.fill', blurb: 'Make the game your own.' },
 ];
 
-/** Turns the phone sideways while this tab is open, like a handheld console. */
-function useLandscape() {
+/**
+ * Upright by default. With the console view on, turns the phone sideways while
+ * this tab is open, like a handheld console, and back upright on leaving.
+ */
+function useOrientation(landscape: boolean) {
   useFocusEffect(
     useCallback(() => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      ScreenOrientation.lockAsync(
+        landscape ? ScreenOrientation.OrientationLock.LANDSCAPE : ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
       return () => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
       };
-    }, []),
+    }, [landscape]),
   );
 }
 
 export default function ObjectivesScreen() {
-  useLandscape();
+  const landscape = useGameStore((s) => s.player?.objectivesLandscape ?? false);
+  const setLandscape = useGameStore((s) => s.setObjectivesLandscape);
+  useOrientation(landscape);
   const today = useToday();
   const objectives = useObjectives(today);
   const goals = useGoals();
@@ -60,8 +67,14 @@ export default function ObjectivesScreen() {
   const finished = goals.filter((g) => g.completedAt);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <View style={styles.menu} accessibilityRole="tablist">
+    <SafeAreaView style={[styles.safe, landscape && styles.safeWide]} edges={['top', 'left', 'right']}>
+      <ScrollView
+        horizontal={!landscape}
+        scrollEnabled={!landscape}
+        showsHorizontalScrollIndicator={false}
+        style={landscape ? styles.menu : styles.menuBar}
+        contentContainerStyle={landscape ? styles.menuContent : styles.menuBarContent}
+        accessibilityRole="tablist">
         {CATEGORIES.map((c) => {
           const selected = c.key === category;
           const count = waiting(c.key);
@@ -75,17 +88,24 @@ export default function ObjectivesScreen() {
                 if (!selected) haptics.select();
                 setCategory(c.key);
               }}
-              style={[styles.menuItem, selected && styles.menuItemSelected]}>
+              style={[styles.menuItem, !landscape && styles.menuItemCompact, selected && styles.menuItemSelected]}>
               <View style={styles.cursorSlot}>
                 {selected && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} />}
               </View>
-              <SymbolView name={c.symbol} tintColor={selected ? colors.accent : colors.textMuted} size={selected ? 24 : 20} />
-              <Text style={[styles.menuLabel, selected && styles.menuLabelSelected]}>{c.label.toUpperCase()}</Text>
+              <SymbolView
+                name={c.symbol}
+                tintColor={selected ? colors.accent : colors.textMuted}
+                size={selected ? 24 : 20}
+              />
+              <Text
+                style={[styles.menuLabel, !landscape && styles.menuLabelCompact, selected && styles.menuLabelSelected]}>
+                {c.label.toUpperCase()}
+              </Text>
               {count > 0 && <Text style={styles.menuCount}>{count}</Text>}
             </Pressable>
           );
         })}
-        {objectives.boosted.length > 0 && (
+        {landscape && objectives.boosted.length > 0 && (
           <View style={styles.boosts}>
             {objectives.boosted.map((d) => (
               <Text key={d} style={[styles.boost, { color: CLASSES[d].color }]}>
@@ -94,37 +114,57 @@ export default function ObjectivesScreen() {
             ))}
           </View>
         )}
-      </View>
+      </ScrollView>
 
       <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent}>
         <View style={styles.panelHeader}>
           <View>
-            <Text style={styles.panelTitle}>
-              {category === 'themes' ? 'Themes' : `${current.label} objectives`}
-            </Text>
+            <Text style={styles.panelTitle}>{category === 'themes' ? 'Themes' : `${current.label} objectives`}</Text>
             <Text style={styles.blurb}>{current.blurb}</Text>
           </View>
-          {category === 'personal' && (
+          <View style={styles.headerActions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="New goal"
+              accessibilityLabel={landscape ? 'Switch to upright view' : 'Switch to sideways console view'}
               onPress={() => {
-                haptics.tap();
-                router.push('/goal-editor');
+                haptics.select();
+                setLandscape(!landscape);
               }}
-              style={({ pressed }) => [styles.add, pressed && { opacity: 0.7 }]}>
-              <SymbolView name="plus" tintColor={colors.background} size={18} weight="bold" />
+              hitSlop={8}
+              style={({ pressed }) => [styles.rotate, pressed && { opacity: 0.7 }]}>
+              <SymbolView
+                name={landscape ? 'rectangle.portrait.rotate' : 'rectangle.landscape.rotate'}
+                tintColor={colors.accent}
+                size={22}
+              />
             </Pressable>
-          )}
+            {category === 'personal' && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="New goal"
+                onPress={() => {
+                  haptics.tap();
+                  router.push('/goal-editor');
+                }}
+                style={({ pressed }) => [styles.add, pressed && { opacity: 0.7 }]}>
+                <SymbolView name="plus" tintColor={colors.background} size={18} weight="bold" />
+              </Pressable>
+            )}
+          </View>
         </View>
+        {!landscape && objectives.boosted.length > 0 && (
+          <Text style={styles.boost}>
+            {objectives.boosted.map((d) => `${BOOST_MULTIPLIER}× ${CLASSES[d].className}`).join(' · ')} today
+          </Text>
+        )}
 
         {category === 'themes' ? (
           <ThemePicker />
         ) : category === 'personal' ? (
           goals.length === 0 ? (
             <Text style={styles.empty}>
-              Write down something you&apos;re working toward: run a 5K, pay off a card, call home more. Pick a
-              Path and finishing it earns XP there.
+              Write down something you&apos;re working toward: run a 5K, pay off a card, call home more. Pick a Path and
+              finishing it earns XP there.
             </Text>
           ) : (
             <View style={styles.list}>
@@ -155,9 +195,23 @@ export default function ObjectivesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, flexDirection: 'row', backgroundColor: colors.background },
-  menu: { width: 210, paddingVertical: spacing.lg, paddingLeft: spacing.md, gap: spacing.xs },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md, paddingRight: spacing.sm },
+  safe: { flex: 1, flexDirection: 'column', backgroundColor: colors.background },
+  safeWide: { flexDirection: 'row' },
+  menu: { width: 210, flexGrow: 0 },
+  menuContent: { paddingVertical: spacing.lg, paddingLeft: spacing.md, gap: spacing.xs },
+  menuBar: { flexGrow: 0 },
+  menuBarContent: { paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
+  menuItemCompact: { paddingVertical: spacing.sm, paddingHorizontal: spacing.xs },
+  menuLabelCompact: { flex: 0, fontSize: 18 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  rotate: { ...windowStyle, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingRight: spacing.sm,
+  },
   menuItemSelected: { backgroundColor: colors.card, borderColor: colors.accent, borderWidth: 2 },
   cursorSlot: { width: 16, alignItems: 'flex-end' },
   menuLabel: { flex: 1, color: colors.textMuted, fontFamily: fonts.bold, fontSize: 20, letterSpacing: 1.2 },
@@ -177,7 +231,14 @@ const styles = StyleSheet.create({
   panelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   panelTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 30 },
   blurb: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
-  add: { ...windowStyle, backgroundColor: colors.accent, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  add: {
+    ...windowStyle,
+    backgroundColor: colors.accent,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   list: { gap: spacing.sm },
   empty: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
 });

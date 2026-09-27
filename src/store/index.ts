@@ -103,6 +103,7 @@ type Actions = {
   archiveQuest: (id: string) => void;
   setNotificationTime: (time: string) => void;
   setHapticsEnabled: (on: boolean) => void;
+  setObjectivesLandscape: (on: boolean) => void;
   changeClass: (dimension: Dimension) => void;
   /** Puts an unlocked character in their Path's party slot. False if they're still locked. */
   swapCharacter: (id: CharacterId) => boolean;
@@ -233,6 +234,7 @@ export const useGameStore = create<GameState>()(
             tutorialComplete: false,
             notificationTime: '20:00',
             hapticsEnabled: true,
+            objectivesLandscape: false,
           },
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
           // The core eight are there from the start: no reveal needed.
@@ -298,6 +300,9 @@ export const useGameStore = create<GameState>()(
 
       setHapticsEnabled: (hapticsEnabled) =>
         set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
+
+      setObjectivesLandscape: (objectivesLandscape) =>
+        set((s) => (s.player ? { player: { ...s.player, objectivesLandscape } } : s)),
 
       changeClass: (classDimension) =>
         set((s) => (s.player ? { player: { ...s.player, classDimension } } : s)),

@@ -92,6 +92,7 @@ const state = {
     tutorialComplete: true,
     notificationTime: '20:00',
     hapticsEnabled: true,
+    objectivesLandscape: false,
   },
   quests,
   completions,
@@ -119,4 +120,4 @@ const state = {
   ],
 };
 
-process.stdout.write(JSON.stringify({ state, version: 4 }));
+process.stdout.write(JSON.stringify({ state, version: 6 }));

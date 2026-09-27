@@ -7,8 +7,8 @@ import { CollectionGrid } from '@/components/collection-grid';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
 import { XpBar } from '@/components/xp-bar';
-import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
-import { ensureReminderPermission } from '@/notifications';
+import { MAX_REST_TOKENS, formatTime, parseTime, toDateKey } from '@/game';
+import { ensureReminderPermission, syncReminders } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
@@ -177,6 +177,27 @@ export default function CharacterScreen() {
               onPress={() => {
                 const pick = ROSTER[Math.floor(Math.random() * ROSTER.length)];
                 router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
+              }}
+            />
+            <View style={styles.divider} />
+            <SettingsRow
+              icon="bell"
+              iconColor={classInfo.color}
+              title="Test reminder in 1 minute (dev)"
+              subtitle="Schedules through the real reminder code. Leave the app to see it."
+              onPress={async () => {
+                if (!(await ensureReminderPermission())) {
+                  Alert.alert('Notifications are off', 'Allow notifications for this app in iOS Settings, then try again.');
+                  return;
+                }
+                const at = new Date(Date.now() + 60_000);
+                await syncReminders({
+                  today: toDateKey(at),
+                  notificationTime: formatTime(at.getHours(), at.getMinutes()),
+                  playedToday: false,
+                  enabled: true,
+                });
+                Alert.alert('Reminder scheduled', `It should arrive at ${formatTime(at.getHours(), at.getMinutes())}. Leave the app now.`);
               }}
             />
           </>
