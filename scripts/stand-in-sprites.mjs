@@ -991,6 +991,31 @@ const SPECIAL = {
     draw(10, C.hairBrown, C.teal);
     f.rect(8, 17, 6, 3, C.red).rect(18, 17, 6, 3, C.sky);
   },
+  // Midas (gold, spends) and Minnow (grey, saves).
+  penrose(f) {
+    const draw = (dx, hair, top) => {
+      f.rect(7 + dx, 21, 8, 8, C.skin1)
+        .rect(8 + dx, 25, 2, 1, EYE)
+        .rect(12 + dx, 25, 2, 1, EYE)
+        .rect(7 + dx, 20, 8, 2, hair);
+      f.rect(7 + dx, 29, 8, 7, top)
+        .rect(8 + dx, 36, 2, 6, C.black)
+        .rect(12 + dx, 36, 2, 6, C.black);
+      f.rect(7 + dx, 42, 3, 3, C.black).rect(12 + dx, 42, 3, 3, C.black);
+    };
+    draw(0, C.hairBlond, C.gold);
+    draw(10, C.hairBlond, C.grey);
+    f.px(
+      [
+        [6, 31],
+        [5, 33],
+        [7, 35],
+      ],
+      C.gold,
+    )
+      .rect(24, 32, 3, 3, C.brown)
+      .px([[25, 31]], C.gold);
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -1264,6 +1289,69 @@ const SPECS = {
     eyes: 'glasses',
     scarf: C.violet,
     held: [['sack']],
+  },
+  fennick: {
+    skin: 'skin3',
+    hair: ['long', 'hairGrey'],
+    beard: ['hairGrey', 3],
+    top: C.tan,
+    patches: [
+      [1, 2, C.brown],
+      [6, 6, C.grey],
+      [2, 7, C.moss],
+    ],
+    shade: C.tan,
+    legs: C.brown,
+    boots: C.brown,
+    left: [['cane']],
+    held: [['sack']],
+  },
+  opaline: {
+    skin: 'skin5',
+    hair: ['curly', 'hairBlack'],
+    hat: ['feathered', 'teal'],
+    outfit: 'robe',
+    top: C.teal,
+    sash: C.gold,
+    shade: C.teal,
+    dots: [
+      [13, 33, C.white],
+      [18, 37, C.white],
+    ],
+  },
+  silas: {
+    size: 'tall',
+    skin: 'skin1',
+    hair: ['short', 'hairBlack'],
+    hat: ['tophat', 'black'],
+    mustache: 'hairBlack',
+    top: C.black,
+    stripes: C.steel2,
+    shade: C.black,
+    legs: C.black,
+    boots: C.black,
+    belt: C.gold,
+    held: [['scroll']],
+  },
+  barnabus: {
+    size: 'big',
+    skin: 'skin2',
+    hair: ['bald'],
+    beard: ['hairGrey', 2],
+    top: C.violet,
+    shade: C.violet,
+    legs: C.violet,
+    boots: C.black,
+    belt: C.gold,
+    held: [['sack']],
+    dots: [
+      [6, 44, C.gold],
+      [8, 43, C.gold],
+      [24, 44, C.gold],
+      [26, 43, C.gold],
+      [25, 42, C.gold],
+      [7, 45, C.gold],
+    ],
   },
   // Intellectual
   nib: {
@@ -1983,6 +2071,7 @@ const SPECIAL_IDS = {
   antler: 'stag',
   lumen: 'flame',
   kitkat: 'twins',
+  penrose: 'penrose',
 };
 const FLOATS = new Set(['lumen']);
 

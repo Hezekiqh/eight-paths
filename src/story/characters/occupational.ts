@@ -113,7 +113,7 @@ export const OCCUPATIONAL = {
   morrow: {
     number: 4,
     rarity: 5,
-    name: 'Keeper Morrow',
+    name: 'Old Morrow',
     dimension: 'occupational',
     kind: 'recruit',
     unlockLevel: 35,
