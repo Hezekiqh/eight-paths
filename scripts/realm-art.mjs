@@ -664,6 +664,278 @@ export function toPng(g, scale) {
 /** The cocoon picture's canvas: 80×106, the cocoon's bottom centre at (40, 102). */
 export const COCOON_CANVAS = { width: COCOON_W + 20, height: COCOON_H + 6, cx: (COCOON_W + 20) / 2, by: COCOON_H + 2 };
 
+
+// ---- the intro's scenes ("Long ago…")
+
+/** Draws `src` (a grid) into `g` at (x0, y0), scaled by `s`, shifted toward `tint` by `amt`. */
+function stamp(g, src, x0, y0, s, tint = '#000000', amt = 0) {
+  const tc = hex(tint);
+  const h = Math.round(src.length * s);
+  const w = Math.round(src[0].length * s);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const c = src[Math.floor(y / s)][Math.floor(x / s)];
+      if (c) put(g, x0 + x, y0 + y, amt ? mix(c, tc, amt) : c);
+    }
+}
+const cocoonSprite = (cracks = 0) => {
+  const g = blank(COCOON_CANVAS.width, COCOON_CANVAS.height);
+  drawCocoon(g, COCOON_CANVAS.cx, COCOON_CANVAS.by, { cracks });
+  return g;
+};
+
+/** Rows of sleeping cocoons receding into the dark. */
+function sleepers(rnd, { overgrown = false } = {}) {
+  const g = canvas();
+  gradient(g, 0, GROUND, ['#030208', '#07060F', '#0C0A1A', '#12102A']);
+  // a shaft of pale light from high above
+  for (let y = 0; y < GROUND; y++)
+    for (let x = 0; x < GW; x++) {
+      const half = 24 + y * 0.22;
+      const d = Math.abs(x - GW / 2) / half;
+      if (d < 1) g[y][x] = mix(g[y][x], hex('#8C86C8'), dither(0.22 * (1 - d) * (y / GROUND), x, y));
+    }
+  ground(g, rnd, ['#14122A', '#0C0A1A', '#05040A'], { specks: 0.02 });
+  layer(g, 5);
+  const cocoon = cocoonSprite();
+  for (const [by, s, count, dim] of [
+    [262, 0.3, 11, 0.72],
+    [298, 0.45, 8, 0.55],
+    [340, 0.65, 6, 0.35],
+    [398, 0.9, 4, 0.15],
+  ]) {
+    const w = COCOON_CANVAS.width * s;
+    const step = GW / count;
+    for (let i = 0; i < count; i++) {
+      const cx = step * (i + 0.5) + (rnd() - 0.5) * step * 0.2;
+      const x0 = Math.round(cx - w / 2);
+      const y0 = Math.round(by - COCOON_CANVAS.by * s);
+      stamp(g, cocoon, x0, y0, s, overgrown ? '#1A1A10' : '#07060F', dim + (overgrown ? 0.1 : 0));
+      if (!overgrown) glow(g, cx, by - 40 * s, 30 * s, '#8C86C8', 0.12);
+      if (overgrown) {
+        // vines climb the silk; dust settles on top
+        for (let v = 0; v < 3; v++) {
+          let vx = x0 + w * (0.25 + v * 0.25);
+          for (let y = by; y > by - COCOON_H * s * (0.5 + rnd() * 0.5); y--) {
+            vx += (rnd() - 0.5) * 1.6;
+            put(g, vx, y, hex(rnd() > 0.3 ? '#2E4A24' : '#4A6A30'));
+            if (rnd() > 0.85) put(g, vx + 1, y, hex('#5A7A38'));
+          }
+        }
+        for (let d = 0; d < 6; d++) put(g, x0 + rnd() * w, y0 + rnd() * 6 * s + 2, hex('#6A6450'));
+      }
+    }
+  }
+  if (overgrown) {
+    layer(g, 10);
+    // cobwebs in the top corners
+    for (let r = 10; r < 60; r += 10)
+      for (let a = 0; a <= 20; a++) {
+        const t = (a / 20) * (Math.PI / 2);
+        put(g, Math.cos(t) * r, Math.sin(t) * r, hex('#3A3848'));
+        put(g, GW - 1 - Math.cos(t) * r, Math.sin(t) * r, hex('#3A3848'));
+      }
+    for (let n = 0; n < 60; n++) put(g, rnd() * GW, rnd() * GROUND, hex('#4A4636'));
+  }
+  const out = finish(g, { lightDir: 0, rimColor: '#8C86C8', rim: 0.2, vignette: 0.8 });
+  if (overgrown) out.base = out.base.map((row) => row.map((c) => mix(c, hex('#1A140A'), 0.25)));
+  return out;
+}
+
+/** The Warrior Kingdom under a sky of fire and smoke: the war that would have ended everything. */
+function war(rnd) {
+  const { base } = drawRealm('physical');
+  const g = base.map((row) => row.map((c) => mix(c, hex('#2A0606'), 0.35)));
+  for (let y = 0; y < 240; y++)
+    for (let x = 0; x < GW; x++) g[y][x] = mix(g[y][x], hex('#8A1A10'), dither(0.5 * (1 - y / 240), x, y));
+  // smoke rolling over the sky
+  for (let n = 0; n < 26; n++) {
+    const sx = rnd() * GW;
+    const sy = 40 + rnd() * 180;
+    const r = 10 + rnd() * 22;
+    for (let j = -r; j <= r; j++)
+      for (let i = -r; i <= r; i++)
+        if (i * i + j * j <= r * r) {
+          const px = Math.round(sx + i);
+          const py = Math.round(sy + j);
+          const a = dither(0.6 * (1 - Math.hypot(i, j) / r), px, py);
+          if (py >= 0 && py < GH && px >= 0 && px < GW && a > 0) g[py][px] = mix(g[py][px], hex('#2A1216'), a);
+        }
+  }
+  // fires along the horizon
+  const fires = [];
+  for (let n = 0; n < 9; n++) {
+    const fx = 10 + n * 31 + rnd() * 10;
+    for (let y = 0; y < 14; y++)
+      for (let i = -4 + y / 4; i <= 4 - y / 4; i++) put(g, fx + i, GROUND - y, hex(y < 5 ? '#FFD060' : y < 10 ? '#FF8A3D' : '#B3261E'));
+    fires.push(fx);
+  }
+  const gg = { glows: [] };
+  fires.forEach((fx) => gg.glows.push({ x: fx, y: GROUND - 6, r: 26, c: hex('#FF6A2A'), s: 0.5 }));
+  for (const { x, y, r, c, s } of gg.glows)
+    for (let j = Math.floor(y - r); j <= y + r; j++)
+      for (let i = Math.floor(x - r); i <= x + r; i++) {
+        if (j < 0 || j >= GH || i < 0 || i >= GW) continue;
+        const d = Math.hypot(i - x, j - y) / r;
+        if (d < 1) g[j][i] = mix(g[j][i], c, dither(s * (1 - d) * (1 - d), i, j));
+      }
+  for (let n = 0; n < 40; n++) put(g, rnd() * GW, 150 + rnd() * 200, hex('#FFB04A'));
+  return { base: g, lights: [] };
+}
+
+/** The Archive: shelves of scrolls by candlelight. The cocoon at its heart is placed by the app. */
+function archive(rnd) {
+  const g = canvas();
+  gradient(g, 0, GROUND, ['#0A0608', '#140C0C', '#1E1412', '#2A1C16']);
+  layer(g, 2);
+  const wood = hex('#3A2418');
+  const dark = hex('#24160E');
+  for (const [x0, w] of [[-6, 88], [94, 82], [188, 88]]) {
+    box(g, x0, 40, w, GROUND - 40, dark);
+    box(g, x0, 40, 4, GROUND - 40, wood);
+    box(g, x0 + w - 4, 40, 4, GROUND - 40, wood);
+    for (let sy = 70; sy < GROUND - 10; sy += 34) {
+      box(g, x0, sy, w, 4, wood);
+      // scrolls lying on the shelf, ends toward us
+      for (let sx = x0 + 6; sx < x0 + w - 10; sx += 9 + Math.floor(rnd() * 3)) {
+        if (rnd() < 0.15) continue;
+        const r = 3 + Math.floor(rnd() * 2);
+        const cy = sy - r - 1;
+        disc(g, sx + r, cy, r, rnd() > 0.2 ? '#E8DCC0' : '#C9B890', '#A89878');
+        put(g, sx + r, cy, hex('#6A5A48'));
+        if (rnd() < 0.18) box(g, sx + r - 1, cy + r - 1, 3, 2, hex('#B3261E'));
+      }
+    }
+  }
+  // a high window lets in one shaft of light onto the centre
+  layer(g, 1);
+  box(g, 118, 8, 34, 26, hex('#4A5A8A'));
+  box(g, 134, 8, 2, 26, dark);
+  box(g, 118, 20, 34, 2, dark);
+  for (let y = 34; y < GROUND; y++)
+    for (let x = 0; x < GW; x++) {
+      const cx = 135 + (y - 34) * 0.05;
+      const half = 17 + (y - 34) * 0.12;
+      const d = Math.abs(x - cx) / half;
+      if (d < 1) g[y][x] = mix(g[y][x], hex('#C8C8F0'), dither(0.22 * (1 - d), x, y));
+    }
+  ground(g, rnd, ['#3A2A22', '#221812', '#0C0806'], { specks: 0.03 });
+  layer(g, 10);
+  for (const [cx, cy] of [[40, 138], [230, 206], [40, 274], [230, 104], [135, 172]]) {
+    box(g, cx - 1, cy - 6, 3, 6, hex('#F3ECDD'));
+    put(g, cx, cy - 8, hex('#FFD060'));
+    put(g, cx, cy - 7, hex('#FFB04A'));
+    light(g, cx, cy - 8, '#FFB04A', 20, 0.5);
+  }
+  return finish(g, { lightDir: 0, rimColor: '#FFB04A', rim: 0.25, vignette: 0.7 });
+}
+
+
+/** How tall the descent is: the world at night, down through the earth, into the dark, to the Archive. */
+export const DESCENT_H = GH * 3;
+/** Where the Archive (and its floor) starts in the descent. */
+export const DESCENT_ARCHIVE_TOP = DESCENT_H - GH;
+
+/**
+ * The intro's last panel, a long scroll downward: the sleeping world under the
+ * stars, the earth with the old world's ruins buried in it, the earth giving
+ * way to a starry dark, and the Archive at the bottom, where the player wakes.
+ */
+function descent(rnd) {
+  const H2 = DESCENT_H;
+  const g = Array.from({ length: H2 }, () => Array(GW).fill(null));
+  const surface = 300;
+  // the world at night
+  const sky = ['#05060F', '#0A0E24', '#141A3A', '#1E2450'].map(hex);
+  for (let y = 0; y < surface; y++) {
+    const t = (y / surface) * (sky.length - 1);
+    const k = Math.min(sky.length - 2, Math.floor(t));
+    for (let x = 0; x < GW; x++) g[y][x] = mix(sky[k], sky[k + 1], dither(t - k, x, y));
+  }
+  for (let n = 0; n < 110; n++) put(g, rnd() * GW, rnd() * 220, hex(rnd() > 0.7 ? '#FFF4C0' : '#8C86C8'));
+  disc(g, 200, 70, 12, '#EEEAFF', '#C0B8F4');
+  for (const [base, amp, col] of [[230, 60, '#1A1E3A'], [262, 34, '#12142A']])
+    for (let x = 0; x < GW; x++) for (let y = Math.round(base - amp * Math.abs(Math.sin(x / 40 + base))); y < surface; y++) g[y][x] = hex(col);
+  // a lone tree and the grass line
+  for (let y = 0; y < 40; y++) box(g, 60 - y * 0.4, surface - 40 + y, 3 + y * 0.8, 1, hex('#0A0C18'));
+  for (let x = 0; x < GW; x++) {
+    g[surface][x] = hex('#2A4A28');
+    if (x % 3 === 0) put(g, x, surface - 1, hex('#1E3A20'));
+  }
+  // the earth, darker as it goes down, roots reaching in
+  const earthTop = surface + 1;
+  const earthBottom = 820;
+  const earth = ['#3A2A1E', '#2A1E16', '#1C140E', '#100A08'].map(hex);
+  for (let y = earthTop; y < earthBottom; y++) {
+    const t = ((y - earthTop) / (earthBottom - earthTop)) * (earth.length - 1);
+    const k = Math.min(earth.length - 2, Math.floor(t));
+    for (let x = 0; x < GW; x++) g[y][x] = mix(earth[k], earth[k + 1], dither(t - k, x, y));
+  }
+  for (let n = 0; n < 900; n++) {
+    const y = earthTop + Math.floor(rnd() * (earthBottom - earthTop));
+    put(g, rnd() * GW, y, mix(g[y][0], [255, 255, 255], 0.08));
+  }
+  for (let r = 0; r < 14; r++) {
+    let rx = rnd() * GW;
+    for (let y = earthTop; y < earthTop + 40 + rnd() * 120; y++) {
+      rx += (rnd() - 0.5) * 1.8;
+      put(g, rx, y, hex('#4A3424'));
+    }
+  }
+  for (let n = 0; n < 40; n++) {
+    const sx = rnd() * GW;
+    const sy = earthTop + 20 + rnd() * (earthBottom - earthTop - 40);
+    disc(g, sx, sy, 2 + Math.floor(rnd() * 4), '#4A3E36', '#3A302A');
+  }
+  // the old world, buried: a fallen column, a broken sword, a helmet, a scroll case
+  const ruin = hex('#6A6060');
+  const ruinDark = hex('#4A4444');
+  for (let i = 0; i < 70; i++) box(g, 40 + i, 470 + i * 0.12, 1, 14, i % 12 === 0 ? ruinDark : ruin);
+  box(g, 36, 466, 6, 22, ruinDark);
+  for (let i = 0; i < 44; i++) put(g, 180 + i, 560 - i * 0.5, hex('#8A8A96'));
+  box(g, 176, 556, 8, 3, hex('#6A4A2A'));
+  disc(g, 90, 640, 8, '#5A5050', '#3A3434');
+  box(g, 82, 640, 17, 4, hex('#3A3434'));
+  box(g, 190, 700, 30, 8, hex('#5A3A2A'));
+  box(g, 190, 700, 4, 8, hex('#B3261E'));
+  // the earth gives way to a starry dark
+  const voidTop = earthBottom;
+  const voidBottom = DESCENT_ARCHIVE_TOP;
+  for (let y = voidTop; y < voidBottom; y++)
+    for (let x = 0; x < GW; x++) {
+      const t = (y - voidTop) / (voidBottom - voidTop);
+      g[y][x] = dither(1 - t * 3, x, y) > 0.5 ? mix(earth[3], [5, 4, 10], 0.5) : hex('#05040A');
+    }
+  for (let n = 0; n < 30; n++) {
+    const sx = rnd() * GW;
+    const sy = voidTop + rnd() * 90;
+    box(g, sx, sy, 2 + rnd() * 4, 2 + rnd() * 3, hex('#1C140E'));
+  }
+  for (let n = 0; n < 120; n++) put(g, rnd() * GW, voidTop + 40 + rnd() * (voidBottom - voidTop - 40), hex(rnd() > 0.6 ? '#FFF4C0' : '#5A568A'));
+  // loose pages drifting down toward the Archive
+  for (let n = 0; n < 12; n++) {
+    const px = 20 + rnd() * 230;
+    const py = voidTop + 60 + rnd() * (voidBottom - voidTop - 80);
+    box(g, px, py, 6, 4, hex('#E8DCC0'));
+    box(g, px + 1, py + 1, 4, 1, hex('#A89878'));
+  }
+  // the Archive at the bottom, its ceiling fading into the dark
+  const room = archive(rnd).base;
+  for (let y = 0; y < GH; y++)
+    for (let x = 0; x < GW; x++) {
+      const c = room[y][x];
+      g[DESCENT_ARCHIVE_TOP + y][x] = y < 40 && dither(1 - y / 40, x, y) > 0.5 ? hex('#05040A') : c;
+    }
+  return { base: g, lights: [] };
+}
+
+export const INTRO_SCENES = {
+  war: (rnd) => war(rnd),
+  sleepers: (rnd) => sleepers(rnd),
+  forgotten: (rnd) => sleepers(rnd, { overgrown: true }),
+  descent: (rnd) => descent(rnd),
+};
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   mkdirSync('assets/realms', { recursive: true });
   const lights = {};
@@ -672,6 +944,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     writeFileSync(`assets/realms/${name}.png`, toPng(realm.base, 6));
     lights[name] = realm.lights.map(([x, y, c]) => [x, y, typeof c === 'string' ? c : toHex(c)]);
   }
+  mkdirSync('assets/intro', { recursive: true });
+  for (const [name, draw] of Object.entries(INTRO_SCENES)) writeFileSync(`assets/intro/${name}.png`, toPng(draw(rng(31)).base, 6));
   mkdirSync('assets/cocoon', { recursive: true });
   for (let stage = 0; stage <= 4; stage++) {
     const g = blank(COCOON_CANVAS.width, COCOON_CANVAS.height);
@@ -695,6 +969,9 @@ export const COCOON_ART = {
   eye: { x: ${eye.x}, y: ${eye.y}, w: ${eye.w}, h: ${eye.h} },
 };
 
+/** The intro's descent: ${GW}×${DESCENT_H} pixels, with the Archive's scene starting at row ${DESCENT_ARCHIVE_TOP}. */
+export const DESCENT_ART = { width: ${GW}, height: ${DESCENT_H}, archiveTop: ${DESCENT_ARCHIVE_TOP} };
+
 /** Lights that twinkle over each realm: [x, y, colour] in scene pixels. */
 export const REALM_LIGHTS: Record<Dimension, [number, number, string][]> = {
 ${Object.entries(lights)
@@ -703,5 +980,5 @@ ${Object.entries(lights)
 };
 `,
   );
-  console.log(`Wrote ${REALM_NAMES.length} realms, 5 cocoon stages and src/art/realm-scene.ts.`);
+  console.log(`Wrote ${REALM_NAMES.length} realms, ${Object.keys(INTRO_SCENES).length} intro scenes, 5 cocoon stages and src/art/realm-scene.ts.`);
 }

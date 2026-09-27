@@ -1,7 +1,7 @@
 import type { Dimension } from '@/game';
 
 // Drawn by scripts/realm-art.mjs; run it again after changing the art.
-export { COCOON_ART, REALM_ART, REALM_LIGHTS } from './realm-scene';
+export { COCOON_ART, DESCENT_ART, REALM_ART, REALM_LIGHTS } from './realm-scene';
 
 export const REALM_BACKGROUNDS: Record<Dimension, number> = {
   physical: require('@/assets/realms/physical.png'),
@@ -22,3 +22,11 @@ export const COCOON_STAGES = [
   require('@/assets/cocoon/crack-3.png'),
   require('@/assets/cocoon/crack-4.png'),
 ];
+
+/** The intro's panels ("Long ago…"), drawn by the same script. */
+export const INTRO_SCENES = {
+  war: require('@/assets/intro/war.png'),
+  sleepers: require('@/assets/intro/sleepers.png'),
+  forgotten: require('@/assets/intro/forgotten.png'),
+  descent: require('@/assets/intro/descent.png'),
+};

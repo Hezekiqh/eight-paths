@@ -15,6 +15,8 @@ type Props = {
   start?: boolean;
   /** Show everything at once (the player tapped to skip). */
   instant?: boolean;
+  /** Milliseconds per letter; slower for narration. */
+  letterMs?: number;
   onDone?: () => void;
 };
 
@@ -23,7 +25,7 @@ type Props = {
  * dialogue box. The untyped rest is laid out but transparent, so the box never
  * grows and words never jump lines mid-type. Reduce Motion shows it all at once.
  */
-export function TypewriterText({ text, style, start = true, instant = false, onDone }: Props) {
+export function TypewriterText({ text, style, start = true, instant = false, letterMs = LETTER_MS, onDone }: Props) {
   const reduceMotion = useReducedMotion();
   const [shown, setShown] = useState(0);
   const all = instant || reduceMotion;
@@ -32,14 +34,17 @@ export function TypewriterText({ text, style, start = true, instant = false, onD
 
   useEffect(() => {
     if (all || !start || shown >= text.length) return;
-    const delay = LETTER_MS + (PAUSES[text[shown - 1]] ?? 0);
-    const id = setTimeout(() => {
-      // A tiny click per letter, like a dialogue blip; spaces stay silent for rhythm.
-      if (text[shown].trim()) haptics.tick();
-      setShown((n) => n + 1);
-    }, shown === 0 ? 0 : delay);
+    const delay = letterMs + (PAUSES[text[shown - 1]] ?? 0) * (letterMs / LETTER_MS);
+    const id = setTimeout(
+      () => {
+        // A tiny click per letter, like a dialogue blip; spaces stay silent for rhythm.
+        if (text[shown].trim()) haptics.tick();
+        setShown((n) => n + 1);
+      },
+      shown === 0 ? 0 : delay,
+    );
     return () => clearTimeout(id);
-  }, [all, start, shown, text]);
+  }, [all, start, shown, text, letterMs]);
 
   useEffect(() => {
     if (done) onDone?.();

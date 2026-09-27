@@ -12,6 +12,9 @@ export const COCOON_ART = {
   eye: { x: 38, y: 54, w: 12, h: 7 },
 };
 
+/** The intro's descent: 270×1440 pixels, with the Archive's scene starting at row 960. */
+export const DESCENT_ART = { width: 270, height: 1440, archiveTop: 960 };
+
 /** Lights that twinkle over each realm: [x, y, colour] in scene pixels. */
 export const REALM_LIGHTS: Record<Dimension, [number, number, string][]> = {
   physical: [[11,293,'#FFB04A'],[257,293,'#FFB04A']],

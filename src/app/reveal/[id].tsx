@@ -17,6 +17,7 @@ import Animated, {
 
 import { COCOON_ART, COCOON_STAGES, REALM_ART, REALM_BACKGROUNDS, REALM_LIGHTS } from '@/art/realms';
 import { CHARACTER_ART } from '@/art/sprites';
+import { CocoonEye } from '@/components/cocoon-eye';
 import { PixelSprite } from '@/components/pixel-sprite';
 import { TypewriterText } from '@/components/typewriter-text';
 import { CLASSES } from '@/game';
@@ -297,8 +298,6 @@ export default function RevealScreen() {
     opacity: glow.value * 0.45,
     transform: [{ scale: 1 + glow.value * 0.3 }],
   }));
-  const eyeStyle = useAnimatedStyle(() => ({ opacity: eye.value > 0 ? 1 : 0 }));
-  const lidStyle = useAnimatedStyle(() => ({ transform: [{ scaleY: Math.max(0.12, eye.value) }] }));
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
 
   if (!valid) return null;
@@ -313,7 +312,6 @@ export default function RevealScreen() {
   const spriteW = (art?.idle.width ?? 32) * spriteScale;
   const spriteH = (art?.idle.height ?? 48) * spriteScale;
   const [, groundY] = at(0, standY);
-  const e = COCOON_ART.eye;
 
   const onTap = () => {
     const tl = timeline.current;
@@ -383,25 +381,7 @@ export default function RevealScreen() {
             />
             <Animated.View style={[{ width: cocoonW, height: cocoonH, transformOrigin: 'bottom' }, cocoonStyle]}>
               <Image source={COCOON_STAGES[crack]} contentFit="fill" style={{ width: cocoonW, height: cocoonH }} />
-              <Animated.View
-                style={[
-                  styles.eyeHole,
-                  {
-                    left: (e.x - e.w / 2 - 2) * px,
-                    top: (e.y - e.h / 2 - 1.5) * px,
-                    width: (e.w + 4) * px,
-                    height: (e.h + 3) * px,
-                    borderRadius: (e.h + 3) * px,
-                  },
-                  eyeStyle,
-                ]}>
-                <Animated.View
-                  style={[styles.eyeball, { width: e.w * px, height: e.h * px, borderRadius: e.h * px }, lidStyle]}>
-                  <View style={{ width: 7 * px, height: e.h * px, backgroundColor: info.color, alignItems: 'center' }}>
-                    <View style={{ width: 3 * px, height: e.h * px, backgroundColor: INK }} />
-                  </View>
-                </Animated.View>
-              </Animated.View>
+              <CocoonEye open={eye} px={px} color={info.color} />
             </Animated.View>
           </View>
         )}
@@ -526,8 +506,6 @@ const styles = StyleSheet.create({
   scene: { position: 'absolute', left: 0, top: 0, transformOrigin: 'left top' },
   anchor: { position: 'absolute', alignItems: 'center' },
   glow: { position: 'absolute', backgroundColor: '#FFE9A0' },
-  eyeHole: { position: 'absolute', backgroundColor: '#0A0810', alignItems: 'center', justifyContent: 'center' },
-  eyeball: { backgroundColor: '#F4F0E6', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   twinkle: { position: 'absolute' },
   shardOrigin: { position: 'absolute', width: 0, height: 0 },
   shard: { position: 'absolute' },

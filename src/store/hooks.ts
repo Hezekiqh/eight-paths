@@ -7,6 +7,7 @@ import { msUntilNextMidnight, toDateKey, type RadarFilter } from '@/game';
 import { syncReminders } from '@/notifications';
 
 import { pickData, useGameStore, type GameData } from './index';
+import { useSession } from './session';
 import {
   selectAllQuestGroups,
   selectClassInfo,
@@ -53,9 +54,7 @@ export function useToday(): string {
 }
 
 function useGameData(): GameData {
-  return useGameStore(
-    useShallow(pickData),
-  );
+  return useGameStore(useShallow(pickData));
 }
 
 export const usePlayer = () => useGameStore((s) => s.player);
@@ -176,6 +175,8 @@ export function useRevealQueue() {
   const revealed = useGameStore((s) => s.revealed);
   const hasPlayer = useGameStore((s) => s.player !== null);
   const markRevealed = useGameStore((s) => s.markRevealed);
+  // Nothing hatches behind the opening intro; it waits until the intro is over.
+  const introDone = useSession((s) => s.introDone);
   const showing = useRef<string | null>(null);
   const unlocked = collection.entries.filter((e) => e.unlocked).map((e) => e.companion.id);
   const next = revealed === null ? undefined : unlocked.find((id) => !revealed.includes(id));
@@ -186,7 +187,7 @@ export function useRevealQueue() {
       markRevealed(unlocked);
       return;
     }
-    if (!next || showing.current === next) return;
+    if (!next || !introDone || showing.current === next) return;
     const timer = setTimeout(() => {
       showing.current = next;
       router.push({ pathname: '/reveal/[id]', params: { id: next } });
@@ -194,5 +195,5 @@ export function useRevealQueue() {
     return () => clearTimeout(timer);
     // `unlocked` is derived from the collection; `next` captures what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPlayer, revealed === null, next, markRevealed]);
+  }, [hasPlayer, revealed === null, next, introDone, markRevealed]);
 }

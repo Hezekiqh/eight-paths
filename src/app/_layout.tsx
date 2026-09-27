@@ -8,8 +8,10 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ErrorScreen } from '@/components/error-screen';
+import { Intro } from '@/components/intro';
 import { useGameStore } from '@/store';
 import { useHydrated } from '@/store/hooks';
+import { useSession } from '@/store/session';
 import { colors, theme } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -44,6 +46,9 @@ export default function RootLayout() {
   // If the font fails to load, carry on with the system font rather than a blank screen.
   const [fontsLoaded, fontError] = useFonts({ DotGothic16_400Regular, Jersey10_400Regular });
   const ready = hydrated && (fontsLoaded || fontError !== null);
+  // The story intro plays over everything each time the app starts.
+  const introDone = useSession((s) => s.introDone);
+  const finishIntro = useSession((s) => s.finishIntro);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -77,6 +82,7 @@ export default function RootLayout() {
             options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
           />
         </Stack>
+        {!introDone && <Intro onDone={finishIntro} />}
       </ThemeProvider>
     </GestureHandlerRootView>
   );
