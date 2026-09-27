@@ -12,25 +12,25 @@ Copy each field into App Store Connect → Eight Paths → 1.0 Prepare for Submi
 | Secondary category | Lifestyle |
 | Price | Free |
 | Copyright | 2026 Hezekiah Hopkins |
-| Privacy Policy URL | `https://<your-host>/privacy.html` (from `docs/privacy.html`) |
-| Support URL | `https://<your-host>/support.html` (from `docs/support.html`) |
+| Privacy Policy URL | https://hezekiqh.github.io/eight-paths/privacy.html |
+| Support URL | https://hezekiqh.github.io/eight-paths/support.html |
 
 ## Promotional text (170)
 
-Every habit is a quest. Every quest grows one of eight classes. Watch your party level up on a living radar, one small step at a time.
+Every habit is a quest. Level up a party of pixel heroes, collect 100 characters and chase Level 100, one small, honest step at a time.
 
 ## Keywords (100)
 
 ```
-habit,tracker,rpg,quest,streak,routine,self care,goals,level up,fantasy,daily,balance,wellbeing,game
+habit,tracker,rpg,quest,streak,routine,pixel,goals,level up,fantasy,daily,collect,wellbeing,game
 ```
 
 ## Description (4000)
 
-Your life is a party of eight heroes. Eight Paths turns everyday habits into quests, and every quest you complete makes one of your heroes stronger.
+Your life is a party of eight heroes. Eight Paths turns everyday habits into quests, and every quest you finish makes your party stronger.
 
 CHOOSE YOUR CLASS
-Pick the hero who leads your party. Your class earns +25% XP on its own quests, but every class grows when you tend to it.
+Pick the Path that leads your story. Each class grows through its own kind of habit:
 
 • Warrior, Sword of the Realm: movement, sleep, water and strength
 • Noble, Keeper of the Coffers: spending, saving and planning
@@ -42,16 +42,27 @@ Pick the hero who leads your party. Your class earns +25% XP on its own quests, 
 • Ranger, Warden of the Wilds: the outdoors and a tidy camp
 
 TURN HABITS INTO QUESTS
-Start with a ready-made quest for each class, or write your own. Set any quest to repeat daily, on weekdays or on the days you choose. Tap to complete it and watch the XP bar fill. Cross a threshold and your hero levels up.
+Write your own quests or start with ready-made ones. Set them to repeat daily, on weekdays or on the days you choose. Every task is worth the same XP, so your progress always means something real.
 
-SEE YOUR WHOLE LIFE AT A GLANCE
-The radar chart shows how your party is growing this week, this month or across all time. A faint outline of the previous week sits behind it, so you can see what changed. Classes you haven't visited in a while gently fade, and one quest brings them back to full brightness.
+LEVEL UP FAST, THEN FOR LIFE
+Your first quests level you up almost every time. Keep going and you'll reach Level 100 in about three months of steady play, and then a second climb begins.
+
+LEAD A PARTY, COLLECT 100 HEROES
+Every Path has a pixel-art companion who levels up with your habits and has lore of their own, typed out like an old RPG. Keep a Path strong and new characters join your collection: recruits, rivals and legends, 100 in all. Swap anyone into your party.
+
+OBJECTIVES AND REWARDS
+Fresh daily and weekly objectives are built from your own quests. Claim random drops, grace days that protect a streak and double-XP boosts. Add personal goals too, like "Run a 5K", and earn XP when you finish them.
+
+SEE YOUR PROGRESS HONESTLY
+A radar shows how your whole life is balanced this week, this month or all time. A calendar glows brighter on the days you did more, and consistency is measured only against the days you planned.
+
+MAKE IT YOURS
+Five themes, from an aged parchment scroll to a glowing blue status window. Crisp pixel art, gentle vibration and readable text throughout.
 
 GENTLE BY DESIGN
 • Levels and XP are never taken away
 • Rest tokens protect your streaks on days off
 • One supportive evening reminder, skipped on days you've already played
-• Streaks forgive: one quest keeps a class's streak alive
 
 PRIVATE BY DEFAULT
 No account, no sign-up, no ads, no tracking. Everything stays on your iPhone.
@@ -70,7 +81,9 @@ The first release of Eight Paths. Choose your class, set out on your quests and 
 
 > Eight Paths is fully offline. There is no account, backend or sign-in; all data is stored on the device.
 >
-> To see the full flow: enter a name (optional), choose a class, keep the default starting quests and tap Start. Complete the pinned "Begin your journey" quest to see the XP animation, then the app asks for notification permission (a single local evening reminder). The Today tab shows the radar and today's quests; tap a quest to complete it and tap again to undo. Character shows levels, streaks, rest tokens and settings, including a "Get support" row that links to the 988 Suicide & Crisis Lifeline. Quests lets you add, edit (tap) and archive (swipe left) habits.
+> To see the full flow: enter a name (optional), choose a class, keep the default starting quests and tap Start. Complete the pinned "Begin your journey" quest to see the level-up animation, then the app asks for notification permission (a single local evening reminder).
+>
+> Tabs: Today shows the radar and today's quests grouped under each party member; tap a quest to complete it, tap again to undo. Character shows the overall level, the 100-character collection (tap any card for lore; unlocked characters can be swapped in) and settings, including a "Get support" row that links to the 988 Suicide & Crisis Lifeline. Journey shows progress and a calendar. Quests lets you add, edit (tap) and archive (swipe left) habits. Objectives (the controller icon) turns the screen sideways, like a handheld console, and has daily and weekly objectives, personal goals and a Themes picker; changing theme restarts the app for a moment by design.
 >
 > Notifications are local only; the app does not use push notifications.
 

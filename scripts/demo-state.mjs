@@ -56,7 +56,7 @@ const quests = [
 ];
 
 const completions = [
-  { id: 'c-tutorial', questId: 'tutorial', dimension: CLASS, date: key(dayOffset(START)), xp: 13 },
+  { id: 'c-tutorial', questId: 'tutorial', dimension: CLASS, date: key(dayOffset(START)), xp: 10 },
 ];
 
 // Today: leave a few quests open so the Today list shows both states.
@@ -76,7 +76,9 @@ for (let offset = START; offset <= 0; offset += 1) {
       questId: id,
       dimension,
       date: key(date),
-      xp: dimension === CLASS ? 13 : 10,
+      xp: 10,
+      // Dessa joined the Warriors ten days ago; everything before was Brannoc's.
+      characterId: dimension === 'physical' && offset > -10 ? 'dessa' : undefined,
     });
   }
 }
@@ -89,11 +91,32 @@ const state = {
     onboardedAt: key(dayOffset(START)),
     tutorialComplete: true,
     notificationTime: '20:00',
+    hapticsEnabled: true,
   },
   quests,
   completions,
   restDays: [],
   lastSettledDate: key(dayOffset(-1)),
+  // Dessa (a recruit) leads the Warriors, to show off swapping and the collection.
+  party: {
+    physical: 'dessa',
+    financial: 'ysolde',
+    intellectual: 'quill',
+    spiritual: 'wren',
+    emotional: 'oren',
+    social: 'pip',
+    occupational: 'tamsin',
+    environmental: 'moss',
+  },
+  xpGrants: [],
+  boosts: [],
+  shards: { hollis: 2, fern: 1 },
+  claimed: [],
+  goals: [
+    { id: 'g-5k', title: 'Run a 5K', dimension: 'physical', dueDate: key(dayOffset(40)), createdAt: key(dayOffset(-20)) },
+    { id: 'g-book', title: 'Finish a book this month', dimension: 'intellectual', createdAt: key(dayOffset(-10)) },
+    { id: 'g-call', title: 'Call Grandma', createdAt: key(dayOffset(-3)), completedAt: key(dayOffset(-1)) },
+  ],
 };
 
-process.stdout.write(JSON.stringify({ state, version: 1 }));
+process.stdout.write(JSON.stringify({ state, version: 4 }));
