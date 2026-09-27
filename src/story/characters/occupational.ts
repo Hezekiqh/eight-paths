@@ -123,7 +123,7 @@ export const OCCUPATIONAL = {
   morrow: {
     number: 4,
     rarity: 5,
-    alignment: 'Chaotic Good',
+    alignment: 'Lawful Good',
     name: 'Old Morrow',
     dimension: 'occupational',
     kind: 'recruit',

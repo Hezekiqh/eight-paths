@@ -128,7 +128,7 @@ export const SPIRITUAL = {
   oona: {
     number: 14,
     rarity: 5,
-    alignment: 'Neutral',
+    alignment: 'True Neutral',
     name: 'Oona',
     fullName: 'Oona Farsight',
     dimension: 'spiritual',

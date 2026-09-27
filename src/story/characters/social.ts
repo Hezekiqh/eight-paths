@@ -17,7 +17,7 @@ export const SOCIAL = {
   marigold: {
     number: 9,
     rarity: 5,
-    alignment: 'Neutral Good',
+    alignment: 'Chaotic Good',
     name: 'Marigold',
     fullName: 'Marigold Tumble',
     dimension: 'social',

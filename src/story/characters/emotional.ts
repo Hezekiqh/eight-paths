@@ -132,7 +132,7 @@ export const EMOTIONAL = {
   willa: {
     number: 54,
     rarity: 5,
-    alignment: 'Neutral',
+    alignment: 'True Neutral',
     name: 'Willa',
     fullName: 'Willa Stillpond',
     dimension: 'emotional',

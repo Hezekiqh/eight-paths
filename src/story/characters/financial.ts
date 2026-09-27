@@ -148,7 +148,7 @@ export const FINANCIAL = {
   fennick: {
     number: 101,
     rarity: 5,
-    alignment: 'Chaotic Good',
+    alignment: 'Neutral Good',
     name: 'Old Man Fennick',
     dimension: 'financial',
     kind: 'recruit',

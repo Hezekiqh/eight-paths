@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CharacterPortrait } from '@/components/character-portrait';
 import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
 import type { CollectionEntry } from '@/store/selectors';
-import { formatNumber, type Rarity } from '@/story/companions';
+import { formatNumber, type Alignment, type Rarity } from '@/story/companions';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
@@ -44,6 +44,19 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
 
 const stars = (rarity: Rarity) => '★'.repeat(rarity);
 
+/** The nine alignments in grid order, with the short label shown on each chip. */
+const ALIGNMENTS: [Alignment, string][] = [
+  ['Lawful Good', 'LG'],
+  ['Neutral Good', 'NG'],
+  ['Chaotic Good', 'CG'],
+  ['Lawful Neutral', 'LN'],
+  ['True Neutral', 'TN'],
+  ['Chaotic Neutral', 'CN'],
+  ['Lawful Evil', 'LE'],
+  ['Neutral Evil', 'NE'],
+  ['Chaotic Evil', 'CE'],
+];
+
 type ChipProps = {
   label?: string;
   symbol?: SFSymbol;
@@ -79,16 +92,21 @@ function Chip({ label, symbol, color = colors.textMuted, selected, onPress, a11y
 /**
  * Every collectible character in pages of 4 × 4, swiped sideways, so the
  * collection stays the same height however many characters it holds. Filters
- * narrow it by class and by rarity.
+ * narrow it by class, rarity and alignment.
  */
 export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] }) {
   const [width, setWidth] = useState(0);
   const [page, setPage] = useState(0);
   const [path, setPath] = useState<Dimension | null>(null);
   const [rarity, setRarity] = useState<Rarity | null>(null);
+  const [alignment, setAlignment] = useState<Alignment | null>(null);
+  const alignments = ALIGNMENTS.filter(([a]) => all.some((e) => e.companion.alignment === a));
   const rarities = [...new Set(all.map((e) => e.companion.rarity))].sort((a, b) => b - a);
   const entries = all.filter(
-    (e) => (path === null || e.companion.dimension === path) && (rarity === null || e.companion.rarity === rarity),
+    (e) =>
+      (path === null || e.companion.dimension === path) &&
+      (rarity === null || e.companion.rarity === rarity) &&
+      (alignment === null || e.companion.alignment === alignment),
   );
   const filter = (apply: () => void) => {
     apply();
@@ -110,6 +128,23 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
             selected={path === d}
             onPress={() => filter(() => setPath(path === d ? null : d))}
             a11y={`${CLASSES[d].className} only`}
+          />
+        ))}
+      </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        <Chip
+          label="All"
+          selected={alignment === null}
+          onPress={() => filter(() => setAlignment(null))}
+          a11y="All alignments"
+        />
+        {alignments.map(([a, short]) => (
+          <Chip
+            key={a}
+            label={short}
+            selected={alignment === a}
+            onPress={() => filter(() => setAlignment(alignment === a ? null : a))}
+            a11y={`${a} only`}
           />
         ))}
       </ScrollView>
@@ -136,7 +171,7 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
         {width > 0 && entries.length > 0 && (
           <ScrollView
             // A new filter starts back on the first page.
-            key={`${path}-${rarity}`}
+            key={`${path}-${rarity}-${alignment}`}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}

@@ -28,7 +28,7 @@ export const ENVIRONMENTAL = {
   brimsby: {
     number: 65,
     rarity: 5,
-    alignment: 'Neutral',
+    alignment: 'True Neutral',
     name: 'Mother Brimsby',
     dimension: 'environmental',
     kind: 'steward',
@@ -39,7 +39,7 @@ export const ENVIRONMENTAL = {
   tully: {
     number: 32,
     rarity: 5,
-    alignment: 'Chaotic Good',
+    alignment: 'True Neutral',
     name: 'Old Tully',
     dimension: 'environmental',
     kind: 'recruit',
@@ -120,7 +120,7 @@ export const ENVIRONMENTAL = {
   antler: {
     number: 49,
     rarity: 5,
-    alignment: 'Chaotic Good',
+    alignment: 'Neutral Good',
     name: 'Old Antler',
     dimension: 'environmental',
     kind: 'recruit',

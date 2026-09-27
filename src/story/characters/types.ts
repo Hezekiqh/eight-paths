@@ -19,7 +19,6 @@ export type Alignment =
   | 'Chaotic Good'
   | 'Lawful Neutral'
   | 'True Neutral'
-  | 'Neutral'
   | 'Chaotic Neutral'
   | 'Lawful Evil'
   | 'Neutral Evil'

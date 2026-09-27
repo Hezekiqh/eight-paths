@@ -65,7 +65,7 @@ export const INTELLECTUAL = {
   astra: {
     number: 70,
     rarity: 5,
-    alignment: 'Neutral',
+    alignment: 'True Neutral',
     name: 'Astra',
     fullName: 'Astra Voss',
     dimension: 'intellectual',
@@ -124,7 +124,7 @@ export const INTELLECTUAL = {
   solomon: {
     number: 19,
     rarity: 5,
-    alignment: 'Chaotic Good',
+    alignment: 'Lawful Good',
     name: 'Old Solomon',
     dimension: 'intellectual',
     kind: 'recruit',
@@ -135,7 +135,7 @@ export const INTELLECTUAL = {
   hoot: {
     number: 29,
     rarity: 5,
-    alignment: 'Neutral',
+    alignment: 'True Neutral',
     name: 'Professor Hoot',
     dimension: 'intellectual',
     kind: 'recruit',
