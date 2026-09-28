@@ -26,6 +26,8 @@ export const COCOON_STAGES = [
 /** The intro's panels ("Long ago…"), drawn by the same script. */
 export const INTRO_SCENES = {
   war: require('@/assets/intro/war.png'),
+  council: require('@/assets/intro/council.png'),
+  councilSmile: require('@/assets/intro/councilSmile.png'),
   sleepers: require('@/assets/intro/sleepers.png'),
   forgotten: require('@/assets/intro/forgotten.png'),
   descent: require('@/assets/intro/descent.png'),

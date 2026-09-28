@@ -22,7 +22,12 @@ export const GH = 480;
 export const GROUND = 350;
 
 export const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const toHex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+const toHex = (c) =>
+  '#' +
+  c
+    .map((v) => v.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
 export const mix = (a, b, t) => a.map((v, k) => Math.round(v + (b[k] - v) * t));
 export const blank = (w = GW, h = GH) => Array.from({ length: h }, () => Array(w).fill(null));
 
@@ -123,7 +128,8 @@ function ground(g, rnd, stops, { joints = true, specks = 0.04, speckColor } = {}
     if (joints) {
       const w = 8 + (y - GROUND) * 0.3;
       for (let x = (k % 2) * (w / 2); x < GW; x += w)
-        for (let j = prev; j < Math.min(GH, y - 1); j++) g[j][Math.round(x)] && (g[j][Math.round(x)] = mix(g[j][Math.round(x)], [0, 0, 0], 0.18));
+        for (let j = prev; j < Math.min(GH, y - 1); j++)
+          g[j][Math.round(x)] && (g[j][Math.round(x)] = mix(g[j][Math.round(x)], [0, 0, 0], 0.18));
     }
     prev = y;
   }
@@ -253,7 +259,10 @@ const REALMS = {
       x += w + 1;
     }
     layer(g, 2, 0.25, HAZE);
-    for (const [dx, r] of [[34, 24], [236, 20]]) {
+    for (const [dx, r] of [
+      [34, 24],
+      [236, 20],
+    ]) {
       disc(g, dx, 252, r, '#B8902E', '#8A6A20');
       box(g, dx - 1, 252 - r - 10, 2, 10, hex('#8A6A20'));
       box(g, dx - r, 252, r * 2, 98, hex('#6A5A6A'));
@@ -304,7 +313,12 @@ const REALMS = {
     }
     layer(g, 3);
     const tower = hex('#221C48');
-    for (const [x0, w, top] of [[18, 44, 150], [78, 50, 106], [152, 42, 170], [206, 52, 128]]) {
+    for (const [x0, w, top] of [
+      [18, 44, 150],
+      [78, 50, 106],
+      [152, 42, 170],
+      [206, 52, 128],
+    ]) {
       box(g, x0, top, w, GROUND - top, tower);
       for (let y = 0; y < 44; y++) {
         const hw = Math.round((w / 2 + 3) * (y / 44));
@@ -324,7 +338,8 @@ const REALMS = {
     ground(g, rnd, ['#2A2650', '#1A1838', '#0C0A1E'], { specks: 0.03, speckColor: '#3A3470' });
     reflect(g, 58, '#9AA4FF', 50, 4);
     layer(g, 10);
-    for (let n = 0; n < 9; n++) light(g, 20 + rnd() * 230, 190 + rnd() * 140, ['#9B74F8', '#6FD3FF', '#FFD27A'][n % 3], 7, 0.5);
+    for (let n = 0; n < 9; n++)
+      light(g, 20 + rnd() * 230, 190 + rnd() * 140, ['#9B74F8', '#6FD3FF', '#FFD27A'][n % 3], 7, 0.5);
     return finish(g, { lightDir: -1, rimColor: '#8A90FF', rim: 0.35, vignette: 0.6 });
   },
 
@@ -353,7 +368,11 @@ const REALMS = {
     }
     for (let s = 0; s < 5; s++) box(g, 46 - s * 8, 322 + s * 6, 178 + s * 16, 6, s % 2 ? stone : shade);
     // the three flames: the Free, the Guarded, the Reconciled
-    for (const [fx, c] of [[88, '#FF8A3D'], [135, '#9B74F8'], [182, '#2DD4BF']]) {
+    for (const [fx, c] of [
+      [88, '#FF8A3D'],
+      [135, '#9B74F8'],
+      [182, '#2DD4BF'],
+    ]) {
       box(g, fx - 5, 176, 10, 4, hex('#6A5A80'));
       box(g, fx - 3, 180, 6, 14, hex('#6A5A80'));
       box(g, fx - 3, 164, 6, 12, hex(c));
@@ -403,7 +422,13 @@ const REALMS = {
       }
     ground(g, rnd, ['#2E4034', '#1E2C24', '#0E1612'], { joints: false, specks: 0.07, speckColor: '#3A5A40' });
     layer(g, 10);
-    for (const [lx, ly] of [[40, 326], [78, 318], [196, 322], [236, 330], [150, 340]]) {
+    for (const [lx, ly] of [
+      [40, 326],
+      [78, 318],
+      [196, 322],
+      [236, 330],
+      [150, 340],
+    ]) {
       box(g, lx - 2, ly - 3, 5, 4, hex('#FFB04A'));
       box(g, lx - 3, ly + 1, 7, 1, hex('#5A2A20'));
       light(g, lx, ly - 1, '#FFB04A', 12, 0.5);
@@ -443,9 +468,11 @@ const REALMS = {
     const tcx = 135;
     for (let y = 0; y < 44; y++) {
       const hw = Math.round(8 + y * 1.15);
-      for (let i = -hw; i <= hw; i++) put(g, tcx + i, 256 + y, Math.floor((i + 70) / 7) % 2 ? hex('#B3261E') : hex('#F3ECDD'));
+      for (let i = -hw; i <= hw; i++)
+        put(g, tcx + i, 256 + y, Math.floor((i + 70) / 7) % 2 ? hex('#B3261E') : hex('#F3ECDD'));
     }
-    for (let i = -58; i <= 58; i += 6) box(g, tcx + i, 300, 4, 4, Math.floor((i + 70) / 7) % 2 ? hex('#B3261E') : hex('#F3ECDD'));
+    for (let i = -58; i <= 58; i += 6)
+      box(g, tcx + i, 300, 4, 4, Math.floor((i + 70) / 7) % 2 ? hex('#B3261E') : hex('#F3ECDD'));
     box(g, tcx - 54, 304, 108, 46, hex('#3A1A2A'));
     box(g, tcx - 14, 314, 28, 36, hex('#240A16'));
     for (const lx of [tcx - 44, tcx + 44]) {
@@ -458,7 +485,10 @@ const REALMS = {
     for (const lx of [tcx - 44, tcx + 44]) reflect(g, lx, '#FFB04A', 40, 3);
     layer(g, 10);
     const colors = ['#FF4FD8', '#FFC940', '#2DD4BF', '#FF8A3D', '#9B74F8'];
-    for (const [y0, sag] of [[120, 26], [158, 20]])
+    for (const [y0, sag] of [
+      [120, 26],
+      [158, 20],
+    ])
       for (let x2 = 0; x2 < GW; x2++) {
         const y = Math.round(y0 + sag * Math.sin((x2 / GW) * Math.PI));
         put(g, x2, y, hex('#1A1224'));
@@ -515,7 +545,14 @@ const REALMS = {
     disc(g, 200, 214, 26, '#8A7060', '#6A5040');
     disc(g, 200, 214, 9, '#2E201C');
     for (let a = 0; a < 10; a++)
-      box(g, 200 + Math.cos((a / 10) * 2 * Math.PI) * 29 - 3, 214 + Math.sin((a / 10) * 2 * Math.PI) * 29 - 3, 7, 7, gear);
+      box(
+        g,
+        200 + Math.cos((a / 10) * 2 * Math.PI) * 29 - 3,
+        214 + Math.sin((a / 10) * 2 * Math.PI) * 29 - 3,
+        7,
+        7,
+        gear,
+      );
     ground(g, rnd, ['#4A3A34', '#2E2420', '#140E0C'], { specks: 0.04 });
     for (let wx = 26; wx < 250; wx += 38) reflect(g, wx + 11, '#FF8A3D', 30, 6);
     layer(g, 10);
@@ -574,7 +611,31 @@ export function drawRealm(dimension) {
 
 export const COCOON_W = 60;
 export const COCOON_H = 100;
-const CRACKS = [[0,-62],[2,-60],[4,-56],[2,-52],[6,-48],[4,-44],[8,-40],[5,-36],[9,-32],[-3,-66],[-6,-62],[-9,-58],[-7,-54],[-12,-50],[-10,-46],[-14,-42],[12,-70],[15,-66],[13,-62],[17,-58],[-2,-30],[1,-26],[-4,-22]];
+const CRACKS = [
+  [0, -62],
+  [2, -60],
+  [4, -56],
+  [2, -52],
+  [6, -48],
+  [4, -44],
+  [8, -40],
+  [5, -36],
+  [9, -32],
+  [-3, -66],
+  [-6, -62],
+  [-9, -58],
+  [-7, -54],
+  [-12, -50],
+  [-10, -46],
+  [-14, -42],
+  [12, -70],
+  [15, -66],
+  [13, -62],
+  [17, -58],
+  [-2, -30],
+  [1, -26],
+  [-4, -22],
+];
 /** Where the eye looks out, from the cocoon's bottom centre, and its size. */
 export const EYE = { dx: -2, dy: -48, w: 12, h: 7 };
 
@@ -625,7 +686,8 @@ export function drawCocoon(
     // a torn hole in the silk, dark inside, the eye within
     for (let j = -Math.ceil(EYE.h / 2) - 1; j <= Math.ceil(EYE.h / 2) + 1; j++)
       for (let i = -EYE.w / 2 - 2; i <= EYE.w / 2 + 2; i++)
-        if ((i * i) / (EYE.w / 2 + 2) ** 2 + (j * j) / (EYE.h / 2 + 1.5) ** 2 <= 1) put(g, ex + i, ey + j, hex('#0A0810'));
+        if ((i * i) / (EYE.w / 2 + 2) ** 2 + (j * j) / (EYE.h / 2 + 1.5) ** 2 <= 1)
+          put(g, ex + i, ey + j, hex('#0A0810'));
     for (let j = -Math.floor(open / 2); j <= Math.floor((open - 1) / 2); j++)
       for (let i = -EYE.w / 2; i <= EYE.w / 2; i++) {
         if ((i * i) / (EYE.w / 2) ** 2 + (j * j) / (EYE.h / 2) ** 2 > 1) continue;
@@ -640,7 +702,12 @@ export function drawCocoon(
     for (let r = 0; r < 3; r++)
       for (let a = 0; a < 16; a++)
         if (rnd() < glow * 0.5)
-          put(g, cx + Math.cos(a) * (COCOON_W / 2 + 3 + r * 3), by - COCOON_H / 2 + Math.sin(a) * (COCOON_H / 2 + 3 + r * 3) - lift, hex('#FFE9A0'));
+          put(
+            g,
+            cx + Math.cos(a) * (COCOON_W / 2 + 3 + r * 3),
+            by - COCOON_H / 2 + Math.sin(a) * (COCOON_H / 2 + 3 + r * 3) - lift,
+            hex('#FFE9A0'),
+          );
 }
 
 /** Writes a grid to PNG at `scale` screen pixels per art pixel (null = transparent). */
@@ -663,7 +730,6 @@ export function toPng(g, scale) {
 
 /** The cocoon picture's canvas: 80×106, the cocoon's bottom centre at (40, 102). */
 export const COCOON_CANVAS = { width: COCOON_W + 20, height: COCOON_H + 6, cx: (COCOON_W + 20) / 2, by: COCOON_H + 2 };
-
 
 // ---- the intro's scenes ("Long ago…")
 
@@ -767,7 +833,8 @@ function war(rnd) {
   for (let n = 0; n < 9; n++) {
     const fx = 10 + n * 31 + rnd() * 10;
     for (let y = 0; y < 14; y++)
-      for (let i = -4 + y / 4; i <= 4 - y / 4; i++) put(g, fx + i, GROUND - y, hex(y < 5 ? '#FFD060' : y < 10 ? '#FF8A3D' : '#B3261E'));
+      for (let i = -4 + y / 4; i <= 4 - y / 4; i++)
+        put(g, fx + i, GROUND - y, hex(y < 5 ? '#FFD060' : y < 10 ? '#FF8A3D' : '#B3261E'));
     fires.push(fx);
   }
   const gg = { glows: [] };
@@ -790,7 +857,11 @@ function archive(rnd) {
   layer(g, 2);
   const wood = hex('#3A2418');
   const dark = hex('#24160E');
-  for (const [x0, w] of [[-6, 88], [94, 82], [188, 88]]) {
+  for (const [x0, w] of [
+    [-6, 88],
+    [94, 82],
+    [188, 88],
+  ]) {
     box(g, x0, 40, w, GROUND - 40, dark);
     box(g, x0, 40, 4, GROUND - 40, wood);
     box(g, x0 + w - 4, 40, 4, GROUND - 40, wood);
@@ -821,7 +892,13 @@ function archive(rnd) {
     }
   ground(g, rnd, ['#3A2A22', '#221812', '#0C0806'], { specks: 0.03 });
   layer(g, 10);
-  for (const [cx, cy] of [[40, 138], [230, 206], [40, 274], [230, 104], [135, 172]]) {
+  for (const [cx, cy] of [
+    [40, 138],
+    [230, 206],
+    [40, 274],
+    [230, 104],
+    [135, 172],
+  ]) {
     box(g, cx - 1, cy - 6, 3, 6, hex('#F3ECDD'));
     put(g, cx, cy - 8, hex('#FFD060'));
     put(g, cx, cy - 7, hex('#FFB04A'));
@@ -829,7 +906,6 @@ function archive(rnd) {
   }
   return finish(g, { lightDir: 0, rimColor: '#FFB04A', rim: 0.25, vignette: 0.7 });
 }
-
 
 /** How tall the descent is: the world at night, down through the earth, into the dark, to the Archive. */
 export const DESCENT_H = GH * 3;
@@ -854,8 +930,12 @@ function descent(rnd) {
   }
   for (let n = 0; n < 110; n++) put(g, rnd() * GW, rnd() * 220, hex(rnd() > 0.7 ? '#FFF4C0' : '#8C86C8'));
   disc(g, 200, 70, 12, '#EEEAFF', '#C0B8F4');
-  for (const [base, amp, col] of [[230, 60, '#1A1E3A'], [262, 34, '#12142A']])
-    for (let x = 0; x < GW; x++) for (let y = Math.round(base - amp * Math.abs(Math.sin(x / 40 + base))); y < surface; y++) g[y][x] = hex(col);
+  for (const [base, amp, col] of [
+    [230, 60, '#1A1E3A'],
+    [262, 34, '#12142A'],
+  ])
+    for (let x = 0; x < GW; x++)
+      for (let y = Math.round(base - amp * Math.abs(Math.sin(x / 40 + base))); y < surface; y++) g[y][x] = hex(col);
   // a lone tree and the grass line
   for (let y = 0; y < 40; y++) box(g, 60 - y * 0.4, surface - 40 + y, 3 + y * 0.8, 1, hex('#0A0C18'));
   for (let x = 0; x < GW; x++) {
@@ -911,7 +991,8 @@ function descent(rnd) {
     const sy = voidTop + rnd() * 90;
     box(g, sx, sy, 2 + rnd() * 4, 2 + rnd() * 3, hex('#1C140E'));
   }
-  for (let n = 0; n < 120; n++) put(g, rnd() * GW, voidTop + 40 + rnd() * (voidBottom - voidTop - 40), hex(rnd() > 0.6 ? '#FFF4C0' : '#5A568A'));
+  for (let n = 0; n < 120; n++)
+    put(g, rnd() * GW, voidTop + 40 + rnd() * (voidBottom - voidTop - 40), hex(rnd() > 0.6 ? '#FFF4C0' : '#5A568A'));
   // loose pages drifting down toward the Archive
   for (let n = 0; n < 12; n++) {
     const px = 20 + rnd() * 230;
@@ -929,7 +1010,213 @@ function descent(rnd) {
   return { base: g, lights: [] };
 }
 
+/** A soft glow straight onto a finished grid (no canvas bookkeeping). */
+function glowOnto(g, x, y, r, color, s) {
+  const c = hex(color);
+  for (let j = Math.floor(y - r); j <= y + r; j++)
+    for (let i = Math.floor(x - r); i <= x + r; i++) {
+      if (j < 0 || j >= GH || i < 0 || i >= GW) continue;
+      const d = Math.hypot(i - x, j - y) / r;
+      if (d < 1) g[j][i] = mix(g[j][i], c, dither(s * (1 - d) * (1 - d), i, j));
+    }
+}
+
+/** The eight kings are the Eight Paths: each king's colour, in Path order (Warrior … Ranger). */
+const KING_COLORS = ['#FF4D5E', '#FFC940', '#9B74F8', '#F0E6C8', '#2DD4BF', '#FF4FD8', '#FF8A3D', '#4ADE80'];
+
+/** Eight crowned kings on a ridge, arms raised, their power meeting in the sky. */
+function kings(rnd) {
+  const g = canvas();
+  gradient(g, 0, GROUND, ['#12040A', '#3A0A12', '#7A1418', '#C4381E', '#F07A2A']);
+  stars(g, rnd, 20, 90);
+  layer(g, 1, 0.45, '#C4381E');
+  ridge(g, (x) => 300 - 14 * Math.sin(x / 26) - 5 * Math.sin(x / 7), '#2A0A10');
+  layer(g, 3);
+  const ink = hex('#0A0206');
+  const gold = hex('#FFC940');
+  const cy = 120;
+  for (let k = 0; k < 8; k++) {
+    const x = 22 + k * 32;
+    const by = 300 - 14 * Math.sin(x / 26) - 5 * Math.sin(x / 7);
+    // robe widening to the ground, head, crown, arms raised toward the centre
+    for (let y = 0; y < 34; y++) box(g, x - 3 - y / 6, by - 34 + y, 7 + y / 3, 1, ink);
+    disc(g, x, by - 39, 4, '#0A0206');
+    for (let i = -3; i <= 3; i++) put(g, x + i, by - 44, gold);
+    for (const i of [-3, 0, 3]) (put(g, x + i, by - 45, gold), put(g, x + i, by - 46, gold));
+    const hx = x + (135 - x) * 0.12;
+    const hy = by - 58;
+    for (let t = 0; t <= 1; t += 0.05) box(g, x + (hx - x) * t - 1, by - 30 + (hy - by + 30) * t, 2, 2, ink);
+    // each king raises their Path's item: sword, coin, staff, lantern, beads, lute, hammer, bow
+    const c = KING_COLORS[k];
+    const item = hex(c);
+    if (k === 0)
+      for (let i = 0; i < 12; i++) (put(g, hx, hy - i, hex('#D8D8E0')), i === 3 && box(g, hx - 2, hy - 3, 5, 1, item));
+    if (k === 1) disc(g, hx, hy - 4, 3, c, '#B8902E');
+    if (k === 2) {
+      for (let i = 0; i < 14; i++) put(g, hx, hy - i + 4, hex('#6A4A2A'));
+      disc(g, hx, hy - 11, 2, c);
+    }
+    if (k === 3) (box(g, hx - 2, hy - 7, 5, 6, item), box(g, hx - 1, hy - 9, 3, 2, hex('#6A5A48')));
+    if (k === 4) for (let a = 0; a < 8; a++) put(g, hx + Math.cos(a) * 3, hy - 4 + Math.sin(a) * 3, item);
+    if (k === 5) {
+      disc(g, hx, hy - 3, 3, c, '#8A2A6A');
+      for (let i = 0; i < 7; i++) put(g, hx + 1, hy - 6 - i, hex('#6A4A2A'));
+    }
+    if (k === 6) {
+      for (let i = 0; i < 9; i++) put(g, hx, hy - i, hex('#6A4A2A'));
+      box(g, hx - 3, hy - 11, 7, 3, item);
+    }
+    if (k === 7) for (let i = -6; i <= 6; i++) put(g, hx + 2 - Math.round((i * i) / 12), hy - 4 + i, item);
+    // and their power streams to the centre
+    for (let t = 0; t <= 1; t += 0.01) {
+      const px = hx + (135 - hx) * t;
+      const py = hy + (cy - hy) * t - Math.sin(t * Math.PI) * 18;
+      put(g, px, py, hex(c));
+      if (rnd() > 0.6) put(g, px + (rnd() - 0.5) * 3, py + (rnd() - 0.5) * 3, hex(c));
+    }
+    glow(g, hx, hy, 10, c, 0.6);
+  }
+  ground(g, rnd, ['#2A0A10', '#1A060A', '#0A0206'], { joints: false, specks: 0.05, speckColor: '#3A1016' });
+  const out = finish(g, { lightDir: 0, rimColor: '#FF7A3A', rim: 0.35, vignette: 0.6 });
+  // the combined blaze where the eight streams meet
+  glowOnto(out.base, 135, cy, 70, '#FFF4DE', 0.8);
+  glowOnto(out.base, 135, cy, 30, '#FFFFFF', 0.9);
+  return out;
+}
+
+/** The world after: the kingdom broken and dark, ash falling, fires burned low. */
+function ruin(rnd) {
+  const { base } = drawRealm('physical');
+  const g = base.map((row) =>
+    row.map((c) => {
+      const grey = Math.round(c[0] * 0.3 + c[1] * 0.5 + c[2] * 0.2);
+      return mix([grey, grey, grey], hex('#1A1216'), 0.55);
+    }),
+  );
+  // knock the tops off the towers and walls: those pixels become sky again
+  const sky = g.map((row) => row[3]);
+  for (let n = 0; n < 9; n++) {
+    const x0 = 48 + rnd() * 160;
+    const w = 12 + rnd() * 26;
+    const depth = 150 + rnd() * 70;
+    for (let x = Math.round(x0); x < x0 + w && x < GW; x++) {
+      const cut = depth - 30 * Math.abs(Math.cos(((x - x0) / w) * Math.PI)) + rnd() * 5;
+      for (let y = 60; y < cut; y++) g[y][x] = sky[y];
+    }
+  }
+  // rubble heaps along the ground
+  for (let n = 0; n < 40; n++)
+    disc(g, rnd() * GW, GROUND - 2 + rnd() * 20, 2 + Math.floor(rnd() * 5), '#3A3036', '#241C22');
+  // embers, smoke and falling ash
+  for (let n = 0; n < 6; n++) glowOnto(g, 20 + rnd() * 230, GROUND - 4, 16, '#8A2A10', 0.4);
+  for (let n = 0; n < 220; n++) put(g, rnd() * GW, rnd() * GH, hex(rnd() > 0.85 ? '#FF8A3D' : '#8A8088'));
+  return { base: g, lights: [] };
+}
+
+/**
+ * The eight kings at their round table, lit from below by the candle at its
+ * heart, each in their Path's colour. `smile` gives them wide, fixed grins:
+ * the intro crossfades to it as the Keeper says they "saved the world".
+ */
+function council(rnd, { smile = false } = {}) {
+  const g = canvas();
+  gradient(g, 0, GH, ['#050308', '#0C0710', '#140A18', '#1C0E1E', '#0A0508']);
+  // the hall: pillars at the edges, the eight Paths' banners along the back wall
+  layer(g, 1);
+  for (const x of [0, 246]) box(g, x, 0, 24, 330, hex('#140C16'));
+  for (let k = 0; k < 8; k++) {
+    const bx = 32 + k * 27;
+    const c = mix(hex(KING_COLORS[k]), hex('#0C0710'), 0.55);
+    box(g, bx, 90, 16, 80, c);
+    for (let i = 0; i < 8; i++) box(g, bx + i, 170 + Math.floor(i / 2), 16 - i * 2, 1, c);
+    box(g, bx - 2, 88, 20, 3, hex('#3A2A18'));
+  }
+  // the floor
+  layer(g, 2);
+  gradient(g, 290, GH, ['#1A1018', '#100A10', '#060306']);
+  const cx = 135;
+  const cy = 340;
+  const skin = hex('#E0B898');
+  const ink = hex('#07040A');
+  // the kings, seated around the far side of the table, back to front
+  const seats = Array.from({ length: 8 }, (_, k) => {
+    const a = Math.PI * (1.08 + (k / 7) * 0.84);
+    return { k, x: cx + Math.cos(a) * 106, y: cy - 4 + Math.sin(a) * 50 };
+  }).sort((p, q) => p.y - q.y);
+  layer(g, 4);
+  for (const { k, x, y } of seats) {
+    const s = 1.2 + ((y - (cy - 60)) / 60) * 0.3;
+    const head = y - 44 * s;
+    const robe = mix(hex(KING_COLORS[k]), hex('#07040A'), 0.45);
+    for (let j = 0; j < 70 * s; j++) box(g, x - 9 * s - j * 0.25, head + 8 * s + j, 18 * s + j * 0.5, 1, robe);
+    box(g, x - 9 * s, head + 8 * s, 18 * s, 3, mix(robe, hex('#FFFFFF'), 0.15));
+    // head, lit from below: brighter at the chin
+    const r = Math.round(7 * s);
+    for (let j = -r; j <= r; j++)
+      for (let i = -r; i <= r; i++)
+        if (i * i + j * j <= r * r) put(g, x + i, head + j, mix(skin, hex('#FFB060'), Math.max(0, j / r) * 0.45));
+    // crown
+    const gold = hex('#FFC940');
+    for (let i = -r; i <= r; i++) put(g, x + i, head - r, gold);
+    for (let i = -r; i <= r; i += Math.max(2, r)) {
+      put(g, x + i, head - r - 1, gold);
+      put(g, x + i, head - r - 2, gold);
+    }
+    // the face
+    const ex = Math.max(2, Math.round(3 * s));
+    if (!smile) {
+      for (const d of [-ex, ex]) put(g, x + d, head - 1, ink);
+      for (let i = -2; i <= 2; i++) put(g, x + i, head + Math.round(3 * s), mix(skin, ink, 0.7));
+    } else {
+      // eyes squeezed into arcs with a glint, and a grin far too wide
+      for (const d of [-ex, ex]) {
+        put(g, x + d - 1, head - 1, ink);
+        put(g, x + d, head - 2, ink);
+        put(g, x + d + 1, head - 1, ink);
+        put(g, x + d, head - 1, hex('#FF3A2A'));
+      }
+      const half = Math.round(5.5 * s);
+      for (let i = -half; i <= half; i++) {
+        const t = i / half;
+        const top = head + Math.round(2 * s) + Math.round((1 - t * t) * -0.5);
+        const depth = Math.round((1 - t * t) * 3 * s) + 1;
+        for (let j = 0; j <= depth; j++) put(g, x + i, top + j, ink);
+        if (Math.abs(i) < half && i % 2 === 0) put(g, x + i, top + 1, hex('#F4F0E6'));
+      }
+      put(g, x - half - 1, head + Math.round(2 * s) - 1, ink);
+      put(g, x + half + 1, head + Math.round(2 * s) - 1, ink);
+    }
+  }
+  // the round table in front of them, and the candle at its heart
+  layer(g, 5);
+  const rx = 96;
+  const ry = 34;
+  for (let j = 0; j < 16; j++)
+    for (let i = -rx; i <= rx; i++) {
+      const e = 1 - (i * i) / (rx * rx);
+      if (e < 0) continue;
+      put(g, cx + i, cy + Math.sqrt(e) * ry + j, hex(j < 3 ? '#4A2E1C' : '#24140C'));
+    }
+  for (let j = -ry; j <= ry; j++)
+    for (let i = -rx; i <= rx; i++) {
+      const e = (i * i) / (rx * rx) + (j * j) / (ry * ry);
+      if (e > 1) continue;
+      put(g, cx + i, cy + j, e > 0.9 ? hex('#6A4A2A') : mix(hex('#3A2418'), hex('#2A180E'), dither(e, cx + i, cy + j)));
+    }
+  box(g, cx - 3, cy - 14, 6, 12, hex('#F3ECDD'));
+  box(g, cx - 1, cy - 19, 2, 3, hex('#FFB04A'));
+  put(g, cx, cy - 20, hex('#FFF4C0'));
+  light(g, cx, cy - 18, '#FFB04A', 120, 0.55);
+  for (let n = 0; n < 8; n++) {
+    const a = (n / 8) * Math.PI * 2;
+    box(g, cx + Math.cos(a) * 62 - 2, cy + Math.sin(a) * 20 - 5, 4, 5, hex('#8A6A30'));
+  }
+  return finish(g, { lightDir: 0, rimColor: '#FFB04A', rim: 0.3, vignette: 0.75 });
+}
+
 export const INTRO_SCENES = {
+  council: (rnd) => council(rnd),
+  councilSmile: (rnd) => council(rnd, { smile: true }),
   war: (rnd) => war(rnd),
   sleepers: (rnd) => sleepers(rnd),
   forgotten: (rnd) => sleepers(rnd, { overgrown: true }),
@@ -945,7 +1232,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     lights[name] = realm.lights.map(([x, y, c]) => [x, y, typeof c === 'string' ? c : toHex(c)]);
   }
   mkdirSync('assets/intro', { recursive: true });
-  for (const [name, draw] of Object.entries(INTRO_SCENES)) writeFileSync(`assets/intro/${name}.png`, toPng(draw(rng(31)).base, 6));
+  for (const [name, draw] of Object.entries(INTRO_SCENES))
+    writeFileSync(`assets/intro/${name}.png`, toPng(draw(rng(31)).base, 6));
   mkdirSync('assets/cocoon', { recursive: true });
   for (let stage = 0; stage <= 4; stage++) {
     const g = blank(COCOON_CANVAS.width, COCOON_CANVAS.height);
@@ -980,5 +1268,7 @@ ${Object.entries(lights)
 };
 `,
   );
-  console.log(`Wrote ${REALM_NAMES.length} realms, ${Object.keys(INTRO_SCENES).length} intro scenes, 5 cocoon stages and src/art/realm-scene.ts.`);
+  console.log(
+    `Wrote ${REALM_NAMES.length} realms, ${Object.keys(INTRO_SCENES).length} intro scenes, 5 cocoon stages and src/art/realm-scene.ts.`,
+  );
 }
