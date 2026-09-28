@@ -11,11 +11,14 @@ type Props = {
   color: string;
 };
 
+/** Closes the modal, or goes home when it was opened straight from a link. */
+export const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
 /** Cancel · title · action, for screens presented as modals. */
 export function ModalHeader({ title, actionLabel, onAction, actionDisabled, color }: Props) {
   return (
     <View style={styles.bar}>
-      <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12}>
+      <Pressable accessibilityRole="button" onPress={close} hitSlop={12}>
         <Text style={styles.cancel}>Cancel</Text>
       </Pressable>
       <Text style={styles.title}>{title}</Text>

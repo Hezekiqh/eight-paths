@@ -34,7 +34,7 @@ import {
   type XpGain,
 } from '@/game';
 
-import { COMPANIONS, DEFAULT_PARTY, isUnlocked, type CharacterId } from '@/story/companions';
+import { COMPANIONS, DEFAULT_PARTY, SHARDS_TO_UNLOCK, isUnlocked, type CharacterId } from '@/story/companions';
 
 import { newId } from './ids';
 import { GOAL_XP, applyReward, type RewardResult } from './rewards';
@@ -116,6 +116,8 @@ type Actions = {
   toggleGoal: (id: string, today?: string) => void;
   /** Records that `ids` have been revealed (their cutscene played, or they predate reveals). */
   markRevealed: (ids: CharacterId[]) => void;
+  /** Unlocks characters as a gift (a friend joined): gives each a full set of shards. */
+  giftCharacters: (ids: CharacterId[]) => void;
   completeTutorial: () => void;
   settle: (today?: string) => void;
   resetGame: () => void;
@@ -142,8 +144,20 @@ export const initialData: GameData = {
 
 /** Every saved field, for persisting and backups. */
 export function pickData(s: GameData): GameData {
-  const { player, quests, completions, restDays, lastSettledDate, party, xpGrants, boosts, shards, claimed, goals, revealed } =
-    s;
+  const {
+    player,
+    quests,
+    completions,
+    restDays,
+    lastSettledDate,
+    party,
+    xpGrants,
+    boosts,
+    shards,
+    claimed,
+    goals,
+    revealed,
+  } = s;
   return {
     player,
     quests,
@@ -285,7 +299,12 @@ export const useGameStore = create<GameState>()(
         set((s) => ({
           quests: s.quests.map((q) =>
             q.id === id
-              ? { ...q, title: draft.title.trim(), dimension: draft.dimension, repeatDays: [...draft.repeatDays].sort() }
+              ? {
+                  ...q,
+                  title: draft.title.trim(),
+                  dimension: draft.dimension,
+                  repeatDays: [...draft.repeatDays].sort(),
+                }
               : q,
           ),
         })),
@@ -298,14 +317,12 @@ export const useGameStore = create<GameState>()(
       setNotificationTime: (notificationTime) =>
         set((s) => (s.player ? { player: { ...s.player, notificationTime } } : s)),
 
-      setHapticsEnabled: (hapticsEnabled) =>
-        set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
+      setHapticsEnabled: (hapticsEnabled) => set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
 
       setObjectivesLandscape: (objectivesLandscape) =>
         set((s) => (s.player ? { player: { ...s.player, objectivesLandscape } } : s)),
 
-      changeClass: (classDimension) =>
-        set((s) => (s.player ? { player: { ...s.player, classDimension } } : s)),
+      changeClass: (classDimension) => set((s) => (s.player ? { player: { ...s.player, classDimension } } : s)),
 
       swapCharacter: (id) => {
         const { completions, xpGrants, shards } = get();
@@ -357,14 +374,27 @@ export const useGameStore = create<GameState>()(
           xpGrants: goal.dimension
             ? [
                 ...xpGrants,
-                { id, date: today, dimension: goal.dimension, xp: GOAL_XP, characterId: party[goal.dimension], source: 'goal' },
+                {
+                  id,
+                  date: today,
+                  dimension: goal.dimension,
+                  xp: GOAL_XP,
+                  characterId: party[goal.dimension],
+                  source: 'goal',
+                },
               ]
             : xpGrants,
         });
       },
 
-      markRevealed: (ids) =>
-        set((s) => ({ revealed: [...new Set([...(s.revealed ?? []), ...ids])] })),
+      markRevealed: (ids) => set((s) => ({ revealed: [...new Set([...(s.revealed ?? []), ...ids])] })),
+
+      giftCharacters: (ids) =>
+        set((s) => {
+          const shards = { ...s.shards };
+          for (const id of ids) shards[id] = Math.max(shards[id] ?? 0, SHARDS_TO_UNLOCK);
+          return { shards };
+        }),
 
       completeTutorial: () =>
         set((s) =>

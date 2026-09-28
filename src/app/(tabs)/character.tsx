@@ -6,9 +6,12 @@ import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-nat
 import { CollectionGrid } from '@/components/collection-grid';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
+import { shareFriendCode } from '@/social/api';
+import { socialEnabled } from '@/social/config';
+import { useSocial } from '@/social/store';
 import { XpBar } from '@/components/xp-bar';
-import { MAX_REST_TOKENS, formatTime, parseTime, toDateKey } from '@/game';
-import { ensureReminderPermission, syncReminders } from '@/notifications';
+import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
+import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
@@ -35,6 +38,7 @@ export default function CharacterScreen() {
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const exportSave = useGameStore((s) => s.exportSave);
+  const profile = useSocial((s) => s.profile);
 
   const shareBackup = () => {
     Share.share({ title: 'Eight Paths backup', message: exportSave() }).catch(() =>
@@ -94,8 +98,32 @@ export default function CharacterScreen() {
       </View>
       <CollectionGrid entries={collection.entries} />
 
+      {socialEnabled && (
+        <View style={[styles.list, { marginTop: spacing.lg }]}>
+          <SettingsRow
+            icon="users"
+            iconColor={classInfo.color}
+            title="Friends · The Second 100"
+            subtitle="Share your heroes, never your habits"
+            onPress={() => router.push('/social')}
+          />
+        </View>
+      )}
+
       <Text style={styles.section}>SETTINGS</Text>
       <View style={styles.list}>
+        {profile && (
+          <>
+            <SettingsRow
+              icon="share"
+              iconColor={classInfo.color}
+              title="Share friend code"
+              subtitle={`${profile.friendCode} · friends who join with it wake a hero for you`}
+              onPress={() => shareFriendCode(profile.friendCode)}
+            />
+            <View style={styles.divider} />
+          </>
+        )}
         <SettingsRow
           icon="bell"
           iconColor={classInfo.color}
@@ -177,27 +205,6 @@ export default function CharacterScreen() {
               onPress={() => {
                 const pick = ROSTER[Math.floor(Math.random() * ROSTER.length)];
                 router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
-              }}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="bell"
-              iconColor={classInfo.color}
-              title="Test reminder in 1 minute (dev)"
-              subtitle="Schedules through the real reminder code. Leave the app to see it."
-              onPress={async () => {
-                if (!(await ensureReminderPermission())) {
-                  Alert.alert('Notifications are off', 'Allow notifications for this app in iOS Settings, then try again.');
-                  return;
-                }
-                const at = new Date(Date.now() + 60_000);
-                await syncReminders({
-                  today: toDateKey(at),
-                  notificationTime: formatTime(at.getHours(), at.getMinutes()),
-                  playedToday: false,
-                  enabled: true,
-                });
-                Alert.alert('Reminder scheduled', `It should arrive at ${formatTime(at.getHours(), at.getMinutes())}. Leave the app now.`);
               }}
             />
           </>

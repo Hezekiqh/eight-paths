@@ -14,7 +14,8 @@
       "bundleIdentifier": "com.hezekiahhopkins.eightpaths",
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -40,8 +41,16 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      ["expo-screen-orientation", { "initialOrientation": "PORTRAIT_UP" }],
-      "./plugins/without-push-entitlement"
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT_UP"
+        }
+      ],
+      "./plugins/without-push-entitlement",
+      "expo-sqlite",
+      "expo-apple-authentication",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

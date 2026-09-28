@@ -70,6 +70,9 @@ export default function RootLayout() {
             <Stack.Screen name="quest-editor" options={{ presentation: 'modal' }} />
             <Stack.Screen name="change-class" options={{ presentation: 'modal' }} />
             <Stack.Screen name="goal-editor" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="social" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="friend/[code]" options={{ animation: 'none' }} />
+            <Stack.Screen name="auth-callback" options={{ animation: 'none' }} />
           </Stack.Protected>
           <Stack.Protected guard={!onboarded}>
             <Stack.Screen name="onboarding" />

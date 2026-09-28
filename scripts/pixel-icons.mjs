@@ -18,6 +18,13 @@ const ICONS = [
   'download',
   'chevron-right',
   'zap',
+  'users',
+  'user-plus',
+  'user-x',
+  'share',
+  'logout',
+  'trash',
+  'flag',
 ];
 
 const entries = ICONS.map((name) => {

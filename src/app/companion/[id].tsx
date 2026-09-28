@@ -13,6 +13,14 @@ import { useGameStore } from '@/store';
 import { useCollection } from '@/store/hooks';
 import { KIND_LABEL, REALMS, formatNumber, isCharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
+import { useSocial, type CharacterStat } from '@/social/store';
+
+/** "Woken by 3% of players · first: @moss_fan", or a note that no one has yet. */
+function rarityLine(stat: CharacterStat | undefined) {
+  if (!stat || stat.wokenBy === 0) return 'No one has woken them yet.';
+  const pct = Math.max(1, Math.round((stat.wokenBy / Math.max(1, stat.players)) * 100));
+  return `Woken by ${pct}% of players${stat.firstUsername ? ` · first: @${stat.firstUsername}` : ''}`;
+}
 
 export default function CompanionSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,6 +28,8 @@ export default function CompanionSheet() {
   const swapCharacter = useGameStore((s) => s.swapCharacter);
   const [bioDone, setBioDone] = useState(false);
   const [skipped, setSkipped] = useState(false);
+  // How rare they are among all players, once signed in to the Second 100.
+  const stats = useSocial((s) => s.stats);
   if (!isCharacterId(id)) return null;
 
   const entry = collection.entries.find((e) => e.companion.id === id)!;
@@ -60,6 +70,7 @@ export default function CompanionSheet() {
           <Text style={styles.realm}>
             {REALMS[companion.dimension]} · {companion.alignment}
           </Text>
+          {Object.keys(stats).length > 0 && <Text style={styles.realm}>{rarityLine(stats[companion.id])}</Text>}
         </View>
       </View>
 

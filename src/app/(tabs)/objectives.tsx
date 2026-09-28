@@ -70,7 +70,7 @@ export default function ObjectivesScreen() {
     <SafeAreaView style={[styles.safe, landscape && styles.safeWide]} edges={['top', 'left', 'right']}>
       <ScrollView
         horizontal={!landscape}
-        scrollEnabled={!landscape}
+        scrollEnabled={false}
         showsHorizontalScrollIndicator={false}
         style={landscape ? styles.menu : styles.menuBar}
         contentContainerStyle={landscape ? styles.menuContent : styles.menuBarContent}
@@ -88,20 +88,24 @@ export default function ObjectivesScreen() {
                 if (!selected) haptics.select();
                 setCategory(c.key);
               }}
-              style={[styles.menuItem, !landscape && styles.menuItemCompact, selected && styles.menuItemSelected]}>
-              <View style={styles.cursorSlot}>
-                {selected && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} />}
-              </View>
+              style={[styles.menuItem, selected && styles.menuItemSelected, !landscape && styles.menuItemCompact]}>
+              {landscape && (
+                <View style={styles.cursorSlot}>
+                  {selected && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} />}
+                </View>
+              )}
               <SymbolView
                 name={c.symbol}
                 tintColor={selected ? colors.accent : colors.textMuted}
-                size={selected ? 24 : 20}
+                size={selected && landscape ? 24 : 20}
               />
               <Text
-                style={[styles.menuLabel, !landscape && styles.menuLabelCompact, selected && styles.menuLabelSelected]}>
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={[styles.menuLabel, selected && styles.menuLabelSelected, !landscape && styles.menuLabelCompact]}>
                 {c.label.toUpperCase()}
               </Text>
-              {count > 0 && <Text style={styles.menuCount}>{count}</Text>}
+              {count > 0 && <Text style={[styles.menuCount, !landscape && styles.menuCountCompact]}>{count}</Text>}
             </Pressable>
           );
         })}
@@ -200,9 +204,18 @@ const styles = StyleSheet.create({
   menu: { width: 210, flexGrow: 0 },
   menuContent: { paddingVertical: spacing.lg, paddingLeft: spacing.md, gap: spacing.xs },
   menuBar: { flexGrow: 0 },
-  menuBarContent: { paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
-  menuItemCompact: { paddingVertical: spacing.sm, paddingHorizontal: spacing.xs },
-  menuLabelCompact: { flex: 0, fontSize: 18 },
+  // Upright, the four categories share the width equally, icon above label, so they always fit.
+  menuBarContent: { flexGrow: 1, paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
+  menuItemCompact: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 2,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: 2,
+    paddingRight: 2,
+  },
+  menuLabelCompact: { flex: 0, fontSize: 16, letterSpacing: 0.5 },
+  menuCountCompact: { position: 'absolute', top: 2, right: 2, fontSize: 13 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   rotate: { ...windowStyle, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   menuItem: {
