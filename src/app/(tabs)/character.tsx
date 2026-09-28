@@ -1,12 +1,14 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { SymbolView } from 'expo-symbols';
 import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CollectionGrid } from '@/components/collection-grid';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
-import { shareFriendCode } from '@/social/api';
+import { fetchMyValue, shareFriendCode } from '@/social/api';
+import { founderLabel } from '@/social/username';
 import { socialEnabled } from '@/social/config';
 import { useSocial } from '@/social/store';
 import { XpBar } from '@/components/xp-bar';
@@ -39,6 +41,21 @@ export default function CharacterScreen() {
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const exportSave = useGameStore((s) => s.exportSave);
   const profile = useSocial((s) => s.profile);
+  const [value, setValue] = useState<number | null>(null);
+
+  // Collection value shifts as other players wake heroes, so refresh on every visit.
+  useFocusEffect(
+    useCallback(() => {
+      if (!profile) return;
+      let live = true;
+      fetchMyValue()
+        .then((v) => live && setValue(v))
+        .catch(() => {});
+      return () => {
+        live = false;
+      };
+    }, [profile]),
+  );
 
   const shareBackup = () => {
     Share.share({ title: 'Eight Paths backup', message: exportSave() }).catch(() =>
@@ -64,6 +81,12 @@ export default function CharacterScreen() {
             <Text style={[styles.heroClass, { color: classInfo.color }]}>
               {classInfo.className} · <Text style={styles.epithet}>{classInfo.epithet}</Text>
             </Text>
+            {profile && (
+              <Text style={styles.handle}>
+                @{profile.username}
+                {profile.founderNumber !== null ? ` · Second 100 ${founderLabel(profile.founderNumber)}` : ''}
+              </Text>
+            )}
           </View>
         </View>
         <View style={styles.overallTop}>
@@ -92,6 +115,9 @@ export default function CharacterScreen() {
 
       <View style={styles.sectionRow}>
         <Text style={styles.section}>YOUR COLLECTION</Text>
+        {profile && value !== null && (
+          <Text style={[styles.sectionCount, { color: classInfo.color }]}>{value.toLocaleString()} value</Text>
+        )}
         <Text style={styles.sectionCount}>
           {collection.unlockedCount} / {collection.entries.length}
         </Text>
@@ -234,6 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardRaised,
   },
   heroText: { flex: 1, gap: 2 },
+  handle: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, marginTop: 2 },
   name: { color: colors.text, fontSize: 29, fontFamily: fonts.bold },
   heroClass: { fontSize: 20, fontFamily: fonts.bold },
   epithet: { color: colors.textMuted, fontStyle: 'italic', fontFamily: fonts.medium },

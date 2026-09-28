@@ -35,7 +35,7 @@ import {
 } from '@/social/api';
 import { FOUNDER_COUNT } from '@/social/config';
 import { useSocial, type Profile } from '@/social/store';
-import { USERNAME_RULES, founderLabel } from '@/social/username';
+import { USERNAME_RULES, extractFriendCode, founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
@@ -151,12 +151,11 @@ function ChooseUsername({ color }: { color: string }) {
       <Text style={styles.label}>FRIEND&apos;S CODE (OPTIONAL)</Text>
       <TextInput
         value={invite}
-        onChangeText={setInvite}
+        onChangeText={(t) => setInvite(t.length > 14 ? (extractFriendCode(t) ?? t) : t)}
         placeholder="8P-XXXX-XXXX"
         placeholderTextColor={colors.textFaint}
         autoCapitalize="characters"
         autoCorrect={false}
-        maxLength={14}
         style={styles.input}
       />
       <Text style={styles.hint}>Joining with a friend&apos;s code wakes a hero for them.</Text>
@@ -257,19 +256,19 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
         <TextInput
           value={code}
           onChangeText={(t) => {
-            setCode(t);
+            // A pasted share message or link becomes just the code.
+            setCode(t.length > 14 ? (extractFriendCode(t) ?? t) : t);
             setError(null);
           }}
           placeholder="8P-XXXX-XXXX"
           placeholderTextColor={colors.textFaint}
           autoCapitalize="characters"
           autoCorrect={false}
-          maxLength={14}
           returnKeyType="done"
           onSubmitEditing={add}
           style={[styles.input, { flex: 1 }]}
         />
-        <Button title="Add" onPress={add} color={color} disabled={busy || code.trim().length < 12} />
+        <Button title="Add" onPress={add} color={color} disabled={busy || !extractFriendCode(code)} />
       </View>
       {error && <Text style={[styles.hint, styles.error]}>{error}</Text>}
 

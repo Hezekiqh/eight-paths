@@ -1,4 +1,4 @@
-import { founderLabel, usernameProblem } from './username';
+import { extractFriendCode, founderLabel, usernameProblem } from './username';
 
 describe('usernameProblem', () => {
   it('accepts ordinary names', () => {
@@ -28,5 +28,26 @@ describe('founderLabel', () => {
   it('pads to three digits', () => {
     expect(founderLabel(7)).toBe('#007');
     expect(founderLabel(100)).toBe('#100');
+  });
+});
+
+describe('extractFriendCode', () => {
+  it('accepts a code in any case, with or without dashes', () => {
+    expect(extractFriendCode('8P-PD74-ZWRD')).toBe('8P-PD74-ZWRD');
+    expect(extractFriendCode('8p-pd74-zwrd')).toBe('8P-PD74-ZWRD');
+    expect(extractFriendCode(' 8ppd74zwrd ')).toBe('8P-PD74-ZWRD');
+  });
+
+  it('finds the code inside a pasted share message or link', () => {
+    const message =
+      'Walk the Eight Paths with me. Join with my friend code 8P-PD74-ZWRD and we both wake a hero.\neightpaths://friend/8P-PD74-ZWRD';
+    expect(extractFriendCode(message)).toBe('8P-PD74-ZWRD');
+    expect(extractFriendCode('eightpaths://friend/8P-AB23-CD45')).toBe('8P-AB23-CD45');
+  });
+
+  it('rejects incomplete or too-long codes', () => {
+    expect(extractFriendCode('8P-PD74-ZWR')).toBeNull();
+    expect(extractFriendCode('8P-PD74-ZWR8P-')).toBeNull();
+    expect(extractFriendCode('hello')).toBeNull();
   });
 });

@@ -25,6 +25,7 @@ const ICONS = [
   'logout',
   'trash',
   'flag',
+  'star',
 ];
 
 const entries = ICONS.map((name) => {

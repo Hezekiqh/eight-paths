@@ -36,7 +36,10 @@ export default function TabsLayout() {
           <RetroTabButton label="Today" icon="sun" />
         </TabTrigger>
         <TabTrigger name="character" href="/character" asChild>
-          <RetroTabButton label="Character" icon="user" />
+          <RetroTabButton label="Profile and collection" icon="star" />
+        </TabTrigger>
+        <TabTrigger name="social-tab" href="/social-tab" asChild>
+          <RetroTabButton label="Social" icon="users" />
         </TabTrigger>
         <TabTrigger name="journey" href="/journey" asChild>
           <RetroTabButton label="Journey" icon="map" />

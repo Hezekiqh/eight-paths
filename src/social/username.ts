@@ -18,3 +18,13 @@ export function usernameProblem(name: string): string | null {
 
 /** Formats a founder number for display: 7 → "#007". */
 export const founderLabel = (n: number) => `#${String(n).padStart(3, '0')}`;
+
+/**
+ * Finds a friend code in whatever was typed or pasted (a bare code, a link,
+ * or a whole share message) and formats it as "8P-XXXX-XXXX". Returns null
+ * when there isn't a complete code.
+ */
+export function extractFriendCode(text: string): string | null {
+  const match = text.toUpperCase().match(/8P[\s-]?([A-Z0-9]{4})[\s-]?([A-Z0-9]{4})(?![A-Z0-9])/);
+  return match ? `8P-${match[1]}-${match[2]}` : null;
+}

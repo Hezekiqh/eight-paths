@@ -6,7 +6,7 @@ import { Share } from 'react-native';
 import { supabase } from './client';
 import { socialEnabled } from './config';
 import { useSocial, type CharacterStat, type Profile } from './store';
-import { usernameProblem } from './username';
+import { extractFriendCode, usernameProblem } from './username';
 
 const PROFILE_COLUMNS =
   'id, username, founder_number, friend_code, leader, party, level, days_shown_up, streak, created_at';
@@ -169,11 +169,11 @@ export async function claimUsername(name: string, inviteCode?: string) {
     fail(OFFLINE);
   }
   // Joining with a friend's code: they become friends, and the inviter earns a hero.
-  const code = inviteCode?.trim() || useSocial.getState().pendingFriendCode;
+  const code = extractFriendCode(inviteCode ?? '') ?? useSocial.getState().pendingFriendCode;
   if (code) {
     useSocial.setState({ pendingFriendCode: null });
     // A mistyped code never blocks sign-up; it just earns no one a hero.
-    await supabase().rpc('redeem_invite', { code: code.toUpperCase() });
+    await supabase().rpc('redeem_invite', { code });
   }
   await loadAccount(auth.user!.id);
 }
@@ -252,7 +252,9 @@ export async function refreshFriends() {
 
 /** Adds a friend by their code (both become friends at once). Returns their id. */
 export async function addFriend(code: string): Promise<string> {
-  const { data, error } = await supabase().rpc('add_friend', { code: code.trim().toUpperCase() });
+  const clean = extractFriendCode(code);
+  if (!clean) fail("That doesn't look like a friend code. Codes look like 8P-XXXX-XXXX.");
+  const { data, error } = await supabase().rpc('add_friend', { code: clean });
   if (error) {
     if (error.message.includes('own_code')) fail("That's your own code.");
     if (error.message.includes('unknown_code')) fail('No one has that code. Check it and try again.');
@@ -332,4 +334,49 @@ export function shareFriendCode(code: string) {
   return Share.share({
     message: `Walk the Eight Paths with me. Join with my friend code ${code} and we both wake a hero.\neightpaths://friend/${code}`,
   }).catch(() => {});
+}
+
+/** One row of the collection leaderboard. */
+export type LeaderRow = {
+  userId: string;
+  username: string;
+  founderNumber: number | null;
+  leader: string | null;
+  level: number;
+  heroes: number;
+  /** Collection value: rarer heroes are worth more. */
+  value: number;
+};
+
+/** The top collections among friends (and the player), or among everyone. */
+export async function fetchLeaderboard(scope: 'friends' | 'all'): Promise<LeaderRow[]> {
+  const { data, error } = await supabase().rpc('leaderboard', { scope });
+  if (error) fail(OFFLINE);
+  return (
+    (data ?? []) as {
+      user_id: string;
+      username: string;
+      founder_number: number | null;
+      leader: string | null;
+      level: number;
+      heroes: number;
+      value: number;
+    }[]
+  ).map((r) => ({
+    userId: r.user_id,
+    username: r.username,
+    founderNumber: r.founder_number,
+    leader: r.leader,
+    level: r.level,
+    heroes: r.heroes,
+    value: r.value,
+  }));
+}
+
+/** The player's own collection value (their row of the friends leaderboard). */
+export async function fetchMyValue(): Promise<number | null> {
+  const me = useSocial.getState().profile;
+  if (!me) return null;
+  const rows = await fetchLeaderboard('friends');
+  return rows.find((r) => r.userId === me.id)?.value ?? null;
 }
