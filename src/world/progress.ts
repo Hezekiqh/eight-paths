@@ -44,13 +44,16 @@ export type Exit = {
  */
 export const ARCHIVE_DOOR_LEVEL = 6;
 
-/** The Courier Road runs on toward the Warrior Kingdom at this overall level. */
-export const ROAD_ONWARD_LEVEL = 8;
+/**
+ * After the door, the main road opens every 3 overall levels (author, Sep 29,
+ * 2026): the road east at 9, then (as they're built) Plush at 12, the kingdom
+ * at 15, the king at 18, and the end of Season 1 at 20. Overall, so any habit counts.
+ */
+export const ROAD_ONWARD_LEVEL = 9;
 
 /**
- * The game is finished at this overall level (author, Sep 29, 2026). Overall,
- * so every habit counts and nobody is held back by one they find hard: about
- * 35 habits of any kind from the start (WORLDS.md, pacing rule).
+ * Season 1 ends at this overall level (author, Sep 29, 2026): about 35 habits
+ * of any kind. Later kingdoms arrive as new seasons, each with its own finish.
  */
 export const FINAL_GOAL: Requirement = { kind: 'overall', level: 20 };
 

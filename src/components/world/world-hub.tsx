@@ -82,14 +82,16 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
       <Text style={styles.section}>OBJECTIVES</Text>
 
       <Goal
-        label="The last seal"
-        need={final.met ? `${describeRequirement(FINAL_GOAL)} ✓` : `${describeRequirement(FINAL_GOAL)} · Lv ${final.have}`}
+        label="Season 1"
+        need={
+          final.met ? `${describeRequirement(FINAL_GOAL)} ✓` : `${describeRequirement(FINAL_GOAL)} · Lv ${final.have}`
+        }
         met={final.met}
         fraction={final.fraction}
         how={
           final.met
-            ? "You're strong enough to finish. The last seal opens in a coming update."
-            : `Finish the game at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
+            ? "You've reached the end of Season 1. The next kingdom arrives in a coming update."
+            : `Season 1 ends at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
         }
       />
 
@@ -212,7 +214,12 @@ const styles = StyleSheet.create({
   fill: { height: 6, backgroundColor: colors.accent },
   fillMet: { backgroundColor: classColors.environmental },
   how: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
-  lore: { gap: 2, paddingVertical: spacing.xs, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  lore: {
+    gap: 2,
+    paddingVertical: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
   speaker: { color: colors.accent, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 1 },
   ask: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 14 },
   answer: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 15, lineHeight: 22 },
