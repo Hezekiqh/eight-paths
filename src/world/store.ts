@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { isCharacterId, type CharacterId } from '@/story/companions';
 
+import { addLore, cleanLore, type LoreEntry } from './lore';
 import { FACINGS, isMapId, type Facing, type MapId } from './maps';
 
 export type ControlScheme = 'joystick' | 'touchpad';
@@ -24,9 +25,13 @@ type WorldState = {
   discover: (map: MapId) => void;
   setControls: (controls: ControlScheme) => void;
   savePosition: (position: WorldPosition) => void;
+  /** What characters have told the player: the World menu's lore journal. */
+  heard: LoreEntry[];
+  hear: (entry: LoreEntry) => void;
 };
 
-const SAVE_VERSION = 1;
+/** v2 adds the lore journal (`heard`), which starts empty. */
+const SAVE_VERSION = 2;
 
 /** Drops anything malformed from a loaded save, keeping what's good. */
 function sanitize(persisted: unknown): Partial<WorldState> {
@@ -35,6 +40,7 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   if (data.controls === 'joystick' || data.controls === 'touchpad') out.controls = data.controls;
   if (isCharacterId(data.hero)) out.hero = data.hero;
   if (Array.isArray(data.discovered)) out.discovered = data.discovered.filter(isMapId);
+  if (data.heard !== undefined) out.heard = cleanLore(data.heard);
   const p = data.position as Record<string, unknown> | null | undefined;
   if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
@@ -57,12 +63,20 @@ export const useWorldStore = create<WorldState>()(
       discover: (map) => set((s) => (s.discovered.includes(map) ? s : { discovered: [...s.discovered, map] })),
       setControls: (controls) => set({ controls }),
       savePosition: (position) => set({ position }),
+      heard: [],
+      hear: (entry) => set((s) => ({ heard: addLore(s.heard, entry) })),
     }),
     {
       name: 'eight-paths-world',
       version: SAVE_VERSION,
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ controls: s.controls, position: s.position, hero: s.hero, discovered: s.discovered }),
+      partialize: (s) => ({
+        controls: s.controls,
+        position: s.position,
+        hero: s.hero,
+        discovered: s.discovered,
+        heard: s.heard,
+      }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),
     },

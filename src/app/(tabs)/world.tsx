@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -8,13 +8,16 @@ import { DialogueBox, type Dialogue } from '@/components/world/dialogue-box';
 import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
+import { WorldHub } from '@/components/world/world-hub';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { useGameStore } from '@/store';
+import { useSession } from '@/store/session';
 import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { COMPANIONS } from '@/story/companions';
 import { FACINGS, MAPS, TILE, objectAt, tileAt, withoutCharacter, type MapId, type WorldMap } from '@/world/maps';
 import { EXITS, describeRequirement, howToProgress, standing, type Arrival, type XpTotals } from '@/world/progress';
+import { loreId } from '@/world/lore';
 import { characterQuestions } from '@/world/talk';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { worldHero } from '@/world/hero';
@@ -26,21 +29,37 @@ import type { WalkerId } from '@/world/walkers';
  */
 let keepSideways = false;
 
-/** Turns the phone sideways while the World is open, and back upright on leaving it. */
-function useSideways() {
+/**
+ * The tab opens upright on the World menu; the game turns the phone sideways
+ * only once the player jumps in. Leaving the tab turns it upright again and
+ * comes back to the menu next time (unless the quest board was opened over
+ * the game, which keeps everything as it was).
+ */
+function usePlaying() {
+  const playing = useSession((s) => s.worldPlaying);
+  const setPlaying = useCallback((worldPlaying: boolean) => useSession.setState({ worldPlaying }), []);
+  const focused = useIsFocused();
+  useEffect(() => {
+    if (!focused) return;
+    ScreenOrientation.lockAsync(
+      playing ? ScreenOrientation.OrientationLock.LANDSCAPE : ScreenOrientation.OrientationLock.PORTRAIT_UP,
+    );
+  }, [focused, playing]);
   useFocusEffect(
     useCallback(() => {
       keepSideways = false;
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
       return () => {
-        if (!keepSideways) ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        if (keepSideways) return;
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        setPlaying(false);
       };
-    }, []),
+    }, [setPlaying]),
   );
+  return [playing, setPlaying] as const;
 }
 
 export default function WorldScreen() {
-  useSideways();
+  const [playing, setPlaying] = usePlaying();
   const hydrated = useWorldHydrated();
   const [hero] = useParty();
   const { width, height } = useWindowDimensions();
@@ -64,12 +83,21 @@ export default function WorldScreen() {
     [dark, savePosition],
   );
 
-  // Wait for the save and for the phone to finish turning sideways.
-  if (!hydrated || width < height) return <View style={styles.root} />;
+  if (!hydrated) return <View style={styles.root} />;
+  if (!playing) return <WorldHub onPlay={() => setPlaying(true)} />;
+  // Wait for the phone to finish turning sideways.
+  if (width < height) return <View style={styles.root} />;
   // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
   return (
     <View style={styles.root}>
-      <World key={`${hero}-${trip}`} hero={hero} width={width} height={height} onTravel={travel} />
+      <World
+        key={`${hero}-${trip}`}
+        hero={hero}
+        width={width}
+        height={height}
+        onTravel={travel}
+        onMenu={() => setPlaying(false)}
+      />
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.fade, darkStyle]} />
     </View>
   );
@@ -113,11 +141,14 @@ function World({
   width,
   height,
   onTravel,
+  onMenu,
 }: {
   hero: WalkerId;
   width: number;
   height: number;
   onTravel: (to: Arrival) => void;
+  /** Back to the upright World menu. */
+  onMenu: () => void;
 }) {
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
@@ -135,6 +166,7 @@ function World({
   const [you, setYou] = useState({ x: 0, y: 0 });
   const discovered = useWorldStore((s) => s.discovered);
   const discover = useWorldStore((s) => s.discover);
+  const hear = useWorldStore((s) => s.hear);
   const xp = useXpTotals();
   const xpRef = useRef(xp);
   useEffect(() => {
@@ -228,6 +260,11 @@ function World({
             setDialogue(null);
             dialogue.then?.();
           }}
+          onAsk={(q) => {
+            // Everything a character tells you goes in the World menu's lore journal.
+            const speaker = dialogue.speaker;
+            if (speaker) hear({ id: loreId(speaker, q.ask), speaker, ask: q.ask, answer: q.answer, at: Date.now() });
+          }}
         />
       )}
       {paused && (
@@ -242,6 +279,11 @@ function World({
             setMapOpen(true);
           }}
           onOpenBoard={openBoard}
+          onMenu={() => {
+            save();
+            setPaused(false);
+            onMenu();
+          }}
           onLeave={() => {
             setPaused(false);
             router.navigate('/');

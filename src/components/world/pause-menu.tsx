@@ -25,6 +25,8 @@ type Props = {
   onResume: () => void;
   onOpenMap: () => void;
   onOpenBoard: () => void;
+  /** The upright World menu: lore, objectives, what's coming. */
+  onMenu: () => void;
   onLeave: () => void;
 };
 
@@ -32,7 +34,17 @@ type Props = {
  * The World's pause menu. Left: what it takes to go on, in real habits, and
  * the quest board. Right: the map, the controls, and resume or go back to habits.
  */
-export function PauseMenu({ map, mapName, controls, onControls, onResume, onOpenMap, onOpenBoard, onLeave }: Props) {
+export function PauseMenu({
+  map,
+  mapName,
+  controls,
+  onControls,
+  onResume,
+  onOpenMap,
+  onOpenBoard,
+  onMenu,
+  onLeave,
+}: Props) {
   return (
     <View style={styles.scrim}>
       <View style={styles.window} accessibilityViewIsModal>
@@ -46,7 +58,10 @@ export function PauseMenu({ map, mapName, controls, onControls, onResume, onOpen
             <ObjectivesPanel map={map} onOpenBoard={onOpenBoard} />
           </View>
           <View style={styles.column}>
-            <MenuItem label="Map" onPress={onOpenMap} />
+            <View style={styles.actions}>
+              <MenuItem label="Map" onPress={onOpenMap} grow />
+              <MenuItem label="World menu" onPress={onMenu} grow />
+            </View>
             <Text style={styles.section}>CONTROLS</Text>
             <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
             <Text style={styles.hint}>{HINTS[controls]}</Text>

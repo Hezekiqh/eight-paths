@@ -18,6 +18,7 @@ import {
   useSettleOnDayChange,
   useToday,
 } from '@/store/hooks';
+import { useSession } from '@/store/session';
 import { FRAME, colors, spacing } from '@/theme';
 
 export default function TabsLayout() {
@@ -34,8 +35,9 @@ export default function TabsLayout() {
   useInviteRewards();
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);
-  // The World fills the screen; its pause menu leads back to the other tabs.
-  const inWorld = usePathname() === '/world';
+  // The game fills the screen; its pause menu leads back to the World menu and the other tabs.
+  const worldPlaying = useSession((s) => s.worldPlaying);
+  const inWorld = usePathname() === '/world' && worldPlaying;
 
   return (
     <Tabs style={styles.root}>

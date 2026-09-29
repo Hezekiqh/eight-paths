@@ -18,6 +18,8 @@ export type Dialogue = {
 type Props = {
   dialogue: Dialogue;
   onClose: () => void;
+  /** Each question the player asks, as its answer starts (for the lore journal). */
+  onAsk?: (question: Question) => void;
 };
 
 /**
@@ -26,7 +28,7 @@ type Props = {
  * the speaker can be asked things, their lines end in a menu of questions:
  * each answer plays, then the menu comes back until you say Goodbye.
  */
-export function DialogueBox({ dialogue, onClose }: Props) {
+export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const insets = useSafeAreaInsets();
   const [lines, setLines] = useState(dialogue.lines);
   /** Bumped per answer, so the typewriter starts fresh even at line 0. */
@@ -57,6 +59,7 @@ export function DialogueBox({ dialogue, onClose }: Props) {
 
   const ask = (question: Question) => {
     haptics.select();
+    onAsk?.(question);
     setLines(question.answer);
     setRound((r) => r + 1);
     setIndex(0);

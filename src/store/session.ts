@@ -12,6 +12,8 @@ type Session = {
   pendingQuest: string | null;
   /** Notification responses already acted on this launch, so a "Done" never runs twice. */
   handledResponses: string[];
+  /** The sideways game is on screen (not the World menu), so the tab bar steps aside. */
+  worldPlaying: boolean;
 };
 
 export const useSession = create<Session>((set) => ({
@@ -21,4 +23,5 @@ export const useSession = create<Session>((set) => ({
   setKeeperHold: (keeperHold) => set({ keeperHold }),
   pendingQuest: null,
   handledResponses: [],
+  worldPlaying: false,
 }));

@@ -47,6 +47,13 @@ export const ARCHIVE_DOOR_LEVEL = 6;
 /** The Courier Road runs on toward the Warrior Kingdom at this overall level. */
 export const ROAD_ONWARD_LEVEL = 8;
 
+/**
+ * The game is finished at this overall level (author, Sep 29, 2026). Overall,
+ * so every habit counts and nobody is held back by one they find hard: about
+ * 35 habits of any kind from the start (WORLDS.md, pacing rule).
+ */
+export const FINAL_GOAL: Requirement = { kind: 'overall', level: 20 };
+
 export const EXITS: Exit[] = [
   {
     id: 'archive-door',
