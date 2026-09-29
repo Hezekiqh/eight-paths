@@ -6,7 +6,7 @@ import { currentTier } from '@/premium/store';
 import { selectReminderState, type ReminderState } from '@/store/selectors';
 
 import type { ReminderAccess } from './ask-rules';
-import { recentLines, recordOpen, settleSent, withPending, type PendingCall } from './stats-rules';
+import { recentLines, recordOpen, settleSent, withPending, type PendingCall, type SyncReport } from './stats-rules';
 import { updateKeeperStats, useKeeperStats } from './stats-store';
 
 Notifications.setNotificationHandler({
@@ -26,9 +26,17 @@ let queue: Promise<void> = Promise.resolve();
  * overlapping calls can't interleave cancel and schedule.
  */
 export function syncReminders(state: ReminderState | null): Promise<void> {
-  queue = queue.then(() => doSync(state)).catch(() => {});
+  queue = queue
+    .then(() => doSync(state))
+    .catch((e: unknown) => {
+      // Never silent: Settings shows this under the Keeper's next call.
+      if (__DEV__) console.warn('[reminders] sync failed', e);
+      updateKeeperStats((s) => ({ ...s, lastSync: { at: Date.now(), scheduled: 0, failed: 1, error: message(e) } }));
+    });
   return queue;
 }
+
+const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 async function doSync(state: ReminderState | null) {
   await Notifications.cancelAllScheduledNotificationsAsync();
@@ -37,7 +45,7 @@ async function doSync(state: ReminderState | null) {
   updateKeeperStats((stats) => settleSent(stats, now));
   const access = state ? await getReminderAccess() : 'denied';
   if (!state || (access !== 'full' && access !== 'quiet')) {
-    updateKeeperStats((stats) => withPending(stats, [], now));
+    updateKeeperStats((stats) => ({ ...withPending(stats, [], now), lastSync: { at: now, scheduled: 0, failed: 0 } }));
     return;
   }
 
@@ -52,9 +60,12 @@ async function doSync(state: ReminderState | null) {
   if (__DEV__) console.log(`[reminders] scheduling ${plans.length} from ${plans[0]?.date} at ${state.notificationTime}`);
   const categories = await syncDoneCategories(plans, state.quests);
   const pending: PendingCall[] = [];
+  let failed = 0;
+  let error: string | undefined;
   for (const plan of plans) {
     const [y, m, d] = plan.date.split('-').map(Number);
     const date = new Date(y, m - 1, d, plan.hour, plan.minute);
+    // One bad call mustn't cost the rest: the old plan is already cancelled.
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: KEEPER_TITLE,
@@ -64,12 +75,19 @@ async function doSync(state: ReminderState | null) {
         ...(categories.has(plan) ? { categoryIdentifier: categories.get(plan) } : {}),
         // The 10:30 PM last call may break through Focus; everything else waits politely.
         interruptionLevel: plan.timeSensitive ? 'timeSensitive' : 'active',
+        // A knock you can hear: a silent banner is too easy to miss.
+        sound: 'default',
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+    }).catch((e: unknown) => {
+      failed += 1;
+      error ??= message(e);
+      return null;
     });
-    pending.push({ lineId: plan.lineId, at: date.getTime(), body: plan.body, id });
+    if (id) pending.push({ lineId: plan.lineId, at: date.getTime(), body: plan.body, id });
   }
-  updateKeeperStats((s) => withPending(s, pending, Date.now()));
+  const report = { at: Date.now(), scheduled: pending.length, failed, ...(error ? { error } : {}) };
+  updateKeeperStats((s) => ({ ...withPending(s, pending, Date.now()), lastSync: report }));
 }
 
 /** Prefix of the Keeper's "Done" categories, so stale ones can be cleared. */
@@ -117,33 +135,63 @@ async function syncDoneCategories(plans: PlannedReminder[], quests: Quest[]) {
   return byPlan;
 }
 
+/** The line id of a test call, kept out of the Keeper's record. */
+export const TEST_LINE = 'test';
+
 /**
- * Development only: one of the Keeper's calls in 5 seconds, with "Done"
- * buttons for today's quests still to do, to try the long-press on a device.
+ * A test call in 5 seconds, from Settings, so a player can check the Keeper
+ * reaches them. It carries "Done" buttons for today's quests still to do.
+ * Returns what iOS allowed: nothing is sent when notifications are off.
  */
-export async function sendTestCall(): Promise<void> {
-  if (!(await ensureReminderPermission())) return;
-  const { quests, completions } = useGameStore.getState();
+export async function sendTestCall(): Promise<ReminderAccess> {
+  await ensureReminderPermission();
+  const access = await getReminderAccess();
+  if (access !== 'full' && access !== 'quiet') return access;
+  const { quests, completions, player } = useGameStore.getState();
   const today = toDateKey(new Date());
   const left = quests.filter((q) => q.active && !completions.some((c) => c.questId === q.id && c.date === today));
   const plan = { questIds: left.slice(0, 3).map((q) => q.id) } as PlannedReminder;
   const categories = await syncDoneCategories([plan], quests);
+  const name = player?.name ? `, ${player.name}` : '';
   await Notifications.scheduleNotificationAsync({
     content: {
       title: KEEPER_TITLE,
-      body: 'A test knock. Long-press me.',
-      data: { lineId: 'test', date: today },
+      body: `A test knock${name}. If you can read this, I can reach you.`,
+      data: { lineId: TEST_LINE, date: today },
+      sound: 'default',
       ...(categories.has(plan) ? { categoryIdentifier: categories.get(plan) } : {}),
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 5 },
   });
+  return access;
+}
+
+export type KeeperStatus = {
+  access: ReminderAccess;
+  /** Calls iOS is actually holding right now. */
+  scheduled: number;
+  /** The next call the Keeper planned, if any. */
+  next: PendingCall | null;
+  lastSync?: SyncReport;
+};
+
+/** Everything Settings needs to show whether, and when, the Keeper will call. */
+export async function getKeeperStatus(): Promise<KeeperStatus> {
+  const [access, scheduled] = await Promise.all([
+    getReminderAccess(),
+    Notifications.getAllScheduledNotificationsAsync().then((all) => all.length),
+  ]);
+  const { pending, lastSync } = useKeeperStats.getState();
+  const now = Date.now();
+  const next = pending.filter((p) => p.at > now).sort((a, b) => a.at - b.at)[0] ?? null;
+  return { access, scheduled, next, lastSync };
 }
 
 /** Counts a tap on one of the Keeper's calls (N5). */
 export function recordKeeperOpen(response: Notifications.NotificationResponse) {
   const { request, date } = response.notification;
   const lineId = request.content.data?.lineId;
-  if (typeof lineId !== 'string') return;
+  if (typeof lineId !== 'string' || lineId === TEST_LINE) return;
   updateKeeperStats((stats) => recordOpen(stats, lineId, request.identifier, date));
 }
 

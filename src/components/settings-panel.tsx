@@ -5,12 +5,13 @@ import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-nat
 
 import { LevelUp } from '@/components/level-up';
 import { Segmented } from '@/components/segmented';
+import { KeeperStatusRows } from '@/components/keeper-status';
 import { SettingsRow } from '@/components/settings-row';
 import { ThemePicker } from '@/components/theme-picker';
 import { HINTS, SCHEMES } from '@/components/world/pause-menu';
 import { formatTime, parseTime } from '@/game';
 import { haptics } from '@/haptics';
-import { ensureReminderPermission, sendTestCall } from '@/notifications';
+import { ensureReminderPermission } from '@/notifications';
 import { premiumEnabled } from '@/premium/config';
 import { usePremium } from '@/premium/store';
 import { shareFriendCode } from '@/social/api';
@@ -177,6 +178,8 @@ export function SettingsPanel() {
             />
           }
         />
+        <View style={styles.divider} />
+        <KeeperStatusRows color={color} />
       </View>
 
       <Text style={styles.section}>OPTIONS</Text>
@@ -238,14 +241,6 @@ export function SettingsPanel() {
               title="The Keeper's record (dev)"
               subtitle="Which notification lines get opened, and what's scheduled next"
               onPress={() => router.push('/keeper-stats')}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="bell"
-              iconColor={color}
-              title="Test a Keeper call (dev)"
-              subtitle="Knocks in 5 seconds. Long-press it for the Done buttons."
-              onPress={() => sendTestCall()}
             />
             <View style={styles.divider} />
             <SettingsRow
