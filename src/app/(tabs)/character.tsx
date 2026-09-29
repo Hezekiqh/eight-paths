@@ -8,6 +8,8 @@ import { CollectionGrid } from '@/components/collection-grid';
 import { LevelUp } from '@/components/level-up';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
+import { premiumEnabled } from '@/premium/config';
+import { usePremium } from '@/premium/store';
 import { fetchMyValue, shareFriendCode } from '@/social/api';
 import { founderLabel } from '@/social/username';
 import { socialEnabled } from '@/social/config';
@@ -42,6 +44,7 @@ export default function CharacterScreen() {
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const exportSave = useGameStore((s) => s.exportSave);
   const profile = useSocial((s) => s.profile);
+  const premium = usePremium((s) => s.premium);
   const [value, setValue] = useState<number | null>(null);
   const [demoLevelUp, setDemoLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
   const closeDemo = useCallback(() => setDemoLevelUp(null), []);
@@ -142,6 +145,18 @@ export default function CharacterScreen() {
 
       <Text style={styles.section}>SETTINGS</Text>
       <View style={styles.list}>
+        {premiumEnabled && (
+          <>
+            <SettingsRow
+              icon="star"
+              iconColor={classInfo.color}
+              title="Eight Paths Premium"
+              subtitle={premium ? 'Active · thank you' : 'Support the game and lore by upgrading to Premium'}
+              onPress={() => router.push('/paywall')}
+            />
+            <View style={styles.divider} />
+          </>
+        )}
         {profile && (
           <>
             <SettingsRow

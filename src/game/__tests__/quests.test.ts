@@ -1,9 +1,21 @@
-import { WEEKDAYS, describeSchedule, questsForDay, scheduleKind, toggleCompletion } from '../quests';
+import {
+  TUTORIAL_QUEST_ID,
+  WEEKDAYS,
+  atHabitLimit,
+  describeSchedule,
+  questsForDay,
+  scheduleKind,
+  toggleCompletion,
+} from '../quests';
 import { done, quest } from './helpers';
 
 describe('questsForDay', () => {
   it('returns active quests scheduled that weekday', () => {
-    const qs = [quest({ id: 'daily' }), quest({ id: 'weekday', repeatDays: WEEKDAYS }), quest({ id: 'off', active: false })];
+    const qs = [
+      quest({ id: 'daily' }),
+      quest({ id: 'weekday', repeatDays: WEEKDAYS }),
+      quest({ id: 'off', active: false }),
+    ];
     expect(questsForDay(qs, '2026-09-26').map((q) => q.id)).toEqual(['daily']); // Saturday
     expect(questsForDay(qs, '2026-09-25').map((q) => q.id)).toEqual(['daily', 'weekday']); // Friday
   });
@@ -46,3 +58,13 @@ describe('describeSchedule', () => {
   });
 });
 
+describe('habit limit', () => {
+  it('stops free players at 10 active habits, not counting archived ones or the tutorial', () => {
+    const many = (n: number) => Array.from({ length: n }, (_, i) => quest({ id: `q${i}` }));
+    expect(atHabitLimit(many(9), 'free')).toBe(false);
+    expect(atHabitLimit(many(10), 'free')).toBe(true);
+    expect(atHabitLimit(many(30), 'premium')).toBe(false);
+    expect(atHabitLimit([...many(9), quest({ id: 'old', active: false })], 'free')).toBe(false);
+    expect(atHabitLimit([...many(9), quest({ id: TUTORIAL_QUEST_ID })], 'free')).toBe(false);
+  });
+});

@@ -1,6 +1,6 @@
 import { isScheduledOn } from './schedule';
-import { xpForCompletion } from './xp';
-import type { Completion, Quest } from './types';
+import { xpForCompletion, type Tier } from './xp';
+import type { Completion, Dimension, Quest } from './types';
 
 export const DAILY = [0, 1, 2, 3, 4, 5, 6];
 export const WEEKDAYS = [1, 2, 3, 4, 5];
@@ -9,12 +9,28 @@ export const WEEKDAYS = [1, 2, 3, 4, 5];
 export const TUTORIAL_QUEST_ID = 'tutorial';
 export const TUTORIAL_QUEST_TITLE = 'Begin your journey';
 
+/** Free players can keep this many active habits; Premium has no limit. */
+export const FREE_HABIT_LIMIT = 10;
+
+/** Active habits that count toward the limit (the tutorial quest doesn't). */
+export const activeHabitCount = (quests: Quest[]) =>
+  quests.filter((q) => q.active && q.id !== TUTORIAL_QUEST_ID).length;
+
+/** Whether a free player has as many habits as they can keep. Existing habits are never taken away. */
+export const atHabitLimit = (quests: Quest[], tier: Tier) =>
+  tier === 'free' && activeHabitCount(quests) >= FREE_HABIT_LIMIT;
+
 export function questsForDay(quests: Quest[], date: string): Quest[] {
   return quests.filter((q) => q.active && isScheduledOn(q, date));
 }
 
 export function completionFor(completions: Completion[], questId: string, date: string) {
   return completions.find((c) => c.questId === questId && c.date === date);
+}
+
+/** XP a Path has earned from tasks on `date`, for the daily cap. */
+export function earnedToday(completions: Completion[], dimension: Dimension, date: string): number {
+  return completions.filter((c) => c.date === date && c.dimension === dimension).reduce((sum, c) => sum + c.xp, 0);
 }
 
 export type ToggleResult =
@@ -31,6 +47,7 @@ export function toggleCompletion(
   quest: Quest,
   today: string,
   newId: string,
+  { tier = 'free', boosted = false }: { tier?: Tier; boosted?: boolean } = {},
 ): ToggleResult {
   const existing = completionFor(completions, quest.id, today);
   if (existing) {
@@ -42,7 +59,7 @@ export function toggleCompletion(
     questId: quest.id,
     dimension: quest.dimension,
     date: today,
-    xp: xpForCompletion(completions.filter((c) => c.date === today).length),
+    xp: xpForCompletion(earnedToday(completions, quest.dimension, today), tier, boosted),
   };
   return { kind: 'completed', completions: [...completions, completion], completion };
 }

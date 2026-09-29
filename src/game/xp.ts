@@ -4,22 +4,39 @@ import { DIMENSIONS, type Completion, type Dimension } from './types';
 export const BASE_XP = 10;
 export const START_LEVEL = 5;
 
-/** Only the first this-many completions each day earn XP; more still count for streaks. */
-export const DAILY_XP_TASKS = 10;
+/** Free players, or Premium subscribers (see PREMIUM.md). */
+export type Tier = 'free' | 'premium';
+
+/** XP for each completed task. Premium doubles it. */
+export const TASK_XP: Record<Tier, number> = { free: BASE_XP, premium: BASE_XP * 2 };
+
+/**
+ * The most XP one Path can earn from tasks in a day, boosts included. Past it,
+ * tasks still count for streaks and objectives, just not for XP.
+ */
+export const DAILY_PATH_XP_CAP: Record<Tier, number> = { free: 30, premium: 60 };
+
+/** Double XP on a boosted Path (from objectives). */
+export const BOOST_MULTIPLIER = 2;
 
 /** Tasks per level stop growing here, so progress never grinds to a halt. */
 export const MAX_TASKS_PER_LEVEL = 10;
-
-/** `earlierToday` is how many completions the player already has today, on any Path. */
-export function xpForCompletion(earlierToday = 0): number {
-  return earlierToday < DAILY_XP_TASKS ? BASE_XP : 0;
-}
 
 /**
  * Tasks needed to go from `level` to `level + 1`. Quick at the start (1 task
  * at level 5, then 2, 3, 4, 5), then one more every two levels until it
  * settles at 10 tasks a level from level 18 on.
  */
+/**
+ * XP for completing a task on a Path that has already earned
+ * `earnedOnPathToday` from tasks today: the tier's rate (doubled when
+ * boosted), cut down to whatever room is left under the daily cap.
+ */
+export function xpForCompletion(earnedOnPathToday = 0, tier: Tier = 'free', boosted = false): number {
+  const xp = TASK_XP[tier] * (boosted ? BOOST_MULTIPLIER : 1);
+  return Math.max(0, Math.min(xp, DAILY_PATH_XP_CAP[tier] - earnedOnPathToday));
+}
+
 export function tasksToNextLevel(level: number): number {
   if (level < 10) return Math.max(1, level - (START_LEVEL - 1));
   return Math.min(6 + Math.floor((level - 10) / 2), MAX_TASKS_PER_LEVEL);

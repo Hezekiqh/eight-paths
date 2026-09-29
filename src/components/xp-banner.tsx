@@ -121,7 +121,9 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
           <Text style={[styles.title, levelledNow && { color: info.color }]}>
             {levelledNow ? `${info.className} — Level ${level}` : `${info.className} · Level ${level}`}
           </Text>
-          <Text style={[styles.gain, { color: info.color }]}>+{gain.gained} XP</Text>
+          <Text style={[styles.gain, { color: info.color }]}>
+            {gain.gained > 0 ? `+${gain.gained} XP` : 'XP full today'}
+          </Text>
         </View>
         <View style={styles.track}>
           <Animated.View style={[styles.fill, { backgroundColor: info.color }, fillStyle]} />

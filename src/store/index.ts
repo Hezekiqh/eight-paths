@@ -18,7 +18,6 @@ import {
   FIRST_CLIMB_LEVEL,
   overallLevelFromXp,
   totalXp,
-  BOOST_MULTIPLIER,
   addDays,
   dailyObjectives,
   isObjectiveDone,
@@ -36,9 +35,11 @@ import {
 
 import { COMPANIONS, DEFAULT_PARTY, SHARDS_TO_UNLOCK, isUnlocked, type CharacterId } from '@/story/companions';
 
+import { currentTier } from '@/premium/store';
+
 import { newId } from './ids';
 import { GOAL_XP, applyReward, type RewardResult } from './rewards';
-import { reconcileDraws as reconcile, type Owned } from './draws';
+import { reconcileDraws as reconcile, redoDrop as redo, type Owned } from './draws';
 import { SAVE_VERSION, migrateSave, sanitizeSave } from './migrations';
 
 export type GameData = {
@@ -69,6 +70,8 @@ export type GameData = {
   nextDraw: Partial<Record<Dimension, number>>;
   /** Arrivals waiting for their hatch, oldest first (a repeat is an extra copy). */
   drops: CharacterId[];
+  /** Waiting arrivals that came from a Premium redo, so they can't be redone again. */
+  redrawn: CharacterId[];
 };
 
 export type GoalDraft = Pick<Goal, 'title' | 'dimension' | 'dueDate'>;
@@ -131,6 +134,8 @@ type Actions = {
   reconcileDraws: (random?: () => number) => void;
   /** The hatch for the first waiting arrival of `id` has played. */
   finishDrop: (id: CharacterId) => void;
+  /** Premium: swaps the waiting arrival `id` for another draw. Returns who came instead, or null. */
+  redoDrop: (id: CharacterId, random?: () => number) => CharacterId | null;
   completeTutorial: () => void;
   settle: (today?: string) => void;
   resetGame: () => void;
@@ -156,6 +161,7 @@ export const initialData: GameData = {
   owned: null,
   nextDraw: {},
   drops: [],
+  redrawn: [],
 };
 
 /** Every saved field, for persisting and backups. */
@@ -176,6 +182,7 @@ export function pickData(s: GameData): GameData {
     owned,
     nextDraw,
     drops,
+    redrawn,
   } = s;
   return {
     player,
@@ -193,7 +200,14 @@ export function pickData(s: GameData): GameData {
     owned,
     nextDraw,
     drops,
+    redrawn,
   };
+}
+
+/** `list` without its first `item`. */
+function withoutOne<T>(list: T[], item: T): T[] {
+  const i = list.indexOf(item);
+  return i < 0 ? list : [...list.slice(0, i), ...list.slice(i + 1)];
 }
 
 const todayKey = () => toDateKey(new Date());
@@ -278,6 +292,7 @@ export const useGameStore = create<GameState>()(
           owned: Object.fromEntries(Object.values(DEFAULT_PARTY).map((id) => [id, 1])),
           nextDraw: {},
           drops: [],
+          redrawn: [],
         });
       },
 
@@ -287,17 +302,13 @@ export const useGameStore = create<GameState>()(
         if (!player || !quest) return { kind: 'ignored' };
 
         const xpBefore = xpByDimension([...completions, ...xpGrants])[quest.dimension];
-        const result = toggleCompletion(completions, quest, today, newId());
+        const boosted = boosts.some((b) => b.date === today && b.dimension === quest.dimension);
+        const result = toggleCompletion(completions, quest, today, newId(), { tier: currentTier(), boosted });
         if (result.kind !== 'completed') {
           set({ completions: result.completions });
           return { kind: result.kind };
         }
-        const boosted = boosts.some((b) => b.date === today && b.dimension === quest.dimension);
-        const completion = {
-          ...result.completion,
-          xp: boosted ? result.completion.xp * BOOST_MULTIPLIER : result.completion.xp,
-          characterId: party[quest.dimension],
-        };
+        const completion = { ...result.completion, characterId: party[quest.dimension] };
         set({ completions: result.completions.map((c) => (c === result.completion ? completion : c)) });
         const xpBeforeAll = totalXp([...completions, ...xpGrants]);
         const levelAfter = overallLevelFromXp(xpBeforeAll + completion.xp).level;
@@ -429,18 +440,24 @@ export const useGameStore = create<GameState>()(
       reconcileDraws: (random) => {
         const s = get();
         const pathXp = xpByDimension([...s.completions, ...s.xpGrants]);
-        const changes = reconcile(s, pathXp, random);
+        const changes = reconcile(s, pathXp, random, currentTier());
         if (changes) set(changes);
       },
 
       finishDrop: (id) =>
-        set((s) => {
-          const i = s.drops.indexOf(id);
-          return {
-            drops: i < 0 ? s.drops : [...s.drops.slice(0, i), ...s.drops.slice(i + 1)],
-            revealed: [...new Set([...(s.revealed ?? []), id])],
-          };
-        }),
+        set((s) => ({
+          drops: withoutOne(s.drops, id),
+          redrawn: withoutOne(s.redrawn, id),
+          revealed: [...new Set([...(s.revealed ?? []), id])],
+        })),
+
+      redoDrop: (id, random) => {
+        if (currentTier() !== 'premium') return null;
+        const result = redo(get(), id, random);
+        if (!result) return null;
+        set(result.changes);
+        return result.pick;
+      },
 
       completeTutorial: () =>
         set((s) =>

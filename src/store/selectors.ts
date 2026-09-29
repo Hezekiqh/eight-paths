@@ -50,7 +50,7 @@ export type CollectionEntry = {
   pathLevel: number;
   /** Shards found toward unlocking them early. */
   shards: number;
-  /** How many copies the player has (more than one once their Path is complete). */
+  /** How many copies the player has (any draw can be a duplicate). */
   copies: number;
 };
 

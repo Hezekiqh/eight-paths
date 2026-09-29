@@ -22,6 +22,8 @@ import { PixelSprite } from '@/components/pixel-sprite';
 import { TypewriterText } from '@/components/typewriter-text';
 import { CLASSES } from '@/game';
 import { haptics } from '@/haptics';
+import { premiumEnabled } from '@/premium/config';
+import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
 import {
   COMPANIONS,
@@ -232,6 +234,10 @@ function Twinkle({
 export default function RevealScreen() {
   const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();
   const finishDrop = useGameStore((s) => s.finishDrop);
+  const redoDrop = useGameStore((s) => s.redoDrop);
+  const premium = usePremium((s) => s.premium);
+  // A Premium redo is offered once per drop, never on a preview or on a drop that is already a redo.
+  const canRedo = useGameStore((s) => !preview && isCharacterId(id) && s.drops.includes(id) && !s.redrawn.includes(id));
   const flair = FLAIR[isCharacterId(id) ? COMPANIONS[id].rarity : 3];
   const SHAKE = flair.shake;
   const EYE_OPEN = flair.eye;
@@ -581,6 +587,22 @@ export default function RevealScreen() {
               style={styles.title}
             />
             <Text style={styles.hint}>Tap to continue</Text>
+            {premiumEnabled && canRedo && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={premium ? 'Redo this drop' : 'Redo this drop, with Premium'}
+                hitSlop={8}
+                onPress={() => {
+                  if (!premium) return router.push('/paywall');
+                  const pick = redoDrop(id);
+                  if (!pick) return;
+                  haptics.tap();
+                  router.replace({ pathname: '/reveal/[id]', params: { id: pick } });
+                }}
+                style={({ pressed }) => [styles.redo, pressed && { opacity: 0.7 }]}>
+                <Text style={styles.redoText}>{premium ? 'REDO' : 'REDO · PREMIUM'}</Text>
+              </Pressable>
+            )}
           </Animated.View>
         </>
       )}
@@ -672,6 +694,15 @@ const styles = StyleSheet.create({
   number: { fontFamily: fonts.bold, fontSize: 20, fontVariant: ['tabular-nums'], ...shadow },
   title: { color: WHITE, fontFamily: fonts.dialogue, fontSize: 16, lineHeight: 24, textAlign: 'center' },
   detail: { color: WHITE, fontFamily: fonts.regular, fontSize: 14, ...shadow },
+  redo: {
+    marginTop: spacing.md,
+    borderWidth: 2,
+    borderColor: WHITE,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  redoText: { color: WHITE, fontFamily: fonts.bold, fontSize: 20, letterSpacing: 1 },
   hint: { color: '#D8D2E6', fontFamily: fonts.regular, fontSize: 13, marginTop: spacing.sm, ...shadow },
   entryStage: {
     ...StyleSheet.absoluteFill,

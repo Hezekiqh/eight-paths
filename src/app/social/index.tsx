@@ -33,6 +33,8 @@ import {
   signOut,
   startSocial,
 } from '@/social/api';
+import { premiumEnabled } from '@/premium/config';
+import { usePremium } from '@/premium/store';
 import { FOUNDER_COUNT } from '@/social/config';
 import { useSocial, type Profile } from '@/social/store';
 import { USERNAME_RULES, extractFriendCode, founderLabel } from '@/social/username';
@@ -122,6 +124,9 @@ function ChooseUsername({ color }: { color: string }) {
       if (problem) return setError(problem);
       await claimUsername(name, invite);
       haptics.celebrate();
+      // Once, right after sign-up: the founder offer (or the regular one).
+      const { premium, offerSeen } = usePremium.getState();
+      if (premiumEnabled && !premium && !offerSeen) router.push('/paywall');
     } catch (e) {
       setError(message(e));
     } finally {

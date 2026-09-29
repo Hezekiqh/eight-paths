@@ -21,13 +21,14 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
       accessibilityRole="button"
       accessibilityLabel={`${formatNumber(companion.number)}, ${companion.name}, ${
         unlocked ? (inParty ? 'in your party' : info.className) : 'locked'
-      }`}
+      }${entry.copies > 1 ? `, ${entry.copies} copies` : ''}`}
       onPress={() => {
         haptics.tap();
         router.push(`/companion/${companion.id}`);
       }}
       style={({ pressed }) => [styles.card, { width }, pressed && { backgroundColor: colors.cardRaised }]}>
       {inParty && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} style={styles.partyMark} />}
+      {entry.copies > 1 && <Text style={[styles.copies, { color: info.color }]}>×{entry.copies}</Text>}
       <View style={styles.portrait}>
         <CharacterPortrait companion={companion} locked={!unlocked} animate={false} />
       </View>
@@ -36,7 +37,6 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
       </Text>
       <Text style={[styles.name, !unlocked && styles.lockedName]} numberOfLines={1}>
         {companion.name}
-        {entry.copies > 1 ? ` ×${entry.copies}` : ''}
       </Text>
       <Text style={[styles.stars, { color: RARITY_TIERS[companion.rarity].color }, !unlocked && styles.lockedName]}>
         {stars(companion.rarity)}
@@ -217,6 +217,7 @@ const styles = StyleSheet.create({
   page: { flexDirection: 'row', flexWrap: 'wrap', alignContent: 'flex-start', height: CARD_HEIGHT * 4 },
   card: { height: CARD_HEIGHT, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.sm, gap: 1 },
   partyMark: { position: 'absolute', top: spacing.sm, right: spacing.sm },
+  copies: { position: 'absolute', top: spacing.xs, left: spacing.sm, fontFamily: fonts.bold, fontSize: 16 },
   portrait: { height: 50, justifyContent: 'flex-end', alignItems: 'center' },
   number: { fontFamily: fonts.bold, fontSize: 14, fontVariant: ['tabular-nums'] },
   name: { color: colors.text, fontFamily: fonts.regular, fontSize: 12, paddingHorizontal: 2 },

@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -42,6 +42,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   // v7 replaces fixed unlock levels with random arrivals every 3–5 Path levels.
   // owned null means "work out who was already unlocked" (reconcileDraws does it).
   6: (save) => ({ ...save, owned: null, nextDraw: {}, drops: [] }),
+  // v8 adds Premium redos of waiting drops; sanitizeSave starts the list empty.
+  7: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -205,6 +207,7 @@ export function sanitizeSave(raw: unknown): GameData {
     owned: isObject(save.owned) ? cleanShards(save.owned) : null,
     nextDraw: cleanNextDraw(save.nextDraw),
     drops: asArray(save.drops).filter(isCharacterId),
+    redrawn: asArray(save.redrawn).filter(isCharacterId),
   };
 }
 

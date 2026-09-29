@@ -101,5 +101,3 @@ export function weeklyObjectives(quests: Quest[], completions: Completion[], tod
   ];
 }
 
-export const BOOST_MULTIPLIER = 2;
-

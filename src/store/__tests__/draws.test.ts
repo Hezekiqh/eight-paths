@@ -1,7 +1,16 @@
 import { levelFromXp } from '@/game';
 import { DEFAULT_PARTY, ROSTER, type CharacterId } from '@/story/companions';
 
-import { DRAW_GAP_MAX, DRAW_GAP_MIN, pickWeighted, reconcileDraws, type DrawState } from '../draws';
+import {
+  DRAW_GAP_MAX,
+  DRAW_GAP_MIN,
+  RARITY_WEIGHTS,
+  dropOdds,
+  pickWeighted,
+  reconcileDraws,
+  redoDrop,
+  type DrawState,
+} from '../draws';
 
 /** A repeatable random source. */
 function seeded(seed = 1) {
@@ -30,6 +39,7 @@ const fresh = (over: Partial<DrawState> = {}): DrawState => ({
   owned: Object.fromEntries(Object.values(DEFAULT_PARTY).map((id) => [id, 1])),
   nextDraw: {},
   drops: [],
+  redrawn: [],
   shards: {},
   revealed: [],
   ...over,
@@ -60,6 +70,18 @@ describe('reconcileDraws', () => {
     const state = fresh({ nextDraw: { physical: 8 } });
     const out = reconcileDraws(state, { ...zeroXp, physical: xpForLevel(30) }, seeded())!;
     expect(out.drops.length).toBeGreaterThanOrEqual(Math.floor((30 - 8) / DRAW_GAP_MAX) + 1);
+  });
+
+  it('can draw a duplicate before the Path is complete', () => {
+    // Own every Warrior but one: over many draws, some must still be repeats.
+    const warriors = ROSTER.filter((c) => c.dimension === 'physical');
+    const owned = Object.fromEntries(warriors.slice(1).map((c) => [c.id, 1]));
+    const out = reconcileDraws(
+      fresh({ owned, nextDraw: { physical: 8 } }),
+      { ...zeroXp, physical: xpForLevel(60) },
+      seeded(3),
+    )!;
+    expect(out.drops.some((id) => owned[id] !== undefined)).toBe(true);
   });
 
   it('gives extra copies once a Path is complete', () => {
@@ -93,7 +115,45 @@ describe('reconcileDraws', () => {
   });
 });
 
+describe('redoDrop', () => {
+  const state = (over: Partial<DrawState> = {}) =>
+    fresh({ owned: { ...fresh().owned, pip: 1 }, drops: ['pip'], ...over });
+
+  it('swaps the waiting drop for someone else from the same Path', () => {
+    const out = redoDrop(state(), 'pip', seeded())!;
+    const pick = ROSTER.find((c) => c.id === out.pick)!;
+    expect(out.pick).not.toBe('pip');
+    expect(pick.dimension).toBe(ROSTER.find((c) => c.id === 'pip')!.dimension);
+    expect(out.changes.drops).toEqual([out.pick]);
+    expect(out.changes.owned!.pip).toBeUndefined();
+    expect(out.changes.owned![out.pick]).toBeGreaterThanOrEqual(1);
+    expect(out.changes.redrawn).toEqual([out.pick]);
+  });
+
+  it('only takes back the one copy that just arrived', () => {
+    const out = redoDrop(state({ owned: { ...fresh().owned, pip: 3 } }), 'pip', seeded())!;
+    expect(out.changes.owned!.pip).toBe(2);
+  });
+
+  it("won't redo a redo, or a drop that isn't waiting", () => {
+    expect(redoDrop(state({ redrawn: ['pip'] }), 'pip', seeded())).toBeNull();
+    expect(redoDrop(state({ drops: [] }), 'pip', seeded())).toBeNull();
+  });
+});
+
 describe('pickWeighted', () => {
+  it('makes a 1★ about twice as likely with Premium odds', () => {
+    const count = (weights = RARITY_WEIGHTS.free) => {
+      const random = seeded(11);
+      let legends = 0;
+      for (let i = 0; i < 40000; i++) if (pickWeighted(ROSTER, random, weights).rarity === 1) legends++;
+      return legends;
+    };
+    const ratio = count(RARITY_WEIGHTS.premium) / count(RARITY_WEIGHTS.free);
+    expect(ratio).toBeGreaterThan(1.7);
+    expect(ratio).toBeLessThan(2.1);
+  });
+
   it('draws Commons far more often than Legendaries', () => {
     const random = seeded(7);
     const counts: Record<number, number> = {};
@@ -105,5 +165,16 @@ describe('pickWeighted', () => {
     expect(counts[4]).toBeGreaterThan(counts[3]);
     expect(counts[3]).toBeGreaterThan(counts[2]);
     expect(counts[2]).toBeGreaterThan(counts[1]);
+  });
+});
+
+describe('dropOdds', () => {
+  it('adds up to 1 on every Path, and Premium raises the 1★ chance', () => {
+    for (const d of ['physical', 'spiritual'] as const) {
+      const free = dropOdds(d, 'free');
+      const sum = Object.values(free).reduce((a, b) => a + b, 0);
+      expect(sum).toBeCloseTo(1);
+      expect(dropOdds(d, 'premium')[1]).toBeGreaterThan(free[1]);
+    }
   });
 });

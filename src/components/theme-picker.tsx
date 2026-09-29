@@ -1,9 +1,13 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PixelIcon } from '@/components/pixel-icon';
 import { haptics } from '@/haptics';
+import { premiumEnabled } from '@/premium/config';
+import { usePremium } from '@/premium/store';
 import { THEME_ID, THEMES, colors, fonts, radius, setTheme, spacing, type ThemeId } from '@/theme';
+import { DEFAULT_THEME } from '@/theme/palettes';
 
 /** A tiny window drawn in the theme's own colours: background, frame, text and class dots. */
 function Swatch({ id }: { id: ThemeId }) {
@@ -28,14 +32,18 @@ function Swatch({ id }: { id: ThemeId }) {
 }
 
 /**
- * Every theme, all unlocked for now. Picking one saves it and restarts the
- * app so every screen redraws in the new colours.
+ * Every theme. Free players have the default (and keep whichever theme they
+ * already had); Premium unlocks the rest. Picking one saves it and restarts
+ * the app so every screen redraws in the new colours.
  */
 export function ThemePicker() {
   const [applying, setApplying] = useState<ThemeId | null>(null);
+  const premium = usePremium((s) => s.premium);
+  const locked = (id: ThemeId) => premiumEnabled && !premium && id !== DEFAULT_THEME && id !== THEME_ID;
 
   const choose = (id: ThemeId) => {
     if (id === THEME_ID || applying) return;
+    if (locked(id)) return router.push('/paywall');
     haptics.success();
     setApplying(id);
     setTheme(id).catch(() => setApplying(null));
@@ -51,7 +59,7 @@ export function ThemePicker() {
             key={id}
             accessibilityRole="radio"
             accessibilityState={{ selected: current }}
-            accessibilityLabel={`${t.name} theme. ${t.description}`}
+            accessibilityLabel={`${t.name} theme. ${t.description}${locked(id) ? ' Premium.' : ''}`}
             onPress={() => choose(id)}
             style={({ pressed }) => [
               styles.row,
@@ -67,11 +75,17 @@ export function ThemePicker() {
               <ActivityIndicator color={colors.accent} />
             ) : current ? (
               <PixelIcon name="heart" color={colors.accent} size={24} />
+            ) : locked(id) ? (
+              <PixelIcon name="star" color={colors.textFaint} size={24} />
             ) : null}
           </Pressable>
         );
       })}
-      <Text style={styles.note}>All themes are unlocked for now. Changing theme restarts the app for a moment.</Text>
+      <Text style={styles.note}>
+        {premiumEnabled && !premium
+          ? 'Starred themes come with Premium. Changing theme restarts the app for a moment.'
+          : 'Changing theme restarts the app for a moment.'}
+      </Text>
     </View>
   );
 }

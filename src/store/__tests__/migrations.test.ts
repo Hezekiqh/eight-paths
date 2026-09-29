@@ -47,7 +47,15 @@ const valid = {
   owned: { brannoc: 1, quill: 1, ottilie: 2 },
   nextDraw: { intellectual: 12 },
   drops: ['ottilie'],
+  redrawn: [],
 };
+
+describe('v8: Premium redos', () => {
+  it('upgrades a v7 save with no redos yet', () => {
+    const { redrawn: _r, ...v7 } = valid;
+    expect(migrateSave(v7, 7).redrawn).toEqual([]);
+  });
+});
 
 describe('v7: random arrivals', () => {
   it('upgrades a v6 save so reconcileDraws works out who was already unlocked', () => {
@@ -82,6 +90,7 @@ describe('sanitizeSave', () => {
         owned: null,
         nextDraw: {},
         drops: [],
+        redrawn: [],
       });
     }
   });

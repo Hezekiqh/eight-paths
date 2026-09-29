@@ -6,7 +6,19 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { ClassChips } from '@/components/class-chips';
 import { ModalHeader } from '@/components/modal-header';
 import { Segmented } from '@/components/segmented';
-import { CLASSES, DAILY, WEEKDAYS, scheduleKind, type Dimension, type ScheduleKind } from '@/game';
+import { NoteBox } from '@/components/note-box';
+import {
+  CLASSES,
+  DAILY,
+  FREE_HABIT_LIMIT,
+  WEEKDAYS,
+  atHabitLimit,
+  scheduleKind,
+  type Dimension,
+  type ScheduleKind,
+} from '@/game';
+import { premiumEnabled } from '@/premium/config';
+import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
 import { usePlayer, useQuest } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
@@ -35,11 +47,14 @@ export default function QuestEditor() {
   const addQuest = useGameStore((s) => s.addQuest);
   const updateQuest = useGameStore((s) => s.updateQuest);
   const archiveQuest = useGameStore((s) => s.archiveQuest);
+  const premium = usePremium((s) => s.premium);
+  // A free player at the limit can still edit, just not add. (Only once Premium can be bought.)
+  const limited = useGameStore(
+    (s) => !existing && premiumEnabled && atHabitLimit(s.quests, premium ? 'premium' : 'free'),
+  );
 
   const [title, setTitle] = useState(existing?.title ?? '');
-  const [dimension, setDimension] = useState<Dimension>(
-    existing?.dimension ?? player?.classDimension ?? 'physical',
-  );
+  const [dimension, setDimension] = useState<Dimension>(existing?.dimension ?? player?.classDimension ?? 'physical');
   const [kind, setKind] = useState<ScheduleKind>(existing ? scheduleKind(existing.repeatDays) : 'daily');
   const [customDays, setCustomDays] = useState<number[]>(
     existing && scheduleKind(existing.repeatDays) === 'custom' ? existing.repeatDays : [1, 3, 5],
@@ -47,7 +62,7 @@ export default function QuestEditor() {
 
   const info = CLASSES[dimension];
   const repeatDays = kind === 'daily' ? DAILY : kind === 'weekdays' ? WEEKDAYS : customDays;
-  const canSave = title.trim().length > 0 && repeatDays.length > 0;
+  const canSave = title.trim().length > 0 && repeatDays.length > 0 && !limited;
 
   const save = () => {
     const draft = { title, dimension, repeatDays };
@@ -84,6 +99,13 @@ export default function QuestEditor() {
         color={info.color}
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {limited && (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/paywall')}>
+            <NoteBox symbol="lock.fill" color={info.color}>
+              {`You have ${FREE_HABIT_LIMIT} habits, the most a free player can keep. Archive one to make room, or tap here to upgrade to Premium for unlimited habits.`}
+            </NoteBox>
+          </Pressable>
+        )}
         <Text style={styles.label}>Quest</Text>
         <TextInput
           value={title}

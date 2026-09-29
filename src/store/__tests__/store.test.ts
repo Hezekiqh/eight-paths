@@ -1,3 +1,6 @@
+import { DIMENSIONS } from '@/game';
+import { usePremium } from '@/premium/store';
+
 import { useGameStore, initialData } from '../index';
 import {
   selectAllQuestGroups,
@@ -10,7 +13,10 @@ import {
 
 const today = '2026-09-26';
 
-beforeEach(() => useGameStore.setState(initialData));
+beforeEach(() => {
+  useGameStore.setState(initialData);
+  usePremium.setState({ premium: false });
+});
 
 function start() {
   useGameStore.getState().startGame(
@@ -102,22 +108,40 @@ describe('game store', () => {
     expect(second.kind === 'completed' && second.milestone).toBeNull();
   });
 
-  it('stops giving XP after the first 10 tasks of the day, on any Path', () => {
-    start();
-    for (let i = 0; i < 12; i += 1) {
-      useGameStore
+  it('caps XP at 30 a Path a day, or 60 with Premium', () => {
+    const gainsFor = (count: number) => {
+      start();
+      for (let i = 0; i < count; i += 1) {
+        useGameStore.getState().addQuest({ title: `Q${i}`, dimension: 'physical', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+      }
+      return useGameStore
         .getState()
-        .addQuest({ title: `Q${i}`, dimension: i % 2 ? 'physical' : 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
-    }
-    const ids = useGameStore
-      .getState()
-      .quests.slice(-12)
-      .map((q) => q.id);
-    const gains = ids.map((id) => {
-      const o = useGameStore.getState().toggleQuest(id, today);
-      return o.kind === 'completed' ? o.gain.gained : -1;
-    });
-    expect(gains).toEqual([10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0]);
+        .quests.slice(-count)
+        .map((q) => {
+          const o = useGameStore.getState().toggleQuest(q.id, today);
+          return o.kind === 'completed' ? o.gain.gained : -1;
+        });
+    };
+    expect(gainsFor(4)).toEqual([10, 10, 10, 0]);
+    // Another Path still has its own 30 to earn.
+    const other = useGameStore.getState().quests.find((q) => q.dimension !== 'physical')!;
+    const o = useGameStore.getState().toggleQuest(other.id, today);
+    expect(o.kind === 'completed' && o.gain.gained).toBe(10);
+
+    usePremium.setState({ premium: true });
+    expect(gainsFor(4)).toEqual([20, 20, 20, 0]);
+  });
+
+  it('only lets Premium redo a waiting drop', () => {
+    start();
+    useGameStore.setState({ drops: ['pip'], owned: { ...useGameStore.getState().owned, pip: 1 } });
+    expect(useGameStore.getState().redoDrop('pip')).toBeNull();
+    usePremium.setState({ premium: true });
+    const pick = useGameStore.getState().redoDrop('pip')!;
+    expect(useGameStore.getState().drops).toEqual([pick]);
+    expect(useGameStore.getState().redoDrop(pick)).toBeNull();
+    useGameStore.getState().finishDrop(pick);
+    expect(useGameStore.getState().redrawn).toEqual([]);
   });
 
   it('stamps the archive date so past days still count as due', () => {
@@ -324,9 +348,11 @@ describe('loading a saved game', () => {
 
   it('reports overall level-ups and makes every tenth level a milestone', () => {
     start();
-    // Overall level 10 takes 10 tasks (2 a level from 5).
+    // Overall level 10 takes 10 tasks (2 a level from 5), spread out to stay under each Path's daily cap.
     for (let i = 0; i < 10; i += 1) {
-      useGameStore.getState().addQuest({ title: `Q${i}`, dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+      useGameStore
+        .getState()
+        .addQuest({ title: `Q${i}`, dimension: DIMENSIONS[i % 8], repeatDays: [0, 1, 2, 3, 4, 5, 6] });
     }
     const ids = useGameStore
       .getState()

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useInviteRewards } from '@/social/rewards';
+import { usePurchases } from '@/premium/purchases';
 import { useSocialSync } from '@/social/sync';
 import {
   useCharacterDraws,
@@ -22,6 +23,7 @@ export default function TabsLayout() {
   useRevealQueue();
   useReminderSync(today);
   useSocialSync();
+  usePurchases();
   useInviteRewards();
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);
