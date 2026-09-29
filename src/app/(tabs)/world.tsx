@@ -5,13 +5,15 @@ import { AppState, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { DialogueBox, type Dialogue } from '@/components/world/dialogue-box';
 import { PauseMenu } from '@/components/world/pause-menu';
+import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { useGameStore } from '@/store';
-import { useObjectives, useToday } from '@/store/hooks';
+import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { COMPANIONS } from '@/story/companions';
-import { FACINGS, MAPS, TILE, objectAt, tileAt, withoutCharacter, type WorldMap } from '@/world/maps';
+import { FACINGS, MAPS, TILE, objectAt, tileAt, withoutCharacter, type MapId, type WorldMap } from '@/world/maps';
+import { EXITS, describeRequirement, howToProgress, standing, type XpTotals } from '@/world/progress';
 import { characterQuestions } from '@/world/talk';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { worldHero } from '@/world/hero';
@@ -91,6 +93,20 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
 
   const [focused, setFocused] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [you, setYou] = useState({ x: 0, y: 0 });
+  const discovered = useWorldStore((s) => s.discovered);
+  const discover = useWorldStore((s) => s.discover);
+  const xp = useXpTotals();
+  const xpRef = useRef(xp);
+  useEffect(() => {
+    xpRef.current = xp;
+  }, [xp]);
+
+  // Setting foot somewhere puts it on the World map.
+  useEffect(() => {
+    discover(map.id as MapId);
+  }, [map, discover]);
   const [dialogue, setDialogue] = useState<Dialogue | null>(null);
 
   // Points per art pixel: about eight and a half tiles top to bottom, in whole steps so pixels stay sharp.
@@ -124,7 +140,13 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
     sim.frozen.set(frozen);
   }, [frozen, sim]);
 
-  const act = useAct(map, sim, setDialogue, save);
+  const openBoard = useCallback(() => {
+    save();
+    keepSideways = true;
+    router.push('/quest-board');
+  }, [save]);
+
+  const act = useAct(map, sim, setDialogue, save, xpRef);
   const board = map.objects.find((o) => o.type === 'board');
 
   return (
@@ -153,14 +175,30 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
       {dialogue && <DialogueBox dialogue={dialogue} onClose={() => setDialogue(null)} />}
       {paused && (
         <PauseMenu
+          map={map.id as MapId}
           mapName={map.name}
           controls={controls}
           onControls={setControls}
           onResume={() => setPaused(false)}
+          onOpenMap={() => {
+            setYou({ x: sim.x.get(), y: sim.y.get() });
+            setMapOpen(true);
+          }}
+          onOpenBoard={openBoard}
           onLeave={() => {
             setPaused(false);
             router.navigate('/');
           }}
+        />
+      )}
+      {mapOpen && (
+        <WorldMapView
+          map={map}
+          you={you}
+          discovered={discovered}
+          width={width}
+          height={height}
+          onClose={() => setMapOpen(false)}
         />
       )}
     </View>
@@ -170,7 +208,13 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
 const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
 
 /** What A (or a tap) does: talk to whoever's in front, open the quest board, or examine the tile. */
-function useAct(map: WorldMap, sim: WorldSim, setDialogue: (d: Dialogue) => void, save: () => void) {
+function useAct(
+  map: WorldMap,
+  sim: WorldSim,
+  setDialogue: (d: Dialogue) => void,
+  save: () => void,
+  xp: { current: XpTotals },
+) {
   const busy = useRef(false);
   return useCallback(() => {
     if (busy.current) return;
@@ -198,9 +242,25 @@ function useAct(map: WorldMap, sim: WorldSim, setDialogue: (d: Dialogue) => void
       setTimeout(() => (busy.current = false), 600);
       return;
     }
-    const lines = map.examine[tileAt(map, tx, ty)];
+    const tile = tileAt(map, tx, ty);
+    // A way out says what it needs, in real habits.
+    const exit = EXITS.find((e) => e.from === map.id && e.tile === tile);
+    if (exit) {
+      const s = standing(exit.needs, xp.current);
+      setDialogue({
+        lines: s.met
+          ? [`${exit.label} gives a little under your hand.`, "Whatever lies beyond isn't ready for you yet."]
+          : [
+              `${exit.label}. It won't budge. Not yet.`,
+              `It needs ${describeRequirement(exit.needs)}. You're Lv ${s.have}.`,
+              howToProgress(s),
+            ],
+      });
+      return;
+    }
+    const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save]);
+  }, [map, sim, setDialogue, save, xp]);
 }
 
 const styles = StyleSheet.create({

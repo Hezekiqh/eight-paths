@@ -19,6 +19,7 @@ import {
   selectMilestones,
   selectMonthComparison,
   selectOverallProgress,
+  selectXpTotals,
   selectProgressSummary,
   selectReminderState,
   selectQuest,
@@ -86,6 +87,11 @@ export function useDimensionStats(today: string) {
 export function useLearnedReminderTime(): string | null {
   const completions = useGameStore((s) => s.completions);
   return useMemo(() => usualReminderTime(completions), [completions]);
+}
+
+export function useXpTotals() {
+  const data = useGameData();
+  return useMemo(() => selectXpTotals(data), [data]);
 }
 
 export function useOverallProgress() {

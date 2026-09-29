@@ -19,6 +19,9 @@ type WorldState = {
   /** The one party member who walks the World (null: your class's companion). */
   hero: CharacterId | null;
   setHero: (hero: CharacterId) => void;
+  /** Maps the player has set foot in: the World map shows only these. */
+  discovered: MapId[];
+  discover: (map: MapId) => void;
   setControls: (controls: ControlScheme) => void;
   savePosition: (position: WorldPosition) => void;
 };
@@ -31,14 +34,9 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   const out: Partial<WorldState> = {};
   if (data.controls === 'joystick' || data.controls === 'touchpad') out.controls = data.controls;
   if (isCharacterId(data.hero)) out.hero = data.hero;
+  if (Array.isArray(data.discovered)) out.discovered = data.discovered.filter(isMapId);
   const p = data.position as Record<string, unknown> | null | undefined;
-  if (
-    p &&
-    isMapId(p.map) &&
-    Number.isFinite(p.x) &&
-    Number.isFinite(p.y) &&
-    FACINGS.includes(p.facing as Facing)
-  ) {
+  if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
   }
   return out;
@@ -55,6 +53,8 @@ export const useWorldStore = create<WorldState>()(
       position: null,
       hero: null,
       setHero: (hero) => set({ hero }),
+      discovered: [],
+      discover: (map) => set((s) => (s.discovered.includes(map) ? s : { discovered: [...s.discovered, map] })),
       setControls: (controls) => set({ controls }),
       savePosition: (position) => set({ position }),
     }),
@@ -62,7 +62,7 @@ export const useWorldStore = create<WorldState>()(
       name: 'eight-paths-world',
       version: SAVE_VERSION,
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ controls: s.controls, position: s.position, hero: s.hero }),
+      partialize: (s) => ({ controls: s.controls, position: s.position, hero: s.hero, discovered: s.discovered }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),
     },

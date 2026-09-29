@@ -116,6 +116,12 @@ export type QuestView = {
 /** Everything that counts toward levels: quest completions plus bonus XP. */
 const allXp = (data: GameData) => [...data.completions, ...data.xpGrants];
 
+/** All the player's XP, overall and per Path: what the World's gates check. */
+export function selectXpTotals(data: GameData): { total: number; byPath: Record<Dimension, number> } {
+  const xp = allXp(data);
+  return { total: totalXp(xp), byPath: xpByDimension(xp) };
+}
+
 export function selectDimensionStats(data: GameData, today: string): DimensionStats[] {
   const xp = xpByDimension(allXp(data));
   const since = data.player?.onboardedAt ?? today;
