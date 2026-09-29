@@ -7,12 +7,13 @@ import type { MapId } from '@/world/maps';
 import type { ControlScheme } from '@/world/store';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
-const SCHEMES = [
+/** The two ways to walk, shared with the World menu's Settings. */
+export const SCHEMES = [
   { value: 'joystick', label: 'Joystick' },
   { value: 'touchpad', label: 'Touch pad' },
 ] as const;
 
-const HINTS: Record<ControlScheme, string> = {
+export const HINTS: Record<ControlScheme, string> = {
   joystick: 'Drag the stick at bottom left to walk. A talks and examines.',
   touchpad: 'Put your thumb down anywhere and drag to walk. Tap, or press A, to talk and examine.',
 };

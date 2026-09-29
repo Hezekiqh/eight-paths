@@ -1,8 +1,10 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Segmented } from '@/components/segmented';
+import { SettingsPanel } from '@/components/settings-panel';
 import { isObjectiveDone } from '@/game';
 import { haptics } from '@/haptics';
 import { useGameStore } from '@/store';
@@ -15,13 +17,20 @@ import { EXITS, FINAL_GOAL, describeRequirement, howToProgress, standing } from 
 import { ROADMAP } from '@/world/roadmap';
 import { useWorldStore } from '@/world/store';
 
+const TABS = [
+  { value: 'world', label: 'World' },
+  { value: 'settings', label: 'Settings' },
+] as const;
+type Tab = (typeof TABS)[number]['value'];
+
 /** Lore entries shown before "Show all". */
 const LORE_PREVIEW = 4;
 
 /**
- * What the World tab opens on: an upright pause menu. Jump back into the
- * sideways game, see what your habits need to do next, read what people have
- * told you, and what's still being built.
+ * What the World tab opens on: an upright pause menu. The World tab jumps
+ * back into the sideways game and shows what your habits need to do next,
+ * what people have told you, and what's still being built. The Settings tab
+ * holds every setting in the app.
  */
 export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const position = useWorldStore((s) => s.position);
@@ -33,6 +42,15 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const walker = worldHero(picked, party, classDimension);
   const heroName = walker === 'keeper' ? 'The Keeper' : COMPANIONS[walker].name;
   const place = MAPS[position?.map ?? 'archive'].name;
+  // `/world?tab=settings` opens straight on Settings (the Character tab links here).
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const asked: Tab = params.tab === 'settings' ? 'settings' : 'world';
+  const [tab, setTab] = useState<Tab>(asked);
+  const [lastAsked, setLastAsked] = useState(asked);
+  if (asked !== lastAsked) {
+    setLastAsked(asked);
+    setTab(asked);
+  }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -41,22 +59,29 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
         <Text style={styles.place}>
           {heroName} · {place}
         </Text>
+        <Segmented options={TABS} value={tab} onChange={setTab} color={colors.accent} />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityHint="Opens the game. Turn your phone sideways."
-          onPress={() => {
-            haptics.tap();
-            onPlay();
-          }}
-          style={({ pressed }) => [styles.play, pressed && { opacity: 0.8 }]}>
-          <Text style={styles.playLabel}>{position ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
-          <Text style={styles.playHint}>Turn your phone sideways</Text>
-        </Pressable>
+        {tab === 'settings' ? (
+          <SettingsPanel />
+        ) : (
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityHint="Opens the game. Turn your phone sideways."
+              onPress={() => {
+                haptics.tap();
+                onPlay();
+              }}
+              style={({ pressed }) => [styles.play, pressed && { opacity: 0.8 }]}>
+              <Text style={styles.playLabel}>{position ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
+              <Text style={styles.playHint}>Turn your phone sideways</Text>
+            </Pressable>
 
-        <Objectives discovered={discovered} />
-        <Lore heard={heard} />
-        <ComingSoon />
+            <Objectives discovered={discovered} />
+            <Lore heard={heard} />
+            <ComingSoon />
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

@@ -8,25 +8,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { haptics } from '@/haptics';
 import { GoalRow } from '@/components/goal-row';
 import { ObjectiveRow } from '@/components/objective-row';
-import { ThemePicker } from '@/components/theme-picker';
 import { BOOST_MULTIPLIER, CLASSES, isObjectiveDone } from '@/game';
 import { useGameStore } from '@/store';
 import { useGoals, useObjectives, useToday } from '@/store/hooks';
 import type { ObjectiveView } from '@/store/selectors';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
-type Category = 'daily' | 'weekly' | 'personal' | 'themes';
+type Category = 'daily' | 'weekly' | 'personal';
 
 const CATEGORIES: { key: Category; label: string; symbol: SymbolViewProps['name']; blurb: string }[] = [
   { key: 'daily', label: 'Daily', symbol: 'sun.max.fill', blurb: 'New objectives every morning.' },
   { key: 'weekly', label: 'Weekly', symbol: 'calendar', blurb: 'Runs Monday to Sunday.' },
   { key: 'personal', label: 'Personal', symbol: 'pencil.and.scribble', blurb: 'Goals you set yourself.' },
-  { key: 'themes', label: 'Themes', symbol: 'paintpalette.fill', blurb: 'Make the game your own.' },
 ];
 
 /**
- * The quest board in the Archive: daily and weekly objectives, personal goals
- * and themes. Opened from the World, so it stays sideways like the game.
+ * The quest board in the Archive: daily and weekly objectives and personal
+ * goals (themes live in Settings). Opened from the World, so it stays
+ * sideways like the game.
  */
 export default function QuestBoardScreen() {
   useFocusEffect(
@@ -50,7 +49,7 @@ export default function QuestBoardScreen() {
   };
 
   const waiting = (key: Category) =>
-    key === 'personal' || key === 'themes' ? 0 : objectives[key].filter((o) => isObjectiveDone(o) && !o.claimed).length;
+    key === 'personal' ? 0 : objectives[key].filter((o) => isObjectiveDone(o) && !o.claimed).length;
   const current = CATEGORIES.find((c) => c.key === category)!;
   const open = goals.filter((g) => !g.completedAt);
   const finished = goals.filter((g) => g.completedAt);
@@ -104,7 +103,7 @@ export default function QuestBoardScreen() {
       <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent}>
         <View style={styles.panelHeader}>
           <View>
-            <Text style={styles.panelTitle}>{category === 'themes' ? 'Themes' : `${current.label} objectives`}</Text>
+            <Text style={styles.panelTitle}>{`${current.label} objectives`}</Text>
             <Text style={styles.blurb}>{current.blurb}</Text>
           </View>
           <View style={styles.headerActions}>
@@ -134,9 +133,7 @@ export default function QuestBoardScreen() {
           </View>
         </View>
 
-        {category === 'themes' ? (
-          <ThemePicker />
-        ) : category === 'personal' ? (
+        {category === 'personal' ? (
           goals.length === 0 ? (
             <Text style={styles.empty}>
               Write down something you&apos;re working toward: run a 5K, pay off a card, call home more. Pick a Path and

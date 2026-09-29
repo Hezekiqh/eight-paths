@@ -1,65 +1,27 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { SymbolView } from 'expo-symbols';
-import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { CollectionGrid } from '@/components/collection-grid';
-import { LevelUp } from '@/components/level-up';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
-import { premiumEnabled } from '@/premium/config';
-import { usePremium } from '@/premium/store';
-import { fetchMyValue, shareFriendCode } from '@/social/api';
+import { fetchMyValue } from '@/social/api';
 import { founderLabel } from '@/social/username';
 import { socialEnabled } from '@/social/config';
 import { useSocial } from '@/social/store';
 import { XpBar } from '@/components/xp-bar';
-import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
-import { ensureReminderPermission, sendTestCall } from '@/notifications';
-import { useGameStore } from '@/store';
-import { useClassInfo, useCollection, useLearnedReminderTime, useOverallProgress, usePlayer } from '@/store/hooks';
-import { haptics } from '@/haptics';
-import { ROSTER, rarityLabel, type CharacterId } from '@/story/companions';
-import { colors, fonts, radius, spacing, windowStyle, theme } from '@/theme';
-import { useTour } from '@/tutorial/tour';
-
-/** "7:25 PM", in the phone's own clock style. */
-function clock(time: string): string {
-  const { hour, minute } = parseTime(time);
-  const date = new Date();
-  date.setHours(hour, minute, 0, 0);
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
-function openSupport() {
-  Alert.alert(
-    '988 Suicide & Crisis Lifeline',
-    'Free, confidential support, 24/7, in the US. If you are in immediate danger, call 911.',
-    [
-      { text: 'Call 988', onPress: () => Linking.openURL('tel:988') },
-      { text: 'Text 988', onPress: () => Linking.openURL('sms:988') },
-      { text: 'Cancel', style: 'cancel' },
-    ],
-  );
-}
+import { MAX_REST_TOKENS } from '@/game';
+import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 export default function CharacterScreen() {
   const player = usePlayer();
   const classInfo = useClassInfo();
   const overall = useOverallProgress();
   const collection = useCollection();
-  const setNotificationTime = useGameStore((s) => s.setNotificationTime);
-  const setSmartReminders = useGameStore((s) => s.setSmartReminders);
-  const learnedTime = useLearnedReminderTime();
-  const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
-  const exportSave = useGameStore((s) => s.exportSave);
-  const replayTour = useTour((s) => s.replay);
   const profile = useSocial((s) => s.profile);
-  const premium = usePremium((s) => s.premium);
   const [value, setValue] = useState<number | null>(null);
-  const [demoLevelUp, setDemoLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
-  const closeDemo = useCallback(() => setDemoLevelUp(null), []);
 
   // Collection value shifts as other players wake heroes, so refresh on every visit.
   useFocusEffect(
@@ -75,21 +37,10 @@ export default function CharacterScreen() {
     }, [profile]),
   );
 
-  const shareBackup = () => {
-    Share.share({ title: 'Eight Paths backup', message: exportSave() }).catch(() =>
-      Alert.alert('Backup failed', 'The share sheet could not open. Please try again.'),
-    );
-  };
-
   if (!player || !classInfo) return null;
-
-  const { hour, minute } = parseTime(player.notificationTime);
-  const reminder = new Date();
-  reminder.setHours(hour, minute, 0, 0);
 
   return (
     <Screen>
-      {demoLevelUp && <LevelUp {...demoLevelUp} onDone={closeDemo} />}
       <View style={[styles.hero, { borderColor: classInfo.color }]}>
         <View style={styles.heroTop}>
           <View style={[styles.emblem, { borderColor: classInfo.color }]}>
@@ -155,192 +106,15 @@ export default function CharacterScreen() {
         </View>
       )}
 
-      <Text style={styles.section}>SETTINGS</Text>
-      <View style={styles.list}>
-        {premiumEnabled && (
-          <>
-            <SettingsRow
-              icon="star"
-              iconColor={classInfo.color}
-              title="Eight Paths Premium"
-              subtitle={premium ? 'Active · thank you' : 'Support the game and lore by upgrading to Premium'}
-              onPress={() => router.push('/paywall')}
-            />
-            <View style={styles.divider} />
-          </>
-        )}
-        {profile && (
-          <>
-            <SettingsRow
-              icon="share"
-              iconColor={classInfo.color}
-              title="Share friend code"
-              subtitle={`${profile.friendCode} · friends who join with it wake a hero for you`}
-              onPress={() => shareFriendCode(profile.friendCode)}
-            />
-            <View style={styles.divider} />
-          </>
-        )}
+      <View style={[styles.list, { marginTop: spacing.lg }]}>
         <SettingsRow
-          icon="bell"
+          icon="gamepad"
           iconColor={classInfo.color}
-          title="At my usual time"
-          subtitle={
-            learnedTime
-              ? `The Keeper calls around ${clock(learnedTime)}, half an hour before you usually start`
-              : `Learning when you play. Until then, the Keeper calls at ${clock(player.notificationTime)}.`
-          }
-          accessory={
-            <Switch
-              value={player.smartReminders}
-              onValueChange={(on) => {
-                setSmartReminders(on);
-                ensureReminderPermission();
-              }}
-              trackColor={{ true: classInfo.color }}
-            />
-          }
+          title="Settings"
+          subtitle="Themes, controls, reminders and more, in the World menu"
+          onPress={() => router.navigate({ pathname: '/world', params: { tab: 'settings' } })}
         />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="bell"
-          iconColor={classInfo.color}
-          title={player.smartReminders ? 'Set time' : 'Reminder time'}
-          subtitle={
-            player.smartReminders
-              ? 'Picking a time turns off "at my usual time"'
-              : "One call a day, skipped once you've played"
-          }
-          accessory={
-            <DateTimePicker
-              value={reminder}
-              mode="time"
-              display="compact"
-              themeVariant={theme.dark ? 'dark' : 'light'}
-              accentColor={classInfo.color}
-              minuteInterval={5}
-              onValueChange={(_, date) => {
-                setNotificationTime(formatTime(date.getHours(), date.getMinutes()));
-                ensureReminderPermission();
-              }}
-            />
-          }
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="vibrate"
-          iconColor={classInfo.color}
-          title="Vibration"
-          subtitle="Taps, typing and level-ups"
-          accessory={
-            <Switch
-              value={player.hapticsEnabled}
-              onValueChange={(on) => {
-                setHapticsEnabled(on);
-                if (on) haptics.success();
-              }}
-              trackColor={{ true: classInfo.color }}
-            />
-          }
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="repeat"
-          iconColor={classInfo.color}
-          title="Change class"
-          subtitle={`Currently ${classInfo.className}`}
-          onPress={() => router.push('/change-class')}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="map"
-          iconColor={classInfo.color}
-          title="Replay the tour"
-          subtitle="Let the Keeper show you around again"
-          onPress={() => {
-            replayTour();
-            router.navigate('/');
-          }}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="upload"
-          iconColor={classInfo.color}
-          title="Back up progress"
-          subtitle="Save a copy to Notes, Files or email. Your progress only lives on this phone."
-          onPress={shareBackup}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="download"
-          iconColor={classInfo.color}
-          title="Restore from backup"
-          subtitle="Replace this phone's progress with a backup"
-          onPress={() => router.push('/backup')}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="heart"
-          iconColor={colors.danger}
-          title="Get support"
-          subtitle="Call or text 988 · Suicide & Crisis Lifeline (US)"
-          onPress={openSupport}
-        />
-        {/* Development builds only: never ships to the App Store. */}
-        {__DEV__ && (
-          <>
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="bell"
-              iconColor={classInfo.color}
-              title="The Keeper's record (dev)"
-              subtitle="Which notification lines get opened, and what's scheduled next"
-              onPress={() => router.push('/keeper-stats')}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="bell"
-              iconColor={classInfo.color}
-              title="Test a Keeper call (dev)"
-              subtitle="Knocks in 5 seconds. Long-press it for the Done buttons."
-              onPress={() => sendTestCall()}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="star"
-              iconColor={classInfo.color}
-              title="Test level-up (dev)"
-              subtitle="Plays the level-up for a random party member. Doesn't change your save."
-              onPress={() => {
-                const members = collection.entries.filter((e) => e.inParty);
-                const pick = members[Math.floor(Math.random() * members.length)];
-                setDemoLevelUp({ characterId: pick.companion.id, level: pick.progress.level + 1 });
-              }}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="zap"
-              iconColor={classInfo.color}
-              title="Test character reveal (dev)"
-              subtitle="Pick a rarity to see its hatch (1★ is the fanciest). Doesn't change your save."
-              onPress={() => {
-                const play = (r: number) => {
-                  const pool = ROSTER.filter((c) => c.rarity === r);
-                  const pick = pool[Math.floor(Math.random() * pool.length)];
-                  router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
-                };
-                Alert.alert('Test a hatch', 'Which rarity?', [
-                  ...([1, 2, 3, 4, 5] as const).map((r) => ({ text: rarityLabel(r), onPress: () => play(r) })),
-                  { text: 'Cancel', style: 'cancel' as const },
-                ]);
-              }}
-            />
-          </>
-        )}
       </View>
-      <Text style={styles.disclaimer}>
-        Eight Paths is a habit game. It is not a medical, clinical or mental health service.
-      </Text>
     </Screen>
   );
 }
@@ -377,6 +151,13 @@ const styles = StyleSheet.create({
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   sectionCount: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 56 },
+  moved: {
+    color: colors.textFaint,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: spacing.md,
+  },
   disclaimer: {
     color: colors.textFaint,
     fontFamily: fonts.regular,
