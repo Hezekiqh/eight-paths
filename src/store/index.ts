@@ -86,6 +86,8 @@ export type ToggleOutcome =
       milestone: Milestone | null;
       /** The party member on this Path reached a new level. */
       characterLeveledUp: boolean;
+      /** Who levelled up and the level they reached, for the level-up moment. */
+      characterLevelUp: { characterId: CharacterId; level: number } | null;
       /** The overall level just reached, if this task crossed one. */
       overallLevelUp: number | null;
     }
@@ -280,8 +282,12 @@ export const useGameStore = create<GameState>()(
         const characterXp = [...completions, ...xpGrants]
           .filter((c) => (c.characterId ?? DEFAULT_PARTY[c.dimension]) === completion.characterId)
           .reduce((sum, c) => sum + c.xp, 0);
+        const characterGain = describeXpGain(characterXp, completion.xp);
         return {
-          characterLeveledUp: describeXpGain(characterXp, completion.xp).leveledUp,
+          characterLeveledUp: characterGain.leveledUp,
+          characterLevelUp: characterGain.leveledUp
+            ? { characterId: completion.characterId, level: characterGain.after.level }
+            : null,
           kind: 'completed',
           completionId: completion.id,
           dimension: quest.dimension,

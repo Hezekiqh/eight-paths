@@ -5,6 +5,7 @@ import { SymbolView } from 'expo-symbols';
 import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CollectionGrid } from '@/components/collection-grid';
+import { LevelUp } from '@/components/level-up';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
 import { fetchMyValue, shareFriendCode } from '@/social/api';
@@ -17,7 +18,7 @@ import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
-import { ROSTER } from '@/story/companions';
+import { ROSTER, type CharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing, windowStyle, theme } from '@/theme';
 
 function openSupport() {
@@ -42,6 +43,8 @@ export default function CharacterScreen() {
   const exportSave = useGameStore((s) => s.exportSave);
   const profile = useSocial((s) => s.profile);
   const [value, setValue] = useState<number | null>(null);
+  const [demoLevelUp, setDemoLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
+  const closeDemo = useCallback(() => setDemoLevelUp(null), []);
 
   // Collection value shifts as other players wake heroes, so refresh on every visit.
   useFocusEffect(
@@ -71,6 +74,7 @@ export default function CharacterScreen() {
 
   return (
     <Screen>
+      {demoLevelUp && <LevelUp {...demoLevelUp} onDone={closeDemo} />}
       <View style={[styles.hero, { borderColor: classInfo.color }]}>
         <View style={styles.heroTop}>
           <View style={[styles.emblem, { borderColor: classInfo.color }]}>
@@ -222,6 +226,18 @@ export default function CharacterScreen() {
         {/* Development builds only: never ships to the App Store. */}
         {__DEV__ && (
           <>
+            <View style={styles.divider} />
+            <SettingsRow
+              icon="star"
+              iconColor={classInfo.color}
+              title="Test level-up (dev)"
+              subtitle="Plays the level-up for a random party member. Doesn't change your save."
+              onPress={() => {
+                const members = collection.entries.filter((e) => e.inParty);
+                const pick = members[Math.floor(Math.random() * members.length)];
+                setDemoLevelUp({ characterId: pick.companion.id, level: pick.progress.level + 1 });
+              }}
+            />
             <View style={styles.divider} />
             <SettingsRow
               icon="zap"

@@ -1,18 +1,15 @@
 import { SymbolView } from 'expo-symbols';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedProps,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Line, Polygon } from 'react-native-svg';
 
 import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
 import { colors, fonts } from '@/theme';
 
 import { pointOnAxis, polygonPoints } from './geometry';
+import { haptics } from '@/haptics';
 
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 
@@ -71,7 +68,11 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
         {RINGS.map((r) => (
           <Polygon
             key={r}
-            points={polygonPoints(DIMENSIONS.map(() => r), radius, center)}
+            points={polygonPoints(
+              DIMENSIONS.map(() => r),
+              radius,
+              center,
+            )}
             fill="none"
             stroke={colors.accent}
             strokeOpacity={r === 1 ? 0.55 : 0.2}
@@ -115,18 +116,25 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
         const info = CLASSES[d];
         const p = pointOnAxis(i, N, 1, radius + LABEL_SPACE / 2 + 4, center);
         return (
-          <View
+          // Tapping a corner explains the stat it tracks, with the player's own numbers.
+          <Pressable
             key={d}
-            pointerEvents="none"
-            style={[
+            accessibilityRole="button"
+            accessibilityLabel={`${info.stat}: what it means and how you're doing`}
+            hitSlop={6}
+            onPress={() => {
+              haptics.tap();
+              router.push({ pathname: '/stat/[dimension]', params: { dimension: d } });
+            }}
+            style={({ pressed }) => [
               styles.label,
-              { left: p.x - LABEL_WIDTH / 2, top: p.y - 20, opacity: opacity[d] },
+              { left: p.x - LABEL_WIDTH / 2, top: p.y - 20, opacity: pressed ? 0.5 : opacity[d] },
             ]}>
             <SymbolView name={info.symbol} tintColor={info.color} size={16} />
             <Text style={styles.labelText} numberOfLines={1}>
               {info.className}
             </Text>
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -134,6 +142,13 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
 }
 
 const styles = StyleSheet.create({
-  label: { position: 'absolute', width: LABEL_WIDTH, height: 40, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  label: {
+    position: 'absolute',
+    width: LABEL_WIDTH,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
   labelText: { color: colors.text, fontSize: 14, fontFamily: fonts.bold, letterSpacing: 0.3 },
 });

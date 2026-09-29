@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { haptics } from '@/haptics';
@@ -9,6 +9,7 @@ import { RadarCard } from '@/components/radar/radar-card';
 import { Screen } from '@/components/screen';
 import { WrapUpCard } from '@/components/wrap-up-card';
 import { TUTORIAL_QUEST_ID, type Dimension, type XpGain } from '@/game';
+import { LevelUp } from '@/components/level-up';
 import { XpBanner } from '@/components/xp-banner';
 import { useGameStore, type Milestone } from '@/store';
 import {
@@ -20,9 +21,9 @@ import {
   useTutorialQuest,
 } from '@/store/hooks';
 import { colors, fonts, spacing } from '@/theme';
+import type { CharacterId } from '@/story/companions';
 
 type Banner = { key: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null };
-
 
 export default function TodayScreen() {
   const today = useToday();
@@ -36,6 +37,7 @@ export default function TodayScreen() {
   const completeTutorial = useGameStore((s) => s.completeTutorial);
 
   const [banner, setBanner] = useState<Banner | null>(null);
+  const [levelUp, setLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
   const [wrapUpPending, setWrapUpPending] = useState(false);
   const [wrapUpVisible, setWrapUpVisible] = useState(false);
 
@@ -53,6 +55,7 @@ export default function TodayScreen() {
         gain: outcome.gain,
         milestone: outcome.milestone,
       });
+      if (outcome.characterLevelUp) setLevelUp(outcome.characterLevelUp);
       if (questId === TUTORIAL_QUEST_ID) {
         completeTutorial();
         setWrapUpPending(true);
@@ -62,6 +65,8 @@ export default function TodayScreen() {
       setBanner(null);
     }
   };
+
+  const closeLevelUp = useCallback(() => setLevelUp(null), []);
 
   const onBannerDone = () => {
     setBanner(null);
@@ -101,6 +106,7 @@ export default function TodayScreen() {
             </View>
           ))}
       </Screen>
+      {levelUp && <LevelUp {...levelUp} onDone={closeLevelUp} />}
       {banner && (
         <XpBanner
           key={banner.key}
