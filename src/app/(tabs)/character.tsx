@@ -5,6 +5,7 @@ import { SymbolView } from 'expo-symbols';
 import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CollectionGrid } from '@/components/collection-grid';
+import { KeeperStatusRows } from '@/components/keeper-status';
 import { LevelUp } from '@/components/level-up';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
@@ -16,7 +17,7 @@ import { socialEnabled } from '@/social/config';
 import { useSocial } from '@/social/store';
 import { XpBar } from '@/components/xp-bar';
 import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
-import { ensureReminderPermission, sendTestCall } from '@/notifications';
+import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useLearnedReminderTime, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
@@ -227,6 +228,8 @@ export default function CharacterScreen() {
           }
         />
         <View style={styles.divider} />
+        <KeeperStatusRows color={classInfo.color} />
+        <View style={styles.divider} />
         <SettingsRow
           icon="vibrate"
           iconColor={classInfo.color}
@@ -296,14 +299,6 @@ export default function CharacterScreen() {
               title="The Keeper's record (dev)"
               subtitle="Which notification lines get opened, and what's scheduled next"
               onPress={() => router.push('/keeper-stats')}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="bell"
-              iconColor={classInfo.color}
-              title="Test a Keeper call (dev)"
-              subtitle="Knocks in 5 seconds. Long-press it for the Done buttons."
-              onPress={() => sendTestCall()}
             />
             <View style={styles.divider} />
             <SettingsRow

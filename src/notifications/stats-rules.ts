@@ -27,6 +27,9 @@ export type SentCall = { lineId: string; at: number; opened: boolean; converted:
 /** A scheduled call: when it will fire, what it says, and its notification id. */
 export type PendingCall = { lineId: string; at: number; body?: string; id?: string };
 
+/** How the last re-plan went, so a silent failure shows up in Settings. */
+export type SyncReport = { at: number; scheduled: number; failed: number; error?: string };
+
 export type KeeperStats = {
   lines: Record<string, LineStats>;
   /** Calls that have fired, newest last. */
@@ -35,6 +38,7 @@ export type KeeperStats = {
   pending: PendingCall[];
   /** Notification ids already counted as opened. */
   openedIds: string[];
+  lastSync?: SyncReport;
 };
 
 export const EMPTY_STATS: KeeperStats = { lines: {}, log: [], pending: [], openedIds: [] };
