@@ -13,18 +13,25 @@ function overallXpFor(level: number) {
 }
 
 describe('standing', () => {
-  it('counts the habits left to the Archive door from a fresh start', () => {
-    const s = standing({ kind: 'overall', level: ARCHIVE_DOOR_LEVEL }, noXp);
-    expect(s.met).toBe(false);
-    expect(s.habitsLeft).toBe(overallXpFor(ARCHIVE_DOOR_LEVEL) / BASE_XP);
-    expect(s.fraction).toBe(0);
-    expect(howToProgress(s)).toMatch(/^Finish about \d+ more habits\. Any habit counts\.$/);
+  it('opens the Archive door after the first level-up on any Path', () => {
+    const door = { kind: 'anyPath', level: ARCHIVE_DOOR_LEVEL } as const;
+    const fresh = standing(door, noXp);
+    expect(fresh.met).toBe(false);
+    expect(howToProgress(fresh)).toBe('Finish about 1 more habit. Any habit counts.');
+    const oneHabit = { total: BASE_XP, byPath: { ...noXp.byPath, social: BASE_XP } };
+    expect(standing(door, oneHabit)).toMatchObject({ met: true, habitsLeft: 0 });
   });
 
-  it('opens once the overall level is reached', () => {
-    const xp = { ...noXp, total: overallXpFor(ARCHIVE_DOOR_LEVEL) };
-    const s = standing({ kind: 'overall', level: ARCHIVE_DOOR_LEVEL }, xp);
-    expect(s).toMatchObject({ met: true, habitsLeft: 0, fraction: 1 });
+  it('counts the habits left to an overall level', () => {
+    const s = standing({ kind: 'overall', level: 8 }, noXp);
+    expect(s.met).toBe(false);
+    expect(s.habitsLeft).toBe(overallXpFor(8) / BASE_XP);
+    expect(s.fraction).toBe(0);
+    expect(howToProgress(s)).toMatch(/^Finish about \d+ more habits\. Any habit counts\.$/);
+    expect(standing({ kind: 'overall', level: 8 }, { ...noXp, total: overallXpFor(8) })).toMatchObject({
+      met: true,
+      fraction: 1,
+    });
   });
 
   it("asks for that Path's habits when a Path level is needed", () => {
@@ -33,13 +40,6 @@ describe('standing', () => {
     expect(s.have).toBe(levelFromXp(40).level);
     expect(howToProgress(s)).toMatch(/more Warrior habits\.$/);
   });
-
-  it('says one habit, not one habits', () => {
-    const xp = { ...noXp, total: overallXpFor(ARCHIVE_DOOR_LEVEL) - BASE_XP };
-    expect(howToProgress(standing({ kind: 'overall', level: ARCHIVE_DOOR_LEVEL }, xp))).toBe(
-      'Finish about 1 more habit. Any habit counts.',
-    );
-  });
 });
 
 describe('EXITS', () => {
@@ -47,5 +47,19 @@ describe('EXITS', () => {
     for (const exit of EXITS) {
       expect(MAPS[exit.from].tiles.some((row) => row.includes(exit.tile))).toBe(true);
     }
+  });
+
+  it('set you down on open ground, facing somewhere sensible', () => {
+    for (const exit of EXITS) {
+      if (!exit.to) continue;
+      const map = MAPS[exit.to.map];
+      expect(map.solid[exit.to.y * map.width + exit.to.x]).toBe(0);
+    }
+  });
+
+  it('lead back the way they came', () => {
+    const out = EXITS.find((e) => e.id === 'archive-door')!;
+    const back = EXITS.find((e) => e.from === out.to!.map && e.to?.map === 'archive');
+    expect(back?.back).toBe(true);
   });
 });

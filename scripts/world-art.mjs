@@ -385,6 +385,155 @@ function drawMap(map) {
 }
 
 // ---------------------------------------------------------------------------
+// Outdoors: routes between the kingdoms (the Courier Road first).
+
+const O = {
+  grass: ['#4E7A3A', '#46703A', '#568240'],
+  grassDark: '#3A5A2C',
+  blade: '#6E9A4E',
+  flower: ['#E8D26A', '#E8E0D0', '#C86A8A'],
+  dirt: ['#8A6A44', '#7E6040', '#94744C'],
+  dirtDark: '#6A5034',
+  pebble: '#A89070',
+  trunk: '#4A3020',
+  trunkDark: '#2E1C12',
+  leaf: '#2E5A2E',
+  leafLight: '#3E7A3A',
+  leafDark: '#1E3E22',
+  rail: '#8A7A64',
+  railDark: '#5A4C3C',
+  stone: '#6A6260',
+  stoneLight: '#8A8280',
+  stoneDark: '#3A3432',
+};
+
+function tree(g, x, y) {
+  // A round canopy that spills a little past its tile, over a short trunk.
+  box(g, x + 6, y + 10, 4, 6, O.trunk);
+  box(g, x + 6, y + 10, 1, 6, O.trunkDark);
+  ellipse(g, x + 8, y + 7, 8, 7, O.leafDark);
+  ellipse(g, x + 8, y + 6, 7, 6, O.leaf);
+  ellipse(g, x + 6, y + 4, 3, 2, O.leafLight);
+  for (let i = 0; i < 6; i++) put(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 3 + Math.floor(hash(y, x, i) * 7), O.leafLight);
+}
+
+const OUTDOOR_ART = {
+  '.'() {},
+  ','() {},
+  g(g, x, y) {
+    // Tall grass tufts.
+    for (let i = 0; i < 5; i++) {
+      const bx = x + 2 + Math.floor(hash(x, y, i + 20) * 12);
+      const by = y + 6 + Math.floor(hash(x, y, i + 30) * 8);
+      box(g, bx, by - 3, 1, 3, O.blade);
+      put(g, bx - 1, by - 2, O.blade);
+      put(g, bx + 1, by - 1, O.grassDark);
+    }
+  },
+  T(g, x, y) {
+    tree(g, x, y);
+  },
+  F(g, x, y, m) {
+    box(g, x, y + 6, TILE, 2, O.rail);
+    box(g, x, y + 11, TILE, 2, O.rail);
+    box(g, x, y + 8, TILE, 1, O.railDark);
+    box(g, x, y + 13, TILE, 1, O.railDark);
+    if (m.at(-1, 0) !== 'F') box(g, x + 1, y + 4, 3, 11, O.railDark);
+    box(g, x + 12, y + 4, 3, 11, O.railDark);
+    box(g, x + 12, y + 4, 1, 11, O.rail);
+  },
+  S(g, x, y) {
+    box(g, x + 7, y + 4, 2, 12, O.trunk);
+    box(g, x + 1, y + 3, 14, 4, O.rail);
+    box(g, x + 1, y + 6, 14, 1, O.railDark);
+    put(g, x + 15, y + 4, O.rail);
+    put(g, x + 15, y + 5, O.rail);
+    box(g, x + 3, y + 4, 8, 1, O.railDark);
+  },
+  c(g, x, y) {
+    // A candle in an iron lantern on a post: the road's save point.
+    box(g, x + 7, y + 7, 2, 9, P.iron);
+    box(g, x + 5, y + 1, 6, 7, P.iron);
+    box(g, x + 6, y + 2, 4, 5, '#3A2A1A');
+    box(g, x + 7, y + 4, 2, 3, P.wax);
+    put(g, x + 7, y + 3, P.flame);
+    put(g, x + 8, y + 2, P.flame2);
+  },
+  K(g, x, y) {
+    // Dessa's cocoon, lying in the long grass with a satchel strap poking out.
+    ellipse(g, x + 8, y + 10, 7, 5, P.silkDark);
+    ellipse(g, x + 8, y + 9, 6, 4, P.silk);
+    box(g, x + 4, y + 8, 8, 1, P.silkShade);
+    box(g, x + 11, y + 10, 4, 1, '#6A4A2A');
+    box(g, x + 14, y + 10, 1, 3, '#6A4A2A');
+  },
+  '='(g, x, y, m) {
+    // The Archive's great door, set into a hill of old stone.
+    box(g, x, y, TILE, TILE, O.stone);
+    for (let j = 0; j < TILE; j += 4) box(g, x, y + j, TILE, 1, O.stoneDark);
+    const left = m.at(-1, 0) !== '=';
+    box(g, x + (left ? 3 : 0), y + 3, left ? 13 : 13, 13, '#2A1A10');
+    box(g, x + (left ? 4 : 0), y + 4, left ? 12 : 12, 12, P.woodDark);
+    if (left) box(g, x + 14, y + 9, 2, 2, P.rugGold);
+  },
+  '>'() {},
+};
+
+function drawOutdoor(map) {
+  const rows = map.tiles;
+  const H = rows.length;
+  const W = rows[0].length;
+  const g = canvas(W * TILE, H * TILE);
+  const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
+  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>';
+
+  // Grass everywhere, in soft patches.
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) {
+      let c = hex(O.grass[Math.floor(hash(Math.floor(x / 6), Math.floor(y / 5), 4) * 3)]);
+      if (hash(x, y, 5) < 0.05) c = hex(O.blade);
+      else if (hash(x, y, 6) < 0.04) c = hex(O.grassDark);
+      g[y][x] = c;
+    }
+  // Wildflowers dotted about.
+  for (let i = 0; i < W * H * 0.6; i++) {
+    const x = Math.floor(hash(i, 1, 7) * g.w);
+    const y = Math.floor(hash(i, 2, 7) * g.h);
+    put(g, x, y, O.flower[i % 3]);
+  }
+
+  // The road: packed dirt with soft, grassy edges.
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      if (!isPath(tx, ty)) continue;
+      for (let j = 0; j < TILE; j++)
+        for (let i = 0; i < TILE; i++) {
+          const px = tx * TILE + i;
+          const py = ty * TILE + j;
+          const nearEdge =
+            (i < 2 && !isPath(tx - 1, ty)) ||
+            (i > 13 && !isPath(tx + 1, ty)) ||
+            (j < 2 && !isPath(tx, ty - 1)) ||
+            (j > 13 && !isPath(tx, ty + 1));
+          if (nearEdge && hash(px, py, 8) < 0.5) continue;
+          let c = hex(O.dirt[Math.floor(hash(Math.floor(px / 3), Math.floor(py / 2), 9) * 3)]);
+          if (hash(px, py, 10) < 0.03) c = hex(O.pebble);
+          else if (hash(px, py, 11) < 0.04) c = hex(O.dirtDark);
+          g[py][px] = c;
+        }
+    }
+
+  // Trees last, row by row, so lower canopies overlap the ones behind them.
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      const draw = OUTDOOR_ART[at(tx, ty)];
+      if (!draw) throw new Error(`No outdoor art for tile "${at(tx, ty)}" in ${map.id}`);
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+    }
+  return g;
+}
+
+// ---------------------------------------------------------------------------
 // Walkers: 16×24 frames. Columns are down, up, left, right × stand, step A, step B.
 
 const FW = 16;
@@ -740,13 +889,13 @@ function drawWalkers() {
 
 // ---------------------------------------------------------------------------
 
-const MAPS = ['archive'];
+const MAPS = ['archive', 'courier-road'];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {
   const map = JSON.parse(readFileSync(`src/world/maps/${id}.json`, 'utf8'));
   const widths = new Set(map.tiles.map((r) => r.length));
   if (widths.size !== 1) throw new Error(`${id}: rows have different lengths (${[...widths].join(', ')})`);
-  writeFileSync(`assets/world/${id}.png`, toPng(drawMap(map)));
+  writeFileSync(`assets/world/${id}.png`, toPng(map.style === 'outdoor' ? drawOutdoor(map) : drawMap(map)));
 }
 const { g, ids } = drawWalkers();
 writeFileSync('assets/world/walkers.png', toPng(g));

@@ -1,0 +1,36 @@
+{
+  "id": "courier-road",
+  "name": "The Courier Road",
+  "style": "outdoor",
+  "walkable": [".", ",", "g"],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTT==TTTTTTTTTTTTTTTT",
+    "TTT....gg...,,...g....TTTTTTTT",
+    "TT...g......,,.......g..TTTTTT",
+    "TT..FFFF....,,.....S.....TTTTT",
+    "T......c....,,,,,,,,,,,,,,,,,>",
+    "T...g.......,,,,,,,,,,,,,,,,,>",
+    "T..........,,.........g.....TT",
+    "TT...K.....,,....FFFF.......TT",
+    "TT......g..,,..........g...TTT",
+    "TTT..........g.............TTT",
+    "TTTTT....TT.......TT....TTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": { "x": 12, "y": 2, "facing": "down" },
+  "examine": {
+    "T": ["Old trees, taller than anything in the Archive. The air smells of rain and pine."],
+    "F": ["A split-rail fence, grey with age. Someone mends it now and then."],
+    "S": ["A signpost. One arm points back the way you came. The other, east, reads only: ONWARD."],
+    "c": ["A candle in an iron lantern, burning steadily at the roadside. It feels like the Archive's candles. Somehow, it feels safe."],
+    "K": [
+      "A cocoon, half hidden in the long grass at the roadside. A leather satchel strap pokes out of the silk.",
+      "Whoever is inside was going somewhere in a hurry.",
+      "The silk won't give. Not yet."
+    ],
+    "=": ["The great door of the Archive, set into a hill of old stone. From out here, it looks like it has always been part of the hill."],
+    ">": ["The road runs on east toward distant towers."]
+  },
+  "objects": []
+}

@@ -1,4 +1,5 @@
 import archiveData from './maps/archive.json';
+import courierRoadData from './maps/courier-road.json';
 import type { CharacterId } from '@/story/companions';
 
 import type { WalkerId } from './walkers';
@@ -35,6 +36,8 @@ export type MapObject = NpcObject | BoardObject;
 type MapData = {
   id: string;
   name: string;
+  /** Tile letters you can walk on (default: the Archive's floor and rug). */
+  walkable?: string[];
   tiles: string[];
   spawn: { x: number; y: number; facing: string };
   examine: Record<string, string[]>;
@@ -50,6 +53,8 @@ export type WorldMap = {
   tiles: string[];
   /** 1 where nobody can walk, row by row: walls, furniture and standing NPCs. */
   solid: number[];
+  /** Tile letters you can walk on. */
+  walkable: string[];
   /** The baked picture from scripts/world-art.mjs, one pixel per art pixel. */
   image: number;
   /** Where a new game starts, in tiles. */
@@ -60,23 +65,30 @@ export type WorldMap = {
   npcs: NpcObject[];
 };
 
-/** Floor you can walk on; every other tile letter is solid. */
-const WALKABLE = new Set(['.', 'r']);
+/** Floor you can walk on unless a map says otherwise; every other tile letter is solid. */
+const WALKABLE = ['.', 'r'];
+
+function solidFor(tiles: string[], walkable: string[], npcs: NpcObject[]): number[] {
+  const width = tiles[0].length;
+  const solid = tiles.flatMap((row) => [...row].map((c) => (walkable.includes(c) ? 0 : 1)));
+  for (const n of npcs) solid[n.y * width + n.x] = 1;
+  return solid;
+}
 
 function build(data: MapData, image: number): WorldMap {
   const width = data.tiles[0].length;
   const height = data.tiles.length;
   const objects = data.objects as MapObject[];
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
-  const solid = data.tiles.flatMap((row) => [...row].map((c) => (WALKABLE.has(c) ? 0 : 1)));
-  for (const n of npcs) solid[n.y * width + n.x] = 1;
+  const walkable = data.walkable ?? WALKABLE;
   return {
     id: data.id,
     name: data.name,
     width,
     height,
     tiles: data.tiles,
-    solid,
+    solid: solidFor(data.tiles, walkable, npcs),
+    walkable,
     image,
     spawn: { ...data.spawn, facing: data.spawn.facing as Facing },
     examine: data.examine,
@@ -90,13 +102,12 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   if (!map.npcs.some((n) => n.character === id)) return map;
   const objects = map.objects.filter((o) => o.type !== 'npc' || o.character !== id);
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
-  const solid = map.tiles.flatMap((row) => [...row].map((c) => (WALKABLE.has(c) ? 0 : 1)));
-  for (const n of npcs) solid[n.y * map.width + n.x] = 1;
-  return { ...map, objects, npcs, solid };
+  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, npcs) };
 }
 
 export const MAPS = {
   archive: build(archiveData, require('@/assets/world/archive.png')),
+  'courier-road': build(courierRoadData, require('@/assets/world/courier-road.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

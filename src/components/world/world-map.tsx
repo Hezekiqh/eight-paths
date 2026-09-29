@@ -19,7 +19,8 @@ const GOLD = '#FFD27A';
  * stays black. The Archive floats alone: it's outside space and time.
  */
 const AREA_SPOTS: Record<MapId, { x: number; y: number }> = {
-  archive: { x: 0.5, y: 0.4 },
+  archive: { x: 0.5, y: 0.3 },
+  'courier-road': { x: 0.5, y: 0.62 },
 };
 
 type Zoom = 'world' | 'area';
@@ -47,7 +48,7 @@ export function WorldMapView({ map, you, discovered, width, height, onClose }: P
   const insets = useSafeAreaInsets();
   const [zoom, setZoom] = useState<Zoom>('area');
   const xp = useXpTotals();
-  const exits = EXITS.filter((e) => e.from === map.id);
+  const exits = EXITS.filter((e) => e.from === map.id && !e.back);
   const left = Math.max(insets.left, spacing.lg);
   const right = Math.max(insets.right, spacing.lg);
   const boxW = width - left - right;
@@ -157,7 +158,7 @@ function WorldOverview({
     <View style={[styles.dark, { width, height }]}>
       {places.map((id) => {
         const spot = AREA_SPOTS[id];
-        const ways = EXITS.filter((e) => e.from === id);
+        const ways = EXITS.filter((e) => e.from === id && !e.back);
         return (
           <View
             key={id}
@@ -168,13 +169,17 @@ function WorldOverview({
               <Text style={styles.placeName}>{MAPS[id].name}</Text>
             </View>
             {/* Each way out: a short path that fades into the dark. */}
-            {ways.map((w) => (
-              <View key={w.id} style={styles.stub}>
-                <View style={[styles.stubDash, { opacity: 0.9 }]} />
-                <View style={[styles.stubDash, { opacity: 0.55 }]} />
-                <View style={[styles.stubDash, { opacity: 0.25 }]} />
-              </View>
-            ))}
+            {ways.map((w) => {
+              // A path to somewhere you've been is solid; one into the unknown fades into the dark.
+              const known = w.to !== null && discovered.includes(w.to.map);
+              return (
+                <View key={w.id} style={styles.stub}>
+                  <View style={[styles.stubDash, { opacity: known ? 1 : 0.9 }]} />
+                  <View style={[styles.stubDash, { opacity: known ? 1 : 0.55 }]} />
+                  <View style={[styles.stubDash, { opacity: known ? 1 : 0.25 }]} />
+                </View>
+              );
+            })}
           </View>
         );
       })}

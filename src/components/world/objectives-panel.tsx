@@ -22,7 +22,7 @@ export function ObjectivesPanel({ map, onOpenBoard }: Props) {
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;
   // The road onward first, then any hard-to-reach places.
-  const exits = EXITS.filter((e) => e.from === map).sort(
+  const exits = EXITS.filter((e) => e.from === map && !e.back).sort(
     (a, b) => Number(b.needs.kind === 'overall') - Number(a.needs.kind === 'overall'),
   );
 
@@ -31,7 +31,7 @@ export function ObjectivesPanel({ map, onOpenBoard }: Props) {
       <Text style={styles.section}>TO GO ON</Text>
       {exits.map((exit) => {
         const s = standing(exit.needs, xp);
-        const ready = s.met && exit.to === null;
+        const waiting = s.met && exit.to === null;
         return (
           <View key={exit.id} style={styles.item} accessible>
             <View style={styles.row}>
@@ -45,7 +45,11 @@ export function ObjectivesPanel({ map, onOpenBoard }: Props) {
               <View style={[styles.fill, { width: `${Math.round(s.fraction * 100)}%` }, s.met && styles.fillMet]} />
             </View>
             <Text style={styles.how}>
-              {ready ? "You're strong enough. What lies beyond is still being built." : howToProgress(s)}
+              {waiting
+                ? "You're strong enough. What lies beyond is still being built."
+                : s.met
+                  ? 'The way is open. Walk up to it and press A.'
+                  : howToProgress(s)}
             </Text>
           </View>
         );

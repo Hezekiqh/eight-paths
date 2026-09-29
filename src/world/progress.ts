@@ -8,14 +8,20 @@ import {
   type Dimension,
 } from '@/game';
 
-import type { MapId } from './maps';
+import type { Facing, MapId } from './maps';
 
 // The World's only gates are the player's real levels (WORLDS.md): the road
 // onward opens with the overall level, and hard-to-reach places need a Path
 // level. This file says what each way out needs, and how far off the player is,
 // counted in real habits.
 
-export type Requirement = { kind: 'overall'; level: number } | { kind: 'path'; dimension: Dimension; level: number };
+export type Requirement =
+  | { kind: 'overall'; level: number }
+  | { kind: 'path'; dimension: Dimension; level: number }
+  /** Any one Path at this level: "level up once, any way you like". */
+  | { kind: 'anyPath'; level: number };
+
+export type Arrival = { map: MapId; x: number; y: number; facing: Facing };
 
 export type Exit = {
   id: string;
@@ -25,13 +31,21 @@ export type Exit = {
   tile: string;
   /** What the player calls it (never the name of where it goes: that's for finding out). */
   label: string;
-  /** Where it leads; null while that area is still being built. */
-  to: string | null;
+  /** Where you step out, in tiles; null while that area is still being built. */
+  to: Arrival | null;
   needs: Requirement;
+  /** The way back to somewhere you've been: never a gate, so it isn't listed as a goal. */
+  back?: boolean;
 };
 
-/** The Archive's door opens onto the world once the player has levelled up once (everyone starts at Lv 5). */
+/**
+ * The Archive's door opens the first time any Path levels up (everyone starts
+ * at Lv 5): one habit, the first "LEVELED UP!" a new player sees.
+ */
 export const ARCHIVE_DOOR_LEVEL = 6;
+
+/** The Courier Road runs on toward the Warrior Kingdom at this overall level. */
+export const ROAD_ONWARD_LEVEL = 8;
 
 export const EXITS: Exit[] = [
   {
@@ -39,8 +53,25 @@ export const EXITS: Exit[] = [
     from: 'archive',
     tile: '=',
     label: 'The great door',
+    to: { map: 'courier-road', x: 12, y: 2, facing: 'down' },
+    needs: { kind: 'anyPath', level: ARCHIVE_DOOR_LEVEL },
+  },
+  {
+    id: 'road-archive',
+    from: 'courier-road',
+    tile: '=',
+    label: 'The Archive door',
+    to: { map: 'archive', x: 12, y: 11, facing: 'up' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'road-onward',
+    from: 'courier-road',
+    tile: '>',
+    label: 'The road east',
     to: null,
-    needs: { kind: 'overall', level: ARCHIVE_DOOR_LEVEL },
+    needs: { kind: 'overall', level: ROAD_ONWARD_LEVEL },
   },
 ];
 
@@ -69,7 +100,9 @@ function xpToReach(level: number, xpIntoLevel: number, target: number, xpFor: (l
 /** Where the player stands against a requirement. */
 export function standing(needs: Requirement, xp: XpTotals): Standing {
   const overall = needs.kind === 'overall';
-  const progress = overall ? overallLevelFromXp(xp.total) : levelFromXp(xp.byPath[needs.dimension]);
+  // For "any Path", the Path closest to levelling counts.
+  const pathXp = needs.kind === 'path' ? xp.byPath[needs.dimension] : Math.max(0, ...Object.values(xp.byPath));
+  const progress = overall ? overallLevelFromXp(xp.total) : levelFromXp(pathXp);
   const xpFor = overall ? (l: number) => tasksToNextOverallLevel(l) * BASE_XP : xpToNextLevel;
   const left = xpToReach(progress.level, progress.xpIntoLevel, needs.level, xpFor);
   const whole = xpToReach(overallLevelFromXp(0).level, 0, needs.level, xpFor);
@@ -78,16 +111,16 @@ export function standing(needs: Requirement, xp: XpTotals): Standing {
     have: progress.level,
     need: needs.level,
     habitsLeft: Math.ceil(left / BASE_XP),
-    className: overall ? null : CLASSES[needs.dimension].className,
+    className: needs.kind === 'path' ? CLASSES[needs.dimension].className : null,
     fraction: whole === 0 ? 1 : Math.min(1, 1 - left / whole),
   };
 }
 
 /** What a requirement is, in a few words: "Overall Lv 12" or "Warrior Lv 10". */
 export function describeRequirement(needs: Requirement): string {
-  return needs.kind === 'overall'
-    ? `Overall Lv ${needs.level}`
-    : `${CLASSES[needs.dimension].className} Lv ${needs.level}`;
+  if (needs.kind === 'overall') return `Overall Lv ${needs.level}`;
+  if (needs.kind === 'anyPath') return 'Level up once';
+  return `${CLASSES[needs.dimension].className} Lv ${needs.level}`;
 }
 
 /** What to do about it, in real life: "Finish about 6 more habits. Any habit counts." */

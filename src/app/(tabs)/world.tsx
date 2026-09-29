@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { DialogueBox, type Dialogue } from '@/components/world/dialogue-box';
 import { PauseMenu } from '@/components/world/pause-menu';
@@ -13,7 +14,7 @@ import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { COMPANIONS } from '@/story/companions';
 import { FACINGS, MAPS, TILE, objectAt, tileAt, withoutCharacter, type MapId, type WorldMap } from '@/world/maps';
-import { EXITS, describeRequirement, howToProgress, standing, type XpTotals } from '@/world/progress';
+import { EXITS, describeRequirement, howToProgress, standing, type Arrival, type XpTotals } from '@/world/progress';
 import { characterQuestions } from '@/world/talk';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { worldHero } from '@/world/hero';
@@ -43,11 +44,38 @@ export default function WorldScreen() {
   const hydrated = useWorldHydrated();
   const [hero] = useParty();
   const { width, height } = useWindowDimensions();
+  const savePosition = useWorldStore((s) => s.savePosition);
+  /** Bumped on each trip through a door, so the World starts afresh in the new place. */
+  const [trip, setTrip] = useState(0);
+  const dark = useSharedValue(0);
+  const darkStyle = useAnimatedStyle(() => ({ opacity: dark.value }));
+
+  // Fade to black, step through, fade back in.
+  const travel = useCallback(
+    (to: Arrival) => {
+      dark.set(withTiming(1, { duration: FADE_MS }));
+      setTimeout(() => {
+        const [x, y] = npcFeet(to);
+        savePosition({ map: to.map, x, y, facing: to.facing });
+        setTrip((t) => t + 1);
+        dark.set(withDelay(80, withTiming(0, { duration: FADE_MS })));
+      }, FADE_MS);
+    },
+    [dark, savePosition],
+  );
+
   // Wait for the save and for the phone to finish turning sideways.
   if (!hydrated || width < height) return <View style={styles.root} />;
   // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
-  return <World key={hero} hero={hero} width={width} height={height} />;
+  return (
+    <View style={styles.root}>
+      <World key={`${hero}-${trip}`} hero={hero} width={width} height={height} onTravel={travel} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.fade, darkStyle]} />
+    </View>
+  );
 }
+
+const FADE_MS = 350;
 
 /**
  * One character walks the World: the party member picked from their sheet on
@@ -80,7 +108,17 @@ function startFor(
   return { map, x, y, facing: map.spawn.facing };
 }
 
-function World({ hero, width, height }: { hero: WalkerId; width: number; height: number }) {
+function World({
+  hero,
+  width,
+  height,
+  onTravel,
+}: {
+  hero: WalkerId;
+  width: number;
+  height: number;
+  onTravel: (to: Arrival) => void;
+}) {
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
   const savePosition = useWorldStore((s) => s.savePosition);
@@ -112,7 +150,10 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
   // Points per art pixel: about eight and a half tiles top to bottom, in whole steps so pixels stay sharp.
   const scale = Math.min(4, Math.max(2, Math.round(height / (TILE * 8.5))));
 
+  /** Set once the player steps through a door, so this room never saves over where they arrived. */
+  const left = useRef(false);
   const save = useCallback(() => {
+    if (left.current) return;
     savePosition({
       map: map.id as WorldPosition['map'],
       x: sim.x.get(),
@@ -146,7 +187,15 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
     router.push('/quest-board');
   }, [save]);
 
-  const act = useAct(map, sim, setDialogue, save, xpRef);
+  const travel = useCallback(
+    (to: Arrival) => {
+      save();
+      left.current = true;
+      onTravel(to);
+    },
+    [save, onTravel],
+  );
+  const act = useAct(map, sim, setDialogue, save, xpRef, travel);
   const board = map.objects.find((o) => o.type === 'board');
 
   return (
@@ -172,7 +221,15 @@ function World({ hero, width, height }: { hero: WalkerId; width: number; height:
           }}
         />
       )}
-      {dialogue && <DialogueBox dialogue={dialogue} onClose={() => setDialogue(null)} />}
+      {dialogue && (
+        <DialogueBox
+          dialogue={dialogue}
+          onClose={() => {
+            setDialogue(null);
+            dialogue.then?.();
+          }}
+        />
+      )}
       {paused && (
         <PauseMenu
           map={map.id as MapId}
@@ -214,6 +271,7 @@ function useAct(
   setDialogue: (d: Dialogue) => void,
   save: () => void,
   xp: { current: XpTotals },
+  onTravel: (to: Arrival) => void,
 ) {
   const busy = useRef(false);
   return useCallback(() => {
@@ -247,6 +305,20 @@ function useAct(
     const exit = EXITS.find((e) => e.from === map.id && e.tile === tile);
     if (exit) {
       const s = standing(exit.needs, xp.current);
+      const to = exit.to;
+      if (s.met && to) {
+        // The first time through the great door is a moment; after that, just go.
+        if (exit.id === 'archive-door' && !useWorldStore.getState().discovered.includes(to.map)) {
+          setDialogue({
+            lines: [
+              'The great door groans, and swings open.',
+              'Daylight. Real daylight, for the first time in five hundred years.',
+            ],
+            then: () => onTravel(to),
+          });
+        } else onTravel(to);
+        return;
+      }
       setDialogue({
         lines: s.met
           ? [`${exit.label} gives a little under your hand.`, "Whatever lies beyond isn't ready for you yet."]
@@ -260,9 +332,10 @@ function useAct(
     }
     const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save, xp]);
+  }, [map, sim, setDialogue, save, xp, onTravel]);
 }
 
 const styles = StyleSheet.create({
+  fade: { backgroundColor: '#000000' },
   root: { flex: 1, backgroundColor: '#0C0806' },
 });

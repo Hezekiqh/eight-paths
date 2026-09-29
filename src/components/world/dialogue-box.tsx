@@ -7,7 +7,13 @@ import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import type { Question } from '@/world/maps';
 
-export type Dialogue = { speaker?: string; lines: string[]; questions?: Question[] };
+export type Dialogue = {
+  speaker?: string;
+  lines: string[];
+  questions?: Question[];
+  /** Runs once the conversation closes (e.g. stepping through a door). */
+  then?: () => void;
+};
 
 type Props = {
   dialogue: Dialogue;
