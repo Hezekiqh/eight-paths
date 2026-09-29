@@ -1,0 +1,118 @@
+{
+  "id": "waystation",
+  "name": "The Waystation",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWQWWWWWW#",
+    "#c..rrrr..c#",
+    "#...rrrr...#",
+    "#.DD.rr....#",
+    "#.....r..p.#",
+    "#____==____#",
+    "############"
+  ],
+  "spawn": {
+    "x": 5,
+    "y": 6,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Pigeonholes, floor to ceiling, stuffed with letters. Some are addressed to people who have been dead for centuries. Nobody throws them away."
+    ],
+    "Q": [
+      "The notice board. Year 500's news, pinned in layers:",
+      "\"BY ORDER OF THE KING: all iron to be surrendered.\" Underneath, in pencil: \"generous.\"",
+      "\"LOST: one goose. Answers to Duchess. Do not approach.\"",
+      "\"COURIERS WANTED. Must be fast. Must not read the post.\""
+    ],
+    "c": [
+      "A candle that burns without shrinking, like the ones in the Archive."
+    ],
+    "D": [
+      "The counter. A ledger lies open: every traveller who's rested here, in a hundred different hands.",
+      "Near the very first page, in faded ink: a name, scratched out so hard the page has torn."
+    ],
+    "p": [
+      "A sack of undelivered post. The oldest letter's seal has a running boot pressed into it."
+    ],
+    "_": [
+      "Worn flagstones. Generations of boots have polished a path to the door."
+    ]
+  },
+  "objects": [
+    {
+      "id": "hesper",
+      "type": "npc",
+      "x": 4,
+      "y": 4,
+      "sprite": "hesper",
+      "facing": "down",
+      "name": "Hesper",
+      "lines": [
+        "Welcome to the Waystation! Rest your feet. Candle's free, soup's not."
+      ],
+      "questions": [
+        {
+          "ask": "What is this place?",
+          "answer": [
+            "The old couriers' rest. Couriers ran post between every kingdom, once. Fastest people alive.",
+            "Now it's mostly me, the soup, and Pell over there dreaming about the old days."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king in the east names everything after himself. Kaldor Square. Kaldor Street. I hear there's a Kaldor Street that crosses Kaldor Street.",
+            "I hear a lot of things. The soup's quiet, so I listen."
+          ]
+        },
+        {
+          "ask": "What's east?",
+          "answer": [
+            "The old fort in the hill first, then the Kingdom. The fort's the only way past the king's checkpoints these days.",
+            "Mind the fort. And mind the Kingdom. And mind your manners. That's three minds; you'll need them."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pell",
+      "type": "npc",
+      "x": 8,
+      "y": 5,
+      "sprite": "pell",
+      "facing": "left",
+      "name": "Pell",
+      "lines": [
+        "Are you a courier? You walk like a courier. Couriers are the best.",
+        "I'm in training. Mostly I run to the well and back. Nine seconds! Nearly."
+      ],
+      "questions": [
+        {
+          "ask": "Who's the best courier?",
+          "answer": [
+            "The fastest who ever lived! Nobody knows her name any more. She ran the last message of the old world.",
+            "They say she never delivered it. They say she's still out there somewhere, with the letter, still sealed.",
+            "That's the kind of courier I want to be. Except the delivering part. I'd do the delivering part."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "There's a gap in the trees behind the signpost. I found it chasing a squirrel.",
+            "There's something in there. I didn't take it. Couriers don't take things."
+          ]
+        },
+        {
+          "ask": "Why run every day?",
+          "answer": [
+            "Because one day someone's going to need a message carried, and it's going to matter, and I'm going to be fast enough.",
+            "You have to be ready before the day comes. That's the whole trick."
+          ]
+        }
+      ]
+    }
+  ]
+}

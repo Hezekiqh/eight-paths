@@ -405,6 +405,15 @@ const O = {
   stone: '#6A6260',
   stoneLight: '#8A8280',
   stoneDark: '#3A3432',
+  thatch: '#B8913A',
+  thatchDark: '#8A6A28',
+  plaster: '#E0D4B8',
+  beam: '#4A3020',
+  window: '#6A8AB0',
+  door: '#6A4428',
+  soil: '#5A4028',
+  soilDark: '#3E2C1C',
+  turnip: '#C87AB0',
 };
 
 function tree(g, x, y) {
@@ -477,7 +486,80 @@ const OUTDOOR_ART = {
     if (left) box(g, x + 14, y + 9, 2, 2, P.rugGold);
   },
   '>'() {},
+  '<'() {},
+  H(g, x, y, m) {
+    // A cottage: thatched roof over the top rows, timber and plaster on the bottom row.
+    const wall = m.at(0, 1) !== 'H' && m.at(0, 1) !== 'D' && m.at(0, 1) !== 'd';
+    if (!wall) {
+      box(g, x, y, TILE, TILE, O.thatch);
+      for (let j = 2; j < TILE; j += 4) box(g, x, y + j, TILE, 1, O.thatchDark);
+      if (m.at(0, -1) !== 'H') box(g, x, y, TILE, 2, O.thatchDark);
+      if (m.at(-1, 0) !== 'H') box(g, x, y, 2, TILE, O.thatchDark);
+      if (m.at(1, 0) !== 'H') box(g, x + 14, y, 2, TILE, O.thatchDark);
+      return;
+    }
+    cottageWall(g, x, y, m);
+    box(g, x + 5, y + 4, 6, 5, O.window);
+    box(g, x + 7, y + 4, 2, 5, O.beam);
+    box(g, x + 5, y + 6, 6, 1, O.beam);
+  },
+  D(g, x, y, m) {
+    cottageWall(g, x, y, m);
+    box(g, x + 4, y + 3, 8, 13, O.door);
+    box(g, x + 4, y + 3, 8, 1, O.beam);
+    put(g, x + 10, y + 10, P.rugGold);
+  },
+  d(g, x, y, m) {
+    OUTDOOR_ART.D(g, x, y, m);
+  },
+  h(g, x, y) {
+    // A gap in the trees: drawn as trees, but a little thinner, for sharp eyes.
+    tree(g, x, y);
+    box(g, x + 7, y + 4, 2, 10, O.leafDark);
+  },
+  L(g, x, y) {
+    // A satchel strap snagged on a low branch, with a folded page.
+    box(g, x + 2, y + 5, 12, 2, O.trunk);
+    box(g, x + 8, y + 7, 2, 5, '#6A4A2A');
+    box(g, x + 7, y + 11, 4, 3, P.paper);
+    put(g, x + 8, y + 12, O.railDark);
+  },
+  f(g, x, y) {
+    box(g, x, y, TILE, TILE, O.soil);
+    for (let j = 1; j < TILE; j += 5) {
+      box(g, x, y + j + 2, TILE, 1, O.soilDark);
+      for (let i = 2; i < TILE; i += 5) {
+        box(g, x + i, y + j, 3, 2, O.leafLight);
+        put(g, x + i + 1, y + j + 2, O.turnip);
+      }
+    }
+  },
+  O(g, x, y) {
+    ellipse(g, x + 8, y + 10, 7, 5, O.stoneDark);
+    ellipse(g, x + 8, y + 9, 6, 4, O.stone);
+    ellipse(g, x + 8, y + 9, 4, 2, '#101418');
+    put(g, x + 9, y + 9, '#E8E0A0');
+    box(g, x + 2, y + 1, 2, 9, O.trunk);
+    box(g, x + 12, y + 1, 2, 9, O.trunk);
+    box(g, x + 1, y + 1, 14, 2, O.thatchDark);
+  },
+  Q(g, x, y) {
+    // A faceless statue, toppled face-down in the moss.
+    box(g, x + 2, y + 7, 12, 6, O.stoneDark);
+    box(g, x + 2, y + 6, 12, 5, O.stoneLight);
+    ellipse(g, x + 12, y + 8, 3, 3, O.stoneLight);
+    for (let i = 0; i < 5; i++) put(g, x + 3 + i * 2, y + 11, O.leaf);
+  },
 };
+
+/** The bottom row of a cottage: plaster between timber beams, sitting on a stone footing. */
+function cottageWall(g, x, y, m) {
+  box(g, x, y, TILE, TILE, O.plaster);
+  box(g, x, y, TILE, 1, O.beam);
+  if (m.at(-1, 0) !== 'H' && m.at(-1, 0) !== 'D' && m.at(-1, 0) !== 'd') box(g, x, y, 2, TILE, O.beam);
+  if (m.at(1, 0) !== 'H' && m.at(1, 0) !== 'D' && m.at(1, 0) !== 'd') box(g, x + 14, y, 2, TILE, O.beam);
+  box(g, x, y + 14, TILE, 2, O.stoneDark);
+}
 
 function drawOutdoor(map) {
   const rows = map.tiles;
@@ -485,7 +567,7 @@ function drawOutdoor(map) {
   const W = rows[0].length;
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
-  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>';
+  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>' || at(tx, ty) === '<';
 
   // Grass everywhere, in soft patches.
   for (let y = 0; y < g.h; y++)
@@ -556,6 +638,12 @@ const WALKERS = {
   pip: { top: '#FF4FD8', shade: '#8B5CF6', legs: '#3E7A4A', boots: '#6A4028', hair: ['spiky', '#D86A2A'], back: 'lute', patchwork: ['#FF4FD8', '#2DD4BF', '#FFC940', '#8B5CF6'] },
   tamsin: { top: '#FF8A3D', shade: '#FF8A3D', legs: '#3A3848', boots: '#1E1A24', hair: ['short', '#2A2030'], apron: '#7A4A2A', goggles: '#FF8A3D' },
   moss: { top: '#3E6A3A', shade: '#4E3622', legs: '#4A3A2A', boots: '#2A2020', hair: ['short', '#4E3A22'], cloak: '#6A4A30', leaves: '#4ADE80' },
+  pell: { top: '#C8A040', shade: '#8A6A28', legs: '#5A4A3A', boots: '#6A4028', belt: '#6A4028', hair: ['spiky', '#8A4A2A'] },
+  hesper: { top: '#8A5A7A', shade: '#6A4460', legs: '#4A3A40', boots: '#3A2A20', hair: ['bun', '#B8B0A8'], apron: '#E8E0D0' },
+  jory: { top: '#6A8A4A', shade: '#4E6A36', legs: '#6A5A40', boots: '#4A3020', belt: '#4A3020', hair: ['short', '#C8A060'], apron: '#8A6A40' },
+  wenna: { robe: true, top: '#7A6A9A', shade: '#5A4A7A', boots: '#3A2A30', hair: ['bun', '#E8E4E0'], collar: '#E8E0D0' },
+  oriel: { robe: true, top: '#3A2A6A', shade: '#2A1E50', boots: '#2A2030', belt: '#FFC940', hair: ['veil', '#8A3A8A'], beads: '#FFC940' },
+  hoot: { robe: true, top: '#8A6A44', shade: '#6A4E30', boots: '#C8A040', belt: '#B3261E', hair: ['bald', '#9A7A54'], glasses: true },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -889,7 +977,7 @@ function drawWalkers() {
 
 // ---------------------------------------------------------------------------
 
-const MAPS = ['archive', 'courier-road'];
+const MAPS = ['archive', 'courier-road', 'millbrook', 'waystation'];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {
   const map = JSON.parse(readFileSync(`src/world/maps/${id}.json`, 'utf8'));

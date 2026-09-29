@@ -2,35 +2,70 @@
   "id": "courier-road",
   "name": "The Courier Road",
   "style": "outdoor",
-  "walkable": [".", ",", "g"],
-  "tiles": [
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTT==TTTTTTTTTTTTTTTT",
-    "TTT....gg...,,...g....TTTTTTTT",
-    "TT...g......,,.......g..TTTTTT",
-    "TT..FFFF....,,.....S.....TTTTT",
-    "T......c....,,,,,,,,,,,,,,,,,>",
-    "T...g.......,,,,,,,,,,,,,,,,,>",
-    "T..........,,.........g.....TT",
-    "TT...K.....,,....FFFF.......TT",
-    "TT......g..,,..........g...TTT",
-    "TTT..........g.............TTT",
-    "TTTTT....TT.......TT....TTTTTT",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "h"
   ],
-  "spawn": { "x": 12, "y": 2, "facing": "down" },
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTT==TTTTTTTTTTTTTTT.......TTTT",
+    "TTTTTTTTTTT.,,TTTTTTTTTTTTTTTT....L..TTT",
+    "TT..........,,..HHHHHHTTTTTTT.......TTTT",
+    "T...FFFF....,,..HHHHHH......TTTThTTTT..T",
+    "T.......g...,,..HHDHHH..gg......h......T",
+    "T...........,,.c................S......T",
+    "<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,>",
+    "<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,>",
+    "T......................................T",
+    "T..gg.................FFFFF...gg.......T",
+    "T...gK..........gg.............g.......T",
+    "T.....gg..........................g...TT",
+    "TTT......T..........TT...............TTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 12,
+    "y": 2,
+    "facing": "down"
+  },
   "examine": {
-    "T": ["Old trees, taller than anything in the Archive. The air smells of rain and pine."],
-    "F": ["A split-rail fence, grey with age. Someone mends it now and then."],
-    "S": ["A signpost. One arm points back the way you came. The other, east, reads only: ONWARD."],
-    "c": ["A candle in an iron lantern, burning steadily at the roadside. It feels like the Archive's candles. Somehow, it feels safe."],
+    "T": [
+      "Old trees, taller than anything in the Archive. The air smells of rain and pine."
+    ],
+    "F": [
+      "A split-rail fence, grey with age. Someone mends it now and then."
+    ],
+    "S": [
+      "A signpost. One arm reads ONWARD, pointing east. The other arm has been snapped off.",
+      "Behind the post, the trees don't quite meet."
+    ],
+    "c": [
+      "A candle in an iron lantern, burning steadily at the roadside. It feels like the Archive's candles. Somehow, it feels safe."
+    ],
     "K": [
       "A cocoon, half hidden in the long grass at the roadside. A leather satchel strap pokes out of the silk.",
       "Whoever is inside was going somewhere in a hurry.",
       "The silk won't give. Not yet."
     ],
-    "=": ["The great door of the Archive, set into a hill of old stone. From out here, it looks like it has always been part of the hill."],
-    ">": ["The road runs on east toward distant towers."]
+    "=": [
+      "The great door of the Archive, set into a hill of old stone. From out here, it looks like it has always been part of the hill."
+    ],
+    ">": [
+      "The road runs on east toward distant towers."
+    ],
+    "H": [
+      "The Waystation. Smoke curls from its chimney, and a painted sign over the door shows a running boot."
+    ],
+    "L": [
+      "A strip of old leather, snagged on a low branch: a satchel strap, cracked with age.",
+      "Tucked behind it, a folded page in a careful, hurried hand:",
+      "\"If I don't make it back, the letter still goes. A courier doesn't read the post. A courier delivers it.\""
+    ],
+    "<": [
+      "The road runs west, toward the smell of turnips."
+    ]
   },
   "objects": []
 }

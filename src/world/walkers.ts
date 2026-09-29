@@ -16,7 +16,13 @@ export const WALKER_ROWS = {
   pip: 5,
   tamsin: 6,
   moss: 7,
-  keeper: 8,
+  pell: 8,
+  hesper: 9,
+  jory: 10,
+  wenna: 11,
+  oriel: 12,
+  hoot: 13,
+  keeper: 14,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

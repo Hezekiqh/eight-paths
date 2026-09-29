@@ -1,0 +1,185 @@
+{
+  "id": "millbrook",
+  "name": "Millbrook",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "h"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TT..QQQ..TTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TT.......TTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTThTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "T...HHHH....,,.HHHH.......FFFFF..T",
+    "T...HHHH....,,.HHHH............g.T",
+    "T.g.HdHH..c.,,.HdHH............g.T",
+    "T.g.........,,,,,,,,,,,,,,,,,,,,,>",
+    "T...........,,,,,,,,,,,,,,,,,,,,,>",
+    "T..fffffff..,,..O................T",
+    "T..fffffff..,,........HHHH.......T",
+    "T..fffffff..,,.FFFFF..HHHH..gg...T",
+    "T..fffffffgg,,........HdHH...g...T",
+    "T................................T",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 32,
+    "y": 7,
+    "facing": "left"
+  },
+  "examine": {
+    "T": [
+      "Old woods, thick and quiet. Somewhere a woodpecker is working very hard."
+    ],
+    "H": [
+      "A farmhouse, turnips drying on the sill."
+    ],
+    "d": [
+      "You knock. From inside: \"We're not buying! Unless it's turnips. Are you turnips?\""
+    ],
+    "f": [
+      "Rows and rows of turnips. Millbrook grows nothing else, and is very proud of it."
+    ],
+    "O": [
+      "The village well. Far down in the dark, something catches the light and glints.",
+      "Too deep to reach. Someone nimbler might manage it."
+    ],
+    "F": [
+      "A fence, mended with twine, hope and more twine."
+    ],
+    "c": [
+      "A candle in an iron lantern on a post, burning steadily. It feels like the Archive's candles."
+    ],
+    "Q": [
+      "Three old statues, toppled face-down in the moss. You turn one over.",
+      "Its face has been worn smooth. So have the others. Whoever they were, someone wanted them forgotten."
+    ],
+    ">": [
+      "The road back east, toward the Courier Road."
+    ]
+  },
+  "objects": [
+    {
+      "id": "jory",
+      "type": "npc",
+      "x": 10,
+      "y": 10,
+      "sprite": "jory",
+      "facing": "left",
+      "name": "Jory",
+      "lines": [
+        "Morning! Or afternoon. Out here it's mostly turnip o'clock."
+      ],
+      "questions": [
+        {
+          "ask": "What is this place?",
+          "answer": [
+            "Millbrook. Six families, one well, and the best turnips in the world.",
+            "We're the only village the king doesn't bother with. We've got nothing he wants. Except turnips. He doesn't want those either."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king's soldiers came through last spring and took every bit of iron. Pots, nails, my grandad's teeth.",
+            "Left the turnips. Said they were \"too heavy to carry and too sad to eat\". The cheek."
+          ]
+        },
+        {
+          "ask": "Why grow only turnips?",
+          "answer": [
+            "Turnips don't care who's king. You plant them, you tend them, they come up. Every year.",
+            "There's a lesson in that, my mum said. She never said what it was."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wenna",
+      "type": "npc",
+      "x": 9,
+      "y": 7,
+      "sprite": "wenna",
+      "facing": "down",
+      "name": "Old Wenna",
+      "lines": [
+        "Stop. You. Arm-wrestle me for directions.",
+        "...No? Soft. You're not from the Kingdom, then. Good."
+      ],
+      "questions": [
+        {
+          "ask": "The Kingdom?",
+          "answer": [
+            "East, past the old fort. They call it the Berserker Kingdom now.",
+            "In my great-grandmother's day it had another name. Pretty one. Nobody says it any more."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The fort in the hill's haunted. Soldiers from the old war, still drilling in the dark.",
+            "My nephew went in on a dare. Came out three days later, saluting everything. Still does. Salutes the cat."
+          ]
+        },
+        {
+          "ask": "Why arm-wrestle strangers?",
+          "answer": [
+            "Keeps the arms young. At my age you do one thing a day that's hard, or the days start doing it to you."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oriel",
+      "type": "npc",
+      "x": 20,
+      "y": 5,
+      "sprite": "oriel",
+      "facing": "down",
+      "name": "Madame Oriel",
+      "lines": [
+        "Ah! I have foreseen you. You are... a tall man named Gerald.",
+        "No? Then the stars are having an off day. Cross my palm with a habit and I'll try again."
+      ],
+      "questions": [
+        {
+          "ask": "Tell my fortune.",
+          "answer": [
+            "I see... a door. You will open it. Then another door. Life is mostly doors.",
+            "Also a goose. Beware the goose. Or befriend it. The vision was unclear about the goose."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king in the east has not aged a day in five hundred years. I have foreseen that this is odd.",
+            "That one I actually got right."
+          ]
+        },
+        {
+          "ask": "Are you ever right?",
+          "answer": [
+            "Once a year, exactly. I just never know which time it is."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hoot",
+      "type": "npc",
+      "x": 28,
+      "y": 5,
+      "sprite": "hoot",
+      "facing": "down",
+      "name": "Professor Hoot",
+      "character": "hoot",
+      "lines": [
+        "Zzz... hm? Ah. A player. Don't mind me.",
+        "I'm resting my eyes. Have you rested yours? You've been looking at this little screen for a while."
+      ]
+    }
+  ]
+}

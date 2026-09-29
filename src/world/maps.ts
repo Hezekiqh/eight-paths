@@ -1,5 +1,7 @@
 import archiveData from './maps/archive.json';
 import courierRoadData from './maps/courier-road.json';
+import millbrookData from './maps/millbrook.json';
+import waystationData from './maps/waystation.json';
 import type { CharacterId } from '@/story/companions';
 
 import type { WalkerId } from './walkers';
@@ -108,6 +110,8 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
 export const MAPS = {
   archive: build(archiveData, require('@/assets/world/archive.png')),
   'courier-road': build(courierRoadData, require('@/assets/world/courier-road.png')),
+  millbrook: build(millbrookData, require('@/assets/world/millbrook.png')),
+  waystation: build(waystationData, require('@/assets/world/waystation.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

@@ -1,4 +1,4 @@
-import { Canvas, FilterMode, Image, MipmapMode, Rect, useImage } from '@shopify/react-native-skia';
+import { Canvas, FilterMode, Image, Line, MipmapMode, Rect, useImage, vec } from '@shopify/react-native-skia';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,8 +19,10 @@ const GOLD = '#FFD27A';
  * stays black. The Archive floats alone: it's outside space and time.
  */
 const AREA_SPOTS: Record<MapId, { x: number; y: number }> = {
-  archive: { x: 0.5, y: 0.3 },
-  'courier-road': { x: 0.5, y: 0.62 },
+  archive: { x: 0.5, y: 0.2 },
+  'courier-road': { x: 0.5, y: 0.52 },
+  waystation: { x: 0.78, y: 0.3 },
+  millbrook: { x: 0.18, y: 0.52 },
 };
 
 type Zoom = 'world' | 'area';
@@ -153,33 +155,54 @@ function WorldOverview({
   width: number;
   height: number;
 }) {
-  const places = (Object.keys(AREA_SPOTS) as MapId[]).filter((id) => discovered.includes(id) || id === here);
+  const known = (id: MapId) => discovered.includes(id) || id === here;
+  const places = (Object.keys(AREA_SPOTS) as MapId[]).filter(known);
+  const at = (id: MapId) => vec(AREA_SPOTS[id].x * width, AREA_SPOTS[id].y * height);
+  // Paths between places you've been, drawn once each.
+  const paths = EXITS.filter((e) => known(e.from) && e.to && known(e.to.map) && e.from < e.to.map);
+  // Ways out of places you've been into somewhere you haven't: a short path fading into the dark.
+  const stubs = EXITS.filter((e) => known(e.from) && !(e.to && known(e.to.map)));
+
   return (
     <View style={[styles.dark, { width, height }]}>
+      <Canvas style={StyleSheet.absoluteFill}>
+        {paths.map((e) => (
+          <Line key={e.id} p1={at(e.from)} p2={at(e.to!.map)} color="#8A86A0" strokeWidth={3} />
+        ))}
+        {stubs.map((e) => {
+          const from = at(e.from);
+          // Toward where it leads, if that's on the map; otherwise off to the east.
+          const target = e.to ? at(e.to.map) : vec(from.x + 100, from.y);
+          const dx = target.x - from.x;
+          const dy = target.y - from.y;
+          const len = Math.hypot(dx, dy) || 1;
+          return [0, 1, 2].map((i) => {
+            const a = 44 + i * 16;
+            const b = a + 10;
+            return (
+              <Line
+                key={`${e.id}-${i}`}
+                p1={vec(from.x + (dx / len) * a, from.y + (dy / len) * a)}
+                p2={vec(from.x + (dx / len) * b, from.y + (dy / len) * b)}
+                color="#8A86A0"
+                opacity={0.9 - i * 0.3}
+                strokeWidth={3}
+              />
+            );
+          });
+        })}
+      </Canvas>
       {places.map((id) => {
         const spot = AREA_SPOTS[id];
-        const ways = EXITS.filter((e) => e.from === id && !e.back);
         return (
           <View
             key={id}
-            style={[styles.place, { left: spot.x * width - 70, top: spot.y * height - 22 }]}
+            style={[styles.place, { left: spot.x * width - 70, top: spot.y * height - 18 }]}
             accessible
             accessibilityLabel={`${MAPS[id].name}${id === here ? ', you are here' : ''}`}>
             <View style={[styles.placeBox, id === here && styles.placeHere]}>
               <Text style={styles.placeName}>{MAPS[id].name}</Text>
             </View>
-            {/* Each way out: a short path that fades into the dark. */}
-            {ways.map((w) => {
-              // A path to somewhere you've been is solid; one into the unknown fades into the dark.
-              const known = w.to !== null && discovered.includes(w.to.map);
-              return (
-                <View key={w.id} style={styles.stub}>
-                  <View style={[styles.stubDash, { opacity: known ? 1 : 0.9 }]} />
-                  <View style={[styles.stubDash, { opacity: known ? 1 : 0.55 }]} />
-                  <View style={[styles.stubDash, { opacity: known ? 1 : 0.25 }]} />
-                </View>
-              );
-            })}
           </View>
         );
       })}

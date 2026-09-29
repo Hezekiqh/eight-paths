@@ -40,7 +40,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const party = useGameStore((s) => s.party);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   const walker = worldHero(picked, party, classDimension);
-  const heroName = walker === 'keeper' ? 'The Keeper' : COMPANIONS[walker].name;
+  const heroName = COMPANIONS[walker].name;
   const place = MAPS[position?.map ?? 'archive'].name;
   // `/world?tab=settings` opens straight on Settings (the Character tab links here).
   const params = useLocalSearchParams<{ tab?: string }>();

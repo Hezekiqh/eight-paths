@@ -34,7 +34,7 @@ export type Exit = {
   /** Where you step out, in tiles; null while that area is still being built. */
   to: Arrival | null;
   needs: Requirement;
-  /** The way back to somewhere you've been: never a gate, so it isn't listed as a goal. */
+  /** Never a gate (the way home, a side road, a building's door), so it isn't listed as a goal. */
   back?: boolean;
 };
 
@@ -72,6 +72,42 @@ export const EXITS: Exit[] = [
     tile: '=',
     label: 'The Archive door',
     to: { map: 'archive', x: 12, y: 11, facing: 'up' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'road-waystation',
+    from: 'courier-road',
+    tile: 'D',
+    label: 'The Waystation',
+    to: { map: 'waystation', x: 5, y: 6, facing: 'up' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'waystation-road',
+    from: 'waystation',
+    tile: '=',
+    label: 'The door',
+    to: { map: 'courier-road', x: 18, y: 6, facing: 'down' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'road-millbrook',
+    from: 'courier-road',
+    tile: '<',
+    label: 'The road west',
+    to: { map: 'millbrook', x: 32, y: 7, facing: 'left' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'millbrook-road',
+    from: 'millbrook',
+    tile: '>',
+    label: 'The road east',
+    to: { map: 'courier-road', x: 1, y: 7, facing: 'right' },
     needs: { kind: 'overall', level: 0 },
     back: true,
   },
