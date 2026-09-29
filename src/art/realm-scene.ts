@@ -9,7 +9,7 @@ export const REALM_ART = { width: 270, height: 480, ground: 350 };
 export const COCOON_ART = {
   width: 80,
   height: 106,
-  eye: { x: 38, y: 54, w: 12, h: 7 },
+  eye: { x: 40, y: 32, w: 12, h: 7 },
 };
 
 /** The intro's descent: 270×1440 pixels, with the Archive's scene starting at row 960. */

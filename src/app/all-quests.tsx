@@ -63,6 +63,7 @@ export default function QuestsScreen() {
 
   return (
     <Screen
+      title="All quests"
       action={
         <Pressable
           accessibilityRole="button"

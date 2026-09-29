@@ -1,5 +1,7 @@
+import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { haptics } from '@/haptics';
 import { ClassHeader } from '@/components/class-header';
@@ -7,6 +9,7 @@ import { ProgressStrip } from '@/components/progress-strip';
 import { QuestCard } from '@/components/quest-card';
 import { RadarCard } from '@/components/radar/radar-card';
 import { Screen } from '@/components/screen';
+import { SettingsRow } from '@/components/settings-row';
 import { WrapUpCard } from '@/components/wrap-up-card';
 import { TUTORIAL_QUEST_ID, type Dimension, type XpGain } from '@/game';
 import { LevelUp } from '@/components/level-up';
@@ -20,7 +23,7 @@ import {
   useTodayQuestGroups,
   useTutorialQuest,
 } from '@/store/hooks';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 import type { CharacterId } from '@/story/companions';
 
 type Banner = { key: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null };
@@ -80,7 +83,20 @@ export default function TodayScreen() {
 
   return (
     <View style={styles.flex}>
-      <Screen>
+      <Screen
+        action={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add quest"
+            onPress={() => {
+              haptics.tap();
+              router.push('/quest-editor');
+            }}
+            hitSlop={12}
+            style={[styles.add, { backgroundColor: classInfo.color }]}>
+            <SymbolView name="plus" tintColor={colors.background} size={18} weight="bold" />
+          </Pressable>
+        }>
         {tutorial ? (
           <View style={styles.tutorial}>
             <Text style={styles.greeting}>Welcome, {player.name}.</Text>
@@ -94,7 +110,7 @@ export default function TodayScreen() {
           </>
         )}
         {!tutorial && groups.length === 0 && (
-          <Text style={styles.hint}>No quests scheduled today. Add some from the Quests tab.</Text>
+          <Text style={styles.hint}>No quests scheduled today. Tap + to add one.</Text>
         )}
         {!tutorial &&
           groups.map((group) => (
@@ -105,6 +121,17 @@ export default function TodayScreen() {
               ))}
             </View>
           ))}
+        {!tutorial && (
+          <View style={styles.manage}>
+            <SettingsRow
+              icon="script"
+              iconColor={classInfo.color}
+              title="All quests"
+              subtitle="Edit, reschedule or archive your quests"
+              onPress={() => router.push('/all-quests')}
+            />
+          </View>
+        )}
       </Screen>
       {levelUp && <LevelUp {...levelUp} onDone={closeLevelUp} />}
       {banner && (
@@ -123,6 +150,8 @@ export default function TodayScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
+  add: { width: 36, height: 36, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  manage: { ...windowStyle, marginTop: spacing.sm },
   tutorial: { gap: spacing.md },
   greeting: { color: colors.text, fontSize: 26, fontFamily: fonts.bold },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },

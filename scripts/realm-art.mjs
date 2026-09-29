@@ -636,8 +636,8 @@ const CRACKS = [
   [1, -26],
   [-4, -22],
 ];
-/** Where the eye looks out, from the cocoon's bottom centre, and its size. */
-export const EYE = { dx: -2, dy: -48, w: 12, h: 7 };
+/** Where the eye opens, from the cocoon's bottom centre: centred, in the upper middle (enlightenment), and its size. */
+export const EYE = { dx: 0, dy: -70, w: 12, h: 7 };
 
 /**
  * The silk cocoon, bottom-centre at (cx, by). `shear` tilts the top in pixels,

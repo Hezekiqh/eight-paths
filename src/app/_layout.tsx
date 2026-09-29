@@ -68,6 +68,7 @@ export default function RootLayout() {
           <Stack.Protected guard={onboarded}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="quest-editor" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="all-quests" options={{ presentation: 'modal' }} />
             <Stack.Screen name="change-class" options={{ presentation: 'modal' }} />
             <Stack.Screen name="goal-editor" options={{ presentation: 'modal' }} />
             <Stack.Screen name="social" options={{ presentation: 'modal' }} />

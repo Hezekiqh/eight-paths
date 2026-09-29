@@ -36,27 +36,27 @@ type Panel = {
 };
 
 const PANELS: Panel[] = [
-  { scene: 'black', line: 'Can you hear me?', ms: 3800, beat: true },
-  { scene: 'war', line: 'Long ago the eight realms were at war, on the brink of destroying themselves.', ms: 7800 },
-  { scene: 'council', line: 'Eight kings united and, with their combined strength, saved the world.', ms: 7200 },
+  { scene: 'black', line: 'Can you hear me?', ms: 2400, beat: true },
+  { scene: 'war', line: 'Long ago the eight realms were at war, on the brink of destroying themselves.', ms: 5400 },
+  { scene: 'council', line: 'Eight kings united and, with their combined strength, saved the world.', ms: 5000 },
   // The same picture carries on; as the Keeper doubts them, their faces change.
-  { scene: 'smile', line: "Or at least that's what they say.", ms: 5200, flow: true },
+  { scene: 'smile', line: "Or at least that's what they say.", ms: 3800, flow: true },
   {
     scene: 'descent',
     line: 'It has been five hundred years since then.',
-    ms: 10500,
+    ms: 6400,
     from: 0,
     to: DESCENT_ART.archiveTop,
   },
-  { scene: 'awake', line: "I'm glad you're finally awake.", ms: 5600, flow: true },
-  { scene: 'title', line: '', ms: 4200, beat: true },
+  { scene: 'awake', line: "I'm glad you're finally awake.", ms: 4000, flow: true },
+  { scene: 'title', line: '', ms: 2200, beat: true },
 ];
 const TITLE = PANELS.length - 1;
 /** The descent scrolls for this long, then lands in the Archive. */
-const DESCEND_MS = 9800;
+const DESCEND_MS = 5600;
 /** Room under the picture for the Keeper's dialogue box. */
 const TEXT_ROOM = 170;
-const CUT_MS = 350;
+const CUT_MS = 250;
 
 const heartbeat = () => {
   haptics.tap();
@@ -129,13 +129,13 @@ export function Intro({ onDone }: { onDone: () => void }) {
       tilt.set(withSequence(withTiming(-3, step), withTiming(3, step), withTiming(-2, step), withTiming(0, step)));
       later(() => {
         haptics.celebrate();
-        eye.set(withTiming(1, { duration: 300 }));
+        eye.set(withTiming(1, { duration: 650, easing: Easing.out(Easing.quad) }));
       }, 700);
       later(() => eye.set(withSequence(withTiming(0.1, { duration: 80 }), withTiming(1, { duration: 80 }))), 2600);
     }
     if (p.scene === 'title') {
       title.set(0);
-      title.set(withDelay(400, withTiming(1, { duration: 900 })));
+      title.set(withDelay(150, withTiming(1, { duration: 600 })));
     }
     later(() => {
       if (index >= TITLE) return finish();
@@ -238,7 +238,7 @@ export function Intro({ onDone }: { onDone: () => void }) {
                 : { top: H * 0.42, left: 28, right: 28 },
             ]}>
             <Text style={styles.speaker}>???</Text>
-            <TypewriterText key={index} text={panel.line} letterMs={46} style={styles.line} />
+            <TypewriterText key={index} text={panel.line} letterMs={36} style={styles.line} />
           </View>
         )}
         <Text style={styles.skip}>Tap to skip</Text>

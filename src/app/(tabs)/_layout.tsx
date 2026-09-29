@@ -5,12 +5,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useInviteRewards } from '@/social/rewards';
 import { useSocialSync } from '@/social/sync';
-import { useObjectives, useReminderSync, useRevealQueue, useSettleOnDayChange, useToday } from '@/store/hooks';
+import {
+  useCharacterDraws,
+  useObjectives,
+  useReminderSync,
+  useRevealQueue,
+  useSettleOnDayChange,
+  useToday,
+} from '@/store/hooks';
 import { FRAME, colors, spacing } from '@/theme';
 
 export default function TabsLayout() {
   const today = useToday();
   useSettleOnDayChange(today);
+  useCharacterDraws();
   useRevealQueue();
   useReminderSync(today);
   useSocialSync();
@@ -33,7 +41,7 @@ export default function TabsLayout() {
         ]}>
         {/* Today is the index route, so the app opens on it. */}
         <TabTrigger name="index" href="/" asChild>
-          <RetroTabButton label="Today" icon="sun" />
+          <RetroTabButton label="Today" icon="script" />
         </TabTrigger>
         <TabTrigger name="character" href="/character" asChild>
           <RetroTabButton label="Profile and collection" icon="star" />
@@ -43,9 +51,6 @@ export default function TabsLayout() {
         </TabTrigger>
         <TabTrigger name="journey" href="/journey" asChild>
           <RetroTabButton label="Journey" icon="map" />
-        </TabTrigger>
-        <TabTrigger name="quests" href="/quests" asChild>
-          <RetroTabButton label="Quests" icon="script" />
         </TabTrigger>
         {/* Last, since opening it turns the phone sideways. */}
         <TabTrigger name="objectives" href="/objectives" asChild>
