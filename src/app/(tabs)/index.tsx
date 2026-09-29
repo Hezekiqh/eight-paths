@@ -1,6 +1,6 @@
 import { router, useIsFocused } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { haptics } from '@/haptics';
@@ -28,6 +28,9 @@ import {
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 import type { CharacterId } from '@/story/companions';
 import { useTour, useTourScroller, useTourTarget } from '@/tutorial/tour';
+
+/** Lets Today appear before a quest marked done from a notification celebrates. */
+const DONE_ACTION_DELAY_MS = 600;
 
 type Banner = { key: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null };
 
@@ -84,6 +87,26 @@ export default function TodayScreen() {
   };
 
   const closeLevelUp = useCallback(() => setLevelUp(null), []);
+
+  // "Done" on one of the Keeper's calls: complete it here, once the intro is over
+  // and the screen has settled, so it gets the same banner and level-ups as a tap.
+  // Never undoes a quest that's already done.
+  const pendingQuest = useSession((s) => s.pendingQuest);
+  const toggleRef = useRef(onToggle);
+  useEffect(() => {
+    toggleRef.current = onToggle;
+  });
+  useEffect(() => {
+    if (!pendingQuest || !introDone) return;
+    const timer = setTimeout(() => {
+      useSession.setState({ pendingQuest: null });
+      const { quests, completions } = useGameStore.getState();
+      const quest = quests.find((q) => q.id === pendingQuest && q.active);
+      const done = completions.some((c) => c.questId === pendingQuest && c.date === today);
+      if (quest && !done) toggleRef.current(quest.id);
+    }, DONE_ACTION_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [pendingQuest, introDone, today]);
 
   const onBannerDone = () => {
     setBanner(null);

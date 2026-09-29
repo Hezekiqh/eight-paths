@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useInviteRewards } from '@/social/rewards';
+import { useKeeperActions } from '@/notifications/use-keeper-actions';
 import { useKeeperAsk } from '@/notifications/use-keeper-ask';
+import { useKeeperStatsTracking } from '@/notifications/use-keeper-stats';
 import { usePurchases } from '@/premium/purchases';
 import { useSocialSync } from '@/social/sync';
 import {
@@ -25,6 +27,8 @@ export default function TabsLayout() {
   useRevealQueue();
   useReminderSync(today);
   useKeeperAsk(today);
+  useKeeperStatsTracking();
+  useKeeperActions();
   useSocialSync();
   usePurchases();
   useInviteRewards();

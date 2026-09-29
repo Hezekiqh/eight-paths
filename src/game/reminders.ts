@@ -68,7 +68,22 @@ export type ReminderInput = {
   heroes: string[];
   /** Characters this player has yet to wake. */
   sleeping: number;
+  /** How well each line has worked so far (N5); lines with no record count as untried. */
+  lineStats?: Record<string, LineRecord>;
+  /** Lines sent in the last 10 days, rested before they're used again. */
+  recentLines?: string[];
 };
+
+/** A line's track record on this phone. */
+export type LineRecord = { sends: number; opens: number };
+
+/**
+ * How likely a line is to be picked: its open rate, starting from an even
+ * guess (1 open in 2 sends) so a new or unlucky line still gets its turn.
+ */
+export function lineWeight(record: LineRecord | undefined): number {
+  return ((record?.opens ?? 0) + 1) / ((record?.sends ?? 0) + 2);
+}
 
 export type PlannedReminder = {
   date: string;
@@ -81,7 +96,12 @@ export type PlannedReminder = {
   body: string;
   /** Breaks through Focus (the last call only). */
   timeSensitive: boolean;
+  /** Quests the call offers "Done" buttons for, the one it names first (none after the first week). */
+  questIds: string[];
 };
+
+/** iOS shows a handful of actions on a long-press; three quests keep the menu short. */
+export const MAX_DONE_ACTIONS = 3;
 
 /** Which kind of call, by how many days in a row the player has been away. */
 export function groupForMissed(missed: number): KeeperGroup | null {
@@ -131,6 +151,12 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
   let alive = input.streak > 0;
   let coveredYesterday = input.restDays.some((r) => r.date === addDays(input.today, -1) && r.dimension === 'all');
 
+  const choice: Choice = {
+    stats: input.lineStats ?? {},
+    recent: new Set(input.recentLines ?? []),
+    used: new Set(),
+  };
+
   const plans: PlannedReminder[] = [];
   for (let k = 0; k <= MAX_DAYS_AHEAD && plans.length < MAX_PENDING_REMINDERS; k += 1) {
     const date = addDays(input.today, k);
@@ -165,17 +191,18 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
             ? seed + (missed - WEEKLY_FROM) / 7
             : daySeed;
       const picked =
-        (group === 'usual' ? pickPersonal(input, date, k === 0, atRisk, daySeed, vars) : null) ??
-        pickLine(group, index, vars, group === 'away' && missed === 3 ? 'e4' : undefined) ??
+        (group === 'usual' ? pickPersonal(input, date, k === 0, atRisk, daySeed, vars, choice) : null) ??
+        pickLine(group, index, vars, choice, group === 'away' && missed === 3 ? 'e4' : undefined) ??
         // A group whose every line needs something missing (a hero) falls back to a plain call.
-        pickLine('usual', daySeed, vars);
-      if (picked) plans.push({ date, hour, minute, missed, ...picked, timeSensitive: false });
+        pickLine('usual', daySeed, vars, choice);
+      const questIds = followsSchedule(missed) ? doneActions(input, date, k === 0, picked?.body) : [];
+      if (picked) plans.push({ date, hour, minute, missed, ...picked, timeSensitive: false, questIds });
     }
 
     // The last call.
     const lastCallAhead = k > 0 || input.minutesNow < LAST_CALL_MINUTES;
     if (atRisk && lastCallFits && lastCallAhead) {
-      const picked = pickLine('lastCall', daySeed, { name: input.name, streak: input.streak });
+      const picked = pickLine('lastCall', daySeed, { name: input.name, streak: input.streak }, choice);
       if (picked) {
         plans.push({
           date,
@@ -184,6 +211,7 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
           missed,
           ...picked,
           timeSensitive: true,
+          questIds: doneActions(input, date, k === 0, picked.body),
         });
       }
     }
@@ -204,6 +232,13 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
 
 type Picked = { lineId: string; group: KeeperGroup; body: string };
 
+/** The quests still to do on `date`, the one the line names first. */
+function doneActions(input: ReminderInput, date: string, isToday: boolean, body = ''): string[] {
+  const left = input.quests.filter((q) => isDueOn(q, date) && !(isToday && input.doneToday.includes(q.id)));
+  const named = left.filter((q) => body.includes(q.title));
+  return [...named, ...left.filter((q) => !named.includes(q))].slice(0, MAX_DONE_ACTIONS).map((q) => q.id);
+}
+
 /**
  * A usual-time call about something real (a streak, a level, a cocoon, the
  * quests left, a milestone), or null to use a plain line. Rotates between
@@ -217,6 +252,7 @@ function pickPersonal(
   atRisk: boolean,
   seed: number,
   base: KeeperVars,
+  choice: Choice,
 ): Picked | null {
   const left = input.quests.filter((q) => isDueOn(q, date) && !(isToday && input.doneToday.includes(q.id)));
   const topics: { ids: string[]; vars: KeeperVars }[] = [];
@@ -258,25 +294,74 @@ function pickPersonal(
   }
 
   // One slot in the rotation stays plain.
-  const choice = seed % (topics.length + 1);
-  if (choice === topics.length) return null;
-  const topic = topics[choice];
+  const slot = seed % (topics.length + 1);
+  if (slot === topics.length) return null;
+  const topic = topics[slot];
   const vars = { ...base, ...topic.vars };
   const options = topic.ids
     .map((id) => KEEPER_LINES.find((l) => l.id === id)!)
     .map((l) => ({ lineId: l.id, group: l.group, body: fillLine(l.text, vars) }))
     .filter((o): o is Picked => o.body !== null);
-  return options.length > 0 ? options[Math.floor(seed / (topics.length + 1)) % options.length] : null;
+  return choose(options, choice, Math.floor(seed / (topics.length + 1)));
 }
 
-function pickLine(group: KeeperGroup, index: number, vars: KeeperVars, prefer?: string): Picked | null {
+function pickLine(
+  group: KeeperGroup,
+  index: number,
+  vars: KeeperVars,
+  choice: Choice,
+  prefer?: string,
+): Picked | null {
   const options = KEEPER_LINES.filter((l) => l.group === group)
     .map((l) => ({ lineId: l.id, group, body: fillLine(l.text, vars) }))
     .filter((o): o is Picked => o.body !== null);
   if (options.length === 0) return null;
   const preferred = prefer ? options.find((o) => o.lineId === prefer) : undefined;
-  if (preferred) return preferred;
+  if (preferred) return take(preferred, choice);
+  // Story drops are a sequence, told in order.
+  if (group === 'story') return take(options[index % options.length], choice);
   // e4 names the third day, so it's only ever used there.
   const pool = group === 'away' ? options.filter((o) => o.lineId !== 'e4') : options;
-  return pool[index % pool.length] ?? options[0];
+  return choose(pool.length > 0 ? pool : options, choice, index);
+}
+
+/** What the planner knows while picking: track records, recent lines, and lines already in this plan. */
+type Choice = { stats: Record<string, LineRecord>; recent: Set<string>; used: Set<string> };
+
+function take(picked: Picked, choice: Choice): Picked {
+  choice.used.add(picked.lineId);
+  return picked;
+}
+
+/**
+ * Picks among `options` by track record: better-opened lines come up more
+ * often. Lines already in this plan are left out until every option has had
+ * a turn, and lines sent in the last 10 days rest while there's anything else.
+ * Seeded, so the same day always plans the same line.
+ */
+function choose(options: Picked[], choice: Choice, seed: number): Picked | null {
+  if (options.length === 0) return null;
+  let unused = options.filter((o) => !choice.used.has(o.lineId));
+  if (unused.length === 0) {
+    // Every line has had its turn: start a new round.
+    for (const o of options) choice.used.delete(o.lineId);
+    unused = options;
+  }
+  const fresh = unused.filter((o) => !choice.recent.has(o.lineId));
+  const pool = fresh.length > 0 ? fresh : unused;
+  const weights = pool.map((o) => lineWeight(choice.stats[o.lineId]));
+  let roll = seeded(seed) * weights.reduce((sum, w) => sum + w, 0);
+  for (let i = 0; i < pool.length; i += 1) {
+    roll -= weights[i];
+    if (roll < 0) return take(pool[i], choice);
+  }
+  return take(pool[pool.length - 1], choice);
+}
+
+/** A number in [0, 1) that depends only on `seed` (mulberry32). */
+function seeded(seed: number): number {
+  let t = (seed + 0x6d2b79f5) | 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }

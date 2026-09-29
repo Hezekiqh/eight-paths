@@ -16,7 +16,7 @@ import { socialEnabled } from '@/social/config';
 import { useSocial } from '@/social/store';
 import { XpBar } from '@/components/xp-bar';
 import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
-import { ensureReminderPermission } from '@/notifications';
+import { ensureReminderPermission, sendTestCall } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useLearnedReminderTime, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
@@ -289,6 +289,22 @@ export default function CharacterScreen() {
         {/* Development builds only: never ships to the App Store. */}
         {__DEV__ && (
           <>
+            <View style={styles.divider} />
+            <SettingsRow
+              icon="bell"
+              iconColor={classInfo.color}
+              title="The Keeper's record (dev)"
+              subtitle="Which notification lines get opened, and what's scheduled next"
+              onPress={() => router.push('/keeper-stats')}
+            />
+            <View style={styles.divider} />
+            <SettingsRow
+              icon="bell"
+              iconColor={classInfo.color}
+              title="Test a Keeper call (dev)"
+              subtitle="Knocks in 5 seconds. Long-press it for the Done buttons."
+              onPress={() => sendTestCall()}
+            />
             <View style={styles.divider} />
             <SettingsRow
               icon="star"

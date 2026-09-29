@@ -8,6 +8,10 @@ type Session = {
   /** Something is celebrating on screen (the onboarding wrap-up), so the Keeper waits to ask. */
   keeperHold: boolean;
   setKeeperHold: (hold: boolean) => void;
+  /** A quest the player marked done from a notification, waiting for the Today screen to complete it. */
+  pendingQuest: string | null;
+  /** Notification responses already acted on this launch, so a "Done" never runs twice. */
+  handledResponses: string[];
 };
 
 export const useSession = create<Session>((set) => ({
@@ -15,4 +19,6 @@ export const useSession = create<Session>((set) => ({
   finishIntro: () => set({ introDone: true }),
   keeperHold: false,
   setKeeperHold: (keeperHold) => set({ keeperHold }),
+  pendingQuest: null,
+  handledResponses: [],
 }));

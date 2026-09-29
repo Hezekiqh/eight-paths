@@ -5,6 +5,7 @@ import {
   STORY_DAYS,
   WEEKLY_FROM,
   groupForMissed,
+  lineWeight,
   planReminders,
   type PathFacts,
   type ReminderInput,
@@ -261,6 +262,71 @@ describe('the last call (N2)', () => {
     expect(reset.find((p) => p.missed === 1)?.group).toBe('reset');
     const rested = planReminders(input({ lastActive: today, streak: 9, restTokens: 0, restTokensTomorrow: 1 }));
     expect(rested.find((p) => p.missed === 1)?.group).toBe('rested');
+  });
+});
+
+describe('learning which lines work (N5)', () => {
+  const usualIds = (overrides: Partial<ReminderInput>) =>
+    Array.from({ length: 200 }, (_, i) => {
+      const day = addDays(today, i);
+      return planReminders(input({ today: day, lastActive: addDays(day, -1), ...overrides }))[0].lineId;
+    }).filter((id) => /^a\d+$/.test(id));
+
+  it('weights a line by its open rate, starting from an even guess', () => {
+    expect(lineWeight(undefined)).toBe(0.5);
+    expect(lineWeight({ sends: 10, opens: 8 })).toBe(0.75);
+    expect(lineWeight({ sends: 10, opens: 0 })).toBeCloseTo(1 / 12);
+  });
+
+  it('picks a line that gets opened far more often than one that never does', () => {
+    const ids = usualIds({ lineStats: { a1: { sends: 40, opens: 36 }, a2: { sends: 40, opens: 0 } } });
+    const count = (id: string) => ids.filter((x) => x === id).length;
+    expect(count('a1')).toBeGreaterThan(count('a2') * 4);
+  });
+
+  it('rests lines sent in the last 10 days while others are left', () => {
+    const recent = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9'];
+    expect(new Set(usualIds({ recentLines: recent }))).toEqual(new Set(['a10']));
+  });
+
+  it('never repeats a line within one plan until the group runs out', () => {
+    const plans = planReminders(input());
+    const weekly = plans.filter((p) => p.group === 'weekly').map((p) => p.lineId);
+    for (let i = 0; i + 8 <= weekly.length; i += 8) expect(new Set(weekly.slice(i, i + 8)).size).toBe(8);
+  });
+
+  it('plans the same line for the same day every time', () => {
+    const stats = { lineStats: { a3: { sends: 5, opens: 4 } } };
+    expect(planReminders(input(stats))[0].lineId).toBe(planReminders(input(stats))[0].lineId);
+  });
+});
+
+describe('"Done" buttons (N6)', () => {
+  const three = [
+    quest(),
+    quest({ id: 'q2', title: 'Drink water' }),
+    quest({ id: 'q3', title: 'Read 20 min' }),
+    quest({ id: 'q4', title: 'Stretch' }),
+  ];
+
+  it("offers today's quests still to do, at most three", () => {
+    const [first] = planReminders(input({ quests: three, doneToday: ['q1'] }));
+    expect(first.questIds).toHaveLength(3);
+    expect(first.questIds).not.toContain('q1');
+  });
+
+  it('puts the quest the line names first', () => {
+    const plans = Array.from({ length: 60 }, (_, i) =>
+      planReminders(input({ today: addDays(today, i), lastActive: addDays(today, i - 1), quests: three }))[0],
+    );
+    const named = plans.find((p) => p.lineId === 'b11');
+    expect(named?.questIds.slice(0, 2)).toEqual(['q1', 'q2']);
+  });
+
+  it('adds them to the last call, but not to the vigil, story drops or weekly calls', () => {
+    const plans = planReminders(input({ streak: 9, restTokens: 0 }));
+    expect(plans.find((p) => p.group === 'lastCall')?.questIds).toEqual(['q1']);
+    expect(plans.filter((p) => p.missed >= 7).every((p) => p.questIds.length === 0)).toBe(true);
   });
 });
 

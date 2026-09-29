@@ -75,6 +75,7 @@ export default function RootLayout() {
             <Stack.Screen name="social" options={{ presentation: 'modal' }} />
             <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
             <Stack.Screen name="drop-odds" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="keeper-stats" options={{ presentation: 'modal' }} />
             <Stack.Screen
               name="keeper-call"
               options={{ presentation: 'transparentModal', animation: 'fade', gestureEnabled: false }}
