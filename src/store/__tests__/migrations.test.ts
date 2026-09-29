@@ -35,9 +35,7 @@ const valid = {
   restDays: [{ date: '2026-09-03', dimension: 'all' }],
   lastSettledDate: '2026-09-03',
   party: { ...DEFAULT_PARTY, intellectual: 'ottilie' },
-  xpGrants: [
-    { id: 'g1', date: '2026-09-02', dimension: 'physical', xp: 20, characterId: 'brannoc', source: 'drop' },
-  ],
+  xpGrants: [{ id: 'g1', date: '2026-09-02', dimension: 'physical', xp: 20, characterId: 'brannoc', source: 'drop' }],
   boosts: [{ date: '2026-09-03', dimension: 'intellectual' }],
   shards: { thane: 2 },
   claimed: ['daily:2026-09-03:show-up'],
@@ -46,7 +44,20 @@ const valid = {
     { id: 'goal2', title: 'Call Mum', createdAt: '2026-09-01', completedAt: '2026-09-02' },
   ],
   revealed: ['brannoc', 'quill', 'ottilie'],
+  owned: { brannoc: 1, quill: 1, ottilie: 2 },
+  nextDraw: { intellectual: 12 },
+  drops: ['ottilie'],
 };
+
+describe('v7: random arrivals', () => {
+  it('upgrades a v6 save so reconcileDraws works out who was already unlocked', () => {
+    const { owned: _o, nextDraw: _n, drops: _d, ...v6 } = valid;
+    const save = migrateSave(v6, 6);
+    expect(save.owned).toBeNull();
+    expect(save.nextDraw).toEqual({});
+    expect(save.drops).toEqual([]);
+  });
+});
 
 describe('sanitizeSave', () => {
   it('keeps a valid save exactly as it is', () => {
@@ -68,6 +79,9 @@ describe('sanitizeSave', () => {
         claimed: [],
         goals: [],
         revealed: null,
+        owned: null,
+        nextDraw: {},
+        drops: [],
       });
     }
   });
@@ -123,12 +137,7 @@ describe('migrateSave', () => {
 
   it('upgrades a v1 save: core companions hold every slot and get credit for past XP', () => {
     const { party: _, ...v1 } = valid;
-    const upgraded = migrateSave(
-      { ...v1, completions: [{ ...completion, characterId: undefined }] },
-      1,
-      MIGRATIONS,
-      2,
-    );
+    const upgraded = migrateSave({ ...v1, completions: [{ ...completion, characterId: undefined }] }, 1, MIGRATIONS, 2);
     expect(upgraded.party).toEqual(DEFAULT_PARTY);
     expect(upgraded.completions[0].characterId).toBe('quill');
   });
@@ -139,7 +148,10 @@ describe('migrateSave', () => {
   });
 
   it('keeps each party slot on its own Path', () => {
-    const party = sanitizeSave({ ...valid, party: { intellectual: 'brannoc', physical: 'dessa', social: 'nobody' } }).party;
+    const party = sanitizeSave({
+      ...valid,
+      party: { intellectual: 'brannoc', physical: 'dessa', social: 'nobody' },
+    }).party;
     expect(party).toEqual({ ...DEFAULT_PARTY, physical: 'dessa' });
   });
 

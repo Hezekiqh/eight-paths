@@ -8,7 +8,7 @@ import {
   type Dimension,
   type ObjectiveReward,
 } from '@/game';
-import { ROSTER, SHARDS_TO_UNLOCK, isUnlocked } from '@/story/companions';
+import { ROSTER, SHARDS_TO_UNLOCK, hasCharacter } from '@/story/companions';
 
 import type { GameData } from './index';
 
@@ -30,7 +30,10 @@ const pick = <T>(items: readonly T[], seed: string) => items[Math.floor(seededRo
 
 function grantXp(data: GameData, id: string, dimension: Dimension, today: string, xp = DROP_XP): Changes {
   return {
-    xpGrants: [...data.xpGrants, { id, date: today, dimension, xp, characterId: data.party[dimension], source: 'drop' }],
+    xpGrants: [
+      ...data.xpGrants,
+      { id, date: today, dimension, xp, characterId: data.party[dimension], source: 'drop' },
+    ],
   };
 }
 
@@ -61,7 +64,7 @@ function graceReward(data: GameData, id: string, today: string): RewardResult {
 function dropReward(data: GameData, id: string, today: string): RewardResult {
   const roll = seededRoll(`drop:${id}`);
   const pathXp = xpByDimension([...data.completions, ...data.xpGrants]);
-  const locked = ROSTER.filter((c) => !isUnlocked(c, pathXp[c.dimension], data.shards[c.id]));
+  const locked = ROSTER.filter((c) => !hasCharacter(c, data.owned, pathXp[c.dimension], data.shards[c.id]));
   if (roll < 0.4 && locked.length) {
     const found = pick(locked, `shard:${id}`);
     const shards = (data.shards[found.id] ?? 0) + 1;
@@ -87,7 +90,9 @@ export function applyReward(data: GameData, id: string, reward: ObjectiveReward,
   if (reward.kind === 'boost') {
     const info = CLASSES[reward.dimension];
     return {
-      changes: { boosts: [...data.boosts.filter((b) => b.date >= today), { date: today, dimension: reward.dimension }] },
+      changes: {
+        boosts: [...data.boosts.filter((b) => b.date >= today), { date: today, dimension: reward.dimension }],
+      },
       title: `${BOOST_MULTIPLIER}× ${info.className} XP`,
       detail: `Every ${info.className} quest earns ${BOOST_MULTIPLIER}× XP for the rest of today.`,
     };

@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CharacterPortrait } from '@/components/character-portrait';
 import { CLASSES, DIMENSIONS, type Dimension } from '@/game';
 import type { CollectionEntry } from '@/store/selectors';
-import { formatNumber, type Alignment, type Rarity } from '@/story/companions';
+import { RARITY_TIERS, formatNumber, type Alignment, type Rarity } from '@/story/companions';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
@@ -36,8 +36,11 @@ function CollectionCard({ entry, width }: { entry: CollectionEntry; width: numbe
       </Text>
       <Text style={[styles.name, !unlocked && styles.lockedName]} numberOfLines={1}>
         {companion.name}
+        {entry.copies > 1 ? ` ×${entry.copies}` : ''}
       </Text>
-      <Text style={[styles.stars, !unlocked && styles.lockedName]}>{stars(companion.rarity)}</Text>
+      <Text style={[styles.stars, { color: RARITY_TIERS[companion.rarity].color }, !unlocked && styles.lockedName]}>
+        {stars(companion.rarity)}
+      </Text>
     </Pressable>
   );
 }
@@ -101,7 +104,8 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
   const [rarity, setRarity] = useState<Rarity | null>(null);
   const [alignment, setAlignment] = useState<Alignment | null>(null);
   const alignments = ALIGNMENTS.filter(([a]) => all.some((e) => e.companion.alignment === a));
-  const rarities = [...new Set(all.map((e) => e.companion.rarity))].sort((a, b) => b - a);
+  // Rarest first: 1★ Legendary, then Epic, Rare, Uncommon, Common.
+  const rarities = [...new Set(all.map((e) => e.companion.rarity))].sort((a, b) => a - b);
   const entries = all.filter(
     (e) =>
       (path === null || e.companion.dimension === path) &&
@@ -159,9 +163,10 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
           <Chip
             key={r}
             label={stars(r)}
+            color={RARITY_TIERS[r].color}
             selected={rarity === r}
             onPress={() => filter(() => setRarity(rarity === r ? null : r))}
-            a11y={`${r} star only`}
+            a11y={`${RARITY_TIERS[r].name} only`}
           />
         ))}
         <Text style={styles.count}>{entries.length} shown</Text>

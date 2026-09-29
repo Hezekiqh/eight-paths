@@ -4,7 +4,7 @@ import type { CharacterData } from './types';
 export const SPIRITUAL = {
   wren: {
     number: 75,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Neutral Good',
     name: 'Sister Wren',
     dimension: 'spiritual',
@@ -26,7 +26,7 @@ export const SPIRITUAL = {
   },
   honeywell: {
     number: 99,
-    rarity: 5,
+    rarity: 2,
     alignment: 'Chaotic Neutral',
     name: 'Lucian Honeywell',
     dimension: 'spiritual',
@@ -37,7 +37,7 @@ export const SPIRITUAL = {
   },
   sage: {
     number: 66,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Neutral Good',
     name: 'Mother Sage',
     dimension: 'spiritual',
@@ -48,7 +48,7 @@ export const SPIRITUAL = {
   },
   moth: {
     number: 71,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Neutral Good',
     name: 'Moth',
     dimension: 'spiritual',
@@ -70,7 +70,7 @@ export const SPIRITUAL = {
   },
   zahra: {
     number: 73,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Chaotic Good',
     name: 'Zahra',
     fullName: 'Zahra of the Dunes',
@@ -82,7 +82,7 @@ export const SPIRITUAL = {
   },
   clementine: {
     number: 5,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Neutral Good',
     name: 'Clementine',
     fullName: 'Clementine Chime',
@@ -105,7 +105,7 @@ export const SPIRITUAL = {
   },
   lumen: {
     number: 10,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Lumen',
     dimension: 'spiritual',
@@ -116,7 +116,7 @@ export const SPIRITUAL = {
   },
   ilse: {
     number: 38,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Abbess Ilse',
     dimension: 'spiritual',
@@ -127,7 +127,7 @@ export const SPIRITUAL = {
   },
   oona: {
     number: 14,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'Oona',
     fullName: 'Oona Farsight',

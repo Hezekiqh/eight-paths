@@ -36,7 +36,7 @@ import {
   type RadarData,
   type RadarFilter,
 } from '@/game';
-import { DEFAULT_PARTY, ROSTER, isUnlocked, type CharacterId, type Companion } from '@/story/companions';
+import { DEFAULT_PARTY, ROSTER, hasCharacter, type CharacterId, type Companion } from '@/story/companions';
 
 import type { GameData } from './index';
 
@@ -50,6 +50,8 @@ export type CollectionEntry = {
   pathLevel: number;
   /** Shards found toward unlocking them early. */
   shards: number;
+  /** How many copies the player has (more than one once their Path is complete). */
+  copies: number;
 };
 
 export type Collection = {
@@ -68,7 +70,8 @@ export function selectCollection(data: GameData): Collection {
   }
   const entries = ROSTER.map((companion) => ({
     companion,
-    unlocked: isUnlocked(companion, pathXp[companion.dimension], data.shards[companion.id]),
+    unlocked: hasCharacter(companion, data.owned, pathXp[companion.dimension], data.shards[companion.id]),
+    copies: data.owned?.[companion.id] ?? 0,
     shards: data.shards[companion.id] ?? 0,
     inParty: data.party[companion.dimension] === companion.id,
     progress: levelFromXp(earned.get(companion.id) ?? 0),
@@ -77,7 +80,10 @@ export function selectCollection(data: GameData): Collection {
   const byId = new Map<CharacterId, CollectionEntry>(entries.map((e) => [e.companion.id, e]));
   return {
     entries,
-    party: Object.fromEntries(DIMENSIONS.map((d) => [d, byId.get(data.party[d])!])) as Record<Dimension, CollectionEntry>,
+    party: Object.fromEntries(DIMENSIONS.map((d) => [d, byId.get(data.party[d])!])) as Record<
+      Dimension,
+      CollectionEntry
+    >,
     unlockedCount: entries.filter((e) => e.unlocked).length,
   };
 }
@@ -251,9 +257,7 @@ export function selectTodayQuestGroups(data: GameData, today: string): QuestGrou
 
 export function selectAllQuestGroups(data: GameData, today: string): QuestGroup[] {
   return groupByDimension(
-    data.quests
-      .filter((q) => q.active && q.id !== TUTORIAL_QUEST_ID)
-      .map((q) => toQuestView(data, q, today)),
+    data.quests.filter((q) => q.active && q.id !== TUTORIAL_QUEST_ID).map((q) => toQuestView(data, q, today)),
   );
 }
 

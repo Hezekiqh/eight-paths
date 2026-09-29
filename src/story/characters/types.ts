@@ -9,7 +9,10 @@ import type { Dimension } from '@/game';
  */
 export type CharacterKind = 'core' | 'recruit' | 'steward' | 'legend';
 
-/** Stars, 1 to 5. Everyone in the original roster is 5★; later characters can be rarer or commoner. */
+/**
+ * Stars, 1 to 5, read like a rank: 1★ is the rarest (Legendary), 5★ the most
+ * common. Rarity follows lore weight: how much of the story they hold.
+ */
 export type Rarity = 1 | 2 | 3 | 4 | 5;
 
 /** A D&D-style moral compass: who they were in the ancient world. */

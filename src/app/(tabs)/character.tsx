@@ -18,7 +18,7 @@ import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
 import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
-import { ROSTER, type CharacterId } from '@/story/companions';
+import { ROSTER, rarityLabel, type CharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing, windowStyle, theme } from '@/theme';
 
 function openSupport() {
@@ -243,10 +243,17 @@ export default function CharacterScreen() {
               icon="zap"
               iconColor={classInfo.color}
               title="Test character reveal (dev)"
-              subtitle="Plays the reveal for a random character. Doesn't change your save."
+              subtitle="Pick a rarity to see its hatch (1★ is the fanciest). Doesn't change your save."
               onPress={() => {
-                const pick = ROSTER[Math.floor(Math.random() * ROSTER.length)];
-                router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
+                const play = (r: number) => {
+                  const pool = ROSTER.filter((c) => c.rarity === r);
+                  const pick = pool[Math.floor(Math.random() * pool.length)];
+                  router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
+                };
+                Alert.alert('Test a hatch', 'Which rarity?', [
+                  ...([1, 2, 3, 4, 5] as const).map((r) => ({ text: rarityLabel(r), onPress: () => play(r) })),
+                  { text: 'Cancel', style: 'cancel' as const },
+                ]);
               }}
             />
           </>

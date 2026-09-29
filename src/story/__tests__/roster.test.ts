@@ -21,6 +21,12 @@ describe('roster', () => {
     for (const c of ROSTER) expect([1, 2, 3, 4, 5]).toContain(c.rarity);
   });
 
+  it('keeps rarity a pyramid: each star count is more common than the one below it', () => {
+    // 1★ is Legendary and rarest; 5★ is Common and most numerous.
+    const count = (r: number) => ROSTER.filter((c) => c.rarity === r).length;
+    for (let r = 1; r < 5; r++) expect(count(r)).toBeLessThan(count(r + 1));
+  });
+
   it.each(DIMENSIONS)('gives the %s Path one core companion, then climbs the unlock ladder', (dimension) => {
     // The Original 100 (#001–#100) follow the ladder; later arrivals set their own levels.
     const path = ROSTER.filter((c) => c.dimension === dimension && c.number <= 100).sort(

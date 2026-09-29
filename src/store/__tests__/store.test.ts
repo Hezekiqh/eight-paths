@@ -105,9 +105,14 @@ describe('game store', () => {
   it('stops giving XP after the first 10 tasks of the day, on any Path', () => {
     start();
     for (let i = 0; i < 12; i += 1) {
-      useGameStore.getState().addQuest({ title: `Q${i}`, dimension: i % 2 ? 'physical' : 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+      useGameStore
+        .getState()
+        .addQuest({ title: `Q${i}`, dimension: i % 2 ? 'physical' : 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
     }
-    const ids = useGameStore.getState().quests.slice(-12).map((q) => q.id);
+    const ids = useGameStore
+      .getState()
+      .quests.slice(-12)
+      .map((q) => q.id);
     const gains = ids.map((id) => {
       const o = useGameStore.getState().toggleQuest(id, today);
       return o.kind === 'completed' ? o.gain.gained : -1;
@@ -187,7 +192,8 @@ describe('loading a saved game', () => {
     useGameStore.getState().toggleQuest(read.id, today);
     expect(useGameStore.getState().completions.at(-1)?.characterId).toBe('quill');
 
-    // Ottilie needs Mage Path Lv 10; a new player is Lv 5.
+    // Nobody new has arrived on the Mage Path yet.
+    useGameStore.getState().reconcileDraws();
     expect(useGameStore.getState().swapCharacter('ottilie')).toBe(false);
     expect(useGameStore.getState().party.intellectual).toBe('quill');
 
@@ -195,6 +201,12 @@ describe('loading a saved game', () => {
     useGameStore.setState({
       completions: [...early, ...Array.from({ length: 30 }, (_, i) => ({ ...early[0], id: `x${i}`, xp: 13 }))],
     });
+    // Levelling the Mage Path brings random arrivals from it; pretend Ottilie was one.
+    useGameStore.getState().reconcileDraws();
+    const arrivals = useGameStore.getState().drops;
+    expect(arrivals.length).toBeGreaterThan(0);
+    expect(arrivals.every((id) => ['intellectual'].includes(selectCollection(useGameStore.getState()).entries.find((e) => e.companion.id === id)!.companion.dimension))).toBe(true);
+    useGameStore.setState((s) => ({ owned: { ...s.owned, ottilie: 1 } }));
     expect(useGameStore.getState().swapCharacter('ottilie')).toBe(true);
 
     const tomorrow = '2026-09-27';
@@ -250,8 +262,10 @@ describe('loading a saved game', () => {
     start();
     expect(useGameStore.getState().swapCharacter('dessa')).toBe(false);
     useGameStore.setState({ shards: { dessa: 3 } });
+    useGameStore.getState().reconcileDraws();
     expect(useGameStore.getState().swapCharacter('dessa')).toBe(true);
     expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(9);
+    expect(useGameStore.getState().drops).toContain('dessa');
   });
 
   it('awards goal XP to the Path and takes it back when undone', () => {
@@ -264,7 +278,8 @@ describe('loading a saved game', () => {
 
     toggleGoal(run.id, today);
     toggleGoal(call.id, today);
-    const physical = () => selectDimensionStats(useGameStore.getState(), today).find((d) => d.dimension === 'physical')!;
+    const physical = () =>
+      selectDimensionStats(useGameStore.getState(), today).find((d) => d.dimension === 'physical')!;
     expect(physical().xp).toBe(30);
     expect(useGameStore.getState().xpGrants).toHaveLength(1);
 
@@ -284,7 +299,9 @@ describe('loading a saved game', () => {
     start();
     const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
     // Quill levels on the 1st task (5→6), then needs 2 more (6→7).
-    const outcomes = ['2026-09-24', '2026-09-25', '2026-09-26'].map((d) => useGameStore.getState().toggleQuest(read.id, d));
+    const outcomes = ['2026-09-24', '2026-09-25', '2026-09-26'].map((d) =>
+      useGameStore.getState().toggleQuest(read.id, d),
+    );
     const levelled = outcomes.map((o) => o.kind === 'completed' && o.characterLeveledUp);
     expect(levelled).toEqual([true, false, true]);
   });
@@ -295,7 +312,10 @@ describe('loading a saved game', () => {
     for (let i = 0; i < 10; i += 1) {
       useGameStore.getState().addQuest({ title: `Q${i}`, dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
     }
-    const ids = useGameStore.getState().quests.slice(-10).map((q) => q.id);
+    const ids = useGameStore
+      .getState()
+      .quests.slice(-10)
+      .map((q) => q.id);
     const outcomes = ids.map((id) => useGameStore.getState().toggleQuest(id, today));
     const ups = outcomes.map((o) => (o.kind === 'completed' ? o.overallLevelUp : undefined));
     expect(ups).toEqual([null, 6, null, 7, null, 8, null, 9, null, 10]);

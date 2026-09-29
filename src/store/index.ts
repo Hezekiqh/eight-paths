@@ -38,6 +38,7 @@ import { COMPANIONS, DEFAULT_PARTY, SHARDS_TO_UNLOCK, isUnlocked, type Character
 
 import { newId } from './ids';
 import { GOAL_XP, applyReward, type RewardResult } from './rewards';
+import { reconcileDraws as reconcile, type Owned } from './draws';
 import { SAVE_VERSION, migrateSave, sanitizeSave } from './migrations';
 
 export type GameData = {
@@ -62,6 +63,12 @@ export type GameData = {
    * saves from before reveals existed count everyone already unlocked as met.
    */
   revealed: CharacterId[] | null;
+  /** Copies of each character the player has. Null on an old save until reconcileDraws fills it in. */
+  owned: Owned | null;
+  /** The Path level at which each Path's next random character arrives. */
+  nextDraw: Partial<Record<Dimension, number>>;
+  /** Arrivals waiting for their hatch, oldest first (a repeat is an extra copy). */
+  drops: CharacterId[];
 };
 
 export type GoalDraft = Pick<Goal, 'title' | 'dimension' | 'dueDate'>;
@@ -120,6 +127,10 @@ type Actions = {
   markRevealed: (ids: CharacterId[]) => void;
   /** Unlocks characters as a gift (a friend joined): gives each a full set of shards. */
   giftCharacters: (ids: CharacterId[]) => void;
+  /** Hands out any characters now due: new arrivals every 3–5 Path levels, full shard sets. */
+  reconcileDraws: (random?: () => number) => void;
+  /** The hatch for the first waiting arrival of `id` has played. */
+  finishDrop: (id: CharacterId) => void;
   completeTutorial: () => void;
   settle: (today?: string) => void;
   resetGame: () => void;
@@ -142,6 +153,9 @@ export const initialData: GameData = {
   claimed: [],
   goals: [],
   revealed: null,
+  owned: null,
+  nextDraw: {},
+  drops: [],
 };
 
 /** Every saved field, for persisting and backups. */
@@ -159,6 +173,9 @@ export function pickData(s: GameData): GameData {
     claimed,
     goals,
     revealed,
+    owned,
+    nextDraw,
+    drops,
   } = s;
   return {
     player,
@@ -173,6 +190,9 @@ export function pickData(s: GameData): GameData {
     claimed,
     goals,
     revealed,
+    owned,
+    nextDraw,
+    drops,
   };
 }
 
@@ -255,6 +275,9 @@ export const useGameStore = create<GameState>()(
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
           // The core eight are there from the start: no reveal needed.
           revealed: Object.values(DEFAULT_PARTY),
+          owned: Object.fromEntries(Object.values(DEFAULT_PARTY).map((id) => [id, 1])),
+          nextDraw: {},
+          drops: [],
         });
       },
 
@@ -331,10 +354,11 @@ export const useGameStore = create<GameState>()(
       changeClass: (classDimension) => set((s) => (s.player ? { player: { ...s.player, classDimension } } : s)),
 
       swapCharacter: (id) => {
-        const { completions, xpGrants, shards } = get();
+        const { completions, xpGrants, shards, owned } = get();
         const companion = COMPANIONS[id];
         const pathXp = xpByDimension([...completions, ...xpGrants])[companion.dimension];
-        if (!isUnlocked(companion, pathXp, shards[id])) return false;
+        const has = owned ? (owned[id] ?? 0) > 0 : isUnlocked(companion, pathXp, shards[id]);
+        if (!has) return false;
         set((s) => ({ party: { ...s.party, [companion.dimension]: id } }));
         return true;
       },
@@ -400,6 +424,22 @@ export const useGameStore = create<GameState>()(
           const shards = { ...s.shards };
           for (const id of ids) shards[id] = Math.max(shards[id] ?? 0, SHARDS_TO_UNLOCK);
           return { shards };
+        }),
+
+      reconcileDraws: (random) => {
+        const s = get();
+        const pathXp = xpByDimension([...s.completions, ...s.xpGrants]);
+        const changes = reconcile(s, pathXp, random);
+        if (changes) set(changes);
+      },
+
+      finishDrop: (id) =>
+        set((s) => {
+          const i = s.drops.indexOf(id);
+          return {
+            drops: i < 0 ? s.drops : [...s.drops.slice(0, i), ...s.drops.slice(i + 1)],
+            revealed: [...new Set([...(s.revealed ?? []), id])],
+          };
         }),
 
       completeTutorial: () =>

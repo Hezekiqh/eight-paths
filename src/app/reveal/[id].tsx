@@ -23,22 +23,115 @@ import { TypewriterText } from '@/components/typewriter-text';
 import { CLASSES } from '@/game';
 import { haptics } from '@/haptics';
 import { useGameStore } from '@/store';
-import { COMPANIONS, KIND_LABEL, REALMS, formatNumber, isCharacterId } from '@/story/companions';
+import {
+  COMPANIONS,
+  KIND_LABEL,
+  RARITY_TIERS,
+  REALMS,
+  formatNumber,
+  isCharacterId,
+  rarityLabel,
+  type Rarity,
+} from '@/story/companions';
 import { fonts, spacing } from '@/theme';
+import { CONFETTI, Confetto, Rays } from '@/components/level-up';
 
 // The hatch plays the same beats as the hatch videos (scripts/hatch-video.mjs),
 // so what people see posted is what happens in the game. Times are seconds.
 const IMPACT = 0.13; // the camera slams in on the cocoon
 const WIGGLE_FIRST = 0.3;
 const WIGGLE_EVERY = 2.1; // while waiting for the tap
-const SHAKE = 1.0; // after the tap, the shake builds and cracks the silk
-const EYE_OPEN = 0.75; // then silence: an eye opens, the camera punches in, it blinks
-const BURST = 0.65; // then the camera snaps back and the shake turns violent
-const HATCH_AT = SHAKE + EYE_OPEN + BURST;
+
+/**
+ * How grand each hatch is. The joke runs backwards: a 5★ Common is barely an
+ * event, and a 1★ Legendary is outrageous. Each step rarer adds a layer.
+ */
+type Flair = {
+  headline: string;
+  /** The opening camera slam. */
+  impact: boolean;
+  /** Seconds of the building shake after the tap, and how violent it gets. */
+  shake: number;
+  power: number;
+  /** Silence while an eye opens in the silk (0 = no eye). */
+  eye: number;
+  /** Seconds of the final violent burst before the hatch (0 = straight to it). */
+  burst: number;
+  shards: boolean;
+  glow: boolean;
+  sparkles: boolean;
+  /** Gold rays, confetti and a banner: the full Legendary treatment. */
+  legendary: boolean;
+};
+const FLAIR: Record<Rarity, Flair> = {
+  5: {
+    headline: 'A cocoon.',
+    impact: false,
+    shake: 0.35,
+    power: 0.3,
+    eye: 0,
+    burst: 0,
+    shards: false,
+    glow: false,
+    sparkles: false,
+    legendary: false,
+  },
+  4: {
+    headline: 'Someone is waking up.',
+    impact: false,
+    shake: 0.6,
+    power: 0.6,
+    eye: 0,
+    burst: 0,
+    shards: true,
+    glow: false,
+    sparkles: false,
+    legendary: false,
+  },
+  3: {
+    headline: 'SOMEONE IS\nWAKING UP!',
+    impact: true,
+    shake: 1.0,
+    power: 1,
+    eye: 0,
+    burst: 0.5,
+    shards: true,
+    glow: true,
+    sparkles: false,
+    legendary: false,
+  },
+  2: {
+    headline: 'SOMEONE IS\nWAKING UP!',
+    impact: true,
+    shake: 1.0,
+    power: 1,
+    eye: 0.75,
+    burst: 0.65,
+    shards: true,
+    glow: true,
+    sparkles: true,
+    legendary: false,
+  },
+  1: {
+    headline: 'SOMETHING ANCIENT\nSTIRS…',
+    impact: true,
+    shake: 1.6,
+    power: 1.6,
+    eye: 1.1,
+    burst: 1.0,
+    shards: true,
+    glow: true,
+    sparkles: true,
+    legendary: true,
+  },
+};
 
 type Phase = 'waking' | 'hatching' | 'revealed' | 'entry';
 
 // The cutscene is its own stage, the same in every theme.
+/** Typing speed for the hatch's captions and entry: twice the normal dialogue speed. */
+const CAPTION_MS = 14;
+
 const INK = '#07060B';
 const WHITE = '#FFFFFF';
 const SILK = ['#EDE6D6', '#C9BFAE', '#FFF7DC', '#A69C8C'];
@@ -48,7 +141,7 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const wiggle = (since: number) => (since >= 0 && since < 0.6 ? Math.sin(since * 26) * 4 * (1 - since / 0.6) : 0);
 
-/** Where the sparkles sit around a 5★ reveal, as fractions of the sprite's size from its centre. */
+/** Where the sparkles sit around a Legendary or Epic reveal, as fractions of the sprite's size. */
 const SPARKLES = [
   { x: -0.95, y: -0.55, size: 22, delay: 0 },
   { x: 0.9, y: -0.4, size: 16, delay: 250 },
@@ -132,13 +225,20 @@ function Twinkle({
  * their home realm: the camera slams in on a cocoon ("Someone is waking
  * up!"), which wiggles until the player taps. The tap sets off a shake that
  * cracks the silk; then silence, an eye opens and looks out, and the silk
- * bursts: a flash, shards and the character, with sparkles for a 5★. The next
+ * bursts: a flash, shards and the character, with sparkles for a rare one (1★ or 2★). The next
  * tap opens their collection entry. `preview` (from the dev test button)
  * plays it without marking anyone as revealed.
  */
 export default function RevealScreen() {
   const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();
-  const markRevealed = useGameStore((s) => s.markRevealed);
+  const finishDrop = useGameStore((s) => s.finishDrop);
+  const flair = FLAIR[isCharacterId(id) ? COMPANIONS[id].rarity : 3];
+  const SHAKE = flair.shake;
+  const EYE_OPEN = flair.eye;
+  const BURST = flair.burst;
+  const HATCH_AT = SHAKE + EYE_OPEN + BURST;
+  const legendSpin = useSharedValue(0);
+  const copies = useGameStore((s) => (isCharacterId(id) ? (s.owned?.[id] ?? 0) : 0));
   const reduceMotion = useReducedMotion();
   const { width: W, height: H } = useWindowDimensions();
   const [phase, setPhase] = useState<Phase>('waking');
@@ -196,7 +296,8 @@ export default function RevealScreen() {
       let fl = 0;
       if (tl.phase === 'waking') {
         const hit = t - IMPACT;
-        if (hit >= 0) {
+        if (!flair.impact) z = 1.2;
+        else if (hit >= 0) {
           z = hit < 0.12 ? lerp(1, 2.05, ease(hit / 0.12)) : lerp(2.05, 1.7, ease((hit - 0.12) / 0.4));
           if (t > 0.65) z = lerp(1.7, 1.25, ease((t - 0.65) / 4.4));
           shake = hit < 0.7 ? 6 * (1 - hit / 0.7) : 0;
@@ -218,18 +319,18 @@ export default function RevealScreen() {
         const h = t;
         if (h < SHAKE) {
           z = lerp(tl.zAtTap, 1.4, clamp01(h / SHAKE));
-          shake = 1 + h * 2.5;
           const k = h / SHAKE;
-          tilt.set(Math.sin((5.6 + h) * (24 + k * 30)) * (1.5 + k * 4) * 0.6);
-          setCrackStage(Math.min(3, Math.ceil(lerp(0.12, 0.55, k) * 4)));
-          glow.set(k * 0.5);
+          shake = (1 + k * 2.5) * flair.power;
+          tilt.set(Math.sin((5.6 + h) * (24 + k * 30)) * (1.5 + k * 4) * 0.6 * flair.power);
+          setCrackStage(Math.min(flair.burst > 0 ? 3 : 4, Math.ceil(lerp(0.12, 0.55, k) * 4)));
+          if (flair.glow) glow.set(k * 0.5);
         } else if (h < SHAKE + EYE_OPEN) {
           const et = h - SHAKE;
           focus = eyeAt;
           z = lerp(1.4, 3.4, ease(et / 0.14));
           tilt.set(0);
           if (et > 0.5 && et < 0.65) eye.set(Math.abs(et - 0.575) / 0.075);
-          else eye.set(clamp01(et / 0.3));
+          else eye.set(clamp01(et / 0.5));
           if (!tl.eyed) {
             tl.eyed = true;
             haptics.celebrate();
@@ -237,12 +338,12 @@ export default function RevealScreen() {
         } else if (h < HATCH_AT) {
           const k = (h - SHAKE - EYE_OPEN) / BURST;
           z = lerp(2.2, 1.45, ease(k * 2.2));
-          shake = 3 + k * 4;
-          eye.set(1);
+          shake = (3 + k * 4) * flair.power;
+          if (EYE_OPEN > 0) eye.set(1);
           tilt.set(Math.sin((5.6 + h) * 60) * (4 + k * 5) * 0.6);
           lift.set(Math.round(Math.abs(Math.sin(h * 34)) * k * 3));
           setCrackStage(4);
-          glow.set(0.5 + k * 0.5);
+          if (flair.glow) glow.set(0.5 + k * 0.5);
         } else {
           hatch(now);
         }
@@ -250,8 +351,8 @@ export default function RevealScreen() {
         const rt = t;
         focus = revealFocus;
         z = rt < 0.25 ? lerp(0.92, 1, ease(rt / 0.25)) : lerp(1, 1.1, clamp01((rt - 0.25) / 4.5));
-        shake = rt < 0.8 ? 7 * (1 - rt / 0.8) : 0;
-        fl = rt < 0.5 ? 1 - rt / 0.5 : 0;
+        shake = rt < 0.8 ? 7 * (1 - rt / 0.8) * flair.power : 0;
+        fl = rt < 0.5 ? (1 - rt / 0.5) * Math.min(1, 0.35 + flair.power * 0.5) : 0;
       }
       // Zoom toward the focus point, which drifts toward the frame's centre as it zooms.
       const k = clamp01((z - 1) / 1.2);
@@ -284,7 +385,13 @@ export default function RevealScreen() {
     glow.set(0);
     eye.set(0);
     haptics.celebrate();
-    if (!reduceMotion) burst.set(withTiming(1, { duration: 1300, easing: Easing.linear }));
+    if (flair.legendary) {
+      // A Legendary gets a drumroll of buzzes and slow-turning golden light.
+      setTimeout(haptics.celebrate, 350);
+      setTimeout(haptics.celebrate, 700);
+      if (!reduceMotion) legendSpin.set(withRepeat(withTiming(1, { duration: 14000, easing: Easing.linear }), -1));
+    }
+    if (!reduceMotion && flair.shards) burst.set(withTiming(1, { duration: 1300, easing: Easing.linear }));
     setPhase('revealed');
   }
 
@@ -329,7 +436,7 @@ export default function RevealScreen() {
       setPhase('entry');
     } else if (phase === 'entry') {
       if (!entryDone) return setSkipped(true);
-      if (!preview) markRevealed([id]);
+      if (!preview) finishDrop(id);
       router.back();
     }
   };
@@ -394,12 +501,17 @@ export default function RevealScreen() {
               { left: sceneLeft + 135 * px - spriteW / 2, top: groundY - spriteH, width: spriteW },
             ]}>
             {revealed &&
-              companion.rarity === 5 &&
+              flair.sparkles &&
               SPARKLES.map((s, i) => (
                 <View key={i} style={[styles.sparkleSlot, { top: spriteH / 2, left: spriteW / 2 }]}>
                   <Sparkle x={s.x * spriteW} y={s.y * spriteH} size={s.size} delay={s.delay} />
                 </View>
               ))}
+            {revealed && flair.legendary && (
+              <View pointerEvents="none" style={[styles.raysSlot, { top: spriteH * 0.45, left: spriteW / 2 }]}>
+                <Rays color="#FFD27A" size={spriteH * 2.6} spin={legendSpin} />
+              </View>
+            )}
             {art && <PixelSprite sheet={art.idle} scale={spriteScale} animate={revealed} />}
           </View>
         )}
@@ -415,12 +527,29 @@ export default function RevealScreen() {
 
       {!hatched && (
         <View style={[styles.top, { top: sceneTop + 70 * px }]} pointerEvents="none">
-          <Text style={[styles.headline, { fontSize: 26 * px, lineHeight: 30 * px }]}>{'SOMEONE IS\nWAKING UP!'}</Text>
+          <Text
+            style={[
+              styles.headline,
+              companion.rarity >= 4
+                ? { fontSize: 16 * px, lineHeight: 20 * px }
+                : { fontSize: 26 * px, lineHeight: 30 * px },
+              flair.legendary && { color: '#FFD27A' },
+            ]}>
+            {flair.headline}
+          </Text>
           {phase === 'waking' && hintShown && (
             <Animated.Text entering={FadeIn.duration(800)} style={styles.hint}>
               Tap to hatch
             </Animated.Text>
           )}
+        </View>
+      )}
+
+      {revealed && flair.legendary && !reduceMotion && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          {CONFETTI.map((p, i) => (
+            <Confetto key={i} piece={p} color={i % 2 ? '#FFD27A' : '#FFF4C0'} width={W} height={H} />
+          ))}
         </View>
       )}
 
@@ -433,14 +562,24 @@ export default function RevealScreen() {
               adjustsFontSizeToFit>
               {companion.name.toUpperCase()}
             </Text>
-            <Text style={[styles.stars, { fontSize: 15 * px }]}>{'★'.repeat(companion.rarity)}</Text>
+            <Text style={[styles.stars, { fontSize: 15 * px, color: RARITY_TIERS[companion.rarity].color }]}>
+              {rarityLabel(companion.rarity)}
+            </Text>
             <Text style={styles.detail}>
               {info.className} · {REALMS[companion.dimension]}
             </Text>
             <Text style={[styles.number, { color: '#D8D2E6' }]}>{formatNumber(companion.number)}</Text>
           </Animated.View>
           <Animated.View entering={FadeIn.delay(600).duration(400)} style={[styles.band, { top: groundY + 14 * px }]}>
-            <TypewriterText text={`${companion.name} joined your collection!`} style={styles.title} />
+            <TypewriterText
+              letterMs={CAPTION_MS}
+              text={
+                copies > 1
+                  ? `Another ${companion.name}! You now have ${copies}.`
+                  : `${companion.name} joined your collection!`
+              }
+              style={styles.title}
+            />
             <Text style={styles.hint}>Tap to continue</Text>
           </Animated.View>
         </>
@@ -465,7 +604,7 @@ export default function RevealScreen() {
                   ['CLASS', `${info.className} · ${info.dimensionLabel}`],
                   ['REALM', REALMS[companion.dimension]],
                   ['ALIGN', companion.alignment],
-                  ['RARITY', '★'.repeat(companion.rarity)],
+                  ['RARITY', rarityLabel(companion.rarity)],
                 ].map(([label, value]) => (
                   <View key={label} style={styles.entryRow}>
                     <Text style={styles.entryRowLabel}>{label}</Text>
@@ -476,12 +615,14 @@ export default function RevealScreen() {
             </View>
             <View style={[styles.entryLore, { borderColor: info.color }]}>
               <TypewriterText
+                letterMs={CAPTION_MS}
                 text={companion.bio}
                 style={styles.entryBio}
                 instant={skipped}
                 onDone={() => setBioDone(true)}
               />
               <TypewriterText
+                letterMs={CAPTION_MS}
                 text={`“${companion.quote}”`}
                 style={styles.entryQuote}
                 start={bioDone}
@@ -494,7 +635,10 @@ export default function RevealScreen() {
         </Animated.View>
       )}
 
-      <Animated.View style={[styles.flash, flashStyle]} pointerEvents="none" />
+      <Animated.View
+        style={[styles.flash, flair.legendary && { backgroundColor: '#FFE9A0' }, flashStyle]}
+        pointerEvents="none"
+      />
     </Pressable>
   );
 }
@@ -502,6 +646,7 @@ export default function RevealScreen() {
 const shadow = { textShadowColor: INK, textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 0 };
 
 const styles = StyleSheet.create({
+  raysSlot: { position: 'absolute', width: 0, height: 0, alignItems: 'center', justifyContent: 'center' },
   stage: { flex: 1, backgroundColor: INK, overflow: 'hidden' },
   scene: { position: 'absolute', left: 0, top: 0, transformOrigin: 'left top' },
   anchor: { position: 'absolute', alignItems: 'center' },

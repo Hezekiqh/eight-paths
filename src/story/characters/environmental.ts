@@ -4,7 +4,7 @@ import type { CharacterData } from './types';
 export const ENVIRONMENTAL = {
   moss: {
     number: 52,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Chaotic Good',
     name: 'Moss',
     dimension: 'environmental',
@@ -27,7 +27,7 @@ export const ENVIRONMENTAL = {
   },
   brimsby: {
     number: 65,
-    rarity: 5,
+    rarity: 2,
     alignment: 'True Neutral',
     name: 'Mother Brimsby',
     dimension: 'environmental',
@@ -38,7 +38,7 @@ export const ENVIRONMENTAL = {
   },
   tully: {
     number: 32,
-    rarity: 5,
+    rarity: 4,
     alignment: 'True Neutral',
     name: 'Old Tully',
     dimension: 'environmental',
@@ -83,7 +83,7 @@ export const ENVIRONMENTAL = {
   },
   wynn: {
     number: 91,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Chaotic Neutral',
     name: 'Wynn',
     fullName: 'Wynn Rainmaker',
@@ -119,7 +119,7 @@ export const ENVIRONMENTAL = {
   },
   antler: {
     number: 49,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Old Antler',
     dimension: 'environmental',
@@ -142,7 +142,7 @@ export const ENVIRONMENTAL = {
   },
   warden: {
     number: 30,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'The Green Warden',
     dimension: 'environmental',

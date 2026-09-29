@@ -4,7 +4,7 @@ import type { CharacterData } from './types';
 export const EMOTIONAL = {
   oren: {
     number: 72,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Lawful Good',
     name: 'Oren',
     fullName: 'Oren Stillwater',
@@ -28,7 +28,7 @@ export const EMOTIONAL = {
   },
   corwin: {
     number: 95,
-    rarity: 5,
+    rarity: 2,
     alignment: 'Lawful Evil',
     name: 'Captain Corwin',
     dimension: 'emotional',
@@ -73,7 +73,7 @@ export const EMOTIONAL = {
   },
   mireille: {
     number: 22,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Chaotic Neutral',
     name: 'Mireille',
     dimension: 'emotional',
@@ -119,7 +119,7 @@ export const EMOTIONAL = {
   },
   iris: {
     number: 79,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Iris',
     fullName: 'Iris Calloway',
@@ -143,7 +143,7 @@ export const EMOTIONAL = {
   },
   kaito: {
     number: 40,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Master Kaito',
     dimension: 'emotional',

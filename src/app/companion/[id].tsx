@@ -11,7 +11,7 @@ import { XpBar } from '@/components/xp-bar';
 import { CLASSES } from '@/game';
 import { useGameStore } from '@/store';
 import { useCollection } from '@/store/hooks';
-import { KIND_LABEL, REALMS, formatNumber, isCharacterId } from '@/story/companions';
+import { KIND_LABEL, RARITY_TIERS, REALMS, formatNumber, isCharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
 import { useSocial, type CharacterStat } from '@/social/store';
 
@@ -26,6 +26,7 @@ export default function CompanionSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const collection = useCollection();
   const swapCharacter = useGameStore((s) => s.swapCharacter);
+  const nextDrawAll = useGameStore((s) => s.nextDraw);
   const [bioDone, setBioDone] = useState(false);
   const [skipped, setSkipped] = useState(false);
   // How rare they are among all players, once signed in to the Second 100.
@@ -36,6 +37,7 @@ export default function CompanionSheet() {
   const { companion, unlocked, inParty, progress, pathLevel } = entry;
   const info = CLASSES[companion.dimension];
   const current = collection.party[companion.dimension].companion;
+  const nextArrival = nextDrawAll[companion.dimension];
 
   const swapIn = () => {
     if (swapCharacter(companion.id)) haptics.success();
@@ -47,9 +49,9 @@ export default function CompanionSheet() {
       <View
         style={styles.rarity}
         accessible
-        accessibilityLabel={`${companion.rarity} star${companion.rarity === 1 ? '' : 's'}`}>
+        accessibilityLabel={`${RARITY_TIERS[companion.rarity].name}, ${companion.rarity} star${companion.rarity === 1 ? '' : 's'}`}>
         {Array.from({ length: companion.rarity }, (_, i) => (
-          <Text key={i} style={styles.rarityStar}>
+          <Text key={i} style={[styles.rarityStar, { color: RARITY_TIERS[companion.rarity].color }]}>
             ★
           </Text>
         ))}
@@ -107,7 +109,7 @@ export default function CompanionSheet() {
         </>
       ) : (
         <NoteBox symbol="lock.fill" color={colors.border} iconColor={colors.textMuted}>
-          {`Unlocks at ${info.className} Path Lv ${companion.unlockLevel}. You’re Lv ${pathLevel}: keep up your ${info.dimensionLabel.toLowerCase()} habits to meet them.`}
+          {`Not yet awake. A random ${info.className} arrives every few ${info.dimensionLabel} Path levels (next at Lv ${nextArrival ?? '?'}; you're Lv ${pathLevel}). Rarer characters turn up less often.`}
         </NoteBox>
       )}
     </View>

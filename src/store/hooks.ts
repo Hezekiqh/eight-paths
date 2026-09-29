@@ -171,29 +171,37 @@ const REVEAL_DELAY_MS = 2200;
  * On an older save (revealed is null) everyone already unlocked counts as met.
  */
 export function useRevealQueue() {
-  const collection = useCollection();
-  const revealed = useGameStore((s) => s.revealed);
+  const drops = useGameStore((s) => s.drops);
   const hasPlayer = useGameStore((s) => s.player !== null);
-  const markRevealed = useGameStore((s) => s.markRevealed);
   // Nothing hatches behind the opening intro; it waits until the intro is over.
   const introDone = useSession((s) => s.introDone);
-  const showing = useRef<string | null>(null);
-  const unlocked = collection.entries.filter((e) => e.unlocked).map((e) => e.companion.id);
-  const next = revealed === null ? undefined : unlocked.find((id) => !revealed.includes(id));
+  // The queue length when the last hatch was opened: wait until it shrinks before the next.
+  const opened = useRef<number | null>(null);
+  const next = drops[0];
 
   useEffect(() => {
-    if (!hasPlayer) return;
-    if (revealed === null) {
-      markRevealed(unlocked);
-      return;
-    }
-    if (!next || !introDone || showing.current === next) return;
+    if (opened.current !== null && drops.length < opened.current) opened.current = null;
+    if (!hasPlayer || !next || !introDone || opened.current !== null) return;
     const timer = setTimeout(() => {
-      showing.current = next;
+      opened.current = drops.length;
       router.push({ pathname: '/reveal/[id]', params: { id: next } });
     }, REVEAL_DELAY_MS);
     return () => clearTimeout(timer);
-    // `unlocked` is derived from the collection; `next` captures what matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPlayer, revealed === null, next, introDone, markRevealed]);
+  }, [hasPlayer, next, drops.length, introDone]);
+}
+
+/**
+ * Hands out characters as they come due: whenever XP or shards change, each
+ * Path that has reached its next arrival gets a random character (see
+ * store/draws). Also carries an old save's collection over on first run.
+ */
+export function useCharacterDraws() {
+  const hasPlayer = useGameStore((s) => s.player !== null);
+  const completions = useGameStore((s) => s.completions);
+  const xpGrants = useGameStore((s) => s.xpGrants);
+  const shards = useGameStore((s) => s.shards);
+  const reconcile = useGameStore((s) => s.reconcileDraws);
+  useEffect(() => {
+    if (hasPlayer) reconcile();
+  }, [hasPlayer, completions, xpGrants, shards, reconcile]);
 }

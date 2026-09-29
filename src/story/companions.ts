@@ -8,7 +8,7 @@ import { OCCUPATIONAL } from './characters/occupational';
 import { PHYSICAL } from './characters/physical';
 import { SOCIAL } from './characters/social';
 import { SPIRITUAL } from './characters/spiritual';
-import type { CharacterData, CharacterKind } from './characters/types';
+import type { CharacterData, CharacterKind, Rarity } from './characters/types';
 
 export type { Alignment, CharacterKind, Rarity } from './characters/types';
 
@@ -68,6 +68,7 @@ export const SHARDS_TO_UNLOCK = 3;
  * on that Path), or early with enough shards.
  */
 export function isUnlocked(companion: Companion, pathXp: number, shards = 0): boolean {
+  // The old fixed-level rule: now only used to carry old saves over (see store/draws).
   return levelFromXp(pathXp).level >= companion.unlockLevel || shards >= SHARDS_TO_UNLOCK;
 }
 
@@ -90,3 +91,28 @@ export const KIND_LABEL: Record<CharacterKind, string> = {
   steward: 'Rival',
   legend: 'Legend',
 };
+
+/** What each star count means. Fewer stars is rarer: 1★ is a first-rank, legendary figure. */
+export const RARITY_TIERS: Record<Rarity, { name: string; color: string }> = {
+  1: { name: 'Legendary', color: '#E8A317' },
+  2: { name: 'Epic', color: '#9B59E8' },
+  3: { name: 'Rare', color: '#3B8BEB' },
+  4: { name: 'Uncommon', color: '#3FAE5A' },
+  5: { name: 'Common', color: '#8C8A94' },
+};
+
+/**
+ * Just the stars. The joke is left unexplained: one star is the grandest,
+ * five the plainest. (Tier names stay for VoiceOver only.)
+ */
+export const rarityLabel = (r: Rarity) => '★'.repeat(r);
+
+/** Whether the player has this character: at least one copy, or (old saves not yet reconciled) the old rule. */
+export function hasCharacter(
+  companion: Companion,
+  owned: Partial<Record<CharacterId, number>> | null,
+  pathXp: number,
+  shards = 0,
+): boolean {
+  return owned ? (owned[companion.id] ?? 0) > 0 : isUnlocked(companion, pathXp, shards);
+}

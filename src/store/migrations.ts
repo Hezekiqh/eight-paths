@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -39,6 +39,9 @@ export const MIGRATIONS: Record<number, Migration> = {
   4: (save) => ({ ...save, revealed: null }),
   // v6 adds the Objectives layout choice to the player; sanitizeSave defaults it to upright.
   5: (save) => save,
+  // v7 replaces fixed unlock levels with random arrivals every 3–5 Path levels.
+  // owned null means "work out who was already unlocked" (reconcileDraws does it).
+  6: (save) => ({ ...save, owned: null, nextDraw: {}, drops: [] }),
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -159,9 +162,14 @@ function cleanGoal(raw: unknown): Goal | null {
 function cleanShards(raw: unknown): Partial<Record<CharacterId, number>> {
   if (!isObject(raw)) return {};
   return Object.fromEntries(
-    Object.entries(raw).filter(
-      ([id, n]) => isCharacterId(id) && typeof n === 'number' && Number.isInteger(n) && n > 0,
-    ),
+    Object.entries(raw).filter(([id, n]) => isCharacterId(id) && typeof n === 'number' && Number.isInteger(n) && n > 0),
+  );
+}
+
+function cleanNextDraw(raw: unknown): Partial<Record<Dimension, number>> {
+  if (!isObject(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw).filter(([d, n]) => isDimension(d) && typeof n === 'number' && Number.isFinite(n)),
   );
 }
 
@@ -194,6 +202,9 @@ export function sanitizeSave(raw: unknown): GameData {
     claimed: asArray(save.claimed).filter((c): c is string => typeof c === 'string'),
     goals: keep(asArray(save.goals), cleanGoal),
     revealed: Array.isArray(save.revealed) ? save.revealed.filter(isCharacterId) : null,
+    owned: isObject(save.owned) ? cleanShards(save.owned) : null,
+    nextDraw: cleanNextDraw(save.nextDraw),
+    drops: asArray(save.drops).filter(isCharacterId),
   };
 }
 

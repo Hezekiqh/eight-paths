@@ -4,7 +4,7 @@ import type { CharacterData } from './types';
 export const SOCIAL = {
   pip: {
     number: 82,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Chaotic Good',
     name: 'Pip',
     fullName: 'Pip Larkspur',
@@ -28,7 +28,7 @@ export const SOCIAL = {
   },
   marisol: {
     number: 13,
-    rarity: 5,
+    rarity: 2,
     alignment: 'Neutral Evil',
     name: 'Marisol Vane',
     dimension: 'social',
@@ -122,7 +122,7 @@ export const SOCIAL = {
   },
   kitkat: {
     number: 3,
-    rarity: 5,
+    rarity: 2,
     alignment: 'Chaotic Neutral',
     name: 'Kit and Kat',
     dimension: 'social',
@@ -133,7 +133,7 @@ export const SOCIAL = {
   },
   oyelaran: {
     number: 100,
-    rarity: 5,
+    rarity: 2,
     alignment: 'Lawful Good',
     name: 'Ambassador Oyelaran',
     dimension: 'social',

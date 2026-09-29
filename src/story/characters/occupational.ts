@@ -4,7 +4,7 @@ import type { CharacterData } from './types';
 export const OCCUPATIONAL = {
   tamsin: {
     number: 84,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Neutral Good',
     name: 'Tamsin',
     fullName: 'Tamsin Brasse',
@@ -16,7 +16,7 @@ export const OCCUPATIONAL = {
   },
   rivet: {
     number: 12,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Lawful Good',
     name: 'Wick',
     fullName: 'Wick Rivet',
@@ -98,7 +98,7 @@ export const OCCUPATIONAL = {
   },
   oskar: {
     number: 63,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Lawful Good',
     name: 'Oskar',
     fullName: 'Scrivener Oskar',
@@ -122,7 +122,7 @@ export const OCCUPATIONAL = {
   },
   morrow: {
     number: 4,
-    rarity: 5,
+    rarity: 3,
     alignment: 'Lawful Good',
     name: 'Old Morrow',
     dimension: 'occupational',
@@ -133,7 +133,7 @@ export const OCCUPATIONAL = {
   },
   adaeze: {
     number: 83,
-    rarity: 5,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Guildmaster Adaeze',
     dimension: 'occupational',

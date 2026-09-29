@@ -35,7 +35,7 @@ const CELEBRATION_ART: Partial<Record<CharacterId, number>> = {};
 const INK = '#07060B';
 const RAYS = 12;
 /** Confetti pieces: a fixed spread so every celebration looks the same. */
-const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
+export const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
   x: ((i * 37) % 100) / 100,
   delay: (i * 97) % 900,
   size: 5 + (i % 3) * 2,
@@ -43,7 +43,7 @@ const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
   gold: i % 3 === 0,
 }));
 
-function Confetto({
+export function Confetto({
   piece,
   color,
   width,
@@ -78,7 +78,7 @@ function Confetto({
 }
 
 /** A fan of light turning slowly behind the character, in their Path's colour. */
-function Rays({ color, size, spin }: { color: string; size: number; spin: SharedValue<number> }) {
+export function Rays({ color, size, spin }: { color: string; size: number; spin: SharedValue<number> }) {
   const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value * 360}deg` }] }));
   return (
     <Animated.View style={[{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }, style]}>
