@@ -19,6 +19,7 @@ import { REALM_ART, REALM_BACKGROUNDS } from '@/art/realms';
 import { CHARACTER_ART } from '@/art/sprites';
 import { PixelSprite } from '@/components/pixel-sprite';
 import { CLASSES } from '@/game';
+import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
 import { COMPANIONS, REALMS, type CharacterId } from '@/story/companions';
 import { fonts, spacing } from '@/theme';
@@ -130,6 +131,7 @@ export function LevelUp({ characterId, level, onDone }: Props) {
 
   useEffect(() => {
     haptics.celebrate();
+    playSound('levelUp');
     if (!reduceMotion) {
       pop.set(withTiming(1, { duration: 280, easing: Easing.out(Easing.back(2.2)) }));
       burst.set(withSequence(withTiming(1.25, { duration: 320 }), withTiming(1, { duration: 400 })));

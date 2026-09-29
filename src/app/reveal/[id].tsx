@@ -21,6 +21,7 @@ import { CocoonEye } from '@/components/cocoon-eye';
 import { PixelSprite } from '@/components/pixel-sprite';
 import { TypewriterText } from '@/components/typewriter-text';
 import { CLASSES } from '@/game';
+import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
 import { premiumEnabled } from '@/premium/config';
 import { usePremium } from '@/premium/store';
@@ -391,6 +392,7 @@ export default function RevealScreen() {
     glow.set(0);
     eye.set(0);
     haptics.celebrate();
+    playSound('hatch');
     if (flair.legendary) {
       // A Legendary gets a drumroll of buzzes and slow-turning golden light.
       setTimeout(haptics.celebrate, 350);

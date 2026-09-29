@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
+import { playSound, useAudioSettings } from '@/audio';
 import { LevelUp } from '@/components/level-up';
 import { Segmented } from '@/components/segmented';
 import { KeeperStatusRows } from '@/components/keeper-status';
@@ -54,6 +55,7 @@ export function SettingsPanel() {
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
   const setSmartReminders = useGameStore((s) => s.setSmartReminders);
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
+  const { music, sounds, setMusic, setSounds } = useAudioSettings();
   const exportSave = useGameStore((s) => s.exportSave);
   const learnedTime = useLearnedReminderTime();
   const replayTour = useTour((s) => s.replay);
@@ -119,6 +121,31 @@ export function SettingsPanel() {
               onValueChange={(on) => {
                 setHapticsEnabled(on);
                 if (on) haptics.success();
+              }}
+              trackColor={{ true: color }}
+            />
+          }
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="music"
+          iconColor={color}
+          title="Music"
+          subtitle="Quiet pieces now and then, like a game. Plays alongside your own music."
+          accessory={<Switch value={music} onValueChange={setMusic} trackColor={{ true: color }} />}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="volume-2"
+          iconColor={color}
+          title="Sounds"
+          subtitle="Quests, level-ups and hatches. Quiet when your ringer is off."
+          accessory={
+            <Switch
+              value={sounds}
+              onValueChange={(on) => {
+                setSounds(on);
+                if (on) playSound('quest');
               }}
               trackColor={{ true: color }}
             />

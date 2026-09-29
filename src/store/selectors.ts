@@ -20,10 +20,12 @@ import {
   describeSchedule,
   dimOpacityByDimension,
   dimensionStreak,
+  habitOrder,
   habitStreak,
   levelFromXp,
   overallLevelFromXp,
   questsForDay,
+  sortByHabitOrder,
   radarData,
   totalXp,
   xpByDimension,
@@ -263,8 +265,18 @@ function groupByDimension(views: QuestView[]) {
 
 export type QuestGroup = ReturnType<typeof groupByDimension>[number];
 
+/**
+ * Today's quests in the order the player usually does them: each Path's quests
+ * sorted by where they fall in the day, and the Paths sorted by their earliest
+ * quest. Learned from past days only, so it shifts day to day, not mid-session.
+ */
 export function selectTodayQuestGroups(data: GameData, today: string): QuestGroup[] {
-  return groupByDimension(questsForDay(data.quests, today).map((q) => toQuestView(data, q, today)));
+  const order = habitOrder(data.completions, today);
+  const position = (v: QuestView) => order.get(v.quest.id);
+  const groups = groupByDimension(
+    sortByHabitOrder(questsForDay(data.quests, today).map((q) => toQuestView(data, q, today)), position),
+  );
+  return sortByHabitOrder(groups, (g) => position(g.quests[0]));
 }
 
 export function selectAllQuestGroups(data: GameData, today: string): QuestGroup[] {

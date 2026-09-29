@@ -53,7 +53,8 @@
       "./plugins/without-push-entitlement",
       "expo-sqlite",
       "expo-apple-authentication",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

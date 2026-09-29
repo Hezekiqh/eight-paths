@@ -74,6 +74,26 @@ describe('game store', () => {
     expect(groups.map((g) => g.dimension)).toEqual(['physical']);
   });
 
+  it('orders today by the order the player usually does their quests', () => {
+    start();
+    expect(selectTodayQuestGroups(useGameStore.getState(), today).map((g) => g.dimension)).toEqual([
+      'physical',
+      'intellectual',
+    ]);
+    const [, read, move] = useGameStore.getState().quests;
+    const yesterday = '2026-09-25';
+    useGameStore.setState({
+      completions: [
+        { id: 'a', questId: move.id, dimension: 'physical', date: yesterday, xp: 10, at: 20 * 60 },
+        { id: 'b', questId: read.id, dimension: 'intellectual', date: yesterday, xp: 10, at: 7 * 60 },
+      ],
+    });
+    expect(selectTodayQuestGroups(useGameStore.getState(), today).map((g) => g.dimension)).toEqual([
+      'intellectual',
+      'physical',
+    ]);
+  });
+
   it('completes the tutorial for class XP, then retires it', () => {
     start();
     const outcome = useGameStore.getState().toggleQuest('tutorial', today);

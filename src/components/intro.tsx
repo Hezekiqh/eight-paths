@@ -16,13 +16,15 @@ import Animated, {
 import { COCOON_ART, COCOON_STAGES, DESCENT_ART, INTRO_SCENES, REALM_ART } from '@/art/realms';
 import { CocoonEye } from '@/components/cocoon-eye';
 import { TypewriterText } from '@/components/typewriter-text';
+import { playSound, useMusic } from '@/audio';
 import { haptics } from '@/haptics';
 import { fonts } from '@/theme';
 
 // The story so far, told by the Keeper to the player as they wake: Undertale-
 // style panels, a picture that drifts slowly, the Keeper's line typed into a
-// dialogue box beneath it, a cut to black between. Music comes in a later
-// build; `beat` marks where the heartbeat lands.
+// dialogue box laid over the foot of it, a cut to black between. The picture
+// comes first and the words after, so the eye isn't asked to do both at once.
+// Music comes in a later build; `beat` marks where the heartbeat lands.
 type Scene = 'black' | 'war' | 'council' | 'smile' | 'descent' | 'awake' | 'title';
 type Panel = {
   scene: Scene;
@@ -33,6 +35,8 @@ type Panel = {
   beat?: boolean;
   /** Carry straight on from the previous panel without cutting to black. */
   flow?: boolean;
+  /** When the line starts typing, once the picture has had its moment. */
+  textAt?: number;
 };
 
 const PANELS: Panel[] = [
@@ -40,36 +44,48 @@ const PANELS: Panel[] = [
   { scene: 'war', line: 'Long ago the eight realms were at war, on the brink of destroying themselves.', ms: 5400 },
   { scene: 'council', line: 'Eight kings united and, with their combined strength, saved the world.', ms: 5000 },
   // The same picture carries on; as the Keeper doubts them, their faces change.
-  { scene: 'smile', line: "Or at least that's what they say.", ms: 3800, flow: true },
+  { scene: 'smile', line: "Or at least that's what they say.", ms: 3800, flow: true, textAt: 1000 },
   {
     scene: 'descent',
     line: 'It has been five hundred years since then.',
     ms: 6400,
     from: 0,
     to: DESCENT_ART.archiveTop,
+    // Typing begins as the fall slows, not while the picture is racing past.
+    textAt: 4400,
   },
-  { scene: 'awake', line: "I'm glad you're finally awake.", ms: 4000, flow: true },
+  { scene: 'awake', line: "I'm glad you're finally awake.", ms: 4000, flow: true, textAt: 1300 },
   { scene: 'title', line: '', ms: 2200, beat: true },
 ];
 const TITLE = PANELS.length - 1;
 /** The descent scrolls for this long, then lands in the Archive. */
 const DESCEND_MS = 5600;
-/** Room under the picture for the Keeper's dialogue box. */
-const TEXT_ROOM = 170;
+/** Room above and below the picture, for the skip button. */
+const MARGIN = 140;
 const CUT_MS = 250;
+/** How far the dialogue box sits inside the picture's edge. */
+const INSET = 10;
+/** How long the picture shows alone before the words, unless a panel says. */
+const TEXT_AT = 700;
+/** Time to finish reading once a line has typed out, before moving on. */
+const readMs = (line: string) => (line ? 1200 + 20 * line.length : 0);
 
 const heartbeat = () => {
+  playSound('heartbeat');
   haptics.tap();
   setTimeout(haptics.tap, 170);
 };
 
 /**
  * The opening intro, played every time the app starts: the Keeper telling
- * the waking player what happened. A tap skips to the title; a tap on the
- * title finishes. `onDone` fires once it has faded away.
+ * the waking player what happened. Each panel moves on by itself once its
+ * line has been read; a tap finishes a line that is still typing, or moves
+ * on from one that has. Skip jumps to the title; a tap on the title
+ * finishes. `onDone` fires once it has faded away.
  */
 export function Intro({ onDone }: { onDone: () => void }) {
   const reduceMotion = useReducedMotion();
+  useMusic('intro');
   const { width: W, height: H } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [cut, setCut] = useState(false);
@@ -81,14 +97,21 @@ export function Intro({ onDone }: { onDone: () => void }) {
   const eye = useSharedValue(0);
   const title = useSharedValue(0);
   const ending = useRef(false);
+  const moving = useRef(false);
+  // Which panel each milestone was last reached on, so a new panel starts clean.
+  const [textFrom, setTextFrom] = useState(-1);
+  const [typedOn, setTypedOn] = useState(-1);
+  const [rushedOn, setRushedOn] = useState(-1);
+  const [shownOn, setShownOn] = useState(-1);
   const panel = PANELS[index];
+  const typed = typedOn === index || panel.line === '';
 
-  // A centred 9:16 frame holding a whole scene, with the dialogue box beneath
-  // it, the pair centred on the screen (and the frame's shape suits vertical ads).
-  const boxW = Math.min(W - 48, ((H - TEXT_ROOM - 80) * REALM_ART.width) / REALM_ART.height, 520);
+  // A centred 9:16 frame holding a whole scene, the dialogue box over its
+  // foot (the frame's shape suits vertical ads).
+  const boxW = Math.min(W - 48, ((H - MARGIN) * REALM_ART.width) / REALM_ART.height, 520);
   const px = boxW / REALM_ART.width;
   const boxH = REALM_ART.height * px;
-  const boxTop = Math.max(40, (H - boxH - TEXT_ROOM) / 2);
+  const boxTop = Math.max(40, (H - boxH) / 2);
 
   const finish = () => {
     if (ending.current) return;
@@ -97,9 +120,23 @@ export function Intro({ onDone }: { onDone: () => void }) {
     setTimeout(onDone, 620);
   };
 
-  // Each panel: set its motion going, then cut to black (or flow on) and move on.
+  // Cut to black (or flow on) into the next panel; once per panel.
+  const advance = () => {
+    if (moving.current) return;
+    moving.current = true;
+    if (index >= TITLE) return finish();
+    if (PANELS[index + 1].flow) return setIndex(index + 1);
+    setCut(true);
+    setTimeout(() => {
+      setCut(false);
+      setIndex(index + 1);
+    }, CUT_MS);
+  };
+
+  // Each panel: set its motion going, then let the line in once the picture has landed.
   useEffect(() => {
     const p = PANELS[index];
+    moving.current = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms));
     if (!p.flow) {
@@ -107,7 +144,7 @@ export function Intro({ onDone }: { onDone: () => void }) {
       zoom.set(1);
     }
     if (p.to === undefined && !p.flow && !reduceMotion)
-      zoom.set(withTiming(1.08, { duration: p.ms, easing: Easing.linear }));
+      zoom.set(withTiming(1.04, { duration: p.ms, easing: Easing.linear }));
     if (p.to !== undefined && !reduceMotion)
       pan.set(withTiming(p.to, { duration: DESCEND_MS, easing: Easing.inOut(Easing.quad) }));
     else if (p.to !== undefined) pan.set(p.to);
@@ -137,25 +174,30 @@ export function Intro({ onDone }: { onDone: () => void }) {
       title.set(0);
       title.set(withDelay(150, withTiming(1, { duration: 600 })));
     }
-    later(() => {
-      if (index >= TITLE) return finish();
-      if (PANELS[index + 1].flow) return setIndex(index + 1);
-      setCut(true);
-      later(() => {
-        setCut(false);
-        setIndex(index + 1);
-      }, CUT_MS);
-    }, p.ms);
+    later(() => setTextFrom(index), reduceMotion ? 0 : (p.textAt ?? (p.flow || p.scene === 'black' ? 400 : TEXT_AT)));
+    later(() => setShownOn(index), p.ms);
     return () => timers.forEach(clearTimeout);
     // Shared values are stable; the panel index drives everything.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
+  // Move on once the panel has had its time and the line has been read.
+  useEffect(() => {
+    if (!typed || shownOn !== index) return;
+    const id = setTimeout(advance, readMs(panel.line));
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typed, shownOn, index]);
+
   const onTap = () => {
-    if (index < TITLE) {
-      setCut(false);
-      setIndex(TITLE);
-    } else finish();
+    if (cut) return;
+    if (!typed) setRushedOn(index);
+    else advance();
+  };
+
+  const skip = () => {
+    setCut(false);
+    setIndex(TITLE);
   };
 
   const stageStyle = useAnimatedStyle(() => ({ opacity: fade.value }));
@@ -182,7 +224,7 @@ export function Intro({ onDone }: { onDone: () => void }) {
         style={StyleSheet.absoluteFill}
         onPress={onTap}
         accessibilityRole="button"
-        accessibilityLabel="The story so far. Tap to skip.">
+        accessibilityLabel="The story so far. Tap to continue.">
         {!cut && pictured && (
           <Animated.View
             key={tall ? 'tall' : kings ? 'kings' : index}
@@ -229,20 +271,44 @@ export function Intro({ onDone }: { onDone: () => void }) {
           </View>
         )}
 
-        {!cut && panel.line !== '' && (
-          <View
+        {/* The box only arrives with its words, so the picture has the screen to itself first. */}
+        {!cut && panel.line !== '' && (textFrom === index || rushedOn === index) && (
+          <Animated.View
+            key={`line-${index}`}
+            entering={reduceMotion ? undefined : FadeIn.duration(200)}
             style={[
               styles.dialogue,
               pictured
-                ? { top: boxTop + boxH + 18, left: (W - boxW) / 2, right: (W - boxW) / 2 }
+                ? {
+                    bottom: H - boxTop - boxH + INSET,
+                    left: (W - boxW) / 2 + INSET,
+                    right: (W - boxW) / 2 + INSET,
+                  }
                 : { top: H * 0.42, left: 28, right: 28 },
             ]}>
             <Text style={styles.speaker}>???</Text>
-            <TypewriterText key={index} text={panel.line} letterMs={36} style={styles.line} />
-          </View>
+            <TypewriterText
+              key={index}
+              text={panel.line}
+              letterMs={36}
+              start={textFrom === index}
+              instant={rushedOn === index}
+              onDone={() => setTypedOn(index)}
+              style={styles.line}
+            />
+          </Animated.View>
         )}
-        <Text style={styles.skip}>Tap to skip</Text>
       </Pressable>
+      {index < TITLE && (
+        <Pressable
+          onPress={skip}
+          hitSlop={16}
+          style={styles.skipButton}
+          accessibilityRole="button"
+          accessibilityLabel="Skip the intro">
+          <Text style={styles.skip}>Skip</Text>
+        </Pressable>
+      )}
     </Animated.View>
   );
 }
@@ -266,12 +332,6 @@ const styles = StyleSheet.create({
   line: { color: '#FFFFFF', fontFamily: fonts.dialogue, fontSize: 18, lineHeight: 28 },
   titleWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   title: { color: '#FFD27A', fontFamily: fonts.bold, fontSize: 64, letterSpacing: 4, textAlign: 'center' },
-  skip: {
-    position: 'absolute',
-    bottom: 36,
-    alignSelf: 'center',
-    color: '#5A5670',
-    fontFamily: fonts.regular,
-    fontSize: 13,
-  },
+  skipButton: { position: 'absolute', bottom: 28, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 8 },
+  skip: { color: '#5A5670', fontFamily: fonts.regular, fontSize: 14, letterSpacing: 1 },
 });

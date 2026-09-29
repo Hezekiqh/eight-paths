@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
+import { claimMusic } from '@/audio';
 import { DialogueBox, type Dialogue } from '@/components/world/dialogue-box';
 import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
@@ -48,7 +49,9 @@ function usePlaying() {
   useFocusEffect(
     useCallback(() => {
       keepSideways = false;
+      const releaseMusic = claimMusic('world');
       return () => {
+        releaseMusic();
         if (keepSideways) return;
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
         setPlaying(false);

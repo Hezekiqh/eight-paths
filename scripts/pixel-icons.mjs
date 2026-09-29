@@ -26,6 +26,8 @@ const ICONS = [
   'trash',
   'flag',
   'star',
+  'music',
+  'volume-2',
 ];
 
 const entries = ICONS.map((name) => {

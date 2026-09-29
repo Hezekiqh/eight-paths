@@ -15,3 +15,4 @@ export * from './keeper';
 export * from './usual-time';
 export * from './objectives';
 export * from './calendar';
+export * from './habit-order';

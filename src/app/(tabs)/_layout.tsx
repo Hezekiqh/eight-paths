@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RetroTabButton } from '@/components/retro-tab-bar';
+import { useMusic } from '@/audio';
 import { useInviteRewards } from '@/social/rewards';
 import { useKeeperActions } from '@/notifications/use-keeper-actions';
 import { useKeeperAsk } from '@/notifications/use-keeper-ask';
@@ -33,6 +34,7 @@ export default function TabsLayout() {
   useSocialSync();
   usePurchases();
   useInviteRewards();
+  useMusic('home');
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);
   // The game fills the screen; its pause menu leads back to the World menu and the other tabs.

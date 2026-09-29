@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
 import { ClassHeader } from '@/components/class-header';
 import { KeeperTour } from '@/components/keeper-tour';
@@ -67,6 +68,9 @@ export default function TodayScreen() {
       if (outcome.overallLevelUp !== null && outcome.overallLevelUp % 10 === 0) haptics.celebrate();
       else if (outcome.gain.leveledUp || outcome.characterLeveledUp || outcome.overallLevelUp) haptics.success();
       else haptics.nudge();
+      // A companion's level-up plays its own fanfare over the top.
+      const leveled = outcome.gain.leveledUp || outcome.overallLevelUp !== null;
+      playSound(leveled && !outcome.characterLevelUp ? 'levelUp' : 'quest');
       setBanner({
         key: outcome.completionId,
         dimension: outcome.dimension,
