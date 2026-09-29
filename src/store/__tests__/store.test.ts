@@ -205,7 +205,13 @@ describe('loading a saved game', () => {
     useGameStore.getState().reconcileDraws();
     const arrivals = useGameStore.getState().drops;
     expect(arrivals.length).toBeGreaterThan(0);
-    expect(arrivals.every((id) => ['intellectual'].includes(selectCollection(useGameStore.getState()).entries.find((e) => e.companion.id === id)!.companion.dimension))).toBe(true);
+    expect(
+      arrivals.every((id) =>
+        ['intellectual'].includes(
+          selectCollection(useGameStore.getState()).entries.find((e) => e.companion.id === id)!.companion.dimension,
+        ),
+      ),
+    ).toBe(true);
     useGameStore.setState((s) => ({ owned: { ...s.owned, ottilie: 1 } }));
     expect(useGameStore.getState().swapCharacter('ottilie')).toBe(true);
 
@@ -256,6 +262,16 @@ describe('loading a saved game', () => {
     expect(reward.title).toMatch(/XP/);
     expect(useGameStore.getState().xpGrants).toHaveLength(1);
     expect(useGameStore.getState().player!.restTokens).toBe(3);
+  });
+
+  it('never grants a character just by showing one (the dev test buttons are visual only)', () => {
+    start();
+    const before = { owned: useGameStore.getState().owned, drops: useGameStore.getState().drops };
+    // A hatch closing for someone who never arrived (as a preview or a stray link would).
+    useGameStore.getState().finishDrop('aurelio');
+    expect(useGameStore.getState().owned).toEqual(before.owned);
+    expect(useGameStore.getState().owned?.aurelio).toBeUndefined();
+    expect(useGameStore.getState().swapCharacter('aurelio')).toBe(false);
   });
 
   it('unlocks a character early with enough shards', () => {
