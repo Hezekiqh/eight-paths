@@ -1,10 +1,11 @@
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { haptics } from '@/haptics';
 import { ClassHeader } from '@/components/class-header';
+import { KeeperTour } from '@/components/keeper-tour';
 import { ProgressStrip } from '@/components/progress-strip';
 import { QuestCard } from '@/components/quest-card';
 import { RadarCard } from '@/components/radar/radar-card';
@@ -26,6 +27,7 @@ import {
 } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 import type { CharacterId } from '@/story/companions';
+import { useTour, useTourScroller, useTourTarget } from '@/tutorial/tour';
 
 type Banner = { key: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null };
 
@@ -45,6 +47,14 @@ export default function TodayScreen() {
   const [levelUp, setLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
   const [wrapUpPending, setWrapUpPending] = useState(false);
   const [wrapUpVisible, setWrapUpVisible] = useState(false);
+
+  const scroller = useTourScroller();
+  const addRef = useTourTarget('add-quest', scroller);
+  const radarRef = useTourTarget('radar', scroller);
+  const questRef = useTourTarget('first-quest', scroller);
+  const focused = useIsFocused();
+  const introDone = useSession((s) => s.introDone);
+  const tourDue = useTour((s) => s.ready && !s.done);
 
   const onToggle = (questId: string) => {
     const outcome = toggleQuest(questId, today);
@@ -84,12 +94,18 @@ export default function TodayScreen() {
   };
 
   if (!player || !classInfo) return null;
+  // The Keeper's tour waits for the first quest and its wrap-up, and for the screen to be quiet.
+  const touring =
+    tourDue && introDone && focused && !tutorial && !wrapUpPending && !wrapUpVisible && !banner && !levelUp;
 
   return (
     <View style={styles.flex}>
       <Screen
+        scrollRef={scroller.ref}
+        onScroll={scroller.onScroll}
         action={
           <Pressable
+            ref={addRef}
             accessibilityRole="button"
             accessibilityLabel="Add quest"
             onPress={() => {
@@ -110,18 +126,22 @@ export default function TodayScreen() {
         ) : (
           <>
             <ProgressStrip summary={summary} color={classInfo.color} />
-            <RadarCard today={today} classInfo={classInfo} />
+            <View ref={radarRef} collapsable={false}>
+              <RadarCard today={today} classInfo={classInfo} />
+            </View>
           </>
         )}
         {!tutorial && groups.length === 0 && (
           <Text style={styles.hint}>No quests scheduled today. Tap + to add one.</Text>
         )}
         {!tutorial &&
-          groups.map((group) => (
+          groups.map((group, g) => (
             <View key={group.dimension} style={styles.group}>
               <ClassHeader info={group.info} />
-              {group.quests.map((view) => (
-                <QuestCard key={view.quest.id} view={view} onPress={() => onToggle(view.quest.id)} />
+              {group.quests.map((view, q) => (
+                <View key={view.quest.id} ref={g === 0 && q === 0 ? questRef : undefined} collapsable={false}>
+                  <QuestCard view={view} onPress={() => onToggle(view.quest.id)} />
+                </View>
               ))}
             </View>
           ))}
@@ -147,6 +167,7 @@ export default function TodayScreen() {
           onDone={onBannerDone}
         />
       )}
+      <KeeperTour visible={touring} />
       <WrapUpCard
         visible={wrapUpVisible}
         info={classInfo}

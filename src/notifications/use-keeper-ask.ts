@@ -6,6 +6,7 @@ import { showUpStreak } from '@/game';
 import { useGameStore } from '@/store';
 import { useSession } from '@/store/session';
 import { DEFAULT_PARTY } from '@/story/companions';
+import { useTour } from '@/tutorial/tour';
 
 import { nextKeeperAsk } from './ask-rules';
 import { useAskHistory } from './ask-store';
@@ -34,6 +35,8 @@ export function useKeeperAsk(today: string) {
   const pathname = usePathname();
   const introDone = useSession((s) => s.introDone);
   const hold = useSession((s) => s.keeperHold);
+  // The Keeper's tour of the app comes first.
+  const touring = useTour((s) => !s.ready || !s.done);
   const player = useGameStore((s) => s.player);
   const completions = useGameStore((s) => s.completions);
   const restDays = useGameStore((s) => s.restDays);
@@ -49,7 +52,7 @@ export function useKeeperAsk(today: string) {
     [player, completions, restDays, today],
   );
   const ready =
-    introDone && !hold && !dropsWaiting && ASK_SCREENS.has(pathname) && (player?.tutorialComplete ?? false);
+    introDone && !hold && !touring && !dropsWaiting && ASK_SCREENS.has(pathname) && (player?.tutorialComplete ?? false);
 
   useEffect(() => {
     if (!ready) return;

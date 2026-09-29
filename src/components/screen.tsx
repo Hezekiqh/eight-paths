@@ -1,16 +1,21 @@
-import type { PropsWithChildren, ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { PropsWithChildren, ReactNode, Ref } from 'react';
+import { ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, fonts, spacing } from '@/theme';
 
 /** Tab screens leave out `title`; the tab bar already names them. */
-type Props = PropsWithChildren<{ title?: string; action?: ReactNode }>;
+type Props = PropsWithChildren<{
+  title?: string;
+  action?: ReactNode;
+  scrollRef?: Ref<ScrollView>;
+  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+}>;
 
-export function Screen({ title, action, children }: Props) {
+export function Screen({ title, action, scrollRef, onScroll, children }: Props) {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={32} contentContainerStyle={styles.content}>
         {(title || action) && (
           <View style={[styles.titleRow, !title && styles.actionOnly]}>
             {title && <Text style={styles.title}>{title}</Text>}

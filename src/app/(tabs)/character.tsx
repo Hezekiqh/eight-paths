@@ -22,6 +22,7 @@ import { useClassInfo, useCollection, useLearnedReminderTime, useOverallProgress
 import { haptics } from '@/haptics';
 import { ROSTER, rarityLabel, type CharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing, windowStyle, theme } from '@/theme';
+import { useTour } from '@/tutorial/tour';
 
 /** "7:25 PM", in the phone's own clock style. */
 function clock(time: string): string {
@@ -53,6 +54,7 @@ export default function CharacterScreen() {
   const learnedTime = useLearnedReminderTime();
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const exportSave = useGameStore((s) => s.exportSave);
+  const replayTour = useTour((s) => s.replay);
   const profile = useSocial((s) => s.profile);
   const premium = usePremium((s) => s.premium);
   const [value, setValue] = useState<number | null>(null);
@@ -248,6 +250,17 @@ export default function CharacterScreen() {
           title="Change class"
           subtitle={`Currently ${classInfo.className}`}
           onPress={() => router.push('/change-class')}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="map"
+          iconColor={classInfo.color}
+          title="Replay the tour"
+          subtitle="Let the Keeper show you around again"
+          onPress={() => {
+            replayTour();
+            router.navigate('/');
+          }}
         />
         <View style={styles.divider} />
         <SettingsRow

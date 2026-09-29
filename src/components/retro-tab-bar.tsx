@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View, type View as ViewType } from 'react-native
 import { PixelIcon } from '@/components/pixel-icon';
 import type { PixelIconName } from '@/components/pixel-icons';
 import { haptics } from '@/haptics';
+import { useTourTarget } from '@/tutorial/tour';
 import { colors, spacing } from '@/theme';
 
 type Props = TabTriggerSlotProps & {
@@ -23,6 +24,8 @@ export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButto
   { label, icon, badge, isFocused, onPress, ...props },
   ref,
 ) {
+  // The Keeper's tour points at tabs by their label.
+  const tourRef = useTourTarget(`tab:${label}`);
   const tint = isFocused ? colors.accent : colors.textMuted;
   return (
     <Pressable
@@ -36,7 +39,7 @@ export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButto
       accessibilityState={{ selected: isFocused }}
       accessibilityLabel={badge ? `${label}, rewards to claim` : label}
       style={styles.tab}>
-      <View>
+      <View ref={tourRef} collapsable={false}>
         {isFocused && (
           <View style={styles.cursor}>
             <PixelIcon name="heart" color={colors.accent} size={12} />
