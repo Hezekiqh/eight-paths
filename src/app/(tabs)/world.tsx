@@ -10,7 +10,9 @@ import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/wor
 import { useGameStore } from '@/store';
 import { useObjectives, useToday } from '@/store/hooks';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
-import { FACINGS, MAPS, TILE, objectAt, tileAt, type WorldMap } from '@/world/maps';
+import { COMPANIONS } from '@/story/companions';
+import { FACINGS, MAPS, TILE, objectAt, tileAt, withoutCharacter, type WorldMap } from '@/world/maps';
+import { characterQuestions } from '@/world/talk';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { worldHero } from '@/world/hero';
 import type { WalkerId } from '@/world/walkers';
@@ -37,10 +39,12 @@ function useSideways() {
 export default function WorldScreen() {
   useSideways();
   const hydrated = useWorldHydrated();
+  const [hero] = useParty();
   const { width, height } = useWindowDimensions();
   // Wait for the save and for the phone to finish turning sideways.
   if (!hydrated || width < height) return <View style={styles.root} />;
-  return <World width={width} height={height} />;
+  // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
+  return <World key={hero} hero={hero} width={width} height={height} />;
 }
 
 /**
@@ -54,25 +58,33 @@ function useParty(): WalkerId[] {
   return useMemo(() => [worldHero(picked, party, classDimension)], [picked, party, classDimension]);
 }
 
-function startFor(saved: WorldPosition | null): {
+/** Where to start: the saved spot, unless someone now stands there (then the map's spawn). */
+function startFor(
+  saved: WorldPosition | null,
+  hero: WalkerId,
+): {
   map: WorldMap;
   x: number;
   y: number;
   facing: WorldPosition['facing'];
 } {
-  if (saved) return { ...saved, map: MAPS[saved.map] };
-  const map = MAPS.archive;
+  if (saved) {
+    const map = withoutCharacter(MAPS[saved.map], hero);
+    const tile = Math.floor((saved.y - 1) / TILE) * map.width + Math.floor(saved.x / TILE);
+    if (!map.solid[tile]) return { ...saved, map };
+  }
+  const map = withoutCharacter(MAPS.archive, hero);
   const [x, y] = npcFeet(map.spawn);
   return { map, x, y, facing: map.spawn.facing };
 }
 
-function World({ width, height }: { width: number; height: number }) {
+function World({ hero, width, height }: { hero: WalkerId; width: number; height: number }) {
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
   const savePosition = useWorldStore((s) => s.savePosition);
-  const [start] = useState(() => startFor(useWorldStore.getState().position));
+  const [start] = useState(() => startFor(useWorldStore.getState().position, hero));
   const map = start.map;
-  const party = useParty();
+  const party = useMemo(() => [hero], [hero]);
   const sim = useWorldSim(start, map.npcs);
   const today = useToday();
   const { unclaimed } = useObjectives(today);
@@ -171,7 +183,11 @@ function useAct(map: WorldMap, sim: WorldSim, setDialogue: (d: Dialogue) => void
       const turned = [...sim.npcFacing.get()];
       turned[i] = OPPOSITE[facing];
       sim.npcFacing.set(turned);
-      setDialogue({ speaker: thing.name, lines: thing.lines });
+      setDialogue({
+        speaker: thing.name,
+        lines: thing.lines,
+        questions: thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined),
+      });
       return;
     }
     if (thing?.type === 'board') {

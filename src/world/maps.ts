@@ -1,4 +1,6 @@
 import archiveData from './maps/archive.json';
+import type { CharacterId } from '@/story/companions';
+
 import type { WalkerId } from './walkers';
 
 export const TILE = 16;
@@ -14,8 +16,16 @@ export type NpcObject = {
   sprite: WalkerId;
   facing: Facing;
   name: string;
+  /** What they say when you first talk to them. */
   lines: string[];
+  /** Questions you can ask them afterwards, from a menu (plus Goodbye). */
+  questions?: Question[];
+  /** A character from the collection: they get the standard three questions (see talk.ts). */
+  character?: CharacterId;
 };
+
+/** Something the player can ask an NPC, and the answer, a line per box. */
+export type Question = { ask: string; answer: string[] };
 
 /** The Archive's quest board: opens the objectives. */
 export type BoardObject = { id: string; type: 'board'; x: number; y: number };
@@ -73,6 +83,16 @@ function build(data: MapData, image: number): WorldMap {
     objects,
     npcs,
   };
+}
+
+/** The map without a character standing in it: they're the one walking the World. */
+export function withoutCharacter(map: WorldMap, id: string): WorldMap {
+  if (!map.npcs.some((n) => n.character === id)) return map;
+  const objects = map.objects.filter((o) => o.type !== 'npc' || o.character !== id);
+  const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
+  const solid = map.tiles.flatMap((row) => [...row].map((c) => (WALKABLE.has(c) ? 0 : 1)));
+  for (const n of npcs) solid[n.y * map.width + n.x] = 1;
+  return { ...map, objects, npcs, solid };
 }
 
 export const MAPS = {

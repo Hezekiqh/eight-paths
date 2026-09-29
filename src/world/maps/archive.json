@@ -41,9 +41,138 @@
       "name": "The Keeper",
       "lines": [
         "Ah, you're on your feet. Good. Slowly, now. Five hundred years is a long sleep.",
-        "Walk wherever you like. The Archive is yours as much as mine.",
-        "The board on the north wall holds the day's tasks, if you want something to do.",
-        "The door? Not yet. When you're stronger, it will open."
+        "The board on the north wall holds the day's tasks, if you want something to do."
+      ],
+      "questions": [
+        {
+          "ask": "What is this place?",
+          "answer": [
+            "The Archive. Everything the old world knew, written down before it was lost.",
+            "It sits a little apart from everything else. Time doesn't pass here the way it does out there.",
+            "That's how you slept so long, and woke up looking so well."
+          ]
+        },
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Me? The Keeper. I keep the Archive, and I kept you safe while you slept.",
+            "I know more than I'm saying. I won't pretend I don't.",
+            "But who you were is yours to find. I think you'd rather remember it than be told."
+          ]
+        },
+        {
+          "ask": "How do I leave?",
+          "answer": [
+            "Through the door, when you're strong enough. Every habit you keep out there makes you stronger in here.",
+            "Raise your overall level and the door will open onto other worlds.",
+            "Some places are harder to reach: boulders, rivers, dark caves. Your party members will need to reach certain levels to get there and clear the way."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brannoc",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "brannoc",
+      "facing": "down",
+      "name": "Brannoc",
+      "character": "brannoc",
+      "lines": [
+        "You're up! Good, good. I was guarding you. From over here. Tactically."
+      ]
+    },
+    {
+      "id": "ysolde",
+      "type": "npc",
+      "x": 5,
+      "y": 3,
+      "sprite": "ysolde",
+      "facing": "down",
+      "name": "Ysolde",
+      "character": "ysolde",
+      "lines": [
+        "Awake at last. Five hundred years of lodging, and not a coin paid. I'm joking. Mostly."
+      ]
+    },
+    {
+      "id": "quill",
+      "type": "npc",
+      "x": 7,
+      "y": 3,
+      "sprite": "quill",
+      "facing": "down",
+      "name": "Quill",
+      "character": "quill",
+      "lines": [
+        "Oh! You're awake! Do you know how many books are in here? I do. Roughly. Give or take a shelf."
+      ]
+    },
+    {
+      "id": "wren",
+      "type": "npc",
+      "x": 9,
+      "y": 3,
+      "sprite": "wren",
+      "facing": "down",
+      "name": "Wren",
+      "character": "wren",
+      "lines": [
+        "Welcome back. Take it slowly. The first steps are always the strangest."
+      ]
+    },
+    {
+      "id": "oren",
+      "type": "npc",
+      "x": 17,
+      "y": 3,
+      "sprite": "oren",
+      "facing": "down",
+      "name": "Oren",
+      "character": "oren",
+      "lines": [
+        "You're awake.",
+        "Good."
+      ]
+    },
+    {
+      "id": "pip",
+      "type": "npc",
+      "x": 19,
+      "y": 3,
+      "sprite": "pip",
+      "facing": "down",
+      "name": "Pip",
+      "character": "pip",
+      "lines": [
+        "There you are! I wrote you a welcome song. It's mostly about sleeping. Very restful chorus."
+      ]
+    },
+    {
+      "id": "tamsin",
+      "type": "npc",
+      "x": 21,
+      "y": 3,
+      "sprite": "tamsin",
+      "facing": "down",
+      "name": "Tamsin",
+      "character": "tamsin",
+      "lines": [
+        "Mind that shelf. It wobbles. I'll fix it. Later."
+      ]
+    },
+    {
+      "id": "moss",
+      "type": "npc",
+      "x": 23,
+      "y": 3,
+      "sprite": "moss",
+      "facing": "down",
+      "name": "Moss",
+      "character": "moss",
+      "lines": [
+        "Tuft noticed you before I did. He notices everything."
       ]
     },
     { "id": "board", "type": "board", "x": 6, "y": 2 }
