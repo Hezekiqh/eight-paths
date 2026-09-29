@@ -3,7 +3,6 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import type { ClassInfo } from '@/game';
-import { ensureReminderPermission } from '@/notifications';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 type Props = {
@@ -12,16 +11,8 @@ type Props = {
   onClose: () => void;
 };
 
-/** Ends onboarding; the notification permission prompt is shown only from here. */
+/** Ends onboarding. The Keeper asks about notifications right after it closes. */
 export function WrapUpCard({ visible, info, onClose }: Props) {
-  const finish = async () => {
-    try {
-      await ensureReminderPermission();
-    } finally {
-      onClose();
-    }
-  };
-
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -31,11 +22,8 @@ export function WrapUpCard({ visible, info, onClose }: Props) {
           <Text style={styles.body}>
             These quests are just a start: edit, add, or remove them anytime.
           </Text>
-          <Text style={styles.body}>
-            Want a gentle evening reminder? We&apos;ll ask for permission next.
-          </Text>
           <View style={styles.button}>
-            <Button title="Continue" color={info.color} onPress={finish} />
+            <Button title="Continue" color={info.color} onPress={onClose} />
           </View>
         </View>
       </View>

@@ -71,9 +71,14 @@ export default function RootLayout() {
             <Stack.Screen name="all-quests" options={{ presentation: 'modal' }} />
             <Stack.Screen name="change-class" options={{ presentation: 'modal' }} />
             <Stack.Screen name="goal-editor" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="quest-board" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
             <Stack.Screen name="social" options={{ presentation: 'modal' }} />
             <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
             <Stack.Screen name="drop-odds" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="keeper-call"
+              options={{ presentation: 'transparentModal', animation: 'fade', gestureEnabled: false }}
+            />
             <Stack.Screen name="friend/[code]" options={{ animation: 'none' }} />
             <Stack.Screen name="auth-callback" options={{ animation: 'none' }} />
           </Stack.Protected>

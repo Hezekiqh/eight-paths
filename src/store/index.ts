@@ -113,7 +113,9 @@ type Actions = {
   addQuest: (draft: QuestDraft) => void;
   updateQuest: (id: string, draft: QuestDraft) => void;
   archiveQuest: (id: string) => void;
+  /** Picks a set reminder time, which turns off "at my usual time". */
   setNotificationTime: (time: string) => void;
+  setSmartReminders: (on: boolean) => void;
   setHapticsEnabled: (on: boolean) => void;
   setObjectivesLandscape: (on: boolean) => void;
   changeClass: (dimension: Dimension) => void;
@@ -285,6 +287,7 @@ export const useGameStore = create<GameState>()(
             notificationTime: '20:00',
             hapticsEnabled: true,
             objectivesLandscape: false,
+            smartReminders: true,
           },
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
           // The core eight are there from the start: no reveal needed.
@@ -308,7 +311,13 @@ export const useGameStore = create<GameState>()(
           set({ completions: result.completions });
           return { kind: result.kind };
         }
-        const completion = { ...result.completion, characterId: party[quest.dimension] };
+        const now = new Date();
+        const completion = {
+          ...result.completion,
+          characterId: party[quest.dimension],
+          // Only a completion made today, right now, says when the player plays.
+          ...(toDateKey(now) === today ? { at: now.getHours() * 60 + now.getMinutes() } : {}),
+        };
         set({ completions: result.completions.map((c) => (c === result.completion ? completion : c)) });
         const xpBeforeAll = totalXp([...completions, ...xpGrants]);
         const levelAfter = overallLevelFromXp(xpBeforeAll + completion.xp).level;
@@ -355,7 +364,9 @@ export const useGameStore = create<GameState>()(
         })),
 
       setNotificationTime: (notificationTime) =>
-        set((s) => (s.player ? { player: { ...s.player, notificationTime } } : s)),
+        set((s) => (s.player ? { player: { ...s.player, notificationTime, smartReminders: false } } : s)),
+      setSmartReminders: (smartReminders) =>
+        set((s) => (s.player ? { player: { ...s.player, smartReminders } } : s)),
 
       setHapticsEnabled: (hapticsEnabled) => set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
 

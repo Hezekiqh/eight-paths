@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -44,6 +44,9 @@ export const MIGRATIONS: Record<number, Migration> = {
   6: (save) => ({ ...save, owned: null, nextDraw: {}, drops: [] }),
   // v8 adds Premium redos of waiting drops; sanitizeSave starts the list empty.
   7: (save) => save,
+  // v9 adds completion times and the "at my usual time" reminder setting;
+  // sanitizeSave turns it on only for players who never changed the 8 PM default.
+  8: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -67,6 +70,9 @@ function cleanPlayer(raw: unknown): Player | null {
     notificationTime: formatTime(time.hour, time.minute),
     hapticsEnabled: raw.hapticsEnabled !== false,
     objectivesLandscape: raw.objectivesLandscape === true,
+    // Someone who picked their own time keeps it; the untouched default learns.
+    smartReminders:
+      typeof raw.smartReminders === 'boolean' ? raw.smartReminders : formatTime(time.hour, time.minute) === '20:00',
   };
 }
 
@@ -107,6 +113,7 @@ function cleanCompletion(raw: unknown): Completion | null {
     xp: raw.xp,
     // Unknown or missing: credit the core companion, who held every slot first.
     characterId: isCharacterId(raw.characterId) ? raw.characterId : DEFAULT_PARTY[raw.dimension],
+    ...(Number.isInteger(raw.at) && (raw.at as number) >= 0 && (raw.at as number) < 24 * 60 ? { at: raw.at as number } : {}),
   };
 }
 

@@ -1,0 +1,192 @@
+import { router, useFocusEffect } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, StyleSheet, View, useWindowDimensions } from 'react-native';
+
+import { DialogueBox, type Dialogue } from '@/components/world/dialogue-box';
+import { PauseMenu } from '@/components/world/pause-menu';
+import { WorldControls } from '@/components/world/world-controls';
+import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
+import { useGameStore } from '@/store';
+import { useObjectives, useToday } from '@/store/hooks';
+import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
+import { FACINGS, MAPS, TILE, objectAt, tileAt, type WorldMap } from '@/world/maps';
+import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
+import { worldHero } from '@/world/hero';
+import type { WalkerId } from '@/world/walkers';
+
+/**
+ * Set just before opening a screen over the World (the quest board), so the
+ * phone stays sideways instead of flipping upright for a moment.
+ */
+let keepSideways = false;
+
+/** Turns the phone sideways while the World is open, and back upright on leaving it. */
+function useSideways() {
+  useFocusEffect(
+    useCallback(() => {
+      keepSideways = false;
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      return () => {
+        if (!keepSideways) ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      };
+    }, []),
+  );
+}
+
+export default function WorldScreen() {
+  useSideways();
+  const hydrated = useWorldHydrated();
+  const { width, height } = useWindowDimensions();
+  // Wait for the save and for the phone to finish turning sideways.
+  if (!hydrated || width < height) return <View style={styles.root} />;
+  return <World width={width} height={height} />;
+}
+
+/**
+ * One character walks the World: the party member picked from their sheet on
+ * the Today screen (worldHero falls back to your class's companion).
+ */
+function useParty(): WalkerId[] {
+  const picked = useWorldStore((s) => s.hero);
+  const party = useGameStore((s) => s.party);
+  const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
+  return useMemo(() => [worldHero(picked, party, classDimension)], [picked, party, classDimension]);
+}
+
+function startFor(saved: WorldPosition | null): {
+  map: WorldMap;
+  x: number;
+  y: number;
+  facing: WorldPosition['facing'];
+} {
+  if (saved) return { ...saved, map: MAPS[saved.map] };
+  const map = MAPS.archive;
+  const [x, y] = npcFeet(map.spawn);
+  return { map, x, y, facing: map.spawn.facing };
+}
+
+function World({ width, height }: { width: number; height: number }) {
+  const controls = useWorldStore((s) => s.controls);
+  const setControls = useWorldStore((s) => s.setControls);
+  const savePosition = useWorldStore((s) => s.savePosition);
+  const [start] = useState(() => startFor(useWorldStore.getState().position));
+  const map = start.map;
+  const party = useParty();
+  const sim = useWorldSim(start, map.npcs);
+  const today = useToday();
+  const { unclaimed } = useObjectives(today);
+
+  const [focused, setFocused] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const [dialogue, setDialogue] = useState<Dialogue | null>(null);
+
+  // Points per art pixel: about eight and a half tiles top to bottom, in whole steps so pixels stay sharp.
+  const scale = Math.min(4, Math.max(2, Math.round(height / (TILE * 8.5))));
+
+  const save = useCallback(() => {
+    savePosition({
+      map: map.id as WorldPosition['map'],
+      x: sim.x.get(),
+      y: sim.y.get(),
+      facing: FACINGS[sim.facing.get()],
+    });
+  }, [map, sim, savePosition]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => {
+        setFocused(false);
+        save();
+      };
+    }, [save]),
+  );
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => s !== 'active' && save());
+    return () => sub.remove();
+  }, [save]);
+
+  const frozen = paused || dialogue !== null;
+  useEffect(() => {
+    sim.frozen.set(frozen);
+  }, [frozen, sim]);
+
+  const act = useAct(map, sim, setDialogue, save);
+  const board = map.objects.find((o) => o.type === 'board');
+
+  return (
+    <View style={styles.root}>
+      <WorldView
+        map={map}
+        party={party}
+        sim={sim}
+        width={width}
+        height={height}
+        scale={scale}
+        active={focused}
+        marks={unclaimed > 0 && board ? [board] : []}
+      />
+      {!frozen && (
+        <WorldControls
+          scheme={controls}
+          sim={sim}
+          onAct={act}
+          onPause={() => {
+            save();
+            setPaused(true);
+          }}
+        />
+      )}
+      {dialogue && <DialogueBox dialogue={dialogue} onClose={() => setDialogue(null)} />}
+      {paused && (
+        <PauseMenu
+          mapName={map.name}
+          controls={controls}
+          onControls={setControls}
+          onResume={() => setPaused(false)}
+          onLeave={() => {
+            setPaused(false);
+            router.navigate('/');
+          }}
+        />
+      )}
+    </View>
+  );
+}
+
+const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
+
+/** What A (or a tap) does: talk to whoever's in front, open the quest board, or examine the tile. */
+function useAct(map: WorldMap, sim: WorldSim, setDialogue: (d: Dialogue) => void, save: () => void) {
+  const busy = useRef(false);
+  return useCallback(() => {
+    if (busy.current) return;
+    const facing = sim.facing.get();
+    const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
+    const thing = objectAt(map, tx, ty);
+    if (thing?.type === 'npc') {
+      // they turn to face you
+      const i = map.npcs.indexOf(thing);
+      const turned = [...sim.npcFacing.get()];
+      turned[i] = OPPOSITE[facing];
+      sim.npcFacing.set(turned);
+      setDialogue({ speaker: thing.name, lines: thing.lines });
+      return;
+    }
+    if (thing?.type === 'board') {
+      save();
+      keepSideways = true;
+      busy.current = true;
+      router.push('/quest-board');
+      setTimeout(() => (busy.current = false), 600);
+      return;
+    }
+    const lines = map.examine[tileAt(map, tx, ty)];
+    if (lines) setDialogue({ lines });
+  }, [map, sim, setDialogue, save]);
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#0C0806' },
+});

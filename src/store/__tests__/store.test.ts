@@ -1,4 +1,4 @@
-import { DIMENSIONS } from '@/game';
+import { DIMENSIONS, toDateKey } from '@/game';
 import { usePremium } from '@/premium/store';
 
 import { useGameStore, initialData } from '../index';
@@ -372,5 +372,29 @@ describe('loading a saved game', () => {
     const revealed = useGameStore.getState().revealed!;
     expect(revealed).toHaveLength(9);
     expect(revealed).toContain('dessa');
+  });
+});
+
+describe('usual-time reminders', () => {
+  it('starts new players on "at my usual time", and picking a time turns it off', () => {
+    start();
+    expect(useGameStore.getState().player?.smartReminders).toBe(true);
+    useGameStore.getState().setNotificationTime('07:30');
+    expect(useGameStore.getState().player).toMatchObject({ notificationTime: '07:30', smartReminders: false });
+    useGameStore.getState().setSmartReminders(true);
+    expect(useGameStore.getState().player?.smartReminders).toBe(true);
+  });
+
+  it('times a completion made today, and not one made for another day', () => {
+    start();
+    const [first, second] = useGameStore.getState().quests.filter((q) => q.id !== 'tutorial');
+    const now = new Date();
+    const todayKey = toDateKey(now);
+    useGameStore.getState().toggleQuest(first.id, todayKey);
+    useGameStore.getState().toggleQuest(second.id, today);
+    const [timed, untimed] = useGameStore.getState().completions;
+    expect(timed.at).toBeGreaterThanOrEqual(0);
+    expect(timed.at).toBeLessThan(24 * 60);
+    expect(untimed.at).toBeUndefined();
   });
 });

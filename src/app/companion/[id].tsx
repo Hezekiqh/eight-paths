@@ -14,6 +14,8 @@ import { useCollection } from '@/store/hooks';
 import { KIND_LABEL, RARITY_TIERS, REALMS, formatNumber, isCharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
 import { useSocial, type CharacterStat } from '@/social/store';
+import { isWalker, worldHero } from '@/world/hero';
+import { useWorldStore } from '@/world/store';
 
 /** "Woken by 3% of players · first: @moss_fan", or a note that no one has yet. */
 function rarityLine(stat: CharacterStat | undefined) {
@@ -31,6 +33,11 @@ export default function CompanionSheet() {
   const [skipped, setSkipped] = useState(false);
   // How rare they are among all players, once signed in to the Second 100.
   const stats = useSocial((s) => s.stats);
+  // One party member walks the World; this sheet is where you pick them.
+  const pickedHero = useWorldStore((s) => s.hero);
+  const setHero = useWorldStore((s) => s.setHero);
+  const party = useGameStore((s) => s.party);
+  const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   if (!isCharacterId(id)) return null;
 
   const entry = collection.entries.find((e) => e.companion.id === id)!;
@@ -41,6 +48,11 @@ export default function CompanionSheet() {
 
   const swapIn = () => {
     if (swapCharacter(companion.id)) haptics.success();
+  };
+  const exploring = worldHero(pickedHero, party, classDimension) === companion.id;
+  const explore = () => {
+    setHero(companion.id);
+    haptics.success();
   };
 
   return (
@@ -106,6 +118,18 @@ export default function CompanionSheet() {
           ) : (
             <Button title={`Swap in for ${current.name}`} color={info.color} onPress={swapIn} />
           )}
+          {inParty &&
+            (!isWalker(companion.id) ? (
+              <NoteBox symbol="map" color={colors.border} iconColor={colors.textMuted}>
+                {`${companion.name} can't walk the World yet: their overworld sprite is still being drawn.`}
+              </NoteBox>
+            ) : exploring ? (
+              <NoteBox symbol="figure.walk" color={info.color} iconColor={info.color}>
+                {`${companion.name} walks the World with you.`}
+              </NoteBox>
+            ) : (
+              <Button title={`Explore the World with ${companion.name}`} color={info.color} onPress={explore} />
+            ))}
         </>
       ) : (
         <NoteBox symbol="lock.fill" color={colors.border} iconColor={colors.textMuted}>

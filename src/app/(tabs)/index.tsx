@@ -15,6 +15,7 @@ import { TUTORIAL_QUEST_ID, type Dimension, type XpGain } from '@/game';
 import { LevelUp } from '@/components/level-up';
 import { XpBanner } from '@/components/xp-banner';
 import { useGameStore, type Milestone } from '@/store';
+import { useSession } from '@/store/session';
 import {
   useClassInfo,
   usePlayer,
@@ -38,6 +39,7 @@ export default function TodayScreen() {
   const summary = useProgressSummary(today);
   const toggleQuest = useGameStore((s) => s.toggleQuest);
   const completeTutorial = useGameStore((s) => s.completeTutorial);
+  const setKeeperHold = useSession((s) => s.setKeeperHold);
 
   const [banner, setBanner] = useState<Banner | null>(null);
   const [levelUp, setLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
@@ -62,6 +64,8 @@ export default function TodayScreen() {
       if (questId === TUTORIAL_QUEST_ID) {
         completeTutorial();
         setWrapUpPending(true);
+        // The Keeper waits until the wrap-up card has closed.
+        setKeeperHold(true);
       }
     } else if (outcome.kind === 'undone') {
       haptics.select();
@@ -143,7 +147,14 @@ export default function TodayScreen() {
           onDone={onBannerDone}
         />
       )}
-      <WrapUpCard visible={wrapUpVisible} info={classInfo} onClose={() => setWrapUpVisible(false)} />
+      <WrapUpCard
+        visible={wrapUpVisible}
+        info={classInfo}
+        onClose={() => {
+          setWrapUpVisible(false);
+          setKeeperHold(false);
+        }}
+      />
     </View>
   );
 }

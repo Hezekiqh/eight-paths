@@ -1,9 +1,11 @@
+import { usePathname } from 'expo-router';
 import { TabList, TabSlot, TabTrigger, Tabs } from 'expo-router/ui';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useInviteRewards } from '@/social/rewards';
+import { useKeeperAsk } from '@/notifications/use-keeper-ask';
 import { usePurchases } from '@/premium/purchases';
 import { useSocialSync } from '@/social/sync';
 import {
@@ -22,11 +24,14 @@ export default function TabsLayout() {
   useCharacterDraws();
   useRevealQueue();
   useReminderSync(today);
+  useKeeperAsk(today);
   useSocialSync();
   usePurchases();
   useInviteRewards();
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);
+  // The World fills the screen; its pause menu leads back to the other tabs.
+  const inWorld = usePathname() === '/world';
 
   return (
     <Tabs style={styles.root}>
@@ -34,9 +39,10 @@ export default function TabsLayout() {
       <TabList
         style={[
           styles.bar,
+          inWorld && styles.hidden,
           {
             paddingBottom: Math.max(insets.bottom, spacing.sm),
-            // Clear the notch when the Objectives tab turns the phone sideways.
+            // Clear the notch if the phone is still sideways.
             paddingLeft: Math.max(insets.left, spacing.sm),
             paddingRight: Math.max(insets.right, spacing.sm),
           },
@@ -54,9 +60,9 @@ export default function TabsLayout() {
         <TabTrigger name="journey" href="/journey" asChild>
           <RetroTabButton label="Journey" icon="map" />
         </TabTrigger>
-        {/* Last, since opening it turns the phone sideways. */}
-        <TabTrigger name="objectives" href="/objectives" asChild>
-          <RetroTabButton label="Objectives" icon="gamepad" badge={unclaimed > 0} />
+        {/* Last, since opening it turns the phone sideways. The quest board inside holds the objectives. */}
+        <TabTrigger name="world" href="/world" asChild>
+          <RetroTabButton label="World" icon="gamepad" badge={unclaimed > 0} />
         </TabTrigger>
       </TabList>
     </Tabs>
@@ -73,4 +79,5 @@ const styles = StyleSheet.create({
     borderColor: colors.frame,
     paddingTop: spacing.xs,
   },
+  hidden: { display: 'none' },
 });

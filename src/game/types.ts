@@ -22,6 +22,8 @@ export type Player = {
   hapticsEnabled: boolean;
   /** Objectives tab turns sideways like a handheld console; upright by default. */
   objectivesLandscape: boolean;
+  /** The Keeper calls at the player's usual time, learned from their quests, instead of `notificationTime`. */
+  smartReminders: boolean;
 };
 
 export type Quest = {
@@ -43,6 +45,8 @@ export type Completion = {
   xp: number;
   /** Who was in this Path's party slot, and so earned the XP as well. */
   characterId?: string;
+  /** Local minutes since midnight when it was done. Missing on completions from before v9. */
+  at?: number;
 };
 
 export type RestDay = { date: string; dimension: Dimension | 'all' };

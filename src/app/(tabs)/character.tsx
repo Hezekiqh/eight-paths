@@ -18,10 +18,18 @@ import { XpBar } from '@/components/xp-bar';
 import { MAX_REST_TOKENS, formatTime, parseTime } from '@/game';
 import { ensureReminderPermission } from '@/notifications';
 import { useGameStore } from '@/store';
-import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
+import { useClassInfo, useCollection, useLearnedReminderTime, useOverallProgress, usePlayer } from '@/store/hooks';
 import { haptics } from '@/haptics';
 import { ROSTER, rarityLabel, type CharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing, windowStyle, theme } from '@/theme';
+
+/** "7:25 PM", in the phone's own clock style. */
+function clock(time: string): string {
+  const { hour, minute } = parseTime(time);
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
 
 function openSupport() {
   Alert.alert(
@@ -41,6 +49,8 @@ export default function CharacterScreen() {
   const overall = useOverallProgress();
   const collection = useCollection();
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
+  const setSmartReminders = useGameStore((s) => s.setSmartReminders);
+  const learnedTime = useLearnedReminderTime();
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const exportSave = useGameStore((s) => s.exportSave);
   const profile = useSocial((s) => s.profile);
@@ -172,8 +182,33 @@ export default function CharacterScreen() {
         <SettingsRow
           icon="bell"
           iconColor={classInfo.color}
-          title="Evening reminder"
-          subtitle="One gentle nudge, skipped on days you've already played"
+          title="At my usual time"
+          subtitle={
+            learnedTime
+              ? `The Keeper calls around ${clock(learnedTime)}, half an hour before you usually start`
+              : `Learning when you play. Until then, the Keeper calls at ${clock(player.notificationTime)}.`
+          }
+          accessory={
+            <Switch
+              value={player.smartReminders}
+              onValueChange={(on) => {
+                setSmartReminders(on);
+                ensureReminderPermission();
+              }}
+              trackColor={{ true: classInfo.color }}
+            />
+          }
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="bell"
+          iconColor={classInfo.color}
+          title={player.smartReminders ? 'Set time' : 'Reminder time'}
+          subtitle={
+            player.smartReminders
+              ? 'Picking a time turns off "at my usual time"'
+              : "One call a day, skipped once you've played"
+          }
           accessory={
             <DateTimePicker
               value={reminder}

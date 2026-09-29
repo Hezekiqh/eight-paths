@@ -35,6 +35,12 @@ import {
   type Quest,
   type RadarData,
   type RadarFilter,
+  type ReminderInput,
+  type PathFacts,
+  type Tier,
+  settleRestDays,
+  usualReminderTime,
+  xpForCompletion,
 } from '@/game';
 import { DEFAULT_PARTY, ROSTER, hasCharacter, type CharacterId, type Companion } from '@/story/companions';
 
@@ -280,8 +286,70 @@ export function selectQuest(data: GameData, id: string | undefined): Quest | nul
   return data.quests.find((q) => q.id === id) ?? null;
 }
 
-export function selectPlayedToday(data: GameData, today: string): boolean {
-  return data.completions.some((c) => c.date === today);
+/**
+ * The time the Keeper calls: learned from the player's quests when "at my
+ * usual time" is on and there's enough to learn from, otherwise the set time.
+ */
+export function selectReminderTime(data: GameData): string | null {
+  if (!data.player) return null;
+  if (!data.player.smartReminders) return data.player.notificationTime;
+  return usualReminderTime(data.completions);
+}
+
+/** What the Keeper's calls depend on; the clock time is added when they're planned. */
+export type ReminderState = Omit<ReminderInput, 'minutesNow'>;
+
+export function selectReminderState(data: GameData, today: string, tier: Tier = 'free'): ReminderState | null {
+  const { player } = data;
+  if (!player) return null;
+  const collection = selectCollection(data);
+  const party = new Set(Object.values(data.party));
+  const woken = collection.entries.filter((e) => e.unlocked);
+  const doneToday = data.completions.filter((c) => c.date === today);
+  const days = daysShownUp(data.completions);
+  const pathXp = xpByDimension(allXp(data));
+  const paths: PathFacts[] = DIMENSIONS.map((dimension) => {
+    const progress = levelFromXp(pathXp[dimension]);
+    const earnedToday = doneToday.filter((c) => c.dimension === dimension).reduce((sum, c) => sum + c.xp, 0);
+    const boosted = data.boosts.some((b) => b.date === today && b.dimension === dimension);
+    return {
+      dimension,
+      name: CLASSES[dimension].className,
+      nextLevel: progress.level + 1,
+      xpToLevel: progress.xpForNext - progress.xpIntoLevel,
+      xpPerQuestToday: xpForCompletion(earnedToday, tier, boosted),
+      xpPerQuest: xpForCompletion(0, tier),
+      cocoonAtNextLevel: data.nextDraw[dimension] === progress.level + 1,
+    };
+  });
+  // Tonight's midnight played out with nothing more done today.
+  const tomorrow = settleRestDays(
+    { restTokens: player.restTokens, restDays: data.restDays, lastSettledDate: data.lastSettledDate },
+    data.completions,
+    player.onboardedAt,
+    addDays(today, 1),
+  );
+  return {
+    today,
+    notificationTime: selectReminderTime(data) ?? player.notificationTime,
+    name: player.name,
+    quests: data.quests,
+    doneToday: doneToday.map((c) => c.questId),
+    lastActive: data.completions.reduce<string | null>((max, c) => (max === null || c.date > max ? c.date : max), null),
+    onboardedAt: player.onboardedAt,
+    restTokens: player.restTokens,
+    restTokensTomorrow: tomorrow.restTokens,
+    restDays: data.restDays,
+    streak: showUpStreak(data.completions, data.restDays, player.onboardedAt, today).current,
+    daysShownUp: days,
+    nextMilestone: nextMilestone(days),
+    paths,
+    heroes: [
+      ...woken.filter((e) => party.has(e.companion.id)),
+      ...woken.filter((e) => !party.has(e.companion.id)),
+    ].map((e) => e.companion.name),
+    sleeping: collection.entries.length - woken.length,
+  };
 }
 
 export type ObjectiveView = Objective & { claimed: boolean };

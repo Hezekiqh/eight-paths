@@ -11,6 +11,7 @@ const player = {
   notificationTime: '20:00',
   hapticsEnabled: true,
   objectivesLandscape: false,
+  smartReminders: true,
 };
 const quest = {
   id: 'q1',
@@ -27,6 +28,7 @@ const completion = {
   date: '2026-09-02',
   xp: 13,
   characterId: 'quill',
+  at: 19 * 60 + 5,
 };
 const valid = {
   player,
@@ -49,6 +51,22 @@ const valid = {
   drops: ['ottilie'],
   redrawn: [],
 };
+
+describe('v9: usual-time reminders', () => {
+  it('learns the time for players who kept the 8 PM default, and keeps a chosen time', () => {
+    const { smartReminders: _, ...old } = player;
+    expect(sanitizeSave({ ...valid, player: old }).player?.smartReminders).toBe(true);
+    const chosen = sanitizeSave({ ...valid, player: { ...old, notificationTime: '07:30' } }).player;
+    expect(chosen).toMatchObject({ smartReminders: false, notificationTime: '07:30' });
+  });
+
+  it('keeps a completion time only when it is a real minute of the day', () => {
+    const times = [undefined, -1, 1440, 12.5, '600', 0, 1439].map(
+      (at) => sanitizeSave({ ...valid, completions: [{ ...completion, at }] }).completions[0].at,
+    );
+    expect(times).toEqual([undefined, undefined, undefined, undefined, undefined, 0, 1439]);
+  });
+});
 
 describe('v8: Premium redos', () => {
   it('upgrades a v7 save with no redos yet', () => {

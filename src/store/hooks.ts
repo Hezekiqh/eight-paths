@@ -3,8 +3,9 @@ import { router } from 'expo-router';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
-import { msUntilNextMidnight, toDateKey, type RadarFilter } from '@/game';
+import { msUntilNextMidnight, toDateKey, usualReminderTime, type RadarFilter } from '@/game';
 import { syncReminders } from '@/notifications';
+import { usePremium } from '@/premium/store';
 
 import { pickData, useGameStore, type GameData } from './index';
 import { useSession } from './session';
@@ -19,7 +20,7 @@ import {
   selectMonthComparison,
   selectOverallProgress,
   selectProgressSummary,
-  selectPlayedToday,
+  selectReminderState,
   selectQuest,
   selectRadar,
   selectTodayQuestGroups,
@@ -79,6 +80,12 @@ export const useGoals = () => useGameStore((s) => s.goals);
 export function useDimensionStats(today: string) {
   const data = useGameData();
   return useMemo(() => selectDimensionStats(data, today), [data, today]);
+}
+
+/** The reminder time learned from the player's quests, or null while still learning. */
+export function useLearnedReminderTime(): string | null {
+  const completions = useGameStore((s) => s.completions);
+  return useMemo(() => usualReminderTime(completions), [completions]);
 }
 
 export function useOverallProgress() {
@@ -149,18 +156,21 @@ export function useSettleOnDayChange(today: string) {
 }
 
 /**
- * Keeps the scheduled evening reminders in step with the player's chosen
- * time and whether they've already played today.
+ * Keeps the Keeper's scheduled calls in step with the save: re-planned on
+ * every launch, day change and change to anything a call talks about.
  */
 export function useReminderSync(today: string) {
   const data = useGameData();
-  const notificationTime = data.player?.notificationTime ?? '20:00';
   const enabled = data.player?.tutorialComplete ?? false;
-  const playedToday = useMemo(() => selectPlayedToday(data, today), [data, today]);
+  const tier = usePremium((s) => (s.premium ? 'premium' : 'free'));
+  const state = useMemo(() => selectReminderState(data, today, tier), [data, today, tier]);
+  // Compared by value, so unrelated saves (XP, party order) don't re-plan.
+  const key = JSON.stringify(state);
 
   useEffect(() => {
-    syncReminders({ today, notificationTime, playedToday, enabled });
-  }, [today, notificationTime, playedToday, enabled]);
+    syncReminders(enabled ? state : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, enabled]);
 }
 
 /** How long a new character waits before their reveal, so the XP banner shows first. */

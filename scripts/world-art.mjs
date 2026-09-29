@@ -1,0 +1,771 @@
+// Pixel art for the World: each map baked into one picture, and the overworld
+// walkers (the party and NPCs) in four directions with a walk cycle.
+//
+//   node scripts/world-art.mjs
+//
+// writes assets/world/<map>.png (1 pixel per art pixel; the app scales it up
+// with sharp pixels), assets/world/walkers.png and src/world/walkers.ts.
+// Maps are laid out in src/world/maps/<map>.json, which the app also reads
+// for walls, so the picture and the collisions always agree.
+
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { PNG } from 'pngjs';
+
+const TILE = 16;
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => a.map((v, k) => Math.round(v + (b[k] - v) * t));
+const BAYER = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+].map((row) => row.map((v) => (v + 0.5) / 16));
+/** Rounds an amount (0–1) to quarters, dithering between them so blends stay pixel art. */
+const dither = (a, x, y, steps = 4) => {
+  const q = Math.max(0, a) * steps;
+  const base = Math.floor(q);
+  return Math.min(1, (q - base > BAYER[y & 3][x & 3] ? base + 1 : base) / steps);
+};
+function rng(seed) {
+  return () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+}
+/** A steady pseudo-random number (0–1) for a grid cell, so textures don't shift between runs. */
+const hash = (x, y, s = 0) => {
+  let h = (x * 374761393 + y * 668265263 + s * 982451653) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+
+function canvas(w, h) {
+  const g = Array.from({ length: h }, () => Array(w).fill(null));
+  g.w = w;
+  g.h = h;
+  return g;
+}
+const put = (g, x, y, c) => {
+  x = Math.round(x);
+  y = Math.round(y);
+  if (y >= 0 && y < g.h && x >= 0 && x < g.w) g[y][x] = typeof c === 'string' ? hex(c) : c;
+};
+const box = (g, x, y, w, h, c) => {
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(g, x + i, y + j, c);
+};
+const ellipse = (g, cx, cy, rx, ry, c) => {
+  for (let y = -ry; y <= ry; y++)
+    for (let x = -rx; x <= rx; x++) if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) put(g, cx + x, cy + y, c);
+};
+function toPng(g) {
+  const png = new PNG({ width: g.w, height: g.h });
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) {
+      const i = (y * g.w + x) * 4;
+      const c = g[y][x];
+      if (!c) continue;
+      png.data[i] = c[0];
+      png.data[i + 1] = c[1];
+      png.data[i + 2] = c[2];
+      png.data[i + 3] = c[3] ?? 255;
+    }
+  return PNG.sync.write(png);
+}
+
+// ---------------------------------------------------------------------------
+// The Archive's tiles
+
+const P = {
+  void: '#0C0806',
+  wood: '#3A2418',
+  woodDark: '#24160E',
+  woodLight: '#5A3A26',
+  trim: '#7A5234',
+  plank: ['#5A3A26', '#52341F', '#61402A'],
+  seam: '#2E1C12',
+  rug: '#6E1A20',
+  rugDark: '#561218',
+  rugGold: '#C8963A',
+  scroll: ['#E8DCC0', '#C9B890', '#D8C8A0'],
+  scrollEnd: '#6A5A48',
+  ribbon: '#B3261E',
+  stone: '#3A302C',
+  stoneLight: '#56483F',
+  sky: '#4A5A8A',
+  skyLight: '#7A8AC0',
+  iron: '#2A2228',
+  flame: '#FFD060',
+  flame2: '#FFB04A',
+  wax: '#F3ECDD',
+  cork: '#8A6038',
+  paper: '#EFE4C8',
+  silk: '#E8E0D0',
+  silkShade: '#B8AE9C',
+  silkDark: '#8A8070',
+};
+
+/** A row of scroll ends lying on a shelf whose board is at `y`. */
+function scrollRow(g, x0, x1, y, seed) {
+  box(g, x0, y, x1 - x0, 1, P.trim);
+  box(g, x0, y + 1, x1 - x0, 1, P.woodDark);
+  for (let x = x0 + 1; x < x1 - 2; x += 3) {
+    if (hash(x, y, seed) < 0.18) continue;
+    const c = P.scroll[Math.floor(hash(x, y, seed + 1) * 3)];
+    box(g, x, y - 3, 3, 3, c);
+    put(g, x + 1, y - 2, P.scrollEnd);
+    if (hash(x, y, seed + 2) < 0.15) box(g, x, y - 1, 3, 1, P.ribbon);
+  }
+}
+
+const TILE_ART = {
+  '#'(g, x, y) {
+    box(g, x, y, TILE, TILE, P.void);
+  },
+  '.'() {}, // the floor is laid everywhere first
+  r() {}, // the rug too
+  W(g, x, y, m) {
+    const upper = m.at(0, -1) === '#';
+    box(g, x, y, TILE, TILE, P.woodDark);
+    if (upper) {
+      box(g, x, y, TILE, 3, P.trim);
+      box(g, x, y + 3, TILE, 1, P.wood);
+      scrollRow(g, x, x + TILE, y + 9, 1);
+      scrollRow(g, x, x + TILE, y + 15, 2);
+    } else {
+      scrollRow(g, x, x + TILE, y + 5, 3);
+      box(g, x, y + 11, TILE, 5, P.wood);
+      box(g, x, y + 11, TILE, 1, P.trim);
+    }
+    // uprights between bays
+    if ((x / TILE) % 3 === 0) box(g, x, y + (upper ? 3 : 0), 2, upper ? 13 : 11, P.wood);
+  },
+  Q(g, x, y) {
+    TILE_ART.W(g, x, y, { at: () => 'W' });
+    box(g, x + 1, y - 6, 14, 15, P.woodLight);
+    box(g, x + 2, y - 5, 12, 13, P.cork);
+    for (const [px, py, w, h] of [
+      [3, -4, 4, 5],
+      [8, -3, 5, 4],
+      [4, 2, 5, 5],
+      [10, 2, 3, 4],
+    ]) {
+      box(g, x + px, y + py, w, h, P.paper);
+      box(g, x + px + 1, y + py + 2, w - 2, 1, '#B8A888');
+      put(g, x + px + Math.floor(w / 2), y + py, P.ribbon);
+    }
+  },
+  M(g, x, y, m) {
+    const upper = m.at(0, -1) === '#';
+    const left = m.at(-1, 0) !== 'M';
+    box(g, x, y, TILE, TILE, P.woodDark);
+    if (upper) {
+      box(g, x, y, TILE, 3, P.trim);
+      box(g, x + (left ? 3 : 0), y + 4, left ? 13 : 13, 12, P.sky);
+      for (let i = 0; i < 6; i++) put(g, x + 4 + hash(x, i) * 10, y + 5 + hash(i, x) * 9, P.skyLight);
+    } else {
+      box(g, x + (left ? 3 : 0), y, 13, 9, P.sky);
+      box(g, x, y + 9, TILE, 2, P.trim);
+      box(g, x, y + 11, TILE, 5, P.wood);
+      box(g, x, y + 11, TILE, 1, P.trim);
+    }
+    // the mullion down the middle of the pair, and the crossbar
+    if (!left) box(g, x - 1, y + (upper ? 4 : 0), 2, upper ? 12 : 9, P.woodDark);
+    if (!upper) box(g, x + (left ? 3 : 0), y + 2, 13, 1, P.woodDark);
+  },
+  T(g, x, y, m) {
+    bookcase(g, x, y, m, true);
+  },
+  B(g, x, y, m) {
+    bookcase(g, x, y, m, false);
+  },
+  c(g, x, y) {
+    ellipse(g, x + 8, y + 14, 4, 1, '#1A1210');
+    box(g, x + 7, y + 6, 2, 8, P.iron);
+    box(g, x + 4, y + 7, 8, 1, P.iron);
+    box(g, x + 5, y + 13, 6, 1, P.iron);
+    for (const cx of [4, 7, 11]) {
+      const top = cx === 7 ? 1 : 3;
+      box(g, x + cx, y + top, 1 + (cx === 7 ? 1 : 0), 7 - top, P.wax);
+      put(g, x + cx, y + top - 1, P.flame2);
+      put(g, x + cx, y + top - 2, P.flame);
+    }
+  },
+  D(g, x, y, m) {
+    const left = m.at(-1, 0) !== 'D';
+    box(g, x, y + 3, TILE, 9, P.woodLight);
+    box(g, x, y + 12, TILE, 4, P.wood);
+    box(g, x, y + 3, TILE, 1, P.trim);
+    if (left) {
+      box(g, x, y + 3, 1, 13, P.woodDark);
+      // the open ledger
+      box(g, x + 6, y + 4, 10, 7, P.paper);
+      box(g, x + 15, y + 4, 1, 7, '#B8A888');
+      for (let r = 5; r < 10; r += 2) box(g, x + 7, y + r, 7, 1, '#9A8A70');
+    } else {
+      box(g, x + 15, y + 3, 1, 13, P.woodDark);
+      box(g, x, y + 4, 7, 7, P.paper);
+      for (let r = 5; r < 10; r += 2) box(g, x + 2, y + r, 4, 1, '#9A8A70');
+      box(g, x + 10, y + 5, 3, 3, '#1A1426'); // ink pot
+      put(g, x + 11, y + 4, '#3A3050');
+      box(g, x + 13, y + 2, 1, 5, P.wax); // quill
+      put(g, x + 12, y + 1, P.wax);
+    }
+  },
+  p(g, x, y) {
+    ellipse(g, x + 8, y + 13, 6, 2, '#2A1A12');
+    for (const [px, py] of [
+      [2, 9],
+      [7, 9],
+      [4, 5],
+      [9, 6],
+      [6, 2],
+    ]) {
+      box(g, x + px, y + py, 5, 4, P.scroll[(px + py) % 3]);
+      box(g, x + px, y + py, 1, 4, P.scrollEnd);
+      box(g, x + px + 4, y + py, 1, 4, P.scroll[1]);
+    }
+  },
+  O(g, x, y, m) {
+    // The cocoon covers a 2×2 block; draw it once, from its top-left tile.
+    if (m.at(-1, 0) === 'O' || m.at(0, -1) === 'O') return;
+    const cx = x + 16;
+    ellipse(g, cx, y + 26, 13, 4, P.stoneLight);
+    ellipse(g, cx, y + 27, 12, 3, P.stone);
+    box(g, cx - 12, y + 26, 25, 2, P.stone);
+    ellipse(g, cx, y + 28, 12, 2, '#2A221E');
+    // the husk, split down the front
+    ellipse(g, cx, y + 15, 8, 12, P.silkShade);
+    ellipse(g, cx - 1, y + 14, 7, 11, P.silk);
+    for (let j = 0; j < 22; j++) {
+      const w = Math.max(0, Math.round(3 - Math.abs(j - 10) / 4 + hash(j, 1) * 1.5));
+      box(g, cx - Math.floor(w / 2) + (j % 3 === 0 ? 1 : 0), y + 4 + j, w, 1, j > 6 ? P.silkDark : '#1A1410');
+    }
+    for (let j = 0; j < 18; j += 3) put(g, cx + 5, y + 6 + j, P.silkShade);
+    for (let j = 0; j < 14; j += 4) put(g, cx - 6, y + 8 + j, P.silkShade);
+    // loose strands on the dais
+    for (const [sx, sy] of [
+      [-9, 24],
+      [8, 25],
+      [11, 23],
+    ])
+      box(g, cx + sx, y + sy, 3, 1, P.silk);
+  },
+  _(g, x, y) {
+    box(g, x, y, TILE, TILE, P.stone);
+    box(g, x, y, TILE, 2, P.stoneLight);
+    box(g, x, y + 2, TILE, 1, '#1A1210');
+    for (let i = 0; i < TILE; i += 8) box(g, x + i + ((y / TILE) % 2) * 4, y + 3, 1, 13, '#2A221E');
+  },
+  '='(g, x, y, m) {
+    const left = m.at(-1, 0) !== '=';
+    box(g, x, y, TILE, TILE, P.woodDark);
+    box(g, x, y, TILE, 2, P.stoneLight);
+    box(g, x + (left ? 1 : 0), y + 2, 15, 14, P.wood);
+    for (let i = 4; i < 16; i += 4) box(g, x + (left ? 1 : 0), y + i, 15, 1, P.woodDark);
+    box(g, x + (left ? 1 : 0), y + 6, 15, 1, P.iron);
+    box(g, x + (left ? 1 : 0), y + 12, 15, 1, P.iron);
+    box(g, x + (left ? 14 : 1), y + 8, 1, 3, P.rugGold); // ring handles
+  },
+};
+
+/** A free-standing bookcase: `T` is its top half, `B` its bottom. Runs of them share end panels. */
+function bookcase(g, x, y, m, top) {
+  const run = top ? 'T' : 'B';
+  const left = m.at(-1, 0) !== run;
+  const right = m.at(1, 0) !== run;
+  box(g, x, y, TILE, TILE, P.woodDark);
+  if (top) {
+    box(g, x, y, TILE, 3, P.woodLight);
+    box(g, x, y + 3, TILE, 1, P.wood);
+    scrollRow(g, x, x + TILE, y + 10, 4);
+  } else {
+    scrollRow(g, x, x + TILE, y + 3, 5);
+    scrollRow(g, x, x + TILE, y + 10, 6);
+    box(g, x, y + 12, TILE, 3, P.wood);
+    box(g, x, y + 15, TILE, 1, '#1A1210');
+  }
+  if (left) box(g, x, y, 2, TILE, P.wood);
+  if (right) box(g, x + 14, y, 2, TILE, P.wood);
+}
+
+function drawMap(map) {
+  const rows = map.tiles;
+  const H = rows.length;
+  const W = rows[0].length;
+  const g = canvas(W * TILE, H * TILE);
+  const at = (tx, ty) => rows[ty]?.[tx] ?? '#';
+  const walkable = (c) => c === '.' || c === 'r';
+
+  // Floorboards run under everything, continuous from tile to tile.
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) {
+      const row = Math.floor(y / 4);
+      const joint = (row * 7) % 24;
+      const seg = Math.floor((x + joint) / 24);
+      let c = hex(P.plank[Math.floor(hash(seg, row, 9) * 3)]);
+      if (y % 4 === 3 || (x + joint) % 24 === 0) c = hex(P.seam);
+      else if (hash(x, y, 3) < 0.04) c = mix(c, hex(P.seam), 0.5);
+      g[y][x] = c;
+    }
+
+  // The rug: a crimson runner with a gold border, wherever `r` or the cocoon's dais sits.
+  const onRug = (tx, ty) => at(tx, ty) === 'r' || at(tx, ty) === 'O';
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      if (!onRug(tx, ty)) continue;
+      for (let j = 0; j < TILE; j++)
+        for (let i = 0; i < TILE; i++) {
+          const px = tx * TILE + i;
+          const py = ty * TILE + j;
+          const edge =
+            (i < 3 && !onRug(tx - 1, ty)) ||
+            (i > 12 && !onRug(tx + 1, ty)) ||
+            (j < 3 && !onRug(tx, ty - 1)) ||
+            (j > 12 && !onRug(tx, ty + 1));
+          const rim =
+            (i === 1 && !onRug(tx - 1, ty)) ||
+            (i === 14 && !onRug(tx + 1, ty)) ||
+            (j === 1 && !onRug(tx, ty - 1)) ||
+            (j === 14 && !onRug(tx, ty + 1));
+          let c = P.rug;
+          if (edge) c = rim ? P.rugDark : P.rugGold;
+          else if ((Math.abs((px % 8) - 4) + Math.abs((py % 8) - 4)) === 3) c = P.rugDark;
+          g[py][px] = hex(c);
+        }
+    }
+
+  // Soft shadows under walls and furniture, on the floor tile below them.
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      if (!walkable(at(tx, ty)) || walkable(at(tx, ty - 1))) continue;
+      for (let j = 0; j < 4; j++)
+        for (let i = 0; i < TILE; i++) {
+          const px = tx * TILE + i;
+          const py = ty * TILE + j;
+          g[py][px] = mix(g[py][px], hex('#100A08'), dither(0.55 - j * 0.14, px, py));
+        }
+    }
+
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      const draw = TILE_ART[at(tx, ty)];
+      if (!draw) throw new Error(`No art for tile "${at(tx, ty)}" in ${map.id}`);
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+    }
+
+  // Moonlight from the high window falls onto the cocoon.
+  const win = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === 'M' && win.push([tx, ty])));
+  if (win.length) {
+    const cx = ((Math.min(...win.map((w) => w[0])) + Math.max(...win.map((w) => w[0])) + 1) / 2) * TILE;
+    const y0 = (Math.max(...win.map((w) => w[1])) + 1) * TILE;
+    for (let y = y0; y < y0 + TILE * 6; y++)
+      for (let x = 0; x < g.w; x++) {
+        const half = 17 + (y - y0) * 0.1;
+        const d = Math.abs(x - cx) / half;
+        const fade = 1 - (y - y0) / (TILE * 6);
+        if (d < 1) g[y][x] = mix(g[y][x], hex('#C8C8F0'), dither(0.24 * (1 - d) * fade, x, y));
+      }
+  }
+
+  // Candlelight pools around every candelabra.
+  rows.forEach((r, ty) =>
+    [...r].forEach((c, tx) => {
+      if (c !== 'c') return;
+      const lx = tx * TILE + 8;
+      const ly = ty * TILE + 3;
+      const R = 44;
+      for (let y = ly - R; y < ly + R; y++)
+        for (let x = lx - R; x < lx + R; x++) {
+          if (y < 0 || x < 0 || y >= g.h || x >= g.w) continue;
+          if (at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#') continue;
+          const d = Math.hypot(x - lx, (y - ly) * 1.2) / R;
+          if (d < 1) g[y][x] = mix(g[y][x], hex('#FFB04A'), dither(0.3 * (1 - d) ** 2, x, y));
+        }
+    }),
+  );
+  return g;
+}
+
+// ---------------------------------------------------------------------------
+// Walkers: 16×24 frames. Columns are down, up, left, right × stand, step A, step B.
+
+const FW = 16;
+const FH = 24;
+const DIRS = ['down', 'up', 'left', 'right'];
+const OUT = hex('#140E1C');
+const EYE = '#140E1C';
+const SKIN = '#E8B48C';
+
+/**
+ * How each walker looks. `top` is the tunic or robe, `shade` its sleeves.
+ * `hair` picks a style; `extra` draws anything particular to them.
+ */
+const WALKERS = {
+  brannoc: { top: '#9AA0B4', shade: '#6A7088', legs: '#6A7088', boots: '#5C3A28', belt: '#5C3A28', hair: ['short', '#C4442A'], back: 'sword', beard: '#C4442A' },
+  ysolde: { robe: true, top: '#9A6A9E', shade: '#76507C', boots: '#2A2030', belt: '#FFC940', hair: ['bun', '#3A2A2E'], monocle: true },
+  quill: { robe: true, top: '#3A3470', shade: '#2A2458', boots: '#2A2030', belt: '#6A4028', hair: ['short', '#6A4028'], hat: 'wizard', glasses: true },
+  wren: { robe: true, top: '#8A8898', shade: '#6A687A', boots: '#2A2030', hair: ['veil', '#5A586A'], collar: '#F0E6C8', lantern: true },
+  oren: { robe: true, top: '#2DD4BF', shade: '#1E9C8C', boots: SKIN, belt: '#1E9C8C', hair: ['bald', '#F4CCA8'], beads: '#8A5A34' },
+  pip: { top: '#FF4FD8', shade: '#8B5CF6', legs: '#3E7A4A', boots: '#6A4028', hair: ['spiky', '#D86A2A'], back: 'lute', patchwork: ['#FF4FD8', '#2DD4BF', '#FFC940', '#8B5CF6'] },
+  tamsin: { top: '#FF8A3D', shade: '#FF8A3D', legs: '#3A3848', boots: '#1E1A24', hair: ['short', '#2A2030'], apron: '#7A4A2A', goggles: '#FF8A3D' },
+  moss: { top: '#3E6A3A', shade: '#4E3622', legs: '#4A3A2A', boots: '#2A2020', hair: ['short', '#4E3A22'], cloak: '#6A4A30', leaves: '#4ADE80' },
+  keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
+};
+
+/** Draws one frame of a walker into `g` at (ox, oy). */
+function drawWalker(g, ox, oy, w, dir, frame) {
+  const f = canvas(FW, FH);
+  const b = (x, y, ww, hh, c) => box(f, x, y, ww, hh, c);
+  const p = (x, y, c) => put(f, x, y, c);
+  const skin = w.skin ?? SKIN;
+  const side = dir === 'left' || dir === 'right';
+  const back = dir === 'up';
+  const step = frame === 0 ? 0 : frame === 1 ? 1 : -1; // which leg is forward
+  const [style, hair] = w.hair;
+
+  // things carried on the back, seen behind the body from the front and side
+  const backItem = (behind) => {
+    if (w.back === 'sword') {
+      if (back && !behind) {
+        b(7, 2, 2, 14, '#D8DCE8');
+        b(6, 12, 4, 1, '#8A6A3A');
+        b(7, 13, 2, 2, '#5C3A28');
+      } else if (behind) b(side ? 10 : 12, 1, 1, 11, '#D8DCE8');
+    }
+    if (w.back === 'lute') {
+      if (back && !behind) {
+        ellipse(f, 8, 15, 3, 3, '#B87838');
+        p(8, 15, '#3A2418');
+        b(8, 7, 1, 5, '#8A5A34');
+      } else if (behind) b(side ? 10 : 12, 7, 1, 5, '#8A5A34');
+    }
+    if (w.cloak && (back || side) && !behind) {
+      if (back) b(4, 11, 8, 9, w.cloak);
+      else b(9, 11, 3, 8, w.cloak);
+    }
+  };
+  backItem(true);
+
+  // legs and feet (hidden under a robe apart from the toes)
+  if (w.robe) {
+    for (let y = 11; y <= 21; y++) {
+      const spread = Math.min(1, Math.floor((y - 11) / 4));
+      const x0 = side ? 5 - spread : 4 - spread;
+      const x1 = side ? 10 + spread : 11 + spread;
+      b(x0, y, x1 - x0 + 1, 1, w.top);
+    }
+    const hem = side ? [4, 11] : [3, 12];
+    b(hem[0], 21, hem[1] - hem[0] + 1, 1, w.shade);
+    if (side) {
+      if (step === 0) b(6, 22, 3, 1, w.boots);
+      else {
+        b(4, 22, 2, 1, w.boots);
+        b(9, 22, 2, 1, w.boots);
+      }
+    } else {
+      b(5, 22, 2, 1, w.boots);
+      b(9, 22, 2, 1, w.boots);
+      if (step === 1) b(5, 22, 2, 1, null);
+      if (step === -1) b(9, 22, 2, 1, null);
+    }
+  } else if (side) {
+    if (step === 0) {
+      b(6, 17, 4, 4, w.legs);
+      b(6, 21, 4, 2, w.boots);
+    } else {
+      const fwd = step === 1 ? 4 : 5;
+      b(fwd, 17, 2, 4, w.legs);
+      b(fwd - 1, 21, 3, 2, w.boots);
+      b(9, 17, 2, 4, w.legs);
+      b(9, 21, 3, 2, w.boots);
+    }
+  } else {
+    const lift = (leg) => (step === leg ? 1 : 0);
+    b(5, 17, 2, 4 - lift(1), w.legs);
+    b(5, 21 - lift(1), 2, 2, w.boots);
+    b(9, 17, 2, 4 - lift(-1), w.legs);
+    b(9, 21 - lift(-1), 2, 2, w.boots);
+  }
+
+  // body
+  if (!w.robe) b(side ? 5 : 4, 11, side ? 6 : 8, 6, w.top);
+  if (w.patchwork && !side) {
+    const c = w.patchwork;
+    b(4, 11, 4, 3, c[back ? 1 : 3]);
+    b(8, 11, 4, 3, c[back ? 3 : 1]);
+    b(4, 14, 4, 3, c[2]);
+    b(8, 14, 4, 3, c[0]);
+  } else if (w.patchwork) {
+    b(5, 11, 6, 3, w.patchwork[1]);
+    b(5, 14, 6, 3, w.patchwork[2]);
+  }
+  if (w.apron) {
+    if (dir === 'down') b(5, 12, 6, 6, w.apron);
+    else if (back) {
+      p(5, 11, w.apron);
+      p(10, 11, w.apron);
+      b(6, 12, 4, 1, w.apron);
+    } else b(dir === 'left' ? 5 : 8, 12, 3, 6, w.apron);
+  }
+  if (w.belt && !back) b(side ? 5 : 4, 15, side ? 6 : 8, 1, w.belt);
+  if (w.collar && !back) b(side ? 5 : 6, 11, side ? 3 : 4, 1, w.collar);
+  backItem(false);
+
+  // arms, swinging with the step
+  if (side) {
+    const ax = step === 0 ? 7 : step === 1 ? 6 : 8;
+    b(ax, 11, 2, 5, w.shade);
+    b(ax, 16, 2, 1, skin);
+    if (w.lantern) {
+      p(ax, 17, '#3A3440');
+      b(ax - 1, 18, 3, 3, '#FFD86A');
+      p(ax, 19, '#FFF4C0');
+    }
+  } else {
+    const swing = (arm) => (step === arm ? 1 : 0);
+    b(3, 11 + swing(1), 1, 5, w.shade);
+    p(3, 16 + swing(1), skin);
+    b(12, 11 + swing(-1), 1, 5, w.shade);
+    p(12, 16 + swing(-1), skin);
+    if (w.lantern && !back) {
+      p(12, 17 + swing(-1), '#3A3440');
+      b(12, 18 + swing(-1), 2, 3, '#FFD86A');
+      p(12, 19 + swing(-1), '#FFF4C0');
+    }
+  }
+  if (w.beads && dir === 'down') {
+    for (const [x, y] of [
+      [5, 11],
+      [6, 12],
+      [7, 12],
+      [9, 12],
+      [10, 11],
+    ])
+      p(x, y, w.beads);
+  }
+
+  // head
+  const face = dir === 'left' ? 4 : 7; // where the eye sits on a side view (left-facing; right is mirrored)
+  b(4, 3, 8, 8, skin);
+  if (!back) {
+    if (side) {
+      p(5, 7, EYE);
+      p(5, 8, EYE);
+    } else {
+      b(6, 7, 1, 2, EYE);
+      b(9, 7, 1, 2, EYE);
+    }
+  }
+  void face;
+  if (w.skull && !back) {
+    // hollow sockets with a pinprick of candlelight
+    if (side) {
+      b(4, 6, 2, 2, '#140E1C');
+      p(4, 7, '#FFB04A');
+      b(5, 9, 2, 1, '#8A8070');
+    } else {
+      b(5, 6, 2, 2, '#140E1C');
+      b(9, 6, 2, 2, '#140E1C');
+      p(6, 7, '#FFB04A');
+      p(9, 7, '#FFB04A');
+      b(6, 9, 4, 1, '#8A8070');
+    }
+  }
+
+  // hair and headwear
+  if (style === 'short' || style === 'spiky') {
+    if (back) b(4, 3, 8, 7, hair);
+    else if (side) {
+      b(4, 3, 8, 2, hair);
+      if (w.hat) b(10, 5, 2, 3, hair);
+      else b(8, 5, 4, 4, hair);
+    } else {
+      b(4, 3, 8, 2, hair);
+      p(4, 5, hair);
+      p(11, 5, hair);
+    }
+    if (style === 'spiky') {
+      for (const [x, y] of side
+        ? [
+            [5, 2],
+            [8, 2],
+            [10, 3],
+          ]
+        : [
+            [4, 2],
+            [7, 1],
+            [8, 2],
+            [11, 2],
+          ])
+        p(x, y, hair);
+    }
+  }
+  if (style === 'bun') {
+    if (back) b(3, 3, 10, 9, hair);
+    else if (side) {
+      b(4, 3, 8, 2, hair);
+      b(7, 5, 5, 7, hair);
+    } else {
+      b(3, 3, 10, 2, hair);
+      b(3, 5, 1, 7, hair);
+      b(12, 5, 1, 7, hair);
+    }
+    b(6, 1, 4, 2, hair);
+  }
+  if (style === 'bald') {
+    if (!side) b(6, 3, 3, 1, hair);
+    else b(7, 3, 3, 1, hair);
+  }
+  if (style === 'veil' || style === 'hood') {
+    if (back) b(3, 2, 10, 11, hair);
+    else if (side) {
+      b(4, 2, 8, 10, hair);
+      b(4, 5, 3, 6, skin);
+      p(5, 7, EYE);
+      if (w.skull) {
+        b(4, 6, 2, 2, '#140E1C');
+        p(4, 7, '#FFB04A');
+      }
+    } else {
+      b(3, 2, 10, 11, hair);
+      b(5, 5, 6, 6, skin);
+      if (w.skull) {
+        b(5, 6, 2, 2, '#140E1C');
+        b(9, 6, 2, 2, '#140E1C');
+        p(6, 7, '#FFB04A');
+        p(9, 7, '#FFB04A');
+        b(6, 9, 4, 1, '#8A8070');
+      } else {
+        b(6, 7, 1, 2, EYE);
+        b(9, 7, 1, 2, EYE);
+      }
+    }
+    if (style === 'hood') b(back ? 3 : 4, 2, back ? 10 : 8, 1, w.shade);
+  }
+  if (w.beard && !back) {
+    if (side) b(4, 9, 4, 2, w.beard);
+    else {
+      b(4, 9, 8, 2, w.beard);
+      b(5, 11, 6, 1, w.beard);
+      b(6, 10, 4, 1, skin); // mouth gap
+    }
+  }
+  if (w.glasses && !back) {
+    if (side) {
+      b(4, 6, 2, 3, '#CFE0F0');
+      p(5, 7, EYE);
+    } else {
+      b(5, 6, 3, 3, '#CFE0F0');
+      b(8, 6, 3, 3, '#CFE0F0');
+      b(6, 7, 1, 2, EYE);
+      b(9, 7, 1, 2, EYE);
+    }
+  }
+  if (w.monocle && !back && !side) {
+    p(10, 6, '#FFC940');
+    p(10, 9, '#FFC940');
+    p(11, 10, '#FFC940');
+  }
+  if (w.goggles) {
+    b(4, 5, 8, 1, '#2A2030');
+    if (!back) {
+      if (side) b(4, 5, 2, 1, w.goggles);
+      else {
+        b(5, 5, 2, 1, w.goggles);
+        b(9, 5, 2, 1, w.goggles);
+      }
+    }
+  }
+  if (w.leaves) {
+    for (const [x, y] of side
+      ? [
+          [6, 3],
+          [10, 4],
+        ]
+      : [
+          [5, 3],
+          [10, 4],
+          [8, 3],
+        ])
+      p(x, y, w.leaves);
+  }
+  if (w.hat === 'wizard') {
+    const hat = '#8B5CF6';
+    b(2, 4, 12, 1, hat);
+    b(4, 3, 8, 1, hat);
+    b(5, 2, 6, 1, hat);
+    b(6, 1, 4, 1, hat);
+    b(7, 0, 2, 1, hat);
+    p(back ? 6 : 9, 2, '#FFC940');
+    b(4, 5, 8, 1, null);
+    b(4, 5, 8, 1, back ? '#6A4028' : skin);
+    if (!back && !side) {
+      p(4, 5, '#6A4028');
+      p(11, 5, '#6A4028');
+    }
+  }
+
+  // a dark outline around the whole silhouette, then a soft shadow at the feet
+  const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
+  const outline = [];
+  for (let y = 0; y < FH; y++)
+    for (let x = 0; x < FW; x++)
+      if (!f[y][x] && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) outline.push([x, y]);
+  for (const [x, y] of outline) f[y][x] = OUT;
+  for (let y = 21; y < 24; y++)
+    for (let x = 2; x < 14; x++) {
+      const d = ((x - 7.5) / 6) ** 2 + ((y - 22.5) / 1.6) ** 2;
+      if (d <= 1 && !f[y][x]) f[y][x] = [16, 10, 8, 90];
+    }
+
+  const mirror = dir === 'right';
+  for (let y = 0; y < FH; y++)
+    for (let x = 0; x < FW; x++) {
+      const c = f[y][mirror ? FW - 1 - x : x];
+      if (c) g[oy + y][ox + x] = c;
+    }
+}
+
+function drawWalkers() {
+  const ids = Object.keys(WALKERS);
+  const g = canvas(FW * DIRS.length * 3, FH * ids.length);
+  ids.forEach((id, row) =>
+    DIRS.forEach((dir, d) => {
+      for (let frame = 0; frame < 3; frame++) {
+        // right-facing frames are drawn left-facing, then mirrored
+        drawWalker(g, (d * 3 + frame) * FW, row * FH, WALKERS[id], dir, frame);
+      }
+    }),
+  );
+  return { g, ids };
+}
+
+// ---------------------------------------------------------------------------
+
+const MAPS = ['archive'];
+mkdirSync('assets/world', { recursive: true });
+for (const id of MAPS) {
+  const map = JSON.parse(readFileSync(`src/world/maps/${id}.json`, 'utf8'));
+  const widths = new Set(map.tiles.map((r) => r.length));
+  if (widths.size !== 1) throw new Error(`${id}: rows have different lengths (${[...widths].join(', ')})`);
+  writeFileSync(`assets/world/${id}.png`, toPng(drawMap(map)));
+}
+const { g, ids } = drawWalkers();
+writeFileSync('assets/world/walkers.png', toPng(g));
+writeFileSync(
+  'src/world/walkers.ts',
+  `// Generated by scripts/world-art.mjs. Do not edit by hand.
+
+/** One walker frame, in art pixels. Feet stand 2 pixels above the bottom edge. */
+export const WALKER_FRAME = { width: ${FW}, height: ${FH}, feet: ${FH - 2} };
+
+/** Column blocks in the sheet, three frames each: stand, step A, step B. */
+export const WALKER_DIRS = ${JSON.stringify(DIRS).replace(/"/g, "'")} as const;
+
+/** Each walker's row in assets/world/walkers.png. */
+export const WALKER_ROWS = {
+${ids.map((id, i) => `  ${id}: ${i},`).join('\n')}
+} as const;
+
+export type WalkerId = keyof typeof WALKER_ROWS;
+`,
+);
+console.log(`Wrote ${MAPS.length} map(s), ${ids.length} walkers and src/world/walkers.ts.`);

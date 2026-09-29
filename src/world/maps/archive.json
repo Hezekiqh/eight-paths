@@ -1,0 +1,51 @@
+{
+  "id": "archive",
+  "name": "The Archive",
+  "tiles": [
+    "##########################",
+    "#WWWWWWWWWWWMMWWWWWWWWWWW#",
+    "#WWWWWQWWWWWMMWWWWWWWWWWW#",
+    "#c.........rOOr.........c#",
+    "#..........rOOr..........#",
+    "#.TTTT.TTT.rrrr.TTT.TTTT.#",
+    "#.BBBB.BBB.rrrr.BBB.BBBB.#",
+    "#..........rrrr..........#",
+    "#.TTTT.TTT.rrrr.DD..TTTT.#",
+    "#.BBBB.BBB.rrrr.....BBBB.#",
+    "#c.........rrrr.........c#",
+    "#.p........rrrr......pp..#",
+    "#___________==___________#",
+    "##########################"
+  ],
+  "spawn": { "x": 12, "y": 5, "facing": "down" },
+  "examine": {
+    "W": ["Scroll racks, floor to ceiling. The labels are in a script you almost remember."],
+    "T": ["Scrolls, thousands of them, tied with faded ribbon."],
+    "B": ["Scrolls, thousands of them, tied with faded ribbon."],
+    "M": ["A high window. Somewhere up there is the sky."],
+    "c": ["A candle that never seems to burn down."],
+    "p": ["A pile of scrolls waiting to be shelved. Nobody has got round to it in a while."],
+    "D": ["The Keeper's desk. A ledger lies open, every line in the same careful hand."],
+    "O": ["Your cocoon. The silk is split where you pushed your way out."],
+    "_": ["Cold stone. The rest of the world is out there somewhere."],
+    "=": ["The great door. It won't budge. Not yet."]
+  },
+  "objects": [
+    {
+      "id": "keeper",
+      "type": "npc",
+      "x": 15,
+      "y": 4,
+      "sprite": "keeper",
+      "facing": "left",
+      "name": "The Keeper",
+      "lines": [
+        "Ah, you're on your feet. Good. Slowly, now. Five hundred years is a long sleep.",
+        "Walk wherever you like. The Archive is yours as much as mine.",
+        "The board on the north wall holds the day's tasks, if you want something to do.",
+        "The door? Not yet. When you're stronger, it will open."
+      ]
+    },
+    { "id": "board", "type": "board", "x": 6, "y": 2 }
+  ]
+}

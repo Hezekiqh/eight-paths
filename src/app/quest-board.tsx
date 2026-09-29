@@ -25,26 +25,15 @@ const CATEGORIES: { key: Category; label: string; symbol: SymbolViewProps['name'
 ];
 
 /**
- * Upright by default. With the console view on, turns the phone sideways while
- * this tab is open, like a handheld console, and back upright on leaving.
+ * The quest board in the Archive: daily and weekly objectives, personal goals
+ * and themes. Opened from the World, so it stays sideways like the game.
  */
-function useOrientation(landscape: boolean) {
+export default function QuestBoardScreen() {
   useFocusEffect(
     useCallback(() => {
-      ScreenOrientation.lockAsync(
-        landscape ? ScreenOrientation.OrientationLock.LANDSCAPE : ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
-      return () => {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      };
-    }, [landscape]),
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    }, []),
   );
-}
-
-export default function ObjectivesScreen() {
-  const landscape = useGameStore((s) => s.player?.objectivesLandscape ?? false);
-  const setLandscape = useGameStore((s) => s.setObjectivesLandscape);
-  useOrientation(landscape);
   const today = useToday();
   const objectives = useObjectives(today);
   const goals = useGoals();
@@ -67,14 +56,8 @@ export default function ObjectivesScreen() {
   const finished = goals.filter((g) => g.completedAt);
 
   return (
-    <SafeAreaView style={[styles.safe, landscape && styles.safeWide]} edges={['top', 'left', 'right']}>
-      <ScrollView
-        horizontal={!landscape}
-        scrollEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        style={landscape ? styles.menu : styles.menuBar}
-        contentContainerStyle={landscape ? styles.menuContent : styles.menuBarContent}
-        accessibilityRole="tablist">
+    <SafeAreaView style={styles.safe}>
+      <ScrollView style={styles.menu} contentContainerStyle={styles.menuContent} accessibilityRole="tablist">
         {CATEGORIES.map((c) => {
           const selected = c.key === category;
           const count = waiting(c.key);
@@ -88,28 +71,26 @@ export default function ObjectivesScreen() {
                 if (!selected) haptics.select();
                 setCategory(c.key);
               }}
-              style={[styles.menuItem, selected && styles.menuItemSelected, !landscape && styles.menuItemCompact]}>
-              {landscape && (
-                <View style={styles.cursorSlot}>
-                  {selected && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} />}
-                </View>
-              )}
+              style={[styles.menuItem, selected && styles.menuItemSelected]}>
+              <View style={styles.cursorSlot}>
+                {selected && <SymbolView name="heart.fill" tintColor={colors.accent} size={10} />}
+              </View>
               <SymbolView
                 name={c.symbol}
                 tintColor={selected ? colors.accent : colors.textMuted}
-                size={selected && landscape ? 24 : 20}
+                size={selected ? 24 : 20}
               />
               <Text
                 numberOfLines={1}
                 adjustsFontSizeToFit
-                style={[styles.menuLabel, selected && styles.menuLabelSelected, !landscape && styles.menuLabelCompact]}>
+                style={[styles.menuLabel, selected && styles.menuLabelSelected]}>
                 {c.label.toUpperCase()}
               </Text>
-              {count > 0 && <Text style={[styles.menuCount, !landscape && styles.menuCountCompact]}>{count}</Text>}
+              {count > 0 && <Text style={styles.menuCount}>{count}</Text>}
             </Pressable>
           );
         })}
-        {landscape && objectives.boosted.length > 0 && (
+        {objectives.boosted.length > 0 && (
           <View style={styles.boosts}>
             {objectives.boosted.map((d) => (
               <Text key={d} style={[styles.boost, { color: CLASSES[d].color }]}>
@@ -127,21 +108,6 @@ export default function ObjectivesScreen() {
             <Text style={styles.blurb}>{current.blurb}</Text>
           </View>
           <View style={styles.headerActions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={landscape ? 'Switch to upright view' : 'Switch to sideways console view'}
-              onPress={() => {
-                haptics.select();
-                setLandscape(!landscape);
-              }}
-              hitSlop={8}
-              style={({ pressed }) => [styles.rotate, pressed && { opacity: 0.7 }]}>
-              <SymbolView
-                name={landscape ? 'rectangle.portrait.rotate' : 'rectangle.landscape.rotate'}
-                tintColor={colors.accent}
-                size={22}
-              />
-            </Pressable>
             {category === 'personal' && (
               <Pressable
                 accessibilityRole="button"
@@ -154,13 +120,19 @@ export default function ObjectivesScreen() {
                 <SymbolView name="plus" tintColor={colors.background} size={18} weight="bold" />
               </Pressable>
             )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close the quest board"
+              onPress={() => {
+                haptics.select();
+                router.back();
+              }}
+              hitSlop={8}
+              style={({ pressed }) => [styles.close, pressed && { opacity: 0.7 }]}>
+              <SymbolView name="xmark" tintColor={colors.accent} size={20} weight="bold" />
+            </Pressable>
           </View>
         </View>
-        {!landscape && objectives.boosted.length > 0 && (
-          <Text style={styles.boost}>
-            {objectives.boosted.map((d) => `${BOOST_MULTIPLIER}× ${CLASSES[d].className}`).join(' · ')} today
-          </Text>
-        )}
 
         {category === 'themes' ? (
           <ThemePicker />
@@ -199,25 +171,11 @@ export default function ObjectivesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, flexDirection: 'column', backgroundColor: colors.background },
-  safeWide: { flexDirection: 'row' },
+  safe: { flex: 1, flexDirection: 'row', backgroundColor: colors.background },
   menu: { width: 210, flexGrow: 0 },
   menuContent: { paddingVertical: spacing.lg, paddingLeft: spacing.md, gap: spacing.xs },
-  menuBar: { flexGrow: 0 },
-  // Upright, the four categories share the width equally, icon above label, so they always fit.
-  menuBarContent: { flexGrow: 1, paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
-  menuItemCompact: {
-    flex: 1,
-    flexDirection: 'column',
-    gap: 2,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: 2,
-    paddingRight: 2,
-  },
-  menuLabelCompact: { flex: 0, fontSize: 16, letterSpacing: 0.5 },
-  menuCountCompact: { position: 'absolute', top: 2, right: 2, fontSize: 13 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  rotate: { ...windowStyle, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  close: { ...windowStyle, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
