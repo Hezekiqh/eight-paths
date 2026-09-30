@@ -1,4 +1,4 @@
-# App Store listing: Eight Paths 1.0
+# App Store listing: Eight Paths 1.1
 
 Everything App Store Connect asks for, in the order it appears on **Distribution → iOS App → 1.0 Prepare for Submission**. Copy each code block straight into its field. Character counts are within Apple's limits.
 
@@ -49,7 +49,7 @@ Each part of a whole life has its own Path and its own pixel-art companion who w
 Every companion has their own story, typed out letter by letter like an old RPG, and levels up as you keep their Path.
 
 TURN HABITS INTO QUESTS
-Write your own quests or start with ready-made ones. Set them daily, on weekdays or on the days you choose. Tap to complete and watch your companion's XP bar fill. Every task is worth the same XP, so your progress always means something real.
+Write your own quests or start with ready-made ones. Set them daily, on weekdays or on the days you choose. Tap to complete and watch your companion's XP bar fill. Every task is worth the same XP, up to 30 XP a Path each day, so your progress always means something real.
 
 LEVEL UP FAST, THEN FOR LIFE
 Your first quests level you up almost every time. Keep going and you can reach Level 100 in about three months of steady play, and then a second climb begins. Every tenth level is a milestone worth celebrating.
@@ -64,18 +64,36 @@ SEE YOUR PROGRESS HONESTLY
 A radar shows how balanced your life is this week, this month or all time. A calendar glows brighter on the days you did more. Consistency is measured against the days you planned, never against a perfect week.
 
 MAKE IT YOURS
-Five themes, from an aged parchment scroll to a glowing blue status window. Crisp pixel art, gentle vibration and readable text throughout.
+Crisp pixel art and gentle vibration, in an aged parchment scroll theme. Premium unlocks four more, up to a glowing blue status window.
 
 GENTLE BY DESIGN
 • Levels and XP are never taken away
 • Rest tokens protect your streaks on days off
 • One supportive evening reminder, skipped on days you've already played
 
-PRIVATE BY DEFAULT
-No account, no sign-up, no ads, no tracking. Everything stays on your iPhone.
+JOIN THE SECOND 100 (OPTIONAL)
+Sign in with Apple or Google to add friends, see each other's heroes and find out how rare each character is. The first 100 players get a founder number, forever. Your habits never leave your phone: only your username, level, party and collection are shared.
+
+EIGHT PATHS PREMIUM (OPTIONAL)
+Support the game and lore by upgrading to Premium, a monthly subscription:
+• 20 XP per habit, up to 60 a Path each day
+• Unlimited habits (free players keep up to 10)
+• 1★ characters twice as likely, and one redo per drop
+• Every theme
+• Unlimited time in the World
+The habit tracker itself is always free. Drop odds are shown in the app.
+
+NO ADS, NO TRACKING
+No analytics either. Play without an account and everything stays on your iPhone.
 
 Eight Paths is a habit game, not a medical or mental health service. If you're struggling, the app links to the 988 Suicide & Crisis Lifeline (US).
+
+Premium is an auto-renewing monthly subscription, charged to your Apple ID. It renews unless you cancel at least 24 hours before the end of the period, in your App Store account settings.
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://hezekiqh.github.io/eight-paths/privacy.html
 ```
+
+The last three lines are required for subscription apps (guideline 3.1.2): the description must link to the Terms of Use (EULA) and the Privacy Policy. We use Apple's standard EULA, so leave **App Information → License Agreement** on the standard one.
 
 ### Keywords (100)
 
@@ -98,7 +116,7 @@ https://hezekiqh.github.io/eight-paths/
 ### Version
 
 ```
-1.0
+1.1
 ```
 
 ### Copyright
@@ -117,7 +135,7 @@ Click **Add Build** and choose **build 6** once it has finished processing. (Bui
 
 ### App Review Information
 
-**Sign-in required:** leave **unchecked**. The app has no accounts.
+**Sign-in required:** leave **unchecked**. Sign-in is optional: the whole game works without an account. Friends (the Second 100) need Sign in with Apple or Google, which the reviewer can use with their own Apple ID.
 
 **Contact Information:**
 
@@ -131,11 +149,15 @@ Click **Add Build** and choose **build 6** once it has finished processing. (Bui
 **Notes (4000):**
 
 ```
-Eight Paths is fully offline. There is no account, backend or sign-in; all data is stored on the device.
+Eight Paths is a habit game. Everything about the player's habits is stored on the device; the game works fully without an account.
 
-To see the full flow: enter a name (optional), choose a class, keep the default starting quests and tap Start. Complete the pinned "Begin your journey" quest to see the level-up animation, then the app asks for notification permission (a single local evening reminder).
+To see the full flow: enter a name (optional), choose a class, keep the default starting quests and tap Start. Complete the pinned "Begin your journey" quest to see the level-up animation, then the app asks for notification permission (local reminders only).
 
-Tabs: Today shows the radar and today's quests grouped under each party member; tap a quest to complete it, tap again to undo. Character shows the overall level, the 100-character collection (tap any card for lore; unlocked characters can be swapped in) and settings, including a "Get support" row that links to the 988 Suicide & Crisis Lifeline. Journey shows progress and a calendar. Quests lets you add, edit (tap) and archive (swipe left) habits. Objectives (the controller icon) turns the screen sideways, like a handheld console, and has daily and weekly objectives, personal goals and a Themes picker; changing theme restarts the app for a moment by design.
+OPTIONAL ACCOUNT (Friends, "the Second 100"): Character tab > Friends. Sign in with Apple or Google, then choose a username. Only the username, level, party and collection are shared; habits never leave the device. Players can report and block others from a friend's page (Report / Block). Delete account is at the bottom of the Friends screen: it deletes the server account and revokes Sign in with Apple.
+
+PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once after choosing a username, and any time from Character tab > Settings > Eight Paths Premium. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99); everyone else premium_monthly ($2.99). Premium never locks the habit tracker: it raises XP per habit and the daily XP cap, removes the 10-habit limit, doubles 1-star character odds, adds one redo per character drop, unlocks every theme and unlimited time in the World.
+
+CHARACTER DROPS: every few levels a Path awards a random character from its roster (no purchase can buy a drop directly). The exact odds per Path, free and Premium, are on the Drop odds sheet (link at the bottom of the paywall).
 
 Notifications are local only; the app does not use push notifications.
 ```
@@ -172,7 +194,27 @@ Then click **Save**. Once build 6 is attached and the pages below are done, clic
 https://hezekiqh.github.io/eight-paths/privacy.html
 ```
 
-**Data collection:** choose "No, we do not collect data from this app," then **Publish**. That's accurate: the app has no analytics, crash reporting, ads or network requests, and saves everything on the device.
+**Data collection:** 1.1 collects data for the optional online features, so choose **"Yes, we collect data from this app"** and answer as below. For every type: **linked to the user: Yes**, **used for tracking: No**, **purpose: App Functionality** only.
+
+| Category → data type | Why |
+| --- | --- |
+| Contact Info → **Email Address** | Google sign-in shares it (Apple sign-in asks for none) |
+| Identifiers → **User ID** | the account identifier; also RevenueCat's app user ID |
+| Purchases → **Purchase History** | RevenueCat checks Premium subscriptions |
+| User Content → **Gameplay Content** | level, party, collection, days shown up and streak |
+| User Content → **Other User Content** | username, and reports sent about other players |
+
+Everything else (location, health, contacts, browsing, diagnostics, advertising data, and so on): **not collected**. Habits and quests stay on the device, so they are not "collected".
+
+Then click **Publish**. Apple shows the new label once 1.1 is live.
+
+### Subscriptions (Monetization → Subscriptions)
+
+Both subscriptions are already created in the group **Eight Paths Premium**: `premium_monthly` ($2.99/month) and `premium_founder_monthly` ($0.99/month), all 175 countries, with display names and descriptions. Before submitting:
+
+1. **Group display name:** open the group, **App Store Localization → Add** English (U.S.): Subscription Group Display Name `Eight Paths Premium`, App Name Display Options: use the app name.
+2. **Review screenshot** on each subscription: a screenshot of the paywall (Review Information → Screenshot).
+3. On the 1.1 version page, under **In-App Purchases and Subscriptions**, select both subscriptions so they are reviewed with the build. The first subscriptions must go in with a new app version.
 
 ### Pricing and Availability (Monetization)
 
