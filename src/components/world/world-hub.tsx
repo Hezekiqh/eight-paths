@@ -7,6 +7,9 @@ import { Segmented } from '@/components/segmented';
 import { SettingsPanel } from '@/components/settings-panel';
 import { isObjectiveDone } from '@/game';
 import { haptics } from '@/haptics';
+import { premiumEnabled } from '@/premium/config';
+import { FREE_WORLD_MS, playLeft, usePlaytime } from '@/premium/playtime';
+import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
 import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
 import { COMPANIONS } from '@/story/companions';
@@ -55,7 +58,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>THE WORLD</Text>
+        <Text style={styles.title}>OTHER WORLD</Text>
         <Text style={styles.place}>
           {heroName} · {place}
         </Text>
@@ -65,17 +68,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
           <SettingsPanel />
         ) : (
           <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityHint="Opens the game. Turn your phone sideways."
-              onPress={() => {
-                haptics.tap();
-                onPlay();
-              }}
-              style={({ pressed }) => [styles.play, pressed && { opacity: 0.8 }]}>
-              <Text style={styles.playLabel}>{position ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
-              <Text style={styles.playHint}>Turn your phone sideways</Text>
-            </Pressable>
+            <Play started={position !== null} onPlay={onPlay} />
 
             <Objectives discovered={discovered} />
             <Lore heard={heard} />
@@ -84,6 +77,55 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/**
+ * Jump into the game, with a free player's time left today. Once it's used up,
+ * the button makes way for a note: back at midnight, or no limit with Premium.
+ */
+function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
+  const today = useToday();
+  const premium = usePremium((s) => s.premium);
+  const played = usePlaytime((s) => s.played);
+  const limited = premiumEnabled && !premium;
+  const left = playLeft(played, today, premium ? 'premium' : 'free');
+  const minutes = Math.ceil(left / 60_000);
+
+  if (limited && left <= 0) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityHint="Opens Eight Paths Premium"
+        onPress={() => {
+          haptics.tap();
+          router.push('/paywall');
+        }}
+        style={({ pressed }) => [styles.window, pressed && { opacity: 0.8 }]}>
+        <Text style={styles.section}>RESTING UNTIL TOMORROW</Text>
+        <Text style={styles.answer}>
+          That&apos;s today&apos;s {FREE_WORLD_MS / 60_000} minutes in the Other World. Your habits still count, all
+          day. The road opens again at midnight.
+        </Text>
+        <Text style={styles.need}>Explore without limits with Premium ›</Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint="Opens the game. Turn your phone sideways."
+      onPress={() => {
+        haptics.tap();
+        onPlay();
+      }}
+      style={({ pressed }) => [styles.play, pressed && { opacity: 0.8 }]}>
+      <Text style={styles.playLabel}>{started ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
+      <Text style={styles.playHint}>
+        {limited ? `Turn your phone sideways · ${minutes} min left today` : 'Turn your phone sideways'}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -176,7 +218,7 @@ function Lore({ heard }: { heard: ReturnType<typeof useWorldStore.getState>['hea
       <Text style={styles.section}>LORE · {heard.length} HEARD</Text>
       {heard.length === 0 && (
         <Text style={styles.how}>
-          Talk to people in the World and ask them things. What they tell you is written down here.
+          Talk to people in the Other World and ask them things. What they tell you is written down here.
         </Text>
       )}
       {shown.map((entry) => (
@@ -199,7 +241,7 @@ function ComingSoon() {
   return (
     <View style={styles.window}>
       <Text style={styles.section}>COMING SOON</Text>
-      <Text style={styles.how}>The World is still being built. Here&apos;s what&apos;s next, in order.</Text>
+      <Text style={styles.how}>The Other World is still being built. Here&apos;s what&apos;s next, in order.</Text>
       {ROADMAP.map((item, i) => (
         <View key={item.title} style={styles.soon}>
           <Text style={styles.soonNumber}>{i + 1}</Text>

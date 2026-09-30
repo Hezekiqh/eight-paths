@@ -26,7 +26,7 @@ export const PERKS: Perk[] = [
   { title: 'Habits', free: 'Up to 10', premium: 'Unlimited' },
   { title: '1★ odds', free: 'Standard', premium: 'About twice as likely' },
   { title: 'Redo a drop', free: '—', premium: 'Once per drop' },
-  { title: 'Time in the World', free: '15 min a day', premium: 'Unlimited · coming with the World' },
+  { title: 'Time in the Other World', free: '15 min a day', premium: 'Unlimited' },
   { title: 'Themes', free: 'The default', premium: 'Every theme' },
-  { title: 'Badge', free: '—', premium: 'Premium badge · gold for founders' },
+  { title: 'Badge', free: '—', premium: 'Coming soon: a Premium badge, gold for founders' },
 ];

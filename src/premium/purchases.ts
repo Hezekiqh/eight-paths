@@ -1,3 +1,4 @@
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useEffect } from 'react';
 import Purchases, { PURCHASES_ERROR_CODE, type CustomerInfo, type PurchasesStoreProduct } from 'react-native-purchases';
 
@@ -8,10 +9,12 @@ import { usePremium } from './store';
 /**
  * RevenueCat's public iOS key (EXPO_PUBLIC_REVENUECAT_IOS_KEY, in .env.local
  * or the EAS build env). Without it purchases are off, and in development the
- * paywall's button just flips the local Premium flag.
+ * paywall's button just flips the local Premium flag. Expo Go can't reach the
+ * App Store (RevenueCat rejects a real key there), so it counts as off too.
  */
 const API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
-export const purchasesEnabled = API_KEY !== '';
+const inExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+export const purchasesEnabled = API_KEY !== '' && !inExpoGo;
 
 /** The RevenueCat entitlement both products grant. */
 export const ENTITLEMENT = 'premium';
