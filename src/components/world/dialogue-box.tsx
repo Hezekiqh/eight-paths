@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { playSound } from '@/audio';
 import { TypewriterText } from '@/components/typewriter-text';
+import { Portrait } from '@/components/world/portrait';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import type { Question } from '@/world/maps';
+import { portraitFor, splitSpeaker, voiceFor } from '@/world/portraits';
+import type { WalkerId } from '@/world/walkers';
 
 export type Dialogue = {
   speaker?: string;
+  /** Whose face to show, when it isn't found from `speaker` (see portraits.ts). */
+  sprite?: WalkerId;
   lines: string[];
   questions?: Question[];
   /** Runs once the conversation closes (e.g. stepping through a door). */
@@ -39,7 +45,22 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const [typed, setTyped] = useState(false);
   const [skip, setSkip] = useState(false);
   const [asking, setAsking] = useState(false);
-  const line = lines[index];
+  // A line can hand the box to someone else: "VARGA: …" shows Varga, in her voice.
+  const said = splitSpeaker(lines[index] ?? '');
+  const line = said.text;
+  const speaker = said.speaker ?? dialogue.speaker;
+  const sprite = said.sprite ?? dialogue.sprite ?? portraitFor(dialogue.speaker);
+  const voice = voiceFor(speaker, sprite);
+  const [lift, setLift] = useState(false);
+  // Narration (no speaker) stays silent; people blip every other letter and bob as they talk.
+  const onLetter = useCallback(
+    (i: number) => {
+      if (!speaker || i % 2 !== 0) return;
+      playSound(`blip${voice}`);
+      setLift((l) => !l);
+    },
+    [speaker, voice],
+  );
   const last = index === lines.length - 1;
   const questions = dialogue.questions ?? [];
   const choices = dialogue.choices ?? [];
@@ -82,7 +103,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     return (
       <View style={StyleSheet.absoluteFill} onStartShouldSetResponder={() => true}>
         <View style={[styles.window, place]} accessibilityViewIsModal>
-          {dialogue.speaker && <Text style={styles.speaker}>{dialogue.speaker}</Text>}
+          {speaker && <Text style={styles.speaker}>{speaker}</Text>}
           {questions.map((q) => (
             <Choice key={q.ask} label={q.ask} onPress={() => ask(q)} />
           ))}
@@ -116,19 +137,23 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
       style={StyleSheet.absoluteFill}
       onPress={advance}
       accessibilityRole="button"
-      accessibilityLabel={`${dialogue.speaker ? `${dialogue.speaker}: ` : ''}${line}`}
+      accessibilityLabel={`${speaker ? `${speaker}: ` : ''}${line}`}
       accessibilityHint={
         last ? (questions.length > 0 ? 'Shows what you can ask' : 'Closes the conversation') : 'Next line'
       }>
-      <View style={[styles.window, place]}>
-        {dialogue.speaker && <Text style={styles.speaker}>{dialogue.speaker}</Text>}
-        <TypewriterText
-          key={`${round}-${index}`}
-          text={line}
-          instant={skip}
-          style={styles.text}
-          onDone={() => setTyped(true)}
-        />
+      <View style={[styles.window, styles.row, place]}>
+        {sprite && <Portrait sprite={sprite} lift={lift && !typed} />}
+        <View style={styles.words}>
+          {speaker && <Text style={styles.speaker}>{speaker}</Text>}
+          <TypewriterText
+            key={`${round}-${index}`}
+            text={line}
+            instant={skip}
+            style={styles.text}
+            onDone={() => setTyped(true)}
+            onLetter={onLetter}
+          />
+        </View>
         {typed && <Text style={styles.more}>{last && questions.length === 0 && choices.length === 0 ? '■' : '▼'}</Text>}
       </View>
     </Pressable>
@@ -158,6 +183,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.xs,
   },
+  row: { flexDirection: 'row', gap: spacing.md },
+  words: { flex: 1, gap: spacing.xs },
   speaker: { color: colors.accent, fontFamily: fonts.bold, fontSize: 20 },
   text: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 16, lineHeight: 24 },
   choice: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },

@@ -1,11 +1,15 @@
 import {
   Atlas,
+  BlendColor,
   Canvas,
   FilterMode,
   Group,
   Image,
   MipmapMode,
   Oval,
+  Paint,
+  Path,
+  Skia,
   Circle,
   Rect,
   useImage,
@@ -39,16 +43,20 @@ import {
   E_X,
   E_Y,
   ENEMY_KINDS,
+  FEEL,
   HEARTS,
   MERCY,
   hitAround,
   spawnEnemy,
   stepEnemies,
   strikePoint,
+  strikes,
   type Attack,
   type Enemy,
 } from '@/world/combat';
 import { AttackEffects } from '@/components/world/attack-effects';
+import { playSound } from '@/audio';
+import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 
@@ -57,6 +65,15 @@ const WALKERS_IMAGE = require('@/assets/world/walkers.png');
 const FW = WALKER_FRAME.width;
 const FH = WALKER_FRAME.height;
 const FEET = WALKER_FRAME.feet;
+/** Most enemies flashing white at once. */
+const FLASHES = 4;
+
+type Feel = 'swing' | 'hit' | 'kill' | 'hurt';
+/** Combat's sound and buzz, on the React side. */
+function feel(kind: Feel) {
+  playSound(kind);
+  if (kind !== 'swing') haptics[kind]();
+}
 
 /** An NPC's feet: the middle of their tile, near its bottom edge. */
 export const npcFeet = (n: { x: number; y: number }): [number, number] => [
@@ -215,6 +232,15 @@ export function WorldView({
   /** Pillows in flight: [x, y, dx, dy], and time until the next throw. */
   const pillows = useSharedValue<number[][]>([]);
   const throwIn = useSharedValue(1.5);
+  // ---- game feel: the world holds for a beat on a hit, the screen shakes, struck enemies flash, fallen ones puff.
+  const hitStop = useSharedValue(0);
+  /** [time left, strength in art pixels], and this frame's offset [x, y]. */
+  const shake = useSharedValue<number[]>([0, 0]);
+  const shakeOff = useSharedValue<number[]>([0, 0]);
+  /** Seconds each enemy (by index) still shows white. */
+  const whiteFor = useSharedValue<number[]>(map.enemies.map(() => 0));
+  /** Puffs where enemies fell: [x, y, time left]. */
+  const puffs = useSharedValue<number[][]>([]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   const npcs = useMemo(
     () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], ...npcFeet(n)] as [number, number, number]),
@@ -227,6 +253,8 @@ export function WorldView({
   const bob = useSharedValue(0);
   /** Four numbers per walker, back to front: sheet x, sheet y, screen x, screen y. */
   const drawList = useSharedValue<number[]>([]);
+  /** The same, for the struck enemies drawn again in white on top. */
+  const flashList = useSharedValue<number[]>([]);
 
   const viewW = width / scale;
   const viewH = height / scale;
@@ -235,7 +263,11 @@ export function WorldView({
 
   const frame = useFrameCallback((info) => {
     'worklet';
-    const dt = Math.min((info.timeSincePreviousFrame ?? 16) / 1000, 0.05);
+    const realDt = Math.min((info.timeSincePreviousFrame ?? 16) / 1000, 0.05);
+    // Hit-stop: for a beat after a hit lands, nothing moves (but flashes, puffs and the shake play on).
+    const held = hitStop.get() > 0;
+    hitStop.set(Math.max(0, hitStop.get() - realDt));
+    const dt = held ? 0 : realDt;
     let ix = sim.inputX.get();
     let iy = sim.inputY.get();
     const frozen = sim.frozen.get();
@@ -308,11 +340,13 @@ export function WorldView({
       const f = sim.facing.get();
       mercy.set(Math.max(0, mercy.get() - dt));
       cooldown.set(Math.max(0, cooldown.get() - dt));
-      let enemies = foes.get();
+      const before = foes.get();
+      let enemies = before;
       if (sim.attackPressed.get()) {
         sim.attackPressed.set(false);
         if (attack && cooldown.get() === 0) {
           cooldown.set(attack.cooldown);
+          scheduleOnRN(feel, 'swing');
           if (attack.kind === 'melee') {
             const [sx, sy] = strikePoint(px, py, f, attack.range);
             enemies = hitAround(grid, enemies, sx, sy, attack.range * 0.6 + 6, damage, attack.knock, attack.stun);
@@ -347,6 +381,22 @@ export function WorldView({
         }
         bolts.set(next);
       }
+      const struck = strikes(before, enemies);
+      if (struck.hits > 0) {
+        const kill = struck.kills > 0;
+        hitStop.set(struck.big ? FEEL.bigStop : kill ? FEEL.killStop : FEEL.hitStop);
+        const strength = struck.big || kill ? FEEL.killShake : FEEL.hitShake;
+        if (strength >= shake.get()[1] || shake.get()[0] <= 0) shake.set([FEEL.shakeTime, strength]);
+        const white = whiteFor.get().slice();
+        for (const i of struck.struck) white[i] = FEEL.flash;
+        whiteFor.set(white);
+        if (kill) {
+          const next = puffs.get().slice(-3);
+          for (let k = 0; k < struck.fell.length; k += 2) next.push([struck.fell[k], struck.fell[k + 1], FEEL.puff]);
+          puffs.set(next);
+        }
+        scheduleOnRN(feel, kill ? 'kill' : 'hit');
+      }
       const r = stepEnemies(grid, enemies, px, py, dt, mercy.get() === 0);
       foes.set(r.enemies);
       // The boss: pillows lobbed at you from the sofa, and a win once every bearer is down.
@@ -380,6 +430,9 @@ export function WorldView({
       if (r.stun > 0) dazed.set(Math.max(dazed.get(), r.stun));
       if (r.hurt > 0) {
         mercy.set(MERCY);
+        shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
+        hitStop.set(FEEL.hitStop);
+        scheduleOnRN(feel, 'hurt');
         sim.hp.set(sim.hp.get() - r.hurt);
         const [nx, ny] = move(grid, px, py, r.pushX, r.pushY);
         sim.x.set(nx);
@@ -403,6 +456,17 @@ export function WorldView({
     if (fl[3] > 0) flash.set([fl[0], fl[1], fl[2], Math.max(0, fl[3] - dt), fl[4], fl[5], fl[6], fl[7]]);
     const sh = shout.get();
     if (sh[2] > 0) shout.set([sh[0], sh[1], Math.max(0, sh[2] - dt)]);
+    // Feel timers run on real time, so they play through the hit-stop.
+    const quake = shake.get();
+    if (quake[0] > 0) {
+      shake.set([Math.max(0, quake[0] - realDt), quake[1]]);
+      shakeOff.set([Math.round((Math.random() * 2 - 1) * quake[1]), Math.round((Math.random() * 2 - 1) * quake[1])]);
+    } else if (shakeOff.get()[0] !== 0 || shakeOff.get()[1] !== 0) shakeOff.set([0, 0]);
+    const white = whiteFor.get();
+    if (white.some((w) => w > 0)) whiteFor.set(white.map((w) => Math.max(0, w - realDt)));
+    if (puffs.get().length > 0) {
+      puffs.set(puffs.get().map((p) => [p[0], p[1], p[2] - realDt]).filter((p) => p[2] > 0));
+    }
 
     // Boulders slide toward their tiles.
     const rp = rockPos.get();
@@ -433,26 +497,39 @@ export function WorldView({
     bob.set(Math.floor(info.timestamp / 350) % 2);
 
     // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
+    // The last number says whether they're flashing white.
     const ents: number[][] = [];
     const npcFacing = sim.npcFacing.get();
-    for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2]]);
-    for (const e of foes.get()) {
+    for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2], 0]);
+    const whites = whiteFor.get();
+    const all = foes.get();
+    for (let i = 0; i < all.length; i++) {
+      const e = all[i];
       if (e[E_ALIVE] === 0) continue;
       const toward = facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
-      ents.push([enemyRows[e[E_KIND]], toward, walkFrame(e[E_X] + e[E_Y], e[E_AWAKE] === 1), e[E_X], e[E_Y]]);
+      const lit = (whites[i] ?? 0) > 0 ? 1 : 0;
+      ents.push([enemyRows[e[E_KIND]], toward, walkFrame(e[E_X] + e[E_Y], e[E_AWAKE] === 1), e[E_X], e[E_Y], lit]);
     }
     for (let k = partyRows.length - 1; k >= 1; k--) {
       const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
-      ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy]);
+      ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0]);
     }
-    // the lead goes last so they're drawn on top of a follower standing in the same spot
-    ents.push([partyRows[0], sim.facing.get(), walkFrame(sim.walked.get(), moving), sim.x.get(), sim.y.get()]);
+    // the lead goes last so they're drawn on top of a follower standing in the same spot;
+    // just hurt, they blink until they can be hurt again
+    const blink = mercy.get() > 0 && Math.floor(mercy.get() * 14) % 2 === 0;
+    if (!blink) {
+      ents.push([partyRows[0], sim.facing.get(), walkFrame(sim.walked.get(), moving), sim.x.get(), sim.y.get(), 0]);
+    }
     ents.sort(byFeet);
     const list: number[] = [];
-    for (const [row, facing, f, x, y] of ents) {
-      list.push((facing * 3 + f) * FW, row * FH, round(x - FW / 2), round(y - FEET));
+    const lit: number[] = [];
+    for (const [row, facing, f, x, y, white] of ents) {
+      const item = [(facing * 3 + f) * FW, row * FH, round(x - FW / 2), round(y - FEET)];
+      list.push(...item);
+      if (white === 1 && lit.length < FLASHES * 4) lit.push(...item);
     }
     drawList.set(list);
+    flashList.set(lit);
   }, false);
 
   useEffect(() => {
@@ -472,9 +549,35 @@ export function WorldView({
     else xf.set(1, 0, l[i * 4 + 2], l[i * 4 + 3]);
   });
 
+  const flashSprites = useRectBuffer(FLASHES, (rect, i) => {
+    'worklet';
+    const l = flashList.get();
+    if (l.length < (i + 1) * 4) rect.setXYWH(0, 0, 0, 0);
+    else rect.setXYWH(l[i * 4], l[i * 4 + 1], FW, FH);
+  });
+  const flashTransforms = useRSXformBuffer(FLASHES, (xf, i) => {
+    'worklet';
+    const l = flashList.get();
+    if (l.length < (i + 1) * 4) xf.set(1, 0, -999, -999);
+    else xf.set(1, 0, l[i * 4 + 2], l[i * 4 + 3]);
+  });
+  const puffPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, t] of puffs.get()) {
+      const p = 1 - t / FEEL.puff;
+      const size = Math.max(1, Math.round(3 * (1 - p)) + 1);
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        const r = 3 + 11 * p;
+        path.addRect(Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size));
+      }
+    }
+    return path;
+  });
+
   const camera = useDerivedValue(() => [
-    { translateX: -camX.get() * scale },
-    { translateY: -camY.get() * scale },
+    { translateX: -(camX.get() + shakeOff.get()[0]) * scale },
+    { translateY: -(camY.get() + shakeOff.get()[1]) * scale },
     { scale },
   ]);
   const markLift = useDerivedValue(() => [{ translateY: -bob.get() }]);
@@ -496,6 +599,17 @@ export function WorldView({
         {walkers && <Atlas image={walkers} sprites={sprites} transforms={transforms} sampling={NEAREST} />}
         {map.enemies.length > 0 && (
           <>
+            {walkers && (
+              <Group
+                layer={
+                  <Paint>
+                    <BlendColor color="white" mode="srcIn" />
+                  </Paint>
+                }>
+                <Atlas image={walkers} sprites={flashSprites} transforms={flashTransforms} sampling={NEAREST} />
+              </Group>
+            )}
+            <Path path={puffPath} color="#E8E0D0" />
             {attack && <AttackEffects attack={attack} flash={flash} bolts={bolts} />}
             <Shout shout={shout} />
           </>

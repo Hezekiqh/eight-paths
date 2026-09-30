@@ -5,7 +5,8 @@ import type { AudioSource } from 'expo-audio';
  * scripts/placeholder-audio.mjs; drop a real one in under the same name
  * (updating the extension here if it changes) and nothing else moves.
  *
- * Effects are kept to the rare moments; the music carries the mood.
+ * Outside the World, effects are kept to the rare moments; the music carries
+ * the mood. In the World, combat and dialogue voices get their own.
  */
 export const EFFECTS = {
   /** A quest marked done. */
@@ -16,6 +17,17 @@ export const EFFECTS = {
   hatch: require('../../assets/audio/hatch.wav'),
   /** The intro's heartbeat. */
   heartbeat: require('../../assets/audio/heartbeat.wav'),
+  /** Combat in the World: an attack thrown, landing, an enemy falling, you hurt. */
+  swing: require('../../assets/audio/swing.wav'),
+  hit: require('../../assets/audio/hit.wav'),
+  kill: require('../../assets/audio/kill.wav'),
+  hurt: require('../../assets/audio/hurt.wav'),
+  /** Dialogue voices, lowest to highest (see voiceFor in dialogue-box.tsx). */
+  blip1: require('../../assets/audio/blip-1.wav'),
+  blip2: require('../../assets/audio/blip-2.wav'),
+  blip3: require('../../assets/audio/blip-3.wav'),
+  blip4: require('../../assets/audio/blip-4.wav'),
+  blip5: require('../../assets/audio/blip-5.wav'),
 } satisfies Record<string, AudioSource>;
 
 /**
@@ -48,6 +60,15 @@ export const EFFECT_VOLUME: Record<Effect, number> = {
   levelUp: 0.8,
   hatch: 1,
   heartbeat: 1,
+  swing: 0.5,
+  hit: 0.8,
+  kill: 0.9,
+  hurt: 0.9,
+  blip1: 0.5,
+  blip2: 0.5,
+  blip3: 0.5,
+  blip4: 0.5,
+  blip5: 0.5,
 };
 
 /** Music sits under the game (and under whatever else the phone is playing). */

@@ -18,6 +18,8 @@ type Props = {
   /** Milliseconds per letter; slower for narration. */
   letterMs?: number;
   onDone?: () => void;
+  /** Each letter as it's typed (not spaces), counting from 0: for a speaking voice. */
+  onLetter?: (index: number) => void;
 };
 
 /**
@@ -25,7 +27,7 @@ type Props = {
  * dialogue box. The untyped rest is laid out but transparent, so the box never
  * grows and words never jump lines mid-type. Reduce Motion shows it all at once.
  */
-export function TypewriterText({ text, style, start = true, instant = false, letterMs = LETTER_MS, onDone }: Props) {
+export function TypewriterText({ text, style, start = true, instant = false, letterMs = LETTER_MS, onDone, onLetter }: Props) {
   const reduceMotion = useReducedMotion();
   const [shown, setShown] = useState(0);
   const all = instant || reduceMotion;
@@ -38,13 +40,16 @@ export function TypewriterText({ text, style, start = true, instant = false, let
     const id = setTimeout(
       () => {
         // A tiny click per letter, like a dialogue blip; spaces stay silent for rhythm.
-        if (text[shown].trim()) haptics.tick();
+        if (text[shown].trim()) {
+          haptics.tick();
+          onLetter?.(shown);
+        }
         setShown((n) => n + 1);
       },
       shown === 0 ? 0 : delay,
     );
     return () => clearTimeout(id);
-  }, [all, start, shown, text, letterMs]);
+  }, [all, start, shown, text, letterMs, onLetter]);
 
   useEffect(() => {
     if (done) onDone?.();

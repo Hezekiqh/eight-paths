@@ -274,6 +274,53 @@ export function hitAround(
   return out;
 }
 
+/** What the player's attacks did this frame, found by comparing enemies before and after. */
+export type Strikes = {
+  hits: number;
+  kills: number;
+  /** A boss (Aurek, Kaldor) or a boss's bearer was among those struck. */
+  big: boolean;
+  /** Where each enemy fell: [x, y, x, y, …]. */
+  fell: number[];
+  /** Index of each enemy struck, for its white flash. */
+  struck: number[];
+};
+
+const BIG = ['aurek', 'kaldor'];
+
+export function strikes(before: Enemy[], after: Enemy[]): Strikes {
+  'worklet';
+  const out: Strikes = { hits: 0, kills: 0, big: false, fell: [], struck: [] };
+  for (let i = 0; i < after.length; i++) {
+    const b = before[i];
+    const a = after[i];
+    if (!b || b[E_ALIVE] === 0 || a[E_HP] >= b[E_HP]) continue;
+    out.hits++;
+    out.struck.push(i);
+    if (BIG.includes(ENEMY_KINDS[a[E_KIND]])) out.big = true;
+    if (a[E_ALIVE] === 0) {
+      out.kills++;
+      out.fell.push(a[E_X], a[E_Y]);
+    }
+  }
+  return out;
+}
+
+/** Game feel, in seconds and art pixels: how long the world holds on a hit, and how hard the screen shakes. */
+export const FEEL = {
+  hitStop: 0.05,
+  killStop: 0.09,
+  bigStop: 0.14,
+  hitShake: 1,
+  killShake: 2,
+  hurtShake: 3,
+  shakeTime: 0.18,
+  /** How long a struck enemy shows white. */
+  flash: 0.09,
+  /** How long a fallen enemy's puff lasts. */
+  puff: 0.35,
+};
+
 /** The point in front of the player where a swing lands, for facing down/up/left/right. */
 export function strikePoint(x: number, y: number, facing: number, reach: number): [number, number] {
   'worklet';
