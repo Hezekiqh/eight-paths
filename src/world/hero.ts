@@ -1,4 +1,4 @@
-import type { Dimension } from '@/game';
+import { DIMENSIONS, type Dimension } from '@/game';
 import { DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 
 import { WALKER_ROWS, type WalkerId } from './walkers';
@@ -10,16 +10,24 @@ export const isWalker = (id: string): id is WalkerId => Object.prototype.hasOwnP
 export type HeroId = CharacterId & WalkerId;
 
 /**
- * Who walks the World: the one party member the player picked, as long as
- * they're still in the party and have overworld art. Otherwise it's the
- * player's class companion.
+ * Who can walk the World, one per Path: that Path's party member, or its core
+ * companion when the member has no overworld art yet. So there's always someone
+ * for every Path's jobs (a Warrior to break a wall, a Mage to read the law).
+ */
+export function walkersFor(party: Record<Dimension, CharacterId>): HeroId[] {
+  return DIMENSIONS.map((d) => (isWalker(party[d]) ? party[d] : DEFAULT_PARTY[d]) as HeroId);
+}
+
+/**
+ * Who walks the World: the one the player picked, as long as they can still
+ * walk for their Path (see walkersFor). Otherwise it's the player's class companion.
  */
 export function worldHero(
   picked: CharacterId | null,
   party: Record<Dimension, CharacterId>,
   classDimension: Dimension,
 ): HeroId {
-  if (picked && isWalker(picked) && Object.values(party).includes(picked)) return picked;
+  if (picked && walkersFor(party).includes(picked as HeroId)) return picked as HeroId;
   const own = party[classDimension];
   if (isWalker(own)) return own;
   return DEFAULT_PARTY[classDimension] as HeroId;

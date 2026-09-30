@@ -31,10 +31,13 @@ type WorldState = {
   /** Things done in the World that stay done: a winch pulled, a wall broken, a boss won over. */
   flags: string[];
   setFlag: (flag: string) => void;
+  /** Things the player has run into and couldn't do yet (see notices.ts): the pause screen lists them. */
+  noticed: string[];
+  notice: (id: string) => void;
 };
 
-/** v2 adds the lore journal (`heard`); v3 adds story `flags`. Both start empty. */
-const SAVE_VERSION = 3;
+/** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`. All start empty. */
+const SAVE_VERSION = 4;
 
 /** Drops anything malformed from a loaded save, keeping what's good. */
 function sanitize(persisted: unknown): Partial<WorldState> {
@@ -45,6 +48,7 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   if (Array.isArray(data.discovered)) out.discovered = data.discovered.filter(isMapId);
   if (data.heard !== undefined) out.heard = cleanLore(data.heard);
   if (Array.isArray(data.flags)) out.flags = data.flags.filter((f): f is string => typeof f === 'string');
+  if (Array.isArray(data.noticed)) out.noticed = data.noticed.filter((n): n is string => typeof n === 'string');
   const p = data.position as Record<string, unknown> | null | undefined;
   if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
@@ -71,6 +75,8 @@ export const useWorldStore = create<WorldState>()(
       hear: (entry) => set((s) => ({ heard: addLore(s.heard, entry) })),
       flags: [],
       setFlag: (flag) => set((s) => (s.flags.includes(flag) ? s : { flags: [...s.flags, flag] })),
+      noticed: [],
+      notice: (id) => set((s) => (s.noticed.includes(id) ? s : { noticed: [...s.noticed, id] })),
     }),
     {
       name: 'eight-paths-world',
@@ -83,6 +89,7 @@ export const useWorldStore = create<WorldState>()(
         discovered: s.discovered,
         heard: s.heard,
         flags: s.flags,
+        noticed: s.noticed,
       }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),

@@ -1,27 +1,45 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useWorldProgress } from '@/world/use-progress';
 import { isObjectiveDone } from '@/game';
-import { useObjectives, useToday } from '@/store/hooks';
+import { useGameStore } from '@/store';
+import { useCollection, useObjectives, useToday } from '@/store/hooks';
+import type { HeroId } from '@/world/hero';
+import { openNotices } from '@/world/notices';
+import { useWorldStore } from '@/world/store';
 import { classColors, colors, fonts, spacing } from '@/theme';
 import type { MapId } from '@/world/maps';
 import { EXITS, describeRequirement, howToProgress, standing } from '@/world/progress';
 
 type Props = {
   map: MapId;
+  /** Who's walking now: a lost fight's hint is about them. */
+  hero: HeroId;
   onOpenBoard: () => void;
 };
 
 /**
  * The pause screen's answer to "what now?": what each way out of this area
- * needs, in real habits, and how the day's objectives are going.
+ * needs, in real habits, everything the player has run into and couldn't do
+ * yet (with who can), and how the day's objectives are going.
  */
-export function ObjectivesPanel({ map, onOpenBoard }: Props) {
+export function ObjectivesPanel({ map, hero, onOpenBoard }: Props) {
   const today = useToday();
   const xp = useWorldProgress();
   const objectives = useObjectives(today);
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;
+  const noticed = useWorldStore((s) => s.noticed);
+  const party = useGameStore((s) => s.party);
+  const collection = useCollection();
+  // This area's ways on are listed above; everything else found stays here until it's done.
+  const found = useMemo(() => {
+    const levelOf = (id: HeroId) => collection.entries.find((e) => e.companion.id === id)?.progress.level ?? 1;
+    return openNotices(noticed, { xp, party, levelOf, hero }).filter(
+      (n) => !(n.id.startsWith('exit:') && n.map === map),
+    );
+  }, [noticed, xp, party, collection, hero, map]);
   // The road onward first, then any hard-to-reach places.
   const exits = EXITS.filter((e) => e.from === map && !e.back).sort(
     (a, b) => Number(b.needs.kind === 'overall') - Number(a.needs.kind === 'overall'),
@@ -55,6 +73,21 @@ export function ObjectivesPanel({ map, onOpenBoard }: Props) {
           </View>
         );
       })}
+
+      {found.length > 0 && (
+        <>
+          <Text style={styles.section}>FOUND ON YOUR TRAVELS</Text>
+          {found.map((n) => (
+            <View key={n.id} style={styles.item} accessible>
+              <View style={styles.row}>
+                <Text style={styles.label}>{n.title}</Text>
+                <Text style={styles.place}>{n.place}</Text>
+              </View>
+              <Text style={styles.how}>{n.hint}</Text>
+            </View>
+          ))}
+        </>
+      )}
 
       <Text style={styles.section}>QUEST BOARD</Text>
       <Pressable accessibilityRole="button" onPress={onOpenBoard} style={styles.item}>
@@ -90,4 +123,5 @@ const styles = StyleSheet.create({
   fill: { height: 6, backgroundColor: colors.accent },
   fillMet: { backgroundColor: classColors.environmental },
   how: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  place: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14 },
 });

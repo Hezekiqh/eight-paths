@@ -54,6 +54,30 @@ const ellipse = (g, cx, cy, rx, ry, c) => {
   for (let y = -ry; y <= ry; y++)
     for (let x = -rx; x <= rx; x++) if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) put(g, cx + x, cy + y, c);
 };
+/**
+ * The silk cocoon, the same egg as the hatch and the intro (drawCocoon in
+ * realm-art.mjs): narrow at the top, widest low down, lit from the left with
+ * the silk's bands. Bottom-centre at (cx, by), `w` by `h` art pixels. Returns
+ * each row's half-width, so a husk can be split down the front.
+ */
+function egg(g, cx, by, w, h) {
+  const rows = [];
+  for (let y = 0; y < h; y++) {
+    const ny = (y / (h - 1) - 0.55) * 2;
+    const hw = Math.round((w / 2) * Math.sqrt(Math.max(0, 1 - ny * ny * (ny < 0 ? 0.9 : 1.6))));
+    rows.push(hw);
+    for (let i = -hw; i <= hw; i++) {
+      let c = P.silk;
+      if (i > hw * 0.45) c = P.silkShade;
+      if (i > hw * 0.8) c = P.silkDark;
+      if ((y + Math.round(i * 0.5)) % 6 === 0) c = P.silkShade;
+      put(g, cx + i, by - h + y, c);
+    }
+    put(g, cx - hw - 1, by - h + y, '#3A3044');
+    put(g, cx + hw + 1, by - h + y, '#3A3044');
+  }
+  return rows;
+}
 function toPng(g) {
   const png = new PNG({ width: g.w, height: g.h });
   for (let y = 0; y < g.h; y++)
@@ -230,15 +254,12 @@ const TILE_ART = {
     ellipse(g, cx, y + 27, 12, 3, P.stone);
     box(g, cx - 12, y + 26, 25, 2, P.stone);
     ellipse(g, cx, y + 28, 12, 2, '#2A221E');
-    // the husk, split down the front
-    ellipse(g, cx, y + 15, 8, 12, P.silkShade);
-    ellipse(g, cx - 1, y + 14, 7, 11, P.silk);
-    for (let j = 0; j < 22; j++) {
-      const w = Math.max(0, Math.round(3 - Math.abs(j - 10) / 4 + hash(j, 1) * 1.5));
-      box(g, cx - Math.floor(w / 2) + (j % 3 === 0 ? 1 : 0), y + 4 + j, w, 1, j > 6 ? P.silkDark : '#1A1410');
-    }
-    for (let j = 0; j < 18; j += 3) put(g, cx + 5, y + 6 + j, P.silkShade);
-    for (let j = 0; j < 14; j += 4) put(g, cx - 6, y + 8 + j, P.silkShade);
+    // the husk, split down the front: the same egg as every cocoon
+    const rows = egg(g, cx, y + 27, 15, 25);
+    rows.forEach((hw, j) => {
+      const split = Math.max(0, Math.round(hw * 0.35 - Math.abs(j - 12) / 6 + hash(j, 1)));
+      if (j > 2 && j < 22) box(g, cx - Math.floor(split / 2), y + 3 + j, split, 1, j > 8 ? P.silkDark : '#1A1410');
+    });
     // loose strands on the dais
     for (const [sx, sy] of [
       [-9, 24],
@@ -472,13 +493,11 @@ const OUTDOOR_ART = {
     put(g, x + 7, y + 3, P.flame);
     put(g, x + 8, y + 2, P.flame2);
   },
-  K(g, x, y) {
-    // Dessa's cocoon, lying in the long grass with a satchel strap poking out.
-    ellipse(g, x + 8, y + 10, 7, 5, P.silkDark);
-    ellipse(g, x + 8, y + 9, 6, 4, P.silk);
-    box(g, x + 4, y + 8, 8, 1, P.silkShade);
-    box(g, x + 11, y + 10, 4, 1, '#6A4A2A');
-    box(g, x + 14, y + 10, 1, 3, '#6A4A2A');
+  J(g, x, y) {
+    // Dessa's cocoon, the same egg as every cocoon, in the long grass with a satchel strap poking out.
+    egg(g, x + 8, y + 16, 9, 15);
+    box(g, x + 10, y + 11, 5, 1, '#6A4A2A');
+    box(g, x + 14, y + 11, 1, 4, '#6A4A2A');
   },
   '='(g, x, y, m) {
     // The Archive's great door, set into a hill of old stone.

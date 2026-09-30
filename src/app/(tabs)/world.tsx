@@ -52,7 +52,8 @@ import { loreId } from '@/world/lore';
 import { characterQuestions } from '@/world/talk';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
-import { isWalker, worldHero, type HeroId } from '@/world/hero';
+import { walkersFor, worldHero, type HeroId } from '@/world/hero';
+import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import { ATTACKS, HEARTS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
 import { useWorldProgress } from '@/world/use-progress';
 
@@ -356,19 +357,21 @@ function World({
     });
   }, [map, gameParty, finish]);
   const onDefeat = useCallback(() => {
+    if (map.boss) useWorldStore.getState().notice(fightNotice(map.id as MapId));
     setDialogue({
       lines: [
         'Your knees give. The dark closes in.',
         "You wake on the Archive floor, the candles still burning. Nothing lost. Try again when you're ready.",
+        fightHint(hero, heroLevel),
       ],
       then: () => {
         const a = MAPS.archive.spawn;
         travel({ map: 'archive', x: a.x, y: a.y, facing: a.facing });
       },
     });
-  }, [travel]);
+  }, [travel, map, hero, heroLevel]);
   const setHero = useWorldStore((s) => s.setHero);
-  const walkers = useMemo(() => Object.values(gameParty).filter(isWalker) as HeroId[], [gameParty]);
+  const walkers = useMemo(() => walkersFor(gameParty), [gameParty]);
   const onPlates = useCallback(() => {
     if (!map.platesFlag) return;
     setFlag(map.platesFlag);
@@ -524,7 +527,11 @@ function useAct(
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
         setDialogue({ speaker: thing.name, lines: job.done.map((l) => l.replace('{name}', who.name)) });
-      } else setDialogue({ speaker: thing.name, lines: [...thing.lines, ...job.cant] });
+      } else {
+        const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party)] : [];
+        useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
+        setDialogue({ speaker: thing.name, lines: [...thing.lines, ...job.cant, ...hint] });
+      }
       return;
     }
     if (thing?.type === 'npc') {
@@ -574,7 +581,10 @@ function useAct(
         }
         // An opened doorway: carry on to it below.
       } else if (job.path && who.dimension !== job.path) {
-        setDialogue({ lines: job.cant ?? map.examine[tile] ?? [] });
+        useWorldStore.getState().notice(jobNotice(map.id as MapId, tile));
+        setDialogue({
+          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path, useGameStore.getState().party)],
+        });
         return;
       } else {
         setFlag(job.flag);
@@ -606,6 +616,7 @@ function useAct(
         } else onTravel(to);
         return;
       }
+      useWorldStore.getState().notice(exitNotice(exit.id));
       setDialogue({
         lines: s.met
           ? [`${exit.label} gives a little under your hand.`, "Whatever lies beyond isn't ready for you yet."]

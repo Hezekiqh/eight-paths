@@ -86,7 +86,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
               'KALDOR: The cages stay open. The horde guards the border, not the streets. For now. For you.',
               "You receive the Warrior's Blessing. Kaldor keeps his throne, and his army. The march is only waiting.",
             ],
-            outcome: { flags: ['kaldor-allowed', 'warrior-blessing'], next: FIELD },
+            outcome: { flags: ['kaldor-beaten', 'kaldor-allowed', 'warrior-blessing'], next: FIELD },
           },
           {
             label: 'Take his throne.',
@@ -101,11 +101,15 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
                     "Brannoc takes his father's throne. The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.",
                   ]
                 : ['The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid.']),
-              'Brannoc lays Aurek the Tall to rest, and puts his name back on the champions\' wall. Later, somehow, he wakes, properly, as himself.',
+              "Brannoc lays Aurek the Tall to rest, and puts his name back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
               'Widow Aldane brings the old portrait out from under her floor and hangs it in the war hall.',
               'Captain Ingrid, Aurek and Widow Aldane join your collection.',
             ],
-            outcome: { flags: ['kaldor-dethroned'], joins: ['ingrid', 'aurek', 'aldane'], next: FIELD },
+            outcome: {
+              flags: ['kaldor-beaten', 'kaldor-dethroned'],
+              joins: ['ingrid', 'aurek', 'aldane'],
+              next: FIELD,
+            },
           },
         ],
       };

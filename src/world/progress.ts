@@ -548,6 +548,19 @@ export const EXITS: Exit[] = [
     walk: true,
   },
   {
+    id: 'hall-field',
+    from: 'war-hall',
+    tile: 'Y',
+    label: 'The door behind the throne',
+    to: { map: 'field-of-banners', x: 11, y: 7, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'kaldor-beaten',
+      label: 'Beat Kaldor',
+      hint: 'Kaldor sits on it. The law says any warrior may challenge the crown.',
+    },
+  },
+  {
     id: 'field-town',
     from: 'field-of-banners',
     tile: '1',

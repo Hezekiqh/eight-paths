@@ -1,0 +1,139 @@
+import { JOBS } from '../jobs';
+import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
+import { EXITS, type Requirement } from '../progress';
+import { winScene } from '../scenes';
+
+// A whole run of Season 1, as a player with every level they need (levels only
+// take real habits) and every core companion to walk as. Starting in the
+// Archive, it keeps doing whatever can be done — doors, jobs, people's jobs,
+// fights, the plate puzzle — until nothing new opens, then checks the arc can
+// be finished: the King beaten and the portal at the end reached.
+
+type Arrive = { map: MapId; x: number; y: number };
+
+/** Met if every story flag in it is set; levels count as met. */
+function met(needs: Requirement, flags: Set<string>): boolean {
+  if (needs.kind === 'flag') return flags.has(needs.flag);
+  if (needs.kind === 'all') return needs.of.every((r) => met(r, flags));
+  return true;
+}
+
+function reachable(map: WorldMap, from: [number, number][]): Set<number> {
+  const seen = new Set<number>();
+  const queue = [...from];
+  while (queue.length > 0) {
+    const [x, y] = queue.pop()!;
+    if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue;
+    const i = y * map.width + x;
+    if (seen.has(i) || map.solid[i]) continue;
+    seen.add(i);
+    queue.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+  return seen;
+}
+
+/** Standing on it, or beside it (to press A). */
+function near(map: WorldMap, seen: Set<number>, x: number, y: number): boolean {
+  return [
+    [x, y],
+    [x + 1, y],
+    [x - 1, y],
+    [x, y + 1],
+    [x, y - 1],
+  ].some(([a, b]) => a >= 0 && b >= 0 && a < map.width && b < map.height && seen.has(b * map.width + a));
+}
+
+function tiles(map: WorldMap, letter: string): [number, number][] {
+  const out: [number, number][] = [];
+  map.tiles.forEach((row, y) => [...row].forEach((c, x) => c === letter && out.push([x, y])));
+  return out;
+}
+
+function play() {
+  const flags = new Set<string>();
+  const arrivals: Arrive[] = [{ map: 'archive', ...MAPS.archive.spawn }];
+  const visited = new Set<MapId>();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    const add = (flag: string) => {
+      if (!flags.has(flag)) {
+        flags.add(flag);
+        changed = true;
+      }
+    };
+    const arrive = (a: Arrive) => {
+      if (!arrivals.some((b) => b.map === a.map && b.x === a.x && b.y === a.y)) {
+        arrivals.push(a);
+        changed = true;
+      }
+    };
+    for (const id of new Set(arrivals.map((a) => a.map))) {
+      visited.add(id);
+      const open = [
+        ...EXITS.filter((e) => e.from === id && e.walk && met(e.needs, flags)).map((e) => e.tile),
+        ...JOBS.filter((j) => j.map === id && j.opens && flags.has(j.flag)).map((j) => j.tile),
+      ];
+      const map = withOpenTiles(MAPS[id], open);
+      const seen = reachable(
+        map,
+        arrivals.filter((a) => a.map === id).map((a) => [a.x, a.y]),
+      );
+      for (const exit of EXITS.filter((e) => e.from === id && e.to && met(e.needs, flags))) {
+        if (tiles(map, exit.tile).some(([x, y]) => near(map, seen, x, y))) arrive(exit.to!);
+      }
+      for (const job of JOBS.filter((j) => j.map === id)) {
+        if (tiles(map, job.tile).some(([x, y]) => near(map, seen, x, y))) add(job.flag);
+      }
+      for (const npc of map.npcs) {
+        if (npc.job && near(map, seen, npc.x, npc.y)) add(npc.job.flag);
+      }
+      if (map.platesFlag) add(map.platesFlag);
+      if (map.boss && seen.size > 0) {
+        // Like the game: winning sets only the flags its scene hands out.
+        const scene = winScene(id, map.boss.flag, true);
+        const outcomes = [scene?.outcome, ...(scene?.choices?.map((c) => c.outcome) ?? [])];
+        for (const o of outcomes) {
+          for (const f of o?.flags ?? []) add(f);
+          if (o?.next) arrive(o.next);
+        }
+      }
+    }
+  }
+  return { flags, visited, arrivals };
+}
+
+describe('a run through Season 1', () => {
+  const run = play();
+
+  it('reaches every place in the Other World', () => {
+    expect([...Object.keys(MAPS)].filter((id) => !run.visited.has(id as MapId))).toEqual([]);
+  });
+
+  it('can do everything that a way onward asks for', () => {
+    const needed = new Set<string>();
+    const collect = (r: Requirement) => {
+      if (r.kind === 'flag') needed.add(r.flag);
+      if (r.kind === 'all') r.of.forEach(collect);
+    };
+    EXITS.forEach((e) => collect(e.needs));
+    expect([...needed].filter((f) => !run.flags.has(f))).toEqual([]);
+  });
+
+  it('wins every boss fight for good, the King included', () => {
+    const bosses = Object.values(MAPS).flatMap((m) => (m.boss ? [m.boss.flag] : []));
+    expect(bosses.filter((f) => !run.flags.has(f))).toEqual([]);
+  });
+
+  it('can get back to the portal at the end of Season 1 after leaving it', () => {
+    // Coming back from the town: the Field of Banners must have a way in that isn't the King's scene.
+    const intoField = EXITS.filter((e) => e.to?.map === 'field-of-banners');
+    expect(intoField.length).toBeGreaterThan(0);
+    const field = MAPS['field-of-banners'];
+    const seen = reachable(
+      field,
+      intoField.map((e) => [e.to!.x, e.to!.y]),
+    );
+    expect(tiles(field, 'Q').some(([x, y]) => near(field, seen, x, y))).toBe(true);
+  });
+});

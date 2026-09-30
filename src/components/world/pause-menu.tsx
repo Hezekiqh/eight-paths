@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Segmented } from '@/components/segmented';
 import { ObjectivesPanel } from '@/components/world/objectives-panel';
@@ -65,9 +65,9 @@ export function PauseMenu({
         </View>
 
         <View style={styles.columns}>
-          <View style={styles.column}>
-            <ObjectivesPanel map={map} onOpenBoard={onOpenBoard} />
-          </View>
+          <ScrollView style={styles.column} contentContainerStyle={{ gap: spacing.xs }}>
+            <ObjectivesPanel map={map} hero={hero} onOpenBoard={onOpenBoard} />
+          </ScrollView>
           <View style={styles.column}>
             <View style={styles.actions}>
               <MenuItem label="Map" onPress={onOpenMap} grow />
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  window: { ...windowStyle, width: 720, maxWidth: '90%', padding: spacing.lg, gap: spacing.sm },
+  window: { ...windowStyle, width: 720, maxWidth: '90%', maxHeight: '92%', padding: spacing.lg, gap: spacing.sm },
   heading: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.md },
   title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 30 },
   place: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 16 },

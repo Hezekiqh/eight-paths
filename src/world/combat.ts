@@ -21,17 +21,84 @@ export type Attack = {
   stun: number;
   /** The attack's colour, for its flash, bolt or ring. */
   color: string;
+  /** How it looks (see attack-effects.tsx). */
+  look: AttackLook;
 };
 
+export type AttackLook = 'sword' | 'fire' | 'light' | 'coin' | 'palm' | 'lute' | 'wrench' | 'arrow';
+
 export const ATTACKS: Record<Dimension, Attack> = {
-  physical: { kind: 'melee', range: 20, damage: 2, cooldown: 0.35, knock: 10, stun: 0, color: '#F0F0FF' }, // sword swing
-  intellectual: { kind: 'bolt', range: 120, damage: 2, cooldown: 0.5, knock: 4, stun: 0, color: '#FF8A3D' }, // fire bolt
-  spiritual: { kind: 'burst', range: 30, damage: 1, cooldown: 0.7, knock: 12, stun: 0.3, color: '#FFE9A0' }, // light burst
-  financial: { kind: 'bolt', range: 90, damage: 1, cooldown: 0.45, knock: 2, stun: 1.2, color: '#FFC940' }, // stunning coin
-  emotional: { kind: 'melee', range: 16, damage: 2, cooldown: 0.4, knock: 26, stun: 0.2, color: '#2DD4BF' }, // palm strike
-  social: { kind: 'burst', range: 36, damage: 1, cooldown: 0.8, knock: 22, stun: 0, color: '#FF4FD8' }, // lute shockwave
-  occupational: { kind: 'bolt', range: 70, damage: 2, cooldown: 0.55, knock: 6, stun: 0.3, color: '#C8C8D0' }, // thrown wrench
-  environmental: { kind: 'bolt', range: 160, damage: 2, cooldown: 0.6, knock: 4, stun: 0, color: '#A0D060' }, // arrow
+  physical: {
+    kind: 'melee',
+    range: 20,
+    damage: 2,
+    cooldown: 0.35,
+    knock: 10,
+    stun: 0,
+    color: '#F0F0FF',
+    look: 'sword',
+  }, // sword swing
+  intellectual: {
+    kind: 'bolt',
+    range: 120,
+    damage: 2,
+    cooldown: 0.5,
+    knock: 4,
+    stun: 0,
+    color: '#FF8A3D',
+    look: 'fire',
+  }, // fire bolt
+  spiritual: {
+    kind: 'burst',
+    range: 30,
+    damage: 1,
+    cooldown: 0.7,
+    knock: 12,
+    stun: 0.3,
+    color: '#FFE9A0',
+    look: 'light',
+  }, // light burst
+  financial: {
+    kind: 'bolt',
+    range: 90,
+    damage: 1,
+    cooldown: 0.45,
+    knock: 2,
+    stun: 1.2,
+    color: '#FFC940',
+    look: 'coin',
+  }, // stunning coin
+  emotional: {
+    kind: 'melee',
+    range: 16,
+    damage: 2,
+    cooldown: 0.4,
+    knock: 26,
+    stun: 0.2,
+    color: '#2DD4BF',
+    look: 'palm',
+  }, // palm strike
+  social: { kind: 'burst', range: 36, damage: 1, cooldown: 0.8, knock: 22, stun: 0, color: '#FF4FD8', look: 'lute' }, // lute shockwave
+  occupational: {
+    kind: 'bolt',
+    range: 70,
+    damage: 2,
+    cooldown: 0.55,
+    knock: 6,
+    stun: 0.3,
+    color: '#C8C8D0',
+    look: 'wrench',
+  }, // thrown wrench
+  environmental: {
+    kind: 'bolt',
+    range: 160,
+    damage: 2,
+    cooldown: 0.6,
+    knock: 4,
+    stun: 0,
+    color: '#A0D060',
+    look: 'arrow',
+  }, // arrow
 };
 
 /** Extra damage from real habits: one more point for every 10 levels your character has. */

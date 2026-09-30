@@ -12,6 +12,8 @@ export type Job = {
   /** The tile letter you press A at. */
   tile: string;
   flag: string;
+  /** What it is, for the pause screen: "The cracked wall". */
+  label: string;
   /** Only a character of this Path can do it (null: anyone). */
   path: Dimension | null;
   /** Said when it's done, with {name} for whoever did it. */
@@ -29,6 +31,7 @@ export const JOBS: Job[] = [
     map: 'barracks-armoury',
     tile: 'V',
     flag: 'hall-portcullis',
+    label: 'The winch lever',
     path: null,
     done: [
       'You throw your weight on the lever. It groans, gives, and somewhere far off chains rattle.',
@@ -40,6 +43,7 @@ export const JOBS: Job[] = [
     map: 'barracks-armoury',
     tile: 'C',
     flag: 'armoury-wall',
+    label: 'The cracked wall',
     path: 'physical',
     done: [
       '{name} squares up to the crack, sets both feet, and puts a shoulder straight through the wall.',
@@ -55,6 +59,7 @@ export const JOBS: Job[] = [
     map: 'deserters-camp',
     tile: 'O',
     flag: 'sally-port',
+    label: 'The wedged boulder',
     path: 'physical',
     done: [
       '{name} braces against the boulder, grits their teeth, and rolls it clear of the gap.',
@@ -68,6 +73,7 @@ export const JOBS: Job[] = [
     map: 'forge',
     tile: 'V',
     flag: 'forge-fixed',
+    label: 'The forge bellows',
     path: 'occupational',
     done: [
       '{name} rolls up their sleeves, patches the torn leather, re-seats the valve and gives the bellows a squeeze.',
@@ -80,6 +86,7 @@ export const JOBS: Job[] = [
     map: 'chapel',
     tile: '4',
     flag: 'crypt-found',
+    label: 'The rubble in the chapel',
     path: 'spiritual',
     done: [
       "{name}'s lantern flares. In its light the rubble throws a strange shadow: a stair, going down, hidden behind it.",
@@ -94,6 +101,7 @@ export const JOBS: Job[] = [
     map: 'hedge-maze',
     tile: 'v',
     flag: 'maze-cleared',
+    label: 'The overgrown hedge',
     path: 'environmental',
     done: [
       '{name} runs a hand along the hedge, finds where it grew in, and eases a way through without breaking a branch.',
@@ -107,6 +115,7 @@ export const JOBS: Job[] = [
     map: 'hedge-maze',
     tile: 'L',
     flag: 'old-law',
+    label: 'The old law',
     path: 'intellectual',
     done: [
       '{name} traces the worn letters and reads them aloud:',

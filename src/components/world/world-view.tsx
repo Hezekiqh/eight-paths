@@ -49,6 +49,7 @@ import {
   type Attack,
   type Enemy,
 } from '@/world/combat';
+import { AttackEffects } from '@/components/world/attack-effects';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 
@@ -201,8 +202,11 @@ export function WorldView({
   const fallen = useSharedValue(false);
   /** Flying bolts: [x, y, dx, dy, travelled], per bolt. */
   const bolts = useSharedValue<number[][]>([]);
-  /** The last swing or burst: [x, y, radius, time left]; and the last shout's ring: [x, y, time left]. */
-  const flash = useSharedValue<number[]>([0, 0, 0, 0]);
+  /**
+   * The last swing or burst: [strike x, strike y, radius, time left, your x, your y, facing, duration]
+   * (see attack-effects.tsx); and the last shout's ring: [x, y, time left].
+   */
+  const flash = useSharedValue<number[]>([0, 0, 0, 0, 0, 0, 0, 0]);
   const shout = useSharedValue<number[]>([0, 0, 0]);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
@@ -309,10 +313,10 @@ export function WorldView({
           if (attack.kind === 'melee') {
             const [sx, sy] = strikePoint(px, py, f, attack.range);
             enemies = hitAround(grid, enemies, sx, sy, attack.range * 0.6 + 6, damage, attack.knock, attack.stun);
-            flash.set([sx, sy - 4, attack.range * 0.6 + 4, 0.15]);
+            flash.set([sx, sy - 4, attack.range * 0.6 + 4, 0.2, px, py, f, 0.2]);
           } else if (attack.kind === 'burst') {
             enemies = hitAround(grid, enemies, px, py - 6, attack.range, damage, attack.knock, attack.stun);
-            flash.set([px, py - 8, attack.range, 0.3]);
+            flash.set([px, py - 8, attack.range, 0.35, px, py, f, 0.35]);
           } else {
             const dx = f === 2 ? -1 : f === 3 ? 1 : 0;
             const dy = f === 1 ? -1 : f === 0 ? 1 : 0;
@@ -393,7 +397,7 @@ export function WorldView({
       }
     }
     const fl = flash.get();
-    if (fl[3] > 0) flash.set([fl[0], fl[1], fl[2], Math.max(0, fl[3] - dt)]);
+    if (fl[3] > 0) flash.set([fl[0], fl[1], fl[2], Math.max(0, fl[3] - dt), fl[4], fl[5], fl[6], fl[7]]);
     const sh = shout.get();
     if (sh[2] > 0) shout.set([sh[0], sh[1], Math.max(0, sh[2] - dt)]);
 
@@ -488,7 +492,10 @@ export function WorldView({
         ))}
         {walkers && <Atlas image={walkers} sprites={sprites} transforms={transforms} sampling={NEAREST} />}
         {map.enemies.length > 0 && (
-          <Effects flash={flash} shout={shout} bolts={bolts} color={attack?.color ?? '#FFFFFF'} />
+          <>
+            {attack && <AttackEffects attack={attack} flash={flash} bolts={bolts} />}
+            <Shout shout={shout} />
+          </>
         )}
         {boss && throws && <Pillows pillows={pillows} />}
         <Group transform={markLift}>
@@ -521,44 +528,13 @@ function Boulder({ index, positions }: { index: number; positions: SharedValue<n
   );
 }
 
-/** How many bolts can be drawn in flight at once. */
-const MAX_BOLTS = 6;
-
-/** Swings, bursts, bolts in flight, and the rings of sergeants' shouts. */
-function Effects({
-  flash,
-  shout,
-  bolts,
-  color,
-}: {
-  flash: SharedValue<number[]>;
-  shout: SharedValue<number[]>;
-  bolts: SharedValue<number[][]>;
-  color: string;
-}) {
-  const fx = useDerivedValue(() => flash.get()[0]);
-  const fy = useDerivedValue(() => flash.get()[1]);
-  const fr = useDerivedValue(() => flash.get()[2] * (1.2 - flash.get()[3]));
-  const fo = useDerivedValue(() => Math.min(1, flash.get()[3] * 5));
+/** The ring of a drill sergeant's shout. */
+function Shout({ shout }: { shout: SharedValue<number[]> }) {
   const sx = useDerivedValue(() => shout.get()[0]);
   const sy = useDerivedValue(() => shout.get()[1]);
   const sr = useDerivedValue(() => 46 * (1 - shout.get()[2] * 2) + 6);
   const so = useDerivedValue(() => Math.min(1, shout.get()[2] * 3));
-  return (
-    <Group>
-      <Circle cx={fx} cy={fy} r={fr} color={color} opacity={fo} style="stroke" strokeWidth={3} />
-      <Circle cx={sx} cy={sy} r={sr} color="#8A8AC0" opacity={so} style="stroke" strokeWidth={2} />
-      {Array.from({ length: MAX_BOLTS }, (_, i) => (
-        <Bolt key={i} index={i} bolts={bolts} color={color} />
-      ))}
-    </Group>
-  );
-}
-
-function Bolt({ index, bolts, color }: { index: number; bolts: SharedValue<number[][]>; color: string }) {
-  const cx = useDerivedValue(() => bolts.get()[index]?.[0] ?? -99);
-  const cy = useDerivedValue(() => bolts.get()[index]?.[1] ?? -99);
-  return <Circle cx={cx} cy={cy} r={3} color={color} />;
+  return <Circle cx={sx} cy={sy} r={sr} color="#8A8AC0" opacity={so} style="stroke" strokeWidth={2} />;
 }
 
 /** Baron Plush's pillows, in flight. */
