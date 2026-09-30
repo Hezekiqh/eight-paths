@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Segmented } from '@/components/segmented';
 import { SettingsPanel } from '@/components/settings-panel';
+import { LoreScroll } from '@/components/world/lore-scroll';
 import { isObjectiveDone } from '@/game';
 import { haptics } from '@/haptics';
 import { useGameStore } from '@/store';
@@ -23,13 +24,10 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number]['value'];
 
-/** Lore entries shown before "Show all". */
-const LORE_PREVIEW = 4;
-
 /**
  * What the World tab opens on: an upright pause menu. The World tab jumps
  * back into the sideways game and shows what your habits need to do next,
- * and what people have told you. The Settings tab
+ * and the story of the Kingdom, uncovered by what people tell you. The Settings tab
  * holds every setting in the app.
  */
 export function WorldHub({ onPlay }: { onPlay: () => void }) {
@@ -68,7 +66,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
             <Play started={position !== null} onPlay={onPlay} />
 
             <Objectives discovered={discovered} />
-            <Lore heard={heard} />
+            <LoreScroll heard={heard} />
           </>
         )}
       </ScrollView>
@@ -172,34 +170,6 @@ function Goal(props: { label: string; need: string; met: boolean; fraction: numb
   );
 }
 
-function Lore({ heard }: { heard: ReturnType<typeof useWorldStore.getState>['heard'] }) {
-  const [all, setAll] = useState(false);
-  const newest = [...heard].reverse();
-  const shown = all ? newest : newest.slice(0, LORE_PREVIEW);
-  return (
-    <View style={styles.window}>
-      <Text style={styles.section}>LORE · {heard.length} HEARD</Text>
-      {heard.length === 0 && (
-        <Text style={styles.how}>
-          Talk to people in the Other World and ask them things. What they tell you is written down here.
-        </Text>
-      )}
-      {shown.map((entry) => (
-        <View key={entry.id} style={styles.lore}>
-          <Text style={styles.speaker}>{entry.speaker}</Text>
-          <Text style={styles.ask}>“{entry.ask}”</Text>
-          <Text style={styles.answer}>{entry.answer.join(' ')}</Text>
-        </View>
-      ))}
-      {newest.length > LORE_PREVIEW && (
-        <Pressable accessibilityRole="button" onPress={() => setAll((a) => !a)} hitSlop={8}>
-          <Text style={styles.need}>{all ? 'SHOW LESS' : `SHOW ALL ${newest.length} ›`}</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: 120 },
@@ -226,13 +196,4 @@ const styles = StyleSheet.create({
   fill: { height: 6, backgroundColor: colors.accent },
   fillMet: { backgroundColor: classColors.environmental },
   how: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
-  lore: {
-    gap: 2,
-    paddingVertical: spacing.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-  },
-  speaker: { color: colors.accent, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 1 },
-  ask: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 14 },
-  answer: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 15, lineHeight: 22 },
 });
