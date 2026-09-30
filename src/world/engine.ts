@@ -91,8 +91,7 @@ export function facingFor(ix: number, iy: number, current: number): number {
   const horizontal = ax > ay;
   const dominant = horizontal ? (ix < 0 ? LEFT : RIGHT) : iy < 0 ? UP : DOWN;
   if (dominant === current) return current;
-  const along =
-    current === LEFT ? -ix : current === RIGHT ? ix : current === UP ? -iy : iy;
+  const along = current === LEFT ? -ix : current === RIGHT ? ix : current === UP ? -iy : iy;
   // stay put while the current direction still carries most of the push
   if (along > 0 && along >= Math.max(ax, ay) * 0.8) return current;
   return dominant;
@@ -175,4 +174,53 @@ export function walkFrame(distance: number, moving: boolean): number {
 export function byFeet(a: number[], b: number[]): number {
   'worklet';
   return a[4] - b[4];
+}
+
+// ---- boulders
+// Boulders sit on whole tiles (stored as y * width + x). Walk into one and keep
+// pushing, and it slides a tile, if the tile beyond is open ground.
+
+/** How long the player leans on a boulder before it moves, in seconds. */
+export const PUSH_DELAY = 0.25;
+
+/** The boulder on this tile, or -1. */
+export function boulderAt(boulders: number[], tile: number): number {
+  'worklet';
+  return boulders.indexOf(tile);
+}
+
+/**
+ * Pushes boulder `i` one tile by (dx, dy). Returns the new solid grid and
+ * boulder list, or null if something's in the way (a wall, an NPC, another boulder).
+ */
+export function pushBoulder(
+  solid: number[],
+  width: number,
+  height: number,
+  boulders: number[],
+  i: number,
+  dx: number,
+  dy: number,
+): { solid: number[]; boulders: number[] } | null {
+  'worklet';
+  const from = boulders[i];
+  const x = (from % width) + dx;
+  const y = Math.floor(from / width) + dy;
+  if (x < 0 || y < 0 || x >= width || y >= height) return null;
+  const to = y * width + x;
+  if (solid[to] === 1) return null;
+  const nextSolid = solid.slice();
+  nextSolid[from] = 0;
+  nextSolid[to] = 1;
+  const nextBoulders = boulders.slice();
+  nextBoulders[i] = to;
+  return { solid: nextSolid, boulders: nextBoulders };
+}
+
+/** True when every plate has a boulder on it. */
+export function platesCovered(plates: number[], boulders: number[]): boolean {
+  'worklet';
+  if (plates.length === 0) return false;
+  for (const p of plates) if (boulders.indexOf(p) === -1) return false;
+  return true;
 }

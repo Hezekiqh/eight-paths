@@ -1,0 +1,94 @@
+{
+  "id": "sleeping-keep",
+  "name": "The Sleeping Keep",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "tiles": [
+    "##################",
+    "#WWWWBWWW3WWBWWWW#",
+    "#W..............W#",
+    "#W......SSS.....W#",
+    "#W......SSS.....W#",
+    "#W..............W#",
+    "#W..............W#",
+    "#W..............W#",
+    "#WWWWWWWKKWWWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Soft stone? No. Stone draped in blankets. Somebody wanted even the walls to be comfortable."
+    ],
+    "B": [
+      "The open-hand banner, used as a blanket."
+    ],
+    "S": [
+      "A vast sofa, deep purple, heaped with cushions and medals."
+    ],
+    "K": [
+      "The great door, back to the lower barracks."
+    ],
+    "3": [
+      "A hole behind the sofa, torn through the wall. Daylight, very far up."
+    ]
+  },
+  "objects": [
+    {
+      "id": "plush",
+      "type": "npc",
+      "x": 9,
+      "y": 5,
+      "sprite": "plush",
+      "facing": "down",
+      "name": "Baron Plush",
+      "lines": [
+        "Oh… a visitor. Don't get up, dear. Nobody's getting up. That's the lovely part.",
+        "Boys? Tuck our guest in, would you. Gently."
+      ],
+      "character": "plush",
+      "after": {
+        "flag": "plush-won",
+        "lines": [
+          "There you are, dear. Still awake? Remarkable.",
+          "The hole behind my sofa goes up and out. Mind the drop. I'll be along, eventually. Probably."
+        ]
+      }
+    }
+  ],
+  "art": {
+    "K": "E",
+    "3": "o"
+  },
+  "boss": {
+    "flag": "plush-won",
+    "x": 9,
+    "y": 3,
+    "bearers": [
+      [
+        6,
+        3
+      ],
+      [
+        12,
+        3
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        12,
+        5
+      ]
+    ]
+  }
+}

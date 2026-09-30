@@ -18,7 +18,7 @@
     "T.g.HdHH..c.,,.HdHH............g.T",
     "T.g.........,,,,,,,,,,,,,,,,,,,,,>",
     "T...........,,,,,,,,,,,,,,,,,,,,,>",
-    "T..fffffff..,,..O................T",
+    "T..fffffff..,,..w................T",
     "T..fffffff..,,........HHHH.......T",
     "T..fffffff..,,.FFFFF..HHHH..gg...T",
     "T..fffffffgg,,........HdHH...g...T",
@@ -43,10 +43,6 @@
     "f": [
       "Rows and rows of turnips. Millbrook grows nothing else, and is very proud of it."
     ],
-    "O": [
-      "The village well. Far down in the dark, something catches the light and glints.",
-      "Too deep to reach. Someone nimbler might manage it."
-    ],
     "F": [
       "A fence, mended with twine, hope and more twine."
     ],
@@ -59,6 +55,10 @@
     ],
     ">": [
       "The road back east, toward the Courier Road."
+    ],
+    "w": [
+      "The village well. Far down in the dark, something catches the light and glints.",
+      "Too deep to reach. Someone nimbler might manage it."
     ]
   },
   "objects": [

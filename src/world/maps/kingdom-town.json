@@ -1,0 +1,394 @@
+{
+  "id": "kingdom-town",
+  "name": "The Berserker Kingdom",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "s",
+    "h"
+  ],
+  "tiles": [
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "MMMMMMMMMMMMMMMMMMMEEMMMMMMMMMMMMMMMMMMM",
+    "M...IIII....IIII...ss...IIII....IIIII..M",
+    "M...IIII....IIII...ss...IIII....IIIII..M",
+    "M...I5II....I6II...ss...II7I....IdII...M",
+    "M....ss......ss....ss.....ss......ss...M",
+    "Msssssssssssssssssssssssssssssssssssss.M",
+    "Ms..n..........ssssssss..........n...s.M",
+    "Ms......X.X....s..KK..s....b.........s.M",
+    "Ms.............s..KK..s..............s.M",
+    "<sssssssssssssss......ssssssssssssssss.M",
+    "Ms......X.X....s..Z...s..............s.M",
+    "Ms.............ssssssss..............s.M",
+    "Ms...IIIIIII.........s....TTTTTTTTT..s.M",
+    "Ms...IIIIIII.........s....T...9...T..s.M",
+    "Ms...III3III.........s....TTTThTTTT..s.M",
+    "Ms...................ssssssssssss....s.M",
+    "Msssssssssssssssssssssssssssssssssssss.M",
+    "M......................................M",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+  ],
+  "spawn": {
+    "x": 1,
+    "y": 10,
+    "facing": "right"
+  },
+  "examine": {
+    "M": [
+      "The kingdom's walls. Old stone below, new stakes on top, and the horde's banners on every stake."
+    ],
+    "I": [
+      "Stone houses with iron-shuttered windows. Everybody's watching you. Nobody's looking."
+    ],
+    "E": [
+      "The keep gate, guarded by raiders. Beyond it, the war hall."
+    ],
+    "5": [
+      "The Candle Inn. A sign of a candle and the words WARM. FED. NOT ASKED."
+    ],
+    "6": [
+      "Old Harrow's forge. A horde quota board is nailed over the door: 40 AXES BY MOONFALL."
+    ],
+    "7": [
+      "The chapel, dark and quiet."
+    ],
+    "3": [
+      "The Kaldorium. Once an arena. Carved over the door: HERE WE TEST OURSELVES, NEVER EACH OTHER. Painted beside it: HERE WE TEST EACH OTHER."
+    ],
+    "d": [
+      "You knock. A woman's voice, very close to the door: \"Go away. Unless you're the prince. Are you the prince?\""
+    ],
+    "K": [
+      "The statue of Kaldor, colossal, one boot on a broken crown.",
+      "The plaque: KALDOR THE KINGBREAKER. He struck down the Mad King and saved the world from war. First of the Eight. Undying."
+    ],
+    "Z": [
+      "A statue with no head, left in the square as a warning. Its plaque has been pried off.",
+      "Children dare each other to touch it. You touch it. It's just stone. It feels sad anyway."
+    ],
+    "X": [
+      "An iron cage in the square. Inside, days scratched into the bars. The prisoners won't look at you."
+    ],
+    "n": [
+      "A horde banner: a fist crushing a crown."
+    ],
+    "b": [
+      "The Kaldor Memorial Bench. He isn't dead. It's a memorial in advance."
+    ],
+    "T": [
+      "Hedges, grown wild. A gardener would be sad about this."
+    ],
+    "9": [
+      "The hedge maze."
+    ],
+    "<": [
+      "The gate back out to the March Road."
+    ]
+  },
+  "objects": [
+    {
+      "id": "gert",
+      "type": "npc",
+      "x": 27,
+      "y": 7,
+      "sprite": "gert",
+      "facing": "down",
+      "name": "Gert",
+      "lines": [
+        "Yeah, we know. He names everything after himself.",
+        "That's Kaldor Street. So's that one. They cross. You get used to it."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Gert. I sell lamps. I'm the only man here who hasn't challenged you to a fight. You're welcome."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "Don't make eye contact with the Crushers. The babies. They can smell weakness.",
+            "Also the king closed the Trial of Arms three hundred years ago. You'd need the old law to get near him. Hugo knows where it's carved. In the maze."
+          ]
+        },
+        {
+          "ask": "How do I reach the king?",
+          "answer": [
+            "Get yourself billed at the Kaldorium: Barnaby does the bills, he likes a talker. Win three fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
+            "Or buy a lamp. Lamps are nice."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "gert-lamp",
+        "path": "any",
+        "joins": [
+          "gert"
+        ],
+        "done": [
+          "You buy a lamp. Gert looks genuinely surprised.",
+          "GERT: …Nobody's ever bought one. Huh. I'll walk you round, then. Somebody should.",
+          "Gert joins your collection."
+        ],
+        "cant": []
+      }
+    },
+    {
+      "id": "tessa",
+      "type": "npc",
+      "x": 12,
+      "y": 5,
+      "sprite": "tessa",
+      "facing": "down",
+      "name": "Tessa",
+      "lines": [
+        "Kaldorbread! The only bread allowed! Tastes of nothing, like the king likes it."
+      ],
+      "questions": [
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "He eats alone. Fourteen loaves. Never shares. Never sleeps, the guards say."
+          ]
+        },
+        {
+          "ask": "What's in the bread?",
+          "answer": [
+            "Flour. Water. And, in exactly one loaf a day, my opinion.",
+            "I have a system for choosing which."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "barnaby",
+      "type": "npc",
+      "x": 17,
+      "y": 7,
+      "sprite": "barnaby",
+      "facing": "down",
+      "name": "Barnaby Loudmouth",
+      "lines": [
+        "HEAR YE! The king has won a great victory!",
+        "…The same one. From three hundred years ago. I've been announcing it since. I'd like a new one."
+      ],
+      "questions": [
+        {
+          "ask": "Can you put me on the bill?",
+          "answer": [
+            "At the Kaldorium? Nobody new's fought there in years. They'd need a very good reason."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The Trial closed after the challenger called Aurek. Aurek the Tall. Almost won. Scarred the king's face.",
+            "The king… kept him. You'll see."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "on-the-bill",
+        "path": "social",
+        "done": [
+          "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
+          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE KALDORIUM!",
+          "You're on the bill."
+        ],
+        "cant": [
+          "BARNABY: A new champion? On what grounds? Give me a story, stranger, a story!",
+          "(Someone with a way with words might talk him into it.)"
+        ]
+      }
+    },
+    {
+      "id": "pim",
+      "type": "npc",
+      "x": 23,
+      "y": 11,
+      "sprite": "pim",
+      "facing": "left",
+      "name": "Pim",
+      "lines": [
+        "Rumours! A penny a rumour!"
+      ],
+      "questions": [
+        {
+          "ask": "Buy a rumour.",
+          "answer": [
+            "The king is made of iron.",
+            "…That one was a penny. The next one's two."
+          ]
+        },
+        {
+          "ask": "Buy another.",
+          "answer": [
+            "The king is three goats in a coat. Four pennies."
+          ]
+        },
+        {
+          "ask": "Buy the most expensive one.",
+          "answer": [
+            "The prince will come back up out of the ground, with a giant's beard.",
+            "…I made that one up. It costs the most because it's the least true."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kett",
+      "type": "npc",
+      "x": 6,
+      "y": 9,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Kett",
+      "lines": [
+        "What are you looking at? I'm fierce. I'm very fierce.",
+        "…Everyone's afraid of the king. The trick is to be afraid loudly."
+      ],
+      "questions": [
+        {
+          "ask": "Are you scared?",
+          "answer": [
+            "I can't \"go red\". The Fury. Every raider can. I just go… pale.",
+            "Cold-blooded, they call me."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The cage guard takes bribes. Fat ones. Don't tell him I told you."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guard",
+      "type": "npc",
+      "x": 9,
+      "y": 10,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "The Cage Guard",
+      "lines": [
+        "Back off. These are the king's. The king's prisoners, the king's cages, the king's… everything."
+      ],
+      "questions": [
+        {
+          "ask": "Who's in the cages?",
+          "answer": [
+            "People who wouldn't cheer at the pit. They'll cheer next time."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "cages-open",
+        "path": "financial",
+        "done": [
+          "{name} counts out a heavy purse, slowly, so the guard can hear every coin.",
+          "THE CAGE GUARD: …Keys must've fallen out of my pocket. Terrible. Anyway.",
+          "The cages swing open. The prisoners stand, shaky, and follow you at a distance. They'll be witnesses.",
+          "Kett watches the cages open, then marches over to stand with the prisoners. \"Someone has to look after them.\" Kett joins your collection."
+        ],
+        "cant": [
+          "THE CAGE GUARD: Keys cost more than you've got, stranger.",
+          "(Someone who knows money might change his mind.)"
+        ],
+        "joins": [
+          "kett"
+        ]
+      }
+    },
+    {
+      "id": "varga",
+      "type": "npc",
+      "x": 22,
+      "y": 2,
+      "sprite": "varga",
+      "facing": "down",
+      "name": "Captain Varga",
+      "lines": [
+        "Stop. You. Nobody walks up to the keep.",
+        "Unless they've got a reason. And a spine."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Captain Varga. Second of the horde. The king took his crown with his own two hands. That's the only honest way to get one."
+          ]
+        },
+        {
+          "ask": "Will the march really come?",
+          "answer": [
+            "Any day. The king says we're finally strong enough. I can't wait."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "varga-witness",
+        "path": "emotional",
+        "done": [
+          "VARGA: COWARD! Swing at me! Go on!",
+          "{name} breathes in, counts four, breathes out, and doesn't move.",
+          "VARGA: …Huh. Most people swing. Fine. If you challenge the king by the old law, I'll witness it. Properly.",
+          "Captain Varga joins your collection."
+        ],
+        "cant": [
+          "VARGA: You flinched. Everybody flinches. Come back calmer.",
+          "(Someone steady, who won't rise to her, might earn her respect.)"
+        ],
+        "joins": [
+          "varga"
+        ]
+      }
+    },
+    {
+      "id": "brunna",
+      "type": "npc",
+      "x": 32,
+      "y": 16,
+      "sprite": "brunna",
+      "facing": "left",
+      "name": "Little Brunna",
+      "lines": [
+        "RAAAH.",
+        "(A toddler in tiny armour headbutts your shin. It genuinely hurts.)"
+      ],
+      "questions": [
+        {
+          "ask": "Hello, little one.",
+          "answer": [
+            "RAAAH."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "brunna-won",
+        "path": "any",
+        "joins": [
+          "brunna"
+        ],
+        "done": [
+          "You let Little Brunna headbutt you over. You go down dramatically.",
+          "LITTLE BRUNNA: RAAAAAH!",
+          "She decides you're her friend now. Little Brunna joins your collection."
+        ],
+        "cant": []
+      }
+    }
+  ],
+  "art": {
+    "5": "D",
+    "6": "D",
+    "7": "D",
+    "3": "D",
+    "d": "D",
+    "9": "s"
+  }
+}

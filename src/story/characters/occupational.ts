@@ -142,4 +142,15 @@ export const OCCUPATIONAL = {
     bio: "The head of the Crafters' Guild, wearing a chain hung with a badge from every trade she has ever mastered. She spends her days teaching others to master theirs.",
     quote: 'Master one thing. Then help someone else master it.',
   },
+  gert: {
+    number: 111,
+    rarity: 5,
+    alignment: 'True Neutral',
+    name: 'Gert',
+    dimension: 'occupational',
+    kind: 'recruit',
+    unlockLevel: 14,
+    bio: "A flat-voiced lamp-seller on a bench on Kaldor Street, and the only person in the Berserker Kingdom who has never challenged anyone to a fight. Nothing impresses him. He is, secretly, the best guide in town.",
+    quote: 'Yeah, we know.',
+  },
 } satisfies Record<string, CharacterData>;

@@ -1,0 +1,62 @@
+{
+  "id": "field-of-banners",
+  "name": "The Field of Banners",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    "g"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTT",
+    "T.n...n...n..QQ..n...n.T",
+    "T......................T",
+    "T..n...n......n...n....T",
+    "T....g......g.......g..T",
+    "T.n......n......n...u..T",
+    "T......................T",
+    "T..n..n......n...n...n.T",
+    "TTTTTTTTTTT11TTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 11,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "n": [
+      "A faded banner, one of hundreds. The last battle of the old world was meant to be fought here. It never was."
+    ],
+    "u": [
+      "One banner, standing apart from the others. A single name is stitched on it.",
+      "You know that name. You taught him to hold a sword. Aurelio. The memory is warm, and sad, and yours."
+    ],
+    "Q": [
+      "A portal of old stone, humming, sealed. Beyond it, far off, the sound of water and coins.",
+      "It isn't ready yet. Neither, maybe, are you."
+    ],
+    "1": [
+      "The way back to the kingdom."
+    ]
+  },
+  "objects": [
+    {
+      "id": "hoot-field",
+      "type": "npc",
+      "x": 15,
+      "y": 5,
+      "sprite": "hoot",
+      "facing": "down",
+      "name": "Professor Hoot",
+      "lines": [
+        "Hoo. You've been staring at this screen a while.",
+        "Have you had water today? The next dungeon will still be here. Go on."
+      ],
+      "character": "hoot"
+    }
+  ],
+  "art": {
+    "u": "n",
+    "1": "E",
+    "Q": "p"
+  }
+}

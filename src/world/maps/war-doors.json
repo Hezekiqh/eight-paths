@@ -1,0 +1,63 @@
+{
+  "id": "war-doors",
+  "name": "The Doors of the War Hall",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "################",
+    "#WWWWWBGGBWWWWW#",
+    "#W............W#",
+    "#W.A........A.W#",
+    "#W............W#",
+    "#W.A........A.W#",
+    "#W............W#",
+    "#WWWWWWW11WWWWW#",
+    "################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 6,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "The fist-and-crown banner, huge."
+    ],
+    "A": [
+      "Trophy armour from the king's challengers, polished to a shine."
+    ],
+    "G": [
+      "The great doors of the war hall."
+    ],
+    "1": [
+      "The way back out."
+    ]
+  },
+  "objects": [],
+  "art": {
+    "1": "E"
+  },
+  "boss": {
+    "flag": "aurek-down",
+    "x": 8,
+    "y": 2,
+    "kind": "aurek",
+    "bearers": [
+      [
+        8,
+        3
+      ]
+    ],
+    "intro": {
+      "speaker": null,
+      "lines": [
+        "Something grey and stitched unfolds from beside the doors. Taller than a man. Silent.",
+        "A tag hangs from its neck: AUREK THE TALL. Almost.",
+        "It raises a sword that isn't rusted at all."
+      ]
+    }
+  }
+}

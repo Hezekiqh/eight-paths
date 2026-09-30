@@ -1,0 +1,87 @@
+{
+  "id": "hedge-maze",
+  "name": "The Hedge Maze",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    "g"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTT",
+    "T..T.......T....R.TT",
+    "T.TT.TTTTT.T.TTTT.TT",
+    "T....T...T...T..v.TT",
+    "TTTT.T.T.TTTTT.TT.TT",
+    "T....T.T.....T....TT",
+    "T.TTTT.TTTTT.TTTT.TT",
+    "T......T.L.T....T..T",
+    "TTTT.T.T...T.TT.TT.T",
+    "T....T.TT.TT..T....T",
+    "T.TTTT..v.....TTTT.T",
+    "T....TTTTTTTT......T",
+    "TTTT>TTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 4,
+    "y": 11,
+    "facing": "up"
+  },
+  "examine": {
+    "T": [
+      "Hedge, grown wild and high. Somebody was told to stop gardening."
+    ],
+    "v": [
+      "The hedge has grown right across the path here, thick as a wall.",
+      "Someone who knows the wild could find a way through."
+    ],
+    "L": [
+      "The old law, carved in stone. The letters are old; you can't make them out."
+    ],
+    "R": [
+      "Beyond the law stone, a sealed little garden. One white rose grows here.",
+      "Beside it, a stone head, a king's, set carefully so it faces the rose."
+    ],
+    ">": [
+      "The way back out to the town."
+    ]
+  },
+  "objects": [
+    {
+      "id": "hugo",
+      "type": "npc",
+      "x": 18,
+      "y": 9,
+      "sprite": "hugo",
+      "facing": "left",
+      "name": "Hugo Thornbeard",
+      "lines": [
+        "Mind the hedges. They've got feelings. Well. Forty personalities, anyway."
+      ],
+      "questions": [
+        {
+          "ask": "Where's the old law?",
+          "answer": [
+            "At the heart. Past the overgrowth. The king ordered the maze left wild so nobody'd read it.",
+            "A gardener notices when he's told to stop gardening."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The little prince used to hide in here instead of drilling. Big hands. Small courage. Lovely lad."
+          ]
+        },
+        {
+          "ask": "Who put the head by the rose?",
+          "answer": [
+            "…I found it in the pit's drain, thirty years back. Seemed wrong to leave a king looking at a drain.",
+            "Don't tell the horde."
+          ]
+        }
+      ]
+    }
+  ],
+  "art": {
+    "L": "l"
+  }
+}

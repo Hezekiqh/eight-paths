@@ -121,14 +121,14 @@ export default function CompanionSheet() {
           {inParty &&
             (!isWalker(companion.id) ? (
               <NoteBox symbol="map" color={colors.border} iconColor={colors.textMuted}>
-                {`${companion.name} can't walk the World yet: their overworld sprite is still being drawn.`}
+                {`${companion.name} can't walk the Other World yet: their overworld sprite is still being drawn.`}
               </NoteBox>
             ) : exploring ? (
               <NoteBox symbol="figure.walk" color={info.color} iconColor={info.color}>
-                {`${companion.name} walks the World with you.`}
+                {`${companion.name} walks the Other World with you.`}
               </NoteBox>
             ) : (
-              <Button title={`Explore the World with ${companion.name}`} color={info.color} onPress={explore} />
+              <Button title={`Explore the Other World with ${companion.name}`} color={info.color} onPress={explore} />
             ))}
         </>
       ) : (

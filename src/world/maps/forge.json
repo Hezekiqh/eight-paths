@@ -1,0 +1,92 @@
+{
+  "id": "forge",
+  "name": "Old Harrow's Forge",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "############",
+    "#WWRWWWWBWW#",
+    "#W.r....V.W#",
+    "#W.......xW#",
+    "#W.A..t...W#",
+    "#WWWW11WWWW#",
+    "############"
+  ],
+  "spawn": {
+    "x": 5,
+    "y": 4,
+    "facing": "up"
+  },
+  "examine": {
+    "R": [
+      "The horde's quota board: 40 AXES BY MOONFALL. Underneath, in Harrow's hand: \"Sweetheart: never swung. Keep it that way.\""
+    ],
+    "r": [
+      "Axes, forty of them, for the horde. Harrow hasn't sharpened a single one."
+    ],
+    "V": [
+      "The forge's great bellows, torn and wheezing."
+    ],
+    "x": [
+      "Coal, and a cracked mould for a crown: the Hale coronation crown, never finished."
+    ],
+    "A": [
+      "A suit of armour, far too big for anyone. The size of a giant."
+    ],
+    "t": [
+      "An anvil, worn to a curve by centuries of hammering."
+    ],
+    "1": [
+      "The door back to the street."
+    ]
+  },
+  "objects": [
+    {
+      "id": "harrow",
+      "type": "npc",
+      "x": 5,
+      "y": 3,
+      "sprite": "harrow",
+      "facing": "down",
+      "name": "Old Harrow",
+      "lines": [
+        "Forty axes by moonfall. For the horde. I haven't made one worth the name.",
+        "My bellows are shot, anyway. Can't do honest work, can't do dishonest work."
+      ],
+      "questions": [
+        {
+          "ask": "Tell me about Sweetheart.",
+          "answer": [
+            "Best sword I ever made. For a big lad with the biggest hands I ever saw and the smallest courage.",
+            "It's the only sword I made that stayed clean. I'm prouder of that than all the rest."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king closed the Trial so nobody could challenge him. Oldest trick there is. Change the rules once you've won."
+          ]
+        },
+        {
+          "ask": "Why does strength matter?",
+          "answer": [
+            "A body's the first tool you're given, and the only one you can't replace. Look after it, and when the day comes you have to stand your ground, it'll stand with you."
+          ]
+        }
+      ],
+      "after": {
+        "flag": "forge-fixed",
+        "lines": [
+          "Bellows sing like new. Whoever fixed them knows their trade.",
+          "Bring me that big lad's armour. I'll make it fit. Five hundred years late, but it'll fit."
+        ]
+      }
+    }
+  ],
+  "art": {
+    "1": "E"
+  }
+}

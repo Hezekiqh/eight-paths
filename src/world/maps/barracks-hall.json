@@ -1,0 +1,108 @@
+{
+  "id": "barracks-hall",
+  "name": "The Buried Barracks",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "tiles": [
+    "##################",
+    "#WWWWBWWWGGWWRWBW#",
+    "#W..............W#",
+    "#W.tt...tt...tt.W#",
+    "#W.tt...tt...tt.W#",
+    "#W..............1#",
+    "#W.L.....,,.....W#",
+    "#W.....,,,,..k..W#",
+    "#W......,,......W#",
+    "#WWWWWWWEEWWWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 8,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Cold stone, sweating in the dark."
+    ],
+    "B": [
+      "A faded banner: an open hand holding a sword by the blade. Strength offered, not taken."
+    ],
+    "R": [
+      "A duty roster, still nailed up:",
+      "\"Watch, 3rd bell: Pvt. Dunn. Prince B.: excused (again).\""
+    ],
+    "G": [
+      "A portcullis, down, rusted into its grooves. Beyond it, open ground and the smell of old sweat.",
+      "Somewhere there must be a winch."
+    ],
+    "t": [
+      "Long mess tables, still set. The bowls are five hundred years empty."
+    ],
+    "L": [
+      "A note pinned to a crate: \"Rations cut again. The prince hasn't eaten either.\""
+    ],
+    "k": [
+      "A candle on an iron stand. Its light feels like the Archive's."
+    ],
+    "E": [
+      "The way back out to the camp."
+    ]
+  },
+  "objects": [
+    {
+      "id": "dunn",
+      "type": "npc",
+      "x": 12,
+      "y": 7,
+      "sprite": "dunn",
+      "facing": "left",
+      "name": "Private Dunn",
+      "lines": [
+        "Oh! Relief at last. Did you hear? The prince skipped drill again. Third time this week.",
+        "Take my post, would you? Just while I go for rations."
+      ],
+      "questions": [
+        {
+          "ask": "How long have you been here?",
+          "answer": [
+            "Since this morning. Feels longer.",
+            "Feels a lot longer."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The captain's furious. Says the prince hides in the hedge maze instead of training.",
+            "I don't blame him. The maze has shade."
+          ]
+        },
+        {
+          "ask": "Where's the way on?",
+          "answer": [
+            "The portcullis? The winch is in the armoury, through the hole east. Mind the armour in there. It's not always empty."
+          ]
+        }
+      ]
+    }
+  ],
+  "art": {
+    "1": "o"
+  },
+  "enemies": [
+    {
+      "kind": "shadow",
+      "x": 5,
+      "y": 6
+    },
+    {
+      "kind": "shadow",
+      "x": 15,
+      "y": 3
+    }
+  ]
+}

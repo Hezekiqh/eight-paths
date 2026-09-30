@@ -8,17 +8,18 @@ import { SettingsPanel } from '@/components/settings-panel';
 import { isObjectiveDone } from '@/game';
 import { haptics } from '@/haptics';
 import { useGameStore } from '@/store';
-import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
+import { useObjectives, useToday } from '@/store/hooks';
 import { COMPANIONS } from '@/story/companions';
 import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
 import { worldHero } from '@/world/hero';
 import { MAPS, type MapId } from '@/world/maps';
 import { EXITS, FINAL_GOAL, describeRequirement, howToProgress, standing } from '@/world/progress';
 import { ROADMAP } from '@/world/roadmap';
+import { useWorldProgress } from '@/world/use-progress';
 import { useWorldStore } from '@/world/store';
 
 const TABS = [
-  { value: 'world', label: 'World' },
+  { value: 'world', label: 'Other World' },
   { value: 'settings', label: 'Settings' },
 ] as const;
 type Tab = (typeof TABS)[number]['value'];
@@ -89,7 +90,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
 
 function Objectives({ discovered }: { discovered: MapId[] }) {
   const today = useToday();
-  const xp = useXpTotals();
+  const xp = useWorldProgress();
   const objectives = useObjectives(today);
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;
@@ -176,7 +177,7 @@ function Lore({ heard }: { heard: ReturnType<typeof useWorldStore.getState>['hea
       <Text style={styles.section}>LORE · {heard.length} HEARD</Text>
       {heard.length === 0 && (
         <Text style={styles.how}>
-          Talk to people in the World and ask them things. What they tell you is written down here.
+          Talk to people in the Other World and ask them things. What they tell you is written down here.
         </Text>
       )}
       {shown.map((entry) => (
@@ -199,7 +200,7 @@ function ComingSoon() {
   return (
     <View style={styles.window}>
       <Text style={styles.section}>COMING SOON</Text>
-      <Text style={styles.how}>The World is still being built. Here&apos;s what&apos;s next, in order.</Text>
+      <Text style={styles.how}>The Other World is still being built. Here&apos;s what&apos;s next, in order.</Text>
       {ROADMAP.map((item, i) => (
         <View key={item.title} style={styles.soon}>
           <Text style={styles.soonNumber}>{i + 1}</Text>

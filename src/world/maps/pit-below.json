@@ -1,0 +1,58 @@
+{
+  "id": "pit-below",
+  "name": "The Pit Below the Pit",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "tiles": [
+    "############",
+    "#WWWBWWBWWW#",
+    "#W,,....,,W#",
+    "#W,......,W#",
+    "#W...k....W#",
+    "#W,......,W#",
+    "#W,,..a.,,W#",
+    "#WWWWWWWWWW#",
+    "############"
+  ],
+  "spawn": {
+    "x": 6,
+    "y": 5,
+    "facing": "down"
+  },
+  "examine": {
+    "W": [
+      "Rough walls. Scratched everywhere, the same words: \"AGAIN. AGAIN.\""
+    ],
+    "B": [
+      "A duelling banner, torn in half."
+    ],
+    "k": [
+      "A candle, burning low. Somebody still tends it."
+    ],
+    "a": [
+      "The ladder back up."
+    ]
+  },
+  "objects": [
+    {
+      "id": "sergeant",
+      "type": "npc",
+      "x": 6,
+      "y": 3,
+      "sprite": "dunn",
+      "facing": "down",
+      "name": "The Drill Sergeant",
+      "lines": [
+        "YOU. MAGGOT. You found my pit.",
+        "Nobody finds my pit. Come back when you can hold a sword, and we'll see what you're made of."
+      ]
+    }
+  ],
+  "art": {
+    "a": "H"
+  }
+}

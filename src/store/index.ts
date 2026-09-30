@@ -20,6 +20,7 @@ import {
   totalXp,
   addDays,
   dailyObjectives,
+  earnedToday,
   isObjectiveDone,
   weeklyObjectives,
   type Boost,
@@ -36,6 +37,7 @@ import {
 import { COMPANIONS, DEFAULT_PARTY, SHARDS_TO_UNLOCK, isUnlocked, type CharacterId } from '@/story/companions';
 
 import { currentTier } from '@/premium/store';
+import { blessedPath } from '@/world/blessings';
 
 import { newId } from './ids';
 import { GOAL_XP, applyReward, type RewardResult } from './rewards';
@@ -305,7 +307,9 @@ export const useGameStore = create<GameState>()(
         if (!player || !quest) return { kind: 'ignored' };
 
         const xpBefore = xpByDimension([...completions, ...xpGrants])[quest.dimension];
-        const boosted = boosts.some((b) => b.date === today && b.dimension === quest.dimension);
+        // Double XP: an objective's boost, or a World blessing on the first habit of that Path today.
+        const blessed = blessedPath(quest.dimension) && earnedToday(completions, quest.dimension, today) === 0;
+        const boosted = blessed || boosts.some((b) => b.date === today && b.dimension === quest.dimension);
         const result = toggleCompletion(completions, quest, today, newId(), { tier: currentTier(), boosted });
         if (result.kind !== 'completed') {
           set({ completions: result.completions });

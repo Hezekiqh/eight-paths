@@ -1,11 +1,11 @@
 import { Canvas, FilterMode, Image, Line, MipmapMode, Rect, useImage, vec } from '@shopify/react-native-skia';
+import { useWorldProgress } from '@/world/use-progress';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Segmented } from '@/components/segmented';
 import { haptics } from '@/haptics';
-import { useXpTotals } from '@/store/hooks';
 import { colors, fonts, spacing } from '@/theme';
 import { MAPS, TILE, type MapId, type WorldMap } from '@/world/maps';
 import { EXITS, describeRequirement, standing } from '@/world/progress';
@@ -18,17 +18,43 @@ const GOLD = '#FFD27A';
  * height. Only areas the player has set foot in are ever drawn; everything else
  * stays black. The Archive floats alone: it's outside space and time.
  */
-const AREA_SPOTS: Record<MapId, { x: number; y: number }> = {
-  archive: { x: 0.5, y: 0.2 },
-  'courier-road': { x: 0.5, y: 0.52 },
-  waystation: { x: 0.78, y: 0.3 },
-  millbrook: { x: 0.18, y: 0.52 },
+const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
+  archive: { x: 0.5, y: 0.15 },
+  'courier-road': { x: 0.5, y: 0.45 },
+  waystation: { x: 0.74, y: 0.22 },
+  millbrook: { x: 0.14, y: 0.45 },
+  'deserters-camp': { x: 0.86, y: 0.45 },
+  'barracks-hall': { x: 0.86, y: 0.72 },
+  'march-road': { x: 0.62, y: 0.9 },
+  'kingdom-town': { x: 0.37, y: 0.9 },
+  'field-of-banners': { x: 0.12, y: 0.78 },
 };
+
+/** Rooms shown on the World view as the place they belong to (a dungeon is one place). */
+const REGION: Partial<Record<MapId, MapId>> = {
+  'barracks-armoury': 'barracks-hall',
+  'officers-mess': 'barracks-hall',
+  'barracks-yard': 'barracks-hall',
+  'pit-below': 'barracks-hall',
+  'lower-barracks': 'barracks-hall',
+  'sleeping-keep': 'barracks-hall',
+  'candle-inn': 'kingdom-town',
+  'forge': 'kingdom-town',
+  'chapel': 'kingdom-town',
+  'old-kings-crypt': 'kingdom-town',
+  'hedge-maze': 'kingdom-town',
+  'the-pit': 'kingdom-town',
+  'war-doors': 'kingdom-town',
+  'war-hall': 'kingdom-town',
+};
+const regionOf = (id: MapId): MapId => REGION[id] ?? id;
+/** What a place is called on the World view. */
+const placeName = (id: MapId) => (id === 'barracks-hall' ? 'The Buried Barracks' : MAPS[id].name);
 
 type Zoom = 'world' | 'area';
 const ZOOMS = [
   { value: 'area', label: 'Area' },
-  { value: 'world', label: 'World' },
+  { value: 'world', label: 'Other World' },
 ] as const;
 
 type Props = {
@@ -49,7 +75,7 @@ type Props = {
 export function WorldMapView({ map, you, discovered, width, height, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const [zoom, setZoom] = useState<Zoom>('area');
-  const xp = useXpTotals();
+  const xp = useWorldProgress();
   const exits = EXITS.filter((e) => e.from === map.id && !e.back);
   const left = Math.max(insets.left, spacing.lg);
   const right = Math.max(insets.right, spacing.lg);
@@ -156,12 +182,20 @@ function WorldOverview({
   height: number;
 }) {
   const known = (id: MapId) => discovered.includes(id) || id === here;
-  const places = (Object.keys(AREA_SPOTS) as MapId[]).filter(known);
-  const at = (id: MapId) => vec(AREA_SPOTS[id].x * width, AREA_SPOTS[id].y * height);
+  const regionKnown = (id: MapId) => (Object.keys(MAPS) as MapId[]).some((m) => regionOf(m) === id && known(m));
+  const places = (Object.keys(AREA_SPOTS) as MapId[]).filter(regionKnown);
+  const at = (id: MapId) => {
+    const spot = AREA_SPOTS[regionOf(id)]!;
+    return vec(spot.x * width, spot.y * height);
+  };
+  // Only ways between two different places count; rooms inside one dungeon are one place here.
+  const between = EXITS.filter((e) => regionOf(e.from) !== (e.to ? regionOf(e.to.map) : null));
   // Paths between places you've been, drawn once each.
-  const paths = EXITS.filter((e) => known(e.from) && e.to && known(e.to.map) && e.from < e.to.map);
+  const paths = between.filter(
+    (e) => known(e.from) && e.to && known(e.to.map) && regionOf(e.from) < regionOf(e.to.map),
+  );
   // Ways out of places you've been into somewhere you haven't: a short path fading into the dark.
-  const stubs = EXITS.filter((e) => known(e.from) && !(e.to && known(e.to.map)));
+  const stubs = between.filter((e) => known(e.from) && !(e.to && known(e.to.map)));
 
   return (
     <View style={[styles.dark, { width, height }]}>
@@ -193,15 +227,15 @@ function WorldOverview({
         })}
       </Canvas>
       {places.map((id) => {
-        const spot = AREA_SPOTS[id];
+        const spot = AREA_SPOTS[id]!;
         return (
           <View
             key={id}
             style={[styles.place, { left: spot.x * width - 70, top: spot.y * height - 18 }]}
             accessible
-            accessibilityLabel={`${MAPS[id].name}${id === here ? ', you are here' : ''}`}>
-            <View style={[styles.placeBox, id === here && styles.placeHere]}>
-              <Text style={styles.placeName}>{MAPS[id].name}</Text>
+            accessibilityLabel={`${placeName(id)}${id === regionOf(here) ? ', you are here' : ''}`}>
+            <View style={[styles.placeBox, id === regionOf(here) && styles.placeHere]}>
+              <Text style={styles.placeName}>{placeName(id)}</Text>
             </View>
           </View>
         );

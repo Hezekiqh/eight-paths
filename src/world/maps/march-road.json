@@ -1,0 +1,164 @@
+{
+  "id": "march-road",
+  "name": "The March Road",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TMMMTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TMoMTT....j.....j.....j....TTTTT",
+    "TM.,,,,,,,,,,,,,,,,,,,,,,,,..TTT",
+    "T..,,,,,,,,,,,,,,,,,,,,,,,,,,GGT",
+    "T..........g.......g......,,,GGT",
+    "T...j.........j.......j...,,.TTT",
+    "TT.....gg............g.......TTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 2,
+    "y": 3,
+    "facing": "down"
+  },
+  "examine": {
+    "T": [
+      "Pines, bent by the wind off the hills."
+    ],
+    "M": [
+      "The hillside. Somewhere under it, the Buried Barracks."
+    ],
+    "o": [
+      "The hole back down to the Baron's keep."
+    ],
+    "j": [
+      "A regimental cairn. Scratched into the top stone, in soldiers' hands:",
+      "\"Second Regiment. Held the ford. Held it.\" \"Fourth. We sang the whole way.\" \"Seventh. Tell my wife the garden's hers.\""
+    ],
+    "G": [
+      "A horde checkpoint: sharpened stakes and a barrier of spears. A painted sign: TURN BACK. OR DON'T. WE'RE BORED."
+    ]
+  },
+  "objects": [
+    {
+      "id": "bo",
+      "type": "npc",
+      "x": 12,
+      "y": 5,
+      "sprite": "bo",
+      "facing": "down",
+      "name": "Bo Tumble",
+      "lines": [
+        "Hup! Hup! Cartwheel number four thousand and nine!",
+        "Can't stop. If I stand still, it feels like the dream. So I don't."
+      ],
+      "questions": [
+        {
+          "ask": "What dream?",
+          "answer": [
+            "The long one. Everything soft, everything easy, forever.",
+            "I'd rather be dizzy."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king's raiders at the checkpoint can be bought. Or bored into it. Wim loves a good story. Grask loves a good coin."
+          ]
+        },
+        {
+          "ask": "Why keep moving?",
+          "answer": [
+            "Because moving is how you know you're awake. Try it. Every day. Just a bit."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grask",
+      "type": "npc",
+      "x": 27,
+      "y": 3,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Grask",
+      "lines": [
+        "Halt. Who goes there. Pay the toll. The toll is everything you have.",
+        "Just kidding. Mostly."
+      ],
+      "questions": [
+        {
+          "ask": "Can I pass?",
+          "answer": [
+            "King says nobody passes. King also says pay the toll.",
+            "Those two things argue in my head."
+          ]
+        },
+        {
+          "ask": "Does the king ever sleep?",
+          "answer": [
+            "Never. Wim says standing up, like a horse. Wim's an idiot."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "checkpoint",
+        "path": "financial",
+        "done": [
+          "{name} presses a few coins into Grask's palm, very discreetly, and taps the side of their nose.",
+          "GRASK: …Right. Right. Nobody here. Off you go, nobody.",
+          "The barrier of spears swings aside."
+        ],
+        "cant": [
+          "GRASK: Toll's a gold crown. You got a gold crown? No? Then no.",
+          "(Someone who knows money might manage him.)"
+        ]
+      }
+    },
+    {
+      "id": "wim",
+      "type": "npc",
+      "x": 27,
+      "y": 6,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Wim",
+      "lines": [
+        "Oh good, company. It's been Grask, Grask and more Grask all week.",
+        "Did you know the king sleeps standing up? Like a horse? I'm almost sure."
+      ],
+      "questions": [
+        {
+          "ask": "Can I pass?",
+          "answer": [
+            "Not allowed. Unless… you've got a story? A good one? Nobody tells me stories."
+          ]
+        },
+        {
+          "ask": "Are you scared of the king?",
+          "answer": [
+            "Everyone's scared of the king. And chickens. Mostly chickens."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "checkpoint",
+        "path": "social",
+        "done": [
+          "{name} tells Wim the one about the goose. It's a very long story. Wim laughs so hard he has to sit down.",
+          "WIM: Go on, go on. Grask won't notice. Grask never notices.",
+          "The barrier of spears swings aside."
+        ],
+        "cant": [
+          "WIM: Tell me a story? No? Aw.",
+          "(Someone with a way with people might talk him round.)"
+        ]
+      }
+    }
+  ],
+  "art": {
+    "o": "E"
+  }
+}

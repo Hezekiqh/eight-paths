@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useWorldProgress } from '@/world/use-progress';
 import { isObjectiveDone } from '@/game';
-import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
+import { useObjectives, useToday } from '@/store/hooks';
 import { classColors, colors, fonts, spacing } from '@/theme';
 import type { MapId } from '@/world/maps';
 import { EXITS, describeRequirement, howToProgress, standing } from '@/world/progress';
@@ -17,7 +18,7 @@ type Props = {
  */
 export function ObjectivesPanel({ map, onOpenBoard }: Props) {
   const today = useToday();
-  const xp = useXpTotals();
+  const xp = useWorldProgress();
   const objectives = useObjectives(today);
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;

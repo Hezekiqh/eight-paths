@@ -1,0 +1,47 @@
+{
+  "id": "officers-mess",
+  "name": "The Officers' Mess",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "tiles": [
+    "##########",
+    "#WWBWWBWW#",
+    "#W.tt.L.W#",
+    "#W.tt...W#",
+    "#W......W#",
+    "#WWW2WWWW#",
+    "##########"
+  ],
+  "spawn": {
+    "x": 4,
+    "y": 4,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Dry stone. Nobody's breathed in here for five hundred years."
+    ],
+    "B": [
+      "The open-hand banner, pristine. The officers kept theirs clean."
+    ],
+    "t": [
+      "A map table. The old kingdom's borders, inked by hand: a much bigger kingdom than the one on today's maps.",
+      "In the margin: \"The king wants the eastern pass fortified by spring. For what? Nobody attacks from the east.\""
+    ],
+    "L": [
+      "An officer's letter, never sent:",
+      "\"The king talks of the Mage Kingdom at every supper now. He says we'll strike before they can. He says it smiling. I don't like his smile.\""
+    ],
+    "2": [
+      "The way back through the broken wall."
+    ]
+  },
+  "objects": [],
+  "art": {
+    "2": "o"
+  }
+}

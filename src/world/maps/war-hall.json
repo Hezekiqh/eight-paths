@@ -1,0 +1,66 @@
+{
+  "id": "war-hall",
+  "name": "The War Hall",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "##################",
+    "#WWWBWWWYYYWWWBWW#",
+    "#W.k..........k.W#",
+    "#W..............W#",
+    "#W.k..........k.W#",
+    "#W..............W#",
+    "#W.k..........k.W#",
+    "#WWWWWWWW11WWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 9,
+    "y": 6,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "The fist-and-crown banner, over everything."
+    ],
+    "Y": [
+      "The Throne of a Hundred Challengers: every weapon tagged with its owner's name. The last tag: AUREK THE TALL. Almost."
+    ],
+    "k": [
+      "Torches in a full ring, mirrors behind them. Light from every side, so the king casts no shadow."
+    ],
+    "1": [
+      "The way back to the doors."
+    ]
+  },
+  "objects": [],
+  "art": {
+    "1": "E"
+  },
+  "boss": {
+    "flag": "kaldor-beaten",
+    "x": 9,
+    "y": 2,
+    "kind": "kaldor",
+    "bearers": [
+      [
+        9,
+        3
+      ]
+    ],
+    "intro": {
+      "speaker": "Kaldor the Kingbreaker",
+      "lines": [
+        "You've heard the stories. The Mad King. He was going to march on the Mage Kingdom and set the whole world burning. I stopped him. The Entity and I, together.",
+        "Then the Entity put me in control. Build the army, it said. The Mad King was too hasty. He'd have lost. So I waited. Five hundred years.",
+        "And now we're strong enough. Strong enough to conquer the world. To end every war by being the only army left. Isn't that peace?",
+        "A hundred years ago, the Entity fell silent. I stopped waiting for it to speak. Look at me: I don't age. I don't fall. I cast no shadow.",
+        "I am what the Entity was.",
+        "…Oh. And that big one behind you. I know that beard. I killed the man who wore it first. Your father, boy. The Mad King. Come and finish what he started, properly this time."
+      ]
+    }
+  }
+}

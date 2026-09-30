@@ -86,7 +86,7 @@ export function SettingsPanel() {
       <Text style={styles.section}>GAMEPLAY</Text>
       <View style={styles.list}>
         <View style={styles.controls}>
-          <Text style={styles.label}>Controls in the World</Text>
+          <Text style={styles.label}>Controls in the Other World</Text>
           <Segmented options={SCHEMES} value={controls} onChange={setControls} color={color} />
           <Text style={styles.hint}>{HINTS[controls]}</Text>
         </View>
