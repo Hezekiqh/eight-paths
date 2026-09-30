@@ -16,7 +16,7 @@ describe('game feel', () => {
   });
 
   it('marks a hit on a boss as a big one', () => {
-    const before = [spawnEnemy('kaldor', 100, 100)];
+    const before = [spawnEnemy('aurek', 100, 100)];
     expect(strikes(before, hitAround(open, before, 100, 100, 10, 1, 0, 0)).big).toBe(true);
   });
 

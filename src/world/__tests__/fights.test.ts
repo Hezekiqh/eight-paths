@@ -3,27 +3,35 @@ import { DIMENSIONS, type Dimension } from '@/game';
 import {
   ATTACKS,
   E_ALIVE,
+  E_AWAKE,
+  E_KIND,
+  E_MODE,
+  E_MT,
   E_X,
   E_Y,
-  HEARTS,
-  MERCY,
+  ENEMIES,
+  ENEMY_KINDS,
+  PATTERNS,
+  WINDUP,
   damageFor,
   drowsyRate,
-  hitAround,
+  guarded,
   spawnEnemy,
-  stepEnemies,
-  strikePoint,
   type Enemy,
   type EnemyKind,
 } from '../combat';
 import { SPEED, move, type Grid } from '../engine';
+import { CHARGE_LEVEL, CHARGE_TIME, SPECIALS, startFight, stepFight, type FightInput } from '../fight';
 import { EXITS } from '../progress';
 import { MAPS, TILE, type MapId } from '../maps';
 
-// Every fight in Season 1, played headless with the real combat rules by a
-// sensible bot: ranged Paths line up and shoot, close-range Paths step in,
-// strike and back off, and everyone keeps moving. It answers: at the level a
-// player's hero will have by then, can each Path win?
+// Every fight in Season 1, played headless by a sensible bot with the real
+// rules (stepFight, the same code the World runs). Ranged Paths keep their
+// distance and shoot, close-range Paths step in, strike and back off; the bot
+// rolls out of the way when an enemy's tell is about to finish, waits for
+// Kaldor's shadow before striking him, and (Lv 10 and up) charges its blows
+// against the bosses. It answers: at the level a player's hero will have by
+// then, can each Path win?
 
 const DT = 1 / 60;
 const LIMIT = 180;
@@ -61,29 +69,44 @@ function nextStep(map: (typeof MAPS)[MapId], from: number, to: number): number |
   return t;
 }
 
+const kindOf = (e: Enemy) => ENEMIES[ENEMY_KINDS[e[E_KIND]]];
+
+/** How long an enemy's tell lasts right now. */
+function windupOf(e: Enemy): number {
+  const b = kindOf(e).behaviour;
+  const low = e[3] <= kindOf(e).hp / 2;
+  if (b === 'lunge') return PATTERNS.lunge.windup;
+  if (b === 'slam') return low ? PATTERNS.slam.windupHurt : PATTERNS.slam.windup;
+  if (b === 'king') return low ? PATTERNS.king.windupHurt : PATTERNS.king.windup;
+  return Infinity;
+}
+
 export function fight(id: MapId, path: Dimension, level: number): Result {
   const map = MAPS[id];
   const grid: Grid = { solid: map.solid, width: map.width, height: map.height };
   const arrival = EXITS.find((e) => e.to?.map === id)?.to ?? map.spawn;
   let [px, py] = feet(arrival.x, arrival.y);
-  let enemies: Enemy[] = [
-    ...map.enemies.map((e) => spawnEnemy(e.kind, ...feet(e.x, e.y))),
-    ...(map.boss?.bearers.map(([x, y]) => spawnEnemy((map.boss!.kind ?? 'sleeper') as EnemyKind, ...feet(x, y))) ?? []),
-  ];
   const attack = ATTACKS[path];
-  const damage = damageFor(attack, level);
   const plush = !!map.boss && !map.boss.kind;
   const [bx, by] = map.boss ? feet(map.boss.x, map.boss.y) : [0, 0];
-  const drowsy = plush ? drowsyRate(level) : 0;
-  let hp = HEARTS;
-  let mercy = 0;
-  let cooldown = 0;
-  let dazed = 0;
-  let sleepy = 0;
-  let throwIn = 1.5;
-  let pillows: number[][] = [];
-  let bolts: number[][] = [];
+  const rules = {
+    grid,
+    attack,
+    damage: damageFor(attack, level),
+    level,
+    special: SPECIALS[path].kind,
+    boss: !!map.boss,
+    bossX: bx,
+    bossY: by,
+    throws: plush,
+    drowsy: plush ? drowsyRate(level) : 0,
+  };
+  let f = startFight([
+    ...map.enemies.map((e) => spawnEnemy(e.kind, ...feet(e.x, e.y))),
+    ...(map.boss?.bearers.map(([x, y]) => spawnEnemy((map.boss!.kind ?? 'sleeper') as EnemyKind, ...feet(x, y))) ?? []),
+  ]);
   let facing = 1;
+  let wasHeld = false;
   const tileOf = (x: number, y: number) => Math.floor((y - 1) / TILE) * map.width + Math.floor(x / TILE);
   /** Head along the shortest walk towards (x, y). */
   const towards = (x: number, y: number): [number, number] => {
@@ -94,13 +117,10 @@ export function fight(id: MapId, path: Dimension, level: number): Result {
   };
 
   for (let t = 0; t < LIMIT; t += DT) {
-    const alive = enemies.filter((e) => e[E_ALIVE] === 1);
-    if (alive.length === 0) return { won: true, hearts: hp, seconds: Math.round(t) };
-    mercy = Math.max(0, mercy - DT);
-    cooldown = Math.max(0, cooldown - DT);
-    dazed = Math.max(0, dazed - DT);
+    const alive = f.enemies.filter((e) => e[E_ALIVE] === 1);
+    if (f.won || (!map.boss && alive.length === 0)) return { won: true, hearts: f.hp, seconds: Math.round(t) };
 
-    // The bot: pick the nearest enemy, face it, and decide whether to strike or move.
+    // The bot: pick the nearest enemy, face it, and decide whether to strike, wait, dodge or move.
     const target = alive.reduce((a, b) =>
       Math.hypot(a[E_X] - px, a[E_Y] - py) < Math.hypot(b[E_X] - px, b[E_Y] - py) ? a : b,
     );
@@ -108,108 +128,96 @@ export function fight(id: MapId, path: Dimension, level: number): Result {
     const dy = target[E_Y] - py;
     const dist = Math.hypot(dx, dy);
     facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 2 : 3) : dy < 0 ? 1 : 0;
+    const shielded = guarded(target);
+    const isBoss = kindOf(target).size === 2 || kindOf(target).behaviour === 'king';
     let mx = 0;
     let my = 0;
-    let strike = false;
+    let inReach = false;
     if (attack.kind === 'bolt') {
-      // Walk to a spot in line with the target, a safe shot away, and fire when lined up.
-      const lined = Math.abs(dx) > Math.abs(dy) ? Math.abs(dy) < 6 : Math.abs(dx) < 6;
-      strike = lined && dist < attack.range;
-      const gap = Math.min(attack.range * 0.6, 56);
-      const spots: [number, number][] = [
-        [target[E_X] - Math.sign(dx || 1) * gap, target[E_Y]],
-        [target[E_X], target[E_Y] - Math.sign(dy || 1) * gap],
-      ].filter(([x, y]) => !map.solid[tileOf(x, y)]) as [number, number][];
-      const spot = spots.sort((a, b) => Math.hypot(a[0] - px, a[1] - py) - Math.hypot(b[0] - px, b[1] - py))[0];
-      if (dist < 24) {
-        mx = -dx;
-        my = -dy;
-      } else if (spot && Math.hypot(spot[0] - px, spot[1] - py) > 4) [mx, my] = towards(spot[0], spot[1]);
+      inReach = dist < attack.range * 0.9;
+      // A clear shot: no wall between you and them.
+      let clear = true;
+      for (let k = 1; k < 12; k++) {
+        const sx = px + (dx * k) / 12;
+        const sy = py - 8 + (dy * k) / 12;
+        if (map.solid[Math.floor(sy / TILE) * map.width + Math.floor(sx / TILE)]) clear = false;
+      }
+      inReach = inReach && (clear || dist < 16);
+      if (clear && (dist < 30 || (shielded && dist < 60))) [mx, my] = [-dx, -dy];
+      else if (!clear || dist > attack.range * 0.7 || target[E_AWAKE] === 0) [mx, my] = towards(target[E_X], target[E_Y]);
+      else [mx, my] = [-dy, dx]; // strafe
     } else {
       const reach = attack.kind === 'burst' ? attack.range - 4 : attack.range + 4;
-      strike = dist < reach;
-      // Close in when ready; back off while recharging.
-      if (cooldown > 0.05 && dist < 40) {
-        mx = -dx;
-        my = -dy;
-      } else [mx, my] = towards(target[E_X], target[E_Y]);
+      inReach = dist < reach + (kindOf(target).size === 2 ? 6 : 0);
+      // Close in when ready (and he's open); back off while recharging, or while Kaldor's guarded.
+      if (shielded) [mx, my] = dist < 60 ? [-dx, -dy] : [-dy, dx];
+      else if ((f.cooldown > 0.05 || (level >= CHARGE_LEVEL && isBoss && f.charge < CHARGE_TIME)) && dist < 40)
+        [mx, my] = [-dx, -dy];
+      else [mx, my] = towards(target[E_X], target[E_Y]);
     }
     // A pillow coming your way: step aside.
-    for (const p of pillows) {
-      const toYou = Math.hypot(p[0] - px, p[1] - (py - 8));
-      if (toYou < 36) {
-        mx = -p[3];
-        my = p[2];
-      }
+    for (const p of f.pillows) {
+      if (Math.hypot(p[0] - px, p[1] - (py - 8)) < 36) [mx, my] = [-p[3], p[2]];
     }
     // Always keep moving: drowsiness and chasers punish standing still.
     if (mx === 0 && my === 0) mx = Math.sin(t * 2);
 
+    // Dodge: roll across a lunge or a charge, or away from a slam, just before it comes.
+    let dodge = false;
+    for (const e of alive) {
+      const d = Math.hypot(e[E_X] - px, e[E_Y] - py);
+      if (!process.env.FIGHT_NO_DODGE && e[E_MODE] === WINDUP && d < 90 && e[E_MT] >= windupOf(e) - 0.15) {
+        dodge = true;
+        const ex = e[E_X] - px;
+        const ey = e[E_Y] - py;
+        [mx, my] = kindOf(e).behaviour === 'slam' ? [-ex, -ey] : [-ey, ex];
+      }
+    }
+
+    // Strike: tap, or (Lv 10 and up, against a boss that's open) hold and let go.
+    const charging = level >= CHARGE_LEVEL && isBoss && !shielded;
+    let press = false;
+    let held = false;
+    let release = false;
+    if (charging) {
+      if (f.charge >= CHARGE_TIME && inReach) release = true;
+      else held = true; // charge up, holding it until they're in reach
+    } else if (!shielded && inReach) press = f.cooldown === 0;
+    else if (wasHeld) release = true;
+    wasHeld = held;
+
+    const len = Math.hypot(mx, my) || 1;
+    const input: FightInput = {
+      x: px,
+      y: py,
+      facing,
+      stickX: mx / len,
+      stickY: my / len,
+      moved: false,
+      press,
+      held,
+      release,
+      dodge,
+    };
     let moved = false;
-    if (dazed === 0) {
-      const len = Math.hypot(mx, my) || 1;
+    if (f.dazed === 0 && f.roll === 0) {
       const [nx, ny] = move(grid, px, py, (mx / len) * SPEED * DT, (my / len) * SPEED * DT);
       moved = Math.abs(nx - px) + Math.abs(ny - py) > 0.001;
       [px, py] = [nx, ny];
     }
-    sleepy = Math.min(1, Math.max(0, sleepy + (moved ? -0.35 : drowsy) * DT));
-    if (plush && sleepy >= 1) return { won: false, hearts: hp, seconds: Math.round(t), lost: 'slept' };
-
-    if (strike && cooldown === 0) {
-      cooldown = attack.cooldown;
-      if (attack.kind === 'melee') {
-        const [sx, sy] = strikePoint(px, py, facing, attack.range);
-        enemies = hitAround(grid, enemies, sx, sy, attack.range * 0.6 + 6, damage, attack.knock, attack.stun);
-      } else if (attack.kind === 'burst') {
-        enemies = hitAround(grid, enemies, px, py - 6, attack.range, damage, attack.knock, attack.stun);
-      } else {
-        const bdx = facing === 2 ? -1 : facing === 3 ? 1 : 0;
-        const bdy = facing === 1 ? -1 : facing === 0 ? 1 : 0;
-        bolts.push([px, py - 8, bdx, bdy, 0]);
-      }
+    input.moved = moved;
+    const r = stepFight(f, input, rules, DT);
+    f = r.fight;
+    if (process.env.FIGHT_DEBUG && r.events.hurt) {
+      const near = f.enemies.filter((e) => e[E_ALIVE]).map((e) => `${ENEMY_KINDS[e[E_KIND]]} m${e[E_MODE]} d${Math.round(Math.hypot(e[E_X] - px, e[E_Y] - py))}`);
+      console.log(`HURT ${id} ${path} t${t.toFixed(1)} waves${f.waves.length} ${near.join(',')}`);
     }
-    const next: number[][] = [];
-    for (const b of bolts) {
-      const step = 150 * DT;
-      const nx = b[0] + b[2] * step;
-      const ny = b[1] + b[3] * step;
-      const tx = Math.floor(nx / TILE);
-      const ty = Math.floor(ny / TILE);
-      const wall = tx < 0 || ty < 0 || tx >= map.width || ty >= map.height || map.solid[ty * map.width + tx] === 1;
-      const struck = enemies.some((e) => e[E_ALIVE] === 1 && Math.hypot(e[E_X] - nx, e[E_Y] - 8 - ny) < 9);
-      if (struck) enemies = hitAround(grid, enemies, nx, ny + 8, 10, damage, attack.knock, attack.stun);
-      if (!struck && !wall && b[4] + step < attack.range) next.push([nx, ny, b[2], b[3], b[4] + step]);
-    }
-    bolts = next;
-
-    const r = stepEnemies(grid, enemies, px, py, DT, mercy === 0);
-    enemies = r.enemies;
-    if (plush) {
-      throwIn -= DT;
-      if (throwIn <= 0) {
-        throwIn = 2.2;
-        const d = Math.hypot(px - bx, py - by) || 1;
-        pillows.push([bx, by - 10, (px - bx) / d, (py - 8 - by + 10) / d]);
-      }
-      pillows = pillows.flatMap((p) => {
-        const nx = p[0] + p[2] * 70 * DT;
-        const ny = p[1] + p[3] * 70 * DT;
-        if (mercy === 0 && Math.hypot(nx - px, ny - (py - 8)) < 8) {
-          r.hurt = Math.max(r.hurt, 1);
-          return [];
-        }
-        return nx > 0 && ny > 0 && nx < map.width * TILE && ny < map.height * TILE ? [[nx, ny, p[2], p[3]]] : [];
-      });
-    }
-    if (r.stun > 0) dazed = Math.max(dazed, r.stun);
-    if (r.hurt > 0) {
-      mercy = MERCY;
-      hp -= r.hurt;
-      [px, py] = move(grid, px, py, r.pushX, r.pushY);
-      if (hp <= 0) return { won: false, hearts: 0, seconds: Math.round(t), lost: 'died' };
-    }
+    if (process.env.FIGHT_DEBUG && r.events.guttered) console.log(`GUTTER ${id} ${path} t${t.toFixed(1)}`);
+    if (r.events.moveX !== 0 || r.events.moveY !== 0) [px, py] = move(grid, px, py, r.events.moveX, r.events.moveY);
+    if (f.fallen) return { won: false, hearts: f.hp, seconds: Math.round(t), lost: f.sleepy >= 1 ? 'slept' : 'died' };
   }
-  return { won: false, hearts: hp, seconds: LIMIT, lost: 'time' };
+  if (process.env.FIGHT_DEBUG) console.log(id, path, 'at', Math.round(px), Math.round(py), 'left', f.enemies.filter((e) => e[E_ALIVE]).map((e) => [ENEMY_KINDS[e[E_KIND]], Math.round(e[E_X]), Math.round(e[E_Y]), e[3], e[4]]));
+  return { won: false, hearts: f.hp, seconds: LIMIT, lost: 'time' };
 }
 
 const FIGHTS: MapId[] = [
@@ -224,12 +232,12 @@ const FIGHTS: MapId[] = [
 ];
 
 describe('fights', () => {
-  it.each(['the-pit', 'war-doors'] as MapId[])('every Path can win %s at a low hero level', (id) => {
+  it.each(['the-pit', 'war-doors', 'war-hall'] as MapId[])('every Path can win %s at a low hero level', (id) => {
     const losers = DIMENSIONS.filter((d) => !fight(id, d, 5).won);
     expect(losers).toEqual([]);
   });
 
-  // The full table: FIGHT_REPORT=1 npx jest fights. W# = won with # hearts left,
+  // The full table: FIGHT_REPORT=1 npx jest fights (add FIGHT_NO_DODGE=1 for a player who never rolls). W# = won with # hearts left,
   // D = died, S = fell asleep, T = the bot ran out of time (usually the bot, not the fight).
   const report = process.env.FIGHT_REPORT ? it : it.skip;
   report('prints who wins each fight, by Path and hero level', () => {

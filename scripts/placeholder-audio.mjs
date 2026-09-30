@@ -103,6 +103,26 @@ wav('hurt', 0.3, (b) => {
   note(b, { f: 500, at: 0, len: 0.1, vol: 0.2, wave: 'noise', slide: -400 });
 });
 
+wav('charged', 0.3, (b) => {
+  note(b, { f: 1200, at: 0, len: 0.2, vol: 0.2, wave: 'noise', slide: -900 });
+  note(b, { f: 330, at: 0, len: 0.25, vol: 0.22, wave: 'square', slide: 330 });
+});
+wav('clang', 0.25, (b) => {
+  note(b, { f: 1760, at: 0, len: 0.22, vol: 0.18, wave: 'triangle' });
+  note(b, { f: 2349, at: 0, len: 0.16, vol: 0.12, wave: 'triangle' });
+  note(b, { f: 3000, at: 0, len: 0.03, vol: 0.2, wave: 'noise' });
+});
+wav('roll', 0.15, (b) => note(b, { f: 400, at: 0, len: 0.13, vol: 0.14, wave: 'noise', slide: 300 }));
+wav('slam', 0.5, (b) => {
+  note(b, { f: 90, at: 0, len: 0.45, vol: 0.5, wave: 'square', slide: -50 });
+  note(b, { f: 300, at: 0, len: 0.3, vol: 0.3, wave: 'noise', slide: -250 });
+});
+// A torch guttering: a breathy fall, then a low note as the shadow comes back.
+wav('gutter', 0.6, (b) => {
+  note(b, { f: 600, at: 0, len: 0.3, vol: 0.18, wave: 'noise', slide: -500 });
+  note(b, { f: 147, at: 0.2, len: 0.4, vol: 0.2, wave: 'triangle', slide: -30 });
+});
+
 // Voices: a blip per letter in the World's dialogue, one pitch per kind of
 // speaker, low to high (like Undertale's).
 [110, 165, 247, 330, 494].forEach((f, i) =>

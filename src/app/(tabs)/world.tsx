@@ -55,6 +55,7 @@ import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/sto
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import { ATTACKS, HEARTS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
+import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
 import { useWorldProgress } from '@/world/use-progress';
 
 /**
@@ -362,7 +363,7 @@ function World({
       lines: [
         'Your knees give. The dark closes in.',
         "You wake on the Archive floor, the candles still burning. Nothing lost. Try again when you're ready.",
-        fightHint(hero, heroLevel),
+        fightHint(hero, heroLevel, map.id as MapId),
       ],
       then: () => {
         const a = MAPS.archive.spawn;
@@ -418,6 +419,8 @@ function World({
         onPlates={onPlates}
         attack={ATTACKS[heroPath]}
         damage={damageFor(ATTACKS[heroPath], heroLevel)}
+        level={heroLevel}
+        special={SPECIALS[heroPath].kind}
         onDefeat={onDefeat}
         boss={bossOn && map.boss ? { x: map.boss.x * TILE + TILE / 2, y: map.boss.y * TILE + TILE } : null}
         throws={bossOn && !map.boss?.kind}
@@ -431,7 +434,11 @@ function World({
           onAct={act}
           fight={
             fightMap.enemies.length > 0
-              ? { color: CLASSES[heroPath].color, label: `Attack: ${ATTACK_NAMES[heroPath]}` }
+              ? {
+                  color: CLASSES[heroPath].color,
+                  label: `Attack: ${ATTACK_NAMES[heroPath]}`,
+                  charges: heroLevel >= CHARGE_LEVEL,
+                }
               : null
           }
           onPause={() => {
