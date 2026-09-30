@@ -46,7 +46,7 @@ export function ObjectivesPanel({ map, onOpenBoard }: Props) {
             </View>
             <Text style={styles.how}>
               {waiting
-                ? "You're strong enough. What lies beyond is still being built."
+                ? 'The way is sealed. You have walked as far as the Other World goes.'
                 : s.met
                   ? 'The way is open. Walk up to it and press A.'
                   : howToProgress(s)}

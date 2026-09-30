@@ -28,5 +28,4 @@ export const PERKS: Perk[] = [
   { title: 'Redo a drop', free: '—', premium: 'Once per drop' },
   { title: 'Time in the Other World', free: '15 min a day', premium: 'Unlimited' },
   { title: 'Themes', free: 'The default', premium: 'Every theme' },
-  { title: 'Badge', free: '—', premium: 'Coming soon: a Premium badge, gold for founders' },
 ];

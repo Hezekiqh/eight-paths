@@ -17,7 +17,6 @@ import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
 import { worldHero } from '@/world/hero';
 import { MAPS, type MapId } from '@/world/maps';
 import { EXITS, FINAL_GOAL, describeRequirement, howToProgress, standing } from '@/world/progress';
-import { ROADMAP } from '@/world/roadmap';
 import { useWorldStore } from '@/world/store';
 
 const TABS = [
@@ -32,7 +31,7 @@ const LORE_PREVIEW = 4;
 /**
  * What the World tab opens on: an upright pause menu. The World tab jumps
  * back into the sideways game and shows what your habits need to do next,
- * what people have told you, and what's still being built. The Settings tab
+ * and what people have told you. The Settings tab
  * holds every setting in the app.
  */
 export function WorldHub({ onPlay }: { onPlay: () => void }) {
@@ -72,7 +71,6 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
 
             <Objectives discovered={discovered} />
             <Lore heard={heard} />
-            <ComingSoon />
           </>
         )}
       </ScrollView>
@@ -136,7 +134,7 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;
 
-  // Every way onward from anywhere you've been, still shut or still being built.
+  // Every way onward from anywhere you've been that's still shut, or sealed at the end of the road.
   const been = discovered.length > 0 ? discovered : (['archive'] as MapId[]);
   const exits = EXITS.filter((e) => been.includes(e.from) && !e.back)
     .map((exit) => ({ exit, s: standing(exit.needs, xp) }))
@@ -157,7 +155,7 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
         fraction={final.fraction}
         how={
           final.met
-            ? "You've reached the end of Season 1. The next kingdom arrives in a coming update."
+            ? "You've finished Season 1. The road east stays sealed; keep your Paths strong."
             : `Season 1 ends at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
         }
       />
@@ -169,7 +167,7 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
           need={s.met ? `${describeRequirement(exit.needs)} ✓` : `${describeRequirement(exit.needs)} · Lv ${s.have}`}
           met={s.met}
           fraction={s.fraction}
-          how={s.met ? "You're strong enough. What lies beyond is still being built." : howToProgress(s)}
+          how={s.met ? 'The way is sealed. You have walked as far as the Other World goes.' : howToProgress(s)}
         />
       ))}
 
@@ -237,24 +235,6 @@ function Lore({ heard }: { heard: ReturnType<typeof useWorldStore.getState>['hea
   );
 }
 
-function ComingSoon() {
-  return (
-    <View style={styles.window}>
-      <Text style={styles.section}>COMING SOON</Text>
-      <Text style={styles.how}>The Other World is still being built. Here&apos;s what&apos;s next, in order.</Text>
-      {ROADMAP.map((item, i) => (
-        <View key={item.title} style={styles.soon}>
-          <Text style={styles.soonNumber}>{i + 1}</Text>
-          <View style={styles.soonText}>
-            <Text style={styles.label}>{item.title}</Text>
-            <Text style={styles.how}>{item.body}</Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: 120 },
@@ -290,7 +270,4 @@ const styles = StyleSheet.create({
   speaker: { color: colors.accent, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 1 },
   ask: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 14 },
   answer: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 15, lineHeight: 22 },
-  soon: { flexDirection: 'row', gap: spacing.md, paddingVertical: spacing.xs },
-  soonNumber: { color: colors.accent, fontFamily: fonts.bold, fontSize: 20, width: 20 },
-  soonText: { flex: 1, gap: 2 },
 });
