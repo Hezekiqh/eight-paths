@@ -50,6 +50,7 @@ const valid = {
   nextDraw: { intellectual: 12 },
   drops: ['ottilie'],
   redrawn: [],
+  questOrder: null,
 };
 
 describe('v9: usual-time reminders', () => {
@@ -109,6 +110,7 @@ describe('sanitizeSave', () => {
         nextDraw: {},
         drops: [],
         redrawn: [],
+        questOrder: null,
       });
     }
   });

@@ -24,7 +24,7 @@ import {
   selectReminderState,
   selectQuest,
   selectRadar,
-  selectTodayQuestGroups,
+  selectTodayQuests,
   selectTutorialQuest,
 } from './selectors';
 
@@ -99,9 +99,9 @@ export function useOverallProgress() {
   return useMemo(() => selectOverallProgress(data), [data]);
 }
 
-export function useTodayQuestGroups(today: string) {
+export function useTodayQuests(today: string) {
   const data = useGameData();
-  return useMemo(() => selectTodayQuestGroups(data, today), [data, today]);
+  return useMemo(() => selectTodayQuests(data, today), [data, today]);
 }
 
 export function useProgressSummary(today: string) {

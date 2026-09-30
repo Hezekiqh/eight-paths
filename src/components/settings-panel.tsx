@@ -1,10 +1,8 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
 import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { playSound, useAudioSettings } from '@/audio';
-import { LevelUp } from '@/components/level-up';
 import { Segmented } from '@/components/segmented';
 import { KeeperStatusRows } from '@/components/keeper-status';
 import { SettingsRow } from '@/components/settings-row';
@@ -18,8 +16,7 @@ import { usePremium } from '@/premium/store';
 import { shareFriendCode } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useGameStore } from '@/store';
-import { useClassInfo, useCollection, useLearnedReminderTime, usePlayer } from '@/store/hooks';
-import { ROSTER, rarityLabel, type CharacterId } from '@/story/companions';
+import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
 import { useWorldStore } from '@/world/store';
@@ -51,7 +48,6 @@ function openSupport() {
 export function SettingsPanel() {
   const player = usePlayer();
   const classInfo = useClassInfo();
-  const collection = useCollection();
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
   const setSmartReminders = useGameStore((s) => s.setSmartReminders);
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
@@ -63,8 +59,6 @@ export function SettingsPanel() {
   const setControls = useWorldStore((s) => s.setControls);
   const profile = useSocial((s) => s.profile);
   const premium = usePremium((s) => s.premium);
-  const [demoLevelUp, setDemoLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
-  const closeDemo = useCallback(() => setDemoLevelUp(null), []);
 
   if (!player || !classInfo) return null;
   const color = classInfo.color;
@@ -81,7 +75,6 @@ export function SettingsPanel() {
 
   return (
     <View style={styles.panel}>
-      {demoLevelUp && <LevelUp {...demoLevelUp} onDone={closeDemo} />}
 
       <Text style={styles.section}>GAMEPLAY</Text>
       <View style={styles.list}>
@@ -258,49 +251,6 @@ export function SettingsPanel() {
           subtitle="Call or text 988 · Suicide & Crisis Lifeline (US)"
           onPress={openSupport}
         />
-        {/* Development builds only: never ships to the App Store. */}
-        {__DEV__ && (
-          <>
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="bell"
-              iconColor={color}
-              title="The Keeper's record (dev)"
-              subtitle="Which notification lines get opened, and what's scheduled next"
-              onPress={() => router.push('/keeper-stats')}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="star"
-              iconColor={color}
-              title="Test level-up (dev)"
-              subtitle="Plays the level-up for a random party member. Doesn't change your save."
-              onPress={() => {
-                const members = collection.entries.filter((e) => e.inParty);
-                const pick = members[Math.floor(Math.random() * members.length)];
-                setDemoLevelUp({ characterId: pick.companion.id, level: pick.progress.level + 1 });
-              }}
-            />
-            <View style={styles.divider} />
-            <SettingsRow
-              icon="zap"
-              iconColor={color}
-              title="Test character reveal (dev)"
-              subtitle="Pick a rarity to see its hatch (1★ is the fanciest). Doesn't change your save."
-              onPress={() => {
-                const play = (r: number) => {
-                  const pool = ROSTER.filter((c) => c.rarity === r);
-                  const pick = pool[Math.floor(Math.random() * pool.length)];
-                  router.push({ pathname: '/reveal/[id]', params: { id: pick.id, preview: '1' } });
-                };
-                Alert.alert('Test a hatch', 'Which rarity?', [
-                  ...([1, 2, 3, 4, 5] as const).map((r) => ({ text: rarityLabel(r), onPress: () => play(r) })),
-                  { text: 'Cancel', style: 'cancel' as const },
-                ]);
-              }}
-            />
-          </>
-        )}
       </View>
       <Text style={styles.disclaimer}>
         Eight Paths is a habit game. It is not a medical, clinical or mental health service.

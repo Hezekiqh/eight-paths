@@ -61,7 +61,7 @@ export function PauseMenu({
           <View style={styles.column}>
             <View style={styles.actions}>
               <MenuItem label="Map" onPress={onOpenMap} grow />
-              <MenuItem label="World menu" onPress={onMenu} grow />
+              <MenuItem label="Other World" onPress={onMenu} grow />
             </View>
             <Text style={styles.section}>CONTROLS</Text>
             <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />

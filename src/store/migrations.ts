@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -47,6 +47,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   // v9 adds completion times and the "at my usual time" reminder setting;
   // sanitizeSave turns it on only for players who never changed the 8 PM default.
   8: (save) => save,
+  // v10 adds the player's own quest order; sanitizeSave starts it null (their usual order).
+  9: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -215,6 +217,9 @@ export function sanitizeSave(raw: unknown): GameData {
     nextDraw: cleanNextDraw(save.nextDraw),
     drops: asArray(save.drops).filter(isCharacterId),
     redrawn: asArray(save.redrawn).filter(isCharacterId),
+    questOrder: Array.isArray(save.questOrder)
+      ? save.questOrder.filter((id): id is string => typeof id === 'string')
+      : null,
   };
 }
 

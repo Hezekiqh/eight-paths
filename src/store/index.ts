@@ -72,6 +72,11 @@ export type GameData = {
   drops: CharacterId[];
   /** Waiting arrivals that came from a Premium redo, so they can't be redone again. */
   redrawn: CharacterId[];
+  /**
+   * The player's own order for Today's quests, by id. Null until they drag one:
+   * Today then follows the order they usually do their quests in.
+   */
+  questOrder: string[] | null;
 };
 
 export type GoalDraft = Pick<Goal, 'title' | 'dimension' | 'dueDate'>;
@@ -117,6 +122,8 @@ type Actions = {
   setNotificationTime: (time: string) => void;
   setSmartReminders: (on: boolean) => void;
   setHapticsEnabled: (on: boolean) => void;
+  /** Today's quests in the player's own order, or null to go back to their usual order. */
+  setQuestOrder: (ids: string[] | null) => void;
   setObjectivesLandscape: (on: boolean) => void;
   changeClass: (dimension: Dimension) => void;
   /** Puts an unlocked character in their Path's party slot. False if they're still locked. */
@@ -164,6 +171,7 @@ export const initialData: GameData = {
   nextDraw: {},
   drops: [],
   redrawn: [],
+  questOrder: null,
 };
 
 /** Every saved field, for persisting and backups. */
@@ -185,6 +193,7 @@ export function pickData(s: GameData): GameData {
     nextDraw,
     drops,
     redrawn,
+    questOrder,
   } = s;
   return {
     player,
@@ -203,6 +212,7 @@ export function pickData(s: GameData): GameData {
     nextDraw,
     drops,
     redrawn,
+    questOrder,
   };
 }
 
@@ -296,6 +306,7 @@ export const useGameStore = create<GameState>()(
           nextDraw: {},
           drops: [],
           redrawn: [],
+          questOrder: null,
         });
       },
 
@@ -368,6 +379,7 @@ export const useGameStore = create<GameState>()(
       setSmartReminders: (smartReminders) =>
         set((s) => (s.player ? { player: { ...s.player, smartReminders } } : s)),
 
+      setQuestOrder: (questOrder) => set({ questOrder }),
       setHapticsEnabled: (hapticsEnabled) => set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
 
       setObjectivesLandscape: (objectivesLandscape) =>

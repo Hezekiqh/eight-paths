@@ -1,19 +1,16 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Linking, StyleSheet, View } from 'react-native';
+import { Linking } from 'react-native';
 
 import { SettingsRow } from '@/components/settings-row';
 import { addDays, toDateKey } from '@/game';
-import { haptics } from '@/haptics';
 import {
   ensureReminderPermission,
   getKeeperStatus,
   resyncRemindersNow,
-  sendTestCall,
   type KeeperStatus,
 } from '@/notifications';
 import { usePlayer } from '@/store/hooks';
-import { colors } from '@/theme';
 
 /** "Today at 6:30 PM", "Tomorrow at 8:00 PM", "Thu, Oct 2 at 8:00 PM". */
 export function describeCallTime(at: number, now = new Date()): string {
@@ -29,8 +26,7 @@ export function describeCallTime(at: number, now = new Date()): string {
 type Row = { subtitle: string; onPress?: () => void };
 
 /**
- * Whether the Keeper can reach the player, and when he'll next knock, plus a
- * test call. Every way the calls can fail to arrive (permission off, quiet
+ * Whether the Keeper can reach the player, and when he'll next knock. Every way the calls can fail to arrive (permission off, quiet
  * delivery, a scheduling error) says so here, with the fix one tap away.
  */
 export function KeeperStatusRows({ color }: { color: string }) {
@@ -80,34 +76,7 @@ export function KeeperStatusRows({ color }: { color: string }) {
     return { subtitle: `${when}, unless you've played by then.` };
   })();
 
-  const test = async () => {
-    const access = await sendTestCall();
-    refresh();
-    if (access === 'full' || access === 'quiet') {
-      haptics.success();
-      return;
-    }
-    Alert.alert('Notifications are off', 'Turn on notifications for Eight Paths in iOS Settings so the Keeper can knock.', [
-      { text: 'Open Settings', onPress: () => Linking.openSettings() },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  };
-
   return (
-    <>
-      <SettingsRow icon="bell" iconColor={color} title="The Keeper's next call" subtitle={row.subtitle} onPress={row.onPress} />
-      <View style={styles.divider} />
-      <SettingsRow
-        icon="bell"
-        iconColor={color}
-        title="Send a test call"
-        subtitle="He knocks in 5 seconds. Lock your phone to see it arrive, then long-press it."
-        onPress={test}
-      />
-    </>
+    <SettingsRow icon="bell" iconColor={color} title="The Keeper's next call" subtitle={row.subtitle} onPress={row.onPress} />
   );
 }
-
-const styles = StyleSheet.create({
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 56 },
-});

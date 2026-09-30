@@ -13,8 +13,19 @@ import { colors, fonts, spacing } from '@/theme';
  * Section header for a class: the party member on that Path, their name and
  * level above the class name. Tapping it opens their character sheet.
  */
-export function ClassHeader({ info }: { info: ClassInfo }) {
+export function ClassHeader({ info, compact = false }: { info: ClassInfo; compact?: boolean }) {
   const { companion, progress } = useCollection().party[info.dimension];
+  // Under the party row the portraits are already on show, so a group only needs its name.
+  if (compact) {
+    return (
+      <View style={styles.compact}>
+        <Text style={[styles.title, { color: info.color }]}>{info.className.toUpperCase()}</Text>
+        <Text style={styles.compactName} numberOfLines={1}>
+          {companion.name}
+        </Text>
+      </View>
+    );
+  }
   return (
     <Pressable
       accessibilityRole="button"
@@ -57,5 +68,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 15, fontFamily: fonts.bold, letterSpacing: 1.2 },
   xpRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 },
   bar: { flex: 1 },
+  compact: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: spacing.sm },
+  compactName: { flexShrink: 1, color: colors.textMuted, fontSize: 14, fontFamily: fonts.regular },
   xp: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12, fontVariant: ['tabular-nums'] },
 });

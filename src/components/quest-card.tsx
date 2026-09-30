@@ -8,9 +8,11 @@ type Props = {
   view: QuestView;
   onPress: () => void;
   pinned?: boolean;
+  /** Name the quest's Path on the card, for lists that aren't grouped by Path. */
+  showPath?: boolean;
 };
 
-export function QuestCard({ view, onPress, pinned }: Props) {
+export function QuestCard({ view, onPress, pinned, showPath }: Props) {
   const { quest, info, done, streak } = view;
   return (
     <Pressable
@@ -27,6 +29,7 @@ export function QuestCard({ view, onPress, pinned }: Props) {
       </View>
       <View style={styles.body}>
         {pinned && <Text style={[styles.pinned, { color: info.color }]}>PINNED QUEST</Text>}
+        {showPath && !pinned && <Text style={[styles.path, { color: info.color }]}>{info.className.toUpperCase()}</Text>}
         <Text style={[styles.title, done && styles.done]}>{quest.title}</Text>
         {(pinned || streak > 0) && (
           <Text style={styles.meta}>
@@ -56,6 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: { flex: 1, gap: 2 },
+  path: { fontSize: 13, fontFamily: fonts.bold, letterSpacing: 1.2 },
   pinned: { fontSize: 14, fontFamily: fonts.bold, letterSpacing: 1 },
   title: { color: colors.text, fontSize: 22, fontFamily: fonts.semibold },
   done: { color: colors.textMuted, textDecorationLine: 'line-through' },

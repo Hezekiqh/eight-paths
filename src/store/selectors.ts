@@ -266,17 +266,20 @@ function groupByDimension(views: QuestView[]) {
 export type QuestGroup = ReturnType<typeof groupByDimension>[number];
 
 /**
- * Today's quests in the order the player usually does them: each Path's quests
- * sorted by where they fall in the day, and the Paths sorted by their earliest
- * quest. Learned from past days only, so it shifts day to day, not mid-session.
+ * Today's quests as one list. Once the player has dragged them into their own
+ * order, that order; until then, the order they usually do them in (learned
+ * from past days only, so it shifts day to day, not mid-session). Either way,
+ * quests with no place yet follow, oldest first, so new ones land at the bottom.
  */
-export function selectTodayQuestGroups(data: GameData, today: string): QuestGroup[] {
+export function selectTodayQuests(data: GameData, today: string): QuestView[] {
+  const byAge = questsForDay(data.quests, today).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const views = byAge.map((q) => toQuestView(data, q, today));
+  if (data.questOrder) {
+    const index = new Map(data.questOrder.map((id, i) => [id, i]));
+    return sortByHabitOrder(views, (v) => index.get(v.quest.id));
+  }
   const order = habitOrder(data.completions, today);
-  const position = (v: QuestView) => order.get(v.quest.id);
-  const groups = groupByDimension(
-    sortByHabitOrder(questsForDay(data.quests, today).map((q) => toQuestView(data, q, today)), position),
-  );
-  return sortByHabitOrder(groups, (g) => position(g.quests[0]));
+  return sortByHabitOrder(views, (v) => order.get(v.quest.id));
 }
 
 export function selectAllQuestGroups(data: GameData, today: string): QuestGroup[] {

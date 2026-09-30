@@ -5,7 +5,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
-import { ClassHeader } from '@/components/class-header';
 import { KeeperTour } from '@/components/keeper-tour';
 import { ProgressStrip } from '@/components/progress-strip';
 import { QuestCard } from '@/components/quest-card';
@@ -15,6 +14,7 @@ import { SettingsRow } from '@/components/settings-row';
 import { WrapUpCard } from '@/components/wrap-up-card';
 import { TUTORIAL_QUEST_ID, type Dimension, type XpGain } from '@/game';
 import { LevelUp } from '@/components/level-up';
+import { PartyRow } from '@/components/party-row';
 import { XpBanner } from '@/components/xp-banner';
 import { useGameStore, type Milestone } from '@/store';
 import { useSession } from '@/store/session';
@@ -23,7 +23,7 @@ import {
   usePlayer,
   useProgressSummary,
   useToday,
-  useTodayQuestGroups,
+  useTodayQuests,
   useTutorialQuest,
 } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
@@ -41,7 +41,7 @@ export default function TodayScreen() {
   const player = usePlayer();
   const classInfo = useClassInfo();
   const tutorial = useTutorialQuest(today);
-  const groups = useTodayQuestGroups(today);
+  const quests = useTodayQuests(today);
   const summary = useProgressSummary(today);
   const toggleQuest = useGameStore((s) => s.toggleQuest);
   const completeTutorial = useGameStore((s) => s.completeTutorial);
@@ -158,18 +158,31 @@ export default function TodayScreen() {
             </View>
           </>
         )}
-        {!tutorial && groups.length === 0 && (
+        {!tutorial && <PartyRow />}
+        {!tutorial && quests.length > 1 && (
+          <View style={styles.listHeader}>
+            <Text style={styles.listTitle}>TODAY</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Reorder quests"
+              onPress={() => {
+                haptics.tap();
+                router.push('/reorder-quests');
+              }}
+              hitSlop={12}
+              style={({ pressed }) => [styles.reorder, pressed && { opacity: 0.6 }]}>
+              <SymbolView name="arrow.up.arrow.down" tintColor={classInfo.color} size={15} />
+              <Text style={[styles.reorderText, { color: classInfo.color }]}>Reorder</Text>
+            </Pressable>
+          </View>
+        )}
+        {!tutorial && quests.length === 0 && (
           <Text style={styles.hint}>No quests scheduled today. Tap + to add one.</Text>
         )}
         {!tutorial &&
-          groups.map((group, g) => (
-            <View key={group.dimension} style={styles.group}>
-              <ClassHeader info={group.info} />
-              {group.quests.map((view, q) => (
-                <View key={view.quest.id} ref={g === 0 && q === 0 ? questRef : undefined} collapsable={false}>
-                  <QuestCard view={view} onPress={() => onToggle(view.quest.id)} />
-                </View>
-              ))}
+          quests.map((view, q) => (
+            <View key={view.quest.id} ref={q === 0 ? questRef : undefined} collapsable={false}>
+              <QuestCard view={view} showPath onPress={() => onToggle(view.quest.id)} />
             </View>
           ))}
         {!tutorial && (
@@ -214,5 +227,8 @@ const styles = StyleSheet.create({
   tutorial: { gap: spacing.md },
   greeting: { color: colors.text, fontSize: 26, fontFamily: fonts.bold },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },
-  group: { gap: spacing.sm, marginBottom: spacing.sm },
+  listHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
+  listTitle: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2 },
+  reorder: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  reorderText: { fontFamily: fonts.bold, fontSize: 15 },
 });

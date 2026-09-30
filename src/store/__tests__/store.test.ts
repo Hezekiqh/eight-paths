@@ -8,7 +8,7 @@ import {
   selectObjectives,
   selectDimensionStats,
   selectOverallProgress,
-  selectTodayQuestGroups,
+  selectTodayQuests,
 } from '../selectors';
 
 const today = '2026-09-26';
@@ -51,8 +51,7 @@ describe('game store', () => {
     expect(outcome.kind).toBe('completed');
     if (outcome.kind === 'completed') expect(outcome.gain.gained).toBe(10);
 
-    const groups = selectTodayQuestGroups(useGameStore.getState(), today);
-    expect(groups.find((g) => g.dimension === 'intellectual')?.quests[0].done).toBe(true);
+    expect(selectTodayQuests(useGameStore.getState(), today).find((v) => v.quest.id === read.id)?.done).toBe(true);
 
     expect(useGameStore.getState().toggleQuest(read.id, today).kind).toBe('undone');
     expect(useGameStore.getState().completions).toHaveLength(0);
@@ -70,28 +69,33 @@ describe('game store', () => {
     start();
     const read = useGameStore.getState().quests[1];
     useGameStore.getState().archiveQuest(read.id);
-    const groups = selectTodayQuestGroups(useGameStore.getState(), today);
-    expect(groups.map((g) => g.dimension)).toEqual(['physical']);
+    expect(selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.dimension)).toEqual(['physical']);
   });
 
-  it('orders today by the order the player usually does their quests', () => {
+  it('orders today by the order the player usually does their quests, then oldest first', () => {
     start();
-    expect(selectTodayQuestGroups(useGameStore.getState(), today).map((g) => g.dimension)).toEqual([
-      'physical',
-      'intellectual',
-    ]);
+    const titles = () => selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.title);
+    expect(titles()).toEqual(['Read 20 min', 'Move 30 min']);
     const [, read, move] = useGameStore.getState().quests;
     const yesterday = '2026-09-25';
     useGameStore.setState({
       completions: [
-        { id: 'a', questId: move.id, dimension: 'physical', date: yesterday, xp: 10, at: 20 * 60 },
-        { id: 'b', questId: read.id, dimension: 'intellectual', date: yesterday, xp: 10, at: 7 * 60 },
+        { id: 'a', questId: move.id, dimension: 'physical', date: yesterday, xp: 10, at: 7 * 60 },
+        { id: 'b', questId: read.id, dimension: 'intellectual', date: yesterday, xp: 10, at: 20 * 60 },
       ],
     });
-    expect(selectTodayQuestGroups(useGameStore.getState(), today).map((g) => g.dimension)).toEqual([
-      'intellectual',
-      'physical',
-    ]);
+    expect(titles()).toEqual(['Move 30 min', 'Read 20 min']);
+  });
+
+  it("keeps the player's own order, with new quests at the bottom", () => {
+    start();
+    const [, read, move] = useGameStore.getState().quests;
+    useGameStore.getState().setQuestOrder([move.id, read.id]);
+    useGameStore.getState().addQuest({ title: 'Call a friend', dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+    const titles = () => selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.title);
+    expect(titles()).toEqual(['Move 30 min', 'Read 20 min', 'Call a friend']);
+    useGameStore.getState().setQuestOrder(null);
+    expect(titles()[0]).toBe('Read 20 min');
   });
 
   it('completes the tutorial for class XP, then retires it', () => {
@@ -102,7 +106,7 @@ describe('game store', () => {
     const s = useGameStore.getState();
     expect(s.player?.tutorialComplete).toBe(true);
     expect(s.quests.find((q) => q.id === 'tutorial')?.active).toBe(false);
-    expect(selectTodayQuestGroups(s, today).flatMap((g) => g.quests.map((v) => v.quest.id))).not.toContain('tutorial');
+    expect(selectTodayQuests(s, today).map((v) => v.quest.id)).not.toContain('tutorial');
   });
 
   it('lists every active quest except the tutorial, with its schedule', () => {
