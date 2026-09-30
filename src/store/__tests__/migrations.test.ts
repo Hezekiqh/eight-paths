@@ -51,6 +51,8 @@ const valid = {
   drops: ['ottilie'],
   redrawn: [],
   questOrder: null,
+  traded: {},
+  tradeMoves: [],
 };
 
 describe('v9: usual-time reminders', () => {
@@ -111,6 +113,8 @@ describe('sanitizeSave', () => {
         drops: [],
         redrawn: [],
         questOrder: null,
+        traded: {},
+        tradeMoves: [],
       });
     }
   });

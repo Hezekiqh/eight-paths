@@ -8,7 +8,10 @@ import { PixelSprite } from '@/components/pixel-sprite';
 import { Screen } from '@/components/screen';
 import { Segmented } from '@/components/segmented';
 import { SettingsRow } from '@/components/settings-row';
-import { fetchLeaderboard, shareFriendCode, type LeaderRow } from '@/social/api';
+import { TradeInbox } from '@/components/trade-inbox';
+import { fetchLeaderboard, refreshOffers, shareFriendCode, type LeaderRow } from '@/social/api';
+import { useTradeNotices } from '@/social/notices';
+import { pullTrades } from '@/social/sync';
 import { useSocial } from '@/social/store';
 import { founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
@@ -27,8 +30,8 @@ function Leader({ id, scale }: { id: string | null; scale: number }) {
 }
 
 /**
- * The Second 100 at a glance: your card and friend code, and the collection
- * leaderboard. A collection is worth more the rarer its heroes are among all
+ * The Second 100 at a glance: your card and friend code, open trade offers,
+ * and the collection leaderboard. A collection is worth more the rarer its heroes are among all
  * players. Signed out, it invites the player to join.
  */
 export default function SocialTab() {
@@ -40,12 +43,23 @@ export default function SocialTab() {
   // Results are tagged with who and which board they're for, so a stale list never shows.
   const [board, setBoard] = useState<{ key: string; rows: LeaderRow[] | null; failed: boolean } | null>(null);
   const key = `${profile?.id ?? ''}:${scope}`;
+  const incoming = useSocial((s) => s.offers.filter((o) => o.toId === s.profile?.id).map((o) => o.id).join(','));
+  const markOffersSeen = useTradeNotices((s) => s.markOffersSeen);
+
+  // Offers on screen count as seen: the tab's dot goes out.
+  useFocusEffect(
+    useCallback(() => {
+      if (incoming) markOffersSeen(incoming.split(','));
+    }, [incoming, markOffersSeen]),
+  );
 
   // Refresh whenever the tab comes into view, since values shift as players wake heroes.
   useFocusEffect(
     useCallback(() => {
       if (status !== 'ready') return;
       let live = true;
+      // Offers and finished trades may have come in since the app last looked.
+      Promise.all([refreshOffers(), pullTrades()]).catch(() => {});
       fetchLeaderboard(scope)
         .then((r) => live && setBoard({ key, rows: r, failed: false }))
         .catch(() => live && setBoard({ key, rows: null, failed: true }));
@@ -98,6 +112,8 @@ export default function SocialTab() {
         onPress={() => shareFriendCode(profile.friendCode)}
         color={color}
       />
+
+      <TradeInbox color={color} />
 
       <View style={styles.boardHead}>
         <Text style={styles.section}>TOP COLLECTIONS</Text>

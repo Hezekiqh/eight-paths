@@ -6,6 +6,7 @@ import { Share } from 'react-native';
 import { supabase } from './client';
 import { socialEnabled } from './config';
 import { useSocial, type CharacterStat, type Profile } from './store';
+import { isExpired, tradeProblem, type Copies, type TradeOffer } from './trade';
 import { extractFriendCode, usernameProblem } from './username';
 
 const PROFILE_COLUMNS =
@@ -52,7 +53,7 @@ export async function startSocial() {
   started = true;
   const sb = supabase();
   sb.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT') useSocial.setState({ status: 'signedOut', profile: null, friends: [] });
+    if (event === 'SIGNED_OUT') useSocial.setState({ status: 'signedOut', profile: null, friends: [], offers: [] });
   });
   try {
     const { data } = await sb.auth.getSession();
@@ -73,7 +74,7 @@ async function loadAccount(userId: string | null) {
   // Sharing starts on; it's only off if they turned it off (numbers uploaded as null after syncing).
   const synced = profile.leader !== null;
   useSocial.setState({ status: 'ready', profile, shareConsistency: !synced || profile.daysShownUp !== null });
-  await Promise.allSettled([refreshFriends(), refreshStats()]);
+  await Promise.allSettled([refreshFriends(), refreshStats(), refreshOffers()]);
   const pending = useSocial.getState().pendingFriendCode;
   if (pending) {
     useSocial.setState({ pendingFriendCode: null });
@@ -217,24 +218,157 @@ export async function uploadSnapshot(s: Snapshot) {
   useSocial.setState({ profile: { ...profile, ...s } });
 }
 
-/** Which characters the server already knows this player has woken. */
+/** The heroes a player (or a friend of theirs) holds right now: woken or traded in, minus traded out. */
 export async function fetchCollection(userId: string): Promise<string[]> {
-  const { data, error } = await supabase().from('collections').select('character_id').eq('user_id', userId);
+  const { data, error } = await supabase().rpc('hero_holdings', { player: userId });
   if (error) fail(OFFLINE);
-  return (data ?? []).map((r) => r.character_id as string);
+  return ((data ?? []) as { character_id: string }[]).map((r) => r.character_id);
 }
 
-/** Adds newly woken characters. The server stamps the time, so "first awakened" can't be backdated. */
-export async function uploadCollection(characterIds: string[]) {
-  const profile = useSocial.getState().profile;
-  if (!profile || characterIds.length === 0) return;
-  const { error } = await supabase()
-    .from('collections')
-    .upsert(
-      characterIds.map((id) => ({ user_id: profile.id, character_id: id })),
-      { onConflict: 'user_id,character_id', ignoreDuplicates: true },
-    );
+/**
+ * Reports how many copies of each hero this player has woken themselves. The
+ * server only ever raises the counts and stamps when each was first woken, so
+ * neither an old backup nor a changed clock can rewrite history. Returns how
+ * many heroes the server hadn't seen this player wake before.
+ */
+export async function reportCollection(copies: Record<string, number>): Promise<number> {
+  if (!useSocial.getState().profile || Object.keys(copies).length === 0) return 0;
+  const { data, error } = await supabase().rpc('report_collection', { heroes: copies });
   if (error) fail(OFFLINE);
+  return (data as number | null) ?? 0;
+}
+
+/** Every copy of a hero that has moved in or out of this player's collection by trade, oldest first. */
+export async function fetchTradeMoves(): Promise<
+  { id: number; characterId: string; delta: number; tradeId: string | null; createdAt: string }[]
+> {
+  const profile = useSocial.getState().profile;
+  if (!profile) return [];
+  const { data, error } = await supabase()
+    .from('trade_moves')
+    .select('id, character_id, delta, trade_id, created_at')
+    .eq('user_id', profile.id)
+    .order('id');
+  if (error) fail(OFFLINE);
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    characterId: r.character_id as string,
+    delta: r.delta as number,
+    tradeId: (r.trade_id as string | null) ?? null,
+    createdAt: r.created_at as string,
+  }));
+}
+
+// ---------------------------------------------------------------- trades
+
+/** Fails with the trade rule the server gave, in words, or the usual offline message. */
+const failTrade = (error: { message: string }): never => fail(tradeProblem(error.message) ?? OFFLINE);
+
+/** What a player (this one, or a friend) could trade now, per hero. */
+export async function fetchTradeable(userId: string): Promise<Copies> {
+  const { data, error } = await supabase().rpc('tradeable_copies', { player: userId });
+  if (error) fail(OFFLINE);
+  return Object.fromEntries(((data ?? []) as { character_id: string; copies: number }[]).map((r) => [r.character_id, r.copies]));
+}
+
+/** Loads this player's open offers, sent and received, into the social store. */
+export async function refreshOffers() {
+  if (!useSocial.getState().profile) return;
+  const { data, error } = await supabase()
+    .from('trade_offers')
+    .select('id, from_id, to_id, give, get, created_at')
+    .eq('status', 'open')
+    .order('created_at', { ascending: false });
+  if (error) fail(OFFLINE);
+  const offers: TradeOffer[] = ((data ?? []) as Record<string, unknown>[])
+    .map((r) => ({
+      id: r.id as string,
+      fromId: r.from_id as string,
+      toId: r.to_id as string,
+      give: r.give as string[],
+      get: r.get as string[],
+      createdAt: r.created_at as string,
+    }))
+    .filter((o) => !isExpired(o));
+  useSocial.setState({ offers });
+}
+
+/** Usernames for player ids: friends from the list, anyone else from the server. */
+async function usernames(ids: string[]): Promise<Record<string, string>> {
+  const names: Record<string, string> = {};
+  for (const f of useSocial.getState().friends) names[f.id] = f.username;
+  const missing = [...new Set(ids)].filter((id) => !names[id]);
+  if (missing.length) {
+    const { data } = await supabase().from('profiles').select('id, username').in('id', missing);
+    for (const r of (data ?? []) as { id: string; username: string }[]) names[r.id] = r.username;
+  }
+  return names;
+}
+
+/** Who each trade was with, by trade id. */
+export async function fetchTradePartners(tradeIds: string[]): Promise<Record<string, string>> {
+  const me = useSocial.getState().profile?.id;
+  if (!me || tradeIds.length === 0) return {};
+  const { data, error } = await supabase().from('trade_offers').select('id, from_id, to_id').in('id', tradeIds);
+  if (error) fail(OFFLINE);
+  const rows = (data ?? []) as { id: string; from_id: string; to_id: string }[];
+  const other = (r: { from_id: string; to_id: string }) => (r.from_id === me ? r.to_id : r.from_id);
+  const names = await usernames(rows.map(other));
+  return Object.fromEntries(rows.map((r) => [r.id, names[other(r)] ?? 'a friend']));
+}
+
+/** A finished trade, from this player's side. */
+export type PastTrade = { id: string; partner: string; gave: string[]; got: string[]; at: string };
+
+/** This player's most recent finished trades, newest first. */
+export async function fetchTradeHistory(limit = 20): Promise<PastTrade[]> {
+  const me = useSocial.getState().profile?.id;
+  if (!me) return [];
+  const { data, error } = await supabase()
+    .from('trade_offers')
+    .select('id, from_id, to_id, give, get, closed_at')
+    .eq('status', 'accepted')
+    .order('closed_at', { ascending: false })
+    .limit(limit);
+  if (error) fail(OFFLINE);
+  const rows = (data ?? []) as { id: string; from_id: string; to_id: string; give: string[]; get: string[]; closed_at: string }[];
+  const names = await usernames(rows.map((r) => (r.from_id === me ? r.to_id : r.from_id)));
+  return rows.map((r) => {
+    const sent = r.from_id === me;
+    return {
+      id: r.id,
+      partner: names[sent ? r.to_id : r.from_id] ?? 'a former friend',
+      gave: sent ? r.give : r.get,
+      got: sent ? r.get : r.give,
+      at: r.closed_at,
+    };
+  });
+}
+
+/** Offers `give` for a friend's `get`. With `answering`, counters the offer they sent. */
+export async function offerTrade(friendId: string, give: string[], get: string[], answering?: string) {
+  const { error } = await supabase().rpc('offer_trade', {
+    friend: friendId,
+    give,
+    get,
+    answering: answering ?? null,
+  });
+  if (error) failTrade(error);
+  await refreshOffers().catch(() => {});
+}
+
+/** Accepts an offer sent to this player: both sides' heroes change hands at once. */
+export async function acceptTrade(offerId: string) {
+  const { error } = await supabase().rpc('accept_trade', { offer: offerId });
+  if (error) failTrade(error);
+  await refreshOffers().catch(() => {});
+}
+
+/** Declines an offer sent to this player, or takes back one they sent. */
+export async function declineTrade(offerId: string) {
+  const { error } = await supabase().rpc('decline_trade', { offer: offerId });
+  if (error) fail(OFFLINE);
+  await refreshOffers().catch(() => {});
 }
 
 export async function refreshFriends() {
