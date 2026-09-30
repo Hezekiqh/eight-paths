@@ -1,5 +1,7 @@
 import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16';
+import { IMFellEnglish_400Regular, IMFellEnglish_400Regular_Italic } from '@expo-google-fonts/im-fell-english';
 import { Jersey10_400Regular, useFonts } from '@expo-google-fonts/jersey-10';
+import { MedievalSharp_400Regular } from '@expo-google-fonts/medievalsharp';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router/stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -44,7 +46,13 @@ export default function RootLayout() {
   const hydrated = useHydrated();
   const onboarded = useGameStore((s) => s.player !== null);
   // If the font fails to load, carry on with the system font rather than a blank screen.
-  const [fontsLoaded, fontError] = useFonts({ DotGothic16_400Regular, Jersey10_400Regular });
+  const [fontsLoaded, fontError] = useFonts({
+    DotGothic16_400Regular,
+    Jersey10_400Regular,
+    IMFellEnglish_400Regular,
+    IMFellEnglish_400Regular_Italic,
+    MedievalSharp_400Regular,
+  });
   const ready = hydrated && (fontsLoaded || fontError !== null);
   // The story intro plays over everything each time the app starts.
   const introDone = useSession((s) => s.introDone);

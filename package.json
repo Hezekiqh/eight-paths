@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo-google-fonts/dotgothic16": "^0.4.1",
+    "@expo-google-fonts/im-fell-english": "^0.4.0",
     "@expo-google-fonts/jersey-10": "^0.4.1",
+    "@expo-google-fonts/medievalsharp": "^0.4.1",
     "@expo/ui": "~57.0.20",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
