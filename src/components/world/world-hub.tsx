@@ -7,9 +7,6 @@ import { Segmented } from '@/components/segmented';
 import { SettingsPanel } from '@/components/settings-panel';
 import { isObjectiveDone } from '@/game';
 import { haptics } from '@/haptics';
-import { premiumEnabled } from '@/premium/config';
-import { FREE_WORLD_MS, playLeft, usePlaytime } from '@/premium/playtime';
-import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
 import { useObjectives, useToday } from '@/store/hooks';
 import { COMPANIONS } from '@/story/companions';
@@ -79,38 +76,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   );
 }
 
-/**
- * Jump into the game, with a free player's time left today. Once it's used up,
- * the button makes way for a note: back at midnight, or no limit with Premium.
- */
 function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
-  const today = useToday();
-  const premium = usePremium((s) => s.premium);
-  const played = usePlaytime((s) => s.played);
-  const limited = premiumEnabled && !premium;
-  const left = playLeft(played, today, premium ? 'premium' : 'free');
-  const minutes = Math.ceil(left / 60_000);
-
-  if (limited && left <= 0) {
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityHint="Opens Eight Paths Premium"
-        onPress={() => {
-          haptics.tap();
-          router.push('/paywall');
-        }}
-        style={({ pressed }) => [styles.window, pressed && { opacity: 0.8 }]}>
-        <Text style={styles.section}>RESTING UNTIL TOMORROW</Text>
-        <Text style={styles.answer}>
-          That&apos;s today&apos;s {FREE_WORLD_MS / 60_000} minutes in the Other World. Your habits still count, all
-          day. The road opens again at midnight.
-        </Text>
-        <Text style={styles.need}>Explore without limits with Premium ›</Text>
-      </Pressable>
-    );
-  }
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -121,9 +87,7 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
       }}
       style={({ pressed }) => [styles.play, pressed && { opacity: 0.8 }]}>
       <Text style={styles.playLabel}>{started ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
-      <Text style={styles.playHint}>
-        {limited ? `Turn your phone sideways · ${minutes} min left today` : 'Turn your phone sideways'}
-      </Text>
+      <Text style={styles.playHint}>Turn your phone sideways</Text>
     </Pressable>
   );
 }

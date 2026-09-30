@@ -19,10 +19,6 @@ import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
-import { toDateKey } from '@/game';
-import { premiumEnabled } from '@/premium/config';
-import { addPlay, playLeft, usePlaytime } from '@/premium/playtime';
-import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
 import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
@@ -97,42 +93,8 @@ function usePlaying() {
   return [playing, setPlaying] as const;
 }
 
-/**
- * Counts time spent in the game itself (not the menu, not in the background)
- * toward a free player's daily allowance, and ends the visit when it runs out.
- * Premium players have no limit.
- */
-function useWorldClock(playing: boolean, stop: () => void) {
-  const focused = useIsFocused();
-  const premium = usePremium((s) => s.premium);
-  useEffect(() => {
-    if (!playing || !focused || !premiumEnabled || premium) return;
-    let last = Date.now();
-    const count = () => {
-      const now = Date.now();
-      const played = addPlay(usePlaytime.getState().played, toDateKey(new Date(now)), now - last);
-      last = now;
-      usePlaytime.setState({ played });
-      if (playLeft(played, played.date, 'free') <= 0) stop();
-    };
-    const timer = setInterval(() => AppState.currentState === 'active' && count(), CLOCK_MS);
-    // Time in the background never counts: settle up on the way out, restart the clock on return.
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') last = Date.now();
-      else count();
-    });
-    return () => {
-      clearInterval(timer);
-      sub.remove();
-      if (AppState.currentState === 'active') count();
-    };
-  }, [playing, focused, premium, stop]);
-}
-
 export default function WorldScreen() {
   const [playing, setPlaying] = usePlaying();
-  const stopPlaying = useCallback(() => setPlaying(false), [setPlaying]);
-  useWorldClock(playing, stopPlaying);
   const hydrated = useWorldHydrated();
   const [hero] = useParty();
   const { width, height } = useWindowDimensions();
@@ -177,7 +139,6 @@ export default function WorldScreen() {
 }
 
 const FADE_MS = 350;
-const CLOCK_MS = 5000;
 
 /**
  * One character walks the World: the party member picked from their sheet on

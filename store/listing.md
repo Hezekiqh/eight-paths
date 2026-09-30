@@ -80,7 +80,6 @@ Support the game and lore by upgrading to Premium, a monthly subscription:
 • Unlimited habits (free players keep up to 10)
 • 1★ characters twice as likely, and one redo per drop
 • Every theme
-• Unlimited time in the Other World (free: 15 min a day)
 The habit tracker itself is always free. Drop odds are shown in the app.
 
 NO ADS, NO TRACKING
@@ -155,7 +154,7 @@ To see the full flow: enter a name (optional), choose a class, keep the default 
 
 OPTIONAL ACCOUNT (Friends, "the Second 100"): Character tab > Friends. Sign in with Apple or Google, then choose a username. Only the username, level, party and collection are shared; habits never leave the device. Players can report and block others from a friend's page (Report / Block). Delete account is at the bottom of the Friends screen: it deletes the server account and revokes Sign in with Apple.
 
-PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once after choosing a username, and any time from Character tab > Settings > Eight Paths Premium. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99); everyone else premium_monthly ($2.99). Premium never locks the habit tracker: it raises XP per habit and the daily XP cap, removes the 10-habit limit, doubles 1-star character odds, adds one redo per character drop, unlocks every theme and unlimited time in the Other World (free players get 15 minutes of play a day; the clock only runs in the game itself and resets at midnight).
+PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once after choosing a username, and any time from Character tab > Settings > Eight Paths Premium. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99); everyone else premium_monthly ($2.99). Premium never locks the habit tracker: it raises XP per habit and the daily XP cap, removes the 10-habit limit, doubles 1-star character odds, adds one redo per character drop, and unlocks every theme.
 
 CHARACTER DROPS: every few levels a Path awards a random character from its roster (no purchase can buy a drop directly). The exact odds per Path, free and Premium, are on the Drop odds sheet (link at the bottom of the paywall).
 
