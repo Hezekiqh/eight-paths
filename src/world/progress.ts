@@ -19,7 +19,11 @@ export type Requirement =
   | { kind: 'overall'; level: number }
   | { kind: 'path'; dimension: Dimension; level: number }
   /** Any one Path at this level: "level up once, any way you like". */
-  | { kind: 'anyPath'; level: number };
+  | { kind: 'anyPath'; level: number }
+  /** Something done in the World (a winch pulled, a wall broken). `label` names it; `hint` says how. */
+  | { kind: 'flag'; flag: string; label: string; hint: string }
+  /** Every one of these. */
+  | { kind: 'all'; of: Requirement[] };
 
 export type Arrival = { map: MapId; x: number; y: number; facing: Facing };
 
@@ -34,8 +38,10 @@ export type Exit = {
   /** Where you step out, in tiles; null while that area is still being built. */
   to: Arrival | null;
   needs: Requirement;
-  /** The way back to somewhere you've been: never a gate, so it isn't listed as a goal. */
+  /** Never a gate (the way home, a side road, a building's door), so it isn't listed as a goal. */
   back?: boolean;
+  /** Walk into it to go through (doorways, holes, road ends), instead of pressing A (doors, ladders). */
+  walk?: boolean;
 };
 
 /**
@@ -46,16 +52,22 @@ export const ARCHIVE_DOOR_LEVEL = 6;
 
 /**
  * After the door, the main road opens every 3 overall levels (author, Sep 29,
- * 2026): the road east at 9, then (as they're built) Plush at 12, the kingdom
- * at 15, the king at 18, and the end of Season 1 at 20. Overall, so any habit counts.
+ * 2026): the Buried Barracks at 9, Plush's keep at 12, the way out to the
+ * kingdom at 15, the king at 18, and the end of Season 1 at 20. Overall, so any habit counts.
  */
-export const ROAD_ONWARD_LEVEL = 9;
+export const BARRACKS_LEVEL = 9;
+export const KEEP_LEVEL = 12;
+export const KINGDOM_LEVEL = 15;
+export const KING_LEVEL = 18;
+
+/** Never locked. */
+const OPEN: Requirement = { kind: 'overall', level: 0 };
 
 /**
  * Season 1 ends at this overall level (author, Sep 29, 2026): about 35 habits
  * of any kind. Later kingdoms arrive as new seasons, each with its own finish.
  */
-export const FINAL_GOAL: Requirement = { kind: 'overall', level: 20 };
+export const FINAL_GOAL = { kind: 'overall', level: 20 } as const satisfies Requirement;
 
 export const EXITS: Exit[] = [
   {
@@ -76,16 +88,478 @@ export const EXITS: Exit[] = [
     back: true,
   },
   {
+    id: 'road-waystation',
+    from: 'courier-road',
+    tile: 'D',
+    label: 'The Waystation',
+    to: { map: 'waystation', x: 5, y: 6, facing: 'up' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'waystation-road',
+    from: 'waystation',
+    tile: '=',
+    label: 'The door',
+    to: { map: 'courier-road', x: 18, y: 6, facing: 'down' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'road-millbrook',
+    from: 'courier-road',
+    tile: '<',
+    label: 'The road west',
+    to: { map: 'millbrook', x: 32, y: 7, facing: 'left' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
+    id: 'millbrook-road',
+    from: 'millbrook',
+    tile: '>',
+    label: 'The road east',
+    to: { map: 'courier-road', x: 1, y: 7, facing: 'right' },
+    needs: { kind: 'overall', level: 0 },
+    back: true,
+  },
+  {
     id: 'road-onward',
     from: 'courier-road',
     tile: '>',
     label: 'The road east',
-    to: null,
-    needs: { kind: 'overall', level: ROAD_ONWARD_LEVEL },
+    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'camp-road',
+    from: 'deserters-camp',
+    tile: '<',
+    label: 'The road west',
+    to: { map: 'courier-road', x: 38, y: 7, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'camp-barracks',
+    from: 'deserters-camp',
+    tile: 'E',
+    label: 'The fort in the hill',
+    to: { map: 'barracks-hall', x: 8, y: 8, facing: 'up' },
+    needs: { kind: 'overall', level: BARRACKS_LEVEL },
+    walk: true,
+  },
+  {
+    id: 'hall-camp',
+    from: 'barracks-hall',
+    tile: 'E',
+    label: 'The way out',
+    to: { map: 'deserters-camp', x: 14, y: 4, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'hall-armoury',
+    from: 'barracks-hall',
+    tile: '1',
+    label: 'A hole in the wall',
+    to: { map: 'barracks-armoury', x: 2, y: 4, facing: 'right' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'armoury-hall',
+    from: 'barracks-armoury',
+    tile: '1',
+    label: 'The hole to the hall',
+    to: { map: 'barracks-hall', x: 15, y: 5, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'hall-yard',
+    from: 'barracks-hall',
+    tile: 'G',
+    label: 'The portcullis',
+    to: { map: 'barracks-yard', x: 8, y: 10, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'hall-portcullis',
+      label: 'Raise the portcullis',
+      hint: 'Somewhere there must be a winch.',
+    },
+    walk: true,
+  },
+  {
+    id: 'yard-hall',
+    from: 'barracks-yard',
+    tile: 'E',
+    label: 'The way back',
+    to: { map: 'barracks-hall', x: 8, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'armoury-mess',
+    from: 'barracks-armoury',
+    tile: 'C',
+    label: 'The cracked wall',
+    to: { map: 'officers-mess', x: 4, y: 4, facing: 'up' },
+    needs: { kind: 'flag', flag: 'armoury-wall', label: 'Break the cracked wall', hint: 'A Warrior could break it.' },
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'mess-armoury',
+    from: 'officers-mess',
+    tile: '2',
+    label: 'The broken wall',
+    to: { map: 'barracks-armoury', x: 10, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'yard-lower',
+    from: 'barracks-yard',
+    tile: 'G',
+    label: 'The yard gate',
+    to: { map: 'lower-barracks', x: 3, y: 3, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: 'yard-plates',
+      label: 'Open the yard gate',
+      hint: 'Three shields together: something heavy on every plate.',
+    },
+    walk: true,
+  },
+  {
+    id: 'lower-yard',
+    from: 'lower-barracks',
+    tile: 'e',
+    label: 'The ladder up',
+    to: { map: 'barracks-yard', x: 7, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'yard-pit',
+    from: 'barracks-yard',
+    tile: 'H',
+    label: 'A ladder down',
+    to: { map: 'pit-below', x: 6, y: 5, facing: 'down' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'pit-yard',
+    from: 'pit-below',
+    tile: 'a',
+    label: 'The ladder up',
+    to: { map: 'barracks-yard', x: 10, y: 9, facing: 'down' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'lower-keep',
+    from: 'lower-barracks',
+    tile: 'K',
+    label: 'The great door',
+    to: { map: 'sleeping-keep', x: 8, y: 7, facing: 'up' },
+    needs: { kind: 'overall', level: KEEP_LEVEL },
+    walk: true,
+  },
+  {
+    id: 'keep-lower',
+    from: 'sleeping-keep',
+    tile: 'K',
+    label: 'The great door',
+    to: { map: 'lower-barracks', x: 24, y: 12, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'keep-exit',
+    from: 'sleeping-keep',
+    tile: '3',
+    label: 'The hole behind the sofa',
+    to: { map: 'march-road', x: 2, y: 3, facing: 'down' },
+    needs: {
+      kind: 'all',
+      of: [
+        {
+          kind: 'flag',
+          flag: 'plush-won',
+          label: 'Win over Baron Plush',
+          hint: 'The Baron is in the way. Wake him up.',
+        },
+        { kind: 'overall', level: KINGDOM_LEVEL },
+      ],
+    },
+    walk: true,
+  },
+  {
+    id: 'march-keep',
+    from: 'march-road',
+    tile: 'o',
+    label: 'The hole',
+    to: { map: 'sleeping-keep', x: 9, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'march-town',
+    from: 'march-road',
+    tile: 'G',
+    label: 'The horde checkpoint',
+    to: { map: 'kingdom-town', x: 1, y: 10, facing: 'right' },
+    needs: {
+      kind: 'flag',
+      flag: 'checkpoint',
+      label: 'Get past the checkpoint',
+      hint: 'The raiders can be bought, or talked round.',
+    },
+    walk: true,
+  },
+  {
+    id: 'town-march',
+    from: 'kingdom-town',
+    tile: '<',
+    label: 'The gate out',
+    to: { map: 'march-road', x: 28, y: 5, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'town-inn',
+    from: 'kingdom-town',
+    tile: '5',
+    label: 'The Candle Inn',
+    to: { map: 'candle-inn', x: 5, y: 5, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'inn-town',
+    from: 'candle-inn',
+    tile: '1',
+    label: 'The door',
+    to: { map: 'kingdom-town', x: 5, y: 5, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'town-forge',
+    from: 'kingdom-town',
+    tile: '6',
+    label: 'The forge',
+    to: { map: 'forge', x: 5, y: 4, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'forge-town',
+    from: 'forge',
+    tile: '1',
+    label: 'The door',
+    to: { map: 'kingdom-town', x: 13, y: 5, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'town-chapel',
+    from: 'kingdom-town',
+    tile: '7',
+    label: 'The chapel',
+    to: { map: 'chapel', x: 6, y: 5, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'chapel-town',
+    from: 'chapel',
+    tile: '1',
+    label: 'The door',
+    to: { map: 'kingdom-town', x: 26, y: 5, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'chapel-crypt',
+    from: 'chapel',
+    tile: '4',
+    label: 'The hidden stair',
+    to: { map: 'old-kings-crypt', x: 4, y: 5, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'crypt-found',
+      label: 'Find the hidden stair',
+      hint: "A Cleric's light might show it.",
+    },
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'crypt-chapel',
+    from: 'old-kings-crypt',
+    tile: '2',
+    label: 'The stair up',
+    to: { map: 'chapel', x: 8, y: 5, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'town-maze',
+    from: 'kingdom-town',
+    tile: '9',
+    label: 'The hedge maze',
+    to: { map: 'hedge-maze', x: 4, y: 11, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'maze-town',
+    from: 'hedge-maze',
+    tile: '>',
+    label: 'The way out',
+    to: { map: 'kingdom-town', x: 30, y: 16, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'town-pit',
+    from: 'kingdom-town',
+    tile: '3',
+    label: 'The Kaldorium',
+    to: { map: 'the-pit', x: 7, y: 6, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'on-the-bill',
+      label: 'Get on the bill',
+      hint: 'Barnaby does the bills. He loves a good story.',
+    },
+    walk: true,
+  },
+  {
+    id: 'pit-town',
+    from: 'the-pit',
+    tile: '1',
+    label: 'The way out',
+    to: { map: 'kingdom-town', x: 8, y: 16, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'town-keep',
+    from: 'kingdom-town',
+    tile: 'E',
+    label: 'The keep gate',
+    to: { map: 'war-doors', x: 8, y: 6, facing: 'up' },
+    needs: {
+      kind: 'all',
+      of: [
+        {
+          kind: 'flag',
+          flag: 'pit-champion',
+          label: 'Win at the Kaldorium',
+          hint: 'Get on the bill, then win three fights in the pit.',
+        },
+        {
+          kind: 'flag',
+          flag: 'old-law',
+          label: 'Read the old law',
+          hint: 'It is carved in the heart of the hedge maze.',
+        },
+        {
+          kind: 'flag',
+          flag: 'cages-open',
+          label: 'Free the cages',
+          hint: 'The cage guard takes bribes. A court needs witnesses.',
+        },
+        {
+          kind: 'flag',
+          flag: 'varga-witness',
+          label: 'Earn Captain Varga',
+          hint: "She'll witness a challenge for anyone who won't rise to her.",
+        },
+        {
+          kind: 'flag',
+          flag: 'forge-fixed',
+          label: "Mend Harrow's forge",
+          hint: "Brannoc's armour hasn't fitted in five hundred years.",
+        },
+        { kind: 'overall', level: KING_LEVEL },
+      ],
+    },
+    walk: true,
+  },
+  {
+    id: 'doors-town',
+    from: 'war-doors',
+    tile: '1',
+    label: 'The way out',
+    to: { map: 'kingdom-town', x: 20, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'doors-hall',
+    from: 'war-doors',
+    tile: 'G',
+    label: 'The war hall doors',
+    to: { map: 'war-hall', x: 9, y: 6, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'aurek-down',
+      label: 'Get past the guardian',
+      hint: 'Something tall and stitched guards the doors.',
+    },
+    walk: true,
+  },
+  {
+    id: 'hall-doors',
+    from: 'war-hall',
+    tile: '1',
+    label: 'The doors',
+    to: { map: 'war-doors', x: 8, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'field-town',
+    from: 'field-of-banners',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'kingdom-town', x: 20, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
   },
 ];
 
-export type XpTotals = { total: number; byPath: Record<Dimension, number> };
+export type XpTotals = { total: number; byPath: Record<Dimension, number>; flags?: string[] };
 
 export type Standing = {
   met: boolean;
@@ -98,6 +572,8 @@ export type Standing = {
   className: string | null;
   /** How far along, 0 to 1, from where this level ladder starts. */
   fraction: number;
+  /** For something to do in the World rather than habits: how to do it. */
+  hint?: string;
 };
 
 /** XP still needed to climb from `progress` to `target`, one level at a time. */
@@ -109,6 +585,16 @@ function xpToReach(level: number, xpIntoLevel: number, target: number, xpFor: (l
 
 /** Where the player stands against a requirement. */
 export function standing(needs: Requirement, xp: XpTotals): Standing {
+  if (needs.kind === 'flag') {
+    const met = xp.flags?.includes(needs.flag) ?? false;
+    return { met, have: 0, need: 0, habitsLeft: 0, className: null, fraction: met ? 1 : 0, hint: needs.hint };
+  }
+  if (needs.kind === 'all') {
+    // Met when every part is; otherwise report the first part still to do.
+    const parts = needs.of.map((r) => standing(r, xp));
+    const todo = parts.find((p) => !p.met);
+    return todo ? { ...todo, met: false } : { ...parts[parts.length - 1], met: true };
+  }
   const overall = needs.kind === 'overall';
   // For "any Path", the Path closest to levelling counts.
   const pathXp = needs.kind === 'path' ? xp.byPath[needs.dimension] : Math.max(0, ...Object.values(xp.byPath));
@@ -130,12 +616,15 @@ export function standing(needs: Requirement, xp: XpTotals): Standing {
 export function describeRequirement(needs: Requirement): string {
   if (needs.kind === 'overall') return `Overall Lv ${needs.level}`;
   if (needs.kind === 'anyPath') return 'Level up once';
+  if (needs.kind === 'flag') return needs.label;
+  if (needs.kind === 'all') return needs.of.map(describeRequirement).join(' + ');
   return `${CLASSES[needs.dimension].className} Lv ${needs.level}`;
 }
 
 /** What to do about it, in real life: "Finish about 6 more habits. Any habit counts." */
 export function howToProgress(s: Standing): string {
   if (s.met) return 'You have the strength. It will open.';
+  if (s.hint) return s.hint;
   const plural = s.habitsLeft === 1 ? '' : 's';
   return s.className
     ? `Finish about ${s.habitsLeft} more ${s.className} habit${plural}.`

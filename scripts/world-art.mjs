@@ -405,6 +405,19 @@ const O = {
   stone: '#6A6260',
   stoneLight: '#8A8280',
   stoneDark: '#3A3432',
+  thatch: '#B8913A',
+  thatchDark: '#8A6A28',
+  plaster: '#E0D4B8',
+  beam: '#4A3020',
+  window: '#6A8AB0',
+  door: '#6A4428',
+  soil: '#5A4028',
+  soilDark: '#3E2C1C',
+  turnip: '#C87AB0',
+  slate: '#5A5A6A',
+  slateDark: '#40404E',
+  canvas: '#C8B890',
+  canvasDark: '#A89868',
 };
 
 function tree(g, x, y) {
@@ -477,7 +490,226 @@ const OUTDOOR_ART = {
     if (left) box(g, x + 14, y + 9, 2, 2, P.rugGold);
   },
   '>'() {},
+  '<'() {},
+  H(g, x, y, m) {
+    // A cottage: thatched roof over the top rows, timber and plaster on the bottom row.
+    const wall = m.at(0, 1) !== 'H' && m.at(0, 1) !== 'D' && m.at(0, 1) !== 'd';
+    if (!wall) {
+      box(g, x, y, TILE, TILE, O.thatch);
+      for (let j = 2; j < TILE; j += 4) box(g, x, y + j, TILE, 1, O.thatchDark);
+      if (m.at(0, -1) !== 'H') box(g, x, y, TILE, 2, O.thatchDark);
+      if (m.at(-1, 0) !== 'H') box(g, x, y, 2, TILE, O.thatchDark);
+      if (m.at(1, 0) !== 'H') box(g, x + 14, y, 2, TILE, O.thatchDark);
+      return;
+    }
+    cottageWall(g, x, y, m);
+    box(g, x + 5, y + 4, 6, 5, O.window);
+    box(g, x + 7, y + 4, 2, 5, O.beam);
+    box(g, x + 5, y + 6, 6, 1, O.beam);
+  },
+  D(g, x, y, m) {
+    cottageWall(g, x, y, m);
+    box(g, x + 4, y + 3, 8, 13, O.door);
+    box(g, x + 4, y + 3, 8, 1, O.beam);
+    put(g, x + 10, y + 10, P.rugGold);
+  },
+  d(g, x, y, m) {
+    OUTDOOR_ART.D(g, x, y, m);
+  },
+  h(g, x, y) {
+    // A gap in the trees: drawn as trees, but a little thinner, for sharp eyes.
+    tree(g, x, y);
+    box(g, x + 7, y + 4, 2, 10, O.leafDark);
+  },
+  L(g, x, y) {
+    // A satchel strap snagged on a low branch, with a folded page.
+    box(g, x + 2, y + 5, 12, 2, O.trunk);
+    box(g, x + 8, y + 7, 2, 5, '#6A4A2A');
+    box(g, x + 7, y + 11, 4, 3, P.paper);
+    put(g, x + 8, y + 12, O.railDark);
+  },
+  f(g, x, y) {
+    box(g, x, y, TILE, TILE, O.soil);
+    for (let j = 1; j < TILE; j += 5) {
+      box(g, x, y + j + 2, TILE, 1, O.soilDark);
+      for (let i = 2; i < TILE; i += 5) {
+        box(g, x + i, y + j, 3, 2, O.leafLight);
+        put(g, x + i + 1, y + j + 2, O.turnip);
+      }
+    }
+  },
+  w(g, x, y) {
+    ellipse(g, x + 8, y + 10, 7, 5, O.stoneDark);
+    ellipse(g, x + 8, y + 9, 6, 4, O.stone);
+    ellipse(g, x + 8, y + 9, 4, 2, '#101418');
+    put(g, x + 9, y + 9, '#E8E0A0');
+    box(g, x + 2, y + 1, 2, 9, O.trunk);
+    box(g, x + 12, y + 1, 2, 9, O.trunk);
+    box(g, x + 1, y + 1, 14, 2, O.thatchDark);
+  },
+  A(g, x, y, m) {
+    // A patched canvas tent: a peaked roof on the top row, the front and flap below.
+    const left = m.at(-1, 0) !== 'A';
+    const right = m.at(1, 0) !== 'A';
+    if (m.at(0, -1) !== 'A') {
+      for (let j = 0; j < TILE; j++) {
+        const inset = left ? Math.max(0, 12 - j) : 0;
+        const outset = right ? Math.max(0, 12 - j) : 0;
+        box(g, x + inset, y + j, TILE - inset - outset, 1, j % 4 === 3 ? O.canvasDark : O.canvas);
+      }
+      return;
+    }
+    box(g, x, y, TILE, 14, O.canvasDark);
+    box(g, x, y + 14, TILE, 2, '#3A2A18');
+    if (!left && !right) box(g, x + 4, y + 3, 8, 11, '#2A2018');
+  },
+  x(g, x, y) {
+    // A campfire in a ring of stones.
+    ellipse(g, x + 8, y + 11, 6, 3, O.stoneDark);
+    box(g, x + 4, y + 10, 8, 2, O.trunk);
+    ellipse(g, x + 8, y + 7, 3, 5, P.flame2);
+    ellipse(g, x + 8, y + 8, 2, 3, P.flame);
+  },
+  M(g, x, y, m) {
+    // The hill's rock face, with the fort buried in it.
+    box(g, x, y, TILE, TILE, O.stone);
+    for (let j = 0; j < TILE; j += 5) box(g, x + ((j * 7) % 9), y + j, 7, 1, O.stoneDark);
+    if (m.at(0, -1) !== 'M' && m.at(0, -1) !== 'E') box(g, x, y, TILE, 3, O.leaf);
+    if (m.at(0, 1) !== 'M' && m.at(0, 1) !== 'E') box(g, x, y + 13, TILE, 3, O.stoneDark);
+  },
+  E(g, x, y, m) {
+    // The fort's arch, half buried: a dark way in.
+    OUTDOOR_ART.M(g, x, y, m);
+    const left = m.at(-1, 0) !== 'E';
+    const right = m.at(1, 0) !== 'E';
+    box(g, x + (left ? 3 : 0), y + 3, TILE - (left ? 3 : 0) - (right ? 3 : 0), 13, '#0C0806');
+    if (left) box(g, x + 1, y + 1, 3, 15, O.stoneLight);
+    if (right) box(g, x + 12, y + 1, 3, 15, O.stoneLight);
+    if (m.at(0, -1) !== 'E') box(g, x, y + 1, TILE, 3, O.stoneLight);
+  },
+  O(g, x, y) {
+    ellipse(g, x + 8, y + 10, 7, 6, O.stoneDark);
+    ellipse(g, x + 7, y + 8, 6, 5, O.stone);
+    ellipse(g, x + 5, y + 6, 2, 1, O.stoneLight);
+  },
+  Y(g, x, y) {
+    // A child's wooden sword, left in the rubble.
+    box(g, x + 4, y + 9, 9, 2, '#A07A4A');
+    box(g, x + 11, y + 7, 2, 6, '#6A4A2A');
+    box(g, x + 13, y + 9, 2, 2, '#6A4A2A');
+  },
+  s() {}, // cobbles are laid with the roads
+  I(g, x, y, m) {
+    // A stone house: slate roof over the top rows, stone wall with a shuttered window below.
+    const wall = !'IDd5673'.includes(m.at(0, 1) ?? '');
+    if (!wall) {
+      box(g, x, y, TILE, TILE, O.slate);
+      for (let j = 3; j < TILE; j += 4) box(g, x, y + j, TILE, 1, O.slateDark);
+      if (m.at(0, -1) !== 'I') box(g, x, y, TILE, 2, O.slateDark);
+      return;
+    }
+    box(g, x, y, TILE, TILE, O.stoneLight);
+    for (let j = 0; j < TILE; j += 5) box(g, x, y + j, TILE, 1, O.stone);
+    box(g, x + 5, y + 4, 6, 6, '#2A2430');
+    box(g, x + 5, y + 4, 6, 1, O.beam);
+    box(g, x, y + 14, TILE, 2, O.stoneDark);
+  },
+  K(g, x, y, m) {
+    // Kaldor's colossal statue, drawn once across its 2x2 tiles.
+    if (m.at(-1, 0) === 'K' || m.at(0, -1) === 'K') return;
+    box(g, x + 6, y + 2, 20, 30, O.stoneDark);
+    ellipse(g, x + 16, y + 8, 5, 5, O.stoneLight);
+    box(g, x + 9, y + 12, 14, 12, O.stoneLight);
+    box(g, x + 4, y + 13, 5, 3, O.stoneLight);
+    box(g, x + 23, y + 13, 5, 3, O.stoneLight);
+    box(g, x + 10, y + 24, 5, 6, O.stoneLight);
+    box(g, x + 17, y + 24, 5, 6, O.stoneLight);
+    ellipse(g, x + 22, y + 28, 4, 2, P.rugGold);
+  },
+  Z(g, x, y) {
+    // The headless king.
+    box(g, x + 3, y + 12, 10, 4, O.stoneDark);
+    box(g, x + 4, y + 3, 8, 10, O.stone);
+    box(g, x + 2, y + 4, 3, 3, O.stone);
+    box(g, x + 11, y + 4, 3, 3, O.stone);
+    box(g, x + 7, y + 2, 2, 1, O.stoneDark);
+  },
+  X(g, x, y) {
+    // An iron cage.
+    box(g, x + 1, y + 2, 14, 13, '#1A1618');
+    for (let i = 1; i < 16; i += 3) box(g, x + i, y + 2, 1, 13, P.iron);
+    box(g, x + 1, y + 2, 14, 1, P.iron);
+    box(g, x + 1, y + 14, 14, 1, P.iron);
+  },
+  n(g, x, y) {
+    // A banner on a pole: the horde's fist crushing a crown.
+    box(g, x + 3, y, 2, TILE, O.trunk);
+    box(g, x + 5, y + 1, 9, 10, '#6A1216');
+    box(g, x + 7, y + 3, 5, 3, P.rugGold);
+    box(g, x + 7, y + 6, 5, 3, '#E8B48C');
+  },
+  j(g, x, y) {
+    // A regimental cairn.
+    ellipse(g, x + 8, y + 12, 6, 3, O.stoneDark);
+    ellipse(g, x + 8, y + 9, 5, 3, O.stone);
+    ellipse(g, x + 8, y + 6, 3, 2, O.stoneLight);
+  },
+  G(g, x, y) {
+    // A barrier of sharpened spears.
+    box(g, x, y + 8, TILE, 3, O.trunk);
+    for (let i = 1; i < TILE; i += 3) {
+      box(g, x + i, y + 2, 2, 13, O.beam);
+      put(g, x + i, y + 1, O.stoneLight);
+    }
+  },
+  b(g, x, y) {
+    box(g, x + 1, y + 6, 14, 3, O.beam);
+    box(g, x + 2, y + 9, 2, 5, O.beam);
+    box(g, x + 12, y + 9, 2, 5, O.beam);
+  },
+  v(g, x, y) {
+    // Overgrowth, grown right across the path.
+    tree(g, x, y);
+    for (let i = 0; i < 10; i++) put(g, x + 1 + Math.floor(hash(x, y, i + 40) * 14), y + 8 + Math.floor(hash(y, x, i + 41) * 7), O.leafDark);
+  },
+  l(g, x, y) {
+    // The law stone.
+    box(g, x + 3, y + 2, 10, 13, O.stone);
+    box(g, x + 3, y + 2, 10, 1, O.stoneLight);
+    for (let j = 5; j < 13; j += 2) box(g, x + 5, y + j, 6, 1, O.stoneDark);
+  },
+  R(g, x, y) {
+    // A white rose, and beside it a stone head facing it.
+    box(g, x + 4, y + 8, 1, 7, O.leaf);
+    ellipse(g, x + 4, y + 7, 2, 2, '#F4F0EA');
+    ellipse(g, x + 11, y + 11, 3, 3, O.stoneLight);
+    put(g, x + 10, y + 10, O.stoneDark);
+  },
+  p(g, x, y, m) {
+    // The sealed portal: an old stone ring, humming.
+    const left = m.at(-1, 0) !== 'Q';
+    box(g, x, y + 2, TILE, 14, O.stoneDark);
+    box(g, x + (left ? 3 : 0), y + 5, 13, 11, '#1A1030');
+    for (let i = 0; i < 6; i++) put(g, x + 4 + Math.floor(hash(x, y, i) * 9), y + 7 + Math.floor(hash(y, x, i) * 8), '#6A4AB0');
+    box(g, x, y + 2, TILE, 2, O.stoneLight);
+  },
+  Q(g, x, y) {
+    // A faceless statue, toppled face-down in the moss.
+    box(g, x + 2, y + 7, 12, 6, O.stoneDark);
+    box(g, x + 2, y + 6, 12, 5, O.stoneLight);
+    ellipse(g, x + 12, y + 8, 3, 3, O.stoneLight);
+    for (let i = 0; i < 5; i++) put(g, x + 3 + i * 2, y + 11, O.leaf);
+  },
 };
+
+/** The bottom row of a cottage: plaster between timber beams, sitting on a stone footing. */
+function cottageWall(g, x, y, m) {
+  box(g, x, y, TILE, TILE, O.plaster);
+  box(g, x, y, TILE, 1, O.beam);
+  if (m.at(-1, 0) !== 'H' && m.at(-1, 0) !== 'D' && m.at(-1, 0) !== 'd') box(g, x, y, 2, TILE, O.beam);
+  if (m.at(1, 0) !== 'H' && m.at(1, 0) !== 'D' && m.at(1, 0) !== 'd') box(g, x + 14, y, 2, TILE, O.beam);
+  box(g, x, y + 14, TILE, 2, O.stoneDark);
+}
 
 function drawOutdoor(map) {
   const rows = map.tiles;
@@ -485,7 +717,7 @@ function drawOutdoor(map) {
   const W = rows[0].length;
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
-  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>';
+  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>' || at(tx, ty) === '<' || at(tx, ty) === 's';
 
   // Grass everywhere, in soft patches.
   for (let y = 0; y < g.h; y++)
@@ -516,7 +748,10 @@ function drawOutdoor(map) {
             (j < 2 && !isPath(tx, ty - 1)) ||
             (j > 13 && !isPath(tx, ty + 1));
           if (nearEdge && hash(px, py, 8) < 0.5) continue;
-          let c = hex(O.dirt[Math.floor(hash(Math.floor(px / 3), Math.floor(py / 2), 9) * 3)]);
+          const cobble = at(tx, ty) === 's';
+          let c = cobble
+            ? hex((px % 6 === 0 || py % 5 === 0) ? O.stoneDark : O.stone)
+            : hex(O.dirt[Math.floor(hash(Math.floor(px / 3), Math.floor(py / 2), 9) * 3)]);
           if (hash(px, py, 10) < 0.03) c = hex(O.pebble);
           else if (hash(px, py, 11) < 0.04) c = hex(O.dirtDark);
           g[py][px] = c;
@@ -526,10 +761,268 @@ function drawOutdoor(map) {
   // Trees last, row by row, so lower canopies overlap the ones behind them.
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
-      const draw = OUTDOOR_ART[at(tx, ty)];
+      const draw = OUTDOOR_ART[map.art?.[at(tx, ty)] ?? at(tx, ty)];
       if (!draw) throw new Error(`No outdoor art for tile "${at(tx, ty)}" in ${map.id}`);
       draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
     }
+  return g;
+}
+
+// ---------------------------------------------------------------------------
+// Dungeons: the Buried Barracks first. Cold stone, old timber, the Hales' banners.
+
+const DG = {
+  earth: '#0C0908',
+  wall: '#4A4440',
+  wallLight: '#625A54',
+  wallDark: '#2E2A28',
+  mortar: '#3A3432',
+  floor: ['#3A3634', '#36322F', '#403B37'],
+  floorLine: '#2A2624',
+  rubble: '#5A524C',
+  timber: '#5A3E28',
+  timberDark: '#3A2818',
+  iron: '#3A3A42',
+  ironLight: '#6A6A78',
+  rust: '#8A4A2A',
+  banner: '#6A1E22',
+  bannerDark: '#4A1216',
+  gold: '#C8963A',
+  straw: '#A8904A',
+  blanket: '#4A5A6A',
+  plate: '#6A6A5A',
+};
+
+/** The Hales' sigil: an open hand holding a sword by the blade. */
+function haleSigil(g, x, y) {
+  box(g, x + 7, y, 2, 9, DG.ironLight);
+  box(g, x + 5, y + 9, 6, 1, DG.gold);
+  box(g, x + 4, y + 3, 8, 4, '#E8C8A0');
+  box(g, x + 4, y + 2, 1, 2, '#E8C8A0');
+}
+
+const DUNGEON_ART = {
+  '#'(g, x, y) {
+    box(g, x, y, TILE, TILE, DG.earth);
+  },
+  '.'() {},
+  ','(g, x, y) {
+    for (let i = 0; i < 6; i++) put(g, x + 2 + Math.floor(hash(x, y, i) * 12), y + 2 + Math.floor(hash(y, x, i) * 12), DG.rubble);
+  },
+  W(g, x, y, m) {
+    // Stone wall: a face where the floor meets it, a top view elsewhere.
+    const face = m.at(0, 1) !== 'W' && m.at(0, 1) !== '#' && m.at(0, 1) !== 'B' && m.at(0, 1) !== 'C' && m.at(0, 1) !== 'c';
+    if (!face) {
+      box(g, x, y, TILE, TILE, DG.wallDark);
+      box(g, x, y, TILE, 1, DG.mortar);
+      return;
+    }
+    box(g, x, y, TILE, TILE, DG.wall);
+    for (let j = 0; j < TILE; j += 4) {
+      box(g, x, y + j, TILE, 1, DG.mortar);
+      const off = (j / 4) % 2 ? 4 : 12;
+      box(g, x + off, y + j, 1, 4, DG.mortar);
+    }
+    box(g, x, y + 14, TILE, 2, DG.wallDark);
+  },
+  B(g, x, y, m) {
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 3, y + 1, 10, 13, DG.banner);
+    box(g, x + 3, y + 1, 10, 1, DG.gold);
+    box(g, x + 3, y + 13, 3, 2, DG.banner);
+    box(g, x + 10, y + 13, 3, 2, DG.banner);
+    haleSigil(g, x, y + 3);
+  },
+  c(g, x, y, m) {
+    // A wall torch: the dungeon's save point.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 7, y + 7, 2, 6, DG.timber);
+    ellipse(g, x + 8, y + 5, 2, 3, P.flame2);
+    put(g, x + 8, y + 4, P.flame);
+  },
+  C(g, x, y, m) {
+    // A cracked wall: something strong could break through.
+    DUNGEON_ART.W(g, x, y, m);
+    const crack = [[8, 1], [7, 3], [9, 5], [8, 7], [6, 9], [9, 11], [8, 13]];
+    for (const [cx, cy] of crack) box(g, x + cx, y + cy, 2, 2, DG.earth);
+    box(g, x + 4, y + 8, 3, 1, DG.earth);
+    box(g, x + 10, y + 4, 3, 1, DG.earth);
+  },
+  o(g, x, y, m) {
+    // A ragged hole broken through the wall.
+    DUNGEON_ART.W(g, x, y, m);
+    ellipse(g, x + 8, y + 9, 6, 7, DG.earth);
+    for (let i = 0; i < 5; i++) put(g, x + 3 + i * 3, y + 15, DG.rubble);
+  },
+  E(g, x, y, m) {
+    // A stone archway.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 2, y + 2, 12, 14, DG.earth);
+    box(g, x + 1, y + 1, 14, 2, DG.wallLight);
+  },
+  G(g, x, y, m) {
+    // A portcullis, down.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 1, y + 1, 14, 15, DG.earth);
+    for (let i = 2; i < 15; i += 3) box(g, x + i, y + 1, 1, 15, DG.iron);
+    for (let j = 4; j < 16; j += 4) box(g, x + 1, y + j, 14, 1, DG.iron);
+  },
+  H(g, x, y) {
+    // A ladder.
+    box(g, x + 3, y, 2, TILE, DG.timber);
+    box(g, x + 11, y, 2, TILE, DG.timber);
+    for (let j = 2; j < TILE; j += 4) box(g, x + 3, y + j, 10, 2, DG.timberDark);
+  },
+  b(g, x, y) {
+    // A bunk, straw mattress and a grey blanket.
+    box(g, x + 1, y + 2, 14, 13, DG.timber);
+    box(g, x + 2, y + 3, 12, 10, DG.straw);
+    box(g, x + 2, y + 7, 12, 6, DG.blanket);
+  },
+  t(g, x, y) {
+    box(g, x, y + 4, TILE, 8, DG.timber);
+    box(g, x, y + 11, TILE, 1, DG.timberDark);
+    box(g, x + 1, y + 12, 2, 4, DG.timberDark);
+    box(g, x + 13, y + 12, 2, 4, DG.timberDark);
+  },
+  r(g, x, y) {
+    // A weapon rack of rusted spears.
+    box(g, x + 1, y + 12, 14, 2, DG.timber);
+    for (let i = 3; i < 14; i += 4) {
+      box(g, x + i, y + 1, 1, 12, DG.timberDark);
+      box(g, x + i - 1, y, 3, 3, DG.rust);
+    }
+  },
+  d(g, x, y) {
+    // A drill dummy: straw on a post.
+    box(g, x + 7, y + 8, 2, 8, DG.timber);
+    ellipse(g, x + 8, y + 6, 4, 5, DG.straw);
+    box(g, x + 3, y + 5, 10, 2, DG.timber);
+  },
+  P(g, x, y) {
+    // A pressure plate set into the floor.
+    box(g, x + 2, y + 2, 12, 12, DG.floorLine);
+    box(g, x + 3, y + 3, 10, 10, DG.plate);
+    box(g, x + 3, y + 3, 10, 1, DG.ironLight);
+  },
+  O(g, x, y) {
+    ellipse(g, x + 8, y + 10, 7, 6, DG.wallDark);
+    ellipse(g, x + 7, y + 8, 6, 5, DG.wall);
+    ellipse(g, x + 5, y + 6, 2, 1, DG.wallLight);
+  },
+  x(g, x, y) {
+    ellipse(g, x + 8, y + 10, 7, 5, DG.wallDark);
+    for (let i = 0; i < 8; i++) ellipse(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 6 + Math.floor(hash(y, x, i) * 7), 2, 2, i % 2 ? DG.rubble : DG.wall);
+  },
+  L(g, x, y) {
+    // A crate with a note pinned to it.
+    box(g, x + 2, y + 5, 12, 10, DG.timber);
+    box(g, x + 2, y + 9, 12, 1, DG.timberDark);
+    box(g, x + 6, y + 3, 5, 6, P.paper);
+    put(g, x + 8, y + 4, DG.rust);
+  },
+  R(g, x, y, m) {
+    // A duty roster, nailed to the wall.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 2, y + 2, 12, 11, P.paper);
+    for (let j = 4; j < 12; j += 2) box(g, x + 4, y + j, 8, 1, '#8A7A60');
+  },
+  A(g, x, y) {
+    // An empty suit of armour on a stand.
+    box(g, x + 7, y + 13, 2, 3, DG.timber);
+    ellipse(g, x + 8, y + 3, 3, 3, DG.ironLight);
+    box(g, x + 5, y + 6, 6, 7, DG.iron);
+    box(g, x + 5, y + 6, 6, 1, DG.ironLight);
+    box(g, x + 7, y + 3, 2, 1, DG.earth);
+  },
+  S(g, x, y, m) {
+    // Baron Plush's great sofa, velvet and tassels.
+    const left = m.at(-1, 0) !== 'S';
+    const right = m.at(1, 0) !== 'S';
+    box(g, x, y + 3, TILE, 12, '#6A2A6A');
+    box(g, x, y + 3, TILE, 4, '#8A3A8A');
+    if (left) box(g, x, y + 1, 4, 14, '#5A205A');
+    if (right) box(g, x + 12, y + 1, 4, 14, '#5A205A');
+    for (let i = 2; i < 14; i += 4) put(g, x + i, y + 14, DG.gold);
+  },
+  V(g, x, y) {
+    // A winch lever and its chain.
+    box(g, x + 4, y + 11, 8, 4, DG.iron);
+    box(g, x + 7, y + 3, 2, 9, DG.ironLight);
+    ellipse(g, x + 8, y + 3, 2, 2, DG.rust);
+    for (let j = 0; j < 3; j++) box(g, x + 12, y + j * 2, 2, 1, DG.iron);
+  },
+  Y(g, x, y, m) {
+    // The Throne of a Hundred Challengers: a heap of tagged weapons, drawn once.
+    if (m.at(-1, 0) === 'Y') return;
+    box(g, x, y + 2, 48, 14, DG.wallDark);
+    for (let i = 0; i < 16; i++) {
+      const bx = x + 2 + Math.floor(hash(x, i, 1) * 44);
+      const by = y + 1 + Math.floor(hash(i, y, 2) * 10);
+      box(g, bx, by, 1, 6, i % 3 ? DG.ironLight : DG.rust);
+    }
+    box(g, x + 18, y + 6, 12, 10, DG.banner);
+    box(g, x + 18, y + 6, 12, 1, DG.gold);
+  },
+  k(g, x, y) {
+    // A candle on an iron stand: rest here.
+    box(g, x + 7, y + 7, 2, 9, P.iron);
+    box(g, x + 5, y + 14, 6, 2, P.iron);
+    box(g, x + 7, y + 3, 2, 4, P.wax);
+    put(g, x + 7, y + 2, P.flame);
+    put(g, x + 8, y + 1, P.flame2);
+  },
+};
+
+function drawDungeon(map) {
+  const rows = map.tiles;
+  const H = rows.length;
+  const W = rows[0].length;
+  const g = canvas(W * TILE, H * TILE);
+  const at = (tx, ty) => rows[ty]?.[tx] ?? '#';
+  // Worn flagstones everywhere first.
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) {
+      const stone = Math.floor(x / 8) + Math.floor(y / 8) * 7;
+      let c = hex(DG.floor[Math.floor(hash(stone, 1, 3) * 3)]);
+      if (x % 8 === 0 || y % 8 === 0) c = hex(DG.floorLine);
+      else if (hash(x, y, 4) < 0.04) c = mix(c, hex(DG.floorLine), 0.6);
+      g[y][x] = c;
+    }
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      // Pushable boulders are drawn by the game, so they can move; bake plain floor under them.
+      const letter = map.pushable === at(tx, ty) ? '.' : at(tx, ty);
+      const draw = DUNGEON_ART[map.art?.[letter] ?? letter];
+      if (!draw) throw new Error(`No dungeon art for tile "${at(tx, ty)}" in ${map.id}`);
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+    }
+  // Shadow under the walls, and torchlight around each torch and candle.
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      const c = at(tx, ty);
+      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+        for (let j = 0; j < 5; j++)
+          for (let i = 0; i < TILE; i++) {
+            const px = tx * TILE + i;
+            const py = ty * TILE + j;
+            g[py][px] = mix(g[py][px], hex('#000000'), dither(0.5 - j * 0.1, px, py));
+          }
+    }
+  rows.forEach((r, ty) =>
+    [...r].forEach((c, tx) => {
+      if (c !== 'c' && c !== 'k') return;
+      const lx = tx * TILE + 8;
+      const ly = ty * TILE + 6;
+      const R = 52;
+      for (let y = ly - R; y < ly + R; y++)
+        for (let x = lx - R; x < lx + R; x++) {
+          if (y < 0 || x < 0 || y >= g.h || x >= g.w || at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#') continue;
+          const d = Math.hypot(x - lx, (y - ly) * 1.1) / R;
+          if (d < 1) g[y][x] = mix(g[y][x], hex('#FFA040'), dither(0.28 * (1 - d) ** 2, x, y));
+        }
+    }),
+  );
   return g;
 }
 
@@ -556,6 +1049,36 @@ const WALKERS = {
   pip: { top: '#FF4FD8', shade: '#8B5CF6', legs: '#3E7A4A', boots: '#6A4028', hair: ['spiky', '#D86A2A'], back: 'lute', patchwork: ['#FF4FD8', '#2DD4BF', '#FFC940', '#8B5CF6'] },
   tamsin: { top: '#FF8A3D', shade: '#FF8A3D', legs: '#3A3848', boots: '#1E1A24', hair: ['short', '#2A2030'], apron: '#7A4A2A', goggles: '#FF8A3D' },
   moss: { top: '#3E6A3A', shade: '#4E3622', legs: '#4A3A2A', boots: '#2A2020', hair: ['short', '#4E3A22'], cloak: '#6A4A30', leaves: '#4ADE80' },
+  pell: { top: '#C8A040', shade: '#8A6A28', legs: '#5A4A3A', boots: '#6A4028', belt: '#6A4028', hair: ['spiky', '#8A4A2A'] },
+  hesper: { top: '#8A5A7A', shade: '#6A4460', legs: '#4A3A40', boots: '#3A2A20', hair: ['bun', '#B8B0A8'], apron: '#E8E0D0' },
+  jory: { top: '#6A8A4A', shade: '#4E6A36', legs: '#6A5A40', boots: '#4A3020', belt: '#4A3020', hair: ['short', '#C8A060'], apron: '#8A6A40' },
+  wenna: { robe: true, top: '#7A6A9A', shade: '#5A4A7A', boots: '#3A2A30', hair: ['bun', '#E8E4E0'], collar: '#E8E0D0' },
+  oriel: { robe: true, top: '#3A2A6A', shade: '#2A1E50', boots: '#2A2030', belt: '#FFC940', hair: ['veil', '#8A3A8A'], beads: '#FFC940' },
+  hoot: { robe: true, top: '#8A6A44', shade: '#6A4E30', boots: '#C8A040', belt: '#B3261E', hair: ['bald', '#9A7A54'], glasses: true },
+  holt: { top: '#7A6A4A', shade: '#5A4E36', legs: '#4A4038', boots: '#3A2A20', belt: '#3A2A20', hair: ['short', '#6A6A6A'], beard: '#8A8A8A' },
+  mira: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#4A3A2A', boots: '#3A2A20', belt: '#6A4028', hair: ['short', '#2A1A12'], back: 'sword', cloak: '#3A4A2A' },
+  fen: { robe: true, top: '#6A5A4A', shade: '#4E4236', boots: '#3A2A20', hair: ['bald', '#C8B8A0'], beard: '#D8D0C0' },
+  dunn: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#1A1A24', skin: '#8A8AA0', hair: ['short', '#2A2A3A'] },
+  bellwether: { top: '#6A6A78', shade: '#4A4A58', legs: '#4A4A58', boots: '#3A3A42', belt: '#8A4A2A', skin: '#6A6A78', hair: ['hood', '#6A6A78'] },
+  quartermaster: { robe: true, top: '#B8C0C8', shade: '#8A94A0', boots: '#8A94A0', skin: '#D8E0E8', hair: ['bald', '#C8D0D8'], glasses: true },
+  plush: { robe: true, top: '#8A5AA0', shade: '#6A4280', boots: '#E8C0D0', belt: '#FFC940', hair: ['hood', '#E8E0F0'], beads: '#FFC940' },
+  sleeper: { top: '#C8B8E0', shade: '#A898C0', legs: '#A898C0', boots: '#E8C0D0', belt: '#8A5AA0', hair: ['short', '#6A4A30'], collar: '#E8E0F0' },
+  bo: { top: '#E84A4A', shade: '#FFC940', legs: '#3A3A8A', boots: '#2A2020', hair: ['spiky', '#FFC940'], patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'] },
+  raider: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#3A2418'], beard: '#3A2418', back: 'sword' },
+  gert: { robe: true, top: '#6A6A5A', shade: '#4E4E42', boots: '#3A3A30', hair: ['short', '#8A8A7A'], lantern: true },
+  tessa: { top: '#E8E0D0', shade: '#C8B8A0', legs: '#6A5A4A', boots: '#4A3A2A', hair: ['bun', '#8A4A2A'], apron: '#F4F0EA' },
+  barnaby: { top: '#8A2A2A', shade: '#6A1E1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#FFC940', hair: ['short', '#4A3A2A'], hat: 'wizard' },
+  pim: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
+  varga: { top: '#5A3A3A', shade: '#3E2828', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#1A1210'], back: 'sword', cloak: '#6A1216' },
+  brunna: { top: '#8A6A4A', shade: '#6A4E36', legs: '#6A4E36', boots: '#4A3A2A', hair: ['short', '#C8A060'] },
+  nana: { robe: true, top: '#6A8AA0', shade: '#4E6A80', boots: '#3A2A20', hair: ['bun', '#E8E4E0'], apron: '#F4F0EA' },
+  harrow: { top: '#5A4A3A', shade: '#3E3228', legs: '#3A2A20', boots: '#2A1A12', hair: ['bald', '#E8B48C'], beard: '#B8B0A8', apron: '#3A2A1A' },
+  hugo: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#5A4A3A', boots: '#3A2A20', hair: ['short', '#8A7A6A'], beard: '#8A7A6A', leaves: '#4ADE80' },
+  aurek: { top: '#7A8A7A', shade: '#5A6A5A', legs: '#5A6A5A', boots: '#3A4A3A', skin: '#A8B8A8', hair: ['short', '#5A6A5A'], back: 'sword' },
+  kaldor: { top: '#3A2A2A', shade: '#6A1216', legs: '#2A1A1A', boots: '#1A1010', belt: '#FFC940', skin: '#D8A880', hair: ['hood', '#8A8A9A'], beard: '#C4442A', back: 'sword', cloak: '#6A1216' },
+  shadow: { top: '#1E1A2E', shade: '#141024', legs: '#141024', boots: '#0A0812', belt: '#2E2A40', skin: '#3A3450', hair: ['short', '#141024'], back: 'sword' },
+  rusted: { top: '#8A5A3A', shade: '#6A4028', legs: '#6A4028', boots: '#4A2A18', belt: '#3A2A20', skin: '#8A5A3A', hair: ['hood', '#8A5A3A'] },
+  echo: { top: '#5A5A8A', shade: '#3A3A6A', legs: '#3A3A6A', boots: '#2A2A4A', belt: '#8A8AC0', skin: '#8A8AB8', hair: ['short', '#3A3A6A'], beard: '#6A6A9A' },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -889,13 +1412,40 @@ function drawWalkers() {
 
 // ---------------------------------------------------------------------------
 
-const MAPS = ['archive', 'courier-road'];
+const MAPS = [
+  'archive',
+  'courier-road',
+  'millbrook',
+  'waystation',
+  'deserters-camp',
+  'barracks-hall',
+  'barracks-armoury',
+  'officers-mess',
+  'barracks-yard',
+  'pit-below',
+  'lower-barracks',
+  'sleeping-keep',
+  'march-road',
+  'kingdom-town',
+  'candle-inn',
+  'forge',
+  'chapel',
+  'old-kings-crypt',
+  'hedge-maze',
+  'the-pit',
+  'war-doors',
+  'war-hall',
+  'field-of-banners',
+];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {
   const map = JSON.parse(readFileSync(`src/world/maps/${id}.json`, 'utf8'));
   const widths = new Set(map.tiles.map((r) => r.length));
   if (widths.size !== 1) throw new Error(`${id}: rows have different lengths (${[...widths].join(', ')})`);
-  writeFileSync(`assets/world/${id}.png`, toPng(map.style === 'outdoor' ? drawOutdoor(map) : drawMap(map)));
+  writeFileSync(
+    `assets/world/${id}.png`,
+    toPng(map.style === 'outdoor' ? drawOutdoor(map) : map.style === 'dungeon' ? drawDungeon(map) : drawMap(map)),
+  );
 }
 const { g, ids } = drawWalkers();
 writeFileSync('assets/world/walkers.png', toPng(g));

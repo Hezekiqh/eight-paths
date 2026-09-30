@@ -13,6 +13,8 @@ export type Dialogue = {
   questions?: Question[];
   /** Runs once the conversation closes (e.g. stepping through a door). */
   then?: () => void;
+  /** A decision at the end of the lines: each option runs its own `then`, instead of the usual goodbye. */
+  choices?: { label: string; then: () => void }[];
 };
 
 type Props = {
@@ -40,6 +42,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const line = lines[index];
   const last = index === lines.length - 1;
   const questions = dialogue.questions ?? [];
+  const choices = dialogue.choices ?? [];
 
   const advance = () => {
     if (!typed) {
@@ -48,7 +51,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     }
     haptics.select();
     if (last) {
-      if (questions.length > 0) setAsking(true);
+      if (questions.length > 0 || choices.length > 0) setAsking(true);
       else onClose();
       return;
     }
@@ -83,13 +86,26 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
           {questions.map((q) => (
             <Choice key={q.ask} label={q.ask} onPress={() => ask(q)} />
           ))}
-          <Choice
-            label="Goodbye."
-            onPress={() => {
-              haptics.select();
-              onClose();
-            }}
-          />
+          {choices.map((c) => (
+            <Choice
+              key={c.label}
+              label={c.label}
+              onPress={() => {
+                haptics.select();
+                onClose();
+                c.then();
+              }}
+            />
+          ))}
+          {choices.length === 0 && (
+            <Choice
+              label="Goodbye."
+              onPress={() => {
+                haptics.select();
+                onClose();
+              }}
+            />
+          )}
         </View>
       </View>
     );
@@ -113,7 +129,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
           style={styles.text}
           onDone={() => setTyped(true)}
         />
-        {typed && <Text style={styles.more}>{last && questions.length === 0 ? '■' : '▼'}</Text>}
+        {typed && <Text style={styles.more}>{last && questions.length === 0 && choices.length === 0 ? '■' : '▼'}</Text>}
       </View>
     </Pressable>
   );

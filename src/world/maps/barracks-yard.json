@@ -1,0 +1,77 @@
+{
+  "id": "barracks-yard",
+  "name": "The Drill Yard",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "tiles": [
+    "################",
+    "#WWWWWBGGBWWWWW#",
+    "#W............W#",
+    "#W............W#",
+    "#W...O........W#",
+    "#W..........O.W#",
+    "#W.....PPP....W#",
+    "#W............W#",
+    "#W..O.........W#",
+    "#W.........d..W#",
+    "#W.......dHd..W#",
+    "#WWWWWWWEEWWWWW#",
+    "################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 10,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "High walls. Once, a whole regiment drilled in here."
+    ],
+    "B": [
+      "A drill banner, stitched with a formation: three shields, side by side, in a row.",
+      "\"Shields together. No one stands alone.\""
+    ],
+    "G": [
+      "A portcullis. Three plates in the floor, and three sets of chains running from them up to the gate."
+    ],
+    "P": [
+      "A pressure plate, worn smooth by boots. It won't stay down on its own."
+    ],
+    "O": [
+      "A heavy boulder. You could push it, if you leaned in."
+    ],
+    "d": [
+      "A straw drill dummy, stabbed a thousand times. It has a face drawn on. It looks tired."
+    ],
+    "H": [
+      "A ladder, hidden behind the dummies, going down into the dark."
+    ],
+    "E": [
+      "The way back to the hall."
+    ]
+  },
+  "objects": [],
+  "pushable": "O",
+  "platesFlag": "yard-plates",
+  "enemies": [
+    {
+      "kind": "echo",
+      "x": 12,
+      "y": 2
+    },
+    {
+      "kind": "shadow",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "kind": "shadow",
+      "x": 12,
+      "y": 8
+    }
+  ]
+}

@@ -70,7 +70,7 @@ export default function TabsLayout() {
         </TabTrigger>
         {/* Last, since opening it turns the phone sideways. The quest board inside holds the objectives. */}
         <TabTrigger name="world" href="/world" asChild>
-          <RetroTabButton label="World" icon="gamepad" badge={unclaimed > 0} />
+          <RetroTabButton label="Other World" icon="gamepad" badge={unclaimed > 0} />
         </TabTrigger>
       </TabList>
     </Tabs>

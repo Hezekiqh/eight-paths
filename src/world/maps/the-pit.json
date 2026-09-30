@@ -1,0 +1,65 @@
+{
+  "id": "the-pit",
+  "name": "The Kaldorium",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "################",
+    "#WWWWBWWWWBWWWW#",
+    "#W,,,,,,,,,,,,W#",
+    "#W,..........,W#",
+    "#W,..........,W#",
+    "#W,..........,W#",
+    "#W,..........,W#",
+    "#W,,,,,,,,,,,,W#",
+    "#WWWWWW11WWWWWW#",
+    "################"
+  ],
+  "spawn": {
+    "x": 7,
+    "y": 6,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "The champions' wall: three hundred years of names, each crossed out when they fell. The newest line is blank."
+    ],
+    "1": [
+      "The way out to the street."
+    ]
+  },
+  "objects": [],
+  "art": {
+    "1": "E"
+  },
+  "boss": {
+    "flag": "pit-champion",
+    "x": 7,
+    "y": 2,
+    "kind": "raider",
+    "bearers": [
+      [
+        4,
+        3
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        7,
+        3
+      ]
+    ],
+    "intro": {
+      "speaker": "Barnaby Loudmouth",
+      "lines": [
+        "HEAR YE! In this corner: a stranger! And their very large, very nervous friend!",
+        "In the other corner: THREE OF THE KING'S OWN! FIGHT!"
+      ]
+    }
+  }
+}

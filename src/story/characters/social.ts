@@ -142,4 +142,15 @@ export const SOCIAL = {
     bio: 'A diplomat in a silver sash who once ended a war by inviting both armies to dinner. Charming, patient and a truly excellent cook.',
     quote: 'Nobody fights with their mouth full.',
   },
+  aldane: {
+    number: 110,
+    rarity: 4,
+    alignment: 'Neutral Good',
+    name: 'Widow Aldane',
+    dimension: 'social',
+    kind: 'recruit',
+    unlockLevel: 18,
+    bio: "A widow of the Berserker Kingdom whose family has hidden the old king's portrait under her floorboards for five hundred years. She remembers everything her grandmothers told her, and tells it, at length, to anyone who sits still.",
+    quote: 'My family kept his portrait for five hundred years. It was worth it.',
+  },
 } satisfies Record<string, CharacterData>;

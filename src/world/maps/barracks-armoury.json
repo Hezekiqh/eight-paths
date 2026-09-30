@@ -1,0 +1,80 @@
+{
+  "id": "barracks-armoury",
+  "name": "The Armoury",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "tiles": [
+    "##############",
+    "#WWWWBWWWWCWW#",
+    "#W.r.r..V....W",
+    "#W...........W",
+    "#1...A..A....W",
+    "#W...........W",
+    "#W.r.r.....A.W",
+    "#WWWWWWWWWWWWW",
+    "##############"
+  ],
+  "spawn": {
+    "x": 2,
+    "y": 4,
+    "facing": "right"
+  },
+  "examine": {
+    "W": [
+      "Cold stone. Scratched into it: tallies, hundreds of them."
+    ],
+    "B": [
+      "The open-hand banner, scorched along one edge."
+    ],
+    "C": [
+      "The wall here is cracked from floor to ceiling. Cold air whistles through.",
+      "Something strong could break it open."
+    ],
+    "r": [
+      "A rack of spears, rusted into one solid lump."
+    ],
+    "A": [
+      "An empty suit of armour on a stand. You're almost sure it just moved."
+    ],
+    "V": [
+      "A winch lever, stiff with rust. A chain runs from it up into the ceiling, toward the hall."
+    ],
+    "1": [
+      "The hole back to the hall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "bellwether",
+      "type": "npc",
+      "x": 7,
+      "y": 5,
+      "sprite": "bellwether",
+      "facing": "down",
+      "name": "Bellwether",
+      "lines": [
+        "…",
+        "(The empty armour tilts its helm at you. It seems friendly. It seems to be waiting for something.)"
+      ]
+    }
+  ],
+  "art": {
+    "1": "o"
+  },
+  "enemies": [
+    {
+      "kind": "rusted",
+      "x": 10,
+      "y": 4
+    },
+    {
+      "kind": "rusted",
+      "x": 3,
+      "y": 5
+    }
+  ]
+}

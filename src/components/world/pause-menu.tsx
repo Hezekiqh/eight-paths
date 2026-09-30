@@ -3,6 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Segmented } from '@/components/segmented';
 import { ObjectivesPanel } from '@/components/world/objectives-panel';
 import { haptics } from '@/haptics';
+import { CLASSES } from '@/game';
+import { COMPANIONS } from '@/story/companions';
+import type { HeroId } from '@/world/hero';
 import type { MapId } from '@/world/maps';
 import type { ControlScheme } from '@/world/store';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
@@ -29,6 +32,10 @@ type Props = {
   /** The upright World menu: lore, objectives, what's coming. */
   onMenu: () => void;
   onLeave: () => void;
+  /** Your party members who can walk the World, the one walking now, and swapping. */
+  party: HeroId[];
+  hero: HeroId;
+  onSwap: (hero: HeroId) => void;
 };
 
 /**
@@ -45,6 +52,9 @@ export function PauseMenu({
   onOpenBoard,
   onMenu,
   onLeave,
+  party,
+  hero,
+  onSwap,
 }: Props) {
   return (
     <View style={styles.scrim}>
@@ -61,7 +71,29 @@ export function PauseMenu({
           <View style={styles.column}>
             <View style={styles.actions}>
               <MenuItem label="Map" onPress={onOpenMap} grow />
-              <MenuItem label="Other World" onPress={onMenu} grow />
+              <MenuItem label="Other World menu" onPress={onMenu} grow />
+            </View>
+            <Text style={styles.section}>WALKING AS</Text>
+            <View style={styles.party}>
+              {party.map((id) => {
+                const c = COMPANIONS[id];
+                const on = id === hero;
+                return (
+                  <Pressable
+                    key={id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    accessibilityLabel={`${c.name}, ${CLASSES[c.dimension].className}`}
+                    onPress={() => {
+                      if (on) return;
+                      haptics.select();
+                      onSwap(id);
+                    }}
+                    style={[styles.member, on && { borderColor: CLASSES[c.dimension].color }]}>
+                    <Text style={[styles.memberName, on && { color: CLASSES[c.dimension].color }]}>{c.name}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
             <Text style={styles.section}>CONTROLS</Text>
             <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
@@ -108,6 +140,9 @@ function MenuItem({
 }
 
 const styles = StyleSheet.create({
+  party: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  member: { borderWidth: 2, borderColor: colors.border, paddingHorizontal: 6, paddingVertical: 2 },
+  memberName: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14 },
   scrim: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(8, 5, 10, 0.6)',

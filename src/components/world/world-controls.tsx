@@ -24,6 +24,8 @@ type Props = {
   /** Talk or examine: the A button, or a tap on the touch pad. */
   onAct: () => void;
   onPause: () => void;
+  /** Fight: shown where there's something to fight, in the walking character's colour. */
+  fight?: { color: string; label: string } | null;
 };
 
 /**
@@ -31,7 +33,7 @@ type Props = {
  * Touch pad: put a thumb down anywhere and drag; a quick tap acts. Both keep
  * the A and pause buttons.
  */
-export function WorldControls({ scheme, sim, onAct, onPause }: Props) {
+export function WorldControls({ scheme, sim, onAct, onPause, fight }: Props) {
   const insets = useSafeAreaInsets();
   const left = Math.max(insets.left, 20);
   const right = Math.max(insets.right, 20);
@@ -127,6 +129,23 @@ export function WorldControls({ scheme, sim, onAct, onPause }: Props) {
         <Text style={styles.aLabel}>A</Text>
       </Pressable>
 
+      {fight && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={fight.label}
+          onPressIn={() => {
+            haptics.tap();
+            sim.attackPressed.set(true);
+          }}
+          style={({ pressed }) => [
+            styles.b,
+            { right: right + 88, bottom: bottom + 4, backgroundColor: fight.color },
+            pressed && styles.pressed,
+          ]}>
+          <SymbolView name="bolt.fill" tintColor={colors.background} size={26} />
+        </Pressable>
+      )}
+
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Pause"
@@ -171,6 +190,17 @@ const styles = StyleSheet.create({
     borderWidth: FRAME,
     borderColor: colors.frame,
     backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.9,
+  },
+  b: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: FRAME,
+    borderColor: colors.frame,
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.9,

@@ -1,0 +1,43 @@
+{
+  "id": "chapel",
+  "name": "The Chapel",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "############",
+    "#WWBWWWWBWW#",
+    "#W........W#",
+    "#W.t.t.t..W#",
+    "#W......4.W#",
+    "#W.t.t.t..W#",
+    "#WWWW11WWWW#",
+    "############"
+  ],
+  "spawn": {
+    "x": 6,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "Three empty alcoves where statues once stood. Only their outlines remain, in the soot."
+    ],
+    "t": [
+      "Pews, worn smooth, mostly empty."
+    ],
+    "4": [
+      "A heap of old rubble in the corner. Behind it, the dark seems deeper than it should."
+    ],
+    "1": [
+      "The door back to the street."
+    ]
+  },
+  "objects": [],
+  "art": {
+    "1": "E",
+    "4": "x"
+  }
+}

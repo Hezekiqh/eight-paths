@@ -1,0 +1,83 @@
+{
+  "id": "candle-inn",
+  "name": "The Candle Inn",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "############",
+    "#WWWBWWWWWW#",
+    "#W.t..t..kW#",
+    "#W.t..t...W#",
+    "#W......L.W#",
+    "#W.bb..bb.W#",
+    "#WWWW11WWWW#",
+    "############"
+  ],
+  "spawn": {
+    "x": 5,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "A faded banner, turned to face the wall: the open hand holding a sword by the blade."
+    ],
+    "t": [
+      "Long tables, scrubbed clean. Horde and townsfolk eat here side by side and pretend not to see each other."
+    ],
+    "k": [
+      "A candle that never burns down. Rest here."
+    ],
+    "L": [
+      "A tally over the bar: DAYS SINCE THE HORDE PAID FOR A DRINK: 182,500."
+    ],
+    "b": [
+      "A bed. Clean sheets. Somebody still cares about this place."
+    ],
+    "1": [
+      "The door back to the street."
+    ]
+  },
+  "objects": [
+    {
+      "id": "nana",
+      "type": "npc",
+      "x": 7,
+      "y": 4,
+      "sprite": "nana",
+      "facing": "down",
+      "name": "Nana Birch",
+      "lines": [
+        "Sit. Eat. You're too thin. Everyone's too thin.",
+        "I feed the horde too. A full belly swings a slower axe."
+      ],
+      "questions": [
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king hasn't aged a day since my great-great-grandmother's time. Nobody finds that odd. I find that odd."
+          ]
+        },
+        {
+          "ask": "Tell me about the old days.",
+          "answer": [
+            "My family kept an inn for the old king, too. The Hales. A king who asked the cook how the soup was.",
+            "Mad as a bag of cats by the end, they say. But he asked about the soup."
+          ]
+        },
+        {
+          "ask": "Why does strength matter?",
+          "answer": [
+            "Because you can't carry anyone if you can't carry yourself. Now eat."
+          ]
+        }
+      ]
+    }
+  ],
+  "art": {
+    "1": "E"
+  }
+}

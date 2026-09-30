@@ -29,8 +29,8 @@ export const TOUR_STEPS: TourStep[] = [
     line: "Your Journey remembers every day you've walked, so you can see how far you've come.",
   },
   {
-    target: 'tab:World',
-    line: 'Out there is the World. The stronger your habits make you, the farther you can go. Your objectives wait on the quest board inside.',
+    target: 'tab:Other World',
+    line: 'Out there is the Other World. The stronger your habits make you, the farther you can go. Your objectives wait on the quest board inside.',
   },
   { line: "The rest you'll find on your own. Go on. I'll be watching." },
 ];

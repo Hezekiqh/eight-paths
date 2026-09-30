@@ -4,7 +4,7 @@
 export const WALKER_FRAME = { width: 16, height: 24, feet: 22 };
 
 /** Column blocks in the sheet, three frames each: stand, step A, step B. */
-export const WALKER_DIRS = ['down','up','left','right'] as const;
+export const WALKER_DIRS = ['down', 'up', 'left', 'right'] as const;
 
 /** Each walker's row in assets/world/walkers.png. */
 export const WALKER_ROWS = {
@@ -16,7 +16,37 @@ export const WALKER_ROWS = {
   pip: 5,
   tamsin: 6,
   moss: 7,
-  keeper: 8,
+  pell: 8,
+  hesper: 9,
+  jory: 10,
+  wenna: 11,
+  oriel: 12,
+  hoot: 13,
+  holt: 14,
+  mira: 15,
+  fen: 16,
+  dunn: 17,
+  bellwether: 18,
+  quartermaster: 19,
+  plush: 20,
+  sleeper: 21,
+  bo: 22,
+  raider: 23,
+  gert: 24,
+  tessa: 25,
+  barnaby: 26,
+  pim: 27,
+  varga: 28,
+  brunna: 29,
+  nana: 30,
+  harrow: 31,
+  hugo: 32,
+  aurek: 33,
+  kaldor: 34,
+  shadow: 35,
+  rusted: 36,
+  echo: 37,
+  keeper: 38,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

@@ -1,0 +1,138 @@
+{
+  "id": "lower-barracks",
+  "name": "The Lower Barracks",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P",
+    "o"
+  ],
+  "tiles": [
+    "############################",
+    "#WWWWWWWWWBWWWWWWWWWWBWWWWW#",
+    "#W..e....W......W.....W..LW#",
+    "#W.......o......o.....o...W#",
+    "#W.......W.bb.bbW.....W...W#",
+    "#WWWWoWWWW.bb.bbWWWoWWWWWWW#",
+    "#W.....W.........W......M.W#",
+    "#W..,..W..bb..bb.W........W#",
+    "#W.....o..bb..bb.o..bb..k.W#",
+    "#W..N..W.........W..bb....W#",
+    "#WWWWWWWWWWWWoWWWWWWWWWWWWW#",
+    "#W.......................,W#",
+    "#W.x..,.........,.....x...W#",
+    "#WWWWWWWWWWWWWWWWWWWWWWKKWW#",
+    "############################"
+  ],
+  "spawn": {
+    "x": 3,
+    "y": 3,
+    "facing": "down"
+  },
+  "examine": {
+    "W": [
+      "Stone and more stone. Holes punched through it everywhere, by someone in a hurry."
+    ],
+    "B": [
+      "The open-hand banner. Someone has drawn a small crown on it in charcoal, and then scribbled it out."
+    ],
+    "e": [
+      "The ladder back up to the drill yard."
+    ],
+    "b": [
+      "A bunk. The blanket's still folded. Soldiers made their beds even on the last morning."
+    ],
+    "x": [
+      "A heap of rubble. The ceiling came down here, long ago."
+    ],
+    "k": [
+      "A candle on an iron stand. Rest here."
+    ],
+    "K": [
+      "A great studded door. Behind it, very faintly: snoring.",
+      "It won't open for you yet. You'd need more strength behind you."
+    ],
+    "L": [
+      "Scratched into a board: \"The prince is hiding in the maze again.\""
+    ],
+    "M": [
+      "Scratched small, low down, where a young soldier sat: \"I miss my mum.\""
+    ],
+    "N": [
+      "A note tucked into a boot: \"If you're reading this, the fort fell and I didn't. Tell Marta I kept her fence straight.\""
+    ]
+  },
+  "objects": [
+    {
+      "id": "quartermaster",
+      "type": "npc",
+      "x": 21,
+      "y": 6,
+      "sprite": "quartermaster",
+      "facing": "down",
+      "name": "The Quartermaster",
+      "lines": [
+        "HALT. Everything must be signed for.",
+        "Everything. Even the end of the world. Especially the end of the world."
+      ],
+      "questions": [
+        {
+          "ask": "Can I have something?",
+          "answer": [
+            "Sign here. And here. And here. Initial there.",
+            "(You sign. The ghost hands you nothing, very officially.)",
+            "The Drill Whistle's on back order. Five hundred years. Any day now."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The Baron's asleep behind the big door. Has been since the end. Took the good sofa, too.",
+            "Never signed for it."
+          ]
+        },
+        {
+          "ask": "Who's snoring?",
+          "answer": [
+            "Baron Plush. Lord of the court, once. Told everyone to rest before the war.",
+            "They rested. Then there wasn't a war. Then there wasn't anything."
+          ]
+        }
+      ]
+    }
+  ],
+  "art": {
+    "e": "H",
+    "K": "E",
+    "M": "L",
+    "N": "L"
+  },
+  "enemies": [
+    {
+      "kind": "shadow",
+      "x": 12,
+      "y": 3
+    },
+    {
+      "kind": "shadow",
+      "x": 20,
+      "y": 7
+    },
+    {
+      "kind": "rusted",
+      "x": 8,
+      "y": 7
+    },
+    {
+      "kind": "shadow",
+      "x": 6,
+      "y": 11
+    },
+    {
+      "kind": "shadow",
+      "x": 20,
+      "y": 11
+    }
+  ]
+}

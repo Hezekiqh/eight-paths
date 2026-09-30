@@ -111,7 +111,7 @@ export default function CharacterScreen() {
           icon="gamepad"
           iconColor={classInfo.color}
           title="Settings"
-          subtitle="Themes, controls, reminders and more, in the World menu"
+          subtitle="Themes, controls, reminders and more, in the Other World menu"
           onPress={() => router.navigate({ pathname: '/world', params: { tab: 'settings' } })}
         />
       </View>

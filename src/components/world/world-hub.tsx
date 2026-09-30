@@ -11,16 +11,17 @@ import { premiumEnabled } from '@/premium/config';
 import { FREE_WORLD_MS, playLeft, usePlaytime } from '@/premium/playtime';
 import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
-import { useObjectives, useToday, useXpTotals } from '@/store/hooks';
+import { useObjectives, useToday } from '@/store/hooks';
 import { COMPANIONS } from '@/story/companions';
 import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
 import { worldHero } from '@/world/hero';
 import { MAPS, type MapId } from '@/world/maps';
 import { EXITS, FINAL_GOAL, describeRequirement, howToProgress, standing } from '@/world/progress';
+import { useWorldProgress } from '@/world/use-progress';
 import { useWorldStore } from '@/world/store';
 
 const TABS = [
-  { value: 'world', label: 'World' },
+  { value: 'world', label: 'Other World' },
   { value: 'settings', label: 'Settings' },
 ] as const;
 type Tab = (typeof TABS)[number]['value'];
@@ -42,7 +43,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const party = useGameStore((s) => s.party);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   const walker = worldHero(picked, party, classDimension);
-  const heroName = walker === 'keeper' ? 'The Keeper' : COMPANIONS[walker].name;
+  const heroName = COMPANIONS[walker].name;
   const place = MAPS[position?.map ?? 'archive'].name;
   // `/world?tab=settings` opens straight on Settings (the Character tab links here).
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -129,7 +130,7 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
 
 function Objectives({ discovered }: { discovered: MapId[] }) {
   const today = useToday();
-  const xp = useXpTotals();
+  const xp = useWorldProgress();
   const objectives = useObjectives(today);
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;
@@ -155,7 +156,7 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
         fraction={final.fraction}
         how={
           final.met
-            ? "You've finished Season 1. The road east stays sealed; keep your Paths strong."
+            ? "You've finished Season 1. The portal stays sealed; keep your Paths strong."
             : `Season 1 ends at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
         }
       />

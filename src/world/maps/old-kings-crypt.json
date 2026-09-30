@@ -1,0 +1,52 @@
+{
+  "id": "old-kings-crypt",
+  "name": "The Old King's Crypt",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "tiles": [
+    "##########",
+    "#WWBWWBWW#",
+    "#W.L..M.W#",
+    "#W..OO..W#",
+    "#W..OO..W#",
+    "#W...k..W#",
+    "#WWW2WWWW#",
+    "##########"
+  ],
+  "spawn": {
+    "x": 4,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "The open-hand banner, laid over the tomb like a blanket."
+    ],
+    "O": [
+      "The tomb of King Osric Hale, carved with an open hand holding a sword by the blade.",
+      "\"He kept the law. The law did not keep him.\""
+    ],
+    "L": [
+      "A chaplain's account of the duel, sealed in wax:",
+      "\"The king's arm failed him, and I saw why. A figure who cast no shadow stood at the barbarian's side. When I looked for it again, it was gone, and I have not slept since.\""
+    ],
+    "M": [
+      "A small empty niche, labelled THE PRINCE. Never filled. They never found a body."
+    ],
+    "k": [
+      "A candle. Somebody still tends it."
+    ],
+    "2": [
+      "The stair back up to the chapel."
+    ]
+  },
+  "objects": [],
+  "art": {
+    "2": "o",
+    "M": "L",
+    "O": "t"
+  }
+}
