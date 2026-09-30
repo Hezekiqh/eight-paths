@@ -88,7 +88,8 @@ export const radius = {
  * numbers are Jersey 10, whose digits stay readable at every size (it runs
  * small, so its sizes are about 1.3× a system font's). Body text is SF Pro:
  * pixel fonts blur below their native size. DotGothic16 is kept for dialogue
- * boxes, only ever at 16 (its pixel grid) and never italic.
+ * boxes, only ever at 16 (its pixel grid) and never italic. The lore scroll
+ * is written in old book faces: IM Fell English, headed in MedievalSharp.
  */
 export const fonts = {
   regular: 'System',
@@ -96,6 +97,9 @@ export const fonts = {
   semibold: 'Jersey10_400Regular',
   bold: 'Jersey10_400Regular',
   dialogue: 'DotGothic16_400Regular',
+  ancient: 'IMFellEnglish_400Regular',
+  ancientItalic: 'IMFellEnglish_400Regular_Italic',
+  medieval: 'MedievalSharp_400Regular',
 } as const;
 
 /** Frame thickness for windows and buttons. */
