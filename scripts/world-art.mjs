@@ -1080,7 +1080,8 @@ const WALKERS = {
   dunn: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#1A1A24', skin: '#8A8AA0', hair: ['short', '#2A2A3A'] },
   bellwether: { top: '#6A6A78', shade: '#4A4A58', legs: '#4A4A58', boots: '#3A3A42', belt: '#8A4A2A', skin: '#6A6A78', hair: ['hood', '#6A6A78'] },
   quartermaster: { robe: true, top: '#B8C0C8', shade: '#8A94A0', boots: '#8A94A0', skin: '#D8E0E8', hair: ['bald', '#C8D0D8'], glasses: true },
-  plush: { robe: true, top: '#8A5AA0', shade: '#6A4280', boots: '#E8C0D0', belt: '#FFC940', hair: ['hood', '#E8E0F0'], beads: '#FFC940' },
+  // matches his collectible: striped sky-blue pajamas, medals, a crown, a white mustache, half-shut eyes
+  plush: { top: '#7AB0E0', shade: '#7AB0E0', legs: '#7AB0E0', boots: '#F0E6C8', skin: '#F2CDA8', hair: ['short', '#E8E4DC'], stripes: '#F0E6C8', medals: true, mustache: '#E8E4DC', sleepy: true, crown: '#F2C14E' },
   sleeper: { top: '#C8B8E0', shade: '#A898C0', legs: '#A898C0', boots: '#E8C0D0', belt: '#8A5AA0', hair: ['short', '#6A4A30'], collar: '#E8E0F0' },
   bo: { top: '#E84A4A', shade: '#FFC940', legs: '#3A3A8A', boots: '#2A2020', hair: ['spiky', '#FFC940'], patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'] },
   raider: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#3A2418'], beard: '#3A2418', sword: true },
@@ -1183,6 +1184,12 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     b(5, 11, 6, 3, w.patchwork[1]);
     b(5, 14, 6, 3, w.patchwork[2]);
   }
+  if (w.stripes) for (const y of [12, 14, 16]) b(side ? 5 : 4, y, side ? 6 : 8, 1, w.stripes);
+  if (w.medals && !back) {
+    const medal = ['#F2C14E', '#C4442A', '#C8CCD8'];
+    if (side) p(dir === 'left' ? 6 : 9, 11, medal[0]);
+    else for (let x = 5; x <= 10; x += 2) p(x, 11, medal[(x - 5) / 2]);
+  }
   if (w.apron) {
     if (dir === 'down') b(5, 12, 6, 6, w.apron);
     else if (back) {
@@ -1260,13 +1267,21 @@ function drawWalker(g, ox, oy, w, dir, frame) {
   const face = dir === 'left' ? 4 : 7; // where the eye sits on a side view (left-facing; right is mirrored)
   b(4, 3, 8, 8, skin);
   if (!back) {
+    // sleepy eyes are half shut: one pixel, not two
     if (side) {
-      p(5, 7, EYE);
       p(5, 8, EYE);
+      if (!w.sleepy) p(5, 7, EYE);
+    } else if (w.sleepy) {
+      b(5, 8, 2, 1, EYE);
+      b(9, 8, 2, 1, EYE);
     } else {
       b(6, 7, 1, 2, EYE);
       b(9, 7, 1, 2, EYE);
     }
+  }
+  if (w.mustache && !back) {
+    if (side) b(4, 9, 2, 1, w.mustache);
+    else b(6, 9, 4, 1, w.mustache);
   }
   void face;
   if (w.skull && !back) {
@@ -1428,9 +1443,10 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     else b(4, 5, 4, 1, w.stitches);
   }
   if (w.crown) {
-    // a thin gold circlet over the hood, points up
-    b(back ? 3 : 4, 1, back ? 10 : 8, 1, w.crown);
-    for (const x of side ? [5, 8, 11] : [4, 7, 8, 11]) p(x, 0, w.crown);
+    // a thin gold circlet, points up: over a hood, or sitting right on the hair
+    const cy = style === 'hood' ? 1 : 2;
+    b(back && style === 'hood' ? 3 : 4, cy, back && style === 'hood' ? 10 : 8, 1, w.crown);
+    for (const x of side ? [5, 8, 11] : [4, 7, 8, 11]) p(x, cy - 1, w.crown);
   }
 
   // a dark outline around the whole silhouette, then a soft shadow at the feet
