@@ -217,6 +217,36 @@ export function pushBoulder(
   return { solid: nextSolid, boulders: nextBoulders };
 }
 
+/**
+ * The boulder the player is leaning on: feet right up against one, straight
+ * ahead in the way they face. -1 if none. Walking into it should push it, not
+ * ease them round it (move() slips walkers past corners, and a lone boulder
+ * always has a gap beside it).
+ */
+export function leaningOn(grid: Grid, boulders: number[], x: number, y: number, facing: number): number {
+  'worklet';
+  if (boulders.length === 0) return -1;
+  const dx = facing === LEFT ? -1 : facing === RIGHT ? 1 : 0;
+  const dy = facing === UP ? -1 : facing === DOWN ? 1 : 0;
+  if (!blocked(grid, x + dx, y + dy)) return -1;
+  // Every tile the feet would step into; lean only if it's a boulder that's in the way, not a wall.
+  const l = Math.floor((x + dx - HALF_WIDTH) / TILE);
+  const r = Math.floor((x + dx + HALF_WIDTH - 0.001) / TILE);
+  const t = Math.floor((y + dy - DEPTH) / TILE);
+  const b = Math.floor((y + dy - 0.001) / TILE);
+  let found = -1;
+  for (let ty = t; ty <= b; ty++) {
+    for (let tx = l; tx <= r; tx++) {
+      const tile = ty * grid.width + tx;
+      if (grid.solid[tile] !== 1) continue;
+      const i = boulderAt(boulders, tile);
+      if (i === -1) return -1;
+      found = i;
+    }
+  }
+  return found;
+}
+
 /** True when every plate has a boulder on it. */
 export function platesCovered(plates: number[], boulders: number[]): boolean {
   'worklet';

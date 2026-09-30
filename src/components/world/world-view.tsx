@@ -20,16 +20,15 @@ import {
   DOWN,
   PUSH_DELAY,
   SPEED,
-  boulderAt,
   byFeet,
   extendTrail,
   facingFor,
   followerAt,
+  leaningOn,
   move,
   platesCovered,
   pushBoulder,
   startTrail,
-  tileAhead,
   walkFrame,
   type Grid,
 } from '@/world/engine';
@@ -251,7 +250,11 @@ export function WorldView({
     if (push > 0.25) {
       sim.facing.set(facingFor(ix, iy, sim.facing.get()));
       const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
-      const [nx, ny] = move(grid, sim.x.get(), sim.y.get(), (ix / push) * SPEED * dt, (iy / push) * SPEED * dt);
+      // Straight into a boulder: lean on it (below) instead of being eased round it.
+      const against = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get()) !== -1;
+      const [nx, ny] = against
+        ? [sim.x.get(), sim.y.get()]
+        : move(grid, sim.x.get(), sim.y.get(), (ix / push) * SPEED * dt, (iy / push) * SPEED * dt);
       const d = Math.abs(nx - sim.x.get()) + Math.abs(ny - sim.y.get());
       if (d > 0.001) {
         moving = true;
@@ -272,12 +275,12 @@ export function WorldView({
     }
 
     // Leaning on a boulder, straight on, for a moment pushes it a tile.
-    let leaningOn = -1;
+    let leanedOn = -1;
     if (push > 0.25 && !moving && rocks.get().length > 0) {
-      const [ax, ay] = tileAhead(sim.x.get(), sim.y.get(), sim.facing.get());
-      leaningOn = boulderAt(rocks.get(), ay * mapWidth + ax);
+      const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
+      leanedOn = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get());
     }
-    if (leaningOn === -1) leaning.set(0);
+    if (leanedOn === -1) leaning.set(0);
     else {
       leaning.set(leaning.get() + dt);
       if (leaning.get() >= PUSH_DELAY) {
@@ -285,7 +288,7 @@ export function WorldView({
         const f = sim.facing.get();
         const dx = f === 2 ? -1 : f === 3 ? 1 : 0;
         const dy = f === 1 ? -1 : f === 0 ? 1 : 0;
-        const pushed = pushBoulder(solid.get(), mapWidth, mapHeight, rocks.get(), leaningOn, dx, dy);
+        const pushed = pushBoulder(solid.get(), mapWidth, mapHeight, rocks.get(), leanedOn, dx, dy);
         if (pushed) {
           solid.set(pushed.solid);
           rocks.set(pushed.boulders);
