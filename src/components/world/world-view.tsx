@@ -1,11 +1,17 @@
 import {
   Atlas,
+  BlendColor,
   Canvas,
   FilterMode,
   Group,
   Image,
   MipmapMode,
   Oval,
+  Paint,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
   Circle,
   Rect,
   useImage,
@@ -35,20 +41,28 @@ import {
 import {
   E_ALIVE,
   E_AWAKE,
+  E_CLANG,
   E_KIND,
+  E_MODE,
+  E_MT,
+  E_STUN,
   E_X,
   E_Y,
   ENEMY_KINDS,
+  EXPOSED,
+  FEEL,
   HEARTS,
-  MERCY,
-  hitAround,
+  PATTERNS,
+  WINDUP,
+  sizeOf,
   spawnEnemy,
-  stepEnemies,
-  strikePoint,
   type Attack,
-  type Enemy,
 } from '@/world/combat';
+import { CHARGE_TIME, startFight, stepFight, type Fight, type Special } from '@/world/fight';
 import { AttackEffects } from '@/components/world/attack-effects';
+import { MAX_GUTTERED, type Ambience } from '@/world/ambience';
+import { playSound, type Effect } from '@/audio';
+import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 
@@ -57,6 +71,36 @@ const WALKERS_IMAGE = require('@/assets/world/walkers.png');
 const FW = WALKER_FRAME.width;
 const FH = WALKER_FRAME.height;
 const FEET = WALKER_FRAME.feet;
+/** Most enemies flashing white at once. */
+const FLASHES = 4;
+
+type Feel = 'swing' | 'charged' | 'hit' | 'kill' | 'hurt' | 'clang' | 'roll' | 'mend' | 'slam' | 'gutter';
+const SOUND: Record<Feel, Effect> = {
+  swing: 'swing',
+  charged: 'charged',
+  hit: 'hit',
+  kill: 'kill',
+  hurt: 'hurt',
+  clang: 'clang',
+  roll: 'roll',
+  mend: 'levelUp',
+  slam: 'slam',
+  gutter: 'gutter',
+};
+const BUZZ: Partial<Record<Feel, () => void>> = {
+  charged: haptics.hit,
+  hit: haptics.hit,
+  kill: haptics.kill,
+  hurt: haptics.hurt,
+  clang: haptics.tap,
+  slam: haptics.kill,
+  gutter: haptics.hit,
+};
+/** Combat's sound and buzz, on the React side. */
+function feel(kind: Feel) {
+  playSound(SOUND[kind]);
+  BUZZ[kind]?.();
+}
 
 /** An NPC's feet: the middle of their tile, near its bottom edge. */
 export const npcFeet = (n: { x: number; y: number }): [number, number] => [
@@ -86,8 +130,13 @@ export type WorldSim = {
   frozen: SharedValue<boolean>;
   /** Hearts left this visit. */
   hp: SharedValue<number>;
-  /** The attack button was pressed; the frame loop takes it. */
+  /** The attack button was pressed (the frame loop takes it), and is held down (for a charged attack). */
   attackPressed: SharedValue<boolean>;
+  attackHeld: SharedValue<boolean>;
+  /** How long the attack's been charging, in seconds. */
+  charge: SharedValue<number>;
+  /** The dodge button was pressed; the frame loop takes it. */
+  dodgePressed: SharedValue<boolean>;
   /** Drowsiness in Baron Plush's fight, 0 to 1. */
   sleepy: SharedValue<number>;
 };
@@ -107,6 +156,9 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     frozen: useSharedValue(false),
     hp: useSharedValue(HEARTS),
     attackPressed: useSharedValue(false),
+    attackHeld: useSharedValue(false),
+    charge: useSharedValue(0),
+    dodgePressed: useSharedValue(false),
     sleepy: useSharedValue(0),
   };
 }
@@ -137,8 +189,21 @@ type Props = {
   /** How the walking character fights, and how hard (their real level adds damage). */
   attack?: Attack;
   damage?: number;
+  /** Hearts to start the fight with (five, plus one per four heart pieces). */
+  hearts?: number;
+  /** Their real level (Lv 10 charges; Lv 20 adds their Path's special), and that special. */
+  level?: number;
+  special?: Special;
   /** Out of hearts. */
   onDefeat?: () => void;
+  /** Chests (open or not) and signs standing on tiles, drawn live so they can change. */
+  chests?: { x: number; y: number; open: boolean }[];
+  signs?: { x: number; y: number }[];
+  /** How dark it is here and what drifts in the air; every flame [x, y, light reach] (see ambience.ts). */
+  ambience?: Ambience;
+  flames?: number[][];
+  /** Kaldor's war hall: each torch that gutters in the fight goes out, and stays out. */
+  snuffable?: boolean;
   /** A boss throwing pillows from here (art pixels), drowsiness filling at `drowsy` a second, and a win when every enemy is down. */
   boss?: { x: number; y: number } | null;
   /** The boss lobs pillows (Baron Plush). */
@@ -168,11 +233,19 @@ export function WorldView({
   onPlates,
   attack,
   damage = 1,
+  level = 1,
+  special = 'spin',
+  hearts = HEARTS,
   onDefeat,
   boss = null,
   throws = false,
   drowsy = 0,
   onWin,
+  chests = [],
+  signs = [],
+  ambience = { darkness: 0, motes: null },
+  flames = [],
+  snuffable = false,
 }: Props) {
   const mapImage = useImage(map.image);
   const walkers = useImage(WALKERS_IMAGE);
@@ -192,29 +265,42 @@ export function WorldView({
   const lastTile = useSharedValue(-1);
   const step = useMemo(() => (onStep ? onStep : () => {}), [onStep]);
 
-  // ---- combat
-  const foes = useSharedValue<Enemy[]>(map.enemies.map((e) => spawnEnemy(e.kind, ...npcFeet(e))));
+  // ---- combat: the whole fight in one value, stepped by stepFight (fight.ts) each frame.
+  const fight = useSharedValue<Fight>(
+    startFight(
+      map.enemies.map((e) => spawnEnemy(e.kind, ...npcFeet(e))),
+      hearts,
+    ),
+  );
   const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
-  const mercy = useSharedValue(0);
-  const dazed = useSharedValue(0);
-  const cooldown = useSharedValue(0);
-  const fallen = useSharedValue(false);
-  /** Flying bolts: [x, y, dx, dy, travelled], per bolt. */
-  const bolts = useSharedValue<number[][]>([]);
-  /**
-   * The last swing or burst: [strike x, strike y, radius, time left, your x, your y, facing, duration]
-   * (see attack-effects.tsx); and the last shout's ring: [x, y, time left].
-   */
-  const flash = useSharedValue<number[]>([0, 0, 0, 0, 0, 0, 0, 0]);
-  const shout = useSharedValue<number[]>([0, 0, 0]);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const bossX = boss ? boss.x : -1;
   const bossY = boss ? boss.y : -1;
-  const winning = useSharedValue(false);
-  /** Pillows in flight: [x, y, dx, dy], and time until the next throw. */
-  const pillows = useSharedValue<number[][]>([]);
-  const throwIn = useSharedValue(1.5);
+  const bolts = useDerivedValue(() => fight.get().bolts);
+  const flash = useDerivedValue(() => fight.get().flash);
+  const ring = useDerivedValue(() => fight.get().ring);
+  const shout = useDerivedValue(() => fight.get().shout);
+  const pillows = useDerivedValue(() => fight.get().pillows);
+  const waves = useDerivedValue(() => fight.get().waves);
+  /** The attack button last frame, to see it go down and come up. */
+  const wasHeld = useSharedValue(false);
+  // ---- game feel: the world holds for a beat on a hit, the screen shakes, struck enemies flash, fallen ones puff.
+  const hitStop = useSharedValue(0);
+  /** [time left, strength in art pixels], and this frame's offset [x, y]. */
+  const shake = useSharedValue<number[]>([0, 0]);
+  const shakeOff = useSharedValue<number[]>([0, 0]);
+  /** Seconds each enemy (by index) still shows white. */
+  const whiteFor = useSharedValue<number[]>(map.enemies.map(() => 0));
+  /** Puffs where enemies fell: [x, y, time left]. */
+  const puffs = useSharedValue<number[][]>([]);
+  /** A blow shrugged off (Kaldor, guarded): a spark [x, y, time left]. */
+  const sparks = useSharedValue<number[]>([0, 0, 0]);
+  /** A torch guttering: the room dims for a moment (seconds left); and how many have gone out for good (war hall). */
+  const gutter = useSharedValue(0);
+  const guttered = useSharedValue(0);
+  /** Seconds since the room opened: flames flicker and motes drift by it. */
+  const clock = useSharedValue(0);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   const npcs = useMemo(
     () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], ...npcFeet(n)] as [number, number, number]),
@@ -227,6 +313,11 @@ export function WorldView({
   const bob = useSharedValue(0);
   /** Four numbers per walker, back to front: sheet x, sheet y, screen x, screen y. */
   const drawList = useSharedValue<number[]>([]);
+  /** The same, for the struck enemies drawn again in white on top, and the ones winding up in red. */
+  const flashList = useSharedValue<number[]>([]);
+  const redList = useSharedValue<number[]>([]);
+  /** Where Kaldor's shadow has come back: [x, y, …]. */
+  const shadowAt = useSharedValue<number[]>([]);
 
   const viewW = width / scale;
   const viewH = height / scale;
@@ -235,13 +326,17 @@ export function WorldView({
 
   const frame = useFrameCallback((info) => {
     'worklet';
-    const dt = Math.min((info.timeSincePreviousFrame ?? 16) / 1000, 0.05);
+    const realDt = Math.min((info.timeSincePreviousFrame ?? 16) / 1000, 0.05);
+    // Hit-stop: for a beat after a hit lands, nothing moves (but flashes, puffs and the shake play on).
+    const stopped = hitStop.get() > 0;
+    hitStop.set(Math.max(0, hitStop.get() - realDt));
+    const dt = stopped ? 0 : realDt;
     let ix = sim.inputX.get();
     let iy = sim.inputY.get();
     const frozen = sim.frozen.get();
-    // Dazed by a shout: you can't move for a moment.
-    dazed.set(Math.max(0, dazed.get() - dt));
-    if (frozen || dazed.get() > 0 || fallen.get()) {
+    // Dazed by a shout, mid-roll, or down: the stick does nothing for a moment.
+    const fighting = fight.get();
+    if (frozen || fighting.dazed > 0 || fighting.roll > 0 || fighting.fallen) {
       ix = 0;
       iy = 0;
     }
@@ -300,109 +395,103 @@ export function WorldView({
       }
     }
 
-    // ---- combat: your attack, bolts in flight, then the enemies' turn.
-    if (!frozen && !fallen.get() && foes.get().length > 0) {
+    // ---- combat: your attack, bolts, the enemies' turn, all in stepFight; then its sounds, flashes and shakes.
+    const held = sim.attackHeld.get();
+    const pressed = sim.attackPressed.get();
+    const dodge = sim.dodgePressed.get();
+    sim.attackPressed.set(false);
+    sim.dodgePressed.set(false);
+    const release = wasHeld.get() && !held;
+    wasHeld.set(held);
+    if (!frozen && attack && fight.get().enemies.length > 0 && !fight.get().fallen && !fight.get().won) {
       const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
-      const px = sim.x.get();
-      const py = sim.y.get();
-      const f = sim.facing.get();
-      mercy.set(Math.max(0, mercy.get() - dt));
-      cooldown.set(Math.max(0, cooldown.get() - dt));
-      let enemies = foes.get();
-      if (sim.attackPressed.get()) {
-        sim.attackPressed.set(false);
-        if (attack && cooldown.get() === 0) {
-          cooldown.set(attack.cooldown);
-          if (attack.kind === 'melee') {
-            const [sx, sy] = strikePoint(px, py, f, attack.range);
-            enemies = hitAround(grid, enemies, sx, sy, attack.range * 0.6 + 6, damage, attack.knock, attack.stun);
-            flash.set([sx, sy - 4, attack.range * 0.6 + 4, 0.2, px, py, f, 0.2]);
-          } else if (attack.kind === 'burst') {
-            enemies = hitAround(grid, enemies, px, py - 6, attack.range, damage, attack.knock, attack.stun);
-            flash.set([px, py - 8, attack.range, 0.35, px, py, f, 0.35]);
-          } else {
-            const dx = f === 2 ? -1 : f === 3 ? 1 : 0;
-            const dy = f === 1 ? -1 : f === 0 ? 1 : 0;
-            bolts.set([...bolts.get(), [px, py - 8, dx, dy, 0]]);
-          }
-        }
-      }
-      // Bolts fly straight until they hit a wall, an enemy, or run out of range.
-      if (bolts.get().length > 0 && attack) {
-        const next: number[][] = [];
-        for (const b of bolts.get()) {
-          const stepLen = 150 * dt;
-          const bx = b[0] + b[2] * stepLen;
-          const by = b[1] + b[3] * stepLen;
-          const travelled = b[4] + stepLen;
-          const tx = Math.floor(bx / TILE);
-          const ty = Math.floor(by / TILE);
-          const wall = tx < 0 || ty < 0 || tx >= mapWidth || ty >= mapHeight || solid.get()[ty * mapWidth + tx] === 1;
-          let struck = false;
-          for (const e of enemies) {
-            if (e[E_ALIVE] === 1 && Math.hypot(e[E_X] - bx, e[E_Y] - 8 - by) < 9) struck = true;
-          }
-          if (struck) enemies = hitAround(grid, enemies, bx, by + 8, 10, damage, attack.knock, attack.stun);
-          if (!struck && !wall && travelled < attack.range) next.push([bx, by, b[2], b[3], travelled]);
-        }
-        bolts.set(next);
-      }
-      const r = stepEnemies(grid, enemies, px, py, dt, mercy.get() === 0);
-      foes.set(r.enemies);
-      // The boss: pillows lobbed at you from the sofa, and a win once every bearer is down.
-      if (bossX >= 0 && !winning.get()) {
-        throwIn.set(throwIn.get() - dt);
-        if (throws && throwIn.get() <= 0) {
-          throwIn.set(2.2);
-          const d = Math.hypot(px - bossX, py - bossY) || 1;
-          pillows.set([...pillows.get(), [bossX, bossY - 10, (px - bossX) / d, (py - 8 - bossY + 10) / d]]);
-        }
-        const flying: number[][] = [];
-        for (const p of pillows.get()) {
-          const nx = p[0] + p[2] * 70 * dt;
-          const ny = p[1] + p[3] * 70 * dt;
-          if (mercy.get() === 0 && Math.hypot(nx - px, ny - (py - 8)) < 8) {
-            r.hurt = Math.max(r.hurt, 1);
-            continue;
-          }
-          if (nx > 0 && ny > 0 && nx < mapWidth * TILE && ny < mapHeight * TILE) flying.push([nx, ny, p[2], p[3]]);
-        }
-        pillows.set(flying);
-        let standing = 0;
-        for (const e of r.enemies) standing += e[E_ALIVE];
-        if (standing === 0) {
-          winning.set(true);
-          pillows.set([]);
-          scheduleOnRN(won);
-        }
-      }
-      if (r.shoutX >= 0) shout.set([r.shoutX, r.shoutY - 8, 0.5]);
-      if (r.stun > 0) dazed.set(Math.max(dazed.get(), r.stun));
-      if (r.hurt > 0) {
-        mercy.set(MERCY);
-        sim.hp.set(sim.hp.get() - r.hurt);
-        const [nx, ny] = move(grid, px, py, r.pushX, r.pushY);
+      const r = stepFight(
+        fight.get(),
+        {
+          x: sim.x.get(),
+          y: sim.y.get(),
+          facing: sim.facing.get(),
+          stickX: ix,
+          stickY: iy,
+          moved: moving,
+          press: pressed,
+          held,
+          release,
+          dodge,
+        },
+        { grid, attack, damage, level, special, boss: bossX >= 0, bossX, bossY, throws, drowsy, maxHp: hearts },
+        dt,
+      );
+      const f = r.fight;
+      const ev = r.events;
+      fight.set(f);
+      if (ev.moveX !== 0 || ev.moveY !== 0) {
+        const [nx, ny] = move(grid, sim.x.get(), sim.y.get(), ev.moveX, ev.moveY);
         sim.x.set(nx);
         sim.y.set(ny);
-        if (sim.hp.get() <= 0) {
-          fallen.set(true);
-          scheduleOnRN(defeated);
+        sim.trail.set(extendTrail(sim.trail.get(), nx, ny));
+        if (ev.moveX !== 0 || ev.moveY !== 0) sim.walked.set(sim.walked.get() + Math.hypot(ev.moveX, ev.moveY));
+      }
+      if (sim.hp.get() !== f.hp) sim.hp.set(f.hp);
+      if (sim.sleepy.get() !== f.sleepy) sim.sleepy.set(f.sleepy);
+      sim.charge.set(f.charge);
+      if (ev.swing) scheduleOnRN(feel, ev.charged ? 'charged' : 'swing');
+      if (ev.rolled) scheduleOnRN(feel, 'roll');
+      if (ev.mended) scheduleOnRN(feel, 'mend');
+      if (ev.hits > 0) {
+        const kill = ev.kills > 0;
+        hitStop.set(ev.big ? FEEL.bigStop : kill ? FEEL.killStop : FEEL.hitStop);
+        const strength = ev.big || kill ? FEEL.killShake : FEEL.hitShake;
+        if (strength >= shake.get()[1] || shake.get()[0] <= 0) shake.set([FEEL.shakeTime, strength]);
+        const white = whiteFor.get().slice();
+        for (const i of ev.struck) white[i] = FEEL.flash;
+        whiteFor.set(white);
+        if (kill) {
+          const next = puffs.get().slice(-3);
+          for (let k = 0; k < ev.fell.length; k += 2) next.push([ev.fell[k], ev.fell[k + 1], FEEL.puff]);
+          puffs.set(next);
         }
+        scheduleOnRN(feel, kill ? 'kill' : 'hit');
+      } else if (ev.clangs > 0) {
+        scheduleOnRN(feel, 'clang');
+        const e = f.enemies.find((x) => x[E_CLANG] === 1);
+        if (e) sparks.set([e[E_X], e[E_Y] - 10, 0.15]);
       }
-    }
-    // Drowsiness: standing still fills it, moving drains it. Full, and you fall asleep.
-    if (drowsy > 0 && !frozen && !fallen.get() && !winning.get()) {
-      const next = Math.min(1, Math.max(0, sim.sleepy.get() + (moving ? -0.35 : drowsy) * dt));
-      sim.sleepy.set(next);
-      if (next >= 1) {
-        fallen.set(true);
-        scheduleOnRN(defeated);
+      if (ev.slam) {
+        shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
+        scheduleOnRN(feel, 'slam');
       }
+      if (ev.guttered) {
+        gutter.set(0.5);
+        if (snuffable) guttered.set(Math.min(MAX_GUTTERED, guttered.get() + 1));
+        scheduleOnRN(feel, 'gutter');
+      }
+      if (ev.hurt) {
+        shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
+        hitStop.set(FEEL.hitStop);
+        scheduleOnRN(feel, 'hurt');
+      }
+      if (ev.fallen) scheduleOnRN(defeated);
+      if (ev.won) scheduleOnRN(won);
     }
-    const fl = flash.get();
-    if (fl[3] > 0) flash.set([fl[0], fl[1], fl[2], Math.max(0, fl[3] - dt), fl[4], fl[5], fl[6], fl[7]]);
-    const sh = shout.get();
-    if (sh[2] > 0) shout.set([sh[0], sh[1], Math.max(0, sh[2] - dt)]);
+    // Feel timers run on real time, so they play through the hit-stop.
+    const quake = shake.get();
+    if (quake[0] > 0) {
+      shake.set([Math.max(0, quake[0] - realDt), quake[1]]);
+      shakeOff.set([Math.round((Math.random() * 2 - 1) * quake[1]), Math.round((Math.random() * 2 - 1) * quake[1])]);
+    } else if (shakeOff.get()[0] !== 0 || shakeOff.get()[1] !== 0) shakeOff.set([0, 0]);
+    if (sparks.get()[2] > 0) sparks.set([sparks.get()[0], sparks.get()[1], Math.max(0, sparks.get()[2] - realDt)]);
+    if (gutter.get() > 0) gutter.set(Math.max(0, gutter.get() - realDt));
+    const white = whiteFor.get();
+    if (white.some((w) => w > 0)) whiteFor.set(white.map((w) => Math.max(0, w - realDt)));
+    if (puffs.get().length > 0) {
+      puffs.set(
+        puffs
+          .get()
+          .map((p) => [p[0], p[1], p[2] - realDt])
+          .filter((p) => p[2] > 0),
+      );
+    }
 
     // Boulders slide toward their tiles.
     const rp = rockPos.get();
@@ -431,50 +520,191 @@ export function WorldView({
     camX.set(round(cx));
     camY.set(round(cy));
     bob.set(Math.floor(info.timestamp / 350) % 2);
+    clock.set(clock.get() + realDt);
 
     // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
+    // Each: [row, facing, frame, x, y, tint (0 none, 1 white: struck, 2 red: winding up), size].
     const ents: number[][] = [];
     const npcFacing = sim.npcFacing.get();
-    for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2]]);
-    for (const e of foes.get()) {
+    for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2], 0, 1]);
+    const whites = whiteFor.get();
+    const now = fight.get();
+    const all = now.enemies;
+    const shadows: number[] = [];
+    for (let i = 0; i < all.length; i++) {
+      const e = all[i];
       if (e[E_ALIVE] === 0) continue;
       const toward = facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
-      ents.push([enemyRows[e[E_KIND]], toward, walkFrame(e[E_X] + e[E_Y], e[E_AWAKE] === 1), e[E_X], e[E_Y]]);
+      // The tell: a winding-up enemy blinks red and stands still.
+      const tell = e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
+      const tint = (whites[i] ?? 0) > 0 ? 1 : tell ? 2 : 0;
+      const stepping = e[E_AWAKE] === 1 && e[E_MODE] !== WINDUP && e[E_MODE] !== EXPOSED && e[E_STUN] === 0;
+      ents.push([enemyRows[e[E_KIND]], toward, walkFrame(e[E_X] + e[E_Y], stepping), e[E_X], e[E_Y], tint, sizeOf(e)]);
+      // Kaldor casts no shadow, until a torch gutters.
+      if (e[E_MODE] === EXPOSED && ENEMY_KINDS[e[E_KIND]] === 'kaldor') shadows.push(e[E_X], e[E_Y]);
     }
+    shadowAt.set(shadows);
     for (let k = partyRows.length - 1; k >= 1; k--) {
       const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
-      ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy]);
+      ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
     }
-    // the lead goes last so they're drawn on top of a follower standing in the same spot
-    ents.push([partyRows[0], sim.facing.get(), walkFrame(sim.walked.get(), moving), sim.x.get(), sim.y.get()]);
+    // the lead goes last so they're drawn on top of a follower standing in the same spot;
+    // just hurt, they blink until they can be hurt again; striking, they lean into the blow
+    const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
+    if (!blink) {
+      const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
+      const f = sim.facing.get();
+      const lx = f === 2 ? -lean : f === 3 ? lean : 0;
+      const ly = f === 1 ? -lean : f === 0 ? lean : 0;
+      ents.push([
+        partyRows[0],
+        f,
+        walkFrame(sim.walked.get(), moving || now.roll > 0),
+        sim.x.get() + lx,
+        sim.y.get() + ly,
+        0,
+        1,
+      ]);
+    }
     ents.sort(byFeet);
     const list: number[] = [];
-    for (const [row, facing, f, x, y] of ents) {
-      list.push((facing * 3 + f) * FW, row * FH, round(x - FW / 2), round(y - FEET));
+    const lit: number[] = [];
+    const red: number[] = [];
+    for (const [row, facing, f, x, y, tint, size] of ents) {
+      const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size];
+      list.push(...item);
+      if (tint === 1 && lit.length < FLASHES * 5) lit.push(...item);
+      if (tint === 2 && red.length < FLASHES * 5) red.push(...item);
     }
     drawList.set(list);
+    flashList.set(lit);
+    redList.set(red);
   }, false);
 
   useEffect(() => {
     frame.setActive(active);
   }, [active, frame]);
 
-  const sprites = useRectBuffer(count, (rect, i) => {
-    'worklet';
-    const l = drawList.get();
-    if (l.length < (i + 1) * 4) rect.setXYWH(0, 0, 0, 0);
-    else rect.setXYWH(l[i * 4], l[i * 4 + 1], FW, FH);
-  });
-  const transforms = useRSXformBuffer(count, (xf, i) => {
-    'worklet';
-    const l = drawList.get();
-    if (l.length < (i + 1) * 4) xf.set(1, 0, -999, -999);
-    else xf.set(1, 0, l[i * 4 + 2], l[i * 4 + 3]);
+  const [sprites, transforms] = useSpriteBuffers(drawList, count);
+  const [flashSprites, flashTransforms] = useSpriteBuffers(flashList, FLASHES);
+  const [redSprites, redTransforms] = useSpriteBuffers(redList, FLASHES);
+  const puffPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, t] of puffs.get()) {
+      const p = 1 - t / FEEL.puff;
+      const size = Math.max(1, Math.round(3 * (1 - p)) + 1);
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        const r = 3 + 11 * p;
+        path.addRect(
+          Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size),
+        );
+      }
+    }
+    return path;
   });
 
+  // Kaldor's shadow, back while a torch is out; Aurek's slams spreading; a charged blow's ring; a clang's spark.
+  const shadowPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const at = shadowAt.get();
+    for (let k = 0; k < at.length; k += 2) path.addOval(Skia.XYWHRect(at[k] - 8, at[k + 1] - 3, 16, 5));
+    return path;
+  });
+  const wavePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const w of waves.get()) {
+      const r = PATTERNS.wave.radius * Math.min(1, w[2] / PATTERNS.wave.grow);
+      path.addOval(Skia.XYWHRect(w[0] - r, w[1] - r * 0.6, r * 2, r * 1.2));
+    }
+    return path;
+  });
+  const ringX = useDerivedValue(() => ring.get()[0]);
+  const ringY = useDerivedValue(() => ring.get()[1]);
+  const ringR = useDerivedValue(() => {
+    const g = ring.get();
+    return g[4] > 0 ? g[2] * (1.1 - (0.6 * g[3]) / g[4]) : 0;
+  });
+  const ringO = useDerivedValue(() => (ring.get()[4] > 0 ? ring.get()[3] / ring.get()[4] : 0));
+  const glowX = useDerivedValue(() => sim.x.get());
+  const glowY = useDerivedValue(() => sim.y.get() - 9);
+  const glowR = useDerivedValue(() => 4 + Math.min(1, sim.charge.get() / CHARGE_TIME) * 8);
+  const glowO = useDerivedValue(() => {
+    const c = sim.charge.get();
+    if (c < 0.12) return 0;
+    if (c >= CHARGE_TIME) return 0.45 + 0.35 * (Math.floor(c * 10) % 2);
+    return 0.35 * (c / CHARGE_TIME);
+  });
+  const sparkPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const [x, y, t] = sparks.get();
+    if (t > 0) {
+      const r = 3 + (0.15 - t) * 30;
+      for (let k = 0; k < 4; k++) {
+        const a = (k * Math.PI) / 2 + Math.PI / 4;
+        path.addRect(Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y + Math.sin(a) * r), 2, 2));
+      }
+    }
+    return path;
+  });
+  const dim = useDerivedValue(() => gutter.get() * 1.2);
+
+  // ---- the living room: flames that flicker (or, in the war hall, gutter out), motes in the air, and the dark.
+  const flameLit = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const out = snuffable ? guttered.get() : 0;
+    flames.forEach(([x, y], i) => {
+      if (i < out) return;
+      const k = Math.floor(t * 9 + i * 3.7);
+      const lean = k % 3 === 0 ? -1 : k % 5 === 0 ? 1 : 0;
+      path.addRect(Skia.XYWHRect(x + lean, y - (k % 2), 2, 2 + (k % 2)));
+    });
+    return path;
+  });
+  const flameCore = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const out = snuffable ? guttered.get() : 0;
+    flames.forEach(([x, y], i) => {
+      if (i < out) return;
+      if (Math.floor(t * 7 + i) % 4 !== 0) path.addRect(Skia.XYWHRect(x, y + 1, 1, 1));
+    });
+    return path;
+  });
+  const snuffed = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const out = snuffable ? guttered.get() : 0;
+    for (let i = 0; i < out && i < flames.length; i++) {
+      const [x, y] = flames[i];
+      path.addRect(Skia.XYWHRect(x - 1, y - 2, 4, 5));
+    }
+    return path;
+  });
+  const motePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    if (!ambience.motes) return path;
+    const t = clock.get();
+    const pollen = ambience.motes === 'pollen';
+    for (let i = 0; i < 26; i++) {
+      const sx = (i * 0.618) % 1;
+      const sy = (i * 0.414 + 0.3) % 1;
+      const vx = pollen ? 4 + (i % 3) * 2 : i % 2 ? 1.5 : -1.5;
+      const vy = pollen ? Math.sin(t * 0.8 + i) * 3 : 2 + (i % 4);
+      const x = (((sx * mapW + vx * t) % mapW) + mapW) % mapW;
+      const y = (((sy * mapH + (pollen ? vy : vy * t)) % mapH) + mapH) % mapH;
+      path.addRect(Skia.XYWHRect(Math.round(x), Math.round(y), 1, 1));
+    }
+    return path;
+  });
+  const darkness = useDerivedValue(() => ambience.darkness + (snuffable ? guttered.get() * 0.06 : 0));
+  const youX = useDerivedValue(() => sim.x.get());
+  const youY = useDerivedValue(() => sim.y.get() - 10);
+  const youCenter = useDerivedValue(() => vec(sim.x.get(), sim.y.get() - 10));
+
   const camera = useDerivedValue(() => [
-    { translateX: -camX.get() * scale },
-    { translateY: -camY.get() * scale },
+    { translateX: -(camX.get() + shakeOff.get()[0]) * scale },
+    { translateY: -(camY.get() + shakeOff.get()[1]) * scale },
     { scale },
   ]);
   const markLift = useDerivedValue(() => [{ translateY: -bob.get() }]);
@@ -493,14 +723,90 @@ export function WorldView({
         {boulders.map((_, i) => (
           <Boulder key={i} index={i} positions={rockPos} />
         ))}
+        {signs.map((p) => (
+          <Sign key={`s${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
+        {chests.map((p) => (
+          <Chest key={`c${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} open={p.open} />
+        ))}
+        {flames.length > 0 && (
+          <>
+            <Path path={snuffed} color="#1A1410" />
+            <Path path={flameLit} color="#FFB04A" />
+            <Path path={flameCore} color="#FFF4C0" />
+          </>
+        )}
+        {map.enemies.length > 0 && <Path path={shadowPath} color="#0A0608" opacity={0.6} />}
+        {map.enemies.length > 0 && <Path path={wavePath} color="#E8D8B8" style="stroke" strokeWidth={2} />}
+        {map.enemies.length > 0 && attack && (
+          <Circle cx={glowX} cy={glowY} r={glowR} color={attack.color} opacity={glowO} />
+        )}
         {walkers && <Atlas image={walkers} sprites={sprites} transforms={transforms} sampling={NEAREST} />}
         {map.enemies.length > 0 && (
           <>
+            {walkers && (
+              <Group
+                opacity={0.65}
+                layer={
+                  <Paint>
+                    <BlendColor color="#FF2A2A" mode="srcIn" />
+                  </Paint>
+                }>
+                <Atlas image={walkers} sprites={redSprites} transforms={redTransforms} sampling={NEAREST} />
+              </Group>
+            )}
+            {attack && (
+              <Circle
+                cx={ringX}
+                cy={ringY}
+                r={ringR}
+                color={attack.color}
+                opacity={ringO}
+                style="stroke"
+                strokeWidth={2}
+              />
+            )}
+            <Path path={sparkPath} color="#FFF4C0" />
+            {walkers && (
+              <Group
+                layer={
+                  <Paint>
+                    <BlendColor color="white" mode="srcIn" />
+                  </Paint>
+                }>
+                <Atlas image={walkers} sprites={flashSprites} transforms={flashTransforms} sampling={NEAREST} />
+              </Group>
+            )}
+            <Path path={puffPath} color="#E8E0D0" />
             {attack && <AttackEffects attack={attack} flash={flash} bolts={bolts} />}
             <Shout shout={shout} />
           </>
         )}
         {boss && throws && <Pillows pillows={pillows} />}
+        {ambience.motes && (
+          <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
+        )}
+        {ambience.darkness > 0 && (
+          <Group layer>
+            <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
+            {flames
+              .filter((f) => f[2] > 0)
+              .map((f, i) => (
+                <FlameLight
+                  key={i}
+                  index={i}
+                  x={f[0] + 1}
+                  y={f[1] + 2}
+                  reach={f[2]}
+                  clock={clock}
+                  guttered={snuffable ? guttered : null}
+                />
+              ))}
+            <Circle cx={youX} cy={youY} r={34} blendMode="dstOut">
+              <RadialGradient c={youCenter} r={34} colors={['#000000', '#00000000']} />
+            </Circle>
+          </Group>
+        )}
         <Group transform={markLift}>
           {marks.map((m) => (
             <Group key={`${m.x},${m.y}`}>
@@ -512,8 +818,26 @@ export function WorldView({
           ))}
         </Group>
       </Group>
+      <Rect x={0} y={0} width={width} height={height} color="#000000" opacity={dim} />
     </Canvas>
   );
+}
+
+/** Rects and placements for an Atlas, from a list of five numbers per sprite: sheet x, y, screen x, y, size. */
+function useSpriteBuffers(list: SharedValue<number[]>, count: number) {
+  const sprites = useRectBuffer(count, (rect, i) => {
+    'worklet';
+    const l = list.get();
+    if (l.length < (i + 1) * 5) rect.setXYWH(0, 0, 0, 0);
+    else rect.setXYWH(l[i * 5], l[i * 5 + 1], FW, FH);
+  });
+  const transforms = useRSXformBuffer(count, (xf, i) => {
+    'worklet';
+    const l = list.get();
+    if (l.length < (i + 1) * 5) xf.set(1, 0, -999, -999);
+    else xf.set(l[i * 5 + 4], 0, l[i * 5 + 2], l[i * 5 + 3]);
+  });
+  return [sprites, transforms] as const;
 }
 
 /** A pushable boulder, drawn where it's sliding to. */
@@ -555,4 +879,70 @@ function Pillow({ index, pillows }: { index: number; pillows: SharedValue<number
   const x = useDerivedValue(() => (pillows.get()[index]?.[0] ?? -99) - 5);
   const y = useDerivedValue(() => (pillows.get()[index]?.[1] ?? -99) - 3);
   return <Rect x={x} y={y} width={10} height={7} color="#E8D8F0" />;
+}
+
+/** The light around one flame, cut out of the dark: it breathes with the flicker, and goes out if guttered. */
+function FlameLight({
+  index,
+  x,
+  y,
+  reach,
+  clock,
+  guttered,
+}: {
+  index: number;
+  x: number;
+  y: number;
+  reach: number;
+  clock: SharedValue<number>;
+  guttered: SharedValue<number> | null;
+}) {
+  const r = useDerivedValue(() => {
+    if (guttered && index < guttered.get()) return 0.01;
+    return reach * (0.94 + 0.06 * Math.sin(clock.get() * 11 + index * 2.3));
+  });
+  return (
+    <Circle cx={x} cy={y} r={r} blendMode="dstOut">
+      <RadialGradient c={vec(x, y)} r={r} colors={['#000000', '#000000CC', '#00000000']} />
+    </Circle>
+  );
+}
+
+/** A chest on its tile: shut (gold-banded wood), or open and empty. */
+function Chest({ x, y, open }: { x: number; y: number; open: boolean }) {
+  return (
+    <Group>
+      <Rect x={x + 1} y={y + 13} width={14} height={2} color="#10080A" opacity={0.5} />
+      <Rect x={x + 1} y={y + 6} width={14} height={8} color="#140E1C" />
+      <Rect x={x + 2} y={y + 7} width={12} height={6} color="#8A5A30" />
+      <Rect x={x + 2} y={y + 9} width={12} height={1} color="#5A3A20" />
+      {open ? (
+        <>
+          <Rect x={x + 1} y={y + 1} width={14} height={6} color="#140E1C" />
+          <Rect x={x + 2} y={y + 2} width={12} height={4} color="#6A4424" />
+          <Rect x={x + 3} y={y + 6} width={10} height={2} color="#1A1008" />
+        </>
+      ) : (
+        <>
+          <Rect x={x + 1} y={y + 3} width={14} height={4} color="#140E1C" />
+          <Rect x={x + 2} y={y + 4} width={12} height={2} color="#A0703C" />
+          <Rect x={x + 7} y={y + 5} width={2} height={4} color="#FFC940" />
+          <Rect x={x + 2} y={y + 6} width={12} height={1} color="#FFC940" />
+        </>
+      )}
+    </Group>
+  );
+}
+
+/** A sign on a post: A reads it. */
+function Sign({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x + 7} y={y + 8} width={2} height={7} color="#4A3020" />
+      <Rect x={x + 2} y={y + 2} width={12} height={8} color="#140E1C" />
+      <Rect x={x + 3} y={y + 3} width={10} height={6} color="#B08A58" />
+      <Rect x={x + 4} y={y + 5} width={8} height={1} color="#6A4A2A" />
+      <Rect x={x + 4} y={y + 7} width={6} height={1} color="#6A4A2A" />
+    </Group>
+  );
 }

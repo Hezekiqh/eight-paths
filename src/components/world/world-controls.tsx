@@ -24,8 +24,8 @@ type Props = {
   /** Talk or examine: the A button, or a tap on the touch pad. */
   onAct: () => void;
   onPause: () => void;
-  /** Fight: shown where there's something to fight, in the walking character's colour. */
-  fight?: { color: string; label: string } | null;
+  /** Fight: shown where there's something to fight, in the walking character's colour. `charges` says holding it charges a blow (Path Lv 10). */
+  fight?: { color: string; label: string; charges?: boolean } | null;
 };
 
 /**
@@ -133,16 +133,32 @@ export function WorldControls({ scheme, sim, onAct, onPause, fight }: Props) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={fight.label}
+          accessibilityHint={fight.charges ? 'Hold, then let go, for a charged blow' : undefined}
           onPressIn={() => {
             haptics.tap();
             sim.attackPressed.set(true);
+            sim.attackHeld.set(true);
           }}
+          onPressOut={() => sim.attackHeld.set(false)}
           style={({ pressed }) => [
             styles.b,
             { right: right + 88, bottom: bottom + 4, backgroundColor: fight.color },
             pressed && styles.pressed,
           ]}>
           <SymbolView name="bolt.fill" tintColor={colors.background} size={26} />
+        </Pressable>
+      )}
+
+      {fight && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dodge roll"
+          onPressIn={() => {
+            haptics.tap();
+            sim.dodgePressed.set(true);
+          }}
+          style={({ pressed }) => [styles.dodge, { right: right + 12, bottom: bottom + 108 }, pressed && styles.pressed]}>
+          <SymbolView name="wind" tintColor={colors.text} size={20} />
         </Pressable>
       )}
 
@@ -201,6 +217,18 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: FRAME,
     borderColor: colors.frame,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.9,
+  },
+  dodge: {
+    position: 'absolute',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: FRAME,
+    borderColor: colors.frame,
+    backgroundColor: 'rgba(240, 230, 200, 0.75)',
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.9,

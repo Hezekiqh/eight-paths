@@ -67,5 +67,83 @@
       "The road runs west, toward the smell of turnips."
     ]
   },
-  "objects": []
+  "objects": [
+    {
+      "id": "nib",
+      "type": "npc",
+      "x": 9,
+      "y": 10,
+      "sprite": "pim",
+      "facing": "left",
+      "name": "Nib",
+      "lines": [
+        "HALT! Nobody passes without a duel!",
+        "...Unless you're going the other way. Then carry on. Mind the puddle."
+      ],
+      "questions": [
+        {
+          "ask": "Who taught you to fight?",
+          "answer": [
+            "Nobody. I watch the grass. The wind shoves it flat, and it gets back up.",
+            "That's the whole secret. Don't tell anyone. Especially the grass."
+          ]
+        },
+        {
+          "ask": "What's down the road?",
+          "answer": [
+            "Towers. Mum says a king lives there who never gets any older.",
+            "I asked if that's because he eats his greens. She said not to ask that loudly."
+          ]
+        },
+        {
+          "ask": "Seen anything strange?",
+          "answer": [
+            "There's a lady asleep in the long grass, all wrapped up. She looks like she's still running.",
+            "I leave her a flower sometimes. Runners get tired."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "waystation-plaque",
+      "type": "sign",
+      "x": 22,
+      "y": 5,
+      "lines": [
+        "A brass plaque by the Waystation: REST HERE, COURIER. THE ROAD REMEMBERS EVERY RUNNER.",
+        "Under the words, a running boot, worn almost smooth by passing hands."
+      ]
+    },
+    {
+      "id": "snapped-arm",
+      "type": "sign",
+      "x": 36,
+      "y": 11,
+      "lines": [
+        "Half-buried in the grass: the signpost's missing arm. The paint reads ...ECREST.",
+        "Whatever it pointed to, it's pointing at the dirt now."
+      ]
+    },
+    {
+      "id": "heart-courier-pine",
+      "type": "chest",
+      "x": 38,
+      "y": 4,
+      "item": "heart-piece",
+      "lines": [
+        "In the hollow of an old pine, out of the rain: a Heart Piece, wrapped in a courier's glove."
+      ]
+    },
+    {
+      "id": "dessa-letter",
+      "type": "chest",
+      "x": 36,
+      "y": 2,
+      "item": "dessa-letter",
+      "lines": [
+        "Wedged in the roots below the torn strap: a letter in oilcloth, dry after all this time.",
+        "The seal is unbroken. A courier doesn't read the post. You decide you won't either."
+      ]
+    }
+  ]
 }

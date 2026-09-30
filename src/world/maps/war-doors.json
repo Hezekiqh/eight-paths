@@ -36,7 +36,44 @@
       "The way back out."
     ]
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "tallow",
+      "type": "npc",
+      "x": 13,
+      "y": 6,
+      "sprite": "lamplighter",
+      "facing": "left",
+      "name": "Tallow",
+      "lines": [
+        "Don't mind me. Torches. Every one lit, every hour, or it's the cage for Tallow.",
+        "The king likes it bright in there. No dark corners. Not even under him."
+      ],
+      "questions": [
+        {
+          "ask": "Why so many torches?",
+          "answer": [
+            "Orders. Torches all round, mirrors behind them, so the king casts no shadow. A miracle, we're told.",
+            "A miracle with a very big lamp-oil bill, is all I'm saying."
+          ]
+        },
+        {
+          "ask": "Who's the tall one by the doors?",
+          "answer": [
+            "Don't. He doesn't talk. Used to, they say. Nearly won, they say.",
+            "I light a torch for him too. Nobody told me to. Nobody told me not to."
+          ]
+        },
+        {
+          "ask": "Any advice?",
+          "answer": [
+            "Torches gutter. Even his. Especially if somebody's swinging a sword near them.",
+            "You didn't hear that from Tallow."
+          ]
+        }
+      ]
+    }
+  ],
   "art": {
     "1": "E"
   },

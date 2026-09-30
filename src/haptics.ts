@@ -22,6 +22,12 @@ export const haptics = {
   success: () => run(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
   /** A soft nudge: a quest completed without levelling. */
   nudge: () => run(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)),
+  /** Your attack lands in the World. */
+  hit: () => run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)),
+  /** An enemy falls. */
+  kill: () => run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)),
+  /** You lose a heart. */
+  hurt: () => run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)),
   /** A heavy double thump for level-ups, shards and new characters. */
   celebrate: () => {
     run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));

@@ -2,6 +2,7 @@ import { CLASSES, type Dimension } from '@/game';
 import { COMPANIONS, type CharacterId } from '@/story/companions';
 
 import { ATTACKS, damageFor } from './combat';
+import { CHARGE_LEVEL, SPECIALS, SPECIAL_LEVEL } from './fight';
 import { walkersFor, type HeroId } from './hero';
 import { JOBS } from './jobs';
 import { MAPS, isMapId, type MapId } from './maps';
@@ -35,12 +36,31 @@ export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>): 
   return `${article} ${className} can do this: walk as ${COMPANIONS[walker].name} (pause, then Walking as).`;
 }
 
-/** Why a fight was lost, and how to win it: the walking character's real level sets their damage. */
-export function fightHint(hero: HeroId, level: number): string {
+/** How to beat what's in a room: each boss's tell, and what to do about it. */
+const TELLS: Partial<Record<MapId, string>> = {
+  'the-pit': 'The pit fighters crouch and flash red before they lunge. Roll aside, then strike while they get up.',
+  'war-doors': 'Aurek flashes red before he slams the ground. Roll away from the ring, then hit him while he rises.',
+  'war-hall':
+    "Your blows glance off Kaldor while he casts no shadow. Roll aside when he charges: when a torch gutters and his shadow comes back, strike.",
+};
+
+/**
+ * Why a fight was lost, and how to win it: the boss's tell, if it has one,
+ * then the walking character's real level (which sets their damage, and at
+ * Lv 10 and 20 unlocks their charged blow and special).
+ */
+export function fightHint(hero: HeroId, level: number, map?: MapId): string {
   const c = COMPANIONS[hero];
   const damage = damageFor(ATTACKS[c.dimension], level);
   const next = (Math.floor(level / 10) + 1) * 10;
-  return `${c.name} is Lv ${level} and hits for ${damage}. At Lv ${next} they hit harder: finish ${CLASSES[c.dimension].className} habits, or walk as a stronger party member.`;
+  const unlock =
+    next === CHARGE_LEVEL
+      ? 'can charge a blow (hold, then let go)'
+      : next === SPECIAL_LEVEL
+        ? `learn ${SPECIALS[c.dimension].name}`
+        : 'hit harder';
+  const tell = map && TELLS[map] ? `${TELLS[map]} ` : '';
+  return `${tell}${c.name} is Lv ${level} and hits for ${damage}. At Lv ${next} they ${unlock}: finish ${CLASSES[c.dimension].className} habits, or walk as a stronger party member.`;
 }
 
 /** What one remembered thing is, and how to get past it; null once it's done (or unknown). */
@@ -79,7 +99,7 @@ export function describeNotice(id: string, ctx: NoticeContext): Notice | null {
       map: a,
       place,
       title: who ? `The fight with ${who}` : `The fight in ${place}`,
-      hint: fightHint(ctx.hero, ctx.levelOf(ctx.hero)),
+      hint: fightHint(ctx.hero, ctx.levelOf(ctx.hero), a),
     };
   }
   return null;

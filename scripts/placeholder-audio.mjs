@@ -3,7 +3,7 @@
 // chiptune effects, and quiet piano-like pieces for the music (encoded to
 // .m4a with ffmpeg, which must be installed). Replace a file with a real one
 // of the same name (and update src/audio/sounds.ts if the extension changes).
-// Rerun: node scripts/placeholder-audio.mjs
+// Rerun: node scripts/placeholder-audio.mjs (add --effects to skip the music)
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -24,6 +24,12 @@ const waves = {
   pulse: (t) => (t % 1 < 0.25 ? 1 : -1),
   triangle: (t) => 1 - 4 * Math.abs((t % 1) - 0.5),
   sine: (t) => Math.sin(2 * Math.PI * t),
+  // A crunchy burst for hits; changes value 32 times a cycle, so `f` sets its grit.
+  noise: (t) => {
+    const k = Math.floor(t * 32);
+    const x = Math.sin(k * 12.9898) * 43758.5453;
+    return (x - Math.floor(x)) * 2 - 1;
+  },
 };
 
 /** Adds a note into `buf`: wave, start and length in seconds, volume, a short attack and release. */
@@ -80,6 +86,50 @@ wav('heartbeat', 0.45, (b) => {
   note(b, { f: 70, at: 0, len: 0.12, vol: 0.7, wave: 'sine', slide: -30 });
   note(b, { f: 60, at: 0.17, len: 0.14, vol: 0.6, wave: 'sine', slide: -25 });
 });
+
+// Combat in the World: short and punchy, so they can fire often.
+wav('swing', 0.1, (b) => note(b, { f: 900, at: 0, len: 0.08, vol: 0.12, wave: 'noise', slide: -700 }));
+wav('hit', 0.12, (b) => {
+  note(b, { f: 1400, at: 0, len: 0.05, vol: 0.3, wave: 'noise', slide: -800 });
+  note(b, { f: 220, at: 0, len: 0.08, vol: 0.25, wave: 'square', slide: -120 });
+});
+wav('kill', 0.35, (b) => {
+  note(b, { f: 700, at: 0, len: 0.25, vol: 0.3, wave: 'noise', slide: -600 });
+  note(b, { f: 330, at: 0, len: 0.2, vol: 0.2, wave: 'square', slide: -250 });
+  note(b, { f: 880, at: 0.12, len: 0.1, vol: 0.12, wave: 'pulse' });
+});
+wav('hurt', 0.3, (b) => {
+  note(b, { f: 180, at: 0, len: 0.22, vol: 0.35, wave: 'square', slide: -110 });
+  note(b, { f: 500, at: 0, len: 0.1, vol: 0.2, wave: 'noise', slide: -400 });
+});
+
+wav('charged', 0.3, (b) => {
+  note(b, { f: 1200, at: 0, len: 0.2, vol: 0.2, wave: 'noise', slide: -900 });
+  note(b, { f: 330, at: 0, len: 0.25, vol: 0.22, wave: 'square', slide: 330 });
+});
+wav('clang', 0.25, (b) => {
+  note(b, { f: 1760, at: 0, len: 0.22, vol: 0.18, wave: 'triangle' });
+  note(b, { f: 2349, at: 0, len: 0.16, vol: 0.12, wave: 'triangle' });
+  note(b, { f: 3000, at: 0, len: 0.03, vol: 0.2, wave: 'noise' });
+});
+wav('roll', 0.15, (b) => note(b, { f: 400, at: 0, len: 0.13, vol: 0.14, wave: 'noise', slide: 300 }));
+wav('slam', 0.5, (b) => {
+  note(b, { f: 90, at: 0, len: 0.45, vol: 0.5, wave: 'square', slide: -50 });
+  note(b, { f: 300, at: 0, len: 0.3, vol: 0.3, wave: 'noise', slide: -250 });
+});
+// A torch guttering: a breathy fall, then a low note as the shadow comes back.
+wav('gutter', 0.6, (b) => {
+  note(b, { f: 600, at: 0, len: 0.3, vol: 0.18, wave: 'noise', slide: -500 });
+  note(b, { f: 147, at: 0.2, len: 0.4, vol: 0.2, wave: 'triangle', slide: -30 });
+});
+
+// Voices: a blip per letter in the World's dialogue, one pitch per kind of
+// speaker, low to high (like Undertale's).
+[110, 165, 247, 330, 494].forEach((f, i) =>
+  wav(`blip-${i + 1}`, 0.05, (b) => note(b, { f, at: 0, len: 0.04, vol: 0.14, wave: 'pulse' })),
+);
+
+if (process.argv.includes('--effects')) process.exit(0);
 
 // Music: slow, sparse piano-like pieces with an echo, in the spirit of
 // Minecraft's soundtrack. Each plays once and gives way to silence; only the

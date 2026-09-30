@@ -75,6 +75,16 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cellar-door",
+      "type": "sign",
+      "x": 2,
+      "y": 2,
+      "lines": [
+        "A little door behind the tables, chalked: POTATOES.",
+        "It's warm behind it, and it smells of people. Not of potatoes."
+      ]
     }
   ],
   "art": {

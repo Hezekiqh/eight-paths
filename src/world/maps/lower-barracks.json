@@ -100,6 +100,16 @@
           ]
         }
       ]
+    },
+    {
+      "id": "heart-bunkroom",
+      "type": "chest",
+      "x": 25,
+      "y": 4,
+      "item": "heart-piece",
+      "lines": [
+        "Under a loose stone below the scratched board: a Heart Piece, and a wooden soldier with its paint worn off."
+      ]
     }
   ],
   "art": {

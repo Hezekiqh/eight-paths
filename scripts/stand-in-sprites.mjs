@@ -2061,6 +2061,47 @@ const SPECS = {
       [19, 12],
     ],
   },
+  // These four match their World sprites (scripts/world-art.mjs), so the
+  // character you earn looks like the one you met.
+  aurek: {
+    size: 'tall',
+    skin: '#A8B8A8',
+    hair: ['short', '#5A6A5A'],
+    top: '#7A8A7A',
+    shade: '#5A6A5A',
+    legs: '#5A6A5A',
+    boots: '#3A4A3A',
+    held: [['sword']],
+  },
+  varga: {
+    skin: '#D8A880',
+    hair: ['short', '#1A1210'],
+    cape: '#6A1216',
+    top: '#5A3A3A',
+    shade: '#3E2828',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    held: [['sword']],
+  },
+  gert: {
+    outfit: 'robe',
+    skin: 'skin2',
+    hair: ['short', '#8A8A7A'],
+    top: '#6A6A5A',
+    shade: '#4E4E42',
+    boots: '#3A3A30',
+    held: [['lantern']],
+  },
+  brunna: {
+    size: 'kid',
+    skin: 'skin2',
+    hair: ['short', '#C8A060'],
+    top: '#8A6A4A',
+    shade: '#6A4E36',
+    legs: '#6A4E36',
+    boots: '#4A3A2A',
+  },
 };
 
 const SPECIAL_IDS = {
@@ -2075,8 +2116,14 @@ const SPECIAL_IDS = {
 };
 const FLOATS = new Set(['lumen']);
 
-// Drawn after the person: Bastian's drum sits over his chest.
+// Drawn after the person: Bastian's drum sits over his chest; Aurek's stitches.
 function extras(f, id) {
+  // Aurek's seams: down the chest and across the brow, as in the World
+  if (id === 'aurek') {
+    const L = LAYOUT.tall;
+    f.rect(16, L.ty, 1, L.th, '#2A1A1A').rect(13, L.h + 1, 6, 1, '#2A1A1A');
+    for (let y = L.ty + 2; y < L.ty + L.th; y += 3) f.px([[15, y], [17, y]], '#2A1A1A');
+  }
   if (id === 'bastian')
     f.rect(12, 27, 8, 6, C.red)
       .rect(12, 27, 8, 1, C.white)

@@ -15,6 +15,7 @@ import { KIND_LABEL, RARITY_TIERS, REALMS, formatNumber, isCharacterId } from '@
 import { colors, fonts, radius, spacing } from '@/theme';
 import { useSocial, type CharacterStat } from '@/social/store';
 import { isWalker, worldHero } from '@/world/hero';
+import { movesFor } from '@/world/fight';
 import { useWorldStore } from '@/world/store';
 
 /** "Woken by 3% of players · first: @moss_fan", or a note that no one has yet. */
@@ -130,6 +131,19 @@ export default function CompanionSheet() {
             ) : (
               <Button title={`Explore the Other World with ${companion.name}`} color={info.color} onPress={explore} />
             ))}
+          {inParty && isWalker(companion.id) && (
+            <View style={styles.moves} accessibilityLabel="Moves in the Other World">
+              <Text style={styles.movesTitle}>MOVES IN THE OTHER WORLD</Text>
+              {movesFor(companion.dimension, progress.level).map((m) => (
+                <Text key={m.level} style={[styles.move, !m.unlocked && styles.moveLocked]}>
+                  <Text style={[styles.moveName, m.unlocked && { color: info.color }]}>
+                    {m.unlocked ? m.name : `Lv ${m.level} · ${m.name}`}
+                  </Text>
+                  {`  ${m.does}`}
+                </Text>
+              ))}
+            </View>
+          )}
         </>
       ) : (
         <NoteBox symbol="lock.fill" color={colors.border} iconColor={colors.textMuted}>
@@ -170,6 +184,11 @@ const styles = StyleSheet.create({
   className: { fontSize: 20, fontFamily: fonts.bold },
   realm: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
   level: { gap: 6 },
+  moves: { gap: 4 },
+  movesTitle: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1 },
+  move: { color: colors.text, fontSize: 15, lineHeight: 21 },
+  moveLocked: { color: colors.textFaint },
+  moveName: { fontFamily: fonts.bold },
   levelTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   levelText: { color: colors.text, fontSize: 22, fontFamily: fonts.bold },
   xpText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, fontVariant: ['tabular-nums'] },

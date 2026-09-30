@@ -60,6 +60,17 @@
         "…",
         "(The empty armour tilts its helm at you. It seems friendly. It seems to be waiting for something.)"
       ]
+    },
+    {
+      "id": "heart-armoury",
+      "type": "chest",
+      "x": 12,
+      "y": 6,
+      "item": "heart-piece",
+      "lines": [
+        "Behind the armour stand, in a soldier's footlocker: a Heart Piece.",
+        "The armour definitely moved that time."
+      ]
     }
   ],
   "art": {

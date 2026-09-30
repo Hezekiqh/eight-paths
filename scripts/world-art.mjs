@@ -1060,7 +1060,7 @@ const SKIN = '#E8B48C';
  * `hair` picks a style; `extra` draws anything particular to them.
  */
 const WALKERS = {
-  brannoc: { top: '#9AA0B4', shade: '#6A7088', legs: '#6A7088', boots: '#5C3A28', belt: '#5C3A28', hair: ['short', '#C4442A'], back: 'sword', beard: '#C4442A' },
+  brannoc: { top: '#9AA0B4', shade: '#6A7088', legs: '#6A7088', boots: '#5C3A28', belt: '#5C3A28', hair: ['short', '#C4442A'], sword: true, beard: '#C4442A' },
   ysolde: { robe: true, top: '#9A6A9E', shade: '#76507C', boots: '#2A2030', belt: '#FFC940', hair: ['bun', '#3A2A2E'], monocle: true },
   quill: { robe: true, top: '#3A3470', shade: '#2A2458', boots: '#2A2030', belt: '#6A4028', hair: ['short', '#6A4028'], hat: 'wizard', glasses: true },
   wren: { robe: true, top: '#8A8898', shade: '#6A687A', boots: '#2A2030', hair: ['veil', '#5A586A'], collar: '#F0E6C8', lantern: true },
@@ -1075,29 +1075,38 @@ const WALKERS = {
   oriel: { robe: true, top: '#3A2A6A', shade: '#2A1E50', boots: '#2A2030', belt: '#FFC940', hair: ['veil', '#8A3A8A'], beads: '#FFC940' },
   hoot: { robe: true, top: '#8A6A44', shade: '#6A4E30', boots: '#C8A040', belt: '#B3261E', hair: ['bald', '#9A7A54'], glasses: true },
   holt: { top: '#7A6A4A', shade: '#5A4E36', legs: '#4A4038', boots: '#3A2A20', belt: '#3A2A20', hair: ['short', '#6A6A6A'], beard: '#8A8A8A' },
-  mira: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#4A3A2A', boots: '#3A2A20', belt: '#6A4028', hair: ['short', '#2A1A12'], back: 'sword', cloak: '#3A4A2A' },
+  mira: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#4A3A2A', boots: '#3A2A20', belt: '#6A4028', hair: ['short', '#2A1A12'], sword: true, cloak: '#3A4A2A' },
   fen: { robe: true, top: '#6A5A4A', shade: '#4E4236', boots: '#3A2A20', hair: ['bald', '#C8B8A0'], beard: '#D8D0C0' },
   dunn: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#1A1A24', skin: '#8A8AA0', hair: ['short', '#2A2A3A'] },
   bellwether: { top: '#6A6A78', shade: '#4A4A58', legs: '#4A4A58', boots: '#3A3A42', belt: '#8A4A2A', skin: '#6A6A78', hair: ['hood', '#6A6A78'] },
   quartermaster: { robe: true, top: '#B8C0C8', shade: '#8A94A0', boots: '#8A94A0', skin: '#D8E0E8', hair: ['bald', '#C8D0D8'], glasses: true },
-  plush: { robe: true, top: '#8A5AA0', shade: '#6A4280', boots: '#E8C0D0', belt: '#FFC940', hair: ['hood', '#E8E0F0'], beads: '#FFC940' },
+  // matches his collectible: striped sky-blue pajamas, medals, a crown, a white mustache, half-shut eyes
+  plush: { top: '#7AB0E0', shade: '#7AB0E0', legs: '#7AB0E0', boots: '#F0E6C8', skin: '#F2CDA8', hair: ['short', '#E8E4DC'], stripes: '#F0E6C8', medals: true, mustache: '#E8E4DC', sleepy: true, crown: '#F2C14E' },
   sleeper: { top: '#C8B8E0', shade: '#A898C0', legs: '#A898C0', boots: '#E8C0D0', belt: '#8A5AA0', hair: ['short', '#6A4A30'], collar: '#E8E0F0' },
   bo: { top: '#E84A4A', shade: '#FFC940', legs: '#3A3A8A', boots: '#2A2020', hair: ['spiky', '#FFC940'], patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'] },
-  raider: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#3A2418'], beard: '#3A2418', back: 'sword' },
+  raider: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#3A2418'], beard: '#3A2418', sword: true },
   gert: { robe: true, top: '#6A6A5A', shade: '#4E4E42', boots: '#3A3A30', hair: ['short', '#8A8A7A'], lantern: true },
   tessa: { top: '#E8E0D0', shade: '#C8B8A0', legs: '#6A5A4A', boots: '#4A3A2A', hair: ['bun', '#8A4A2A'], apron: '#F4F0EA' },
   barnaby: { top: '#8A2A2A', shade: '#6A1E1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#FFC940', hair: ['short', '#4A3A2A'], hat: 'wizard' },
   pim: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
-  varga: { top: '#5A3A3A', shade: '#3E2828', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#1A1210'], back: 'sword', cloak: '#6A1216' },
+  varga: { top: '#5A3A3A', shade: '#3E2828', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#1A1210'], sword: true, cloak: '#6A1216' },
   brunna: { top: '#8A6A4A', shade: '#6A4E36', legs: '#6A4E36', boots: '#4A3A2A', hair: ['short', '#C8A060'] },
   nana: { robe: true, top: '#6A8AA0', shade: '#4E6A80', boots: '#3A2A20', hair: ['bun', '#E8E4E0'], apron: '#F4F0EA' },
   harrow: { top: '#5A4A3A', shade: '#3E3228', legs: '#3A2A20', boots: '#2A1A12', hair: ['bald', '#E8B48C'], beard: '#B8B0A8', apron: '#3A2A1A' },
   hugo: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#5A4A3A', boots: '#3A2A20', hair: ['short', '#8A7A6A'], beard: '#8A7A6A', leaves: '#4ADE80' },
-  aurek: { top: '#7A8A7A', shade: '#5A6A5A', legs: '#5A6A5A', boots: '#3A4A3A', skin: '#A8B8A8', hair: ['short', '#5A6A5A'], back: 'sword' },
-  kaldor: { top: '#3A2A2A', shade: '#6A1216', legs: '#2A1A1A', boots: '#1A1010', belt: '#FFC940', skin: '#D8A880', hair: ['hood', '#8A8A9A'], beard: '#C4442A', back: 'sword', cloak: '#6A1216' },
-  shadow: { top: '#1E1A2E', shade: '#141024', legs: '#141024', boots: '#0A0812', belt: '#2E2A40', skin: '#3A3450', hair: ['short', '#141024'], back: 'sword' },
+  // Aurek is drawn twice as big in the World: a stitched giant, raised and bound.
+  aurek: { top: '#7A8A7A', shade: '#5A6A5A', legs: '#5A6A5A', boots: '#3A4A3A', skin: '#A8B8A8', hair: ['short', '#5A6A5A'], sword: true, stitches: '#2A1A1A' },
+  // Kaldor casts no shadow (his torches and mirrors see to it): the game draws one only when a torch gutters.
+  kaldor: { top: '#3A2A2A', shade: '#6A1216', legs: '#2A1A1A', boots: '#1A1010', belt: '#FFC940', skin: '#D8A880', hair: ['hood', '#8A8A9A'], beard: '#C4442A', sword: true, cloak: '#6A1216', crown: '#FFC940', noShadow: true },
+  shadow: { top: '#1E1A2E', shade: '#141024', legs: '#141024', boots: '#0A0812', belt: '#2E2A40', skin: '#3A3450', hair: ['short', '#141024'], sword: true },
   rusted: { top: '#8A5A3A', shade: '#6A4028', legs: '#6A4028', boots: '#4A2A18', belt: '#3A2A20', skin: '#8A5A3A', hair: ['hood', '#8A5A3A'] },
   echo: { top: '#5A5A8A', shade: '#3A3A6A', legs: '#3A3A6A', boots: '#2A2A4A', belt: '#8A8AC0', skin: '#8A8AB8', hair: ['short', '#3A3A6A'], beard: '#6A6A9A' },
+  // Season 1's quieter rooms: the chapel's sexton, a shadow officer, the crypt's chaplain, the Broken Guard, a lamplighter.
+  sexton: { robe: true, top: '#5A5A62', shade: '#42424A', boots: '#2A2030', belt: '#8A6A3A', hair: ['bun', '#9A9490'], collar: '#E8E0D0', apron: '#8A8478' },
+  officer: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#C8B070', skin: '#8A8AA0', hair: ['short', '#2A2A3A'], cloak: '#4A2A3A', collar: '#C8B070', back: 'sword' },
+  chaplain: { robe: true, top: '#8A94B8', shade: '#6A7498', boots: '#6A7498', skin: '#C8D0E8', hair: ['bald', '#B8C0D8'], collar: '#E8ECF8', lantern: true },
+  maelis: { top: '#7A7A8A', shade: '#5A5A6A', legs: '#4A4A58', boots: '#3A2A20', belt: '#8A6A3A', hair: ['bun', '#4A3A2A'], cloak: '#4A4A5A' },
+  lamplighter: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['hood', '#4A3228'], lantern: true },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -1114,13 +1123,6 @@ function drawWalker(g, ox, oy, w, dir, frame) {
 
   // things carried on the back, seen behind the body from the front and side
   const backItem = (behind) => {
-    if (w.back === 'sword') {
-      if (back && !behind) {
-        b(7, 2, 2, 14, '#D8DCE8');
-        b(6, 12, 4, 1, '#8A6A3A');
-        b(7, 13, 2, 2, '#5C3A28');
-      } else if (behind) b(side ? 10 : 12, 1, 1, 11, '#D8DCE8');
-    }
     if (w.back === 'lute') {
       if (back && !behind) {
         ellipse(f, 8, 15, 3, 3, '#B87838');
@@ -1188,6 +1190,12 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     b(5, 11, 6, 3, w.patchwork[1]);
     b(5, 14, 6, 3, w.patchwork[2]);
   }
+  if (w.stripes) for (const y of [12, 14, 16]) b(side ? 5 : 4, y, side ? 6 : 8, 1, w.stripes);
+  if (w.medals && !back) {
+    const medal = ['#F2C14E', '#C4442A', '#C8CCD8'];
+    if (side) p(dir === 'left' ? 6 : 9, 11, medal[0]);
+    else for (let x = 5; x <= 10; x += 2) p(x, 11, medal[(x - 5) / 2]);
+  }
   if (w.apron) {
     if (dir === 'down') b(5, 12, 6, 6, w.apron);
     else if (back) {
@@ -1222,6 +1230,34 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       p(12, 19 + swing(-1), '#FFF4C0');
     }
   }
+
+  // a sword held in the hand: upright at the side from the front and back,
+  // angled forward, ready, from the side
+  if (w.sword) {
+    const BLADE = '#D8DCE8';
+    const TIP = '#FFFFFF';
+    const GUARD = '#8A6A3A';
+    const GRIP = '#5C3A28';
+    if (side) {
+      const ax = step === 0 ? 7 : step === 1 ? 6 : 8;
+      p(ax + 1, 17, GRIP); // pommel below the fist
+      p(ax - 2, 16, GUARD);
+      p(ax, 14, GUARD);
+      p(ax - 1, 15, GUARD);
+      for (let i = 2; i <= 6; i++) p(ax - i, 16 - i, i === 6 ? TIP : BLADE);
+      b(ax, 16, 2, 1, skin); // the fist over the grip
+    } else {
+      // the sword hand: the right hand, which is on the viewer's left from behind
+      const x = back ? 2 : 13;
+      const s = step === (back ? 1 : -1) ? 1 : 0;
+      p(x, 3 + s, TIP);
+      b(x, 4 + s, 1, 10, BLADE);
+      b(x - 1, 14 + s, 3, 1, GUARD);
+      b(x, 15 + s, 1, 2, GRIP);
+      p(x, 16 + s, skin); // the fist over the grip
+    }
+  }
+
   if (w.beads && dir === 'down') {
     for (const [x, y] of [
       [5, 11],
@@ -1237,13 +1273,21 @@ function drawWalker(g, ox, oy, w, dir, frame) {
   const face = dir === 'left' ? 4 : 7; // where the eye sits on a side view (left-facing; right is mirrored)
   b(4, 3, 8, 8, skin);
   if (!back) {
+    // sleepy eyes are half shut: one pixel, not two
     if (side) {
-      p(5, 7, EYE);
       p(5, 8, EYE);
+      if (!w.sleepy) p(5, 7, EYE);
+    } else if (w.sleepy) {
+      b(5, 8, 2, 1, EYE);
+      b(9, 8, 2, 1, EYE);
     } else {
       b(6, 7, 1, 2, EYE);
       b(9, 7, 1, 2, EYE);
     }
+  }
+  if (w.mustache && !back) {
+    if (side) b(4, 9, 2, 1, w.mustache);
+    else b(6, 9, 4, 1, w.mustache);
   }
   void face;
   if (w.skull && !back) {
@@ -1394,6 +1438,23 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     }
   }
 
+  if (w.stitches && !back) {
+    // a seam down the chest and across the brow
+    for (let y = 11; y <= 16; y++) p(side ? 7 : 8, y, w.stitches);
+    for (const y of [12, 14, 16]) {
+      p(side ? 6 : 7, y, w.stitches);
+      p(side ? 8 : 9, y, w.stitches);
+    }
+    if (!side) b(5, 5, 6, 1, w.stitches);
+    else b(4, 5, 4, 1, w.stitches);
+  }
+  if (w.crown) {
+    // a thin gold circlet, points up: over a hood, or sitting right on the hair
+    const cy = style === 'hood' ? 1 : 2;
+    b(back && style === 'hood' ? 3 : 4, cy, back && style === 'hood' ? 10 : 8, 1, w.crown);
+    for (const x of side ? [5, 8, 11] : [4, 7, 8, 11]) p(x, cy - 1, w.crown);
+  }
+
   // a dark outline around the whole silhouette, then a soft shadow at the feet
   const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
   const outline = [];
@@ -1401,7 +1462,7 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     for (let x = 0; x < FW; x++)
       if (!f[y][x] && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) outline.push([x, y]);
   for (const [x, y] of outline) f[y][x] = OUT;
-  for (let y = 21; y < 24; y++)
+  for (let y = 21; y < (w.noShadow ? 21 : 24); y++)
     for (let x = 2; x < 14; x++) {
       const d = ((x - 7.5) / 6) ** 2 + ((y - 22.5) / 1.6) ** 2;
       if (d <= 1 && !f[y][x]) f[y][x] = [16, 10, 8, 90];
