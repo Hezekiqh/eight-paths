@@ -17,6 +17,7 @@ const rules = (over: Partial<FightRules> = {}): FightRules => ({
   bossY: 0,
   throws: false,
   drowsy: 0,
+  maxHp: HEARTS,
   ...over,
 });
 const input = (over: Partial<FightInput> = {}): FightInput => ({

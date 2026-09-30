@@ -31,7 +31,54 @@
       "The way out to the street."
     ]
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "maelis",
+      "type": "npc",
+      "x": 13,
+      "y": 6,
+      "sprite": "maelis",
+      "facing": "left",
+      "name": "Sergeant Maelis",
+      "lines": [
+        "Broken Guard. We rake the sand, we carry the fallen out, we mind the drains.",
+        "Our great-great-grandmothers guarded a prince. We guard a pit. Family tradition, of a sort."
+      ],
+      "questions": [
+        {
+          "ask": "What's the champions' wall?",
+          "answer": [
+            "Three hundred years of names. We cross them out when they fall. It's the only writing we're allowed.",
+            "The newest line's blank. Try not to make me cross you out. I've a steady hand, but I'd rather not."
+          ]
+        },
+        {
+          "ask": "Tell me about the prince.",
+          "answer": [
+            "His captain wrote him down as lost in action. Not deserter. Lost.",
+            "My family's kept that word for five hundred years. Lost things can be found."
+          ]
+        },
+        {
+          "ask": "Tell me about the drains.",
+          "answer": [
+            "Oh, now you've done it.",
+            "The north drain runs under the wall toward the maze. Hugo found something in it once. He won't say what. Gardeners."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fight-card",
+      "type": "sign",
+      "x": 2,
+      "y": 2,
+      "lines": [
+        "The fight card, chalked fresh every day: BRING A FIGHTER OR BRING IRON.",
+        "A smaller line at the bottom: CHEERING IS COMPULSORY."
+      ]
+    }
+  ],
   "art": {
     "1": "E"
   },

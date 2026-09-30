@@ -46,7 +46,12 @@ export const WALKER_ROWS = {
   shadow: 35,
   rusted: 36,
   echo: 37,
-  keeper: 38,
+  sexton: 38,
+  officer: 39,
+  chaplain: 40,
+  maelis: 41,
+  lamplighter: 42,
+  keeper: 43,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

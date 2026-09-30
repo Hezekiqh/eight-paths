@@ -40,7 +40,43 @@
       "The way back through the broken wall."
     ]
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "lieutenant",
+      "type": "npc",
+      "x": 7,
+      "y": 2,
+      "sprite": "officer",
+      "facing": "down",
+      "name": "Lieutenant Arden",
+      "lines": [
+        "At ease. No, sit. Nobody salutes in the mess. It's the one rule I made myself.",
+        "Supper's late. Supper's been late for a while, I think. Odd. I'm not hungry."
+      ],
+      "questions": [
+        {
+          "ask": "What's the map for?",
+          "answer": [
+            "The king wants the eastern pass fortified by spring. I've drawn it nine times.",
+            "Nobody attacks from the east. I think he knows that. I think that's what worries me."
+          ]
+        },
+        {
+          "ask": "Whose letter is that?",
+          "answer": [
+            "Mine. I keep meaning to send it. I keep meaning to be braver about what's in it.",
+            "Don't read it. ...You've read it. Well. Now somebody knows."
+          ]
+        },
+        {
+          "ask": "What day is it?",
+          "answer": [
+            "The eve of something. Everyone's polishing. Nobody's saying what for."
+          ]
+        }
+      ]
+    }
+  ],
   "art": {
     "2": "o"
   }

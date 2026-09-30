@@ -381,6 +381,57 @@
         ],
         "cant": []
       }
+    },
+    {
+      "id": "gate-stone",
+      "type": "sign",
+      "x": 2,
+      "y": 8,
+      "lines": [
+        "A gatestone, chiselled half away: STRENGTH IN SERV...",
+        "The last word is scratched out. Above it, cut deeper and newer: THE STRONG TAKE."
+      ]
+    },
+    {
+      "id": "street-sign",
+      "type": "sign",
+      "x": 16,
+      "y": 5,
+      "lines": [
+        "A street sign with two arms. One reads KALDOR STREET.",
+        "The other reads KALDOR STREET. They point different ways."
+      ]
+    },
+    {
+      "id": "crier-board",
+      "type": "sign",
+      "x": 16,
+      "y": 11,
+      "lines": [
+        "The Crier's board: VICTORIES OF THE KING: see previous notice.",
+        "The previous notice: see previous notice."
+      ]
+    },
+    {
+      "id": "playpen-sign",
+      "type": "sign",
+      "x": 35,
+      "y": 13,
+      "lines": [
+        "KALDOR'S LITTLE CRUSHERS PLAYPEN. This way. No biting.",
+        "Smaller, underneath: Biting is for Tuesdays."
+      ]
+    },
+    {
+      "id": "heart-alley",
+      "type": "chest",
+      "x": 38,
+      "y": 2,
+      "item": "heart-piece",
+      "lines": [
+        "Wedged behind a rain barrel, out of the horde's sight: a Heart Piece.",
+        "Somebody in this town still hides good things."
+      ]
     }
   ],
   "art": {

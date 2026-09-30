@@ -35,7 +35,44 @@
       "The door back to the street."
     ]
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "sexton",
+      "type": "npc",
+      "x": 9,
+      "y": 2,
+      "sprite": "sexton",
+      "facing": "left",
+      "name": "Sexton Rook",
+      "lines": [
+        "Mind the soot, dear. I sweep round the outlines. Never over them.",
+        "Three alcoves, three statues, gone before anyone's grandmother was born. I still say good morning to them."
+      ],
+      "questions": [
+        {
+          "ask": "Who were the statues?",
+          "answer": [
+            "Nobody remembers. The horde carried them out in the first year, like old furniture.",
+            "The soot kept their shapes, though. Soot's loyal like that."
+          ]
+        },
+        {
+          "ask": "What's behind the rubble?",
+          "answer": [
+            "Rubble.",
+            "...And a draught. And some nights, the smell of a candle. I don't go back there. I haven't the light for it."
+          ]
+        },
+        {
+          "ask": "Does anyone pray here?",
+          "answer": [
+            "The horde says it's a waste of a good roof. So it's quiet.",
+            "Quiet's a kind of prayer, if you let it be one."
+          ]
+        }
+      ]
+    }
+  ],
   "art": {
     "1": "E",
     "4": "x"

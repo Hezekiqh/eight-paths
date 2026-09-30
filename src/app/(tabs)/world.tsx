@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { claimMusic } from '@/audio';
+import { claimMusic, playSound } from '@/audio';
 import { DialogueBox, type Dialogue } from '@/components/world/dialogue-box';
 import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
@@ -54,8 +54,11 @@ import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
-import { ATTACKS, HEARTS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
+import { ATTACKS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
+import { ambienceOf, flamesOn } from '@/world/ambience';
+import { ITEMS, PIECES_PER_HEART, chestFlag, foundLines, heartPieces, isCandle, maxHearts, satchel } from '@/world/items';
+import { haptics } from '@/haptics';
 import { useWorldProgress } from '@/world/use-progress';
 
 /**
@@ -241,6 +244,18 @@ function World({
     [map, ways],
   );
   const party = useMemo(() => [hero], [hero]);
+  // What stands in the room and how it feels: chests (open once their flag is set), signs, the dark, the flames.
+  const liveFlags = useWorldStore((s) => s.flags);
+  const chests = useMemo(
+    () =>
+      map.objects.flatMap((o) => (o.type === 'chest' ? [{ x: o.x, y: o.y, open: liveFlags.includes(chestFlag(o.id)) }] : [])),
+    [map, liveFlags],
+  );
+  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  const ambience = useMemo(() => ambienceOf(map), [map]);
+  const flames = useMemo(() => flamesOn(map), [map]);
+  // Hearts for this visit: five, plus one for every four pieces found.
+  const [hearts] = useState(() => maxHearts(arrivalFlags));
   const sim = useWorldSim(start, map.npcs);
   const today = useToday();
   const { unclaimed } = useObjectives(today);
@@ -359,16 +374,20 @@ function World({
   }, [map, gameParty, finish]);
   const onDefeat = useCallback(() => {
     if (map.boss) useWorldStore.getState().notice(fightNotice(map.id as MapId));
+    // You wake by the last candle you rested at, or on the Archive floor.
+    const { candles, lastCandle } = useWorldStore.getState();
+    const spot = candles.find((c) => c.map === lastCandle);
+    const a = MAPS.archive.spawn;
+    const wake: Arrival = spot ?? { map: 'archive', x: a.x, y: a.y, facing: a.facing };
     setDialogue({
       lines: [
         'Your knees give. The dark closes in.',
-        "You wake on the Archive floor, the candles still burning. Nothing lost. Try again when you're ready.",
+        spot && spot.map !== 'archive'
+          ? `You wake by the candle in ${MAPS[spot.map].name}, still burning. Nothing lost. Try again when you're ready.`
+          : "You wake on the Archive floor, the candles still burning. Nothing lost. Try again when you're ready.",
         fightHint(hero, heroLevel, map.id as MapId),
       ],
-      then: () => {
-        const a = MAPS.archive.spawn;
-        travel({ map: 'archive', x: a.x, y: a.y, facing: a.facing });
-      },
+      then: () => travel(wake),
     });
   }, [travel, map, hero, heroLevel]);
   const setHero = useWorldStore((s) => s.setHero);
@@ -421,6 +440,12 @@ function World({
         damage={damageFor(ATTACKS[heroPath], heroLevel)}
         level={heroLevel}
         special={SPECIALS[heroPath].kind}
+        hearts={hearts}
+        chests={chests}
+        signs={signs}
+        ambience={ambience}
+        flames={flames}
+        snuffable={map.id === 'war-hall'}
         onDefeat={onDefeat}
         boss={bossOn && map.boss ? { x: map.boss.x * TILE + TILE / 2, y: map.boss.y * TILE + TILE } : null}
         throws={bossOn && !map.boss?.kind}
@@ -447,7 +472,7 @@ function World({
           }}
         />
       )}
-      {fightMap.enemies.length > 0 && <Hearts hp={sim.hp} />}
+      {fightMap.enemies.length > 0 && <Hearts hp={sim.hp} max={hearts} />}
       {bossOn && !map.boss?.kind && <Drowsiness sleepy={sim.sleepy} />}
       {dialogue && (
         <DialogueBox
@@ -487,6 +512,14 @@ function World({
           }}
           party={walkers}
           hero={hero}
+          pieces={heartPieces(liveFlags) % PIECES_PER_HEART}
+          hearts={maxHearts(liveFlags)}
+          items={satchel(liveFlags).map((id) => ({ id, name: ITEMS[id]?.name ?? id }))}
+          onRead={(id) => {
+            setPaused(false);
+            const item = ITEMS[id];
+            setDialogue({ lines: item?.text.length ? item.text : ['The seal is unbroken. Not yours to open, not yet.'] });
+          }}
           onSwap={(id) => {
             // Save where you stand; the World restarts right here with them.
             save();
@@ -552,6 +585,74 @@ function useAct(
         lines:
           thing.after && useWorldStore.getState().flags.includes(thing.after.flag) ? thing.after.lines : thing.lines,
         questions: thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined),
+      });
+      return;
+    }
+    if (thing?.type === 'sign') {
+      setDialogue({ lines: thing.lines });
+      return;
+    }
+    if (thing?.type === 'chest') {
+      const { flags, setFlag } = useWorldStore.getState();
+      const flag = chestFlag(thing.id);
+      if (flags.includes(flag)) {
+        setDialogue({ lines: ['An empty chest. You already took what was in it.'] });
+        return;
+      }
+      setFlag(flag);
+      playSound('quest');
+      haptics.success();
+      setDialogue({ lines: [...thing.lines, ...foundLines(thing.item, [...flags, flag])] });
+      return;
+    }
+    // A candle: rest by it (you'll wake here if you fall), or travel to another you've rested at.
+    if (isCandle(map, tx, ty)) {
+      const { candles, rest } = useWorldStore.getState();
+      const here = {
+        map: map.id as MapId,
+        x: Math.floor(sim.x.get() / TILE),
+        y: Math.floor((sim.y.get() - 1) / TILE),
+        facing: FACINGS[facing],
+      };
+      const elsewhere = [
+        { map: 'archive' as MapId, x: MAPS.archive.spawn.x, y: MAPS.archive.spawn.y, facing: MAPS.archive.spawn.facing },
+        ...candles.filter((c) => c.map !== 'archive'),
+      ].filter((c) => c.map !== map.id);
+      setDialogue({
+        lines: [...(map.examine[tileAt(map, tx, ty)] ?? []), 'The flame leans toward you, as if it knows you.'],
+        choices: [
+          {
+            label: 'Rest here',
+            then: () => {
+              rest(here);
+              haptics.success();
+              setDialogue({ lines: ["You rest a while. The flame steadies. If you fall, you'll wake here."] });
+            },
+          },
+          ...(elsewhere.length > 0
+            ? [
+                {
+                  label: 'Travel to another candle',
+                  then: () =>
+                    setDialogue({
+                      lines: ['Every candle you have rested by burns in your mind. Which one?'],
+                      choices: [
+                        ...elsewhere.map((c) => ({
+                          label: MAPS[c.map].name,
+                          then: () => {
+                            rest(here);
+                            rest(c);
+                            onTravel(c);
+                          },
+                        })),
+                        { label: 'Stay here', then: () => {} },
+                      ],
+                    }),
+                },
+              ]
+            : []),
+          { label: 'Leave it be', then: () => {} },
+        ],
       });
       return;
     }
@@ -653,14 +754,14 @@ const styles = StyleSheet.create({
 });
 
 /** Hearts left, top left, while there's something to fight. */
-function Hearts({ hp }: { hp: SharedValue<number> }) {
+function Hearts({ hp, max }: { hp: SharedValue<number>; max: number }) {
   const insets = useSafeAreaInsets();
   return (
     <View
       pointerEvents="none"
       style={[styles.hearts, { left: Math.max(insets.left, 16), top: Math.max(insets.top, 12) }]}
       accessibilityElementsHidden>
-      {Array.from({ length: HEARTS }, (_, i) => (
+      {Array.from({ length: max }, (_, i) => (
         <Heart key={i} index={i} hp={hp} />
       ))}
     </View>

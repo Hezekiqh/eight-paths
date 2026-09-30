@@ -79,6 +79,16 @@
           ]
         }
       ]
+    },
+    {
+      "id": "heart-maze",
+      "type": "chest",
+      "x": 2,
+      "y": 1,
+      "item": "heart-piece",
+      "lines": [
+        "At the end of a path that goes nowhere, where a boy once hid from his lessons: a Heart Piece."
+      ]
     }
   ],
   "art": {

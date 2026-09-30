@@ -8,6 +8,7 @@ import { COMPANIONS } from '@/story/companions';
 import type { HeroId } from '@/world/hero';
 import type { MapId } from '@/world/maps';
 import type { ControlScheme } from '@/world/store';
+import { PIECES_PER_HEART } from '@/world/items';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 /** The two ways to walk, shared with the World menu's Settings. */
@@ -36,6 +37,11 @@ type Props = {
   party: HeroId[];
   hero: HeroId;
   onSwap: (hero: HeroId) => void;
+  /** The Satchel: heart pieces toward the next heart, hearts now, and key items (read one with onRead). */
+  pieces: number;
+  hearts: number;
+  items: { id: string; name: string }[];
+  onRead: (id: string) => void;
 };
 
 /**
@@ -55,6 +61,10 @@ export function PauseMenu({
   party,
   hero,
   onSwap,
+  pieces,
+  hearts,
+  items,
+  onRead,
 }: Props) {
   return (
     <View style={styles.scrim}>
@@ -95,6 +105,29 @@ export function PauseMenu({
                 );
               })}
             </View>
+            <Text style={styles.section}>SATCHEL</Text>
+            <Text
+              style={styles.hint}
+              accessibilityLabel={`${hearts} hearts. ${pieces} of ${PIECES_PER_HEART} pieces toward the next.`}>
+              {`${'♥'.repeat(hearts)}  ·  Heart pieces ${pieces}/${PIECES_PER_HEART}`}
+            </Text>
+            {items.length > 0 && (
+              <View style={styles.party}>
+                {items.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Read ${item.name}`}
+                    onPress={() => {
+                      haptics.select();
+                      onRead(item.id);
+                    }}
+                    style={styles.member}>
+                    <Text style={styles.memberName}>{item.name}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
             <Text style={styles.section}>CONTROLS</Text>
             <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
             <Text style={styles.hint}>{HINTS[controls]}</Text>

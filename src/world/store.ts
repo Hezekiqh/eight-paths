@@ -13,6 +13,9 @@ export type ControlScheme = 'joystick' | 'touchpad';
 /** Where the player stands, in art pixels (the point between their feet). */
 export type WorldPosition = { map: MapId; x: number; y: number; facing: Facing };
 
+/** Where the player rested by a candle, in tiles: one per place. */
+export type CandleSpot = { map: MapId; x: number; y: number; facing: Facing };
+
 type WorldState = {
   controls: ControlScheme;
   /** Null until the player first walks; they then start at the map's spawn. */
@@ -34,10 +37,25 @@ type WorldState = {
   /** Things the player has run into and couldn't do yet (see notices.ts): the pause screen lists them. */
   noticed: string[];
   notice: (id: string) => void;
+  /** Candles rested at, one spot per place, and the place of the last: you wake there if you fall. */
+  candles: CandleSpot[];
+  lastCandle: MapId | null;
+  rest: (spot: CandleSpot) => void;
 };
 
-/** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`. All start empty. */
-const SAVE_VERSION = 4;
+/** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`. All start empty. */
+const SAVE_VERSION = 5;
+
+function isSpot(value: unknown): value is CandleSpot {
+  const v = value as Record<string, unknown> | null;
+  return (
+    !!v &&
+    isMapId(v.map) &&
+    Number.isInteger(v.x) &&
+    Number.isInteger(v.y) &&
+    FACINGS.includes(v.facing as Facing)
+  );
+}
 
 /** Drops anything malformed from a loaded save, keeping what's good. */
 function sanitize(persisted: unknown): Partial<WorldState> {
@@ -49,6 +67,8 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   if (data.heard !== undefined) out.heard = cleanLore(data.heard);
   if (Array.isArray(data.flags)) out.flags = data.flags.filter((f): f is string => typeof f === 'string');
   if (Array.isArray(data.noticed)) out.noticed = data.noticed.filter((n): n is string => typeof n === 'string');
+  if (Array.isArray(data.candles)) out.candles = data.candles.filter(isSpot);
+  if (isMapId(data.lastCandle) && out.candles?.some((c) => c.map === data.lastCandle)) out.lastCandle = data.lastCandle;
   const p = data.position as Record<string, unknown> | null | undefined;
   if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
@@ -77,6 +97,9 @@ export const useWorldStore = create<WorldState>()(
       setFlag: (flag) => set((s) => (s.flags.includes(flag) ? s : { flags: [...s.flags, flag] })),
       noticed: [],
       notice: (id) => set((s) => (s.noticed.includes(id) ? s : { noticed: [...s.noticed, id] })),
+      candles: [],
+      lastCandle: null,
+      rest: (spot) => set((s) => ({ candles: [...s.candles.filter((c) => c.map !== spot.map), spot], lastCandle: spot.map })),
     }),
     {
       name: 'eight-paths-world',
@@ -90,6 +113,8 @@ export const useWorldStore = create<WorldState>()(
         heard: s.heard,
         flags: s.flags,
         noticed: s.noticed,
+        candles: s.candles,
+        lastCandle: s.lastCandle,
       }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),

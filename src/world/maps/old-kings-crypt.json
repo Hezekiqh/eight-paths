@@ -12,7 +12,7 @@
     "#W.L..M.W#",
     "#W..OO..W#",
     "#W..OO..W#",
-    "#W...k..W#",
+    "#W.....kW#",
     "#WWW2WWWW#",
     "##########"
   ],
@@ -43,7 +43,45 @@
       "The stair back up to the chapel."
     ]
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "chaplain",
+      "type": "npc",
+      "x": 2,
+      "y": 2,
+      "sprite": "chaplain",
+      "facing": "down",
+      "name": "The Chaplain's Echo",
+      "lines": [
+        "Ah. A light. It's been a very long time since anyone brought one down here.",
+        "Don't be frightened. I'm only what's left of someone who sat up too long beside a candle.",
+        "I keep it lit for him. Somebody should."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "I was the king's chaplain. I wrote down what I saw, sealed it, and didn't sleep for a very long time.",
+            "I don't need to now. It's restful, in its way."
+          ]
+        },
+        {
+          "ask": "Was the king really mad?",
+          "answer": [
+            "He was a hard man, and at the end, not a well one. I prayed for him every night.",
+            "He also asked the bakers how the bread was. Both things are true. Most things are."
+          ]
+        },
+        {
+          "ask": "Whose is the empty niche?",
+          "answer": [
+            "The boy's. They carved his name and waited for a body that never came.",
+            "So I stopped waiting for a body, and started waiting for a boy. It's a much nicer thing to wait for."
+          ]
+        }
+      ]
+    }
+  ],
   "art": {
     "2": "o",
     "M": "L",

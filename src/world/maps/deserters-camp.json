@@ -165,6 +165,17 @@
           ]
         }
       ]
+    },
+    {
+      "id": "heart-camp",
+      "type": "chest",
+      "x": 28,
+      "y": 4,
+      "item": "heart-piece",
+      "lines": [
+        "Under a tent peg marked NOT A TREASURE: a Heart Piece.",
+        "The deserters are very consistent about their signs."
+      ]
     }
   ]
 }

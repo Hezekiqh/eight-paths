@@ -180,6 +180,27 @@
         "Zzz... hm? Ah. A player. Don't mind me.",
         "I'm resting my eyes. Have you rested yours? You've been looking at this little screen for a while."
       ]
+    },
+    {
+      "id": "iron-notice",
+      "type": "sign",
+      "x": 11,
+      "y": 9,
+      "lines": [
+        "BY ORDER OF THE KING: all iron to be surrendered at the border post. Turnips may be kept.",
+        "Underneath, in a different hand: \"generous.\""
+      ]
+    },
+    {
+      "id": "heart-shrine",
+      "type": "chest",
+      "x": 8,
+      "y": 1,
+      "item": "heart-piece",
+      "lines": [
+        "Behind the toppled statues, deep in the moss: a Heart Piece.",
+        "Someone hid it where the forgotten things are. Nobody looks there."
+      ]
     }
   ]
 }

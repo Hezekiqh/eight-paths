@@ -9,7 +9,9 @@ import {
   Oval,
   Paint,
   Path,
+  RadialGradient,
   Skia,
+  vec,
   Circle,
   Rect,
   useImage,
@@ -58,6 +60,7 @@ import {
 } from '@/world/combat';
 import { CHARGE_TIME, startFight, stepFight, type Fight, type Special } from '@/world/fight';
 import { AttackEffects } from '@/components/world/attack-effects';
+import { MAX_GUTTERED, type Ambience } from '@/world/ambience';
 import { playSound, type Effect } from '@/audio';
 import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
@@ -186,11 +189,21 @@ type Props = {
   /** How the walking character fights, and how hard (their real level adds damage). */
   attack?: Attack;
   damage?: number;
+  /** Hearts to start the fight with (five, plus one per four heart pieces). */
+  hearts?: number;
   /** Their real level (Lv 10 charges; Lv 20 adds their Path's special), and that special. */
   level?: number;
   special?: Special;
   /** Out of hearts. */
   onDefeat?: () => void;
+  /** Chests (open or not) and signs standing on tiles, drawn live so they can change. */
+  chests?: { x: number; y: number; open: boolean }[];
+  signs?: { x: number; y: number }[];
+  /** How dark it is here and what drifts in the air; every flame [x, y, light reach] (see ambience.ts). */
+  ambience?: Ambience;
+  flames?: number[][];
+  /** Kaldor's war hall: each torch that gutters in the fight goes out, and stays out. */
+  snuffable?: boolean;
   /** A boss throwing pillows from here (art pixels), drowsiness filling at `drowsy` a second, and a win when every enemy is down. */
   boss?: { x: number; y: number } | null;
   /** The boss lobs pillows (Baron Plush). */
@@ -222,11 +235,17 @@ export function WorldView({
   damage = 1,
   level = 1,
   special = 'spin',
+  hearts = HEARTS,
   onDefeat,
   boss = null,
   throws = false,
   drowsy = 0,
   onWin,
+  chests = [],
+  signs = [],
+  ambience = { darkness: 0, motes: null },
+  flames = [],
+  snuffable = false,
 }: Props) {
   const mapImage = useImage(map.image);
   const walkers = useImage(WALKERS_IMAGE);
@@ -247,7 +266,12 @@ export function WorldView({
   const step = useMemo(() => (onStep ? onStep : () => {}), [onStep]);
 
   // ---- combat: the whole fight in one value, stepped by stepFight (fight.ts) each frame.
-  const fight = useSharedValue<Fight>(startFight(map.enemies.map((e) => spawnEnemy(e.kind, ...npcFeet(e)))));
+  const fight = useSharedValue<Fight>(
+    startFight(
+      map.enemies.map((e) => spawnEnemy(e.kind, ...npcFeet(e))),
+      hearts,
+    ),
+  );
   const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
@@ -272,8 +296,11 @@ export function WorldView({
   const puffs = useSharedValue<number[][]>([]);
   /** A blow shrugged off (Kaldor, guarded): a spark [x, y, time left]. */
   const sparks = useSharedValue<number[]>([0, 0, 0]);
-  /** A torch guttering: the room dims for a moment (seconds left). */
+  /** A torch guttering: the room dims for a moment (seconds left); and how many have gone out for good (war hall). */
   const gutter = useSharedValue(0);
+  const guttered = useSharedValue(0);
+  /** Seconds since the room opened: flames flicker and motes drift by it. */
+  const clock = useSharedValue(0);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   const npcs = useMemo(
     () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], ...npcFeet(n)] as [number, number, number]),
@@ -392,7 +419,7 @@ export function WorldView({
           release,
           dodge,
         },
-        { grid, attack, damage, level, special, boss: bossX >= 0, bossX, bossY, throws, drowsy },
+        { grid, attack, damage, level, special, boss: bossX >= 0, bossX, bossY, throws, drowsy, maxHp: hearts },
         dt,
       );
       const f = r.fight;
@@ -436,6 +463,7 @@ export function WorldView({
       }
       if (ev.guttered) {
         gutter.set(0.5);
+        if (snuffable) guttered.set(Math.min(MAX_GUTTERED, guttered.get() + 1));
         scheduleOnRN(feel, 'gutter');
       }
       if (ev.hurt) {
@@ -457,7 +485,12 @@ export function WorldView({
     const white = whiteFor.get();
     if (white.some((w) => w > 0)) whiteFor.set(white.map((w) => Math.max(0, w - realDt)));
     if (puffs.get().length > 0) {
-      puffs.set(puffs.get().map((p) => [p[0], p[1], p[2] - realDt]).filter((p) => p[2] > 0));
+      puffs.set(
+        puffs
+          .get()
+          .map((p) => [p[0], p[1], p[2] - realDt])
+          .filter((p) => p[2] > 0),
+      );
     }
 
     // Boulders slide toward their tiles.
@@ -487,6 +520,7 @@ export function WorldView({
     camX.set(round(cx));
     camY.set(round(cy));
     bob.set(Math.floor(info.timestamp / 350) % 2);
+    clock.set(clock.get() + realDt);
 
     // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
     // Each: [row, facing, frame, x, y, tint (0 none, 1 white: struck, 2 red: winding up), size].
@@ -522,7 +556,15 @@ export function WorldView({
       const f = sim.facing.get();
       const lx = f === 2 ? -lean : f === 3 ? lean : 0;
       const ly = f === 1 ? -lean : f === 0 ? lean : 0;
-      ents.push([partyRows[0], f, walkFrame(sim.walked.get(), moving || now.roll > 0), sim.x.get() + lx, sim.y.get() + ly, 0, 1]);
+      ents.push([
+        partyRows[0],
+        f,
+        walkFrame(sim.walked.get(), moving || now.roll > 0),
+        sim.x.get() + lx,
+        sim.y.get() + ly,
+        0,
+        1,
+      ]);
     }
     ents.sort(byFeet);
     const list: number[] = [];
@@ -554,7 +596,9 @@ export function WorldView({
       for (let k = 0; k < 8; k++) {
         const a = (k * Math.PI) / 4;
         const r = 3 + 11 * p;
-        path.addRect(Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size));
+        path.addRect(
+          Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size),
+        );
       }
     }
     return path;
@@ -605,6 +649,59 @@ export function WorldView({
   });
   const dim = useDerivedValue(() => gutter.get() * 1.2);
 
+  // ---- the living room: flames that flicker (or, in the war hall, gutter out), motes in the air, and the dark.
+  const flameLit = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const out = snuffable ? guttered.get() : 0;
+    flames.forEach(([x, y], i) => {
+      if (i < out) return;
+      const k = Math.floor(t * 9 + i * 3.7);
+      const lean = k % 3 === 0 ? -1 : k % 5 === 0 ? 1 : 0;
+      path.addRect(Skia.XYWHRect(x + lean, y - (k % 2), 2, 2 + (k % 2)));
+    });
+    return path;
+  });
+  const flameCore = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const out = snuffable ? guttered.get() : 0;
+    flames.forEach(([x, y], i) => {
+      if (i < out) return;
+      if (Math.floor(t * 7 + i) % 4 !== 0) path.addRect(Skia.XYWHRect(x, y + 1, 1, 1));
+    });
+    return path;
+  });
+  const snuffed = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const out = snuffable ? guttered.get() : 0;
+    for (let i = 0; i < out && i < flames.length; i++) {
+      const [x, y] = flames[i];
+      path.addRect(Skia.XYWHRect(x - 1, y - 2, 4, 5));
+    }
+    return path;
+  });
+  const motePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    if (!ambience.motes) return path;
+    const t = clock.get();
+    const pollen = ambience.motes === 'pollen';
+    for (let i = 0; i < 26; i++) {
+      const sx = (i * 0.618) % 1;
+      const sy = (i * 0.414 + 0.3) % 1;
+      const vx = pollen ? 4 + (i % 3) * 2 : i % 2 ? 1.5 : -1.5;
+      const vy = pollen ? Math.sin(t * 0.8 + i) * 3 : 2 + (i % 4);
+      const x = (((sx * mapW + vx * t) % mapW) + mapW) % mapW;
+      const y = (((sy * mapH + (pollen ? vy : vy * t)) % mapH) + mapH) % mapH;
+      path.addRect(Skia.XYWHRect(Math.round(x), Math.round(y), 1, 1));
+    }
+    return path;
+  });
+  const darkness = useDerivedValue(() => ambience.darkness + (snuffable ? guttered.get() * 0.06 : 0));
+  const youX = useDerivedValue(() => sim.x.get());
+  const youY = useDerivedValue(() => sim.y.get() - 10);
+  const youCenter = useDerivedValue(() => vec(sim.x.get(), sim.y.get() - 10));
+
   const camera = useDerivedValue(() => [
     { translateX: -(camX.get() + shakeOff.get()[0]) * scale },
     { translateY: -(camY.get() + shakeOff.get()[1]) * scale },
@@ -626,6 +723,19 @@ export function WorldView({
         {boulders.map((_, i) => (
           <Boulder key={i} index={i} positions={rockPos} />
         ))}
+        {signs.map((p) => (
+          <Sign key={`s${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
+        {chests.map((p) => (
+          <Chest key={`c${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} open={p.open} />
+        ))}
+        {flames.length > 0 && (
+          <>
+            <Path path={snuffed} color="#1A1410" />
+            <Path path={flameLit} color="#FFB04A" />
+            <Path path={flameCore} color="#FFF4C0" />
+          </>
+        )}
         {map.enemies.length > 0 && <Path path={shadowPath} color="#0A0608" opacity={0.6} />}
         {map.enemies.length > 0 && <Path path={wavePath} color="#E8D8B8" style="stroke" strokeWidth={2} />}
         {map.enemies.length > 0 && attack && (
@@ -645,7 +755,17 @@ export function WorldView({
                 <Atlas image={walkers} sprites={redSprites} transforms={redTransforms} sampling={NEAREST} />
               </Group>
             )}
-            {attack && <Circle cx={ringX} cy={ringY} r={ringR} color={attack.color} opacity={ringO} style="stroke" strokeWidth={2} />}
+            {attack && (
+              <Circle
+                cx={ringX}
+                cy={ringY}
+                r={ringR}
+                color={attack.color}
+                opacity={ringO}
+                style="stroke"
+                strokeWidth={2}
+              />
+            )}
             <Path path={sparkPath} color="#FFF4C0" />
             {walkers && (
               <Group
@@ -663,6 +783,30 @@ export function WorldView({
           </>
         )}
         {boss && throws && <Pillows pillows={pillows} />}
+        {ambience.motes && (
+          <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
+        )}
+        {ambience.darkness > 0 && (
+          <Group layer>
+            <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
+            {flames
+              .filter((f) => f[2] > 0)
+              .map((f, i) => (
+                <FlameLight
+                  key={i}
+                  index={i}
+                  x={f[0] + 1}
+                  y={f[1] + 2}
+                  reach={f[2]}
+                  clock={clock}
+                  guttered={snuffable ? guttered : null}
+                />
+              ))}
+            <Circle cx={youX} cy={youY} r={34} blendMode="dstOut">
+              <RadialGradient c={youCenter} r={34} colors={['#000000', '#00000000']} />
+            </Circle>
+          </Group>
+        )}
         <Group transform={markLift}>
           {marks.map((m) => (
             <Group key={`${m.x},${m.y}`}>
@@ -735,4 +879,70 @@ function Pillow({ index, pillows }: { index: number; pillows: SharedValue<number
   const x = useDerivedValue(() => (pillows.get()[index]?.[0] ?? -99) - 5);
   const y = useDerivedValue(() => (pillows.get()[index]?.[1] ?? -99) - 3);
   return <Rect x={x} y={y} width={10} height={7} color="#E8D8F0" />;
+}
+
+/** The light around one flame, cut out of the dark: it breathes with the flicker, and goes out if guttered. */
+function FlameLight({
+  index,
+  x,
+  y,
+  reach,
+  clock,
+  guttered,
+}: {
+  index: number;
+  x: number;
+  y: number;
+  reach: number;
+  clock: SharedValue<number>;
+  guttered: SharedValue<number> | null;
+}) {
+  const r = useDerivedValue(() => {
+    if (guttered && index < guttered.get()) return 0.01;
+    return reach * (0.94 + 0.06 * Math.sin(clock.get() * 11 + index * 2.3));
+  });
+  return (
+    <Circle cx={x} cy={y} r={r} blendMode="dstOut">
+      <RadialGradient c={vec(x, y)} r={r} colors={['#000000', '#000000CC', '#00000000']} />
+    </Circle>
+  );
+}
+
+/** A chest on its tile: shut (gold-banded wood), or open and empty. */
+function Chest({ x, y, open }: { x: number; y: number; open: boolean }) {
+  return (
+    <Group>
+      <Rect x={x + 1} y={y + 13} width={14} height={2} color="#10080A" opacity={0.5} />
+      <Rect x={x + 1} y={y + 6} width={14} height={8} color="#140E1C" />
+      <Rect x={x + 2} y={y + 7} width={12} height={6} color="#8A5A30" />
+      <Rect x={x + 2} y={y + 9} width={12} height={1} color="#5A3A20" />
+      {open ? (
+        <>
+          <Rect x={x + 1} y={y + 1} width={14} height={6} color="#140E1C" />
+          <Rect x={x + 2} y={y + 2} width={12} height={4} color="#6A4424" />
+          <Rect x={x + 3} y={y + 6} width={10} height={2} color="#1A1008" />
+        </>
+      ) : (
+        <>
+          <Rect x={x + 1} y={y + 3} width={14} height={4} color="#140E1C" />
+          <Rect x={x + 2} y={y + 4} width={12} height={2} color="#A0703C" />
+          <Rect x={x + 7} y={y + 5} width={2} height={4} color="#FFC940" />
+          <Rect x={x + 2} y={y + 6} width={12} height={1} color="#FFC940" />
+        </>
+      )}
+    </Group>
+  );
+}
+
+/** A sign on a post: A reads it. */
+function Sign({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x + 7} y={y + 8} width={2} height={7} color="#4A3020" />
+      <Rect x={x + 2} y={y + 2} width={12} height={8} color="#140E1C" />
+      <Rect x={x + 3} y={y + 3} width={10} height={6} color="#B08A58" />
+      <Rect x={x + 4} y={y + 5} width={8} height={1} color="#6A4A2A" />
+      <Rect x={x + 4} y={y + 7} width={6} height={1} color="#6A4A2A" />
+    </Group>
+  );
 }

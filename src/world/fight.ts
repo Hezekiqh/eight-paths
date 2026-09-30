@@ -97,12 +97,12 @@ export type Fight = {
   fallen: boolean;
 };
 
-export function startFight(enemies: Enemy[]): Fight {
+export function startFight(enemies: Enemy[], hearts: number = HEARTS): Fight {
   'worklet';
   return {
     enemies,
     bolts: [],
-    hp: HEARTS,
+    hp: hearts,
     mercy: 0,
     cooldown: 0,
     dazed: 0,
@@ -140,6 +140,8 @@ export type FightRules = {
   throws: boolean;
   /** Drowsiness a second while standing still (Plush), or 0. */
   drowsy: number;
+  /** Most hearts you can have (mending stops here). */
+  maxHp: number;
 };
 
 export type FightInput = {
@@ -293,7 +295,7 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
     const kind = strike === 2 && special ? rules.special : null;
     if (kind === 'mend' && !f.mended) {
       f.mended = true;
-      f.hp = Math.min(HEARTS, f.hp + 1);
+      f.hp = Math.min(rules.maxHp, f.hp + 1);
       ev.mended = true;
     }
     if (kind === 'stun') {

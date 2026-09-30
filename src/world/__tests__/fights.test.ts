@@ -11,6 +11,7 @@ import {
   E_Y,
   ENEMIES,
   ENEMY_KINDS,
+  HEARTS,
   PATTERNS,
   WINDUP,
   damageFor,
@@ -100,6 +101,7 @@ export function fight(id: MapId, path: Dimension, level: number): Result {
     bossY: by,
     throws: plush,
     drowsy: plush ? drowsyRate(level) : 0,
+    maxHp: HEARTS,
   };
   let f = startFight([
     ...map.enemies.map((e) => spawnEnemy(e.kind, ...feet(e.x, e.y))),

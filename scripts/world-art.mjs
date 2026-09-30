@@ -1101,6 +1101,12 @@ const WALKERS = {
   shadow: { top: '#1E1A2E', shade: '#141024', legs: '#141024', boots: '#0A0812', belt: '#2E2A40', skin: '#3A3450', hair: ['short', '#141024'], sword: true },
   rusted: { top: '#8A5A3A', shade: '#6A4028', legs: '#6A4028', boots: '#4A2A18', belt: '#3A2A20', skin: '#8A5A3A', hair: ['hood', '#8A5A3A'] },
   echo: { top: '#5A5A8A', shade: '#3A3A6A', legs: '#3A3A6A', boots: '#2A2A4A', belt: '#8A8AC0', skin: '#8A8AB8', hair: ['short', '#3A3A6A'], beard: '#6A6A9A' },
+  // Season 1's quieter rooms: the chapel's sexton, a shadow officer, the crypt's chaplain, the Broken Guard, a lamplighter.
+  sexton: { robe: true, top: '#5A5A62', shade: '#42424A', boots: '#2A2030', belt: '#8A6A3A', hair: ['bun', '#9A9490'], collar: '#E8E0D0', apron: '#8A8478' },
+  officer: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#C8B070', skin: '#8A8AA0', hair: ['short', '#2A2A3A'], cloak: '#4A2A3A', collar: '#C8B070', back: 'sword' },
+  chaplain: { robe: true, top: '#8A94B8', shade: '#6A7498', boots: '#6A7498', skin: '#C8D0E8', hair: ['bald', '#B8C0D8'], collar: '#E8ECF8', lantern: true },
+  maelis: { top: '#7A7A8A', shade: '#5A5A6A', legs: '#4A4A58', boots: '#3A2A20', belt: '#8A6A3A', hair: ['bun', '#4A3A2A'], cloak: '#4A4A5A' },
+  lamplighter: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['hood', '#4A3228'], lantern: true },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 

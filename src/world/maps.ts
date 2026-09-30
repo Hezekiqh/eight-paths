@@ -74,11 +74,21 @@ export type Question = { ask: string; answer: string[] };
 /** The Archive's quest board: opens the objectives. */
 export type BoardObject = { id: string; type: 'board'; x: number; y: number };
 
-export type MapObject = NpcObject | BoardObject;
+/** A chest: opening it once gives its item (see items.ts), with a line or two about the spot. */
+export type ChestObject = { id: string; type: 'chest'; x: number; y: number; item: string; lines: string[] };
+
+/** A sign or inscription standing on its own tile: A reads it. */
+export type SignObject = { id: string; type: 'sign'; x: number; y: number; lines: string[] };
+
+export type MapObject = NpcObject | BoardObject | ChestObject | SignObject;
+
+/** How a map is drawn by scripts/world-art.mjs: the Archive's rooms, the outdoors, or the dungeons. */
+export type MapStyle = 'rooms' | 'outdoor' | 'dungeon';
 
 type MapData = {
   id: string;
   name: string;
+  style?: string;
   /** Tile letters you can walk on (default: the Archive's floor and rug). */
   walkable?: string[];
   /** The letter of boulders that can be pushed (the game draws them, so they can move). */
@@ -97,6 +107,7 @@ type MapData = {
 export type WorldMap = {
   id: string;
   name: string;
+  style: MapStyle;
   /** Size in tiles. */
   width: number;
   height: number;
@@ -132,12 +143,17 @@ function letterTiles(tiles: string[], letter: string): number[] {
   return out;
 }
 
-function solidFor(tiles: string[], walkable: string[], npcs: NpcObject[]): number[] {
+/** Everything that stands on a tile and blocks it: people, chests, signs. */
+type Standing = { x: number; y: number };
+
+function solidFor(tiles: string[], walkable: string[], standing: Standing[]): number[] {
   const width = tiles[0].length;
   const solid = tiles.flatMap((row) => [...row].map((c) => (walkable.includes(c) ? 0 : 1)));
-  for (const n of npcs) solid[n.y * width + n.x] = 1;
+  for (const n of standing) solid[n.y * width + n.x] = 1;
   return solid;
 }
+
+const blocking = (objects: MapObject[]): Standing[] => objects.filter((o) => o.type !== 'board');
 
 function build(data: MapData, image: number): WorldMap {
   const width = data.tiles[0].length;
@@ -148,10 +164,11 @@ function build(data: MapData, image: number): WorldMap {
   return {
     id: data.id,
     name: data.name,
+    style: data.style === 'outdoor' || data.style === 'dungeon' ? data.style : 'rooms',
     width,
     height,
     tiles: data.tiles,
-    solid: solidFor(data.tiles, walkable, npcs),
+    solid: solidFor(data.tiles, walkable, blocking(objects)),
     walkable,
     boulders: data.pushable ? letterTiles(data.tiles, data.pushable) : [],
     plates: letterTiles(data.tiles, 'P'),
@@ -172,7 +189,7 @@ function build(data: MapData, image: number): WorldMap {
 export function withOpenTiles(map: WorldMap, letters: string[]): WorldMap {
   if (letters.length === 0) return map;
   const walkable = [...map.walkable, ...letters];
-  return { ...map, walkable, solid: solidFor(map.tiles, walkable, map.npcs) };
+  return { ...map, walkable, solid: solidFor(map.tiles, walkable, blocking(map.objects)) };
 }
 
 /** Every tile (as y * width + x) with one of these letters. */
@@ -187,7 +204,7 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   if (!map.npcs.some((n) => n.character === id)) return map;
   const objects = map.objects.filter((o) => o.type !== 'npc' || o.character !== id);
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
-  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, npcs) };
+  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
 export const MAPS = {
