@@ -146,7 +146,8 @@ export function fight(id: MapId, path: Dimension, level: number): Result {
       }
       inReach = inReach && (clear || dist < 16);
       if (clear && (dist < 30 || (shielded && dist < 60))) [mx, my] = [-dx, -dy];
-      else if (!clear || dist > attack.range * 0.7 || target[E_AWAKE] === 0) [mx, my] = towards(target[E_X], target[E_Y]);
+      else if (!clear || dist > attack.range * 0.7 || target[E_AWAKE] === 0)
+        [mx, my] = towards(target[E_X], target[E_Y]);
       else [mx, my] = [-dy, dx]; // strafe
     } else {
       const reach = attack.kind === 'burst' ? attack.range - 4 : attack.range + 4;
@@ -211,14 +212,27 @@ export function fight(id: MapId, path: Dimension, level: number): Result {
     const r = stepFight(f, input, rules, DT);
     f = r.fight;
     if (process.env.FIGHT_DEBUG && r.events.hurt) {
-      const near = f.enemies.filter((e) => e[E_ALIVE]).map((e) => `${ENEMY_KINDS[e[E_KIND]]} m${e[E_MODE]} d${Math.round(Math.hypot(e[E_X] - px, e[E_Y] - py))}`);
+      const near = f.enemies
+        .filter((e) => e[E_ALIVE])
+        .map((e) => `${ENEMY_KINDS[e[E_KIND]]} m${e[E_MODE]} d${Math.round(Math.hypot(e[E_X] - px, e[E_Y] - py))}`);
       console.log(`HURT ${id} ${path} t${t.toFixed(1)} waves${f.waves.length} ${near.join(',')}`);
     }
     if (process.env.FIGHT_DEBUG && r.events.guttered) console.log(`GUTTER ${id} ${path} t${t.toFixed(1)}`);
     if (r.events.moveX !== 0 || r.events.moveY !== 0) [px, py] = move(grid, px, py, r.events.moveX, r.events.moveY);
     if (f.fallen) return { won: false, hearts: f.hp, seconds: Math.round(t), lost: f.sleepy >= 1 ? 'slept' : 'died' };
   }
-  if (process.env.FIGHT_DEBUG) console.log(id, path, 'at', Math.round(px), Math.round(py), 'left', f.enemies.filter((e) => e[E_ALIVE]).map((e) => [ENEMY_KINDS[e[E_KIND]], Math.round(e[E_X]), Math.round(e[E_Y]), e[3], e[4]]));
+  if (process.env.FIGHT_DEBUG)
+    console.log(
+      id,
+      path,
+      'at',
+      Math.round(px),
+      Math.round(py),
+      'left',
+      f.enemies
+        .filter((e) => e[E_ALIVE])
+        .map((e) => [ENEMY_KINDS[e[E_KIND]], Math.round(e[E_X]), Math.round(e[E_Y]), e[3], e[4]]),
+    );
   return { won: false, hearts: f.hp, seconds: LIMIT, lost: 'time' };
 }
 
@@ -239,7 +253,8 @@ describe('fights', () => {
     expect(losers).toEqual([]);
   });
 
-  // The full table: FIGHT_REPORT=1 npx jest fights (add FIGHT_NO_DODGE=1 for a player who never rolls). W# = won with # hearts left,
+  // The full table: FIGHT_REPORT=1 npx jest fights (add FIGHT_NO_DODGE=1 for a player who never rolls,
+  // FIGHT_TIME=1 for how many seconds each fight took). W# = won with # hearts left,
   // D = died, S = fell asleep, T = the bot ran out of time (usually the bot, not the fight).
   const report = process.env.FIGHT_REPORT ? it : it.skip;
   report('prints who wins each fight, by Path and hero level', () => {
@@ -248,9 +263,12 @@ describe('fights', () => {
       for (const level of [5, 10, 15, 20]) {
         const cells = DIMENSIONS.map((d) => {
           const r = fight(id, d, level);
-          return r.won ? `W${r.hearts}` : r.lost === 'died' ? 'D' : r.lost === 'slept' ? 'S' : 'T';
+          const cell = r.won ? `W${r.hearts}` : r.lost === 'died' ? 'D' : r.lost === 'slept' ? 'S' : 'T';
+          return process.env.FIGHT_TIME ? `${cell}/${r.seconds}` : cell;
         });
-        rows.push(`${id.padEnd(17)} Lv${String(level).padEnd(3)} ${cells.map((c) => c.padEnd(4)).join('')}`);
+        rows.push(
+          `${id.padEnd(17)} Lv${String(level).padEnd(3)} ${cells.map((c) => c.padEnd(process.env.FIGHT_TIME ? 8 : 4)).join('')}`,
+        );
       }
     }
     console.log(`${' '.repeat(23)}${DIMENSIONS.map((d) => d.slice(0, 4).padEnd(4)).join('')}\n${rows.join('\n')}`);

@@ -1,4 +1,4 @@
-import { ATTACKS, E_HP, E_MODE, E_X, EXPOSED, HEARTS, WINDUP, spawnEnemy, type Enemy } from '../combat';
+import { ATTACKS, E_HP, E_MODE, E_X, EXPOSED, HEARTS, RECOVER, WINDUP, spawnEnemy, type Enemy } from '../combat';
 import { CHARGE_TIME, aim, startFight, stepFight, type FightInput, type FightRules } from '../fight';
 
 const W = 30;
@@ -75,17 +75,56 @@ describe('fights', () => {
     expect(s.fight.hp).toBe(HEARTS);
   });
 
-  it('charges a double blow from Lv 10, by holding then letting go', () => {
+  it('charges a heavier blow from Lv 10, by holding then letting go', () => {
     const hold = (level: number) => {
       // an echo stands still, so nothing interrupts the charge (being hurt does)
       let f = startFight([spawnEnemy('echo', 112, 100)]);
-      for (let t = 0; t < CHARGE_TIME + 0.05; t += DT) f = stepFight(f, input({ held: true }), rules({ level }), DT).fight;
+      for (let t = 0; t < CHARGE_TIME + 0.05; t += DT)
+        f = stepFight(f, input({ held: true }), rules({ level }), DT).fight;
       return stepFight(f, input({ release: true }), rules({ level }), DT);
     };
     const charged = hold(10);
     expect(charged.events.charged).toBe(true);
-    expect(charged.events.kills).toBe(1); // 2 × 2 damage against 4 hearts
+    expect(charged.fight.enemies[0][E_HP]).toBe(1); // 2 damage, charged to 3, against 4
     expect(hold(9).events.swing).toBe(false);
+  });
+
+  it('makes a charged blow wait for the last one to recover', () => {
+    const r = rules({ level: 10 });
+    let f = startFight([spawnEnemy('echo', 112, 100)]);
+    f = stepFight(f, input({ press: true, held: true }), r, DT).fight; // a tap lands at once
+    for (let t = 0; t < CHARGE_TIME; t += DT) f = stepFight(f, input({ held: true }), r, DT).fight;
+    f = { ...f, cooldown: 0.2 }; // still recovering as you let go
+    const let_go = stepFight(f, input({ release: true }), r, DT);
+    expect(let_go.events.charged).toBe(false);
+    f = let_go.fight;
+    let fired = false;
+    for (let t = 0; t < 0.3 && !fired; t += DT) {
+      const s = stepFight(f, input(), r, DT);
+      f = s.fight;
+      fired = s.events.charged;
+    }
+    expect(fired).toBe(true);
+  });
+
+  it("closes Kaldor's window once he's taken a third of his health", () => {
+    let f = startFight([withMode(spawnEnemy('kaldor', 112, 100), EXPOSED)]);
+    const r = rules({ damage: 7 });
+    f = stepFight(f, input({ press: true }), r, DT).fight;
+    expect(f.enemies[0][E_HP]).toBe(13);
+    expect(f.enemies[0][E_MODE]).not.toBe(EXPOSED);
+  });
+
+  it("turns half of every close blow on Aurek's hide, except while he rises", () => {
+    const hit = (mode: number) =>
+      stepFight(
+        startFight([withMode(spawnEnemy('aurek', 112, 100), mode)]),
+        input({ press: true }),
+        rules({ damage: 4 }),
+        DT,
+      ).fight.enemies[0][E_HP];
+    expect(hit(0)).toBe(10); // 12 health, the blow halved
+    expect(hit(RECOVER)).toBe(8); // in full while he rises
   });
 
   it("mends a heart once a fight with the Cleric's special", () => {
@@ -93,8 +132,18 @@ describe('fights', () => {
     const mend = (fight: typeof f) => {
       let g = fight;
       for (let t = 0; t < CHARGE_TIME + 0.05; t += DT)
-        g = stepFight(g, input({ held: true }), rules({ level: 20, special: 'mend', attack: ATTACKS.spiritual }), DT).fight;
-      return stepFight(g, input({ release: true }), rules({ level: 20, special: 'mend', attack: ATTACKS.spiritual }), DT);
+        g = stepFight(
+          g,
+          input({ held: true }),
+          rules({ level: 20, special: 'mend', attack: ATTACKS.spiritual }),
+          DT,
+        ).fight;
+      return stepFight(
+        g,
+        input({ release: true }),
+        rules({ level: 20, special: 'mend', attack: ATTACKS.spiritual }),
+        DT,
+      );
     };
     const once = mend(f);
     expect(once.events.mended).toBe(true);

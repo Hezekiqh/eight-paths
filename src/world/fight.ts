@@ -13,6 +13,7 @@ import {
   stepEnemies,
   strikePoint,
   strikes,
+  unstunnable,
   type Attack,
   type Enemy,
 } from './combat';
@@ -25,7 +26,15 @@ import { move, type Grid } from './engine';
 /** Your dodge roll: how long, how fast (art pixels a second), and how soon again. */
 export const ROLL = { time: 0.28, speed: 150, cooldown: 0.75 };
 /** Hold the attack this long, then let go, for a charged attack (Path Lv 10 and up). */
-export const CHARGE_TIME = 0.5;
+export const CHARGE_TIME = 0.7;
+/** A charged blow's recovery, as a share of the attack's own cooldown. */
+const CHARGE_RECOVERY = 1.5;
+
+/** A charged blow's damage: half as much again (at least one more). */
+export function chargedDamage(damage: number): number {
+  'worklet';
+  return Math.max(damage + 1, Math.floor(damage * 1.5));
+}
 /** Path levels that unlock the charged attack, then each Path's special. */
 export const CHARGE_LEVEL = 10;
 export const SPECIAL_LEVEL = 20;
@@ -54,15 +63,25 @@ export const SPECIALS: Record<Dimension, { kind: Special; name: string; does: st
 /** What a character can do in a fight, by their real level: for their sheet. */
 export function movesFor(dimension: Dimension, level: number) {
   return [
-    { level: CHARGE_LEVEL, name: 'Charged blow', does: 'hold, then let go: double damage', unlocked: level >= CHARGE_LEVEL },
-    { level: SPECIAL_LEVEL, name: SPECIALS[dimension].name, does: SPECIALS[dimension].does, unlocked: level >= SPECIAL_LEVEL },
+    {
+      level: CHARGE_LEVEL,
+      name: 'Charged blow',
+      does: 'hold, then let go: half as much again',
+      unlocked: level >= CHARGE_LEVEL,
+    },
+    {
+      level: SPECIAL_LEVEL,
+      name: SPECIALS[dimension].name,
+      does: SPECIALS[dimension].does,
+      unlocked: level >= SPECIAL_LEVEL,
+    },
   ];
 }
 
 /** Everything that changes in a fight from frame to frame. */
 export type Fight = {
   enemies: Enemy[];
-  /** Bolts in flight: [x, y, dx, dy, travelled, power, returned (0/1)]. */
+  /** Bolts in flight: [x, y, dx, dy, travelled, power, returned (0/1), enemies already hit (a bit each)]. */
   bolts: number[][];
   hp: number;
   /** Seconds you can't be hurt again; seconds until you can attack again; seconds dazed by a shout. */
@@ -76,6 +95,8 @@ export type Fight = {
   rollCool: number;
   /** How long the attack has been held (0 when it isn't). */
   charge: number;
+  /** Let go fully charged while still recovering: the charged blow goes as soon as you're ready. */
+  primed: boolean;
   /** The Cleric's mend is used up this fight. */
   mended: boolean;
   /** Baron Plush's pillows [x, y, dx, dy], and seconds until the next throw. */
@@ -111,6 +132,7 @@ export function startFight(enemies: Enemy[], hearts: number = HEARTS): Fight {
     rollY: 0,
     rollCool: 0,
     charge: 0,
+    primed: false,
     mended: false,
     pillows: [],
     throwIn: 1.5,
@@ -221,7 +243,12 @@ export function aim(enemies: Enemy[], x: number, y: number, facing: number, sx: 
 }
 
 /** One frame of a fight. Returns the fight after, and what happened. */
-export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: number): { fight: Fight; events: FightEvents } {
+export function stepFight(
+  f0: Fight,
+  input: FightInput,
+  rules: FightRules,
+  dt: number,
+): { fight: Fight; events: FightEvents } {
   'worklet';
   const f: Fight = { ...f0 };
   const ev: FightEvents = {
@@ -282,14 +309,19 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
   if (canCharge) {
     if (input.held) f.charge += dt;
     if (input.release) {
-      if (f.charge >= CHARGE_TIME && f.roll === 0) strike = 2;
+      if (f.charge >= CHARGE_TIME) f.primed = true;
       f.charge = 0;
+    }
+    // A charged blow waits for the last one to recover: no striking twice at once.
+    if (f.primed && f.cooldown === 0 && f.roll === 0) {
+      strike = 2;
+      f.primed = false;
     }
   }
   if (strike > 0) {
     const power = strike === 2 ? 2 : 1;
-    const damage = rules.damage * power;
-    f.cooldown = attack.cooldown;
+    const damage = strike === 2 ? chargedDamage(rules.damage) : rules.damage;
+    f.cooldown = attack.cooldown * (strike === 2 ? CHARGE_RECOVERY : 1);
     ev.swing = true;
     ev.charged = strike === 2;
     const kind = strike === 2 && special ? rules.special : null;
@@ -301,7 +333,7 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
     if (kind === 'stun') {
       for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
-        if (e[E_ALIVE] === 1 && Math.hypot(e[E_X] - px, e[E_Y] - py) < 90) {
+        if (e[E_ALIVE] === 1 && !unstunnable(e) && Math.hypot(e[E_X] - px, e[E_Y] - py) < 90) {
           const n = e.slice();
           n[E_STUN] = Math.max(n[E_STUN], 2.2);
           enemies = [...enemies.slice(0, i), n, ...enemies.slice(i + 1)];
@@ -344,7 +376,9 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
       for (const a of shots) {
         const c = Math.cos(a);
         const s = Math.sin(a);
-        bolts.push([px, py - 8, dx * c - dy * s, dx * s + dy * c, 0, power, kind === 'return' ? 0 : 1]);
+        // A spread is three ordinary bolts; any other charged bolt is one heavy, piercing one.
+        const each = kind === 'spread' ? 1 : power;
+        bolts.push([px, py - 8, dx * c - dy * s, dx * s + dy * c, 0, each, kind === 'return' ? 0 : 1, 0]);
       }
       f.bolts = bolts;
       if (strike === 2) f.ring = [px, py - 8, 12, 0.2, 0.2];
@@ -362,17 +396,32 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
       const tx = Math.floor(bx / TILE_PX);
       const ty = Math.floor(by / TILE_PX);
       const wall = tx < 0 || ty < 0 || tx >= grid.width || ty >= grid.height || grid.solid[ty * grid.width + tx] === 1;
-      let struck = false;
-      for (const e of enemies) {
-        if (e[E_ALIVE] === 1 && Math.hypot(e[E_X] - bx, e[E_Y] - 8 * sizeOf(e) - by) < 9 * sizeOf(e)) struck = true;
+      // Who it touches for the first time (a piercing bolt goes on, but hits each enemy once).
+      let fresh = 0;
+      for (let i = 0; i < enemies.length; i++) {
+        const e = enemies[i];
+        const touching = e[E_ALIVE] === 1 && Math.hypot(e[E_X] - bx, e[E_Y] - 8 * sizeOf(e) - by) < 9 * sizeOf(e);
+        if (touching && !(b[7] & (1 << i))) fresh |= 1 << i;
       }
+      const struck = fresh !== 0;
       if (struck) {
-        enemies = hitAround(grid, enemies, bx, by + 8, 10, rules.damage * b[5], attack.knock, attack.stun);
+        enemies = hitAround(
+          grid,
+          enemies,
+          bx,
+          by + 8,
+          10,
+          b[5] > 1 ? chargedDamage(rules.damage) : rules.damage,
+          attack.knock,
+          attack.stun,
+          ~fresh,
+          false,
+        );
       }
       const pierce = b[5] > 1;
       if (wall || (struck && !pierce)) continue;
-      if (travelled < attack.range) next.push([bx, by, b[2], b[3], travelled, b[5], b[6]]);
-      else if (b[6] === 0) next.push([bx, by, -b[2], -b[3], 0, b[5], 1]); // the boomerang comes back
+      if (travelled < attack.range) next.push([bx, by, b[2], b[3], travelled, b[5], b[6], b[7] | fresh]);
+      else if (b[6] === 0) next.push([bx, by, -b[2], -b[3], 0, b[5], 1, 0]); // the boomerang comes back, and can hit again
     }
     f.bolts = next;
   }
@@ -440,7 +489,8 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
         hurt = 1;
         continue;
       }
-      if (nx > 0 && ny > 0 && nx < grid.width * TILE_PX && ny < grid.height * TILE_PX) flying.push([nx, ny, p[2], p[3]]);
+      if (nx > 0 && ny > 0 && nx < grid.width * TILE_PX && ny < grid.height * TILE_PX)
+        flying.push([nx, ny, p[2], p[3]]);
     }
     f.pillows = flying;
   }
@@ -458,6 +508,7 @@ export function stepFight(f0: Fight, input: FightInput, rules: FightRules, dt: n
     f.mercy = MERCY;
     f.hp -= 1;
     f.charge = 0;
+    f.primed = false;
     ev.hurt = true;
     ev.moveX += pushX;
     ev.moveY += pushY;
@@ -491,4 +542,3 @@ export function pushPlayer(grid: Grid, x: number, y: number, dx: number, dy: num
   if (dx === 0 && dy === 0) return [x, y];
   return move(grid, x, y, dx, dy);
 }
-
