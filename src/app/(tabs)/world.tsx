@@ -19,10 +19,11 @@ import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
-import { useGameStore } from '@/store';
+import { pickData, useGameStore } from '@/store';
+import { selectKeeperFacts } from '@/store/selectors';
 import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
-import { CLASSES, levelFromXp, type Dimension } from '@/game';
+import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { COMPANIONS } from '@/story/companions';
@@ -50,6 +51,7 @@ import {
 import { SEASON_END, winScene, type Outcome } from '@/world/scenes';
 import { loreId } from '@/world/lore';
 import { characterQuestions } from '@/world/talk';
+import { keeperQuestions, keeperRemark } from '@/world/keeper-talk';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
@@ -580,11 +582,16 @@ function useAct(
       const turned = [...sim.npcFacing.get()];
       turned[i] = OPPOSITE[facing];
       sim.npcFacing.set(turned);
+      const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
+      // The Keeper also talks about you: your habits, your party, who to bring (keeper-talk.ts).
+      const keeper =
+        thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
+      const questions =
+        thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
       setDialogue({
         speaker: thing.name,
-        lines:
-          thing.after && useWorldStore.getState().flags.includes(thing.after.flag) ? thing.after.lines : thing.lines,
-        questions: thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined),
+        lines: after ? thing.after!.lines : [...thing.lines, ...(keeper ? keeperRemark(keeper) : [])],
+        questions: keeper ? [...keeperQuestions(keeper), ...(questions ?? [])] : questions,
       });
       return;
     }

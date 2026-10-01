@@ -46,6 +46,8 @@ import {
 } from '@/game';
 import { DEFAULT_PARTY, ROSTER, hasCharacter, type CharacterId, type Companion } from '@/story/companions';
 
+import type { KeeperFacts, KeeperHero } from '@/world/keeper-talk';
+
 import type { GameData } from './index';
 
 export type CollectionEntry = {
@@ -395,5 +397,33 @@ export function selectObjectives(data: GameData, today: string): Objectives {
     weekly,
     unclaimed: [...daily, ...weekly].filter((o) => isObjectiveDone(o) && !o.claimed).length,
     boosted: data.boosts.filter((b) => b.date === today).map((b) => b.dimension),
+  };
+}
+
+/** What the Keeper knows about you when you talk to him in the Archive (see keeper-talk.ts). */
+export function selectKeeperFacts(data: GameData, today: string): KeeperFacts | null {
+  const { player } = data;
+  if (!player) return null;
+  const collection = selectCollection(data);
+  const hero = (e: CollectionEntry): KeeperHero => ({
+    name: e.companion.name,
+    level: e.progress.level,
+    path: CLASSES[e.companion.dimension].className,
+    dimension: e.companion.dimension,
+  });
+  const summary = selectProgressSummary(data, today);
+  // A Path slips when at least a few of its quests were due and under half got done.
+  const dusty = selectDimensionStats(data, today)
+    .filter((d) => d.consistency.due >= 3 && (d.consistency.rate ?? 1) < 0.5)
+    .sort((a, b) => (a.consistency.rate ?? 1) - (b.consistency.rate ?? 1))[0];
+  return {
+    today,
+    name: player.name,
+    streak: summary.showUp.current,
+    best: summary.showUp.best,
+    week: summary.week,
+    party: DIMENSIONS.map((d) => hero(collection.party[d])),
+    bench: collection.entries.filter((e) => e.unlocked && !e.inParty).map(hero),
+    dusty: dusty ? { path: dusty.info.className, hero: collection.party[dusty.dimension].companion.name } : null,
   };
 }
