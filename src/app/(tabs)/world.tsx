@@ -18,6 +18,7 @@ import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
+import { VhsOverlay } from '@/components/world/vhs-overlay';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { pickData, useGameStore } from '@/store';
 import { selectKeeperFacts } from '@/store/selectors';
@@ -466,6 +467,7 @@ function World({
         drowsy={bossOn && !map.boss?.kind ? drowsyRate(levelFromXp(xpNow.byPath.emotional).level) : 0}
         onWin={onWin}
       />
+      <VhsOverlay width={width} height={height} warm={map.id === 'archive'} />
       {!frozen && (
         <WorldControls
           scheme={controls}
