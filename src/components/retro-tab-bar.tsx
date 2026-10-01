@@ -13,6 +13,8 @@ type Props = TabTriggerSlotProps & {
   icon: PixelIconName;
   /** Shows a gold dot: something here is waiting for the player. */
   badge?: boolean;
+  /** What the dot means, for VoiceOver. */
+  badgeLabel?: string;
 };
 
 /**
@@ -21,7 +23,7 @@ type Props = TabTriggerSlotProps & {
  * an option in an old RPG battle menu.
  */
 export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButton(
-  { label, icon, badge, isFocused, onPress, ...props },
+  { label, icon, badge, badgeLabel = 'rewards to claim', isFocused, onPress, ...props },
   ref,
 ) {
   // The Keeper's tour points at tabs by their label.
@@ -37,7 +39,7 @@ export const RetroTabButton = forwardRef<ViewType, Props>(function RetroTabButto
       }}
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
-      accessibilityLabel={badge ? `${label}, rewards to claim` : label}
+      accessibilityLabel={badge ? `${label}, ${badgeLabel}` : label}
       style={styles.tab}>
       <View ref={tourRef} collapsable={false}>
         {isFocused && (

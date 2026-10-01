@@ -19,6 +19,7 @@ import { Button } from '@/components/button';
 import { ModalHeader, close } from '@/components/modal-header';
 import { PixelSprite } from '@/components/pixel-sprite';
 import { SettingsRow } from '@/components/settings-row';
+import { TradeHistory } from '@/components/trade-inbox';
 import { haptics } from '@/haptics';
 import {
   SocialError,
@@ -287,6 +288,8 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           ))}
         </View>
       )}
+
+      <TradeHistory />
 
       <Text style={styles.section}>ACCOUNT</Text>
       <View style={styles.list}>

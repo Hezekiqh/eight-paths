@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { msUntilNextMidnight, toDateKey, usualReminderTime, type RadarFilter } from '@/game';
 import { syncReminders } from '@/notifications';
 import { usePremium } from '@/premium/store';
+import { useTradeNotices } from '@/social/notices';
 
 import { pickData, useGameStore, type GameData } from './index';
 import { useSession } from './session';
@@ -191,19 +192,21 @@ export function useRevealQueue() {
   const hasPlayer = useGameStore((s) => s.player !== null);
   // Nothing hatches behind the opening intro; it waits until the intro is over.
   const introDone = useSession((s) => s.introDone);
+  // Heroes arriving by trade hatch after the trade's moment has played.
+  const tradeShowing = useTradeNotices((s) => s.moments.length > 0);
   // The queue length when the last hatch was opened: wait until it shrinks before the next.
   const opened = useRef<number | null>(null);
   const next = drops[0];
 
   useEffect(() => {
     if (opened.current !== null && drops.length < opened.current) opened.current = null;
-    if (!hasPlayer || !next || !introDone || opened.current !== null) return;
+    if (!hasPlayer || !next || !introDone || tradeShowing || opened.current !== null) return;
     const timer = setTimeout(() => {
       opened.current = drops.length;
       router.push({ pathname: '/reveal/[id]', params: { id: next } });
     }, REVEAL_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [hasPlayer, next, drops.length, introDone]);
+  }, [hasPlayer, next, drops.length, introDone, tradeShowing]);
 }
 
 /**

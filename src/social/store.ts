@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { socialEnabled } from './config';
+import type { TradeOffer } from './trade';
 
 /** A player's public profile, as friends and the server see it. Never habits. */
 export type Profile = {
@@ -32,6 +33,8 @@ type SocialState = {
   shareConsistency: boolean;
   /** A friend code from a link, waiting until the player has an account. */
   pendingFriendCode: string | null;
+  /** Open trade offers this player sent or received, newest first. */
+  offers: TradeOffer[];
 };
 
 /** Social state for this launch. The session itself lives in Supabase's storage. */
@@ -42,4 +45,5 @@ export const useSocial = create<SocialState>(() => ({
   stats: {},
   shareConsistency: true,
   pendingFriendCode: null,
+  offers: [],
 }));

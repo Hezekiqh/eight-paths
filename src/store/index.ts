@@ -43,6 +43,7 @@ import { newId } from './ids';
 import { GOAL_XP, applyReward, type RewardResult } from './rewards';
 import { reconcileDraws as reconcile, redoDrop as redo, type Owned } from './draws';
 import { SAVE_VERSION, migrateSave, sanitizeSave } from './migrations';
+import { applyTradeMoves as applyMoves, type TradeMove } from './trades';
 
 export type GameData = {
   player: Player | null;
@@ -79,6 +80,12 @@ export type GameData = {
    * Today then follows the order they usually do their quests in.
    */
   questOrder: string[] | null;
+  /**
+   * Net copies of each hero moved in (+) or out (-) by trade, and the ids of
+   * the server's trade moves already applied (see trades.ts).
+   */
+  traded: Partial<Record<CharacterId, number>>;
+  tradeMoves: number[];
 };
 
 export type GoalDraft = Pick<Goal, 'title' | 'dimension' | 'dueDate'>;
@@ -141,6 +148,8 @@ type Actions = {
   markRevealed: (ids: CharacterId[]) => void;
   /** Unlocks characters as a gift (a friend joined): gives each a full set of shards. */
   giftCharacters: (ids: CharacterId[]) => void;
+  /** Applies trade moves from the server that this save hasn't seen yet. */
+  applyTradeMoves: (moves: TradeMove[]) => void;
   /** Hands out any characters now due: new arrivals every 3–5 Path levels, full shard sets. */
   reconcileDraws: (random?: () => number) => void;
   /** The hatch for the first waiting arrival of `id` has played. */
@@ -174,6 +183,8 @@ export const initialData: GameData = {
   drops: [],
   redrawn: [],
   questOrder: null,
+  traded: {},
+  tradeMoves: [],
 };
 
 /** Every saved field, for persisting and backups. */
@@ -196,6 +207,8 @@ export function pickData(s: GameData): GameData {
     drops,
     redrawn,
     questOrder,
+    traded,
+    tradeMoves,
   } = s;
   return {
     player,
@@ -215,6 +228,8 @@ export function pickData(s: GameData): GameData {
     drops,
     redrawn,
     questOrder,
+    traded,
+    tradeMoves,
   };
 }
 
@@ -463,6 +478,11 @@ export const useGameStore = create<GameState>()(
           for (const id of ids) shards[id] = Math.max(shards[id] ?? 0, SHARDS_TO_UNLOCK);
           return { shards };
         }),
+
+      applyTradeMoves: (moves) => {
+        const changes = applyMoves(get(), moves);
+        if (changes) set(changes);
+      },
 
       reconcileDraws: (random) => {
         const s = get();

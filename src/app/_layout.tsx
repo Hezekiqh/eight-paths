@@ -110,6 +110,10 @@ export default function RootLayout() {
             name="reveal/[id]"
             options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
           />
+          <Stack.Screen
+            name="trade-moment"
+            options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
+          />
         </Stack>
         {!introDone && <Intro onDone={finishIntro} />}
       </ThemeProvider>

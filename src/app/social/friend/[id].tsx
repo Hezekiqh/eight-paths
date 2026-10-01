@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { CHARACTER_ART } from '@/art/sprites';
+import { Button } from '@/components/button';
 import { PixelSprite } from '@/components/pixel-sprite';
 import { SettingsRow } from '@/components/settings-row';
 import { SocialError, blockPlayer, fetchCollection, removeFriend, reportPlayer } from '@/social/api';
@@ -18,7 +19,7 @@ const REPORT_REASONS = ['Offensive username', 'Harassment', 'Something else'];
 
 const message = (e: unknown) => (e instanceof SocialError ? e.message : 'Something went wrong. Please try again.');
 
-/** A friend's profile and the heroes they've woken. Never their habits. */
+/** A friend's profile, the heroes they hold, and a way to trade. Never their habits. */
 export default function FriendScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const friend = useSocial((s) => s.friends.find((f) => f.id === id));
@@ -92,8 +93,14 @@ export default function FriendScreen() {
         </View>
       </View>
 
+      <Button
+        title="Trade heroes"
+        onPress={() => router.push({ pathname: '/social/trade/[id]', params: { id: friend.id } })}
+        color={color}
+      />
+
       <Text style={styles.section}>
-        HEROES WOKEN · {woken ? `${[...woken].filter(isCharacterId).length} / ${ROSTER.length}` : '…'}
+        HEROES · {woken ? `${[...woken].filter(isCharacterId).length} / ${ROSTER.length}` : '…'}
       </Text>
       {woken === null ? (
         <ActivityIndicator color={color} />

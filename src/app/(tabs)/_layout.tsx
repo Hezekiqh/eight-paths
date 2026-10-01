@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeeperTour } from '@/components/keeper-tour';
 import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useMusic } from '@/audio';
+import { useNewOfferCount } from '@/social/notices';
 import { useInviteRewards } from '@/social/rewards';
 import { useKeeperActions } from '@/notifications/use-keeper-actions';
 import { useKeeperAsk } from '@/notifications/use-keeper-ask';
@@ -38,6 +39,7 @@ export default function TabsLayout() {
   useMusic('home');
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);
+  const newOffers = useNewOfferCount();
   // The game fills the screen; its pause menu leads back to the World menu and the other tabs.
   const worldPlaying = useSession((s) => s.worldPlaying);
   const inWorld = usePathname() === '/world' && worldPlaying;
@@ -64,7 +66,7 @@ export default function TabsLayout() {
           <RetroTabButton label="Profile and collection" icon="star" />
         </TabTrigger>
         <TabTrigger name="social-tab" href="/social-tab" asChild>
-          <RetroTabButton label="Social" icon="users" />
+          <RetroTabButton label="Social" icon="users" badge={newOffers > 0} badgeLabel="new trade offers" />
         </TabTrigger>
         <TabTrigger name="journey" href="/journey" asChild>
           <RetroTabButton label="Journey" icon="map" />
