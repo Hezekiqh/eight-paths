@@ -46,7 +46,8 @@ type Props = {
 
 /**
  * The World's pause menu. Left: what it takes to go on, in real habits, and
- * the quest board. Right: the map, the controls, and resume or go back to habits.
+ * the quest board. Right: the map, party, satchel and controls. Below both, always
+ * in view: resume or go back to habits.
  */
 export function PauseMenu({
   map,
@@ -78,7 +79,7 @@ export function PauseMenu({
           <ScrollView style={styles.column} contentContainerStyle={{ gap: spacing.xs }}>
             <ObjectivesPanel map={map} hero={hero} onOpenBoard={onOpenBoard} />
           </ScrollView>
-          <View style={styles.column}>
+          <ScrollView style={styles.column} contentContainerStyle={{ gap: spacing.xs }}>
             <View style={styles.actions}>
               <MenuItem label="Map" onPress={onOpenMap} grow />
               <MenuItem label="Other World menu" onPress={onMenu} grow />
@@ -131,11 +132,13 @@ export function PauseMenu({
             <Text style={styles.section}>CONTROLS</Text>
             <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
             <Text style={styles.hint}>{HINTS[controls]}</Text>
-            <View style={styles.actions}>
-              <MenuItem label="Resume" onPress={onResume} primary grow />
-              <MenuItem label="Back to habits" onPress={onLeave} grow />
-            </View>
-          </View>
+          </ScrollView>
+        </View>
+
+        {/* Pinned below both columns so a full Satchel never pushes it off screen. */}
+        <View style={styles.actions}>
+          <MenuItem label="Resume" onPress={onResume} primary grow />
+          <MenuItem label="Back to habits" onPress={onLeave} grow />
         </View>
       </View>
     </View>
@@ -186,11 +189,11 @@ const styles = StyleSheet.create({
   heading: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.md },
   title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 30 },
   place: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 16 },
-  columns: { flexDirection: 'row', gap: spacing.xl },
+  columns: { flexDirection: 'row', gap: spacing.xl, flexShrink: 1 },
   column: { flex: 1, gap: spacing.xs },
   section: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1, marginTop: spacing.xs },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
-  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: 'auto' },
+  actions: { flexDirection: 'row', gap: spacing.sm },
   grow: { flex: 1 },
   item: {
     borderWidth: 3,
