@@ -14,7 +14,7 @@ import { COMPANIONS } from '@/story/companions';
 import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
 import { worldHero } from '@/world/hero';
 import { MAPS, type MapId } from '@/world/maps';
-import { EXITS, FINAL_GOAL, describeRequirement, howToProgress, standing } from '@/world/progress';
+import { EXITS, FINAL_GOAL, howToProgress, requirementLabel, standing } from '@/world/progress';
 import { useWorldProgress } from '@/world/use-progress';
 import { useWorldStore } from '@/world/store';
 
@@ -112,7 +112,7 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
       <Goal
         label="Season 1"
         need={
-          final.met ? `${describeRequirement(FINAL_GOAL)} ✓` : `${describeRequirement(FINAL_GOAL)} · Lv ${final.have}`
+          requirementLabel(FINAL_GOAL, xp)
         }
         met={final.met}
         fraction={final.fraction}
@@ -127,7 +127,7 @@ function Objectives({ discovered }: { discovered: MapId[] }) {
         <Goal
           key={exit.id}
           label={exit.label}
-          need={s.met ? `${describeRequirement(exit.needs)} ✓` : `${describeRequirement(exit.needs)} · Lv ${s.have}`}
+          need={requirementLabel(exit.needs, xp)}
           met={s.met}
           fraction={s.fraction}
           how={s.met ? 'The way is sealed. You have walked as far as the Other World goes.' : howToProgress(s)}

@@ -131,7 +131,7 @@ export const ENEMIES: Record<EnemyKind, EnemyStats> = {
   rusted: { hp: 5, speed: 22, sight: 26, behaviour: 'ambush' }, // empty armour that follows once you pass
   echo: { hp: 4, speed: 0, sight: 52, behaviour: 'shout' }, // a drill sergeant's echo; its shout stuns
   sleeper: { hp: 3, speed: 18, sight: 400, behaviour: 'chase' }, // Baron Plush's sofa-bearers, sleepwalking at you
-  raider: { hp: 5, speed: 36, sight: 200, behaviour: 'lunge' }, // the horde's pit fighters
+  raider: { hp: 8, speed: 36, sight: 200, behaviour: 'lunge' }, // the horde's pit fighters
   aurek: { hp: 12, speed: 24, sight: 300, behaviour: 'slam', size: 2 }, // Aurek the Tall, raised and bound
   kaldor: { hp: 20, speed: 32, sight: 400, behaviour: 'king' }, // the Kingbreaker himself
 };
@@ -205,7 +205,7 @@ const TOUCH_PER_SIZE = 4;
  * the tell: the enemy stops, flashes red, and commits to a direction.
  */
 export const PATTERNS = {
-  lunge: { range: 72, rest: 0.9, windup: 0.45, dash: 0.4, speed: 135, recover: 0.5 },
+  lunge: { range: 80, rest: 0.6, windup: 0.38, dash: 0.4, speed: 140, recover: 0.45 },
   slam: { range: 44, rest: 0.8, windup: 0.8, windupHurt: 0.55, recover: 1.6, recoverHurt: 1.2 },
   /** A slam's ring: how far it spreads, how long it takes, how thick it hurts. */
   wave: { radius: 38, grow: 0.3, life: 0.45, band: 7 },

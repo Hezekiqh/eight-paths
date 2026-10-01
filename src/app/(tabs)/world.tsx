@@ -209,11 +209,14 @@ function World({
   const [start] = useState(() => startFor(useWorldStore.getState().position, hero));
   const xpNow = useWorldProgress();
   // Doorways, holes and road ends you walk through, if they're open to you yet.
-  const [ways] = useState(() =>
-    EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
-  );
   // A boss fight, the first time you come in: the boss has their say, then the fight is on.
   const [bossOn] = useState(() => !!start.map.boss && !(xpNow.flags ?? []).includes(start.map.boss.flag));
+  // While it's on, the doorways stay shut (as in Zelda), so backing away never walks you out of it by accident.
+  const [ways] = useState(() =>
+    bossOn
+      ? []
+      : EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
+  );
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
   const [arrivalFlags] = useState(() => xpNow.flags ?? []);
@@ -261,11 +264,19 @@ function World({
   const liveFlags = useWorldStore((s) => s.flags);
   const chests = useMemo(
     () =>
-      map.objects.flatMap((o) => (o.type === 'chest' ? [{ x: o.x, y: o.y, open: liveFlags.includes(chestFlag(o.id)) }] : [])),
+      map.objects.flatMap((o) =>
+        o.type === 'chest' ? [{ x: o.x, y: o.y, open: liveFlags.includes(chestFlag(o.id)) }] : [],
+      ),
     [map, liveFlags],
   );
   const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
+  // The doorways shut for a boss fight, drawn barred.
+  const sealed = useMemo(() => {
+    if (!bossOn) return [];
+    const letters = EXITS.filter((e) => e.from === map.id && e.walk).map((e) => e.tile);
+    return tilesOf(map, letters).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
+  }, [bossOn, map]);
   const flames = useMemo(() => flamesOn(map), [map]);
   // Hearts for this visit: five, plus one for every four pieces found.
   const [hearts] = useState(() => maxHearts(arrivalFlags));
@@ -461,6 +472,7 @@ function World({
         ambience={ambience}
         flames={flames}
         snuffable={map.id === 'war-hall'}
+        sealed={sealed}
         autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}
         boss={bossOn && map.boss ? { x: map.boss.x * TILE + TILE / 2, y: map.boss.y * TILE + TILE } : null}
@@ -539,7 +551,9 @@ function World({
           onRead={(id) => {
             setPaused(false);
             const item = ITEMS[id];
-            setDialogue({ lines: item?.text.length ? item.text : ['The seal is unbroken. Not yours to open, not yet.'] });
+            setDialogue({
+              lines: item?.text.length ? item.text : ['The seal is unbroken. Not yours to open, not yet.'],
+            });
           }}
           onSwap={(id) => {
             // Save where you stand; the World restarts right here with them.
@@ -614,7 +628,11 @@ function useAct(
             day: Math.floor(Date.now() / 86400000),
           });
           if (talk.said) w.setFlag(talk.said);
-          setDialogue({ speaker: thing.name, lines: talk.lines.length ? talk.lines : thing.lines, questions: thing.questions });
+          setDialogue({
+            speaker: thing.name,
+            lines: talk.lines.length ? talk.lines : thing.lines,
+            questions: thing.questions,
+          });
           return;
         }
         w.setFlag('keeper:hello');
@@ -654,7 +672,12 @@ function useAct(
         facing: FACINGS[facing],
       };
       const elsewhere = [
-        { map: 'archive' as MapId, x: MAPS.archive.spawn.x, y: MAPS.archive.spawn.y, facing: MAPS.archive.spawn.facing },
+        {
+          map: 'archive' as MapId,
+          x: MAPS.archive.spawn.x,
+          y: MAPS.archive.spawn.y,
+          facing: MAPS.archive.spawn.facing,
+        },
         ...candles.filter((c) => c.map !== 'archive'),
       ].filter((c) => c.map !== map.id);
       setDialogue({

@@ -634,6 +634,25 @@ export function describeRequirement(needs: Requirement): string {
   return `${CLASSES[needs.dimension].className} Lv ${needs.level}`;
 }
 
+/** The level part of a requirement, if it has one (an "all" counts its first level part). */
+function levelPart(needs: Requirement): Requirement | null {
+  if (needs.kind === 'flag') return null;
+  if (needs.kind === 'all') return needs.of.map(levelPart).find((r) => r !== null) ?? null;
+  return needs;
+}
+
+/**
+ * A requirement with where you stand: "Overall Lv 12 · you're Lv 9", "… ✓"
+ * once met, and no level at all for something done in the World ("Raise the
+ * portcullis"), which has none.
+ */
+export function requirementLabel(needs: Requirement, xp: XpTotals): string {
+  const text = describeRequirement(needs);
+  if (standing(needs, xp).met) return `${text} ✓`;
+  const level = levelPart(needs);
+  return level ? `${text} · you're Lv ${standing(level, xp).have}` : text;
+}
+
 /** What to do about it, in real life: "Finish about 6 more habits. Any habit counts." */
 export function howToProgress(s: Standing): string {
   if (s.met) return 'You have the strength. It will open.';

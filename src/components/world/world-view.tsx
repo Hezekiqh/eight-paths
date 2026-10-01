@@ -208,6 +208,8 @@ type Props = {
   special?: Special;
   /** Out of hearts. */
   onDefeat?: () => void;
+  /** Doorways shut for a boss fight: drawn barred. */
+  sealed?: { x: number; y: number }[];
   /** Chests (open or not) and signs standing on tiles, drawn live so they can change. */
   chests?: { x: number; y: number; open: boolean }[];
   signs?: { x: number; y: number }[];
@@ -256,6 +258,7 @@ export function WorldView({
   onWin,
   chests = [],
   signs = [],
+  sealed = [],
   ambience = { darkness: 0, motes: null },
   flames = [],
   snuffable = false,
@@ -774,6 +777,9 @@ export function WorldView({
         {boulders.map((_, i) => (
           <Boulder key={i} index={i} positions={rockPos} />
         ))}
+        {sealed.map((p) => (
+          <Bars key={`b${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
         {signs.map((p) => (
           <Sign key={`s${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
         ))}
@@ -981,6 +987,19 @@ function Chest({ x, y, open }: { x: number; y: number; open: boolean }) {
           <Rect x={x + 2} y={y + 6} width={12} height={1} color="#FFC940" />
         </>
       )}
+    </Group>
+  );
+}
+
+/** Iron bars across a doorway, shut for a boss fight. */
+function Bars({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x} y={y + 1} width={TILE} height={2} color="#3A3A42" />
+      {[1, 5, 9, 13].map((bx) => (
+        <Rect key={bx} x={x + bx} y={y} width={2} height={TILE} color="#5A5A66" />
+      ))}
+      <Rect x={x} y={y + TILE - 4} width={TILE} height={2} color="#3A3A42" />
     </Group>
   );
 }
