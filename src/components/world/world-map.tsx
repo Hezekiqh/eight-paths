@@ -1,4 +1,16 @@
-import { Canvas, FilterMode, Image, Line, MipmapMode, Rect, useImage, vec } from '@shopify/react-native-skia';
+import {
+  Canvas,
+  DashPathEffect,
+  FilterMode,
+  Image,
+  Line,
+  MipmapMode,
+  Path,
+  Rect,
+  Skia,
+  useImage,
+  vec,
+} from '@shopify/react-native-skia';
 import { useWorldProgress } from '@/world/use-progress';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -8,10 +20,14 @@ import { Segmented } from '@/components/segmented';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing } from '@/theme';
 import { MAPS, TILE, type MapId, type WorldMap } from '@/world/maps';
+import { nextGoal, tileBox, type Goal } from '@/world/guide';
 import { EXITS, describeRequirement, standing } from '@/world/progress';
 
 const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
 const GOLD = '#FFD27A';
+/** Ways out that are never a gate: doors, side roads, the way home. */
+const MUTED = '#A8A4BC';
+const TAG_W = 120;
 
 /**
  * Where each area sits on the world map, as fractions of the map's width and
@@ -77,6 +93,7 @@ export function WorldMapView({ map, you, discovered, width, height, onClose }: P
   const [zoom, setZoom] = useState<Zoom>('area');
   const xp = useWorldProgress();
   const exits = EXITS.filter((e) => e.from === map.id && !e.back);
+  const goal = nextGoal(map.id as MapId, discovered, xp);
   const left = Math.max(insets.left, spacing.lg);
   const right = Math.max(insets.right, spacing.lg);
   const boxW = width - left - right;
@@ -102,13 +119,16 @@ export function WorldMapView({ map, you, discovered, width, height, onClose }: P
 
       <View style={{ width: boxW, height: boxH, marginLeft: left }}>
         {zoom === 'area' ? (
-          <AreaMap map={map} you={you} width={boxW} height={boxH} />
+          <AreaMap map={map} you={you} goal={goal} width={boxW} height={boxH} />
         ) : (
           <WorldOverview discovered={discovered} here={map.id as MapId} width={boxW} height={boxH} />
         )}
       </View>
 
       <View style={[styles.legend, { paddingLeft: left, paddingRight: right }]}>
+        <Text style={styles.legendText}>
+          <Text style={{ color: GOLD }}>➜ </Text>Next: {goal.line}
+        </Text>
         {exits.map((exit) => {
           const s = standing(exit.needs, xp);
           return (
@@ -127,8 +147,23 @@ export function WorldMapView({ map, you, discovered, width, height, onClose }: P
   );
 }
 
-/** The room you're in, whole, with you and its ways out marked. */
-function AreaMap({ map, you, width, height }: { map: WorldMap; you: Props['you']; width: number; height: number }) {
+/**
+ * The room you're in, whole, with you, its ways out named, and the next person
+ * or thing to go to (or the way toward them) marked with an arrow from you.
+ */
+function AreaMap({
+  map,
+  you,
+  goal,
+  width,
+  height,
+}: {
+  map: WorldMap;
+  you: Props['you'];
+  goal: Goal;
+  width: number;
+  height: number;
+}) {
   const image = useImage(map.image);
   const artW = map.width * TILE;
   const artH = map.height * TILE;
@@ -139,27 +174,86 @@ function AreaMap({ map, you, width, height }: { map: WorldMap; you: Props['you']
   const h = artH * scale;
   const ox = (width - w) / 2;
   const oy = (height - h) / 2;
-  const exits = EXITS.filter((e) => e.from === map.id).map((e) => ({ exit: e, box: tileBox(map, e.tile) }));
+  const exits = EXITS.filter((e) => e.from === map.id).flatMap((exit) => {
+    const box = tileBox(map, exit.tile);
+    return box
+      ? [
+          {
+            exit,
+            x: ox + box.x * TILE * scale,
+            y: oy + box.y * TILE * scale,
+            w: box.w * TILE * scale,
+            h: box.h * TILE * scale,
+          },
+        ]
+      : [];
+  });
+  const meX = ox + you.x * scale;
+  const meY = oy + you.y * scale;
+  const mark = goal.mark;
+  // Someone or something to go to that isn't a way out gets its own marker and tag.
+  const spot =
+    mark && !mark.exitId
+      ? {
+          x: ox + mark.box.x * TILE * scale,
+          y: oy + mark.box.y * TILE * scale,
+          w: mark.box.w * TILE * scale,
+          h: mark.box.h * TILE * scale,
+        }
+      : null;
+  const target = spot ?? exits.find((e) => e.exit.id === mark?.exitId);
+  const guide = target ? guideArrow(meX, meY, target) : null;
 
   return (
     <View style={{ width, height }}>
       <Canvas style={{ width, height }}>
         {image && <Image image={image} x={ox} y={oy} width={w} height={h} sampling={NEAREST} />}
-        {exits.map(({ exit, box }) =>
-          box ? (
-            <Rect
-              key={exit.id}
-              x={ox + box.x * TILE * scale - 2}
-              y={oy + box.y * TILE * scale - 2}
-              width={box.w * TILE * scale + 4}
-              height={box.h * TILE * scale + 4}
-              color={GOLD}
-              style="stroke"
-              strokeWidth={2}
-            />
-          ) : null,
+        {exits.map(({ exit, x, y, w, h }) => (
+          <Rect
+            key={exit.id}
+            x={x - 2}
+            y={y - 2}
+            width={w + 4}
+            height={h + 4}
+            color={exit.back ? MUTED : GOLD}
+            style="stroke"
+            strokeWidth={2}
+          />
+        ))}
+        {guide && (
+          <>
+            <Path path={guide.shaft} color="#000000" style="stroke" strokeWidth={5} strokeCap="round" opacity={0.6}>
+              <DashPathEffect intervals={[8, 6]} />
+            </Path>
+            <Path path={guide.shaft} color={GOLD} style="stroke" strokeWidth={3} strokeCap="round">
+              <DashPathEffect intervals={[8, 6]} />
+            </Path>
+            <Path path={guide.head} color={GOLD} />
+          </>
+        )}
+        {spot && (
+          <Rect
+            x={spot.x - 3}
+            y={spot.y - 3}
+            width={spot.w + 6}
+            height={spot.h + 6}
+            color={GOLD}
+            style="stroke"
+            strokeWidth={2}
+          />
         )}
       </Canvas>
+      {exits.map((e) => (
+        <Tag
+          key={e.exit.id}
+          label={e.exit.label}
+          color={e.exit.back ? MUTED : GOLD}
+          box={e}
+          areaW={width}
+          areaH={height}
+        />
+      ))}
+      {spot && mark && <Tag label={`! ${mark.tag}`} color={GOLD} box={spot} areaW={width} areaH={height} />}
       <Text
         style={[styles.you, { left: ox + you.x * scale - 8, top: oy + you.y * scale - 20 }]}
         accessibilityLabel="You are here">
@@ -167,6 +261,84 @@ function AreaMap({ map, you, width, height }: { map: WorldMap; you: Props['you']
       </Text>
     </View>
   );
+}
+
+/**
+ * A name beside something on the Area map, with a pointer at it: above when
+ * there's room, otherwise below, or beside it for a road off the map's edge.
+ */
+function Tag({
+  label,
+  color,
+  box,
+  areaW,
+  areaH,
+}: {
+  label: string;
+  color: string;
+  box: { x: number; y: number; w: number; h: number };
+  areaW: number;
+  areaH: number;
+}) {
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const TAG_H = 30;
+  let side: 'above' | 'below' | 'left' | 'right' = box.y - TAG_H >= 0 ? 'above' : 'below';
+  if (box.x <= 2) side = 'right';
+  else if (box.x + box.w >= areaW - 2) side = 'left';
+  else if (side === 'below' && box.y + box.h + TAG_H > areaH) side = 'above';
+  const pointer = { above: '▼', below: '▲', left: '▶', right: '◀' }[side];
+  const name = (
+    <Text style={[styles.tagName, { color }]} numberOfLines={1}>
+      {label}
+    </Text>
+  );
+  const arrow = <Text style={[styles.tagPointer, { color }]}>{pointer}</Text>;
+  const clampX = (x: number) => Math.min(Math.max(x, 0), areaW - TAG_W);
+
+  return (
+    <View
+      pointerEvents="none"
+      accessible
+      accessibilityLabel={label}
+      style={[
+        styles.tag,
+        side === 'above' && { left: clampX(cx - TAG_W / 2), top: box.y - TAG_H - 2 },
+        side === 'below' && { left: clampX(cx - TAG_W / 2), top: box.y + box.h + 2 },
+        side === 'right' && { left: box.x + box.w + 2, top: cy - 9, flexDirection: 'row' },
+        side === 'left' && { left: box.x - TAG_W - 2, top: cy - 9, flexDirection: 'row-reverse' },
+      ]}>
+      {side === 'below' || side === 'right' ? arrow : name}
+      {side === 'below' || side === 'right' ? name : arrow}
+    </View>
+  );
+}
+
+/** A dashed arrow from you to a way out, stopping just short of it. */
+function guideArrow(fromX: number, fromY: number, to: { x: number; y: number; w: number; h: number }) {
+  const toX = to.x + to.w / 2;
+  const toY = to.y + to.h / 2;
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const len = Math.hypot(dx, dy);
+  // Right on top of it: no arrow needed.
+  if (len < 24) return null;
+  const ux = dx / len;
+  const uy = dy / len;
+  const start = 12;
+  const end = len - Math.max(to.w, to.h) / 2 - 6;
+  if (end <= start + 8) return null;
+  const tipX = fromX + ux * end;
+  const tipY = fromY + uy * end;
+  const shaft = Skia.Path.Make();
+  shaft.moveTo(fromX + ux * start, fromY + uy * start);
+  shaft.lineTo(tipX - ux * 8, tipY - uy * 8);
+  const head = Skia.Path.Make();
+  head.moveTo(tipX, tipY);
+  head.lineTo(tipX - ux * 12 - uy * 7, tipY - uy * 12 + ux * 7);
+  head.lineTo(tipX - ux * 12 + uy * 7, tipY - uy * 12 - ux * 7);
+  head.close();
+  return { shaft, head };
 }
 
 /** The places you've been, and nothing else. */
@@ -245,24 +417,6 @@ function WorldOverview({
   );
 }
 
-/** The bounding box, in tiles, of every tile with this letter. */
-function tileBox(map: WorldMap, letter: string): { x: number; y: number; w: number; h: number } | null {
-  let x0 = Infinity;
-  let y0 = Infinity;
-  let x1 = -1;
-  let y1 = -1;
-  map.tiles.forEach((row, y) =>
-    [...row].forEach((c, x) => {
-      if (c !== letter) return;
-      x0 = Math.min(x0, x);
-      y0 = Math.min(y0, y);
-      x1 = Math.max(x1, x);
-      y1 = Math.max(y1, y);
-    }),
-  );
-  return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
-}
-
 const styles = StyleSheet.create({
   root: { ...StyleSheet.absoluteFill, backgroundColor: '#000000' },
   header: { height: 64, flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
@@ -273,6 +427,16 @@ const styles = StyleSheet.create({
   legendText: { color: '#C9C5DA', fontFamily: fonts.regular, fontSize: 13 },
   you: { position: 'absolute', color: GOLD, fontSize: 16, width: 16, textAlign: 'center' },
   dark: { backgroundColor: '#000000' },
+  tag: { position: 'absolute', width: TAG_W, alignItems: 'center' },
+  tagName: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 4,
+    maxWidth: TAG_W - 14,
+  },
+  tagPointer: { fontSize: 10, lineHeight: 12, paddingHorizontal: 2 },
   place: { position: 'absolute', width: 140, alignItems: 'center' },
   placeBox: {
     borderWidth: 2,
