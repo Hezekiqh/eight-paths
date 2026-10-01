@@ -1,3 +1,5 @@
+import { SymbolView } from 'expo-symbols';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Segmented } from '@/components/segmented';
@@ -44,10 +46,18 @@ type Props = {
   onRead: (id: string) => void;
 };
 
+type Tab = 'goals' | 'party' | 'controls';
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'goals', label: 'Goals' },
+  { value: 'party', label: 'Party' },
+  { value: 'controls', label: 'Controls' },
+];
+
 /**
- * The World's pause menu. Left: what it takes to go on, in real habits, and
- * the quest board. Right: the map, party, satchel and controls. Below both, always
- * in view: resume or go back to habits.
+ * The World's pause menu. Left: one page at a time (what it takes to go on,
+ * then the party and satchel, then controls), so the goals get the room. Right,
+ * always in view: resume, the map, the Other World menu, and back to habits.
  */
 export function PauseMenu({
   map,
@@ -67,78 +77,111 @@ export function PauseMenu({
   items,
   onRead,
 }: Props) {
+  const [tab, setTab] = useState<Tab>('goals');
   return (
     <View style={styles.scrim}>
       <View style={styles.window} accessibilityViewIsModal>
-        <View style={styles.heading}>
-          <Text style={styles.title}>PAUSED</Text>
-          <Text style={styles.place}>{mapName}</Text>
-        </View>
-
-        <View style={styles.columns}>
-          <ScrollView style={styles.column} contentContainerStyle={{ gap: spacing.xs }}>
-            <ObjectivesPanel map={map} hero={hero} onOpenBoard={onOpenBoard} />
-          </ScrollView>
-          <ScrollView style={styles.column} contentContainerStyle={{ gap: spacing.xs }}>
-            <View style={styles.actions}>
-              <MenuItem label="Map" onPress={onOpenMap} grow />
-              <MenuItem label="Other World menu" onPress={onMenu} grow />
-            </View>
-            <Text style={styles.section}>WALKING AS</Text>
-            <View style={styles.party}>
-              {party.map((id) => {
-                const c = COMPANIONS[id];
-                const on = id === hero;
-                return (
-                  <Pressable
-                    key={id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
-                    accessibilityLabel={`${c.name}, ${CLASSES[c.dimension].className}`}
-                    onPress={() => {
-                      if (on) return;
-                      haptics.select();
-                      onSwap(id);
-                    }}
-                    style={[styles.member, on && { borderColor: CLASSES[c.dimension].color }]}>
-                    <Text style={[styles.memberName, on && { color: CLASSES[c.dimension].color }]}>{c.name}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Text style={styles.section}>SATCHEL</Text>
-            <Text
-              style={styles.hint}
-              accessibilityLabel={`${hearts} hearts. ${pieces} of ${PIECES_PER_HEART} pieces toward the next.`}>
-              {`${'♥'.repeat(hearts)}  ·  Heart pieces ${pieces}/${PIECES_PER_HEART}`}
+        <View style={styles.main}>
+          <View style={styles.heading}>
+            <Text style={styles.title}>PAUSED</Text>
+            <Text style={styles.place} numberOfLines={1}>
+              {mapName}
             </Text>
-            {items.length > 0 && (
-              <View style={styles.party}>
-                {items.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Read ${item.name}`}
-                    onPress={() => {
-                      haptics.select();
-                      onRead(item.id);
-                    }}
-                    style={styles.member}>
-                    <Text style={styles.memberName}>{item.name}</Text>
-                  </Pressable>
-                ))}
-              </View>
+          </View>
+          <View style={styles.tabs} accessibilityRole="tablist">
+            {TABS.map((t) => {
+              const on = t.value === tab;
+              return (
+                <Pressable
+                  key={t.value}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: on }}
+                  onPress={() => {
+                    if (on) return;
+                    haptics.select();
+                    setTab(t.value);
+                  }}
+                  style={[styles.tab, on && styles.tabOn]}>
+                  <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{t.label.toUpperCase()}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
+            {tab === 'goals' && <ObjectivesPanel map={map} hero={hero} onOpenBoard={onOpenBoard} />}
+            {tab === 'party' && (
+              <>
+                <Text style={styles.section}>WALKING AS</Text>
+                <View style={styles.chips}>
+                  {party.map((id) => {
+                    const c = COMPANIONS[id];
+                    const on = id === hero;
+                    const color = CLASSES[c.dimension].color;
+                    return (
+                      <Pressable
+                        key={id}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: on }}
+                        accessibilityLabel={`${c.name}, ${CLASSES[c.dimension].className}`}
+                        onPress={() => {
+                          if (on) return;
+                          haptics.select();
+                          onSwap(id);
+                        }}
+                        style={[styles.chip, on && { borderColor: color }]}>
+                        <Text style={[styles.chipName, on && { color }]}>{c.name}</Text>
+                        <Text style={styles.chipClass}>{CLASSES[c.dimension].className}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <Text style={styles.section}>SATCHEL</Text>
+                <View
+                  style={styles.hearts}
+                  accessible
+                  accessibilityLabel={`${hearts} hearts. ${pieces} of ${PIECES_PER_HEART} pieces toward the next.`}>
+                  {Array.from({ length: hearts }, (_, i) => (
+                    <SymbolView key={i} name="heart.fill" tintColor={colors.accent} size={16} />
+                  ))}
+                  <Text style={styles.hint}>{`  Heart pieces ${pieces}/${PIECES_PER_HEART}`}</Text>
+                </View>
+                {items.length > 0 ? (
+                  <View style={styles.chips}>
+                    {items.map((item) => (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Read ${item.name}`}
+                        onPress={() => {
+                          haptics.select();
+                          onRead(item.id);
+                        }}
+                        style={styles.chip}>
+                        <Text style={styles.chipName}>{item.name}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.hint}>Nothing yet. Keep an eye out for chests.</Text>
+                )}
+              </>
             )}
-            <Text style={styles.section}>CONTROLS</Text>
-            <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
-            <Text style={styles.hint}>{HINTS[controls]}</Text>
+            {tab === 'controls' && (
+              <>
+                <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
+                <Text style={styles.hint}>{HINTS[controls]}</Text>
+              </>
+            )}
           </ScrollView>
         </View>
 
-        {/* Pinned below both columns so a full Satchel never pushes it off screen. */}
-        <View style={styles.actions}>
-          <MenuItem label="Resume" onPress={onResume} primary grow />
-          <MenuItem label="Back to habits" onPress={onLeave} grow />
+        <View style={styles.rail}>
+          <MenuItem label="Resume" onPress={onResume} primary />
+          <MenuItem label="Map" onPress={onOpenMap} />
+          <MenuItem label="Other World menu" onPress={onMenu} />
+          <View style={styles.spacer} />
+          <MenuItem label="Back to habits" onPress={onLeave} quiet />
         </View>
       </View>
     </View>
@@ -149,13 +192,13 @@ function MenuItem({
   label,
   onPress,
   primary,
-  grow,
+  quiet,
 }: {
   label: string;
   onPress: () => void;
   primary?: boolean;
-  /** Share a row with the other buttons. */
-  grow?: boolean;
+  /** Leaving: smaller and set apart. */
+  quiet?: boolean;
 }) {
   return (
     <Pressable
@@ -166,35 +209,51 @@ function MenuItem({
       }}
       style={({ pressed }) => [
         styles.item,
-        grow && styles.grow,
         primary && styles.itemPrimary,
+        quiet && styles.itemQuiet,
         pressed && { opacity: 0.7 },
       ]}>
-      <Text style={[styles.itemLabel, primary && styles.itemLabelPrimary]}>{label.toUpperCase()}</Text>
+      <Text style={[styles.itemLabel, primary && styles.itemLabelPrimary, quiet && styles.itemLabelQuiet]}>{label.toUpperCase()}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  party: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  member: { borderWidth: 2, borderColor: colors.border, paddingHorizontal: 6, paddingVertical: 2 },
-  memberName: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14 },
   scrim: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(8, 5, 10, 0.6)',
+    backgroundColor: 'rgba(8, 5, 10, 0.7)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  window: { ...windowStyle, width: 720, maxWidth: '90%', maxHeight: '92%', padding: spacing.lg, gap: spacing.sm },
+  window: {
+    ...windowStyle,
+    flexDirection: 'row',
+    width: 760,
+    maxWidth: '90%',
+    height: '88%',
+    padding: spacing.md,
+    gap: spacing.lg,
+  },
+  main: { flex: 1, gap: spacing.sm },
   heading: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.md },
-  title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 30 },
-  place: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 16 },
-  columns: { flexDirection: 'row', gap: spacing.xl, flexShrink: 1 },
-  column: { flex: 1, gap: spacing.xs },
-  section: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1, marginTop: spacing.xs },
+  title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 24, letterSpacing: 1 },
+  place: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 15, flexShrink: 1 },
+  tabs: { flexDirection: 'row', gap: spacing.xs, borderBottomWidth: 2, borderBottomColor: colors.border },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, marginBottom: -2, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabOn: { borderBottomColor: colors.accent },
+  tabLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 1 },
+  tabLabelOn: { color: colors.accent },
+  page: { flex: 1 },
+  pageContent: { gap: spacing.sm, paddingBottom: spacing.sm },
+  section: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 1 },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
-  actions: { flexDirection: 'row', gap: spacing.sm },
-  grow: { flex: 1 },
+  hearts: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  chip: { borderWidth: 2, borderColor: colors.border, paddingHorizontal: spacing.sm, paddingVertical: 4 },
+  chipName: { color: colors.text, fontFamily: fonts.bold, fontSize: 14 },
+  chipClass: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 11 },
+  rail: { width: 168, gap: spacing.sm },
+  spacer: { flex: 1 },
   item: {
     borderWidth: 3,
     borderColor: colors.frame,
@@ -202,6 +261,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemPrimary: { backgroundColor: colors.accent },
-  itemLabel: { color: colors.text, fontFamily: fonts.bold, fontSize: 20, letterSpacing: 1 },
+  itemQuiet: { borderWidth: 2, borderColor: colors.border, paddingVertical: spacing.xs },
+  itemLabel: { color: colors.text, fontFamily: fonts.bold, fontSize: 17, letterSpacing: 1, textAlign: 'center' },
   itemLabelPrimary: { color: colors.background },
+  itemLabelQuiet: { color: colors.textMuted, fontSize: 14 },
 });
