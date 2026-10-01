@@ -169,7 +169,9 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
             a11y={`${RARITY_TIERS[r].name} only`}
           />
         ))}
-        <Text style={styles.count}>{entries.length} shown</Text>
+        <Text style={styles.count} numberOfLines={1}>
+          {entries.length} shown
+        </Text>
       </View>
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {width > 0 && entries.length === 0 && <Text style={styles.empty}>No characters match these filters.</Text>}
@@ -224,8 +226,11 @@ const styles = StyleSheet.create({
   lockedName: { color: colors.textFaint },
   stars: { color: colors.accent, fontSize: 9, letterSpacing: 1 },
   chips: { gap: spacing.xs, paddingHorizontal: spacing.sm, paddingTop: spacing.sm },
+  // Wraps, so on a narrow phone the count drops to its own line instead of
+  // being squeezed to one letter per line beside the chips.
   rarityRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
@@ -242,7 +247,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   chipText: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14 },
-  count: { flex: 1, textAlign: 'right', color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
+  count: { flexGrow: 1, textAlign: 'right', color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12 },
   empty: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, textAlign: 'center', padding: spacing.xl },
   pager: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: spacing.sm },
   dot: { width: 6, height: 6, backgroundColor: colors.border },
