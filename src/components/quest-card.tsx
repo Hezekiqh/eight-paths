@@ -7,18 +7,23 @@ import { FRAME, colors, fonts, radius, spacing, windowStyle } from '@/theme';
 type Props = {
   view: QuestView;
   onPress: () => void;
+  /** Long press: offers to skip the quest for today. */
+  onSkip?: () => void;
   pinned?: boolean;
   /** Name the quest's Path on the card, for lists that aren't grouped by Path. */
   showPath?: boolean;
 };
 
-export function QuestCard({ view, onPress, pinned, showPath }: Props) {
+export function QuestCard({ view, onPress, onSkip, pinned, showPath }: Props) {
   const { quest, info, done, streak } = view;
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked: done }}
       onPress={onPress}
+      onLongPress={onSkip}
+      accessibilityActions={onSkip ? [{ name: 'skip', label: 'Skip for today' }] : undefined}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'skip' && onSkip?.()}
       style={({ pressed }) => [
         styles.card,
         pinned && { borderColor: info.color },

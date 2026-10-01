@@ -1,4 +1,4 @@
-import { isScheduledOn } from './schedule';
+import { isScheduledOn, isSkippedOn } from './schedule';
 import { xpForCompletion, type Tier } from './xp';
 import type { Completion, Dimension, Quest } from './types';
 
@@ -21,7 +21,7 @@ export const atHabitLimit = (quests: Quest[], tier: Tier) =>
   tier === 'free' && activeHabitCount(quests) >= FREE_HABIT_LIMIT;
 
 export function questsForDay(quests: Quest[], date: string): Quest[] {
-  return quests.filter((q) => q.active && isScheduledOn(q, date));
+  return quests.filter((q) => q.active && isScheduledOn(q, date) && !isSkippedOn(q, date));
 }
 
 export function completionFor(completions: Completion[], questId: string, date: string) {

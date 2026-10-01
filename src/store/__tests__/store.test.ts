@@ -168,6 +168,20 @@ describe('game store', () => {
     expect(useGameStore.getState().redrawn).toEqual([]);
   });
 
+  it('skips a quest out of today for good, without breaking anything', () => {
+    start();
+    const [tutorial, read, move] = useGameStore.getState().quests;
+    useGameStore.getState().toggleQuest(move.id, today);
+    expect(useGameStore.getState().skipQuest(move.id, today)).toBe(false);
+    expect(useGameStore.getState().skipQuest(tutorial.id, today)).toBe(false);
+    expect(useGameStore.getState().skipQuest(read.id, today)).toBe(true);
+    expect(useGameStore.getState().skipQuest(read.id, today)).toBe(false);
+    expect(selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.title)).toEqual(['Move 30 min']);
+    expect(selectTodayQuests(useGameStore.getState(), '2026-09-27').map((v) => v.quest.title)).toContain('Read 20 min');
+    const intellectual = selectDimensionStats(useGameStore.getState(), today).find((d) => d.dimension === 'intellectual');
+    expect(intellectual?.consistency.due).toBe(0);
+  });
+
   it('stamps the archive date so past days still count as due', () => {
     start();
     const read = useGameStore.getState().quests[1];

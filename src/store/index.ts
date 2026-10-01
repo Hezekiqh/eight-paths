@@ -14,6 +14,8 @@ import {
   settleRestDays,
   toDateKey,
   toggleCompletion,
+  completionFor,
+  questsForDay,
   xpByDimension,
   FIRST_CLIMB_LEVEL,
   overallLevelFromXp,
@@ -127,6 +129,8 @@ type Actions = {
   addQuest: (draft: QuestDraft) => void;
   updateQuest: (id: string, draft: QuestDraft) => void;
   archiveQuest: (id: string) => void;
+  /** Erases a quest from `today` for good: it isn't due, so nothing breaks. False if it's done or not scheduled. */
+  skipQuest: (id: string, today?: string) => boolean;
   /** Picks a set reminder time, which turns off "at my usual time". */
   setNotificationTime: (time: string) => void;
   setSmartReminders: (on: boolean) => void;
@@ -387,6 +391,15 @@ export const useGameStore = create<GameState>()(
               : q,
           ),
         })),
+
+      skipQuest: (id, today = todayKey()) => {
+        const { quests, completions } = get();
+        const quest = quests.find((q) => q.id === id);
+        if (!quest || quest.id === TUTORIAL_QUEST_ID || !questsForDay([quest], today).length) return false;
+        if (completionFor(completions, id, today)) return false;
+        set({ quests: quests.map((q) => (q === quest ? { ...q, skippedOn: [...(q.skippedOn ?? []), today] } : q)) });
+        return true;
+      },
 
       archiveQuest: (id) =>
         set((s) => ({
