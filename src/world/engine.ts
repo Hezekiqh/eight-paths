@@ -5,8 +5,8 @@
 
 const TILE = 16;
 
-/** Walking speed in art pixels per second: four tiles a second. */
-export const SPEED = 64;
+/** Walking speed in art pixels per second: seven tiles a second. */
+export const SPEED = 112;
 /** The feet's footprint: 5 pixels either side of centre, 5 pixels deep. */
 const HALF_WIDTH = 5;
 const DEPTH = 5;
@@ -55,6 +55,30 @@ function ease(grid: Grid, ax: number, ay: number, amount: number, alongX: boolea
 }
 
 /**
+ * For a blocked step of `dx` from x: where the feet stop flush against the
+ * tile in the way, or x if they're already there. Keeps fast steps from
+ * stopping a pixel or two short of walls and boulders.
+ */
+function flushX(grid: Grid, x: number, y: number, dx: number): number {
+  'worklet';
+  const to =
+    dx > 0
+      ? Math.floor((x + dx + HALF_WIDTH - 0.001) / TILE) * TILE - HALF_WIDTH
+      : (Math.floor((x + dx - HALF_WIDTH) / TILE) + 1) * TILE + HALF_WIDTH;
+  return (to - x) * dx > 0 && Math.abs(to - x) < Math.abs(dx) && !blocked(grid, to, y) ? to : x;
+}
+
+/** flushX, along y. */
+function flushY(grid: Grid, x: number, y: number, dy: number): number {
+  'worklet';
+  const to =
+    dy > 0
+      ? Math.floor((y + dy - 0.001) / TILE) * TILE
+      : (Math.floor((y + dy - DEPTH) / TILE) + 1) * TILE + DEPTH;
+  return (to - y) * dy > 0 && Math.abs(to - y) < Math.abs(dy) && !blocked(grid, x, to) ? to : y;
+}
+
+/**
  * Moves by (dx, dy), each axis on its own so walls slide rather than stick.
  * Pushing straight into a corner that's nearly lined up with a gap eases the
  * player sideways into it, so one-tile aisles don't need pixel-perfect aim.
@@ -65,14 +89,18 @@ export function move(grid: Grid, x: number, y: number, dx: number, dy: number): 
   let ny = y;
   if (dx !== 0) {
     if (!blocked(grid, x + dx, ny)) nx = x + dx;
-    else if (dy === 0) {
+    else if ((nx = flushX(grid, x, ny, dx)) !== x) {
+      // stepped up against it
+    } else if (dy === 0) {
       const s = ease(grid, x + dx, ny, Math.abs(dx), false);
       if (s !== 0 && !blocked(grid, x, ny + s)) ny += s;
     }
   }
   if (dy !== 0) {
     if (!blocked(grid, nx, y + dy)) ny = y + dy;
-    else if (dx === 0) {
+    else if ((ny = flushY(grid, nx, y, dy)) !== y) {
+      // stepped up against it
+    } else if (dx === 0) {
       const s = ease(grid, nx, y + dy, Math.abs(dy), true);
       if (s !== 0 && !blocked(grid, nx + s, ny)) nx += s;
     }

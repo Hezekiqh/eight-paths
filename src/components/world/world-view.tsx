@@ -499,7 +499,7 @@ export function WorldView({
     if (rs.length > 0) {
       const next = rp.slice();
       let changed = false;
-      const slide = SPEED * 1.5 * dt;
+      const slide = 96 * dt;
       for (let i = 0; i < rs.length; i++) {
         const targets = [(rs[i] % mapWidth) * TILE, Math.floor(rs[i] / mapWidth) * TILE];
         for (let k = 0; k < 2; k++) {
