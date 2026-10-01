@@ -50,6 +50,7 @@ import {
 } from '@/world/progress';
 import { SEASON_END, winScene, type Outcome } from '@/world/scenes';
 import { loreId } from '@/world/lore';
+import { banterFor } from '@/world/banter';
 import { characterQuestions } from '@/world/talk';
 import { keeperQuestions, keeperRemark } from '@/world/keeper-talk';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
@@ -59,7 +60,16 @@ import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from
 import { ATTACKS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
 import { ambienceOf, flamesOn } from '@/world/ambience';
-import { ITEMS, PIECES_PER_HEART, chestFlag, foundLines, heartPieces, isCandle, maxHearts, satchel } from '@/world/items';
+import {
+  ITEMS,
+  PIECES_PER_HEART,
+  chestFlag,
+  foundLines,
+  heartPieces,
+  isCandle,
+  maxHearts,
+  satchel,
+} from '@/world/items';
 import { haptics } from '@/haptics';
 import { useWorldProgress } from '@/world/use-progress';
 
@@ -250,7 +260,9 @@ function World({
   const liveFlags = useWorldStore((s) => s.flags);
   const chests = useMemo(
     () =>
-      map.objects.flatMap((o) => (o.type === 'chest' ? [{ x: o.x, y: o.y, open: liveFlags.includes(chestFlag(o.id)) }] : [])),
+      map.objects.flatMap((o) =>
+        o.type === 'chest' ? [{ x: o.x, y: o.y, open: liveFlags.includes(chestFlag(o.id)) }] : [],
+      ),
     [map, liveFlags],
   );
   const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
@@ -520,7 +532,9 @@ function World({
           onRead={(id) => {
             setPaused(false);
             const item = ITEMS[id];
-            setDialogue({ lines: item?.text.length ? item.text : ['The seal is unbroken. Not yours to open, not yet.'] });
+            setDialogue({
+              lines: item?.text.length ? item.text : ['The seal is unbroken. Not yours to open, not yet.'],
+            });
           }}
           onSwap={(id) => {
             // Save where you stand; the World restarts right here with them.
@@ -562,6 +576,8 @@ function useAct(
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
     const thing = objectAt(map, tx, ty);
+    // a party member may chime in (see banter.ts)
+    const banter = thing ? banterFor(map.id, thing.id, Object.values(useGameStore.getState().party)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const who = COMPANIONS[hero];
       const job = thing.job;
@@ -572,7 +588,7 @@ function useAct(
       } else {
         const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party)] : [];
         useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
-        setDialogue({ speaker: thing.name, lines: [...thing.lines, ...job.cant, ...hint] });
+        setDialogue({ speaker: thing.name, lines: [...thing.lines, ...banter, ...job.cant, ...hint] });
       }
       return;
     }
@@ -590,13 +606,13 @@ function useAct(
         thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
       setDialogue({
         speaker: thing.name,
-        lines: after ? thing.after!.lines : [...thing.lines, ...(keeper ? keeperRemark(keeper) : [])],
+        lines: after ? thing.after!.lines : [...thing.lines, ...(keeper ? keeperRemark(keeper) : []), ...banter],
         questions: keeper ? [...keeperQuestions(keeper), ...(questions ?? [])] : questions,
       });
       return;
     }
     if (thing?.type === 'sign') {
-      setDialogue({ lines: thing.lines });
+      setDialogue({ lines: [...thing.lines, ...banter] });
       return;
     }
     if (thing?.type === 'chest') {
@@ -622,7 +638,12 @@ function useAct(
         facing: FACINGS[facing],
       };
       const elsewhere = [
-        { map: 'archive' as MapId, x: MAPS.archive.spawn.x, y: MAPS.archive.spawn.y, facing: MAPS.archive.spawn.facing },
+        {
+          map: 'archive' as MapId,
+          x: MAPS.archive.spawn.x,
+          y: MAPS.archive.spawn.y,
+          facing: MAPS.archive.spawn.facing,
+        },
         ...candles.filter((c) => c.map !== 'archive'),
       ].filter((c) => c.map !== map.id);
       setDialogue({
