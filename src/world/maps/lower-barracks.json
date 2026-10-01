@@ -44,7 +44,8 @@
       "A bunk. The blanket's still folded. Soldiers made their beds even on the last morning."
     ],
     "x": [
-      "A heap of rubble. The ceiling came down here, long ago."
+      "A heap of rubble. The ceiling came down here, long ago.",
+      "In it, a grey box with a cracked glass face. You tap it. It flickers: a smiling face, then nothing."
     ],
     "k": [
       "A candle on an iron stand. Rest here."
@@ -74,7 +75,8 @@
       "name": "The Quartermaster",
       "lines": [
         "HALT. Everything must be signed for.",
-        "Everything. Even the end of the world. Especially the end of the world."
+        "Everything. Even the end of the world. Especially the end of the world.",
+        "Somebody still owes these stores one spoon. I know who."
       ],
       "questions": [
         {
@@ -97,6 +99,13 @@
           "answer": [
             "Baron Plush. Lord of the court, once. Told everyone to rest before the war.",
             "They rested. Then there wasn't a war. Then there wasn't anything."
+          ]
+        },
+        {
+          "ask": "Whose spoon?",
+          "answer": [
+            "The prince's. Borrowed it for porridge. Five hundred years ago. Never signed it back.",
+            "I've not forgotten. I've had a great deal of time not to forget."
           ]
         }
       ]

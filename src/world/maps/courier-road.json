@@ -53,7 +53,8 @@
       "The great door of the Archive, set into a hill of old stone. From out here, it looks like it has always been part of the hill."
     ],
     ">": [
-      "The road runs on east toward distant towers."
+      "The road runs on east toward distant towers.",
+      "On the tallest one, something blinks red. Slowly. Like it's breathing."
     ],
     "H": [
       "The Waystation. Smoke curls from its chimney, and a painted sign over the door shows a running boot."
@@ -78,7 +79,8 @@
       "name": "Nib",
       "lines": [
         "HALT! Nobody passes without a duel!",
-        "...Unless you're going the other way. Then carry on. Mind the puddle."
+        "Ugh. Look at you. I'd beat you with a stick. I'd beat you with half a stick.",
+        "Go on, pass. I'm counting it as a win. That's forty-one."
       ],
       "questions": [
         {
@@ -102,7 +104,14 @@
             "I leave her a flower sometimes. Runners get tired."
           ]
         }
-      ]
+      ],
+      "after": {
+        "flag": "pit-champion",
+        "lines": [
+          "They say you won in the Kingdom's pit. Three of the king's own.",
+          "Doesn't count. I had you first. Forty-one."
+        ]
+      }
     },
     {
       "id": "waystation-plaque",

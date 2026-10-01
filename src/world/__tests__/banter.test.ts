@@ -32,4 +32,10 @@ describe('party banter', () => {
     expect(banterFor('march-road', 'grask', ['brannoc' as CharacterId])).toEqual([]);
     expect(banterFor('millbrook', 'nowhere', party)).toEqual([]);
   });
+
+  it('plays a two-person exchange only when both of them came', () => {
+    expect(banterFor('deserters-camp', 'fen', ['brannoc', 'oren'] as CharacterId[])).toContain('OREN: Slower.');
+    expect(banterFor('deserters-camp', 'fen', ['brannoc'] as CharacterId[])).not.toContain('OREN: Slower.');
+    expect(banterFor('deserters-camp', 'fen', ['brannoc'] as CharacterId[])[0]).toMatch(/^BRANNOC: /);
+  });
 });

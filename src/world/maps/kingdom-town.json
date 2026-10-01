@@ -38,10 +38,12 @@
   },
   "examine": {
     "M": [
-      "The kingdom's walls. Old stone below, new stakes on top, and the horde's banners on every stake."
+      "The kingdom's walls. Old stone below, new stakes on top, and the horde's banners on every stake.",
+      "Bolted to every fifth stake, a horn from the old world, rusted shut. At dusk, every one of them plays the curfew jingle."
     ],
     "I": [
-      "Stone houses with iron-shuttered windows. Everybody's watching you. Nobody's looking."
+      "Stone houses with iron-shuttered windows. Everybody's watching you. Nobody's looking.",
+      "Behind one shutter, a music box is playing the curfew jingle. A little too slowly."
     ],
     "E": [
       "The keep gate, guarded by raiders. Beyond it, the war hall."
@@ -63,7 +65,8 @@
     ],
     "K": [
       "The statue of Kaldor, colossal, one boot on a broken crown.",
-      "The plaque: KALDOR THE KINGBREAKER. He struck down the Mad King and saved the world from war. First of the Eight. Undying."
+      "The plaque: KALDOR THE KINGBREAKER. He struck down the Mad King and saved the world from war. First of the Eight. Undying.",
+      "Its eyes are two lenses of old-world glass. They follow you round the square. They probably don't."
     ],
     "Z": [
       "A statue with no head, left in the square as a warning. Its plaque has been pried off.",
@@ -73,7 +76,8 @@
       "An iron cage in the square. Inside, days scratched into the bars. The prisoners won't look at you."
     ],
     "n": [
-      "A horde banner: a fist crushing a crown."
+      "A horde banner: a fist crushing a crown.",
+      "Something has pecked a large hole in it. Something goose-sized."
     ],
     "b": [
       "The Kaldor Memorial Bench. He isn't dead. It's a memorial in advance."
@@ -120,6 +124,22 @@
           "answer": [
             "Get yourself billed at the Kaldorium: Barnaby does the bills, he likes a talker. Win three fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
             "Or buy a lamp. Lamps are nice."
+          ]
+        },
+        {
+          "ask": "Who writes on the notices?",
+          "answer": [
+            "Couldn't tell you.",
+            "I sell lamps at the border post on Thursdays, though. Read the notices while I'm there.",
+            "Somebody ought to mark them."
+          ]
+        },
+        {
+          "ask": "What are the horns?",
+          "answer": [
+            "Old-world horns. Older than the king. Older than anybody.",
+            "At dusk they play the jingle, then a lady says nothing further is required of you. Nicest voice in the kingdom.",
+            "Nobody knows who she is. Five hundred years, same words. You get used to it."
           ]
         }
       ],
@@ -276,7 +296,9 @@
       "facing": "down",
       "name": "The Cage Guard",
       "lines": [
-        "Back off. These are the king's. The king's prisoners, the king's cages, the king's… everything."
+        "Back off. King's cages, king's prisoners.",
+        "I score their cheering at the pit. That one's a three. That one's a two.",
+        "You? You look like a one."
       ],
       "questions": [
         {
@@ -292,6 +314,8 @@
         "done": [
           "{name} counts out a heavy purse, slowly, so the guard can hear every coin.",
           "THE CAGE GUARD: …Keys must've fallen out of my pocket. Terrible. Anyway.",
+          "THE CAGE GUARD: Gerald, by the way. Nobody ever asks. Six out of ten, that purse.",
+          "(He's very tall. You hadn't noticed till now.)",
           "The cages swing open. The prisoners stand, shaky, and follow you at a distance. They'll be witnesses.",
           "Kett watches the cages open, then marches over to stand with the prisoners. \"Someone has to look after them.\" Kett joins your collection."
         ],
@@ -301,6 +325,13 @@
         ],
         "joins": [
           "kett"
+        ]
+      },
+      "after": {
+        "flag": "cages-open",
+        "lines": [
+          "Gerald. Still Gerald. Unemployed Gerald.",
+          "A lady in Millbrook told my mum I'd be famous one day. Still waiting."
         ]
       }
     },
@@ -377,6 +408,7 @@
         "done": [
           "You let Little Brunna headbutt you over. You go down dramatically.",
           "LITTLE BRUNNA: RAAAAAH!",
+          "(It's a Tuesday. She bites you as well.)",
           "She decides you're her friend now. Little Brunna joins your collection."
         ],
         "cant": []
@@ -409,7 +441,8 @@
       "y": 11,
       "lines": [
         "The Crier's board: VICTORIES OF THE KING: see previous notice.",
-        "The previous notice: see previous notice."
+        "The previous notice: see previous notice.",
+        "Underneath, in pencil: \"riveting.\""
       ]
     },
     {

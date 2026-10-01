@@ -73,6 +73,13 @@
           "answer": [
             "Because you can't carry anyone if you can't carry yourself. Now eat."
           ]
+        },
+        {
+          "ask": "What's for supper?",
+          "answer": [
+            "Turnip. Millbrook sends them. The horde won't touch a turnip, so nobody asks where they go.",
+            "Half this town's lived on Millbrook turnips for years. So will you. Eat."
+          ]
         }
       ]
     },

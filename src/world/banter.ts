@@ -2,17 +2,27 @@ import type { CharacterId } from '@/story/companions';
 
 // Party banter: when you talk to someone or read a sign, a party member chimes
 // in. Each spot lists who might speak, in order; the first one in your party
-// has their say, so swapping a recruit in (Plush, Bo) changes who talks.
+// has their say, so swapping a recruit in (Plush, Bo) changes who talks. An
+// entry `with` a second member only plays when both came (two of them bickering).
 // Lines are "NAME: text" so the dialogue box shows their face and voice.
 // Drafts until the author approves them. Spoiler rule (LORE.md): Brannoc can
 // brush against his past (the prince, the old law), never name it.
 
-type Banter = { who: CharacterId; lines: string[] };
+type Banter = { who: CharacterId; with?: CharacterId; lines: string[] };
 
 /** By "map:object id". */
 export const BANTER: Record<string, Banter[]> = {
   // ---- the Courier Road, the Waystation and Millbrook
   'courier-road:nib': [
+    {
+      who: 'brannoc',
+      with: 'oren',
+      lines: [
+        "BRANNOC: Half a stick? I'll have you know I'm— Oren, tell her.",
+        'OREN: She could.',
+        'BRANNOC: …Thank you, Oren.',
+      ],
+    },
     {
       who: 'brannoc',
       lines: ["BRANNOC: A duel? Ha! Stand aside, I'll handle this.", "BRANNOC: …You go first, though. I'll handle the second half."],
@@ -24,6 +34,16 @@ export const BANTER: Record<string, Banter[]> = {
     { who: 'pip', lines: ["PIP: Nine seconds! That's a whole verse. I'll write you a running song."] },
   ],
   'waystation:hesper': [
+    {
+      who: 'ysolde',
+      with: 'tamsin',
+      lines: [
+        'YSOLDE: Two coppers for soup.',
+        'TAMSIN: I could build you a better pot for one.',
+        'YSOLDE: Then build it, and the soup is one copper.',
+        'HESPER: …Are you two married?',
+      ],
+    },
     { who: 'ysolde', lines: ['YSOLDE: How much is the soup?', 'HESPER: Two coppers.', "YSOLDE: …I'll want a receipt."] },
   ],
   'millbrook:iron-notice': [
@@ -48,6 +68,16 @@ export const BANTER: Record<string, Banter[]> = {
     { who: 'brannoc', lines: ["BRANNOC: That's what I always say!", "BRANNOC: …I mean, I've heard people say that. Cowards. Ha."] },
   ],
   'deserters-camp:fen': [
+    {
+      who: 'brannoc',
+      with: 'oren',
+      lines: [
+        'BRANNOC: Haunted? Great. Love that. You first.',
+        'OREN: Breathe.',
+        'BRANNOC: I AM breathing.',
+        'OREN: Slower.',
+      ],
+    },
     { who: 'brannoc', lines: ['BRANNOC: Haunted? The fort we are about to walk into? That fort?', 'BRANNOC: Great. Love that. You first.'] },
     { who: 'wren', lines: ["WREN: Then someone ought to listen to them. I'll bring the lantern."] },
   ],
@@ -65,6 +95,7 @@ export const BANTER: Record<string, Banter[]> = {
       who: 'ysolde',
       lines: ['YSOLDE: Finally. Someone who understands paperwork.', 'YSOLDE: Might I see your ledger? Purely for pleasure.'],
     },
+    { who: 'brannoc', lines: ['BRANNOC: Spoons are very easy to lose. Anyone could lose a spoon.', 'BRANNOC: …Shall we go?'] },
   ],
   'pit-below:sergeant': [{ who: 'brannoc', lines: ['BRANNOC: Yes, sergeant! Sorry, sergeant!', 'BRANNOC: …Why did I say that?'] }],
   'sleeping-keep:plush': [
@@ -83,6 +114,16 @@ export const BANTER: Record<string, Banter[]> = {
     { who: 'pip', lines: ['PIP: Can I count the next one? FOUR THOUSAND AND TEN!'] },
   ],
   'march-road:grask': [
+    {
+      who: 'ysolde',
+      with: 'brannoc',
+      lines: [
+        'YSOLDE: Double? Show me the toll schedule.',
+        'GRASK: The what?',
+        'BRANNOC: And what about me? Am I double?',
+        "GRASK: You're big. Triple.",
+      ],
+    },
     { who: 'ysolde', lines: ['YSOLDE: Everything I have? Show me the toll schedule.', 'GRASK: The what?', 'YSOLDE: Thought so.'] },
   ],
   'march-road:wim': [
@@ -123,8 +164,25 @@ export const BANTER: Record<string, Banter[]> = {
   ],
   'kingdom-town:barnaby': [{ who: 'pip', lines: ['PIP: The same victory for three hundred years? Have you tried a key change?'] }],
   'kingdom-town:pim': [{ who: 'ysolde', lines: ['YSOLDE: A penny a rumour. And a false one?', 'PIM: Two pennies!'] }],
+  'kingdom-town:guard': [
+    {
+      who: 'pip',
+      lines: ["PIP: I'm a wonderful cheerer! Score me!", 'THE CAGE GUARD: Two.', 'PIP: …Two out of three?', 'THE CAGE GUARD: Out of ten.'],
+    },
+    { who: 'brannoc', lines: ['BRANNOC: And me? Big lad like me?', 'THE CAGE GUARD: Four. Pity marks.'] },
+  ],
   'kingdom-town:varga': [{ who: 'brannoc', lines: ["BRANNOC: A spine. Yes. I've got one of those. It's in here somewhere."] }],
   'candle-inn:nana': [
+    {
+      who: 'brannoc',
+      with: 'oren',
+      lines: [
+        'BRANNOC: Thin? Me? Look at these arms!',
+        "NANA BIRCH: I'm looking. Eat.",
+        "OREN: He's had three bowls.",
+        'NANA BIRCH: Then he can have a fourth. You too. Sit.',
+      ],
+    },
     { who: 'plush', lines: ['PLUSH: Is there a sofa?', "NANA BIRCH: There's a chair.", "PLUSH: …I'll manage."] },
     { who: 'brannoc', lines: ['BRANNOC: Thin? Me? Look at these arms!', "NANA BIRCH: I'm looking. Eat."] },
   ],
@@ -140,7 +198,9 @@ export const BANTER: Record<string, Banter[]> = {
   'field-of-banners:hoot-field': [{ who: 'pip', lines: ["PIP: He's right, you know. Go on. I'll hum while you drink."] }],
 };
 
-/** What a party member adds on this map at this object: the first listed one who's in the party, or nothing. */
+/** What a party member adds on this map at this object: the first listed one who's in the party (with their partner, if they need one), or nothing. */
 export function banterFor(mapId: string, objectId: string, party: readonly CharacterId[]): string[] {
-  return BANTER[`${mapId}:${objectId}`]?.find((b) => party.includes(b.who))?.lines ?? [];
+  return (
+    BANTER[`${mapId}:${objectId}`]?.find((b) => party.includes(b.who) && (!b.with || party.includes(b.with)))?.lines ?? []
+  );
 }
