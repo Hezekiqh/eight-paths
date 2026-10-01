@@ -5,7 +5,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
-import { KeeperTour } from '@/components/keeper-tour';
 import { ProgressStrip } from '@/components/progress-strip';
 import { QuestCard } from '@/components/quest-card';
 import { RadarCard } from '@/components/radar/radar-card';
@@ -18,14 +17,7 @@ import { PartyRow } from '@/components/party-row';
 import { XpBanner } from '@/components/xp-banner';
 import { useGameStore, type Milestone } from '@/store';
 import { useSession } from '@/store/session';
-import {
-  useClassInfo,
-  usePlayer,
-  useProgressSummary,
-  useToday,
-  useTodayQuests,
-  useTutorialQuest,
-} from '@/store/hooks';
+import { useClassInfo, usePlayer, useProgressSummary, useToday, useTodayQuests, useTutorialQuest } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 import type { CharacterId } from '@/story/companions';
 import { useTour, useTourScroller, useTourTarget } from '@/tutorial/tour';
@@ -58,7 +50,15 @@ export default function TodayScreen() {
   const questRef = useTourTarget('first-quest', scroller);
   const focused = useIsFocused();
   const introDone = useSession((s) => s.introDone);
-  const tourDue = useTour((s) => s.ready && !s.done);
+  const tourDue = useTour((s) => s.ready && !s.done && !s.running);
+  const beginTour = useTour((s) => s.begin);
+  // The Keeper's tour waits for the first quest and its wrap-up, and for the screen to be quiet.
+  // It then walks the tabs from above them (see KeeperTour in the tabs layout).
+  const touring =
+    tourDue && introDone && focused && !!player && !tutorial && !wrapUpPending && !wrapUpVisible && !banner && !levelUp;
+  useEffect(() => {
+    if (touring) beginTour();
+  }, [touring, beginTour]);
 
   const onToggle = (questId: string) => {
     const outcome = toggleQuest(questId, today);
@@ -121,10 +121,6 @@ export default function TodayScreen() {
   };
 
   if (!player || !classInfo) return null;
-  // The Keeper's tour waits for the first quest and its wrap-up, and for the screen to be quiet.
-  const touring =
-    tourDue && introDone && focused && !tutorial && !wrapUpPending && !wrapUpVisible && !banner && !levelUp;
-
   return (
     <View style={styles.flex}>
       <Screen
@@ -207,7 +203,6 @@ export default function TodayScreen() {
           onDone={onBannerDone}
         />
       )}
-      <KeeperTour visible={touring} />
       <WrapUpCard
         visible={wrapUpVisible}
         info={classInfo}

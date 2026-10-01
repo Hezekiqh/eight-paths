@@ -11,6 +11,9 @@ type Tour = {
   done: boolean;
   /** The saved `done` has loaded, so the tour won't flash up for someone who's seen it. */
   ready: boolean;
+  /** The tour is on screen now, walking from tab to tab. Not saved. */
+  running: boolean;
+  begin: () => void;
   finish: () => void;
   replay: () => void;
 };
@@ -25,7 +28,9 @@ export const useTour = create<Tour>()(
     (set) => ({
       done: false,
       ready: false,
-      finish: () => set({ done: true }),
+      running: false,
+      begin: () => set({ running: true }),
+      finish: () => set({ done: true, running: false }),
       replay: () => set({ done: false }),
     }),
     {
@@ -110,4 +115,20 @@ export async function measureTarget(key: string, band: { top: number; bottom: nu
     last = now;
   }
   return last;
+}
+
+/** The longest to wait for a target on a screen that's just opened. */
+const ARRIVE_MS = 2000;
+
+/**
+ * Like measureTarget, but for a target on a tab that was just opened: waits
+ * for its screen to mount and lay it out, then measures it.
+ */
+export async function awaitTarget(key: string, band: { top: number; bottom: number }): Promise<Rect | null> {
+  for (let waited = 0; waited < ARRIVE_MS; waited += POLL_MS) {
+    const rect = await measureTarget(key, band);
+    if (rect) return rect;
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+  return null;
 }

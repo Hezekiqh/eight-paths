@@ -14,6 +14,7 @@ import { founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { useTourTarget } from '@/tutorial/tour';
 
 type Scope = 'friends' | 'all';
 const SCOPES = [
@@ -37,6 +38,8 @@ export default function SocialTab() {
   const friends = useSocial((s) => s.friends);
   const color = useClassInfo()?.color ?? colors.accent;
   const [scope, setScope] = useState<Scope>('friends');
+  // The Keeper's tour points at the way in: the join card, or your friend code once you're in.
+  const tourRef = useTourTarget('social');
   // Results are tagged with who and which board they're for, so a stale list never shows.
   const [board, setBoard] = useState<{ key: string; rows: LeaderRow[] | null; failed: boolean } | null>(null);
   const key = `${profile?.id ?? ''}:${scope}`;
@@ -74,7 +77,7 @@ export default function SocialTab() {
   if (status !== 'ready' || !profile) {
     return (
       <Screen title="Social">
-        <View style={[styles.card, { borderColor: color }]}>
+        <View ref={tourRef} collapsable={false} style={[styles.card, { borderColor: color }]}>
           <Text style={styles.heading}>Join the Second 100</Text>
           <Text style={styles.body}>
             The first 100 players get a founder number, forever. Add friends, compare collections and see who holds the
@@ -93,11 +96,13 @@ export default function SocialTab() {
 
   return (
     <Screen title="Social">
-      <Button
-        title={`Share your code · ${profile.friendCode}`}
-        onPress={() => shareFriendCode(profile.friendCode)}
-        color={color}
-      />
+      <View ref={tourRef} collapsable={false}>
+        <Button
+          title={`Share your code · ${profile.friendCode}`}
+          onPress={() => shareFriendCode(profile.friendCode)}
+          color={color}
+        />
+      </View>
 
       <View style={styles.boardHead}>
         <Text style={styles.section}>TOP COLLECTIONS</Text>

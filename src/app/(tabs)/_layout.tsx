@@ -3,6 +3,7 @@ import { TabList, TabSlot, TabTrigger, Tabs } from 'expo-router/ui';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { KeeperTour } from '@/components/keeper-tour';
 import { RetroTabButton } from '@/components/retro-tab-bar';
 import { useMusic } from '@/audio';
 import { useInviteRewards } from '@/social/rewards';
@@ -73,6 +74,8 @@ export default function TabsLayout() {
           <RetroTabButton label="Other World" icon="gamepad" badge={unclaimed > 0} />
         </TabTrigger>
       </TabList>
+      {/* The Keeper's tour, walking from tab to tab. */}
+      <KeeperTour />
     </Tabs>
   );
 }

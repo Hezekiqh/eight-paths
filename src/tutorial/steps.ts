@@ -1,38 +1,60 @@
 export type Rect = { x: number; y: number; width: number; height: number };
 
+/** The tab screens the tour walks through. */
+export type TourRoute = '/' | '/character' | '/social-tab' | '/journey' | '/world';
+
 export type TourStep = {
   /** What the Keeper says. */
   line: string;
+  /** The tab to open first. */
+  route: TourRoute;
   /** The tour target to point at (see useTourTarget); none, or not on screen, centres the box. */
   target?: string;
 };
 
 /**
- * The Keeper's walk through the app, shown once on the Today screen. Tabs are
- * targeted by their label (`tab:<label>`).
+ * The Keeper's walk through the app: it starts on Today, opens each tab in
+ * turn and points at what matters there, and ends at the Other World's door.
+ * Finishing it steps the player outside.
  */
 export const TOUR_STEPS: TourStep[] = [
-  { line: 'Ah, there you are. Let me show you how things work around here.' },
-  { target: 'radar', line: 'This is you. Eight Paths, one for every part of a life. Each grows as you do.' },
+  { route: '/', line: 'Ah, there you are. Let me show you how things work around here.' },
   {
+    route: '/',
+    target: 'radar',
+    line: 'This is you. Eight Paths, one for every part of a life. Each grows as you do.',
+  },
+  {
+    route: '/',
     target: 'first-quest',
     line: "These are your quests: real things you do. When you've done one, tap it, and its Path grows stronger.",
   },
-  { target: 'add-quest', line: 'Want to build a new habit? Add it here. Every quest strengthens a Path.' },
+  { route: '/', target: 'add-quest', line: 'Want to build a new habit? Add it here. Every quest strengthens a Path.' },
   {
-    target: 'tab:Profile and collection',
+    route: '/character',
+    target: 'collection',
     line: 'Every few levels on a Path, a cocoon hatches and someone new joins you. Watch the ones with fewer stars.',
   },
-  { target: 'tab:Social', line: 'No one walks alone for long. Share your friend code and see how others are doing.' },
   {
-    target: 'tab:Journey',
+    route: '/social-tab',
+    target: 'social',
+    line: 'No one walks alone for long. Share your friend code and see how others are doing.',
+  },
+  {
+    route: '/journey',
+    target: 'journey',
     line: "Your Journey remembers every day you've walked, so you can see how far you've come.",
   },
   {
-    target: 'tab:Other World',
-    line: 'Out there is the Other World. The stronger your habits make you, the farther you can go. Your objectives wait on the quest board inside.',
+    route: '/world',
+    target: 'objectives',
+    line: 'Out there is the Other World. The stronger your habits make you, the farther you can go. Your objectives wait here.',
   },
-  { line: "The rest you'll find on your own. Go on. I'll be watching." },
+  {
+    route: '/world',
+    target: 'step-outside',
+    line: "The rest you'll find on your own. Go on, step outside. I'll be watching.",
+  },
 ];
 
 /** Room kept around a target inside its frame. */

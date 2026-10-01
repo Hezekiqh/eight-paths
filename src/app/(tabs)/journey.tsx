@@ -5,14 +5,9 @@ import { ActivityCalendar } from '@/components/activity-calendar';
 import { describeChange, formatRate } from '@/components/progress-strip';
 import { Screen } from '@/components/screen';
 import type { Consistency } from '@/game';
-import {
-  useClassInfo,
-  useMilestones,
-  useMonthComparison,
-  useProgressSummary,
-  useToday,
-} from '@/store/hooks';
+import { useClassInfo, useMilestones, useMonthComparison, useProgressSummary, useToday } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+import { useTourTarget } from '@/tutorial/tour';
 
 /** Milestone badges per row, so rows line up as a grid. */
 const BADGE_COLUMNS = 7;
@@ -49,6 +44,7 @@ export default function JourneyScreen() {
   const month = useMonthComparison(today);
   const milestones = useMilestones();
   const { width } = useWindowDimensions();
+  const shownUpRef = useTourTarget('journey');
 
   if (!classInfo) return null;
   const color = classInfo.color;
@@ -58,18 +54,21 @@ export default function JourneyScreen() {
 
   return (
     <Screen>
-      <Text style={styles.lede}>
-        * Every day you show up counts, even the small ones. This is the proof.
-      </Text>
+      <Text style={styles.lede}>* Every day you show up counts, even the small ones. This is the proof.</Text>
 
-      <View style={styles.tiles}>
+      <View ref={shownUpRef} collapsable={false} style={styles.tiles}>
         <Tile
           width={tile}
           label="DAYS SHOWN UP"
           value={String(summary.daysShownUp)}
           detail={summary.nextMilestone ? `Next milestone: ${summary.nextMilestone}` : 'Every milestone reached'}
         />
-        <Tile width={tile} label="STREAK" value={`${summary.showUp.current}`} detail={`Best ever: ${summary.showUp.best}`} />
+        <Tile
+          width={tile}
+          label="STREAK"
+          value={`${summary.showUp.current}`}
+          detail={`Best ever: ${summary.showUp.best}`}
+        />
       </View>
       <View style={styles.tiles}>
         <Tile
@@ -101,7 +100,11 @@ export default function JourneyScreen() {
         <View style={styles.badges}>
           {milestones.map((m) => (
             <View key={m.days} style={styles.badgeSlot}>
-              <View style={[styles.badge, m.reached ? { backgroundColor: color } : { borderColor: color, borderWidth: 1.5 }]}>
+              <View
+                style={[
+                  styles.badge,
+                  m.reached ? { backgroundColor: color } : { borderColor: color, borderWidth: 1.5 },
+                ]}>
                 <Text style={[styles.badgeText, { color: m.reached ? colors.background : color }]}>{m.days}</Text>
               </View>
             </View>
@@ -133,7 +136,14 @@ const styles = StyleSheet.create({
   compareRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   compareLabel: { flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 15 },
   compareBefore: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, fontVariant: ['tabular-nums'] },
-  compareNow: { color: colors.text, fontSize: 20, fontFamily: fonts.bold, fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
+  compareNow: {
+    color: colors.text,
+    fontSize: 20,
+    fontFamily: fonts.bold,
+    fontVariant: ['tabular-nums'],
+    minWidth: 44,
+    textAlign: 'right',
+  },
   badges: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -3, rowGap: spacing.sm },
   badgeSlot: { width: `${100 / BADGE_COLUMNS}%`, paddingHorizontal: 3 },
   badge: { height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
