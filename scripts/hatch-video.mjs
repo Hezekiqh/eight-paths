@@ -220,8 +220,8 @@ for (let f = 0; f < total; f++) {
     if (rt > 0.4) drawStars(ui, meta.rarity, 110);
     if (rt > 0.9) text(ui, meta.subtitle, 1, 128, WHITE, { count: Math.floor((rt - 0.9) / 0.03) });
     if (rt > 1.6) text(ui, meta.number, 2, 142, hex('#D8D2E6'), { count: Math.floor((rt - 1.6) / 0.1) });
-    // the lore line: how many still sleep
-    const left = `${200 - meta.episode} STILL SLEEP.`;
+    // the lore line: how many are left
+    const left = `${200 - meta.episode} LEFT.`;
     if (rt > 2.2) text(ui, left, 2, 176, hex('#D8D2E6'), { count: Math.floor((rt - 2.2) / 0.05) });
   }
   if (t >= 0.13) text(ui, tag, 1, 46, hex('#B9B3C9'), { cx: 22 + (tag.length * 6) / 2 });

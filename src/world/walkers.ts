@@ -4,7 +4,7 @@
 export const WALKER_FRAME = { width: 16, height: 24, feet: 22 };
 
 /** Column blocks in the sheet, three frames each: stand, step A, step B. */
-export const WALKER_DIRS = ['down', 'up', 'left', 'right'] as const;
+export const WALKER_DIRS = ['down','up','left','right'] as const;
 
 /** Each walker's row in assets/world/walkers.png. */
 export const WALKER_ROWS = {

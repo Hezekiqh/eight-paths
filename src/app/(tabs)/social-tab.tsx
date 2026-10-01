@@ -8,12 +8,16 @@ import { PixelSprite } from '@/components/pixel-sprite';
 import { Screen } from '@/components/screen';
 import { Segmented } from '@/components/segmented';
 import { SettingsRow } from '@/components/settings-row';
-import { fetchLeaderboard, shareFriendCode, type LeaderRow } from '@/social/api';
+import { TradeInbox } from '@/components/trade-inbox';
+import { fetchLeaderboard, refreshOffers, shareFriendCode, type LeaderRow } from '@/social/api';
+import { useTradeNotices } from '@/social/notices';
+import { pullTrades } from '@/social/sync';
 import { useSocial } from '@/social/store';
 import { founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { useTourTarget } from '@/tutorial/tour';
 
 type Scope = 'friends' | 'all';
 const SCOPES = [
@@ -27,8 +31,8 @@ function Leader({ id, scale }: { id: string | null; scale: number }) {
 }
 
 /**
- * The Second 100 at a glance: your card and friend code, and the collection
- * leaderboard. A collection is worth more the rarer its heroes are among all
+ * The Second 100 at a glance: your card and friend code, open trade offers,
+ * and the collection leaderboard. A collection is worth more the rarer its heroes are among all
  * players. Signed out, it invites the player to join.
  */
 export default function SocialTab() {
@@ -37,15 +41,33 @@ export default function SocialTab() {
   const friends = useSocial((s) => s.friends);
   const color = useClassInfo()?.color ?? colors.accent;
   const [scope, setScope] = useState<Scope>('friends');
+  // The Keeper's tour points at the way in: the join card, or your friend code once you're in.
+  const tourRef = useTourTarget('social');
   // Results are tagged with who and which board they're for, so a stale list never shows.
   const [board, setBoard] = useState<{ key: string; rows: LeaderRow[] | null; failed: boolean } | null>(null);
   const key = `${profile?.id ?? ''}:${scope}`;
+  const incoming = useSocial((s) =>
+    s.offers
+      .filter((o) => o.toId === s.profile?.id)
+      .map((o) => o.id)
+      .join(','),
+  );
+  const markOffersSeen = useTradeNotices((s) => s.markOffersSeen);
+
+  // Offers on screen count as seen: the tab's dot goes out.
+  useFocusEffect(
+    useCallback(() => {
+      if (incoming) markOffersSeen(incoming.split(','));
+    }, [incoming, markOffersSeen]),
+  );
 
   // Refresh whenever the tab comes into view, since values shift as players wake heroes.
   useFocusEffect(
     useCallback(() => {
       if (status !== 'ready') return;
       let live = true;
+      // Offers and finished trades may have come in since the app last looked.
+      Promise.all([refreshOffers(), pullTrades()]).catch(() => {});
       fetchLeaderboard(scope)
         .then((r) => live && setBoard({ key, rows: r, failed: false }))
         .catch(() => live && setBoard({ key, rows: null, failed: true }));
@@ -74,7 +96,7 @@ export default function SocialTab() {
   if (status !== 'ready' || !profile) {
     return (
       <Screen title="Social">
-        <View style={[styles.card, { borderColor: color }]}>
+        <View ref={tourRef} collapsable={false} style={[styles.card, { borderColor: color }]}>
           <Text style={styles.heading}>Join the Second 100</Text>
           <Text style={styles.body}>
             The first 100 players get a founder number, forever. Add friends, compare collections and see who holds the
@@ -93,11 +115,15 @@ export default function SocialTab() {
 
   return (
     <Screen title="Social">
-      <Button
-        title={`Share your code · ${profile.friendCode}`}
-        onPress={() => shareFriendCode(profile.friendCode)}
-        color={color}
-      />
+      <View ref={tourRef} collapsable={false}>
+        <Button
+          title={`Share your code · ${profile.friendCode}`}
+          onPress={() => shareFriendCode(profile.friendCode)}
+          color={color}
+        />
+      </View>
+
+      <TradeInbox color={color} />
 
       <View style={styles.boardHead}>
         <Text style={styles.section}>TOP COLLECTIONS</Text>

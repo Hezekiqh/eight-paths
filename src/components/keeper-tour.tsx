@@ -1,3 +1,4 @@
+import { router, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -14,9 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TypewriterText } from '@/components/typewriter-text';
 import { haptics } from '@/haptics';
+import { useSession } from '@/store/session';
 import { fonts } from '@/theme';
 import { ARROW_H, EDGE, TOUR_STEPS, placeTour, type Rect } from '@/tutorial/steps';
-import { measureTarget, useTour } from '@/tutorial/tour';
+import { awaitTarget, useTour } from '@/tutorial/tour';
 
 const DIM = 'rgba(0,0,0,0.78)';
 /** Roughly the tab bar's height above the home indicator; targets are scrolled clear of it. */
@@ -39,13 +41,18 @@ function PixelArrow({ dir }: { dir: 'up' | 'down' }) {
 }
 
 /**
- * The Keeper's tour of the app: the screen dims but for a framed window onto
- * one thing at a time, a pixel arrow bobs at it, and the Keeper explains it in
- * the same black dialogue box as the intro. A tap finishes the line, then moves
- * on; Skip, in the box's corner, ends it. Shown once, until replayed from the Profile tab.
+ * The Keeper's tour of the app: it opens each tab in turn, the screen dims but
+ * for a framed window onto one thing at a time, a pixel arrow bobs at it, and
+ * the Keeper explains it in the same black dialogue box as the intro. A tap
+ * finishes the line, then moves on; Skip, in the box's corner, ends it. The
+ * last line is at the Other World's door, and finishing steps the player
+ * outside. Lives above the tabs; Today starts it once, until replayed from the
+ * Profile tab.
  */
-export function KeeperTour({ visible }: { visible: boolean }) {
+export function KeeperTour() {
+  const visible = useTour((s) => s.running);
   const finish = useTour((s) => s.finish);
+  const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -60,14 +67,19 @@ export function KeeperTour({ visible }: { visible: boolean }) {
   const step = TOUR_STEPS[index];
   const last = index === TOUR_STEPS.length - 1;
 
-  // Find where this step's target is now (the screen may have scrolled).
+  // Open this step's tab.
   useEffect(() => {
-    if (!visible) return;
+    if (visible && pathname !== step.route) router.navigate(step.route);
+  }, [visible, step.route, pathname]);
+
+  // Find where this step's target is now (its tab may have just opened, or scrolled).
+  useEffect(() => {
+    if (!visible || pathname !== step.route) return;
     let live = true;
     const id = setTimeout(() => {
       // Keep clear of the status bar and the tab bar.
       const band = { top: insets.top + EDGE, bottom: height - insets.bottom - TAB_BAR_H };
-      (step.target ? measureTarget(step.target, band) : Promise.resolve(null)).then((rect) => {
+      (step.target ? awaitTarget(step.target, band) : Promise.resolve(null)).then((rect) => {
         if (live) setMeasured({ index, rect });
       });
     }, 80);
@@ -75,7 +87,7 @@ export function KeeperTour({ visible }: { visible: boolean }) {
       live = false;
       clearTimeout(id);
     };
-  }, [visible, index, step.target, width, height, insets.top, insets.bottom]);
+  }, [visible, index, step.target, step.route, pathname, width, height, insets.top, insets.bottom]);
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -90,17 +102,21 @@ export function KeeperTour({ visible }: { visible: boolean }) {
     setInstant(false);
   };
 
-  const end = () => {
+  /** Ends the tour; after the last line, steps outside into the Other World. */
+  const end = (enter = false) => {
     haptics.tap();
     goTo(0);
     setTitled(false);
     finish();
+    if (enter) useSession.setState({ worldPlaying: true });
   };
+  const enterWorld = () => end(true);
+  const skip = () => end();
 
-  // The title card closes itself, or on a tap.
+  // The title card closes itself, or on a tap, and the game begins.
   useEffect(() => {
     if (!titled) return;
-    const id = setTimeout(end, TITLE_MS);
+    const id = setTimeout(enterWorld, TITLE_MS);
     return () => clearTimeout(id);
     // `end` only touches stable setters and the store.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,10 +145,10 @@ export function KeeperTour({ visible }: { visible: boolean }) {
   if (!visible) return null;
   if (titled) {
     return (
-      <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={end}>
+      <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={enterWorld}>
         <Pressable
           style={[StyleSheet.absoluteFill, styles.titleCard]}
-          onPress={end}
+          onPress={enterWorld}
           accessibilityRole="button"
           accessibilityLabel="Eight Paths. Tap to begin.">
           <Animated.Text entering={reduceMotion ? undefined : FadeIn.duration(700)} style={styles.title}>
@@ -147,7 +163,7 @@ export function KeeperTour({ visible }: { visible: boolean }) {
   const hole = layout?.hole;
 
   return (
-    <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={end}>
+    <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={skip}>
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={onTap}
@@ -193,13 +209,13 @@ export function KeeperTour({ visible }: { visible: boolean }) {
               </View>
               <View style={styles.footer}>
                 {!last && (
-                  <Pressable onPress={end} hitSlop={14} accessibilityRole="button" accessibilityLabel="Skip the tour">
+                  <Pressable onPress={skip} hitSlop={14} accessibilityRole="button" accessibilityLabel="Skip the tour">
                     <Text style={styles.skip}>Skip</Text>
                   </Pressable>
                 )}
                 <View pointerEvents="none" style={styles.flex} />
                 <Text pointerEvents="none" style={[styles.more, !typed && styles.hidden]}>
-                  {last ? 'Tap to begin' : `${index + 1}/${TOUR_STEPS.length}  ▼`}
+                  {last ? 'Tap to step outside' : `${index + 1}/${TOUR_STEPS.length}  ▼`}
                 </Text>
               </View>
             </Pressable>

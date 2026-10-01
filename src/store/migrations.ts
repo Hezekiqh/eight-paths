@@ -21,7 +21,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -49,6 +49,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   8: (save) => save,
   // v10 adds the player's own quest order; sanitizeSave starts it null (their usual order).
   9: (save) => save,
+  // v11 adds trades: net copies traded and the server moves applied; sanitizeSave starts both empty.
+  10: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -177,6 +179,14 @@ function cleanShards(raw: unknown): Partial<Record<CharacterId, number>> {
   );
 }
 
+/** Net traded copies: any non-zero whole number (negative when copies went out). */
+function cleanTraded(raw: unknown): Partial<Record<CharacterId, number>> {
+  if (!isObject(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw).filter(([id, n]) => isCharacterId(id) && Number.isInteger(n) && n !== 0),
+  );
+}
+
 function cleanNextDraw(raw: unknown): Partial<Record<Dimension, number>> {
   if (!isObject(raw)) return {};
   return Object.fromEntries(
@@ -220,6 +230,8 @@ export function sanitizeSave(raw: unknown): GameData {
     questOrder: Array.isArray(save.questOrder)
       ? save.questOrder.filter((id): id is string => typeof id === 'string')
       : null,
+    traded: cleanTraded(save.traded),
+    tradeMoves: asArray(save.tradeMoves).filter((id): id is number => Number.isSafeInteger(id)),
   };
 }
 

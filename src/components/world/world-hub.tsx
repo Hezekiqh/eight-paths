@@ -12,6 +12,7 @@ import { useGameStore } from '@/store';
 import { useObjectives, useToday } from '@/store/hooks';
 import { COMPANIONS } from '@/story/companions';
 import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
+import { useTourScroller, useTourTarget } from '@/tutorial/tour';
 import { worldHero } from '@/world/hero';
 import { MAPS, type MapId } from '@/world/maps';
 import { EXITS, FINAL_GOAL, describeRequirement, howToProgress, standing } from '@/world/progress';
@@ -45,6 +46,11 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const asked: Tab = params.tab === 'settings' ? 'settings' : 'world';
   const [tab, setTab] = useState<Tab>(asked);
   const [lastAsked, setLastAsked] = useState(asked);
+  // The Keeper's tour ends here: the objectives, then the door out.
+  const scroller = useTourScroller();
+  const objectivesRef = useTourTarget('objectives', scroller);
+  const playRef = useTourTarget('step-outside', scroller);
+  const { ref: scrollRef, onScroll } = scroller;
   if (asked !== lastAsked) {
     setLastAsked(asked);
     setTab(asked);
@@ -52,7 +58,11 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        ref={scrollRef}
+        onScroll={onScroll}
+        scrollEventThrottle={32}
+        contentContainerStyle={styles.content}>
         <Text style={styles.title}>OTHER WORLD</Text>
         <Text style={styles.place}>
           {heroName} · {place}
@@ -63,9 +73,13 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
           <SettingsPanel />
         ) : (
           <>
-            <Play started={position !== null} onPlay={onPlay} />
+            <View ref={playRef} collapsable={false}>
+              <Play started={position !== null} onPlay={onPlay} />
+            </View>
 
-            <Objectives discovered={discovered} />
+            <View ref={objectivesRef} collapsable={false}>
+              <Objectives discovered={discovered} />
+            </View>
             <LoreScroll heard={heard} />
           </>
         )}

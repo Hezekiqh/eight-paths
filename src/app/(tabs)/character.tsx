@@ -14,6 +14,7 @@ import { XpBar } from '@/components/xp-bar';
 import { MAX_REST_TOKENS } from '@/game';
 import { useClassInfo, useCollection, useOverallProgress, usePlayer } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+import { useTourScroller, useTourTarget } from '@/tutorial/tour';
 
 export default function CharacterScreen() {
   const player = usePlayer();
@@ -22,6 +23,8 @@ export default function CharacterScreen() {
   const collection = useCollection();
   const profile = useSocial((s) => s.profile);
   const [value, setValue] = useState<number | null>(null);
+  const scroller = useTourScroller();
+  const collectionRef = useTourTarget('collection', scroller);
 
   // Collection value shifts as other players wake heroes, so refresh on every visit.
   useFocusEffect(
@@ -40,7 +43,7 @@ export default function CharacterScreen() {
   if (!player || !classInfo) return null;
 
   return (
-    <Screen>
+    <Screen scrollRef={scroller.ref} onScroll={scroller.onScroll}>
       <View style={[styles.hero, { borderColor: classInfo.color }]}>
         <View style={styles.heroTop}>
           <View style={[styles.emblem, { borderColor: classInfo.color }]}>
@@ -83,16 +86,20 @@ export default function CharacterScreen() {
         </View>
       </View>
 
-      <View style={styles.sectionRow}>
-        <Text style={styles.section}>YOUR COLLECTION</Text>
-        {profile && value !== null && (
-          <Text style={[styles.sectionCount, { color: classInfo.color }]}>{value.toLocaleString()} value</Text>
-        )}
-        <Text style={styles.sectionCount}>
-          {collection.unlockedCount} / {collection.entries.length}
-        </Text>
+      <View style={styles.collection}>
+        {/* The Keeper's tour points at the collection's heading and its first rows. */}
+        <View ref={collectionRef} collapsable={false} style={styles.tourCollection} pointerEvents="none" />
+        <View style={styles.sectionRow}>
+          <Text style={styles.section}>YOUR COLLECTION</Text>
+          {profile && value !== null && (
+            <Text style={[styles.sectionCount, { color: classInfo.color }]}>{value.toLocaleString()} value</Text>
+          )}
+          <Text style={styles.sectionCount}>
+            {collection.unlockedCount} / {collection.entries.length}
+          </Text>
+        </View>
+        <CollectionGrid entries={collection.entries} />
       </View>
-      <CollectionGrid entries={collection.entries} />
 
       {socialEnabled && (
         <View style={[styles.list, { marginTop: spacing.lg }]}>
@@ -149,6 +156,9 @@ const styles = StyleSheet.create({
   section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.md },
   list: { ...windowStyle, overflow: 'hidden' },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  // Same spacing as the Screen's own children.
+  collection: { gap: spacing.md },
+  tourCollection: { position: 'absolute', top: 0, left: 0, right: 0, height: 320 },
   sectionCount: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 56 },
   moved: {

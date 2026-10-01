@@ -32,8 +32,19 @@ describe('placeTour', () => {
 });
 
 describe('TOUR_STEPS', () => {
-  it('starts and ends with the Keeper speaking, pointing at nothing', () => {
+  it('starts on Today with the Keeper speaking, pointing at nothing', () => {
+    expect(TOUR_STEPS[0].route).toBe('/');
     expect(TOUR_STEPS[0].target).toBeUndefined();
-    expect(TOUR_STEPS[TOUR_STEPS.length - 1].target).toBeUndefined();
+  });
+
+  it('ends at the door into the Other World', () => {
+    const last = TOUR_STEPS[TOUR_STEPS.length - 1];
+    expect(last.route).toBe('/world');
+    expect(last.target).toBe('step-outside');
+  });
+
+  it('visits each tab once, in tab-bar order', () => {
+    const visited = TOUR_STEPS.map((s) => s.route).filter((r, i, all) => r !== all[i - 1]);
+    expect(visited).toEqual(['/', '/character', '/social-tab', '/journey', '/world']);
   });
 });
