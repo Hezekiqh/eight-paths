@@ -20,6 +20,8 @@ type Props = {
   onDone?: () => void;
   /** Each letter as it's typed (not spaces), counting from 0: for a speaking voice. */
   onLetter?: (index: number) => void;
+  /** Click once per letter (default); off when `onLetter` buzzes in its own way. */
+  ticks?: boolean;
 };
 
 /**
@@ -27,7 +29,7 @@ type Props = {
  * dialogue box. The untyped rest is laid out but transparent, so the box never
  * grows and words never jump lines mid-type. Reduce Motion shows it all at once.
  */
-export function TypewriterText({ text, style, start = true, instant = false, letterMs = LETTER_MS, onDone, onLetter }: Props) {
+export function TypewriterText({ text, style, start = true, instant = false, letterMs = LETTER_MS, onDone, onLetter, ticks = true }: Props) {
   const reduceMotion = useReducedMotion();
   const [shown, setShown] = useState(0);
   const all = instant || reduceMotion;
@@ -41,7 +43,7 @@ export function TypewriterText({ text, style, start = true, instant = false, let
       () => {
         // A tiny click per letter, like a dialogue blip; spaces stay silent for rhythm.
         if (text[shown].trim()) {
-          haptics.tick();
+          if (ticks) haptics.tick();
           onLetter?.(shown);
         }
         setShown((n) => n + 1);
@@ -49,7 +51,7 @@ export function TypewriterText({ text, style, start = true, instant = false, let
       shown === 0 ? 0 : delay,
     );
     return () => clearTimeout(id);
-  }, [all, start, shown, text, letterMs, onLetter]);
+  }, [all, start, shown, text, letterMs, onLetter, ticks]);
 
   useEffect(() => {
     if (done) onDone?.();
