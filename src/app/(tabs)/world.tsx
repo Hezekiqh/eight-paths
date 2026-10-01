@@ -269,6 +269,7 @@ function World({
   const flames = useMemo(() => flamesOn(map), [map]);
   // Hearts for this visit: five, plus one for every four pieces found.
   const [hearts] = useState(() => maxHearts(arrivalFlags));
+  const autopilotOn = useSession((s) => s.autopilot);
   const sim = useWorldSim(start, map.npcs);
   const today = useToday();
   const { unclaimed } = useObjectives(today);
@@ -460,6 +461,7 @@ function World({
         ambience={ambience}
         flames={flames}
         snuffable={map.id === 'war-hall'}
+        autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}
         boss={bossOn && map.boss ? { x: map.boss.x * TILE + TILE / 2, y: map.boss.y * TILE + TILE } : null}
         throws={bossOn && !map.boss?.kind}
@@ -529,6 +531,11 @@ function World({
           pieces={heartPieces(liveFlags) % PIECES_PER_HEART}
           hearts={maxHearts(liveFlags)}
           items={satchel(liveFlags).map((id) => ({ id, name: ITEMS[id]?.name ?? id }))}
+          autopilot={
+            __DEV__
+              ? { on: autopilotOn, toggle: () => useSession.setState((s) => ({ autopilot: !s.autopilot })) }
+              : undefined
+          }
           onRead={(id) => {
             setPaused(false);
             const item = ITEMS[id];

@@ -42,6 +42,8 @@ type Props = {
   hearts: number;
   items: { id: string; name: string }[];
   onRead: (id: string) => void;
+  /** Dev only: whether the fight bot plays, and switching it. */
+  autopilot?: { on: boolean; toggle: () => void };
 };
 
 /**
@@ -65,6 +67,7 @@ export function PauseMenu({
   hearts,
   items,
   onRead,
+  autopilot,
 }: Props) {
   return (
     <View style={styles.scrim}>
@@ -131,6 +134,12 @@ export function PauseMenu({
             <Text style={styles.section}>CONTROLS</Text>
             <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
             <Text style={styles.hint}>{HINTS[controls]}</Text>
+            {autopilot && (
+              <MenuItem
+                label={`Autopilot (dev): ${autopilot.on ? 'on' : 'off'}`}
+                onPress={autopilot.toggle}
+              />
+            )}
             <View style={styles.actions}>
               <MenuItem label="Resume" onPress={onResume} primary grow />
               <MenuItem label="Back to habits" onPress={onLeave} grow />

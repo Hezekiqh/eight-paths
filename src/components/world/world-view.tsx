@@ -59,6 +59,7 @@ import {
   type Attack,
 } from '@/world/combat';
 import { CHARGE_TIME, startFight, stepFight, type Fight, type Special } from '@/world/fight';
+import { autopilot as autoplay, newPilot, type Pilot } from '@/world/autopilot';
 import { AttackEffects } from '@/components/world/attack-effects';
 import { MAX_GUTTERED, type Ambience } from '@/world/ambience';
 import { playSound, type Effect } from '@/audio';
@@ -71,6 +72,15 @@ const WALKERS_IMAGE = require('@/assets/world/walkers.png');
 const FW = WALKER_FRAME.width;
 const FH = WALKER_FRAME.height;
 const FEET = WALKER_FRAME.feet;
+/**
+ * An error in the frame loop. Thrown on the UI thread it would take the whole
+ * app down (Expo Go crashed this way, entering the World), so the loop catches
+ * it, skips that frame, and reports it here, once per room.
+ */
+function reportFrameError(message: string, stack: string) {
+  console.error('[world frame]', message, stack);
+}
+
 /** Most enemies flashing white at once. */
 const FLASHES = 4;
 
@@ -189,6 +199,8 @@ type Props = {
   /** How the walking character fights, and how hard (their real level adds damage). */
   attack?: Attack;
   damage?: number;
+  /** Dev only: the fight bot plays (autopilot.ts). */
+  autopilot?: boolean;
   /** Hearts to start the fight with (five, plus one per four heart pieces). */
   hearts?: number;
   /** Their real level (Lv 10 charges; Lv 20 adds their Path's special), and that special. */
@@ -236,6 +248,7 @@ export function WorldView({
   level = 1,
   special = 'spin',
   hearts = HEARTS,
+  autopilot = false,
   onDefeat,
   boss = null,
   throws = false,
@@ -285,6 +298,9 @@ export function WorldView({
   const waves = useDerivedValue(() => fight.get().waves);
   /** The attack button last frame, to see it go down and come up. */
   const wasHeld = useSharedValue(false);
+  const pilot = useSharedValue<Pilot>(newPilot());
+  /** The frame loop has hit an error (reported once; see reportFrameError). */
+  const frameFailed = useSharedValue(false);
   // ---- game feel: the world holds for a beat on a hit, the screen shakes, struck enemies flash, fallen ones puff.
   const hitStop = useSharedValue(0);
   /** [time left, strength in art pixels], and this frame's offset [x, y]. */
@@ -326,259 +342,294 @@ export function WorldView({
 
   const frame = useFrameCallback((info) => {
     'worklet';
-    const realDt = Math.min((info.timeSincePreviousFrame ?? 16) / 1000, 0.05);
-    // Hit-stop: for a beat after a hit lands, nothing moves (but flashes, puffs and the shake play on).
-    const stopped = hitStop.get() > 0;
-    hitStop.set(Math.max(0, hitStop.get() - realDt));
-    const dt = stopped ? 0 : realDt;
-    let ix = sim.inputX.get();
-    let iy = sim.inputY.get();
-    const frozen = sim.frozen.get();
-    // Dazed by a shout, mid-roll, or down: the stick does nothing for a moment.
-    const fighting = fight.get();
-    if (frozen || fighting.dazed > 0 || fighting.roll > 0 || fighting.fallen) {
-      ix = 0;
-      iy = 0;
-    }
-    const push = Math.hypot(ix, iy);
-    let moving = false;
-    if (push > 0.25) {
-      sim.facing.set(facingFor(ix, iy, sim.facing.get()));
-      const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
-      // Straight into a boulder: lean on it (below) instead of being eased round it.
-      const against = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get()) !== -1;
-      const [nx, ny] = against
-        ? [sim.x.get(), sim.y.get()]
-        : move(grid, sim.x.get(), sim.y.get(), (ix / push) * SPEED * dt, (iy / push) * SPEED * dt);
-      const d = Math.abs(nx - sim.x.get()) + Math.abs(ny - sim.y.get());
-      if (d > 0.001) {
-        moving = true;
-        sim.x.set(nx);
-        sim.y.set(ny);
-        sim.walked.set(sim.walked.get() + d);
-        sim.trail.set(extendTrail(sim.trail.get(), nx, ny));
+    try {
+      const realDt = Math.min((info.timeSincePreviousFrame ?? 16) / 1000, 0.05);
+      // Hit-stop: for a beat after a hit lands, nothing moves (but flashes, puffs and the shake play on).
+      const stopped = hitStop.get() > 0;
+      hitStop.set(Math.max(0, hitStop.get() - realDt));
+      const dt = stopped ? 0 : realDt;
+      // Dev autopilot: the fight bot drives the stick and the buttons while there's something to fight.
+      const fightNow = fight.get();
+      // Doorways count as walls to the autopilot (for its path and its steps), so it never walks out of a fight.
+      const pilotSolid = autopilot ? solid.get().map((v, i) => (stepTiles.includes(i) ? 1 : v)) : null;
+      const auto =
+        autopilot && attack && !fightNow.fallen && !fightNow.won
+          ? autoplay(
+              pilot.get(),
+              fightNow,
+              sim.x.get(),
+              sim.y.get(),
+              attack,
+              level,
+              { solid: pilotSolid ?? solid.get(), width: mapWidth, height: mapHeight },
+              realDt,
+            )
+          : null;
+      if (auto) pilot.set(auto.pilot);
+      let ix = auto ? auto.stickX : sim.inputX.get();
+      let iy = auto ? auto.stickY : sim.inputY.get();
+      const frozen = sim.frozen.get();
+      // Dazed by a shout, mid-roll, or down: the stick does nothing for a moment.
+      const fighting = fight.get();
+      if (frozen || fighting.dazed > 0 || fighting.roll > 0 || fighting.fallen) {
+        ix = 0;
+        iy = 0;
       }
-    }
-    sim.moving.set(moving);
+      const push = Math.hypot(ix, iy);
+      let moving = false;
+      if (push > 0.25) {
+        sim.facing.set(facingFor(ix, iy, sim.facing.get()));
+        const grid: Grid = { solid: auto && pilotSolid ? pilotSolid : solid.get(), width: mapWidth, height: mapHeight };
+        // Straight into a boulder: lean on it (below) instead of being eased round it.
+        const against = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get()) !== -1;
+        const [nx, ny] = against
+          ? [sim.x.get(), sim.y.get()]
+          : move(grid, sim.x.get(), sim.y.get(), (ix / push) * SPEED * dt, (iy / push) * SPEED * dt);
+        const d = Math.abs(nx - sim.x.get()) + Math.abs(ny - sim.y.get());
+        if (d > 0.001) {
+          moving = true;
+          sim.x.set(nx);
+          sim.y.set(ny);
+          sim.walked.set(sim.walked.get() + d);
+          sim.trail.set(extendTrail(sim.trail.get(), nx, ny));
+        }
+      }
+      sim.moving.set(moving);
+      // The autopilot faces its target, whichever way it's stepping.
+      if (auto) sim.facing.set(auto.facing);
 
-    // Stepping onto a doorway, hole or road end takes you through it.
-    const tile = Math.floor((sim.y.get() - 1) / TILE) * mapWidth + Math.floor(sim.x.get() / TILE);
-    if (tile !== lastTile.get()) {
-      const first = lastTile.get() === -1;
-      lastTile.set(tile);
-      if (!first && moving && stepTiles.includes(tile)) scheduleOnRN(step, tile);
-    }
+      // Stepping onto a doorway, hole or road end takes you through it.
+      const tile = Math.floor((sim.y.get() - 1) / TILE) * mapWidth + Math.floor(sim.x.get() / TILE);
+      if (tile !== lastTile.get()) {
+        const first = lastTile.get() === -1;
+        lastTile.set(tile);
+        if (!first && moving && stepTiles.includes(tile)) scheduleOnRN(step, tile);
+      }
 
-    // Leaning on a boulder, straight on, for a moment pushes it a tile.
-    let leanedOn = -1;
-    if (push > 0.25 && !moving && rocks.get().length > 0) {
-      const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
-      leanedOn = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get());
-    }
-    if (leanedOn === -1) leaning.set(0);
-    else {
-      leaning.set(leaning.get() + dt);
-      if (leaning.get() >= PUSH_DELAY) {
-        leaning.set(0);
+      // Leaning on a boulder, straight on, for a moment pushes it a tile.
+      let leanedOn = -1;
+      if (push > 0.25 && !moving && rocks.get().length > 0) {
+        const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
+        leanedOn = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get());
+      }
+      if (leanedOn === -1) leaning.set(0);
+      else {
+        leaning.set(leaning.get() + dt);
+        if (leaning.get() >= PUSH_DELAY) {
+          leaning.set(0);
+          const f = sim.facing.get();
+          const dx = f === 2 ? -1 : f === 3 ? 1 : 0;
+          const dy = f === 1 ? -1 : f === 0 ? 1 : 0;
+          const pushed = pushBoulder(solid.get(), mapWidth, mapHeight, rocks.get(), leanedOn, dx, dy);
+          if (pushed) {
+            solid.set(pushed.solid);
+            rocks.set(pushed.boulders);
+            if (!solved.get() && platesCovered(plates, pushed.boulders)) {
+              solved.set(true);
+              scheduleOnRN(plated);
+            }
+          }
+        }
+      }
+
+      // ---- combat: your attack, bolts, the enemies' turn, all in stepFight; then its sounds, flashes and shakes.
+      const held = auto ? auto.held : sim.attackHeld.get();
+      const pressed = auto ? auto.press : sim.attackPressed.get();
+      const dodge = auto ? auto.dodge : sim.dodgePressed.get();
+      sim.attackPressed.set(false);
+      sim.dodgePressed.set(false);
+      const release = auto ? auto.release : wasHeld.get() && !held;
+      wasHeld.set(held);
+      if (!frozen && attack && fight.get().enemies.length > 0 && !fight.get().fallen && !fight.get().won) {
+        const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
+        const r = stepFight(
+          fight.get(),
+          {
+            x: sim.x.get(),
+            y: sim.y.get(),
+            facing: sim.facing.get(),
+            stickX: ix,
+            stickY: iy,
+            moved: moving,
+            press: pressed,
+            held,
+            release,
+            dodge,
+          },
+          { grid, attack, damage, level, special, boss: bossX >= 0, bossX, bossY, throws, drowsy, maxHp: hearts },
+          dt,
+        );
+        const f = r.fight;
+        const ev = r.events;
+        fight.set(f);
+        if (ev.moveX !== 0 || ev.moveY !== 0) {
+          const [nx, ny] = move(grid, sim.x.get(), sim.y.get(), ev.moveX, ev.moveY);
+          sim.x.set(nx);
+          sim.y.set(ny);
+          sim.trail.set(extendTrail(sim.trail.get(), nx, ny));
+          if (ev.moveX !== 0 || ev.moveY !== 0) sim.walked.set(sim.walked.get() + Math.hypot(ev.moveX, ev.moveY));
+        }
+        if (sim.hp.get() !== f.hp) sim.hp.set(f.hp);
+        if (sim.sleepy.get() !== f.sleepy) sim.sleepy.set(f.sleepy);
+        sim.charge.set(f.charge);
+        if (ev.swing) scheduleOnRN(feel, ev.charged ? 'charged' : 'swing');
+        if (ev.rolled) scheduleOnRN(feel, 'roll');
+        if (ev.mended) scheduleOnRN(feel, 'mend');
+        if (ev.hits > 0) {
+          const kill = ev.kills > 0;
+          hitStop.set(ev.big ? FEEL.bigStop : kill ? FEEL.killStop : FEEL.hitStop);
+          const strength = ev.big || kill ? FEEL.killShake : FEEL.hitShake;
+          if (strength >= shake.get()[1] || shake.get()[0] <= 0) shake.set([FEEL.shakeTime, strength]);
+          const white = whiteFor.get().slice();
+          for (const i of ev.struck) white[i] = FEEL.flash;
+          whiteFor.set(white);
+          if (kill) {
+            const next = puffs.get().slice(-3);
+            for (let k = 0; k < ev.fell.length; k += 2) next.push([ev.fell[k], ev.fell[k + 1], FEEL.puff]);
+            puffs.set(next);
+          }
+          scheduleOnRN(feel, kill ? 'kill' : 'hit');
+        } else if (ev.clangs > 0) {
+          scheduleOnRN(feel, 'clang');
+          const e = f.enemies.find((x) => x[E_CLANG] === 1);
+          if (e) sparks.set([e[E_X], e[E_Y] - 10, 0.15]);
+        }
+        if (ev.slam) {
+          shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
+          scheduleOnRN(feel, 'slam');
+        }
+        if (ev.guttered) {
+          gutter.set(0.5);
+          if (snuffable) guttered.set(Math.min(MAX_GUTTERED, guttered.get() + 1));
+          scheduleOnRN(feel, 'gutter');
+        }
+        if (ev.hurt) {
+          shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
+          hitStop.set(FEEL.hitStop);
+          scheduleOnRN(feel, 'hurt');
+        }
+        if (ev.fallen) scheduleOnRN(defeated);
+        if (ev.won) scheduleOnRN(won);
+      }
+      // Feel timers run on real time, so they play through the hit-stop.
+      const quake = shake.get();
+      if (quake[0] > 0) {
+        shake.set([Math.max(0, quake[0] - realDt), quake[1]]);
+        shakeOff.set([Math.round((Math.random() * 2 - 1) * quake[1]), Math.round((Math.random() * 2 - 1) * quake[1])]);
+      } else if (shakeOff.get()[0] !== 0 || shakeOff.get()[1] !== 0) shakeOff.set([0, 0]);
+      if (sparks.get()[2] > 0) sparks.set([sparks.get()[0], sparks.get()[1], Math.max(0, sparks.get()[2] - realDt)]);
+      if (gutter.get() > 0) gutter.set(Math.max(0, gutter.get() - realDt));
+      const white = whiteFor.get();
+      if (white.some((w) => w > 0)) whiteFor.set(white.map((w) => Math.max(0, w - realDt)));
+      if (puffs.get().length > 0) {
+        puffs.set(
+          puffs
+            .get()
+            .map((p) => [p[0], p[1], p[2] - realDt])
+            .filter((p) => p[2] > 0),
+        );
+      }
+
+      // Boulders slide toward their tiles.
+      const rp = rockPos.get();
+      const rs = rocks.get();
+      if (rs.length > 0) {
+        const next = rp.slice();
+        let changed = false;
+        const slide = SPEED * 1.5 * dt;
+        for (let i = 0; i < rs.length; i++) {
+          const targets = [(rs[i] % mapWidth) * TILE, Math.floor(rs[i] / mapWidth) * TILE];
+          for (let k = 0; k < 2; k++) {
+            const d = targets[k] - next[i * 2 + k];
+            if (d !== 0) {
+              next[i * 2 + k] += Math.abs(d) <= slide ? d : Math.sign(d) * slide;
+              changed = true;
+            }
+          }
+        }
+        if (changed) rockPos.set(next);
+      }
+
+      // The camera follows the lead and stops at the map's edges (or centres a small map).
+      const round = (v: number) => Math.round(v * scale) / scale;
+      const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(sim.x.get() - viewW / 2, 0), mapW - viewW);
+      const cy = mapH <= viewH ? (mapH - viewH) / 2 : Math.min(Math.max(sim.y.get() - 12 - viewH / 2, 0), mapH - viewH);
+      camX.set(round(cx));
+      camY.set(round(cy));
+      bob.set(Math.floor(info.timestamp / 350) % 2);
+      clock.set(clock.get() + realDt);
+
+      // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
+      // Each: [row, facing, frame, x, y, tint (0 none, 1 white: struck, 2 red: winding up), size].
+      const ents: number[][] = [];
+      const npcFacing = sim.npcFacing.get();
+      for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2], 0, 1]);
+      const whites = whiteFor.get();
+      const now = fight.get();
+      const all = now.enemies;
+      const shadows: number[] = [];
+      for (let i = 0; i < all.length; i++) {
+        const e = all[i];
+        if (e[E_ALIVE] === 0) continue;
+        const toward = facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
+        // The tell: a winding-up enemy blinks red and stands still.
+        const tell = e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
+        const tint = (whites[i] ?? 0) > 0 ? 1 : tell ? 2 : 0;
+        const stepping = e[E_AWAKE] === 1 && e[E_MODE] !== WINDUP && e[E_MODE] !== EXPOSED && e[E_STUN] === 0;
+        ents.push([
+          enemyRows[e[E_KIND]],
+          toward,
+          walkFrame(e[E_X] + e[E_Y], stepping),
+          e[E_X],
+          e[E_Y],
+          tint,
+          sizeOf(e),
+        ]);
+        // Kaldor casts no shadow, until a torch gutters.
+        if (e[E_MODE] === EXPOSED && ENEMY_KINDS[e[E_KIND]] === 'kaldor') shadows.push(e[E_X], e[E_Y]);
+      }
+      shadowAt.set(shadows);
+      for (let k = partyRows.length - 1; k >= 1; k--) {
+        const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
+        ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
+      }
+      // the lead goes last so they're drawn on top of a follower standing in the same spot;
+      // just hurt, they blink until they can be hurt again; striking, they lean into the blow
+      const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
+      if (!blink) {
+        const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
         const f = sim.facing.get();
-        const dx = f === 2 ? -1 : f === 3 ? 1 : 0;
-        const dy = f === 1 ? -1 : f === 0 ? 1 : 0;
-        const pushed = pushBoulder(solid.get(), mapWidth, mapHeight, rocks.get(), leanedOn, dx, dy);
-        if (pushed) {
-          solid.set(pushed.solid);
-          rocks.set(pushed.boulders);
-          if (!solved.get() && platesCovered(plates, pushed.boulders)) {
-            solved.set(true);
-            scheduleOnRN(plated);
-          }
-        }
+        const lx = f === 2 ? -lean : f === 3 ? lean : 0;
+        const ly = f === 1 ? -lean : f === 0 ? lean : 0;
+        ents.push([
+          partyRows[0],
+          f,
+          walkFrame(sim.walked.get(), moving || now.roll > 0),
+          sim.x.get() + lx,
+          sim.y.get() + ly,
+          0,
+          1,
+        ]);
+      }
+      ents.sort(byFeet);
+      const list: number[] = [];
+      const lit: number[] = [];
+      const red: number[] = [];
+      for (const [row, facing, f, x, y, tint, size] of ents) {
+        const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size];
+        list.push(...item);
+        if (tint === 1 && lit.length < FLASHES * 5) lit.push(...item);
+        if (tint === 2 && red.length < FLASHES * 5) red.push(...item);
+      }
+      drawList.set(list);
+      flashList.set(lit);
+      redList.set(red);
+    } catch (e) {
+      if (!frameFailed.get()) {
+        frameFailed.set(true);
+        scheduleOnRN(reportFrameError, String((e as Error)?.message ?? e), String((e as Error)?.stack ?? ''));
       }
     }
-
-    // ---- combat: your attack, bolts, the enemies' turn, all in stepFight; then its sounds, flashes and shakes.
-    const held = sim.attackHeld.get();
-    const pressed = sim.attackPressed.get();
-    const dodge = sim.dodgePressed.get();
-    sim.attackPressed.set(false);
-    sim.dodgePressed.set(false);
-    const release = wasHeld.get() && !held;
-    wasHeld.set(held);
-    if (!frozen && attack && fight.get().enemies.length > 0 && !fight.get().fallen && !fight.get().won) {
-      const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
-      const r = stepFight(
-        fight.get(),
-        {
-          x: sim.x.get(),
-          y: sim.y.get(),
-          facing: sim.facing.get(),
-          stickX: ix,
-          stickY: iy,
-          moved: moving,
-          press: pressed,
-          held,
-          release,
-          dodge,
-        },
-        { grid, attack, damage, level, special, boss: bossX >= 0, bossX, bossY, throws, drowsy, maxHp: hearts },
-        dt,
-      );
-      const f = r.fight;
-      const ev = r.events;
-      fight.set(f);
-      if (ev.moveX !== 0 || ev.moveY !== 0) {
-        const [nx, ny] = move(grid, sim.x.get(), sim.y.get(), ev.moveX, ev.moveY);
-        sim.x.set(nx);
-        sim.y.set(ny);
-        sim.trail.set(extendTrail(sim.trail.get(), nx, ny));
-        if (ev.moveX !== 0 || ev.moveY !== 0) sim.walked.set(sim.walked.get() + Math.hypot(ev.moveX, ev.moveY));
-      }
-      if (sim.hp.get() !== f.hp) sim.hp.set(f.hp);
-      if (sim.sleepy.get() !== f.sleepy) sim.sleepy.set(f.sleepy);
-      sim.charge.set(f.charge);
-      if (ev.swing) scheduleOnRN(feel, ev.charged ? 'charged' : 'swing');
-      if (ev.rolled) scheduleOnRN(feel, 'roll');
-      if (ev.mended) scheduleOnRN(feel, 'mend');
-      if (ev.hits > 0) {
-        const kill = ev.kills > 0;
-        hitStop.set(ev.big ? FEEL.bigStop : kill ? FEEL.killStop : FEEL.hitStop);
-        const strength = ev.big || kill ? FEEL.killShake : FEEL.hitShake;
-        if (strength >= shake.get()[1] || shake.get()[0] <= 0) shake.set([FEEL.shakeTime, strength]);
-        const white = whiteFor.get().slice();
-        for (const i of ev.struck) white[i] = FEEL.flash;
-        whiteFor.set(white);
-        if (kill) {
-          const next = puffs.get().slice(-3);
-          for (let k = 0; k < ev.fell.length; k += 2) next.push([ev.fell[k], ev.fell[k + 1], FEEL.puff]);
-          puffs.set(next);
-        }
-        scheduleOnRN(feel, kill ? 'kill' : 'hit');
-      } else if (ev.clangs > 0) {
-        scheduleOnRN(feel, 'clang');
-        const e = f.enemies.find((x) => x[E_CLANG] === 1);
-        if (e) sparks.set([e[E_X], e[E_Y] - 10, 0.15]);
-      }
-      if (ev.slam) {
-        shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
-        scheduleOnRN(feel, 'slam');
-      }
-      if (ev.guttered) {
-        gutter.set(0.5);
-        if (snuffable) guttered.set(Math.min(MAX_GUTTERED, guttered.get() + 1));
-        scheduleOnRN(feel, 'gutter');
-      }
-      if (ev.hurt) {
-        shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
-        hitStop.set(FEEL.hitStop);
-        scheduleOnRN(feel, 'hurt');
-      }
-      if (ev.fallen) scheduleOnRN(defeated);
-      if (ev.won) scheduleOnRN(won);
-    }
-    // Feel timers run on real time, so they play through the hit-stop.
-    const quake = shake.get();
-    if (quake[0] > 0) {
-      shake.set([Math.max(0, quake[0] - realDt), quake[1]]);
-      shakeOff.set([Math.round((Math.random() * 2 - 1) * quake[1]), Math.round((Math.random() * 2 - 1) * quake[1])]);
-    } else if (shakeOff.get()[0] !== 0 || shakeOff.get()[1] !== 0) shakeOff.set([0, 0]);
-    if (sparks.get()[2] > 0) sparks.set([sparks.get()[0], sparks.get()[1], Math.max(0, sparks.get()[2] - realDt)]);
-    if (gutter.get() > 0) gutter.set(Math.max(0, gutter.get() - realDt));
-    const white = whiteFor.get();
-    if (white.some((w) => w > 0)) whiteFor.set(white.map((w) => Math.max(0, w - realDt)));
-    if (puffs.get().length > 0) {
-      puffs.set(
-        puffs
-          .get()
-          .map((p) => [p[0], p[1], p[2] - realDt])
-          .filter((p) => p[2] > 0),
-      );
-    }
-
-    // Boulders slide toward their tiles.
-    const rp = rockPos.get();
-    const rs = rocks.get();
-    if (rs.length > 0) {
-      const next = rp.slice();
-      let changed = false;
-      const slide = SPEED * 1.5 * dt;
-      for (let i = 0; i < rs.length; i++) {
-        const targets = [(rs[i] % mapWidth) * TILE, Math.floor(rs[i] / mapWidth) * TILE];
-        for (let k = 0; k < 2; k++) {
-          const d = targets[k] - next[i * 2 + k];
-          if (d !== 0) {
-            next[i * 2 + k] += Math.abs(d) <= slide ? d : Math.sign(d) * slide;
-            changed = true;
-          }
-        }
-      }
-      if (changed) rockPos.set(next);
-    }
-
-    // The camera follows the lead and stops at the map's edges (or centres a small map).
-    const round = (v: number) => Math.round(v * scale) / scale;
-    const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(sim.x.get() - viewW / 2, 0), mapW - viewW);
-    const cy = mapH <= viewH ? (mapH - viewH) / 2 : Math.min(Math.max(sim.y.get() - 12 - viewH / 2, 0), mapH - viewH);
-    camX.set(round(cx));
-    camY.set(round(cy));
-    bob.set(Math.floor(info.timestamp / 350) % 2);
-    clock.set(clock.get() + realDt);
-
-    // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
-    // Each: [row, facing, frame, x, y, tint (0 none, 1 white: struck, 2 red: winding up), size].
-    const ents: number[][] = [];
-    const npcFacing = sim.npcFacing.get();
-    for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2], 0, 1]);
-    const whites = whiteFor.get();
-    const now = fight.get();
-    const all = now.enemies;
-    const shadows: number[] = [];
-    for (let i = 0; i < all.length; i++) {
-      const e = all[i];
-      if (e[E_ALIVE] === 0) continue;
-      const toward = facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
-      // The tell: a winding-up enemy blinks red and stands still.
-      const tell = e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
-      const tint = (whites[i] ?? 0) > 0 ? 1 : tell ? 2 : 0;
-      const stepping = e[E_AWAKE] === 1 && e[E_MODE] !== WINDUP && e[E_MODE] !== EXPOSED && e[E_STUN] === 0;
-      ents.push([enemyRows[e[E_KIND]], toward, walkFrame(e[E_X] + e[E_Y], stepping), e[E_X], e[E_Y], tint, sizeOf(e)]);
-      // Kaldor casts no shadow, until a torch gutters.
-      if (e[E_MODE] === EXPOSED && ENEMY_KINDS[e[E_KIND]] === 'kaldor') shadows.push(e[E_X], e[E_Y]);
-    }
-    shadowAt.set(shadows);
-    for (let k = partyRows.length - 1; k >= 1; k--) {
-      const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
-      ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
-    }
-    // the lead goes last so they're drawn on top of a follower standing in the same spot;
-    // just hurt, they blink until they can be hurt again; striking, they lean into the blow
-    const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
-    if (!blink) {
-      const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
-      const f = sim.facing.get();
-      const lx = f === 2 ? -lean : f === 3 ? lean : 0;
-      const ly = f === 1 ? -lean : f === 0 ? lean : 0;
-      ents.push([
-        partyRows[0],
-        f,
-        walkFrame(sim.walked.get(), moving || now.roll > 0),
-        sim.x.get() + lx,
-        sim.y.get() + ly,
-        0,
-        1,
-      ]);
-    }
-    ents.sort(byFeet);
-    const list: number[] = [];
-    const lit: number[] = [];
-    const red: number[] = [];
-    for (const [row, facing, f, x, y, tint, size] of ents) {
-      const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size];
-      list.push(...item);
-      if (tint === 1 && lit.length < FLASHES * 5) lit.push(...item);
-      if (tint === 2 && red.length < FLASHES * 5) red.push(...item);
-    }
-    drawList.set(list);
-    flashList.set(lit);
-    redList.set(red);
   }, false);
 
   useEffect(() => {
