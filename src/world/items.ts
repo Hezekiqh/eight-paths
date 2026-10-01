@@ -1,4 +1,5 @@
 import { HEARTS } from './combat';
+import { FINALE } from './keeper-talk-lines';
 import { MAPS, type ChestObject, type MapId, type WorldMap } from './maps';
 
 // What the player finds and keeps in the World: heart pieces and key items
@@ -10,6 +11,8 @@ export const PIECES_PER_HEART = 4;
 
 /** Key items: what they're called, and what reading one says. */
 export const ITEMS: Record<string, { name: string; text: string[] }> = {
+  // The first memory, from the last seal of Season 1 (see keeper-talk-lines.ts).
+  'first-memory': { name: FINALE.keepsake.name, text: FINALE.keepsake.text },
   'dessa-letter': {
     name: "Dessa's letter",
     // The outside only: what's inside is for later.
@@ -41,9 +44,14 @@ export function maxHearts(flags: string[]): number {
   return HEARTS + Math.floor(heartPieces(flags) / PIECES_PER_HEART);
 }
 
-/** Key items you carry, in the order found in the World. */
+/** Keepsakes the story gives you (not from chests): the flag that means you have one. */
+export const keepsakeFlag = (id: string) => `keepsake:${id}`;
+
+/** Key items you carry: from chests, in the order found in the World, then keepsakes. */
 export function satchel(flags: string[]): string[] {
-  return CHESTS.filter((c) => c.item !== 'heart-piece' && flags.includes(chestFlag(c.id))).map((c) => c.item);
+  const found = CHESTS.filter((c) => c.item !== 'heart-piece' && flags.includes(chestFlag(c.id))).map((c) => c.item);
+  const kept = flags.filter((f) => f.startsWith('keepsake:')).map((f) => f.slice('keepsake:'.length));
+  return [...found, ...kept];
 }
 
 /** What opening a chest says, after its own lines: what you found, and (for pieces) how many you have. */

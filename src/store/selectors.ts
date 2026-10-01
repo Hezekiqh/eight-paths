@@ -46,7 +46,7 @@ import {
 } from '@/game';
 import { DEFAULT_PARTY, ROSTER, hasCharacter, type CharacterId, type Companion } from '@/story/companions';
 
-import type { KeeperFacts, KeeperHero } from '@/world/keeper-talk';
+import type { KeeperFacts, KeeperHero } from '@/world/keeper-advice';
 
 import type { GameData } from './index';
 

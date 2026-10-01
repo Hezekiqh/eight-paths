@@ -46,12 +46,7 @@ export default function SocialTab() {
   // Results are tagged with who and which board they're for, so a stale list never shows.
   const [board, setBoard] = useState<{ key: string; rows: LeaderRow[] | null; failed: boolean } | null>(null);
   const key = `${profile?.id ?? ''}:${scope}`;
-  const incoming = useSocial((s) =>
-    s.offers
-      .filter((o) => o.toId === s.profile?.id)
-      .map((o) => o.id)
-      .join(','),
-  );
+  const incoming = useSocial((s) => s.offers.filter((o) => o.toId === s.profile?.id).map((o) => o.id).join(','));
   const markOffersSeen = useTradeNotices((s) => s.markOffersSeen);
 
   // Offers on screen count as seen: the tab's dot goes out.

@@ -49,11 +49,13 @@ import {
   type Arrival,
   type XpTotals,
 } from '@/world/progress';
-import { SEASON_END, winScene, type Outcome } from '@/world/scenes';
+import { SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { keeperTalk } from '@/world/keeper-talk';
+import { habitMemory } from '@/world/memory';
 import { loreId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
 import { characterQuestions } from '@/world/talk';
-import { keeperQuestions, keeperRemark } from '@/world/keeper-talk';
+import { keeperQuestions } from '@/world/keeper-advice';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
@@ -68,6 +70,7 @@ import {
   foundLines,
   heartPieces,
   isCandle,
+  keepsakeFlag,
   maxHearts,
   satchel,
 } from '@/world/items';
@@ -209,11 +212,14 @@ function World({
   const [start] = useState(() => startFor(useWorldStore.getState().position, hero));
   const xpNow = useWorldProgress();
   // Doorways, holes and road ends you walk through, if they're open to you yet.
-  const [ways] = useState(() =>
-    EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
-  );
   // A boss fight, the first time you come in: the boss has their say, then the fight is on.
   const [bossOn] = useState(() => !!start.map.boss && !(xpNow.flags ?? []).includes(start.map.boss.flag));
+  // While it's on, the doorways stay shut (as in Zelda), so backing away never walks you out of it by accident.
+  const [ways] = useState(() =>
+    bossOn
+      ? []
+      : EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
+  );
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
   const [arrivalFlags] = useState(() => xpNow.flags ?? []);
@@ -268,9 +274,16 @@ function World({
   );
   const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
+  // The doorways shut for a boss fight, drawn barred.
+  const sealed = useMemo(() => {
+    if (!bossOn) return [];
+    const letters = EXITS.filter((e) => e.from === map.id && e.walk).map((e) => e.tile);
+    return tilesOf(map, letters).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
+  }, [bossOn, map]);
   const flames = useMemo(() => flamesOn(map), [map]);
   // Hearts for this visit: five, plus one for every four pieces found.
   const [hearts] = useState(() => maxHearts(arrivalFlags));
+  const autopilotOn = useSession((s) => s.autopilot);
   const sim = useWorldSim(start, map.npcs);
   const today = useToday();
   const { unclaimed } = useObjectives(today);
@@ -389,6 +402,7 @@ function World({
   }, [map, gameParty, finish]);
   const onDefeat = useCallback(() => {
     if (map.boss) useWorldStore.getState().notice(fightNotice(map.id as MapId));
+    useWorldStore.getState().setFlag('fallen');
     // You wake by the last candle you rested at, or on the Archive floor.
     const { candles, lastCandle } = useWorldStore.getState();
     const spot = candles.find((c) => c.map === lastCandle);
@@ -461,6 +475,8 @@ function World({
         ambience={ambience}
         flames={flames}
         snuffable={map.id === 'war-hall'}
+        sealed={sealed}
+        autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}
         boss={bossOn && map.boss ? { x: map.boss.x * TILE + TILE / 2, y: map.boss.y * TILE + TILE } : null}
         throws={bossOn && !map.boss?.kind}
@@ -531,6 +547,11 @@ function World({
           pieces={heartPieces(liveFlags) % PIECES_PER_HEART}
           hearts={maxHearts(liveFlags)}
           items={satchel(liveFlags).map((id) => ({ id, name: ITEMS[id]?.name ?? id }))}
+          autopilot={
+            __DEV__
+              ? { on: autopilotOn, toggle: () => useSession.setState((s) => ({ autopilot: !s.autopilot })) }
+              : undefined
+          }
           onRead={(id) => {
             setPaused(false);
             const item = ITEMS[id];
@@ -601,16 +622,34 @@ function useAct(
       turned[i] = OPPOSITE[facing];
       sim.npcFacing.set(turned);
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
-      // The Keeper also talks about you: your habits, your party, who to bring (keeper-talk.ts).
+      // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =
         thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
-      const questions =
-        thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
-      setDialogue({
-        speaker: thing.name,
-        lines: after ? thing.after!.lines : [...thing.lines, ...(keeper ? keeperRemark(keeper) : []), ...banter],
-        questions: keeper ? [...keeperQuestions(keeper), ...(questions ?? [])] : questions,
-      });
+      const own = thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
+      const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
+      if (thing.id === 'keeper' && map.id === 'archive') {
+        const w = useWorldStore.getState();
+        if (w.flags.includes('keeper:hello')) {
+          const talk = keeperTalk({
+            flags: w.flags,
+            discovered: w.discovered,
+            candlesAway: w.candles.filter((c) => c.map !== 'archive').length,
+            heartPieces: heartPieces(w.flags),
+            memory: habitMemory(useGameStore.getState(), toDateKey(new Date())),
+            day: Math.floor(Date.now() / 86400000),
+          });
+          if (talk.said) w.setFlag(talk.said);
+          setDialogue({
+            speaker: thing.name,
+            lines: talk.lines.length ? talk.lines : thing.lines,
+            questions,
+          });
+          return;
+        }
+        w.setFlag('keeper:hello');
+      }
+      setDialogue({ speaker: thing.name, lines: after ? thing.after!.lines : [...thing.lines, ...banter], questions });
       return;
     }
     if (thing?.type === 'sign') {
@@ -698,8 +737,19 @@ function useAct(
     if (map.id === 'field-of-banners' && tile === 'Q') {
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {
-        useWorldStore.getState().setFlag('season-1');
-        setDialogue({ lines: SEASON_END });
+        const { flags, setFlag } = useWorldStore.getState();
+        if (flags.includes('season-1')) setDialogue({ lines: SEASON_END });
+        else {
+          // The last seal: your real record, the king you left, and the first memory, kept in your Satchel.
+          const memory = habitMemory(useGameStore.getState(), toDateKey(new Date()));
+          setFlag('season-1');
+          setFlag(keepsakeFlag('first-memory'));
+          haptics.celebrate();
+          playSound('levelUp');
+          setDialogue({
+            lines: [...seasonFinale(memory, flags), `${ITEMS['first-memory'].name} is in your Satchel (pause).`],
+          });
+        }
       } else
         setDialogue({
           lines: [...(map.examine.Q ?? []), `Season 1 ends at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(s)}`],

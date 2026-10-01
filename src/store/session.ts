@@ -14,6 +14,8 @@ type Session = {
   handledResponses: string[];
   /** The sideways game is on screen (not the World menu), so the tab bar steps aside. */
   worldPlaying: boolean;
+  /** Dev only: the fight bot plays the World's fights (autopilot.ts), for recording footage. */
+  autopilot: boolean;
 };
 
 export const useSession = create<Session>((set) => ({
@@ -24,4 +26,6 @@ export const useSession = create<Session>((set) => ({
   pendingQuest: null,
   handledResponses: [],
   worldPlaying: false,
+  // Dev only; EXPO_PUBLIC_AUTOPILOT=1 starts it on, for recording.
+  autopilot: __DEV__ && process.env.EXPO_PUBLIC_AUTOPILOT === '1',
 }));

@@ -131,8 +131,8 @@ export const ENEMIES: Record<EnemyKind, EnemyStats> = {
   rusted: { hp: 5, speed: 22, sight: 26, behaviour: 'ambush' }, // empty armour that follows once you pass
   echo: { hp: 4, speed: 0, sight: 52, behaviour: 'shout' }, // a drill sergeant's echo; its shout stuns
   sleeper: { hp: 3, speed: 18, sight: 400, behaviour: 'chase' }, // Baron Plush's sofa-bearers, sleepwalking at you
-  raider: { hp: 5, speed: 36, sight: 200, behaviour: 'lunge' }, // the horde's pit fighters
-  aurek: { hp: 14, speed: 24, sight: 300, behaviour: 'slam', size: 2 }, // Aurek the Tall, raised and bound
+  raider: { hp: 8, speed: 36, sight: 200, behaviour: 'lunge' }, // the horde's pit fighters
+  aurek: { hp: 12, speed: 24, sight: 300, behaviour: 'slam', size: 2 }, // Aurek the Tall, raised and bound
   kaldor: { hp: 20, speed: 32, sight: 400, behaviour: 'king' }, // the Kingbreaker himself
 };
 
@@ -151,7 +151,8 @@ export function drowsyRate(resilienceLevel: number): number {
 /**
  * An enemy on the UI thread, as a flat tuple so it's cheap to copy each frame:
  * [kind, x, y, hp, awake (0/1), timer, stun, alive (0/1), mode, time in mode,
- * locked direction x, y, struck-but-unhurt this frame (0/1), charges since the last window].
+ * locked direction x, y, struck-but-unhurt this frame (0/1), charges since the last window,
+ * damage taken in this window].
  */
 export type Enemy = number[];
 export const E_KIND = 0;
@@ -168,6 +169,7 @@ export const E_DX = 10;
 export const E_DY = 11;
 export const E_CLANG = 12;
 export const E_COUNT = 13;
+export const E_TAKEN = 14;
 
 /** What a patterned enemy is doing: chasing, winding up (the tell), lunging or charging, getting up, or (Kaldor) open to hits. */
 export const CHASE = 0;
@@ -177,7 +179,7 @@ export const RECOVER = 3;
 export const EXPOSED = 4;
 
 export function spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
-  return [ENEMY_KINDS.indexOf(kind), x, y, ENEMIES[kind].hp, 0, 0, 0, 1, CHASE, 0, 0, 0, 0, 0];
+  return [ENEMY_KINDS.indexOf(kind), x, y, ENEMIES[kind].hp, 0, 0, 0, 1, CHASE, 0, 0, 0, 0, 0, 0];
 }
 
 export function sizeOf(e: Enemy): number {
@@ -203,11 +205,23 @@ const TOUCH_PER_SIZE = 4;
  * the tell: the enemy stops, flashes red, and commits to a direction.
  */
 export const PATTERNS = {
-  lunge: { range: 72, rest: 0.9, windup: 0.45, dash: 0.4, speed: 135, recover: 0.5 },
-  slam: { range: 44, rest: 0.8, windup: 0.8, windupHurt: 0.55, recover: 1.2, recoverHurt: 0.8 },
+  lunge: { range: 80, rest: 0.6, windup: 0.38, dash: 0.4, speed: 140, recover: 0.45 },
+  slam: { range: 44, rest: 0.8, windup: 0.8, windupHurt: 0.55, recover: 1.6, recoverHurt: 1.2 },
   /** A slam's ring: how far it spreads, how long it takes, how thick it hurts. */
   wave: { radius: 38, grow: 0.3, life: 0.45, band: 7 },
-  king: { range: 110, rest: 1.2, windup: 0.7, windupHurt: 0.45, dash: 0.8, speed: 170, recover: 0.4, commit: 0.25, exposed: 4, missesToGutter: 2 },
+  king: {
+    range: 110,
+    rest: 1.2,
+    windup: 0.7,
+    windupHurt: 0.45,
+    dash: 0.8,
+    speed: 170,
+    recover: 0.4,
+    commit: 0.25,
+    exposed: 4,
+    windowShare: 1 / 3,
+    missesToGutter: 2,
+  },
 };
 
 export type StepResult = {
@@ -346,7 +360,12 @@ export function stepEnemies(
           else to(RECOVER);
         }
       } else if (e[E_MODE] === RECOVER && e[E_MT] >= P.recover) to(CHASE);
-      else if (e[E_MODE] === EXPOSED && e[E_MT] >= P.exposed) {
+      else if (
+        e[E_MODE] === EXPOSED &&
+        (e[E_MT] >= P.exposed || e[E_TAKEN] >= Math.ceil(ENEMIES[ENEMY_KINDS[e[E_KIND]]].hp * P.windowShare))
+      ) {
+        // The window closes when it runs out, or once he's taken his share: he's back on his feet.
+        e[E_TAKEN] = 0;
         // Hurt, he comes straight back at you.
         if (hurtLow) {
           to(WINDUP);
@@ -369,6 +388,19 @@ export function stepEnemies(
   return { enemies: out, hurt, pushX, pushY, stun, shoutX, shoutY, slams, guttered };
 }
 
+/** Bosses with a pattern can't be stunned out of it: Aurek and Kaldor. */
+export function unstunnable(e: Enemy): boolean {
+  'worklet';
+  const b = ENEMIES[ENEMY_KINDS[e[E_KIND]]].behaviour;
+  return b === 'slam' || b === 'king';
+}
+
+/** True for an enemy whose hide turns half of each close blow right now: Aurek, except while he rises after a slam. Missiles find the stitches. */
+export function armoured(e: Enemy): boolean {
+  'worklet';
+  return ENEMIES[ENEMY_KINDS[e[E_KIND]]].behaviour === 'slam' && e[E_MODE] !== RECOVER;
+}
+
 /** True for an enemy who shrugs off hits right now: Kaldor, until a torch gutters. */
 export function guarded(e: Enemy): boolean {
   'worklet';
@@ -385,11 +417,19 @@ export function hitAround(
   damage: number,
   knock: number,
   stun: number,
+  /** Enemies (a bit per index) this blow passes over: a piercing bolt hits each one once. */
+  skip = 0,
+  /** A blade or a fist, not a missile: Aurek's hide turns half of it. */
+  close = true,
 ): Enemy[] {
   'worklet';
   const out: Enemy[] = [];
-  for (const e0 of enemies) {
-    const e = e0.slice();
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i].slice();
+    if (skip & (1 << i)) {
+      out.push(e);
+      continue;
+    }
     const dx = e[E_X] - x;
     const dy = e[E_Y] - y;
     const dist = Math.hypot(dx, dy);
@@ -400,9 +440,12 @@ export function hitAround(
         out.push(e);
         continue;
       }
-      e[E_HP] -= damage;
+      // Aurek's stitched hide turns half of every close blow, except while he's getting up after a slam.
+      const dealt = close && armoured(e) ? Math.max(1, Math.floor(damage / 2)) : damage;
+      e[E_HP] -= dealt;
+      if (e[E_MODE] === EXPOSED) e[E_TAKEN] += dealt;
       e[E_AWAKE] = 1;
-      e[E_STUN] = Math.max(e[E_STUN], stun);
+      if (!unstunnable(e)) e[E_STUN] = Math.max(e[E_STUN], stun);
       if (e[E_HP] <= 0) e[E_ALIVE] = 0;
       else if (knock > 0) {
         const d = dist || 1;

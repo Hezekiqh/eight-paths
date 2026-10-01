@@ -1,7 +1,7 @@
 import { BASE_XP, emptyDimensionRecord, overallLevelFromXp, levelFromXp } from '@/game';
 
 import { MAPS } from '../maps';
-import { ARCHIVE_DOOR_LEVEL, EXITS, howToProgress, standing, type XpTotals } from '../progress';
+import { ARCHIVE_DOOR_LEVEL, EXITS, howToProgress, requirementLabel, standing, type Requirement, type XpTotals } from '../progress';
 
 const noXp: XpTotals = { total: 0, byPath: emptyDimensionRecord(0) };
 
@@ -61,5 +61,20 @@ describe('EXITS', () => {
     const out = EXITS.find((e) => e.id === 'archive-door')!;
     const back = EXITS.find((e) => e.from === out.to!.map && e.to?.map === 'archive');
     expect(back?.back).toBe(true);
+  });
+});
+
+describe('requirementLabel', () => {
+  const flag: Requirement = { kind: 'flag', flag: 'winch', label: 'Raise the portcullis', hint: 'Find the winch.' };
+  it('shows your level only where there is one', () => {
+    expect(requirementLabel({ kind: 'overall', level: 12 }, noXp)).toMatch(/^Overall Lv 12 · you're Lv \d+$/);
+    expect(requirementLabel(flag, noXp)).toBe('Raise the portcullis');
+    expect(requirementLabel(flag, { ...noXp, flags: ['winch'] })).toBe('Raise the portcullis ✓');
+  });
+
+  it('takes the level from the level part of a combined requirement', () => {
+    const both: Requirement = { kind: 'all', of: [flag, { kind: 'overall', level: 18 }] };
+    const xp = { total: overallXpFor(9), byPath: emptyDimensionRecord(0) };
+    expect(requirementLabel(both, xp)).toBe("Raise the portcullis + Overall Lv 18 · you're Lv 9");
   });
 });

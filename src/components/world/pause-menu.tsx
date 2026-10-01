@@ -44,6 +44,8 @@ type Props = {
   hearts: number;
   items: { id: string; name: string }[];
   onRead: (id: string) => void;
+  /** Dev only: whether the fight bot plays, and switching it. */
+  autopilot?: { on: boolean; toggle: () => void };
 };
 
 type Tab = 'goals' | 'party' | 'controls';
@@ -76,6 +78,7 @@ export function PauseMenu({
   hearts,
   items,
   onRead,
+  autopilot,
 }: Props) {
   const [tab, setTab] = useState<Tab>('goals');
   return (
@@ -171,6 +174,9 @@ export function PauseMenu({
               <>
                 <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
                 <Text style={styles.hint}>{HINTS[controls]}</Text>
+                {autopilot && (
+                  <MenuItem label={`Autopilot (dev): ${autopilot.on ? 'on' : 'off'}`} onPress={autopilot.toggle} />
+                )}
               </>
             )}
           </ScrollView>

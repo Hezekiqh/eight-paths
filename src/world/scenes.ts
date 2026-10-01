@@ -1,6 +1,8 @@
 import type { CharacterId } from '@/story/companions';
 
+import { FINALE } from './keeper-talk-lines';
 import type { MapId } from './maps';
+import { fill, type HabitMemory } from './memory';
 
 // What happens when a fight is won: the scene that plays, the story flags it
 // sets, who joins you, and (at the throne) the choice. Drafts, for the author.
@@ -119,9 +121,27 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
 }
 
 /** Said at the sealed portal once Season 1 is finished. */
-export const SEASON_END = [
-  "The portal's hum rises. Through the stone, far off: water, and coins, and someone counting.",
-  'Not yet. But soon.',
-  'You have finished Season 1 of the Eight Paths.',
-  'Keep walking your Paths. The Other World grows as you do.',
-];
+/**
+ * The last seal of Season 1: the portal, your real record, the king you left
+ * (or crowned), and the first memory back. `memory` null: the record is skipped.
+ */
+export function seasonFinale(memory: HabitMemory | null, flags: string[]): string[] {
+  const record = memory
+    ? FINALE.record
+        .map((line) =>
+          fill(line, {
+            habits: memory.habits,
+            days: memory.days,
+            best: memory.best,
+            gap: memory.comeback?.gap,
+            month: memory.comeback?.month,
+          }),
+        )
+        .filter((l): l is string => l !== null)
+    : [];
+  const king = flags.includes('kaldor-allowed') ? FINALE.allowed : flags.includes('kaldor-dethroned') ? FINALE.dethroned : [];
+  return [...FINALE.seal, ...record, ...king, ...FINALE.memory, ...FINALE.end];
+}
+
+/** Coming back to the seal once the season's done. */
+export const SEASON_END = FINALE.end;

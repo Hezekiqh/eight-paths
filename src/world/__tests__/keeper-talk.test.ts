@@ -1,90 +1,85 @@
-import { DIMENSIONS } from '@/game';
+import { keeperTalk, type KeeperContext } from '../keeper-talk';
+import { FINALE, KEEPER_TALK } from '../keeper-talk-lines';
+import type { HabitMemory } from '../memory';
+import { seasonFinale } from '../scenes';
 
-import {
-  HOW_ASK,
-  PARTY_ASK,
-  habitLine,
-  keeperQuestions,
-  keeperRemark,
-  partyLines,
-  strongestLine,
-  weakestLine,
-  type KeeperFacts,
-  type KeeperHero,
-} from '../keeper-talk';
-
-const none = { done: 0, due: 0, rate: null };
-const hero = (name: string, level: number, i = 0): KeeperHero => ({
-  name,
-  level,
-  path: `Path${i}`,
-  dimension: DIMENSIONS[i],
+const memory = (over: Partial<HabitMemory> = {}): HabitMemory => ({
+  habits: 20,
+  days: 10,
+  streak: 2,
+  best: 4,
+  strongest: { dimension: 'physical', name: 'Warrior', level: 8 },
+  comeback: null,
+  since: 20,
+  ...over,
 });
-
-const facts = (over: Partial<KeeperFacts> = {}): KeeperFacts => ({
-  today: '2026-10-01',
-  name: 'Ash',
-  streak: 0,
-  best: 0,
-  week: { current: none, previous: none },
-  party: DIMENSIONS.map((_, i) => hero(`H${i}`, 1, i)),
-  bench: [],
-  dusty: null,
+const ctx = (over: Partial<KeeperContext> = {}): KeeperContext => ({
+  flags: [],
+  discovered: ['archive'],
+  candlesAway: 0,
+  heartPieces: 0,
+  memory: memory(),
+  day: 3,
   ...over,
 });
 
-const filled = (line: string) => expect(line).not.toMatch(/[{}]/);
-
-describe('the Keeper talking about you', () => {
-  it('counts a long streak', () => {
-    const line = habitLine(facts({ streak: 9 }));
-    expect(line).toContain('9');
-    filled(line);
+describe('the Keeper', () => {
+  it('says something every time', () => {
+    const t = keeperTalk(ctx());
+    expect(t.lines.length).toBeGreaterThan(0);
+    expect(t.said).toBeNull(); // nothing new: the rotation
   });
 
-  it('reminds you of your best run once a streak breaks, without shaming', () => {
-    expect(habitLine(facts({ streak: 1, best: 12 }))).toContain('12 days');
+  it('reacts to the latest step of the story, once', () => {
+    const flags = ['plush-won', 'kaldor-beaten', 'kaldor-allowed'];
+    const first = keeperTalk(ctx({ flags, discovered: ['archive', 'courier-road'] }));
+    const moment = KEEPER_TALK.moments.find((m) => `keeper:${m.id}` === first.said)!;
+    expect(moment.when).toBe('kaldor-allowed');
+    // Said once; the road and Plush are old news by now, so it's on to other things.
+    const next = keeperTalk(ctx({ flags: [...flags, first.said!], discovered: ['archive', 'courier-road'] }));
+    const after = KEEPER_TALK.moments.find((m) => `keeper:${m.id}` === next.said);
+    expect(after?.when ?? 'none').not.toMatch(/first-back-from-road|plush-won/);
   });
 
-  it('compares this week to the last', () => {
-    const up = facts({ week: { current: { done: 6, due: 10, rate: 0.6 }, previous: { done: 3, due: 10, rate: 0.3 } } });
-    expect(habitLine(up)).toMatch(/Better than last week/);
+  it('remembers a comeback, with pride', () => {
+    const t = keeperTalk(ctx({ memory: memory({ comeback: { gap: 11, month: 'March', endedDaysAgo: 2 } }) }));
+    expect(t.said).toBe('keeper:comeback-March-11');
+    expect(t.lines.join(' ')).toMatch(/11|March/);
   });
 
-  it('names the strongest party member only when someone is ahead', () => {
-    expect(strongestLine(facts())).toBeNull();
-    const party = DIMENSIONS.map((_, i) => hero(`H${i}`, i === 2 ? 6 : 1, i));
-    const line = strongestLine(facts({ party }))!;
-    expect(line).toContain('H2');
-    filled(line);
+  it('marks a streak once per step', () => {
+    const t = keeperTalk(ctx({ memory: memory({ streak: 15, best: 20 }) }));
+    expect(t.said).toBe('keeper:streak-14');
+    expect(keeperTalk(ctx({ flags: [t.said!], memory: memory({ streak: 16, best: 20 }) })).said).toBeNull();
+  });
+});
+
+describe('the last seal', () => {
+  it('recalls your record and the king you left', () => {
+    const allowed = seasonFinale(memory({ habits: 35 }), ['kaldor-allowed']);
+    expect(allowed.join(' ')).toContain('35');
+    expect(allowed).toEqual(expect.arrayContaining(FINALE.allowed));
+    expect(seasonFinale(memory(), ['kaldor-dethroned'])).toEqual(expect.arrayContaining(FINALE.dethroned));
+    expect(allowed.slice(-FINALE.end.length)).toEqual(FINALE.end);
   });
 
-  it('points at a dusty Path before the lowest level', () => {
-    const line = weakestLine(facts({ dusty: { path: 'Mage', hero: 'Quill' } }))!;
-    expect(line).toContain('Mage');
-    expect(line).toContain('Quill');
+  it('leaves out the comeback line when there was none', () => {
+    const lines = seasonFinale(memory(), []);
+    expect(lines.join(' ')).not.toMatch(/\{/);
   });
+});
 
-  it('suggests a bench hero who outlevels their Path walker', () => {
-    const lines = partyLines(facts({ bench: [hero('Bo', 4, 0)] }));
-    expect(lines.join(' ')).toContain('Bo');
-    expect(lines.join(' ')).toContain('H0');
-    lines.forEach(filled);
+describe('everything the Keeper and the seal say', () => {
+  const all = [
+    ...KEEPER_TALK.moments.flatMap((m) => m.lines),
+    ...Object.values(KEEPER_TALK.habits).flat(),
+    ...KEEPER_TALK.ambient,
+    ...Object.values(FINALE).flatMap((v) => (Array.isArray(v) ? v : [v.name, ...v.text])),
+  ];
+  it('keeps the mystery', () => {
+    for (const line of all) expect(line).not.toMatch(/Entity|Chosen One|Erasure/);
   });
-
-  it('still has fun advice for a bench hero with no levels', () => {
-    const lines = partyLines(facts({ bench: [hero('Plush', 1, 3)] }));
-    expect(lines[0]).toContain('Plush');
-    lines.forEach(filled);
-  });
-
-  it('opens with one remark and offers his two questions', () => {
-    expect(keeperRemark(facts({ streak: 4 }))).toHaveLength(1);
-    expect(keeperQuestions(facts()).map((q) => q.ask)).toEqual([HOW_ASK, PARTY_ASK]);
-  });
-
-  it('keeps the same remark all day', () => {
-    const f = facts({ streak: 20, bench: [hero('Bo', 1, 0)], dusty: { path: 'Mage', hero: 'Quill' } });
-    expect(keeperRemark(f)).toEqual(keeperRemark({ ...f }));
+  it('fits a dialogue box', () => {
+    for (const line of all) expect(line.length).toBeLessThanOrEqual(160);
   });
 });

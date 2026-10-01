@@ -10,7 +10,7 @@ import { openNotices } from '@/world/notices';
 import { useWorldStore } from '@/world/store';
 import { classColors, colors, fonts, spacing } from '@/theme';
 import type { MapId } from '@/world/maps';
-import { EXITS, describeRequirement, howToProgress, standing } from '@/world/progress';
+import { EXITS, howToProgress, requirementLabel, standing } from '@/world/progress';
 
 type Props = {
   map: MapId;
@@ -56,8 +56,7 @@ export function ObjectivesPanel({ map, hero, onOpenBoard }: Props) {
             <View style={styles.row}>
               <Text style={styles.label}>{exit.label}</Text>
               <Text style={[styles.need, s.met && styles.met]}>
-                {describeRequirement(exit.needs)}
-                {s.met ? ' ✓' : ` · you're Lv ${s.have}`}
+                {requirementLabel(exit.needs, xp)}
               </Text>
             </View>
             <View style={styles.track}>

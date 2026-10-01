@@ -4,6 +4,7 @@ import { Jersey10_400Regular, useFonts } from '@expo-google-fonts/jersey-10';
 import { MedievalSharp_400Regular } from '@expo-google-fonts/medievalsharp';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router/stack';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -61,6 +62,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  // The app is upright, whichever way the phone was held when it opened (the intro played sideways
+  // otherwise); only the World's game and its quest board turn sideways, and they lock that themselves.
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }, []);
 
   if (!ready) return null;
 
