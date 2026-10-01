@@ -90,6 +90,12 @@ describe('habitStreak', () => {
     expect(habitStreak(q, [done('2026-09-25', 'physical', 'other')], [], today)).toBe(0);
   });
 
+  it('passes over a skipped day', () => {
+    const q = quest({ skippedOn: ['2026-09-24'] });
+    const cs = [done('2026-09-23'), done('2026-09-25')];
+    expect(habitStreak(q, cs, [], today)).toBe(2);
+  });
+
   it('survives a rest day', () => {
     const q = quest();
     const cs = [done('2026-09-23'), done('2026-09-25')];

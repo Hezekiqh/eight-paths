@@ -35,6 +35,8 @@ export type Quest = {
   createdAt: string;
   /** Date key the quest was archived; days from then on no longer count as due. */
   archivedAt?: string;
+  /** Date keys the player skipped it: those days it isn't due at all. */
+  skippedOn?: string[];
 };
 
 export type Completion = {

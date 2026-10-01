@@ -830,7 +830,9 @@ const DUNGEON_ART = {
   },
   W(g, x, y, m) {
     // Stone wall: a face where the floor meets it, a top view elsewhere.
-    const face = m.at(0, 1) !== 'W' && m.at(0, 1) !== '#' && m.at(0, 1) !== 'B' && m.at(0, 1) !== 'C' && m.at(0, 1) !== 'c';
+    // A hole broken sideways through the wall below is still the same wall, seen from above.
+    const sideHole = m.at(0, 1) === 'o' && 'WBCcRGE#'.includes(m.at(0, 2));
+    const face = !sideHole && m.at(0, 1) !== 'W' && m.at(0, 1) !== '#' && m.at(0, 1) !== 'B' && m.at(0, 1) !== 'C' && m.at(0, 1) !== 'c';
     if (!face) {
       box(g, x, y, TILE, TILE, DG.wallDark);
       box(g, x, y, TILE, 1, DG.mortar);
@@ -869,6 +871,24 @@ const DUNGEON_ART = {
   },
   o(g, x, y, m) {
     // A ragged hole broken through the wall.
+    const solid = (c) => 'WBCcRGE#'.includes(c);
+    if (solid(m.at(0, -1)) && solid(m.at(0, 1))) {
+      // In a wall that runs up and down you go through it sideways, so show the gap from above:
+      // the floor carries on through, with broken stone either side and the dark beyond at the map's edge.
+      for (let i = 0; i < TILE; i++) {
+        const top = 2 + Math.floor(hash(x + i, y, 12) * 2);
+        const bottom = 14 - Math.floor(hash(x + i, y, 13) * 2);
+        box(g, x + i, y, 1, top, DG.wallDark);
+        box(g, x + i, y + bottom, 1, TILE - bottom, DG.wallDark);
+        put(g, x + i, y + top - 1, DG.mortar);
+        for (let j = 0; j < 3; j++)
+          g[y + top + j][x + i] = mix(g[y + top + j][x + i], hex('#000000'), dither(0.5 - j * 0.15, x + i, y + top + j));
+      }
+      for (const [dx, dy] of [[1, 12], [3, 11], [12, 12], [14, 11], [2, 4], [13, 4]]) put(g, x + dx, y + dy, DG.rubble);
+      for (const [dx, from] of [[-1, 0], [1, 8]])
+        if (m.at(dx, 0) === '#') box(g, x + from, y + 5, 8, 6, DG.earth);
+      return;
+    }
     DUNGEON_ART.W(g, x, y, m);
     ellipse(g, x + 8, y + 9, 6, 7, DG.earth);
     for (let i = 0; i < 5; i++) put(g, x + 3 + i * 3, y + 15, DG.rubble);
@@ -1014,7 +1034,7 @@ function drawDungeon(map) {
       const letter = map.pushable === at(tx, ty) ? '.' : at(tx, ty);
       const draw = DUNGEON_ART[map.art?.[letter] ?? letter];
       if (!draw) throw new Error(`No dungeon art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => map.art?.[at(tx + dx, ty + dy)] ?? at(tx + dx, ty + dy) });
     }
   // Shadow under the walls, and torchlight around each torch and candle.
   for (let ty = 0; ty < H; ty++)

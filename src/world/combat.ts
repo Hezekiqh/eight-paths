@@ -250,6 +250,7 @@ export function stepEnemies(
   py: number,
   dt: number,
   canHurt: boolean,
+  slamRest: number = PATTERNS.slam.rest,
 ): StepResult {
   'worklet';
   const out: Enemy[] = [];
@@ -328,7 +329,7 @@ export function stepEnemies(
       const P = PATTERNS.slam;
       if (e[E_MODE] === CHASE) {
         chase();
-        if (dist < P.range && e[E_MT] >= P.rest) to(WINDUP);
+        if (dist < P.range && e[E_MT] >= slamRest) to(WINDUP);
       } else if (e[E_MODE] === WINDUP && e[E_MT] >= (hurtLow ? P.windupHurt : P.windup)) {
         slams.push(e[E_X], e[E_Y]);
         to(RECOVER);

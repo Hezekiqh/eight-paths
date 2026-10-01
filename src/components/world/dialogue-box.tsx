@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,6 +9,7 @@ import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import type { Question } from '@/world/maps';
 import { portraitFor, splitSpeaker, voiceFor } from '@/world/portraits';
+import { isShouted, rumblesIn } from '@/world/rumbles';
 import type { WalkerId } from '@/world/walkers';
 
 export type Dialogue = {
@@ -52,15 +53,38 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const sprite = said.sprite ?? dialogue.sprite ?? portraitFor(dialogue.speaker);
   const voice = voiceFor(speaker, sprite);
   const [lift, setLift] = useState(false);
-  // Narration (no speaker) stays silent; people blip every other letter and bob as they talk.
+  const shouted = useMemo(() => isShouted(line), [line]);
+  // Loud words ("the crowd roars") buzz as they're typed; `felt` counts how many have gone off this line.
+  const rumbles = useMemo(() => rumblesIn(line), [line]);
+  const felt = useRef(0);
+  // A fresh count for each new line (and each answer, which can restart at line 0).
+  useEffect(() => {
+    felt.current = 0;
+  }, [round, index]);
+  const feelRumbles = useCallback(
+    (upTo: number) => {
+      while (felt.current < rumbles.length && rumbles[felt.current].at <= upTo) haptics.rumble(rumbles[felt.current++].kind);
+    },
+    [rumbles],
+  );
+  // Narration (no speaker) stays silent with a faint click per letter; people blip every
+  // other letter, buzz in their own voice, and bob as they talk.
   const onLetter = useCallback(
     (i: number) => {
-      if (!speaker || i % 2 !== 0) return;
+      feelRumbles(i);
+      if (!speaker) return haptics.tick();
+      if (i % 2 !== 0) return;
       playSound(`blip${voice}`);
+      haptics.speak(voice, shouted);
       setLift((l) => !l);
     },
-    [speaker, voice],
+    [speaker, voice, shouted, feelRumbles],
   );
+  // Skipped to the end (or Reduce Motion): the line's first loud word still lands, once.
+  const onTyped = useCallback(() => {
+    if (felt.current === 0 && rumbles.length > 0) feelRumbles(rumbles[0].at);
+    setTyped(true);
+  }, [rumbles, feelRumbles]);
   const last = index === lines.length - 1;
   const questions = dialogue.questions ?? [];
   const choices = dialogue.choices ?? [];
@@ -150,8 +174,9 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
             text={line}
             instant={skip}
             style={styles.text}
-            onDone={() => setTyped(true)}
+            onDone={onTyped}
             onLetter={onLetter}
+            ticks={false}
           />
         </View>
         {typed && <Text style={styles.more}>{last && questions.length === 0 && choices.length === 0 ? '■' : '▼'}</Text>}

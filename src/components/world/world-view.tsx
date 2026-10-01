@@ -103,7 +103,7 @@ const BUZZ: Partial<Record<Feel, () => void>> = {
   kill: haptics.kill,
   hurt: haptics.hurt,
   clang: haptics.tap,
-  slam: haptics.kill,
+  slam: () => haptics.rumble('crash'),
   gutter: haptics.hit,
 };
 /** Combat's sound and buzz, on the React side. */
@@ -497,6 +497,8 @@ export function WorldView({
           const e = f.enemies.find((x) => x[E_CLANG] === 1);
           if (e) sparks.set([e[E_X], e[E_Y] - 10, 0.15]);
         }
+        // A drill sergeant's echo bellows: felt as a scream, even if it misses you.
+        if (ev.shout) scheduleOnRN(haptics.rumble, 'scream');
         if (ev.slam) {
           shake.set([FEEL.shakeTime * 1.5, FEEL.hurtShake]);
           scheduleOnRN(feel, 'slam');
@@ -539,7 +541,7 @@ export function WorldView({
       if (rs.length > 0) {
         const next = rp.slice();
         let changed = false;
-        const slide = SPEED * 1.5 * dt;
+        const slide = 96 * dt;
         for (let i = 0; i < rs.length; i++) {
           const targets = [(rs[i] % mapWidth) * TILE, Math.floor(rs[i] / mapWidth) * TILE];
           for (let k = 0; k < 2; k++) {

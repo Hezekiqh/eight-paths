@@ -85,8 +85,8 @@
       "facing": "right",
       "name": "Grask",
       "lines": [
-        "Halt. Who goes there. Pay the toll. The toll is everything you have.",
-        "Just kidding. Mostly."
+        "Halt. Toll's everything you have.",
+        "You look like you've got nothing. Toll's double."
       ],
       "questions": [
         {
@@ -140,6 +140,13 @@
           "ask": "Are you scared of the king?",
           "answer": [
             "Everyone's scared of the king. And chickens. Mostly chickens."
+          ]
+        },
+        {
+          "ask": "Seen anything odd?",
+          "answer": [
+            "A goose came through last week. Collar said DUCHESS. Took Grask's helmet.",
+            "Grask cried. Grask says he didn't cry. Grask cried."
           ]
         }
       ],

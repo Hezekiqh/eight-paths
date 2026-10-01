@@ -35,7 +35,8 @@
       "Old woods, thick and quiet. Somewhere a woodpecker is working very hard."
     ],
     "H": [
-      "A farmhouse, turnips drying on the sill."
+      "A farmhouse, turnips drying on the sill.",
+      "The sill is a slab of grey glass from before. Nobody knows what it was for. It makes a very good sill."
     ],
     "d": [
       "You knock. From inside: \"We're not buying! Unless it's turnips. Are you turnips?\""
@@ -107,7 +108,7 @@
       "name": "Old Wenna",
       "lines": [
         "Stop. You. Arm-wrestle me for directions.",
-        "...No? Soft. You're not from the Kingdom, then. Good."
+        "No? Soft. You're not from the Kingdom, then. Good."
       ],
       "questions": [
         {
@@ -130,7 +131,14 @@
             "Keeps the arms young. At my age you do one thing a day that's hard, or the days start doing it to you."
           ]
         }
-      ]
+      ],
+      "after": {
+        "flag": "pit-champion",
+        "lines": [
+          "Heard you won in the pit. Three of the king's own.",
+          "Still soft. Less soft. Sit down. Arm."
+        ]
+      }
     },
     {
       "id": "oriel",
@@ -165,7 +173,14 @@
             "Once a year, exactly. I just never know which time it is."
           ]
         }
-      ]
+      ],
+      "after": {
+        "flag": "cages-open",
+        "lines": [
+          "You've met a tall man named Gerald.",
+          "Don't tell me. I know. Once a year, exactly, and this was the year."
+        ]
+      }
     },
     {
       "id": "hoot",
@@ -188,7 +203,7 @@
       "y": 9,
       "lines": [
         "BY ORDER OF THE KING: all iron to be surrendered at the border post. Turnips may be kept.",
-        "Underneath, in a different hand: \"generous.\""
+        "Underneath, in pencil: \"generous.\""
       ]
     },
     {

@@ -18,11 +18,13 @@ import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
+import { VhsOverlay } from '@/components/world/vhs-overlay';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
-import { useGameStore } from '@/store';
+import { pickData, useGameStore } from '@/store';
+import { selectKeeperFacts } from '@/store/selectors';
 import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
-import { CLASSES, levelFromXp, type Dimension } from '@/game';
+import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { COMPANIONS } from '@/story/companions';
@@ -50,9 +52,10 @@ import {
 import { SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
-import { toDateKey } from '@/game/dates';
 import { loreId } from '@/world/lore';
+import { banterFor } from '@/world/banter';
 import { characterQuestions } from '@/world/talk';
+import { keeperQuestions } from '@/world/keeper-advice';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
@@ -480,6 +483,7 @@ function World({
         drowsy={bossOn && !map.boss?.kind ? drowsyRate(levelFromXp(xpNow.byPath.emotional).level) : 0}
         onWin={onWin}
       />
+      <VhsOverlay width={width} height={height} warm={map.id === 'archive'} />
       {!frozen && (
         <WorldControls
           scheme={controls}
@@ -595,6 +599,8 @@ function useAct(
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
     const thing = objectAt(map, tx, ty);
+    // a party member may chime in (see banter.ts)
+    const banter = thing ? banterFor(map.id, thing.id, Object.values(useGameStore.getState().party)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const who = COMPANIONS[hero];
       const job = thing.job;
@@ -605,7 +611,7 @@ function useAct(
       } else {
         const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party)] : [];
         useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
-        setDialogue({ speaker: thing.name, lines: [...thing.lines, ...job.cant, ...hint] });
+        setDialogue({ speaker: thing.name, lines: [...thing.lines, ...banter, ...job.cant, ...hint] });
       }
       return;
     }
@@ -615,6 +621,12 @@ function useAct(
       const turned = [...sim.npcFacing.get()];
       turned[i] = OPPOSITE[facing];
       sim.npcFacing.set(turned);
+      const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
+      // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
+      const keeper =
+        thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
+      const own = thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
+      const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
       // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
       if (thing.id === 'keeper' && map.id === 'archive') {
         const w = useWorldStore.getState();
@@ -631,22 +643,17 @@ function useAct(
           setDialogue({
             speaker: thing.name,
             lines: talk.lines.length ? talk.lines : thing.lines,
-            questions: thing.questions,
+            questions,
           });
           return;
         }
         w.setFlag('keeper:hello');
       }
-      setDialogue({
-        speaker: thing.name,
-        lines:
-          thing.after && useWorldStore.getState().flags.includes(thing.after.flag) ? thing.after.lines : thing.lines,
-        questions: thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined),
-      });
+      setDialogue({ speaker: thing.name, lines: after ? thing.after!.lines : [...thing.lines, ...banter], questions });
       return;
     }
     if (thing?.type === 'sign') {
-      setDialogue({ lines: thing.lines });
+      setDialogue({ lines: [...thing.lines, ...banter] });
       return;
     }
     if (thing?.type === 'chest') {

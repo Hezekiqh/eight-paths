@@ -10,12 +10,11 @@ Everything App Store Connect asks for, in the order it appears on **Distribution
 
 Use the **6.9" Display** slot (open **View All Sizes in Media Manager**). It covers 6.5", 6.7" and 6.9" iPhones, so the 6.5" slot can stay empty. Upload the files in `store/screenshots/` in this order (only the first 3 show on the install sheet):
 
-1. `01-today.png`
-2. `03-collection.png`
-3. `04-lore.png`
-4. `02-party.png`
-5. `05-calendar.png`
-6. `06-theme-hunter.png`
+1. `01-intro.png`
+2. `02-today.png`
+3. `03-world.png` (landscape; the 6.9" slot takes portrait and landscape together)
+4. `04-journey.png`
+5. `05-quests.png`
 
 No app previews (videos) needed.
 

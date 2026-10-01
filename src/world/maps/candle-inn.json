@@ -32,7 +32,7 @@
       "A candle that never burns down. Rest here."
     ],
     "L": [
-      "A tally over the bar: DAYS SINCE THE HORDE PAID FOR A DRINK: 182,500."
+      "A tally over the bar: DAYS SINCE THE HORDE PAID FOR A DRINK: 182,621."
     ],
     "b": [
       "A bed. Clean sheets. Somebody still cares about this place."
@@ -72,6 +72,13 @@
           "ask": "Why does strength matter?",
           "answer": [
             "Because you can't carry anyone if you can't carry yourself. Now eat."
+          ]
+        },
+        {
+          "ask": "What's for supper?",
+          "answer": [
+            "Turnip. Millbrook sends them. The horde won't touch a turnip, so nobody asks where they go.",
+            "Half this town's lived on Millbrook turnips for years. So will you. Eat."
           ]
         }
       ]

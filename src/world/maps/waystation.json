@@ -25,7 +25,9 @@
       "The notice board. Year 500's news, pinned in layers:",
       "\"BY ORDER OF THE KING: all iron to be surrendered.\" Underneath, in pencil: \"generous.\"",
       "\"LOST: one goose. Answers to Duchess. Do not approach.\"",
-      "\"COURIERS WANTED. Must be fast. Must not read the post.\""
+      "\"COURIERS WANTED. Must be fast. Must not read the post.\"",
+      "A newer notice, printed, not written. Nobody here owns a press:",
+      "\"THE EIGHT THANK YOU FOR YOUR REST. NOTHING FURTHER IS REQUIRED OF YOU.\" Underneath, in pencil: \"noted.\""
     ],
     "c": [
       "A candle that burns without shrinking, like the ones in the Archive."
@@ -51,7 +53,8 @@
       "facing": "down",
       "name": "Hesper",
       "lines": [
-        "Welcome to the Waystation! Rest your feet. Candle's free, soup's not."
+        "Welcome to the Waystation! Rest your feet. Candle's free, soup's not.",
+        "Two coppers. Three if you sniff it first."
       ],
       "questions": [
         {
@@ -73,6 +76,14 @@
           "answer": [
             "The old fort in the hill first, then the Kingdom. The fort's the only way past the king's checkpoints these days.",
             "Mind the fort. And mind the Kingdom. And mind your manners. That's three minds; you'll need them."
+          ]
+        },
+        {
+          "ask": "Who printed that notice?",
+          "answer": [
+            "Nobody. It was just there one morning, pinned up neat as you like.",
+            "They turn up in every town, I hear. Same words. Nobody's ever seen who brings them.",
+            "Soup?"
           ]
         }
       ]
@@ -112,7 +123,14 @@
             "You have to be ready before the day comes. That's the whole trick."
           ]
         }
-      ]
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "Eight seconds! EIGHT! To the well and back!",
+          "Bo taught me to cartwheel the last bit. Don't tell Hesper. She'll charge for the well."
+        ]
+      }
     }
   ]
 }

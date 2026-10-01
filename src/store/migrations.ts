@@ -93,6 +93,7 @@ function cleanQuest(raw: unknown): Quest | null {
     active: raw.active !== false,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date(0).toISOString(),
     ...(isDateKey(raw.archivedAt) ? { archivedAt: raw.archivedAt } : {}),
+    ...(Array.isArray(raw.skippedOn) ? { skippedOn: [...new Set(raw.skippedOn.filter(isDateKey))] } : {}),
   };
 }
 

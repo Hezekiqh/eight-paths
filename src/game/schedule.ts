@@ -5,6 +5,11 @@ export function isScheduledOn(quest: Quest, date: string): boolean {
   return quest.repeatDays.includes(dayOfWeek(date));
 }
 
+/** Whether the player skipped `quest` on `date`. */
+export function isSkippedOn(quest: Quest, date: string): boolean {
+  return quest.skippedOn?.includes(date) ?? false;
+}
+
 /** The local day a quest was created. */
 export function createdDay(quest: Quest): string {
   return toDateKey(new Date(quest.createdAt));
@@ -17,9 +22,9 @@ export function questLiveOn(quest: Quest, date: string): boolean {
   return quest.archivedAt !== undefined && date < quest.archivedAt;
 }
 
-/** Whether the player was expected to do `quest` on `date`. */
+/** Whether the player was expected to do `quest` on `date`. A skipped day isn't due. */
 export function isDueOn(quest: Quest, date: string): boolean {
-  return isScheduledOn(quest, date) && questLiveOn(quest, date);
+  return isScheduledOn(quest, date) && questLiveOn(quest, date) && !isSkippedOn(quest, date);
 }
 
 /** Days a rest token covered, for `dimension` (or any dimension when omitted). */

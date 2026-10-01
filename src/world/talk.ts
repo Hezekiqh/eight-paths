@@ -124,6 +124,20 @@ export const CHARACTER_TALK: Partial<Record<CharacterId, Talk>> = {
       "Most people are never poor from one bad choice. It's a thousand small ones nobody bothered to count.",
     ],
   },
+  tithe: {
+    about: [
+      'Countess Tithe. I own the Counting House, and very nearly everything it counts.',
+      'The scales? A gift to myself. Everything balances eventually, darling. I simply arrange to be on the heavier side.',
+    ],
+    gossip: [
+      "The Marrow girl keeps everyone's accounts, I hear. Everyone's but mine. Mine keep themselves.",
+      "That one was free. The next one, we'll discuss.",
+    ],
+    path: [
+      'The secret is to stop. Keep what you have. Risk nothing.',
+      'Everyone else is still chasing more. I arranged to have enough, and then I arranged for them to have enough too. You are welcome.',
+    ],
+  },
   quill: {
     about: [
       'Quill! Scholar, footnote enthusiast, and, technically, the only person here who has read every book on that shelf. Twice.',

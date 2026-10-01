@@ -33,7 +33,9 @@
       "Pines, crowding close. The camp likes it that way."
     ],
     "M": [
-      "The hill's rock face. An old fort is buried in it, wall and all."
+      "The hill's rock face. An old fort is buried in it, wall and all.",
+      "Higher up, a rusted horn juts from the rock. At dusk it plays four cheerful notes.",
+      "The deserters hum along. They hate that they hum along."
     ],
     "E": [
       "The fort's arch, half swallowed by the hill. Cold air breathes out of it.",
@@ -92,7 +94,14 @@
             "Ask me how I know."
           ]
         }
-      ]
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "We're going back. Bravely. Slightly behind everyone else, but bravely.",
+          "Somebody take down the sign. It's a deserters' camp now. Was. Ex-deserters'."
+        ]
+      }
     },
     {
       "id": "mira",
@@ -128,7 +137,14 @@
             "You don't have to be the biggest. You have to practise every day until you're the steadiest."
           ]
         }
-      ]
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "You did it. I'm going home.",
+          "Today. It's finally today."
+        ]
+      }
     },
     {
       "id": "fen",

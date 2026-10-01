@@ -157,7 +157,11 @@ export function WorldControls({ scheme, sim, onAct, onPause, fight }: Props) {
             haptics.tap();
             sim.dodgePressed.set(true);
           }}
-          style={({ pressed }) => [styles.dodge, { right: right + 12, bottom: bottom + 108 }, pressed && styles.pressed]}>
+          style={({ pressed }) => [
+            styles.dodge,
+            { right: right + 12, bottom: bottom + 108 },
+            pressed && styles.pressed,
+          ]}>
           <SymbolView name="wind" tintColor={colors.text} size={20} />
         </Pressable>
       )}

@@ -1,5 +1,5 @@
 import { addDays } from './dates';
-import { isDueOn, isScheduledOn, restDaySet } from './schedule';
+import { isDueOn, isScheduledOn, isSkippedOn, restDaySet } from './schedule';
 import type { Completion, Dimension, Quest, RestDay } from './types';
 
 export type Streak = { current: number; best: number };
@@ -69,7 +69,7 @@ export function dimensionStreak(
 
 /**
  * Consecutive scheduled days, ending today, on which `quest` was completed.
- * Unscheduled days and rest days are skipped; today is skipped until done.
+ * Unscheduled, skipped and rest days are passed over; today is too until done.
  */
 export function habitStreak(quest: Quest, completions: Completion[], restDays: RestDay[], today: string): number {
   if (quest.repeatDays.length === 0) return 0;
@@ -78,7 +78,7 @@ export function habitStreak(quest: Quest, completions: Completion[], restDays: R
   const rest = restDaySet(restDays, quest.dimension);
   const first = [...doneDays].sort()[0];
   return runStreak(first, today, (day) => {
-    if (!isScheduledOn(quest, day)) return 'skip';
+    if (!isScheduledOn(quest, day) || isSkippedOn(quest, day)) return 'skip';
     if (doneDays.has(day)) return 'hit';
     return rest.has(day) ? 'skip' : 'miss';
   }).current;

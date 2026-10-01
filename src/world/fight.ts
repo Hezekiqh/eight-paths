@@ -38,6 +38,8 @@ export function chargedDamage(damage: number): number {
 /** Path levels that unlock the charged attack, then each Path's special. */
 export const CHARGE_LEVEL = 10;
 export const SPECIAL_LEVEL = 20;
+/** Below CHARGE_LEVEL, Aurek waits this long between slams (PATTERNS.slam.rest otherwise). */
+const SLAM_REST_LOW = 2.2;
 const BOLT_SPEED = 150;
 /** Art pixels per tile (maps.ts TILE; not imported, to keep this file free of the map data). */
 const TILE_PX = 16;
@@ -437,7 +439,7 @@ export function stepFight(
 
   // ---- the enemies' turn.
   const rolling = f.roll > 0;
-  const r = stepEnemies(grid, enemies, px, py, dt, f.mercy === 0 && !rolling);
+  const r = stepEnemies(grid, enemies, px, py, dt, f.mercy === 0 && !rolling, rules.level < CHARGE_LEVEL ? SLAM_REST_LOW : PATTERNS.slam.rest);
   f.enemies = r.enemies;
   let hurt = r.hurt;
   let pushX = r.pushX;
