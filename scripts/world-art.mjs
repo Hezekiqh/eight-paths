@@ -441,6 +441,14 @@ const O = {
   canvasDark: '#A89868',
 };
 
+/** Snow instead of grass (a map with ground: 'snow'). */
+const SNOW = {
+  grass: ['#D8E0EA', '#CED8E4', '#E2E8F0'],
+  blade: '#B8C6D4',
+  grassDark: '#A8B6C6',
+  flower: ['#FFFFFF', '#F0F4FA', '#C8D6E6'],
+};
+
 function tree(g, x, y) {
   // A round canopy that spills a little past its tile, over a short trunk.
   box(g, x + 6, y + 10, 4, 6, O.trunk);
@@ -724,6 +732,15 @@ const OUTDOOR_ART = {
     box(g, x + 1, y + 11, 14, 3, O.trunk);
     for (let i = 0; i < 4; i++) box(g, x + 2 + i * 3, y + 9, 2, 2, ['#E8D26A', '#C86A8A', '#E8E0D0', '#8A6A44'][(i + Math.floor(hash(x, y, 1) * 4)) % 4]);
   },
+  y(g, x, y) {
+    // A training dummy: straw on a post, with a crossbar for arms.
+    box(g, x + 7, y + 6, 2, 10, O.trunk);
+    box(g, x + 2, y + 7, 12, 2, O.trunk);
+    ellipse(g, x + 8, y + 9, 3, 4, '#C8A860');
+    ellipse(g, x + 8, y + 3, 3, 3, '#C8A860');
+    put(g, x + 7, y + 3, O.trunkDark);
+    put(g, x + 9, y + 3, O.trunkDark);
+  },
   q(g, x, y) {
     // A barrel, iron-hooped.
     ellipse(g, x + 8, y + 9, 5, 6, O.trunk);
@@ -779,20 +796,22 @@ function drawOutdoor(map) {
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
   const isPath = (tx, ty) => ',><^_s'.includes(at(tx, ty));
+  // The Frost Ward keeps its snow: the horde brought winter with them, a little of it.
+  const ground = map.ground === 'snow' ? SNOW : O;
 
   // Grass everywhere, in soft patches.
   for (let y = 0; y < g.h; y++)
     for (let x = 0; x < g.w; x++) {
-      let c = hex(O.grass[Math.floor(hash(Math.floor(x / 6), Math.floor(y / 5), 4) * 3)]);
-      if (hash(x, y, 5) < 0.05) c = hex(O.blade);
-      else if (hash(x, y, 6) < 0.04) c = hex(O.grassDark);
+      let c = hex(ground.grass[Math.floor(hash(Math.floor(x / 6), Math.floor(y / 5), 4) * 3)]);
+      if (hash(x, y, 5) < 0.05) c = hex(ground.blade);
+      else if (hash(x, y, 6) < 0.04) c = hex(ground.grassDark);
       g[y][x] = c;
     }
   // Wildflowers dotted about.
   for (let i = 0; i < W * H * 0.6; i++) {
     const x = Math.floor(hash(i, 1, 7) * g.w);
     const y = Math.floor(hash(i, 2, 7) * g.h);
-    put(g, x, y, O.flower[i % 3]);
+    put(g, x, y, ground.flower[i % 3]);
   }
 
   // The road: packed dirt with soft, grassy edges.
@@ -1062,6 +1081,22 @@ const DUNGEON_ART = {
     box(g, x + 3, y + 12, 11, 1, DG.iron);
     ellipse(g, x + 8, y + 4, 4, 2, DG.timberDark);
   },
+  i(g, x, y, m) {
+    // The last block of ice from the wastes, drawn once across its 2x2 tiles.
+    if (m.at(-1, 0) === 'i' || m.at(0, -1) === 'i') return;
+    box(g, x + 3, y + 26, 26, 4, DG.wallDark);
+    box(g, x + 5, y + 4, 22, 23, '#A8D0E8');
+    box(g, x + 5, y + 4, 22, 3, '#E0F0FA');
+    box(g, x + 7, y + 9, 3, 14, '#E0F0FA');
+    box(g, x + 22, y + 8, 2, 16, '#7AA8C8');
+  },
+  u(g, x, y) {
+    // A war drum: hide stretched over a barrel, painted in three stripes.
+    ellipse(g, x + 8, y + 10, 6, 5, '#6A1216');
+    box(g, x + 2, y + 8, 13, 1, '#E8E0D0');
+    box(g, x + 2, y + 11, 13, 1, '#E8E0D0');
+    ellipse(g, x + 8, y + 5, 6, 3, '#D8C8A0');
+  },
   f(g, x, y, m) {
     // A portrait of Kaldor, each more flattering than the last.
     DUNGEON_ART.W(g, x, y, m);
@@ -1240,6 +1275,18 @@ const WALKERS = {
   evenbett: { top: '#6A9A8A', shade: '#4E7A6A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
   joss: { top: '#C8B8E0', shade: '#A898C0', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['short', '#6A4028'], collar: '#E8E0D0' },
   kids: { top: '#C86A8A', shade: '#A84A6A', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['short', '#E8D26A'] },
+  // Kaldorhold's Barracks and Frost Wards.
+  ox: { top: '#6A3A2A', shade: '#4A2A1E', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#2A1A12', cloak: '#6A1216' },
+  tolly: { top: '#7A8A9A', shade: '#5A6A7A', legs: '#3A3A42', boots: '#2A2A30', belt: '#8A6A3A', skin: '#E0B898', hair: ['short', '#C8A060'] },
+  hagga: { top: '#6A1216', shade: '#4A0E10', legs: '#2A1A1A', boots: '#1A1010', belt: '#E8E0D0', skin: '#D8A880', hair: ['spiky', '#C4442A'], beads: '#E8E0D0' },
+  mog: { robe: true, top: '#E8E4D8', shade: '#C8C4B8', boots: '#4A3A2A', belt: '#8A3A2A', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#8A8A7A', apron: '#B3261E' },
+  abbot: { robe: true, top: '#4A4A3A', shade: '#36362A', boots: '#1A1A12', belt: '#C8B070', hair: ['short', '#6A6A5A'], glasses: true, collar: '#E8E0D0' },
+  leif: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#E0B898', hair: ['short', '#E8D26A'] },
+  gorm: { top: '#5A4A3A', shade: '#42362A', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#3A2418'], beard: '#3A2418', sword: true },
+  kaya: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#C89870', hair: ['bun', '#1A1210'], cloak: '#4A1E20', sword: true },
+  skadi: { robe: true, top: '#E8ECF0', shade: '#C8D0D8', boots: '#6A6A78', belt: '#6A1216', skin: '#E0B898', hair: ['veil', '#F4F0EA'], beads: '#6A8AB0' },
+  brug: { top: '#8A7A64', shade: '#6A5A48', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['short', '#6A4028'], beard: '#6A4028', cloak: '#C8B8A0' },
+  ylva: { robe: true, top: '#C8D6E6', shade: '#A8B6C6', boots: '#4A4A58', belt: '#6A1216', skin: '#E0B898', hair: ['bun', '#E8D26A'], collar: '#F4F0EA' },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -1664,6 +1711,12 @@ const MAPS = [
   'ring-ward',
   'kaldorium-maximus',
   'fighters-cells',
+  'barracks-ward',
+  'fury-hall',
+  'stitchery',
+  'ironhouse',
+  'frost-ward',
+  'ice-house',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {

@@ -45,6 +45,8 @@ const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
   'kingdom-town': { x: 0.37, y: 0.9 },
   kaldorhold: { x: 0.5, y: 0.96 },
   'ring-ward': { x: 0.5, y: 0.8 },
+  'barracks-ward': { x: 0.66, y: 0.96 },
+  'frost-ward': { x: 0.5, y: 0.99 },
   'tithe-road': { x: 0.26, y: 0.96 },
   'broken-watch': { x: 0.16, y: 0.88 },
   'field-of-banners': { x: 0.12, y: 0.78 },
@@ -70,6 +72,10 @@ const REGION: Partial<Record<MapId, MapId>> = {
   'hall-of-kaldor': 'kaldorhold',
   'kaldorium-maximus': 'ring-ward',
   'fighters-cells': 'ring-ward',
+  'fury-hall': 'barracks-ward',
+  stitchery: 'barracks-ward',
+  ironhouse: 'barracks-ward',
+  'ice-house': 'frost-ward',
 };
 const regionOf = (id: MapId): MapId => REGION[id] ?? id;
 /** What a place is called on the World view. */

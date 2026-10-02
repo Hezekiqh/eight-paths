@@ -29,6 +29,12 @@ import hallOfKaldorData from './maps/hall-of-kaldor.json';
 import ringWardData from './maps/ring-ward.json';
 import kaldoriumMaximusData from './maps/kaldorium-maximus.json';
 import fightersCellsData from './maps/fighters-cells.json';
+import barracksWardData from './maps/barracks-ward.json';
+import furyHallData from './maps/fury-hall.json';
+import stitcheryData from './maps/stitchery.json';
+import ironhouseData from './maps/ironhouse.json';
+import frostWardData from './maps/frost-ward.json';
+import iceHouseData from './maps/ice-house.json';
 import type { CharacterId } from '@/story/companions';
 
 import { ENEMY_KINDS, type EnemyKind } from './combat';
@@ -281,6 +287,12 @@ export const MAPS = {
   'ring-ward': build(ringWardData as MapData, require('@/assets/world/ring-ward.png')),
   'kaldorium-maximus': build(kaldoriumMaximusData as MapData, require('@/assets/world/kaldorium-maximus.png')),
   'fighters-cells': build(fightersCellsData as MapData, require('@/assets/world/fighters-cells.png')),
+  'barracks-ward': build(barracksWardData as MapData, require('@/assets/world/barracks-ward.png')),
+  'fury-hall': build(furyHallData as MapData, require('@/assets/world/fury-hall.png')),
+  'stitchery': build(stitcheryData as MapData, require('@/assets/world/stitchery.png')),
+  'ironhouse': build(ironhouseData as MapData, require('@/assets/world/ironhouse.png')),
+  'frost-ward': build(frostWardData as MapData, require('@/assets/world/frost-ward.png')),
+  'ice-house': build(iceHouseData as MapData, require('@/assets/world/ice-house.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

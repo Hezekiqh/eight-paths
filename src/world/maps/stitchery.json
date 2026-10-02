@@ -1,0 +1,87 @@
+{
+  "id": "stitchery",
+  "name": "The Stitchery",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "##############",
+    "#WWWcWWWWWWWW#",
+    "#Wb.b.b.b..LW#",
+    "#W..........W#",
+    "#W..........W#",
+    "#WWWWW11WWWWW#",
+    "##############"
+  ],
+  "spawn": {
+    "x": 6,
+    "y": 4,
+    "facing": "up"
+  },
+  "examine": {
+    "b": [
+      "A cot. The blanket is embroidered: WALKED IT OFF."
+    ],
+    "L": [
+      "A crate of bandages, unopened. Doctor Mog doesn't believe in them."
+    ],
+    "1": [
+      "The way out, to the drill yard."
+    ]
+  },
+  "objects": [
+    {
+      "id": "mog",
+      "type": "npc",
+      "x": 9,
+      "y": 3,
+      "sprite": "mog",
+      "facing": "left",
+      "name": "Doctor Mog",
+      "lines": [
+        "Broken arm? Walk it off. Bad cough? Walk it off. Head on backwards? Walk it off.",
+        "Forty years. Not one patient's come back to complain. I think they walked it off."
+      ],
+      "questions": [
+        {
+          "ask": "Does walking it off work?",
+          "answer": [
+            "Course it does. Look at my waiting room. Everybody's walking.",
+            "…Round in a circle. Mostly. Some of them have been walking since spring."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "patient1",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "A patient",
+      "lines": [
+        "Broke my leg. Doctor said walk it off.",
+        "I'm walking it off. Very slowly. This is day ninety."
+      ]
+    },
+    {
+      "id": "patient2",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "haskel",
+      "facing": "up",
+      "name": "Another patient",
+      "lines": [
+        "Arrow in the shoulder. Walk it off, he said.",
+        "I've walked to the bazaar and back eleven times. Still there. Very fit now, though."
+      ]
+    }
+  ]
+}

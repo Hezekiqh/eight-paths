@@ -80,7 +80,18 @@ export const WALKER_ROWS = {
   evenbett: 69,
   joss: 70,
   kids: 71,
-  keeper: 72,
+  ox: 72,
+  tolly: 73,
+  hagga: 74,
+  mog: 75,
+  abbot: 76,
+  leif: 77,
+  gorm: 78,
+  kaya: 79,
+  skadi: 80,
+  brug: 81,
+  ylva: 82,
+  keeper: 83,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

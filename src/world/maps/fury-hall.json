@@ -1,0 +1,109 @@
+{
+  "id": "fury-hall",
+  "name": "The Fury Hall",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "################",
+    "#WWWcWWWWWWcWWW#",
+    "#W.u..u..u..u.W#",
+    "#W............W#",
+    "#W..d......d..W#",
+    "#W............W#",
+    "#WWWWWW11WWWWWW#",
+    "################"
+  ],
+  "spawn": {
+    "x": 7,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "u": [
+      "A war drum, painted in three stripes. Hit it and the whole hall goes red, for a moment."
+    ],
+    "d": [
+      "A dummy for practising the Fury on. It's seen things."
+    ],
+    "1": [
+      "The way out, to the drill yard."
+    ]
+  },
+  "objects": [
+    {
+      "id": "hagga",
+      "type": "npc",
+      "x": 7,
+      "y": 3,
+      "sprite": "hagga",
+      "facing": "down",
+      "name": "Fury-mistress Hagga",
+      "lines": [
+        "DRUM! CHANT! GO RED! Feel it in your teeth!",
+        "Every Kaldari goes red before a fight. Since the wastes. Since before kings."
+      ],
+      "questions": [
+        {
+          "ask": "What is going red?",
+          "answer": [
+            "The Fury. Drum till your blood's louder than your fear. Then fight.",
+            "My gran said in the wastes it kept you warm. Here it keeps you… loud."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tolly",
+      "type": "npc",
+      "x": 12,
+      "y": 5,
+      "sprite": "tolly",
+      "facing": "left",
+      "name": "Tolly the Cold-Blooded",
+      "lines": [
+        "Three years I've been coming. I can't go red. I just go… a sort of pink.",
+        "Hagga says I'm cold-blooded. I think I'm just calm. Somebody has to be."
+      ],
+      "questions": [
+        {
+          "ask": "Why keep coming?",
+          "answer": [
+            "The drums are nice. And everybody's so cross. Somebody ought to bring biscuits.",
+            "Between us, I don't think the old kingdom went red. My nan has a cup with an open hand on it. She hides it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drum1",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "drummer",
+      "facing": "down",
+      "name": "Drummer",
+      "lines": [
+        "BOOM. BOOM. BOOM-BOOM.",
+        "Again! From the top! There's no top. It's just BOOM."
+      ]
+    },
+    {
+      "id": "drum2",
+      "type": "npc",
+      "x": 12,
+      "y": 3,
+      "sprite": "drummer",
+      "facing": "down",
+      "name": "Drummer",
+      "lines": [
+        "BOOM. …Is Tolly pink again? He's pink again."
+      ]
+    }
+  ]
+}
