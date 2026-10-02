@@ -58,18 +58,29 @@ const bytes = (path) => {
 };
 const image = (path) => CK.MakeImageFromEncoded(new Uint8Array(readFileSync(path)));
 const typeface = (path) => CK.Typeface.MakeTypefaceFromData(bytes(path));
-const DIALOGUE = typeface(join(ROOT, 'node_modules/@expo-google-fonts/dotgothic16/400Regular/DotGothic16_400Regular.ttf'));
+const DIALOGUE = typeface(
+  join(ROOT, 'node_modules/@expo-google-fonts/dotgothic16/400Regular/DotGothic16_400Regular.ttf'),
+);
 const JERSEY = typeface(join(ROOT, 'node_modules/@expo-google-fonts/jersey-10/400Regular/Jersey10_400Regular.ttf'));
 const WALKERS = image(join(ROOT, 'assets/world/walkers.png'));
 const WALKER_ROWS = Object.fromEntries(
-  [...readFileSync(join(ROOT, 'src/world/walkers.ts'), 'utf8').matchAll(/^ {2}(\w+): (\d+),$/gm)].map((m) => [m[1], +m[2]]),
+  [...readFileSync(join(ROOT, 'src/world/walkers.ts'), 'utf8').matchAll(/^ {2}(\w+): (\d+),$/gm)].map((m) => [
+    m[1],
+    +m[2],
+  ]),
 );
 const NEAREST = { filter: CK.FilterMode.Nearest, mipmap: CK.MipmapMode.None };
 
 // ---- maps: the baked picture, the people, the candles (ambience.ts)
 const AMBIENCE = { rooms: { darkness: 0.18 }, outdoor: { darkness: 0 }, dungeon: { darkness: 0.32 } };
 const FLAMES = {
-  rooms: { c: [{ dx: 4, dy: 1, reach: 0 }, { dx: 7, dy: -1, reach: 44 }, { dx: 11, dy: 1, reach: 0 }] },
+  rooms: {
+    c: [
+      { dx: 4, dy: 1, reach: 0 },
+      { dx: 7, dy: -1, reach: 44 },
+      { dx: 11, dy: 1, reach: 0 },
+    ],
+  },
   outdoor: { c: [{ dx: 7, dy: 2, reach: 40 }] },
   dungeon: { k: [{ dx: 7, dy: 1, reach: 48 }] },
 };
@@ -85,7 +96,17 @@ function loadMap(id, style) {
   const signs = json.objects.filter((o) => o.type === 'sign');
   const chests = json.objects.filter((o) => o.type === 'chest');
   const motes = style === 'outdoor' ? 'pollen' : 'dust';
-  return { ...json, style, image: image(join(ROOT, `assets/world/${id}.png`)), flames, npcs, signs, chests, motes, darkness: AMBIENCE[style].darkness };
+  return {
+    ...json,
+    style,
+    image: image(join(ROOT, `assets/world/${id}.png`)),
+    flames,
+    npcs,
+    signs,
+    chests,
+    motes,
+    darkness: AMBIENCE[style].darkness,
+  };
 }
 
 // ---- voices (portraits.ts)
@@ -185,7 +206,10 @@ function drawBox(canvas, { speaker, sprite, text, shown, lift, typed, last }) {
     const px = x + (PT.frame + PT.padX) * U;
     const py = y + (PT.frame + PT.padY) * U;
     canvas.drawRect(CK.XYWHRect(px, py, PT.portraitW * U, PT.portraitH * U), paint(C.frame));
-    canvas.drawRect(CK.XYWHRect(px + 2 * U, py + 2 * U, (PT.portraitW - 4) * U, (PT.portraitH - 4) * U), paint(C.background));
+    canvas.drawRect(
+      CK.XYWHRect(px + 2 * U, py + 2 * U, (PT.portraitW - 4) * U, (PT.portraitH - 4) * U),
+      paint(C.background),
+    );
     const row = WALKER_ROWS[sprite];
     const srcY = row * FH - 1 + (lift && !typed ? 1 : 0);
     canvas.save();
@@ -212,7 +236,14 @@ function drawBox(canvas, { speaker, sprite, text, shown, lift, typed, last }) {
   lines.forEach((line, i) => {
     const part = line.slice(0, Math.max(0, left));
     left -= line.length + 1;
-    if (part) canvas.drawText(part, tx, ty + i * PT.lineHeight * U + (PT.lineHeight * 0.5 + PT.text * 0.36) * U, ink, TEXT_FONT);
+    if (part)
+      canvas.drawText(
+        part,
+        tx,
+        ty + i * PT.lineHeight * U + (PT.lineHeight * 0.5 + PT.text * 0.36) * U,
+        ink,
+        TEXT_FONT,
+      );
   });
   if (typed) {
     const mx = x + (boxW - PT.frame - 12) * U;
@@ -221,7 +252,8 @@ function drawBox(canvas, { speaker, sprite, text, shown, lift, typed, last }) {
     if (last) canvas.drawRect(CK.XYWHRect(mx - 3 * U, my - 3 * U, 7 * U, 7 * U), p);
     else {
       // the ▼, as pixel rows: 8pt wide, narrowing to a point
-      for (let r = 0; r < 4; r++) canvas.drawRect(CK.XYWHRect(mx - (4 - r) * U, my + (r * 2 - 3) * U, (8 - r * 2) * U, 2 * U), p);
+      for (let r = 0; r < 4; r++)
+        canvas.drawRect(CK.XYWHRect(mx - (4 - r) * U, my + (r * 2 - 3) * U, (8 - r * 2) * U, 2 * U), p);
     }
   }
 }
@@ -256,7 +288,9 @@ function drawMenu(canvas, { speaker, options, pick, pressed }) {
 const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
 function heart(canvas, x, y, cell, hex) {
   const p = paint(hex);
-  HEART.forEach((row, r) => [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), p)));
+  HEART.forEach((row, r) =>
+    [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), p)),
+  );
 }
 
 const lerpf = (a, b, k) => a + (b - a) * k;
@@ -301,8 +335,22 @@ function drawCardsOnFloor(canvas, ep, st) {
     const sx = DIRS[dir] * 3 * FW;
     const sy = WALKER_ROWS[sprite] * FH;
     const left = Math.round(x - FW / 2);
-    canvas.drawImageRectOptions(WALKERS, CK.XYWHRect(sx, sy + 15, FW, 8), CK.XYWHRect(left, floorY - 4, FW, 4), NEAREST.filter, NEAREST.mipmap, null);
-    canvas.drawImageRectOptions(WALKERS, CK.XYWHRect(sx, sy, FW, 15), CK.XYWHRect(left, floorY - 18 - lift, FW, 15), NEAREST.filter, NEAREST.mipmap, null);
+    canvas.drawImageRectOptions(
+      WALKERS,
+      CK.XYWHRect(sx, sy + 15, FW, 8),
+      CK.XYWHRect(left, floorY - 4, FW, 4),
+      NEAREST.filter,
+      NEAREST.mipmap,
+      null,
+    );
+    canvas.drawImageRectOptions(
+      WALKERS,
+      CK.XYWHRect(sx, sy, FW, 15),
+      CK.XYWHRect(left, floorY - 18 - lift, FW, 15),
+      NEAREST.filter,
+      NEAREST.mipmap,
+      null,
+    );
   };
   sit(ep.hero.sprite, hx, 'right', 0);
   sit(keeper.sprite, kx, 'left', laughing && Math.floor(t * 8) % 2 === 0 ? 1 : 0);
@@ -334,7 +382,9 @@ function drawCardsOnFloor(canvas, ep, st) {
     const y = floorY - 26 - sinceWin * 10;
     const p = paint(C.accent);
     ['.X.X.', 'XXXXX', '.XXX.', '..X..'].forEach((row, r) =>
-      [...row].forEach((c, cx) => c === 'X' && canvas.drawRect(CK.XYWHRect(Math.round(x) + cx, Math.round(y) + r, 1, 1), p)),
+      [...row].forEach(
+        (c, cx) => c === 'X' && canvas.drawRect(CK.XYWHRect(Math.round(x) + cx, Math.round(y) + r, 1, 1), p),
+      ),
     );
   }
 }
@@ -403,7 +453,17 @@ function compile(ep) {
       }
       const speed = step.speed ?? SPEED;
       const dur = dist / speed;
-      segs.push({ kind: 'npcWalk', t0: t, t1: t + dur, id: step.npcWalk, legs, dist, speed, hide: step.hide, tears: step.tears });
+      segs.push({
+        kind: 'npcWalk',
+        t0: t,
+        t1: t + dur,
+        id: step.npcWalk,
+        legs,
+        dist,
+        speed,
+        hide: step.hide,
+        tears: step.tears,
+      });
       if (!step.together) t += dur + 0.15;
     } else if (step.cards) {
       segs.push({ kind: 'cards', t0: t, t1: t + step.cards });
@@ -425,9 +485,23 @@ function compile(ep) {
       lines.forEach((text, i) => {
         const at = letterTimes(text);
         const typing = at[at.length - 1] + 0.03;
-        const blips = speaker ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null) : [];
+        const blips = speaker
+          ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null)
+          : [];
         const dur = typing + HOLD(text);
-        segs.push({ kind: 'line', t0: t, t1: t + dur, speaker, sprite, text, at, typing, blips, voice, last: i === lines.length - 1 });
+        segs.push({
+          kind: 'line',
+          t0: t,
+          t1: t + dur,
+          speaker,
+          sprite,
+          text,
+          at,
+          typing,
+          blips,
+          voice,
+          last: i === lines.length - 1,
+        });
         t += dur;
       });
       t += 0.25;
@@ -474,8 +548,7 @@ function stateAt(ep, compiled, t) {
         gone: done && s.hide,
         tears: s.tears && !done,
       };
-    }
-    else if (s.kind === 'line' && t < s.t1) {
+    } else if (s.kind === 'line' && t < s.t1) {
       const lt = t - s.t0;
       const shown = s.at.filter((a) => a <= lt).length;
       const blipsSoFar = s.blips.filter((a) => a <= lt).length;
@@ -516,7 +589,14 @@ function drawWorld(canvas, ep, st, t) {
   canvas.save();
   canvas.scale(sk, sk);
   canvas.translate(-Math.round(camX * sk) / sk, -Math.round(camY * sk) / sk);
-  canvas.drawImageRectOptions(map.image, CK.XYWHRect(0, 0, mapW, mapH), CK.XYWHRect(0, 0, mapW, mapH), NEAREST.filter, NEAREST.mipmap, null);
+  canvas.drawImageRectOptions(
+    map.image,
+    CK.XYWHRect(0, 0, mapW, mapH),
+    CK.XYWHRect(0, 0, mapW, mapH),
+    NEAREST.filter,
+    NEAREST.mipmap,
+    null,
+  );
   // flames (world-view.tsx flameLit / flameCore)
   const lit = paint('#FFB04A');
   const core = paint('#FFF4C0');
@@ -558,7 +638,8 @@ function drawWorld(canvas, ep, st, t) {
         ? [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y]
         : [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, ...center(n.x, n.y)];
     });
-  if (!st.cards) ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
+  if (!st.cards)
+    ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
   ents.sort((a, b) => a[4] - b[4]);
   for (const [row, dir, frame, x, y] of ents) {
     canvas.drawImageRectOptions(
@@ -577,7 +658,7 @@ function drawWorld(canvas, ep, st, t) {
     const back = at.dir === 'left' ? 1 : at.dir === 'right' ? -1 : 0;
     const tear = paint('#7FC8FF');
     for (let i = 0; i < 3; i++) {
-      const k = ((t * 3 + i / 3) % 1);
+      const k = (t * 3 + i / 3) % 1;
       const x = at.x + back * (3 + k * 8) + (i - 1);
       const y = at.y - 16 + k * k * 10;
       canvas.drawRect(CK.XYWHRect(Math.round(x), Math.round(y), 1, 2), tear);
@@ -602,7 +683,13 @@ function drawWorld(canvas, ep, st, t) {
     const hole = (cx, cy, r, stops) => {
       const p = new CK.Paint();
       p.setBlendMode(CK.BlendMode.DstOut);
-      const shader = CK.Shader.MakeRadialGradient([cx, cy], r, stops.map((s) => color('#000000', s)), null, CK.TileMode.Clamp);
+      const shader = CK.Shader.MakeRadialGradient(
+        [cx, cy],
+        r,
+        stops.map((s) => color('#000000', s)),
+        null,
+        CK.TileMode.Clamp,
+      );
       p.setShader(shader);
       canvas.drawCircle(cx, cy, r, p);
       shader.delete();
@@ -617,7 +704,14 @@ function drawWorld(canvas, ep, st, t) {
   canvas.restore();
   // the tape, over the world and under the words (12 fps, warm in the Archive)
   const tape = vhsAt(Math.floor(t * 12), map.id === 'archive' ? 1 : 0);
-  canvas.drawImageRectOptions(tape, CK.XYWHRect(0, 0, VW, VH), CK.XYWHRect(0, 0, W, H), CK.FilterMode.Linear, CK.MipmapMode.None, null);
+  canvas.drawImageRectOptions(
+    tape,
+    CK.XYWHRect(0, 0, VW, VH),
+    CK.XYWHRect(0, 0, W, H),
+    CK.FilterMode.Linear,
+    CK.MipmapMode.None,
+    null,
+  );
 }
 
 /**
@@ -680,7 +774,13 @@ function vhsAt(tick, warm) {
     }
   }
   const img = CK.MakeImage(
-    { width: VW, height: VH, alphaType: CK.AlphaType.Premul, colorType: CK.ColorType.RGBA_8888, colorSpace: CK.ColorSpace.SRGB },
+    {
+      width: VW,
+      height: VH,
+      alphaType: CK.AlphaType.Premul,
+      colorType: CK.ColorType.RGBA_8888,
+      colorSpace: CK.ColorSpace.SRGB,
+    },
     buf,
     VW * 4,
   );
@@ -717,7 +817,9 @@ function drawEnd(canvas, ep, t) {
   const type = (start) => Math.max(0, Math.floor((t - start) / 0.045));
   // with the next episode still unwritten, the card just says so
   centred(canvas, ep.next ? 'NEXT TIME' : 'TO BE', 330, CARD_MID, '#FFC940', type(0.1));
-  wrap(CARD_BIG, ep.next ?? 'CONTINUED', W - 320).forEach((line, i) => centred(canvas, line, 460 + i * 120, CARD_BIG, C.card, type(0.4)));
+  wrap(CARD_BIG, ep.next ?? 'CONTINUED', W - 320).forEach((line, i) =>
+    centred(canvas, line, 460 + i * 120, CARD_BIG, C.card, type(0.4)),
+  );
   if (t > 1.3) {
     centred(canvas, '8 PATHS', 800, CARD_LOGO, '#FFFFFF');
     centred(canvas, 'THE HABIT', 890, CARD_MID, '#FF4D5E', type(1.45));
@@ -750,16 +852,34 @@ const EPISODES = {
       endDur: 4.5,
       script: [
         { wait: 0.6 },
-        { walk: [[14, 5], [14, 4]], face: 'right' },
+        {
+          walk: [
+            [14, 5],
+            [14, 4],
+          ],
+          face: 'right',
+        },
         { say: 'keeper', lines: ["Ah, you're on your feet. I'm so glad to finally see you again."] },
         { menu: { speaker: 'The Keeper', options: ['Again?', '...'], pick: 0, hold: 1.0 } },
         { say: 'keeper', lines: ["...You don't remember, do you.", 'Oh dear. Where do I begin?'] },
         ask(0),
-        { say: 'keeper', lines: ["You're in a pocket dimension. I've been keeping you company for the past five hundred years.", "It's a long story."] },
+        {
+          say: 'keeper',
+          lines: [
+            "You're in a pocket dimension. I've been keeping you company for the past five hundred years.",
+            "It's a long story.",
+          ],
+        },
         ask(1),
         { say: 'keeper', lines: ["Let's just say I'm an old friend."] },
         ask(2),
-        { say: 'keeper', lines: ["I know more than I'm saying. I won't pretend I don't.", "But who you were is yours to find. I think you'd rather remember it than be told."] },
+        {
+          say: 'keeper',
+          lines: [
+            "I know more than I'm saying. I won't pretend I don't.",
+            "But who you were is yours to find. I think you'd rather remember it than be told.",
+          ],
+        },
         ask(3),
         { say: 'keeper', lines: ["Well, you could stay here, if you'd like.", 'We could play cards.'] },
         { menu: { speaker: 'The Keeper', options: ['Play cards.', 'Goodbye.'], pick: 0, hold: 1.1 } },
@@ -778,7 +898,14 @@ const EPISODES = {
             "Once you're out there, you can do whatever you'd like.",
           ],
         },
-        { walk: [[14, 11], [13, 11], [13, 12]], face: 'down' },
+        {
+          walk: [
+            [14, 11],
+            [13, 11],
+            [13, 12],
+          ],
+          face: 'down',
+        },
         { wait: 0.2 },
       ],
     };
@@ -798,7 +925,14 @@ const EPISODES = {
       endDur: 4.5,
       script: [
         { wait: 0.5 },
-        { walk: [[12, 9], [10, 9], [10, 10]], face: 'left' },
+        {
+          walk: [
+            [12, 9],
+            [10, 9],
+            [10, 10],
+          ],
+          face: 'left',
+        },
         { say: 'nib', lines: nib.lines },
         ask(0),
         { say: 'nib', lines: ["I'm Nib. What's it to ya?"] },
@@ -809,10 +943,26 @@ const EPISODES = {
         ask(3),
         { say: 'nib', lines: ['...', "I'm telling my MUM!"] },
         { narrate: true, lines: ['Nib bursts into tears and runs off down the road.'] },
-        { npcWalk: 'nib', to: [[9, 9], [9, 8], [-2, 8]], speed: 105, hide: true, tears: true },
+        {
+          npcWalk: 'nib',
+          to: [
+            [9, 9],
+            [9, 8],
+            [-2, 8],
+          ],
+          speed: 105,
+          hide: true,
+          tears: true,
+        },
         { wait: 0.4 },
         // the episode ends as you reach the cocoon in the long grass
-        { walk: [[10, 11], [6, 11]], face: 'left' },
+        {
+          walk: [
+            [10, 11],
+            [6, 11],
+          ],
+          face: 'left',
+        },
         { wait: 1.6 },
       ],
     };
@@ -839,43 +989,86 @@ if (process.env.STILLS) {
     } else drawEnd(canvas, ep, s - compiled.end);
     writeFileSync(out.replace(/\.\w+$/, `-${s}.png`), surface.makeImageSnapshot().encodeToBytes());
   }
-  console.log(`total ${total.toFixed(1)}s`, compiled.segs.filter((x) => x.kind === 'line').map((x) => `${x.t0.toFixed(1)} ${x.speaker ?? '-'}: ${x.text.slice(0, 30)}`).join('\n'));
+  console.log(
+    `total ${total.toFixed(1)}s`,
+    compiled.segs
+      .filter((x) => x.kind === 'line')
+      .map((x) => `${x.t0.toFixed(1)} ${x.speaker ?? '-'}: ${x.text.slice(0, 30)}`)
+      .join('\n'),
+  );
   process.exit(0);
 }
 
-// ---- render the picture
+// ---- render the picture (AUDIO_ONLY=1 keeps the picture already in `out` and only remixes the sound)
 const work = mkdtempSync(join(tmpdir(), 'episode-'));
 const silent = join(work, 'picture.mp4');
-const ff = spawn(
-  'ffmpeg',
-  ['-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', `${FPS}`, '-i', '-',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', silent],
-  { stdio: ['pipe', 'inherit', 'inherit'] },
-);
-const surface = CK.MakeSurface(W, H);
-const canvas = surface.getCanvas();
-const black = (a) => a > 0 && canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#000000', Math.min(1, a)));
-for (let f = 0; f < frames; f++) {
-  const t = f / FPS;
-  if (t < ep.titleDur) {
-    drawTitle(canvas, ep, t);
-    black((t - (ep.titleDur - FADE)) / FADE);
-  } else if (t < compiled.end) {
-    const st = stateAt(ep, compiled, t);
-    drawWorld(canvas, ep, st, t);
-    drawOverlays(canvas, st);
-    black(1 - (t - ep.titleDur) / FADE);
-    black((t - (compiled.end - FADE)) / FADE);
-  } else {
-    drawEnd(canvas, ep, t - compiled.end);
+if (process.env.AUDIO_ONLY) {
+  const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', out, '-an', '-c:v', 'copy', silent], {
+    stdio: 'inherit',
+  });
+  if (r.status !== 0) throw new Error(`AUDIO_ONLY needs an existing ${out}`);
+} else await renderPicture();
+
+async function renderPicture() {
+  const ff = spawn(
+    'ffmpeg',
+    [
+      '-y',
+      '-loglevel',
+      'error',
+      '-f',
+      'rawvideo',
+      '-pix_fmt',
+      'rgba',
+      '-s',
+      `${W}x${H}`,
+      '-r',
+      `${FPS}`,
+      '-i',
+      '-',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'medium',
+      '-crf',
+      '18',
+      '-pix_fmt',
+      'yuv420p',
+      silent,
+    ],
+    { stdio: ['pipe', 'inherit', 'inherit'] },
+  );
+  const surface = CK.MakeSurface(W, H);
+  const canvas = surface.getCanvas();
+  const black = (a) => a > 0 && canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#000000', Math.min(1, a)));
+  for (let f = 0; f < frames; f++) {
+    const t = f / FPS;
+    if (t < ep.titleDur) {
+      drawTitle(canvas, ep, t);
+      black((t - (ep.titleDur - FADE)) / FADE);
+    } else if (t < compiled.end) {
+      const st = stateAt(ep, compiled, t);
+      drawWorld(canvas, ep, st, t);
+      drawOverlays(canvas, st);
+      black(1 - (t - ep.titleDur) / FADE);
+      black((t - (compiled.end - FADE)) / FADE);
+    } else {
+      drawEnd(canvas, ep, t - compiled.end);
+    }
+    const px = canvas.readPixels(0, 0, {
+      width: W,
+      height: H,
+      colorType: CK.ColorType.RGBA_8888,
+      alphaType: CK.AlphaType.Unpremul,
+      colorSpace: CK.ColorSpace.SRGB,
+    });
+    if (!ff.stdin.write(Buffer.from(px.buffer, px.byteOffset, px.byteLength))) await once(ff.stdin, 'drain');
+    if (f % 150 === 0) process.stderr.write(`\r${Math.round((f / frames) * 100)}%`);
   }
-  const px = canvas.readPixels(0, 0, { width: W, height: H, colorType: CK.ColorType.RGBA_8888, alphaType: CK.AlphaType.Unpremul, colorSpace: CK.ColorSpace.SRGB });
-  if (!ff.stdin.write(Buffer.from(px.buffer, px.byteOffset, px.byteLength))) await once(ff.stdin, 'drain');
-  if (f % 150 === 0) process.stderr.write(`\r${Math.round((f / frames) * 100)}%`);
+  ff.stdin.end();
+  await once(ff, 'close');
+  process.stderr.write('\r100%\n');
 }
-ff.stdin.end();
-await once(ff, 'close');
-process.stderr.write('\r100%\n');
 
 // ---- the voices: a blip every other letter, at the game's volume (sounds.ts EFFECT_VOLUME 0.5)
 const RATE = 22050;
@@ -885,18 +1078,7 @@ const pcm = (path) => {
   return new Int16Array(b.buffer.slice(b.byteOffset + at, b.byteOffset + b.length));
 };
 const blips = [1, 2, 3, 4, 5].map((v) => pcm(join(ROOT, `assets/audio/blip-${v}.wav`)));
-/** A sound played slower, so lower: `rate` 0.5 is an octave down. */
-const slowed = (src, rate) => {
-  const out = new Int16Array(Math.floor(src.length / rate));
-  for (let i = 0; i < out.length; i++) {
-    const at = i * rate;
-    const k = Math.floor(at);
-    out[i] = Math.round(src[k] + ((src[k + 1] ?? 0) - src[k]) * (at - k));
-  }
-  return out;
-};
-// voice 0, the Keeper's: the lowest blip, an octave and a bit down
-const VOICE_SOUNDS = [slowed(blips[0], 0.45), ...blips];
+const VOICE_SOUNDS = [pcm(join(ROOT, 'assets/audio/blip-0.wav')), ...blips];
 /** The pick of a menu choice: a short, bright two-note tick. */
 const SELECT = (() => {
   const out = new Int16Array(Math.floor(RATE * 0.09));
@@ -914,7 +1096,7 @@ const place = (sound, at, gain) => {
   for (let i = 0; i < sound.length && start + i < mix.length; i++) mix[start + i] += (sound[i] / 32768) * gain;
 };
 for (const s of compiled.segs) {
-  if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5);
+  if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
 }
 const wav = Buffer.alloc(44 + mix.length * 2);
@@ -937,13 +1119,40 @@ writeFileSync(voices, wav);
 // ---- no music: the voices are the soundtrack (add a sound when posting if you like)
 const r = spawnSync(
   'ffmpeg',
-  ['-y', '-loglevel', 'error', '-i', silent, '-i', voices,
+  [
+    '-y',
+    '-loglevel',
+    'error',
+    '-i',
+    silent,
+    '-i',
+    voices,
     // the game's blips are soft under a phone's own volume; a feed needs them up front
     // Instagram and YouTube reject uploads part-way through without 44.1/48 kHz audio and the index
     // up front (faststart): 48 kHz stereo, BT.709 tags, moov first.
-    '-map', '0:v', '-map', '1:a', '-af', 'volume=14dB,alimiter=limit=0.9', '-c:v', 'copy',
-    '-bsf:v', 'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
-    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', '-shortest', out],
+    '-map',
+    '0:v',
+    '-map',
+    '1:a',
+    '-af',
+    'volume=14dB,alimiter=limit=0.9',
+    '-c:v',
+    'copy',
+    '-bsf:v',
+    'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
+    '-c:a',
+    'aac',
+    '-b:a',
+    '192k',
+    '-ar',
+    '48000',
+    '-ac',
+    '2',
+    '-movflags',
+    '+faststart',
+    '-shortest',
+    out,
+  ],
   { stdio: 'inherit' },
 );
 if (r.status !== 0) throw new Error('ffmpeg mux failed');
