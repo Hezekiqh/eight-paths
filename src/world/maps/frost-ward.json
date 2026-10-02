@@ -1,0 +1,158 @@
+{
+  "id": "frost-ward",
+  "name": "The Frost Ward",
+  "style": "outdoor",
+  "ground": "snow",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "s"
+  ],
+  "art": {
+    "5": "D"
+  },
+  "tiles": [
+    "TTTTTTTTTTTTTTTT^^TTTTTTTTTTTTTTTT",
+    "T...............ss.........n.....T",
+    "T..IIIIIIII.....ss........MMM....T",
+    "T..IIIIIIII..c..ss........MMM....T",
+    "T..IIII5III.....ss........MMM....T",
+    "T......s........ss........MMM....T",
+    "T......s........ss...............T",
+    "TssssssssssssssssssssssssssssssssT",
+    "T................................T",
+    "T.............FFFFF.FFFFF........T",
+    "T..AA..x......F.........F........T",
+    "T..AA.........F.........F.....x..T",
+    "T.............F.........F........T",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 16,
+    "y": 1,
+    "facing": "down"
+  },
+  "examine": {
+    "T": [
+      "Pines, white with frost, even in summer. The Frost Ward keeps its snow. Nobody knows how."
+    ],
+    "I": [
+      "The ice house: thick stone, no windows, a door hung with bone charms."
+    ],
+    "5": [
+      "THE ICE HOUSE. Pilgrims leave their boots outside, and letters by the door."
+    ],
+    "M": [
+      "The drum tower. At dusk the curfew drums start here, and every drum in the city answers."
+    ],
+    "n": [
+      "A tattered banner on the drum tower: not the fist and crown. A white wolf on blue. The old Kaldari standard."
+    ],
+    "F": [
+      "The war-beast pens: war boars, war goats, and a war duck. The duck has its own pen. The duck needs its own pen."
+    ],
+    "A": [
+      "A fur tent, in the old style from the wastes. Smoke from the top, smell of fish."
+    ],
+    "x": [
+      "A fire of pine and old bones. Nobody here ever seems to feel the cold."
+    ],
+    "c": [
+      "A lantern on a post, lit. Somebody keeps it burning."
+    ],
+    "^": [
+      "North, back up to the bazaar."
+    ]
+  },
+  "objects": [
+    {
+      "id": "skadi",
+      "type": "npc",
+      "x": 12,
+      "y": 5,
+      "sprite": "skadi",
+      "facing": "down",
+      "name": "Elder Skadi",
+      "lines": [
+        "Sit, child. I'm the oldest Kaldari in the city. My grandmother's grandmother walked out of the wastes.",
+        "'We walked south until the world ran out of winter.' That's what she said. So we brought a little winter with us."
+      ],
+      "questions": [
+        {
+          "ask": "Tell me about the wastes.",
+          "answer": [
+            "Ice to the edge of the sky. Wolves the size of houses. Nights a month long.",
+            "We were hard because the world was hard. Now the world's soft, and we're hard anyway. Habit."
+          ]
+        },
+        {
+          "ask": "Tell me about the creed.",
+          "answer": [
+            "When I was a girl the creed had three lines. The strong take. The weak give. The king takes most.",
+            "Then one winter, the king said he cast no shadow, and we added a fourth.",
+            "Kings don't usually need new lines, child. I've thought about that a long time."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brug",
+      "type": "npc",
+      "x": 19,
+      "y": 8,
+      "sprite": "brug",
+      "facing": "down",
+      "name": "Brug",
+      "lines": [
+        "War boars! War goats! And Duchess. Duchess is the war duck. Don't look at Duchess.",
+        "Everybody's scared of the boars. Wrong. Fear the duck."
+      ],
+      "questions": [
+        {
+          "ask": "What's so bad about the duck?",
+          "answer": [
+            "Duchess has fought in eleven wars. Nobody's sure which side. Nobody asked her.",
+            "She bit a king once. Not this one. Not yet. She's waiting, I think."
+          ]
+        }
+      ],
+      "wander": 2,
+      "along": "x"
+    },
+    {
+      "id": "ylva",
+      "type": "npc",
+      "x": 9,
+      "y": 6,
+      "sprite": "ylva",
+      "facing": "up",
+      "name": "Frostwife Ylva",
+      "lines": [
+        "Pilgrim. I've come to see the ice. The last ice from the wastes, kept five hundred years.",
+        "It's very cold. That's how you know it's real."
+      ],
+      "wander": 2
+    },
+    {
+      "id": "duck-sign",
+      "type": "sign",
+      "x": 22,
+      "y": 8,
+      "lines": [
+        "BEWARE OF THE DUCK.",
+        "Underneath, in a different hand: (SERIOUSLY.)"
+      ]
+    },
+    {
+      "id": "tower-plaque",
+      "type": "sign",
+      "x": 29,
+      "y": 6,
+      "lines": [
+        "THE DRUM TOWER. At dusk, one drum; then the city answers.",
+        "Carved small at the bottom, old: an open hand. Somebody's tried to scratch it off, and given up."
+      ]
+    }
+  ]
+}

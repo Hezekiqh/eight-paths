@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import Animated, {
@@ -18,6 +18,7 @@ import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
+import { CardGame } from '@/components/world/card-game';
 import { VhsOverlay } from '@/components/world/vhs-overlay';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { pickData, useGameStore } from '@/store';
@@ -27,14 +28,15 @@ import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
-import { COMPANIONS } from '@/story/companions';
+import { turnToTalk, whoIsAt } from '@/world/wander';
+import { COMPANIONS, type CharacterId } from '@/story/companions';
 import {
   FACINGS,
   MAPS,
   TILE,
-  objectAt,
   tileAt,
   tilesOf,
+  withLadder,
   withOpenTiles,
   withoutCharacter,
   withoutGone,
@@ -48,9 +50,11 @@ import {
   howToProgress,
   standing,
   type Arrival,
+  type Requirement,
   type XpTotals,
 } from '@/world/progress';
-import { SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
 import { loreId } from '@/world/lore';
@@ -61,8 +65,9 @@ import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
-import { ATTACKS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
+import { ATTACKS, attackFor, damageFor, drowsyRate, levelHearts, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
+import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { ambienceOf, flamesOn } from '@/world/ambience';
 import {
   ITEMS,
@@ -147,20 +152,33 @@ export default function WorldScreen() {
   // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
   return (
     <View style={styles.root}>
-      <World
-        key={`${hero}-${trip}`}
-        hero={hero}
-        width={width}
-        height={height}
-        onTravel={travel}
-        onMenu={() => setPlaying(false)}
-      />
+      <RoomGuard key={`${hero}-${trip}`} onFail={() => setPlaying(false)}>
+        <World hero={hero} width={width} height={height} onTravel={travel} onMenu={() => setPlaying(false)} />
+      </RoomGuard>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.fade, darkStyle]} />
     </View>
   );
 }
 
 const FADE_MS = 350;
+
+/**
+ * If a room ever fails to draw, the player lands back on the World menu (their
+ * place is saved) instead of the whole app going down. The error is logged.
+ */
+class RoomGuard extends Component<{ children: ReactNode; onFail: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.error('[world room]', error);
+    this.props.onFail();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 /**
  * One character walks the World: the party member picked from their sheet on
@@ -184,7 +202,8 @@ function startFor(
   facing: WorldPosition['facing'];
 } {
   if (saved) {
-    const map = withoutCharacter(MAPS[saved.map], hero);
+    // A ladder (the Maximus) puts up the next fight not yet won.
+    const map = withLadder(withoutCharacter(MAPS[saved.map], hero), useWorldStore.getState().flags);
     const tile = Math.floor((saved.y - 1) / TILE) * map.width + Math.floor(saved.x / TILE);
     if (!map.solid[tile]) return { ...saved, map };
   }
@@ -287,8 +306,8 @@ function World({
     return tilesOf(map, letters).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
   }, [bossOn, map]);
   const flames = useMemo(() => flamesOn(map), [map]);
-  // Hearts for this visit: five, plus one for every four pieces found.
-  const [hearts] = useState(() => maxHearts(arrivalFlags));
+  // Hearts for this visit: five, plus one for every four pieces found (the walker's level adds more below).
+  const [pieceHearts] = useState(() => maxHearts(arrivalFlags));
   const autopilotOn = useSession((s) => s.autopilot);
   const sim = useWorldSim(start, map.npcs);
   const today = useToday();
@@ -307,6 +326,8 @@ function World({
     xpRef.current = xp;
   }, [xp]);
 
+  // The one next thing to do: shown on the World map only, never over the game itself.
+  const goal = useMemo(() => nextGoal(map.id as MapId, discovered, xp), [map, discovered, xp]);
   // Setting foot somewhere puts it on the World map.
   useEffect(() => {
     discover(map.id as MapId);
@@ -369,13 +390,43 @@ function World({
     },
     [save, onTravel],
   );
-  const act = useAct(map, sim, setDialogue, save, xpRef, travel, hero);
+  // Cards with the Keeper: they go on until you walk off, and then he asks if you're leaving.
+  // Kept as the room they were dealt in, so walking through a door ends the game.
+  const [cardsIn, setCardsIn] = useState<string | null>(null);
+  const cards = cardsIn === map.id;
+  const playCards = useCallback(() => setCardsIn(map.id), [map]);
+  const leavingCards = useCallback(
+    () =>
+      setDialogue({
+        speaker: 'The Keeper',
+        lines: ['Leaving so soon?'],
+        choices: [
+          { label: 'Yes.', then: () => setCardsIn(null) },
+          { label: 'No.', then: () => {} },
+        ],
+      }),
+    [],
+  );
+  const act = useAct(map, sim, setDialogue, save, xpRef, travel, hero, playCards);
   const setFlag = useWorldStore((s) => s.setFlag);
   // How the walking character fights: their Path's attack, harder the more real habits they have.
   const heroPath = COMPANIONS[hero].dimension;
   const collection = useCollection();
   const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
+  const hearts = pieceHearts + levelHearts(heroLevel);
+  // Their reach grows a little with every level, too.
+  const heroAttack = useMemo(() => attackFor(heroPath, heroLevel), [heroPath, heroLevel]);
   const gameParty = useGameStore((s) => s.party);
+  // Their own move, if they have one (signatures.ts); else their Path's special at Lv 20.
+  const signature = signatureOf(hero);
+  const habitToday = useGameStore((s) => s.completions.some((c) => c.date === today));
+  const barrageDay = useWorldStore((s) => s.barrageDay);
+  const [shouting, setShouting] = useState<{ name: string; line: string; at: number } | null>(null);
+  const onSignature = useCallback(() => {
+    if (!signature) return;
+    if (signature.shout) setShouting({ name: COMPANIONS[hero].name, line: signature.shout, at: Date.now() });
+    if (signature.kind === 'barrage') useWorldStore.getState().useBarrage(today);
+  }, [signature, hero, today]);
   const giftCharacters = useGameStore((s) => s.giftCharacters);
   // Winning a fight: its scene plays, then its flags are set, anyone who joins you joins, and on you go.
   const finish = useCallback(
@@ -471,10 +522,13 @@ function World({
         boulders={boulders}
         plates={map.plates}
         onPlates={onPlates}
-        attack={ATTACKS[heroPath]}
+        attack={heroAttack}
         damage={damageFor(ATTACKS[heroPath], heroLevel)}
         level={heroLevel}
-        special={SPECIALS[heroPath].kind}
+        special={signature?.kind ?? SPECIALS[heroPath].kind}
+        specialLevel={signature ? SIGNATURE_LEVEL : undefined}
+        barrageReady={habitToday && barrageDay !== today}
+        onSignature={onSignature}
         hearts={hearts}
         chests={chests}
         signs={signs}
@@ -510,7 +564,9 @@ function World({
           }}
         />
       )}
+      {cards && <CardGame moving={sim.moving} paused={dialogue !== null} onMove={leavingCards} />}
       {fightMap.enemies.length > 0 && <Hearts hp={sim.hp} max={hearts} />}
+      {shouting && <SignatureShout key={shouting.at} name={shouting.name} line={shouting.line} />}
       {bossOn && !map.boss?.kind && <Drowsiness sleepy={sim.sleepy} />}
       {dialogue && (
         <DialogueBox
@@ -556,7 +612,7 @@ function World({
           party={walkers}
           hero={hero}
           pieces={heartPieces(liveFlags) % PIECES_PER_HEART}
-          hearts={maxHearts(liveFlags)}
+          hearts={maxHearts(liveFlags) + levelHearts(heroLevel)}
           items={satchel(liveFlags).map((id) => ({ id, name: ITEMS[id]?.name ?? id }))}
           autopilot={
             __DEV__
@@ -585,6 +641,7 @@ function World({
           discovered={discovered}
           width={width}
           height={height}
+          swap={goal.path && goal.path !== heroPath ? swapHint(goal.path, gameParty) : null}
           onClose={() => setMapOpen(false)}
         />
       )}
@@ -603,13 +660,17 @@ function useAct(
   xp: { current: XpTotals },
   onTravel: (to: Arrival) => void,
   hero: HeroId,
+  onCards: () => void,
 ) {
   const busy = useRef(false);
-  return useCallback(() => {
+  const act = useCallback(() => {
     if (busy.current) return;
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
-    const thing = objectAt(map, tx, ty);
+    // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
+    const thing =
+      whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
+      map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
     // a party member may chime in (see banter.ts)
     const banter = thing ? banterFor(map.id, thing.id, Object.values(useGameStore.getState().party)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
@@ -618,7 +679,19 @@ function useAct(
       if (job.path === 'any' || who.dimension === job.path) {
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
-        setDialogue({ speaker: thing.name, lines: job.done.map((l) => l.replace('{name}', who.name)) });
+        // A way out of here that this opens (the checkpoint, the Kaldorium) opens now, not next visit.
+        const opens = EXITS.some((e) => e.from === map.id && e.walk && needsFlag(e.needs, job.flag));
+        const here: Arrival = {
+          map: map.id as MapId,
+          x: Math.floor(sim.x.get() / TILE),
+          y: Math.floor((sim.y.get() - 1) / TILE),
+          facing: FACINGS[facing],
+        };
+        setDialogue({
+          speaker: thing.name,
+          lines: job.done.map((l) => l.replace('{name}', who.name)),
+          then: opens ? () => onTravel(here) : undefined,
+        });
       } else {
         const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party)] : [];
         useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
@@ -628,16 +701,21 @@ function useAct(
     }
     if (thing?.type === 'npc') {
       // they turn to face you
-      const i = map.npcs.indexOf(thing);
-      const turned = [...sim.npcFacing.get()];
-      turned[i] = OPPOSITE[facing];
-      sim.npcFacing.set(turned);
+      sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
       // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =
         thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
       const own = thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
       const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      // In the Archive the Keeper will always deal you a hand of cards (card-game.tsx).
+      const choices =
+        thing.id === 'keeper' && map.id === 'archive'
+          ? [
+              { label: 'Play cards.', then: onCards },
+              { label: 'Goodbye.', then: () => {} },
+            ]
+          : undefined;
       // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
       if (thing.id === 'keeper' && map.id === 'archive') {
         const w = useWorldStore.getState();
@@ -655,12 +733,18 @@ function useAct(
             speaker: thing.name,
             lines: talk.lines.length ? talk.lines : thing.lines,
             questions,
+            choices,
           });
           return;
         }
         w.setFlag('keeper:hello');
       }
-      setDialogue({ speaker: thing.name, lines: after ? thing.after!.lines : [...thing.lines, ...banter], questions });
+      setDialogue({
+        speaker: thing.name,
+        lines: after ? thing.after!.lines : [...thing.lines, ...banter],
+        questions,
+        choices,
+      });
       return;
     }
     if (thing?.type === 'sign') {
@@ -749,16 +833,25 @@ function useAct(
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {
         const { flags, setFlag } = useWorldStore.getState();
-        if (flags.includes('season-1')) setDialogue({ lines: SEASON_END });
+        const home = [
+          { label: 'Go home.', then: () => onTravel(PORTAL_HOME.to) },
+          { label: 'Not yet.', then: () => {} },
+        ];
+        if (flags.includes(SEASON_FLAG)) setDialogue({ lines: [...SEASON_END, ...PORTAL_HOME.lines], choices: home });
         else {
           // The last seal: your real record, the king you left, and the first memory, kept in your Satchel.
           const memory = habitMemory(useGameStore.getState(), toDateKey(new Date()));
-          setFlag('season-1');
+          setFlag(SEASON_FLAG);
           setFlag(keepsakeFlag('first-memory'));
           haptics.celebrate();
           playSound('levelUp');
           setDialogue({
-            lines: [...seasonFinale(memory, flags), `${ITEMS['first-memory'].name} is in your Satchel (pause).`],
+            lines: [
+              ...seasonFinale(memory, flags),
+              `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
+              ...PORTAL_HOME.lines,
+            ],
+            choices: home,
           });
         }
       } else
@@ -831,11 +924,46 @@ function useAct(
     }
     const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero]);
+  }, [map, sim, setDialogue, save, xp, onTravel, hero, onCards]);
+  // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
+  return useCallback(() => {
+    try {
+      act();
+    } catch (e) {
+      console.error('[world act]', e);
+      setDialogue({ lines: ['Nothing happens.'] });
+    }
+  }, [act, setDialogue]);
+}
+
+/** True if a way out needs this story flag (on its own, or as one of several). */
+function needsFlag(needs: Requirement, flag: string): boolean {
+  if (needs.kind === 'flag') return needs.flag === flag;
+  if (needs.kind === 'all') return needs.of.some((r) => needsFlag(r, flag));
+  return false;
+}
+
+/** Who to walk as for a job only one Path can do. */
+function swapHint(path: Dimension, party: Record<Dimension, CharacterId>): string {
+  const walker = walkersFor(party).find((h) => COMPANIONS[h].dimension === path);
+  const name = walker ? COMPANIONS[walker].name : `a ${CLASSES[path].className}`;
+  return `Walk as ${name} (${CLASSES[path].className}): pause, then Party`;
 }
 
 const styles = StyleSheet.create({
   drowsy: { position: 'absolute', width: 180, gap: 2 },
+  shout: {
+    position: 'absolute',
+    alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8EACB',
+    borderColor: '#2E1F14',
+    borderWidth: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  shoutName: { color: '#9A3412', fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
+  shoutLine: { color: '#2E1F14', fontFamily: fonts.dialogue, fontSize: 20 },
   drowsyLabel: { color: '#E8D8F0', fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
   drowsyTrack: { height: 8, backgroundColor: 'rgba(20, 14, 28, 0.6)', borderWidth: 2, borderColor: '#E8D8F0' },
   drowsyFill: { height: '100%', backgroundColor: '#B89AE0' },
@@ -864,6 +992,27 @@ function Heart({ index, hp }: { index: number; hp: SharedValue<number> }) {
   return (
     <Animated.View style={style}>
       <SymbolView name="heart.fill" tintColor="#E0454F" size={20} />
+    </Animated.View>
+  );
+}
+
+/** A signature move's shout, over the hero's head for a moment, then gone. */
+function SignatureShout({ name, line }: { name: string; line: string }) {
+  const insets = useSafeAreaInsets();
+  const shown = useSharedValue(0);
+  useEffect(() => {
+    shown.set(withTiming(1, { duration: 120 }));
+    shown.set(withDelay(1500, withTiming(0, { duration: 300 })));
+  }, [shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shown.get(), transform: [{ scale: 0.9 + 0.1 * shown.get() }] }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.shout, { top: Math.max(insets.top, 12) + 36 }, style]}
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={`${name}: ${line}`}>
+      <Text style={styles.shoutName}>{name.toUpperCase()}</Text>
+      <Text style={styles.shoutLine}>{line}</Text>
     </Animated.View>
   );
 }

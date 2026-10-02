@@ -1,0 +1,166 @@
+{
+  "id": "barracks-ward",
+  "name": "The Barracks Ward",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "s"
+  ],
+  "art": {
+    "5": "D",
+    "6": "D",
+    "7": "D"
+  },
+  "tiles": [
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "M..IIIIII....IIIIII....IIIIIIII....M",
+    "M..IIIIII....IIIIII....IIIIIIII.n..M",
+    "M..II5III....II6III....III7IIII....M",
+    "M....s.........s..........s........M",
+    "M....s.........s..........s....qq..M",
+    "<ssssssssssssssssssssssssssssssssssM",
+    "M...........................c......M",
+    "M..FFFFFFFFFF..FFFFFFFFFF..........M",
+    "M..F....................F........n.M",
+    "M..F..y..y........y..y..F..........M",
+    "M..F........y...........F..........M",
+    "M..F....................F..........M",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+  ],
+  "spawn": {
+    "x": 1,
+    "y": 6,
+    "facing": "right"
+  },
+  "examine": {
+    "M": [
+      "The ward wall. Painted along it, every few feet: STRONGER TODAY. Under some, smaller: (than what?)"
+    ],
+    "I": [
+      "Long stone barracks, shutters open, full of snoring."
+    ],
+    "5": [
+      "THE FURY HALL. From inside: drums, and a lot of shouting, in time."
+    ],
+    "6": [
+      "THE STITCHERY. A sign on the door: WALK IT OFF. Under it: (DOCTOR'S ORDERS)."
+    ],
+    "7": [
+      "THE IRONHOUSE. Bunks, kit, and the quartermaster. KNOCK. FILL IN THE KNOCKING FORM FIRST."
+    ],
+    "F": [
+      "The drill yard's rail. Polished smooth by forty years of leaning."
+    ],
+    "y": [
+      "A training dummy. Straw and sacking, very battered."
+    ],
+    "n": [
+      "The fist crushing the crown."
+    ],
+    "q": [
+      "A barrel of water for the drill yard. Somebody has written KALDOR'S on it in chalk, and somebody else has added 'WATER'."
+    ],
+    "c": [
+      "A lantern on a post, lit. Somebody keeps it burning."
+    ],
+    "<": [
+      "The way west, back to the bazaar."
+    ]
+  },
+  "objects": [
+    {
+      "id": "ox",
+      "type": "npc",
+      "x": 13,
+      "y": 10,
+      "sprite": "ox",
+      "facing": "down",
+      "name": "Drillmaster Ox",
+      "lines": [
+        "ONE. TWO. …WHAT. FOUR.",
+        "ONE. TWO. …WHAT COMES AFTER TWO. FOUR.",
+        "Nobody's ever told him. Nobody's brave enough."
+      ],
+      "questions": [
+        {
+          "ask": "It's three.",
+          "answer": [
+            "…",
+            "THREE.",
+            "THREE. THREE. ONE TWO THREE FOUR.",
+            "Forty years. FORTY YEARS. You there! Recruit! You've done more for this yard than any of 'em."
+          ]
+        }
+      ],
+      "wander": 2,
+      "along": "x"
+    },
+    {
+      "id": "rolf",
+      "type": "npc",
+      "x": 7,
+      "y": 11,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Recruit Rolf",
+      "lines": [
+        "I joined up to impress a girl.",
+        "She joined up too. She's my sergeant now. I've never been less impressive."
+      ],
+      "wander": 1
+    },
+    {
+      "id": "kaya",
+      "type": "npc",
+      "x": 8,
+      "y": 11,
+      "sprite": "kaya",
+      "facing": "up",
+      "name": "Sergeant Kaya",
+      "lines": [
+        "Rolf. Rolf, you're holding it upside down.",
+        "…He joined to impress me. It's working, a bit. Don't tell him."
+      ]
+    },
+    {
+      "id": "gorm",
+      "type": "npc",
+      "x": 28,
+      "y": 9,
+      "sprite": "gorm",
+      "facing": "left",
+      "name": "Gorm the Polite",
+      "lines": [
+        "Sorry. Sorry, I'm going to headbutt you now. Sorry.",
+        "…Sorry, I've changed my mind. You look nice. Sorry."
+      ],
+      "wander": 2
+    },
+    {
+      "id": "bruni",
+      "type": "npc",
+      "x": 31,
+      "y": 10,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Bruni",
+      "lines": [
+        "This is my pet rock. His name's Kaldor.",
+        "Not after the king. It's a coincidence. He was called Kaldor before the king was."
+      ],
+      "wander": 2
+    },
+    {
+      "id": "dummy-sign",
+      "type": "sign",
+      "x": 12,
+      "y": 9,
+      "lines": [
+        "THIS DUMMY HAS WON 214 BOUTS.",
+        "It's the one in front of you. It looks very pleased with itself."
+      ]
+    }
+  ]
+}

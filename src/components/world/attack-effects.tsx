@@ -9,13 +9,13 @@ import type { Attack } from '@/world/combat';
 //
 // `flash` is the last swing or burst: [strike x, strike y, radius, time left,
 // your x, your y, facing, duration]. `bolts` are in flight: [x, y, dx, dy,
-// travelled], per bolt.
+// travelled, power, turns left, hit, size], per bolt (size 3: Tamsin's huge wrench).
 
 /** Facing (down, up, left, right) as an angle, in radians. */
 const FACING_ANGLE = [Math.PI / 2, -Math.PI / 2, Math.PI, 0];
 
 /** How many bolts can be drawn in flight at once. */
-const MAX_BOLTS = 6;
+const MAX_BOLTS = 8;
 
 type FlashProps = { flash: SharedValue<number[]>; color: string; range: number };
 
@@ -146,7 +146,7 @@ function Bolt({ index, bolts, attack }: { index: number; bolts: SharedValue<numb
     const heading = Math.atan2(b[3], b[2]);
     // Coins and wrenches spin as they fly; fire and arrows point where they're going.
     const spin = attack.look === 'wrench' ? b[4] / 5 : heading;
-    return [{ translateX: b[0] }, { translateY: b[1] }, { rotate: spin }];
+    return [{ translateX: b[0] }, { translateY: b[1] }, { rotate: spin }, { scale: b[8] ?? 1 }];
   });
   const coin = useDerivedValue(() => {
     const b = bolts.get()[index];

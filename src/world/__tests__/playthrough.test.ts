@@ -89,9 +89,11 @@ function play() {
         if (npc.job && near(map, seen, npc.x, npc.y)) add(npc.job.flag);
       }
       if (map.platesFlag) add(map.platesFlag);
-      if (map.boss && seen.size > 0) {
+      // A ladder is a fight a visit, one after another; climbing it here means winning every rung.
+      for (const boss of map.ladder ?? (map.boss ? [map.boss] : [])) {
+        if (seen.size === 0) continue;
         // Like the game: winning sets only the flags its scene hands out.
-        const scene = winScene(id, map.boss.flag, true);
+        const scene = winScene(id, boss.flag, true);
         const outcomes = [scene?.outcome, ...(scene?.choices?.map((c) => c.outcome) ?? [])];
         for (const o of outcomes) {
           for (const f of o?.flags ?? []) add(f);
@@ -121,7 +123,9 @@ describe('a run through Season 1', () => {
   });
 
   it('wins every boss fight for good, the King included', () => {
-    const bosses = Object.values(MAPS).flatMap((m) => (m.boss ? [m.boss.flag] : []));
+    const bosses = Object.values(MAPS).flatMap((m): string[] =>
+      m.ladder ? m.ladder.map((b) => b.flag) : m.boss ? [m.boss.flag] : [],
+    );
     expect(bosses.filter((f) => !run.flags.has(f))).toEqual([]);
   });
 

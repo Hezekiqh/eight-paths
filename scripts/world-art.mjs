@@ -441,6 +441,66 @@ const O = {
   canvasDark: '#A89868',
 };
 
+/** Kaldor's statues: stone lit from the upper left, an outline, the gold of his vanity, moss. */
+const KS = {
+  o: '#2A2422',
+  d: '#4A4442',
+  m: '#6A6260',
+  l: '#8A8280',
+  h: '#ACA5A0',
+  g: '#C8963A',
+  G: '#F0C860',
+  b: '#8A6420',
+  w: '#4E6E34',
+};
+// prettier-ignore
+const KALDOR_STATUE = [
+  '.......o........................',
+  '......olo.o...........o.........',
+  '...ooooloolo..ooooo..olo........',
+  '..ohlldlo.oloohllmmoomo.........',
+  '.ohllmdlo..olhlllmmdmo..........',
+  '.ohlmmdlo...odddddddo...........',
+  '.ohlmddlo....olohomo............',
+  '..ohmddlo....ohllmmo............',
+  '...ooooloohlmohllmmomddo........',
+  '......oloohlmolhlmdolmddo.......',
+  '......olohlmolmolmomdoldo.......',
+  '.....ohllmoolmmohomddoldo.......',
+  '.....ollmmo.olmmmmddoolmdo......',
+  '......olo...oddgGgddoomddo......',
+  '......olo...olmmlmddo.ooo.......',
+  '......olo..olmomlodddo..........',
+  '......olo..ohlmdoolmdo..........',
+  '......olo..ohlmdo.olmdo.........',
+  '......olo..ohlmdo..olmdo........',
+  '......olo..ohlmdo..ommmdo.......',
+  '......olo.ohllmdo..obgGgbo......',
+  '......ooo.ooooooo..obgbgbbo.....',
+];
+
+// prettier-ignore
+const HEADLESS_STATUE = [
+  '......oo.o......',
+  '.....ohhohho....',
+  '...ooohmmmdooo..',
+  '..ohlllmmmmddo..',
+  '..ohlolmmmoddo..',
+  '..ohlolmmmoddo..',
+  '..ollolmmdoddo..',
+  '...oooldmdooo...',
+  '....olmdmmdo....',
+  '...olmdmmmddo...',
+];
+
+/** Snow instead of grass (a map with ground: 'snow'). */
+const SNOW = {
+  grass: ['#D8E0EA', '#CED8E4', '#E2E8F0'],
+  blade: '#B8C6D4',
+  grassDark: '#A8B6C6',
+  flower: ['#FFFFFF', '#F0F4FA', '#C8D6E6'],
+};
+
 function tree(g, x, y) {
   // A round canopy that spills a little past its tile, over a short trunk.
   box(g, x + 6, y + 10, 4, 6, O.trunk);
@@ -510,6 +570,8 @@ const OUTDOOR_ART = {
   },
   '>'() {},
   '<'() {},
+  '^'() {}, // road ends: the way north and the way south
+  _() {},
   H(g, x, y, m) {
     // A cottage: thatched roof over the top rows, timber and plaster on the bottom row.
     const wall = m.at(0, 1) !== 'H' && m.at(0, 1) !== 'D' && m.at(0, 1) !== 'd';
@@ -620,7 +682,7 @@ const OUTDOOR_ART = {
   s() {}, // cobbles are laid with the roads
   I(g, x, y, m) {
     // A stone house: slate roof over the top rows, stone wall with a shuttered window below.
-    const wall = !'IDd5673'.includes(m.at(0, 1) ?? '');
+    const wall = !'IDd567384'.includes(m.at(0, 1) ?? '');
     if (!wall) {
       box(g, x, y, TILE, TILE, O.slate);
       for (let j = 3; j < TILE; j += 4) box(g, x, y + j, TILE, 1, O.slateDark);
@@ -634,24 +696,98 @@ const OUTDOOR_ART = {
     box(g, x, y + 14, TILE, 2, O.stoneDark);
   },
   K(g, x, y, m) {
-    // Kaldor's colossal statue, drawn once across its 2x2 tiles.
+    // Kaldor's colossal statue, drawn once across its 2x2 tiles: horned helm,
+    // beard, fur mantle, his axe planted beside him and one boot on a broken
+    // crown, on a plinth with a gilded plaque. Kaldorhold's second statue faces
+    // the first, admiringly.
     if (m.at(-1, 0) === 'K' || m.at(0, -1) === 'K') return;
-    box(g, x + 6, y + 2, 20, 30, O.stoneDark);
-    ellipse(g, x + 16, y + 8, 5, 5, O.stoneLight);
-    box(g, x + 9, y + 12, 14, 12, O.stoneLight);
-    box(g, x + 4, y + 13, 5, 3, O.stoneLight);
-    box(g, x + 23, y + 13, 5, 3, O.stoneLight);
-    box(g, x + 10, y + 24, 5, 6, O.stoneLight);
-    box(g, x + 17, y + 24, 5, 6, O.stoneLight);
-    ellipse(g, x + 22, y + 28, 4, 2, P.rugGold);
+    const mirror = [2, 3, 4, 5, 6, 7, 8, 9, 10].some((i) => m.at(-i, 0) === 'K');
+    // Its shadow on the ground, falling down and to the right.
+    for (let j = 21; j < 32; j++)
+      for (let i = 5; i < 32; i++) {
+        const c = g[y + j]?.[x + i];
+        if (c) g[y + j][x + i] = mix(c, [16, 12, 10], 0.4);
+      }
+    // The plinth.
+    box(g, x + 3, y + 19, 26, 1, KS.o);
+    box(g, x + 3, y + 20, 26, 2, KS.l);
+    box(g, x + 4, y + 20, 3, 2, KS.h);
+    box(g, x + 3, y + 22, 26, 1, KS.h);
+    put(g, x + 3, y + 20, KS.o);
+    put(g, x + 3, y + 21, KS.o);
+    put(g, x + 3, y + 22, KS.o);
+    put(g, x + 28, y + 20, KS.o);
+    put(g, x + 28, y + 21, KS.o);
+    put(g, x + 28, y + 22, KS.o);
+    box(g, x + 2, y + 23, 28, 1, KS.o);
+    box(g, x + 2, y + 24, 28, 4, KS.m);
+    box(g, x + 3, y + 24, 1, 4, KS.l);
+    box(g, x + 26, y + 24, 3, 4, KS.d);
+    box(g, x + 2, y + 24, 1, 4, KS.o);
+    box(g, x + 29, y + 24, 1, 4, KS.o);
+    box(g, x + 1, y + 28, 30, 1, KS.o);
+    box(g, x + 1, y + 29, 30, 1, KS.l);
+    put(g, x + 2, y + 29, KS.h);
+    box(g, x + 27, y + 29, 3, 1, KS.d);
+    put(g, x + 1, y + 29, KS.o);
+    put(g, x + 30, y + 29, KS.o);
+    box(g, x + 1, y + 30, 30, 1, KS.o);
+    // The plaque, and a crack the masons hoped he wouldn't notice.
+    box(g, x + 11, y + 24, 10, 3, KS.b);
+    box(g, x + 12, y + 25, 8, 1, KS.g);
+    put(g, x + 12, y + 25, KS.G);
+    for (let i = 13; i < 19; i += 2) put(g, x + i, y + 25, KS.b);
+    put(g, x + 7, y + 24, KS.d);
+    put(g, x + 7, y + 25, KS.d);
+    put(g, x + 8, y + 26, KS.d);
+    put(g, x + 8, y + 27, KS.d);
+    // Moss at the foot.
+    for (const [i, j] of [[2, 29], [3, 29], [4, 29], [2, 27], [3, 27], [27, 29], [24, 29]]) put(g, x + i, y + j, KS.w);
+    // Kaldor himself.
+    KALDOR_STATUE.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch !== '.') put(g, x + (mirror ? 31 - i : i), y + j, KS[ch]);
+      }),
+    );
   },
   Z(g, x, y) {
-    // The headless king.
-    box(g, x + 3, y + 12, 10, 4, O.stoneDark);
-    box(g, x + 4, y + 3, 8, 10, O.stone);
-    box(g, x + 2, y + 4, 3, 3, O.stone);
-    box(g, x + 11, y + 4, 3, 3, O.stone);
-    box(g, x + 7, y + 2, 2, 1, O.stoneDark);
+    // The headless king: a robed statue snapped off at the neck, the break
+    // still pale, on a plinth whose plaque has been pried off.
+    for (let i = 2; i < 16; i++) {
+      const c = g[y + 15]?.[x + i];
+      if (c) g[y + 15][x + i] = mix(c, [16, 12, 10], 0.4);
+    }
+    for (let j = 10; j < 15; j++) {
+      const c = g[y + j]?.[x + 15];
+      if (c) g[y + j][x + 15] = mix(c, [16, 12, 10], 0.4);
+    }
+    box(g, x + 2, y + 9, 12, 1, KS.o);
+    box(g, x + 2, y + 10, 12, 1, KS.l);
+    box(g, x + 3, y + 10, 2, 1, KS.h);
+    put(g, x + 2, y + 10, KS.o);
+    put(g, x + 13, y + 10, KS.o);
+    box(g, x + 1, y + 11, 14, 1, KS.o);
+    box(g, x + 1, y + 12, 14, 2, KS.m);
+    box(g, x + 2, y + 12, 1, 2, KS.l);
+    box(g, x + 12, y + 12, 2, 2, KS.d);
+    put(g, x + 1, y + 12, KS.o);
+    put(g, x + 1, y + 13, KS.o);
+    put(g, x + 14, y + 12, KS.o);
+    put(g, x + 14, y + 13, KS.o);
+    box(g, x + 1, y + 14, 14, 1, KS.o);
+    // Where the plaque was: a pale patch, four nail holes, a pry mark.
+    box(g, x + 5, y + 12, 6, 2, KS.l);
+    for (const [i, j] of [[5, 12], [10, 12], [5, 13], [10, 13]]) put(g, x + i, y + j, KS.o);
+    put(g, x + 8, y + 13, KS.d);
+    put(g, x + 4, y + 13, KS.w);
+    // Chips of the head, never swept up.
+    put(g, x + 11, y + 10, KS.d);
+    put(g, x + 12, y + 10, KS.m);
+    HEADLESS_STATUE.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch !== '.') put(g, x + i, y + j, KS[ch]);
+      }),
+    );
   },
   X(g, x, y) {
     // An iron cage.
@@ -712,6 +848,55 @@ const OUTDOOR_ART = {
     for (let i = 0; i < 6; i++) put(g, x + 4 + Math.floor(hash(x, y, i) * 9), y + 7 + Math.floor(hash(y, x, i) * 8), '#6A4AB0');
     box(g, x, y + 2, TILE, 2, O.stoneLight);
   },
+  m(g, x, y) {
+    // A market stall: a striped awning over a plank counter piled with wares.
+    for (let i = 0; i < TILE; i += 4) box(g, x + i, y + 1, 2, 6, '#B3261E');
+    for (let i = 2; i < TILE; i += 4) box(g, x + i, y + 1, 2, 6, O.plaster);
+    box(g, x, y + 7, TILE, 1, O.beam);
+    box(g, x + 1, y + 8, 1, 8, O.beam);
+    box(g, x + 14, y + 8, 1, 8, O.beam);
+    box(g, x + 1, y + 11, 14, 3, O.trunk);
+    for (let i = 0; i < 4; i++) box(g, x + 2 + i * 3, y + 9, 2, 2, ['#E8D26A', '#C86A8A', '#E8E0D0', '#8A6A44'][(i + Math.floor(hash(x, y, 1) * 4)) % 4]);
+  },
+  y(g, x, y) {
+    // A training dummy: straw on a post, with a crossbar for arms.
+    box(g, x + 7, y + 6, 2, 10, O.trunk);
+    box(g, x + 2, y + 7, 12, 2, O.trunk);
+    ellipse(g, x + 8, y + 9, 3, 4, '#C8A860');
+    ellipse(g, x + 8, y + 3, 3, 3, '#C8A860');
+    put(g, x + 7, y + 3, O.trunkDark);
+    put(g, x + 9, y + 3, O.trunkDark);
+  },
+  q(g, x, y) {
+    // A barrel, iron-hooped.
+    ellipse(g, x + 8, y + 9, 5, 6, O.trunk);
+    box(g, x + 3, y + 6, 11, 1, P.iron);
+    box(g, x + 3, y + 12, 11, 1, P.iron);
+    ellipse(g, x + 8, y + 4, 4, 2, '#6A4A2A');
+  },
+  U(g, x, y, m) {
+    // The Kaldorium Maximus: tall sandstone, arched windows up top, dark arches at the bottom.
+    box(g, x, y, TILE, TILE, '#B89A6A');
+    for (let j = 0; j < TILE; j += 5) box(g, x, y + j, TILE, 1, '#9A7E52');
+    const bottom = m.at(0, 1) !== 'U' && m.at(0, 1) !== '8';
+    if (m.at(0, -1) !== 'U') box(g, x, y, TILE, 3, '#D8BC8A');
+    if (bottom) {
+      box(g, x + 3, y + 5, 10, 11, '#2A1E14');
+      ellipse(g, x + 8, y + 5, 5, 3, '#2A1E14');
+      box(g, x, y + 14, TILE, 2, '#7A6040');
+    } else if (m.at(0, -1) === 'U') {
+      box(g, x + 5, y + 5, 6, 7, '#5A4630');
+      ellipse(g, x + 8, y + 5, 3, 2, '#5A4630');
+    }
+  },
+  8(g, x, y, m) {
+    // The Maximus's great gate: a wide dark arch with a red banner above.
+    OUTDOOR_ART.U(g, x, y, { at: (dx, dy) => (dy < 0 ? m.at(dx, dy) : 'U') });
+    box(g, x, y + 4, TILE, 12, '#140C08');
+    if (m.at(-1, 0) !== '8') box(g, x, y + 4, 2, 12, '#D8BC8A');
+    if (m.at(1, 0) !== '8') box(g, x + 14, y + 4, 2, 12, '#D8BC8A');
+    box(g, x + 3, y, 10, 4, '#6A1216');
+  },
   Q(g, x, y) {
     // A faceless statue, toppled face-down in the moss.
     box(g, x + 2, y + 7, 12, 6, O.stoneDark);
@@ -736,21 +921,23 @@ function drawOutdoor(map) {
   const W = rows[0].length;
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
-  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>' || at(tx, ty) === '<' || at(tx, ty) === 's';
+  const isPath = (tx, ty) => ',><^_s'.includes(at(tx, ty));
+  // The Frost Ward keeps its snow: the horde brought winter with them, a little of it.
+  const ground = map.ground === 'snow' ? SNOW : O;
 
   // Grass everywhere, in soft patches.
   for (let y = 0; y < g.h; y++)
     for (let x = 0; x < g.w; x++) {
-      let c = hex(O.grass[Math.floor(hash(Math.floor(x / 6), Math.floor(y / 5), 4) * 3)]);
-      if (hash(x, y, 5) < 0.05) c = hex(O.blade);
-      else if (hash(x, y, 6) < 0.04) c = hex(O.grassDark);
+      let c = hex(ground.grass[Math.floor(hash(Math.floor(x / 6), Math.floor(y / 5), 4) * 3)]);
+      if (hash(x, y, 5) < 0.05) c = hex(ground.blade);
+      else if (hash(x, y, 6) < 0.04) c = hex(ground.grassDark);
       g[y][x] = c;
     }
   // Wildflowers dotted about.
   for (let i = 0; i < W * H * 0.6; i++) {
     const x = Math.floor(hash(i, 1, 7) * g.w);
     const y = Math.floor(hash(i, 2, 7) * g.h);
-    put(g, x, y, O.flower[i % 3]);
+    put(g, x, y, ground.flower[i % 3]);
   }
 
   // The road: packed dirt with soft, grassy edges.
@@ -832,7 +1019,7 @@ const DUNGEON_ART = {
     // Stone wall: a face where the floor meets it, a top view elsewhere.
     // A hole broken sideways through the wall below is still the same wall, seen from above.
     const sideHole = m.at(0, 1) === 'o' && 'WBCcRGE#'.includes(m.at(0, 2));
-    const face = !sideHole && m.at(0, 1) !== 'W' && m.at(0, 1) !== '#' && m.at(0, 1) !== 'B' && m.at(0, 1) !== 'C' && m.at(0, 1) !== 'c';
+    const face = !sideHole && !'W#BCcf'.includes(m.at(0, 1));
     if (!face) {
       box(g, x, y, TILE, TILE, DG.wallDark);
       box(g, x, y, TILE, 1, DG.mortar);
@@ -1003,6 +1190,61 @@ const DUNGEON_ART = {
     box(g, x + 18, y + 6, 12, 10, DG.banner);
     box(g, x + 18, y + 6, 12, 1, DG.gold);
   },
+  m(g, x, y, m) {
+    // Big Tova's bar: a long counter, sixty feet of it, and mugs that never spill.
+    box(g, x, y + 3, TILE, 10, DG.timber);
+    box(g, x, y + 3, TILE, 2, '#7A5A3A');
+    box(g, x, y + 12, TILE, 1, DG.timberDark);
+    if (hash(x, y, 2) < 0.6) {
+      box(g, x + 5, y, 4, 5, '#C8B070');
+      box(g, x + 5, y, 4, 1, '#F4F0EA');
+      box(g, x + 9, y + 1, 1, 3, '#C8B070');
+    }
+  },
+  q(g, x, y) {
+    ellipse(g, x + 8, y + 9, 5, 6, DG.timber);
+    box(g, x + 3, y + 6, 11, 1, DG.iron);
+    box(g, x + 3, y + 12, 11, 1, DG.iron);
+    ellipse(g, x + 8, y + 4, 4, 2, DG.timberDark);
+  },
+  i(g, x, y, m) {
+    // The last block of ice from the wastes, drawn once across its 2x2 tiles.
+    if (m.at(-1, 0) === 'i' || m.at(0, -1) === 'i') return;
+    box(g, x + 3, y + 26, 26, 4, DG.wallDark);
+    box(g, x + 5, y + 4, 22, 23, '#A8D0E8');
+    box(g, x + 5, y + 4, 22, 3, '#E0F0FA');
+    box(g, x + 7, y + 9, 3, 14, '#E0F0FA');
+    box(g, x + 22, y + 8, 2, 16, '#7AA8C8');
+  },
+  u(g, x, y) {
+    // A war drum: hide stretched over a barrel, painted in three stripes.
+    ellipse(g, x + 8, y + 10, 6, 5, '#6A1216');
+    box(g, x + 2, y + 8, 13, 1, '#E8E0D0');
+    box(g, x + 2, y + 11, 13, 1, '#E8E0D0');
+    ellipse(g, x + 8, y + 5, 6, 3, '#D8C8A0');
+  },
+  f(g, x, y, m) {
+    // A portrait of Kaldor, each more flattering than the last.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 2, y + 1, 12, 12, DG.gold);
+    box(g, x + 3, y + 2, 10, 10, '#4A3A5A');
+    // The fortieth, last on the wall, is just the sun ('Kaldor, Roughly').
+    const sun = m.at(1, 0) !== 'f' && m.at(2, 0) === '#';
+    if (sun) {
+      ellipse(g, x + 8, y + 7, 3, 3, '#FFD27A');
+    } else {
+      ellipse(g, x + 8, y + 6, 2, 2, '#D8A880');
+      box(g, x + 6, y + 8, 5, 4, '#6A1216');
+      box(g, x + 6, y + 3, 5, 1, '#FFC940');
+    }
+  },
+  Z(g, x, y) {
+    // A small statue of Kaldor on a plinth (one of many).
+    box(g, x + 3, y + 12, 10, 4, DG.wallDark);
+    box(g, x + 5, y + 5, 6, 7, DG.wallLight);
+    ellipse(g, x + 8, y + 3, 2, 2, DG.wallLight);
+    box(g, x + 6, y + 1, 5, 1, DG.gold);
+  },
   k(g, x, y) {
     // A candle on an iron stand: rest here.
     box(g, x + 7, y + 7, 2, 9, P.iron);
@@ -1040,7 +1282,7 @@ function drawDungeon(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const c = at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;
@@ -1127,6 +1369,50 @@ const WALKERS = {
   chaplain: { robe: true, top: '#8A94B8', shade: '#6A7498', boots: '#6A7498', skin: '#C8D0E8', hair: ['bald', '#B8C0D8'], collar: '#E8ECF8', lantern: true },
   maelis: { top: '#7A7A8A', shade: '#5A5A6A', legs: '#4A4A58', boots: '#3A2A20', belt: '#8A6A3A', hair: ['bun', '#4A3A2A'], cloak: '#4A4A5A' },
   lamplighter: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['hood', '#4A3228'], lantern: true },
+  // Old Town street life (KINGDOM-EXPANSION.md): the brawlers, their bookie and medic, a patrol, a grandmother, a boulder.
+  durn: { top: '#7A3A2A', shade: '#5A2A1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#C4442A'], beard: '#C4442A' },
+  haskel: { top: '#4A5A3A', shade: '#36442A', legs: '#3A2A20', boots: '#2A1A12', belt: '#2A1A12', skin: '#C89870', hair: ['short', '#2A1A12'], beard: '#2A1A12' },
+  bett: { top: '#8A6A9A', shade: '#6A4E7A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
+  hild: { robe: true, top: '#E8E0D0', shade: '#C8B8A0', boots: '#4A3A2A', belt: '#B3261E', hair: ['veil', '#6A5A4A'], collar: '#B3261E' },
+  drummer: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#C8B070', skin: '#D8A880', hair: ['hood', '#6A1216'], beads: '#E8E0D0' },
+  gudrun: { robe: true, top: '#5A4A3A', shade: '#42362A', boots: '#2A1A12', belt: '#8A3A2A', skin: '#E0B898', hair: ['bun', '#E8E4E0'], beads: '#E8E0D0' },
+  hamm: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['bald', '#D8A880'], boulder: true },
+  // The south road: a knitting mother, a farmer with a spoon, a whispering sergeant, the watchman, a road-block raider.
+  marta: { robe: true, top: '#8A5A3A', shade: '#6A4428', boots: '#3A2A20', hair: ['bun', '#6A4028'], apron: '#C8B890' },
+  dobb: { top: '#7A8A5A', shade: '#5A6A40', legs: '#5A4A3A', boots: '#3A2A1A', belt: '#4A3020', hair: ['short', '#B8B0A8'], beard: '#B8B0A8', apron: '#8A6A40' },
+  bellow: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#D8A880', hair: ['short', '#1A1210'], cloak: '#4A1E20', sword: true },
+  orrin: { top: '#5A6A8A', shade: '#42506A', legs: '#3A4050', boots: '#2A2A30', belt: '#C8B070', hair: ['short', '#9A9490'], beard: '#9A9490', cloak: '#2A3450', back: 'sword' },
+  grub: { top: '#5A3A2A', shade: '#42281E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], sword: true },
+  // Kaldorhold (KINGDOM-EXPANSION.md): the Market Ward, the Ring Ward, Big Tova's bar and the Hall of Kaldor.
+  tova: { top: '#8A3A2A', shade: '#6A2A1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#C8B070', skin: '#E0B898', hair: ['bun', '#E8D26A'], apron: '#E8E0D0', beads: '#C8B070' },
+  ulfa: { robe: true, top: '#5A6A8A', shade: '#42506A', boots: '#2A2030', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#E8E4E0'], beads: '#E8E0D0' },
+  hekla: { robe: true, top: '#6A4A5A', shade: '#4E3642', boots: '#2A1A12', skin: '#E0B898', hair: ['bun', '#F4F0EA'], collar: '#E8E0D0' },
+  snorri: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#8A6A4A'], beard: '#8A6A4A', sleepy: true, sword: true },
+  fawnley: { top: '#3A4A6A', shade: '#2A3650', legs: '#2A2A3A', boots: '#1A1A24', belt: '#C8B070', hair: ['short', '#C8A060'], glasses: true, collar: '#E8E0D0' },
+  fliss: { top: '#3E8A7A', shade: '#2E6A5E', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['bun', '#C4442A'], apron: '#C8B890' },
+  brakka: { top: '#6A5A4A', shade: '#4E4236', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], beard: '#1A1210', cloak: '#8A7A64' },
+  snik: { top: '#5A5A6A', shade: '#42424E', legs: '#3A3A42', boots: '#2A2A30', belt: '#8A6A3A', hair: ['spiky', '#9A9490'], apron: '#3A2A1A', goggles: '#8A8A9A' },
+  chisk: { top: '#C8C0B0', shade: '#A8A090', legs: '#6A6A6A', boots: '#4A4A4A', hair: ['spiky', '#E8E4E0'], apron: '#E8E0D0' },
+  mott: { robe: true, top: '#3A3A2A', shade: '#2A2A1E', boots: '#1A1A12', belt: '#C8B070', hair: ['short', '#4A3A2A'], glasses: true },
+  tib: { top: '#B8913A', shade: '#8A6A28', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
+  holler: { top: '#8A2A6A', shade: '#6A1E50', legs: '#3A2A30', boots: '#2A1A20', belt: '#FFC940', hair: ['bun', '#1A1210'], cloak: '#6A1216', hat: 'wizard' },
+  ogg: { top: '#6A7A3A', shade: '#4E5A2A', legs: '#3A2A20', boots: '#2A1A12', belt: '#2A1A12', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#4A3A2A' },
+  hroth: { top: '#4A3A2A', shade: '#36281E', legs: '#2A2020', boots: '#1A1212', belt: '#FFC940', skin: '#C89870', hair: ['short', '#B8B0A8'], beard: '#B8B0A8', cloak: '#6A1216', sleepy: true },
+  evenbett: { top: '#6A9A8A', shade: '#4E7A6A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
+  joss: { top: '#C8B8E0', shade: '#A898C0', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['short', '#6A4028'], collar: '#E8E0D0' },
+  kids: { top: '#C86A8A', shade: '#A84A6A', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['short', '#E8D26A'] },
+  // Kaldorhold's Barracks and Frost Wards.
+  ox: { top: '#6A3A2A', shade: '#4A2A1E', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#2A1A12', cloak: '#6A1216' },
+  tolly: { top: '#7A8A9A', shade: '#5A6A7A', legs: '#3A3A42', boots: '#2A2A30', belt: '#8A6A3A', skin: '#E0B898', hair: ['short', '#C8A060'] },
+  hagga: { top: '#6A1216', shade: '#4A0E10', legs: '#2A1A1A', boots: '#1A1010', belt: '#E8E0D0', skin: '#D8A880', hair: ['spiky', '#C4442A'], beads: '#E8E0D0' },
+  mog: { robe: true, top: '#E8E4D8', shade: '#C8C4B8', boots: '#4A3A2A', belt: '#8A3A2A', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#8A8A7A', apron: '#B3261E' },
+  abbot: { robe: true, top: '#4A4A3A', shade: '#36362A', boots: '#1A1A12', belt: '#C8B070', hair: ['short', '#6A6A5A'], glasses: true, collar: '#E8E0D0' },
+  leif: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#E0B898', hair: ['short', '#E8D26A'] },
+  gorm: { top: '#5A4A3A', shade: '#42362A', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#3A2418'], beard: '#3A2418', sword: true },
+  kaya: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#C89870', hair: ['bun', '#1A1210'], cloak: '#4A1E20', sword: true },
+  skadi: { robe: true, top: '#E8ECF0', shade: '#C8D0D8', boots: '#6A6A78', belt: '#6A1216', skin: '#E0B898', hair: ['veil', '#F4F0EA'], beads: '#6A8AB0' },
+  brug: { top: '#8A7A64', shade: '#6A5A48', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['short', '#6A4028'], beard: '#6A4028', cloak: '#C8B8A0' },
+  ylva: { robe: true, top: '#C8D6E6', shade: '#A8B6C6', boots: '#4A4A58', belt: '#6A1216', skin: '#E0B898', hair: ['bun', '#E8D26A'], collar: '#F4F0EA' },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -1475,6 +1761,13 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     for (const x of side ? [5, 8, 11] : [4, 7, 8, 11]) p(x, cy - 1, w.crown);
   }
 
+  if (w.boulder && !back) {
+    // a boulder carried on the shoulder, for training (six years, same boulder)
+    const bx = side ? 8 : 12;
+    ellipse(f, bx, 7, 4, 4, '#6A6260');
+    ellipse(f, bx - 1, 6, 2, 2, '#8A8280');
+  }
+
   // a dark outline around the whole silhouette, then a soft shadow at the feet
   const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
   const outline = [];
@@ -1536,6 +1829,20 @@ const MAPS = [
   'war-doors',
   'war-hall',
   'field-of-banners',
+  'tithe-road',
+  'broken-watch',
+  'kaldorhold',
+  'gut-and-gauntlet',
+  'hall-of-kaldor',
+  'ring-ward',
+  'kaldorium-maximus',
+  'fighters-cells',
+  'barracks-ward',
+  'fury-hall',
+  'stitchery',
+  'ironhouse',
+  'frost-ward',
+  'ice-house',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {

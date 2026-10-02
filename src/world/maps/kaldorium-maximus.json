@@ -1,0 +1,208 @@
+{
+  "id": "kaldorium-maximus",
+  "name": "The Kaldorium Maximus",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "####################",
+    "#WWWcWWWWWWWWWWcWWW#",
+    "#W,,,,,,,,,,,,,,,,W#",
+    "#W,..............,W#",
+    "#W,..............,W#",
+    "#W,..............,W#",
+    "#W,..............,W#",
+    "#W,..............,W#",
+    "#W,..............,W#",
+    "#W,,,,,,,,,,,,,,,,W#",
+    "#WWWWWWWW11WWWWWWWW#",
+    "####################"
+  ],
+  "spawn": {
+    "x": 9,
+    "y": 9,
+    "facing": "up"
+  },
+  "ladder": [
+    {
+      "flag": "maximus-1",
+      "x": 9,
+      "y": 2,
+      "kind": "raider",
+      "bearers": [
+        [
+          9,
+          4
+        ]
+      ],
+      "intro": {
+        "speaker": "Lady Holler",
+        "lines": [
+          "LADIES! GENTLEMEN! BABIES! Rung one of the ladder: THE TWINS UGG!",
+          "One of them fights. The other one shouts advice. The advice is bad. FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-2",
+      "x": 9,
+      "y": 2,
+      "kind": "raider",
+      "bearers": [
+        [
+          7,
+          4
+        ],
+        [
+          11,
+          4
+        ]
+      ],
+      "intro": {
+        "speaker": "Lady Holler",
+        "lines": [
+          "Rung two! She raised the Little Crushers! She fights with a RATTLE! MATRON SORREL!",
+          "And two of her biggest babies, all grown up! FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-3",
+      "x": 9,
+      "y": 2,
+      "kind": "raider",
+      "bearers": [
+        [
+          5,
+          4
+        ],
+        [
+          14,
+          4
+        ]
+      ],
+      "intro": {
+        "speaker": "Lady Holler",
+        "lines": [
+          "Rung three! Nine years, never once hit! FENNICK THE UNBITTEN!",
+          "He's brought friends to do the hitting. He's going to run. FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-4",
+      "x": 9,
+      "y": 2,
+      "kind": "raider",
+      "bearers": [
+        [
+          6,
+          4
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          12,
+          4
+        ]
+      ],
+      "intro": {
+        "speaker": "Lady Holler",
+        "lines": [
+          "Rung four! Nobody knows who he is! THE MASKED BRUTE!",
+          "(It's Captain Varga. Everybody knows. She's got her cloak on.) FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-5",
+      "x": 9,
+      "y": 2,
+      "kind": "raider",
+      "bearers": [
+        [
+          5,
+          4
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          14,
+          4
+        ]
+      ],
+      "intro": {
+        "speaker": "Lady Holler",
+        "lines": [
+          "THE TOP OF THE LADDER! Forty years undefeated! GRAND CHAMPION HROTH!",
+          "He looks tired. He looks hopeful, actually. And here come three young bloods who want his crown. FIGHT!"
+        ]
+      }
+    }
+  ],
+  "examine": {
+    "W": [
+      "Ten thousand seats, every one carved KALDOR'S SEAT. In the royal box, a cardboard Kaldor watches. The real one never comes."
+    ],
+    "c": [
+      "A torch in an iron cage. The sand smells of it."
+    ],
+    "1": [
+      "The way out, to the Ring Ward."
+    ]
+  },
+  "objects": [
+    {
+      "id": "holler",
+      "type": "npc",
+      "x": 17,
+      "y": 3,
+      "sprite": "holler",
+      "facing": "left",
+      "name": "Lady Holler",
+      "lines": [
+        "I'm the announcer of the Maximus. Barnaby does the old pit. Barnaby is SMALL TIME.",
+        "Come back any time. The next rung's always waiting."
+      ],
+      "after": {
+        "flag": "maximus-5",
+        "lines": [
+          "You've climbed the whole ladder. Your name's at the top of the board.",
+          "I've announced forty years of Hroth. I've got to learn to say a new name. Give me a minute."
+        ]
+      }
+    },
+    {
+      "id": "ogg",
+      "type": "npc",
+      "x": 2,
+      "y": 3,
+      "sprite": "ogg",
+      "facing": "right",
+      "name": "Ogg Ugg",
+      "lines": [
+        "Advice! Duck when they swing! No, the other way! No, jump! Not like that!",
+        "I'm the twin who shouts. Ugg's the twin who fights. We swap on Thursdays. It goes badly."
+      ],
+      "after": {
+        "flag": "maximus-1",
+        "lines": [
+          "You beat Ugg! My advice was wrong. It always is. It's a family tradition."
+        ]
+      }
+    }
+  ]
+}

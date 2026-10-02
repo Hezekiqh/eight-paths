@@ -41,19 +41,32 @@ type WorldState = {
   candles: CandleSpot[];
   lastCandle: MapId | null;
   rest: (spot: CandleSpot) => void;
+  /** The day (YYYY-MM-DD) Moss last loosed his Arrow Barrage: once a day. */
+  barrageDay: string | null;
+  useBarrage: (day: string) => void;
+  /** Starts the Other World over from the Archive floor. Keeps the controls and who walks; never touches habits. */
+  restart: () => void;
 };
 
-/** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`. All start empty. */
-const SAVE_VERSION = 5;
+/** A fresh World save: everything the game remembers, before any of it happened. */
+export const FRESH_WORLD = {
+  position: null,
+  discovered: [],
+  heard: [],
+  flags: [],
+  noticed: [],
+  candles: [],
+  lastCandle: null,
+  barrageDay: null,
+} satisfies Partial<WorldState>;
+
+/** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`; v6 `barrageDay`. All start empty. */
+const SAVE_VERSION = 6;
 
 function isSpot(value: unknown): value is CandleSpot {
   const v = value as Record<string, unknown> | null;
   return (
-    !!v &&
-    isMapId(v.map) &&
-    Number.isInteger(v.x) &&
-    Number.isInteger(v.y) &&
-    FACINGS.includes(v.facing as Facing)
+    !!v && isMapId(v.map) && Number.isInteger(v.x) && Number.isInteger(v.y) && FACINGS.includes(v.facing as Facing)
   );
 }
 
@@ -69,6 +82,7 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   if (Array.isArray(data.noticed)) out.noticed = data.noticed.filter((n): n is string => typeof n === 'string');
   if (Array.isArray(data.candles)) out.candles = data.candles.filter(isSpot);
   if (isMapId(data.lastCandle) && out.candles?.some((c) => c.map === data.lastCandle)) out.lastCandle = data.lastCandle;
+  if (typeof data.barrageDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.barrageDay)) out.barrageDay = data.barrageDay;
   const p = data.position as Record<string, unknown> | null | undefined;
   if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
@@ -99,7 +113,11 @@ export const useWorldStore = create<WorldState>()(
       notice: (id) => set((s) => (s.noticed.includes(id) ? s : { noticed: [...s.noticed, id] })),
       candles: [],
       lastCandle: null,
-      rest: (spot) => set((s) => ({ candles: [...s.candles.filter((c) => c.map !== spot.map), spot], lastCandle: spot.map })),
+      rest: (spot) =>
+        set((s) => ({ candles: [...s.candles.filter((c) => c.map !== spot.map), spot], lastCandle: spot.map })),
+      barrageDay: null,
+      useBarrage: (day) => set({ barrageDay: day }),
+      restart: () => set(FRESH_WORLD),
     }),
     {
       name: 'eight-paths-world',
@@ -115,6 +133,7 @@ export const useWorldStore = create<WorldState>()(
         noticed: s.noticed,
         candles: s.candles,
         lastCandle: s.lastCandle,
+        barrageDay: s.barrageDay,
       }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),

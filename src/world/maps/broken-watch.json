@@ -1,0 +1,124 @@
+{
+  "id": "broken-watch",
+  "name": "The Broken Watch",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g"
+  ],
+  "tiles": [
+    "TTTTTTTTT^TTTTTTTTTTTTTT",
+    "T.......,,.......g....TT",
+    "T..g....,....MMMM.....jT",
+    "T.......,....MMMM......T",
+    "T.......,....MMEM......T",
+    "T..j....,,,,,,.........T",
+    "T............,......g..T",
+    "T............,.........T",
+    "T..g.........,....GG...T",
+    "TT...........,....GG..TT",
+    "TTTTTTTTTTTTT_TTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 9,
+    "y": 1,
+    "facing": "down"
+  },
+  "examine": {
+    "T": [
+      "Old pines. Somebody carved an open hand into one of them, a very long time ago."
+    ],
+    "M": [
+      "The Broken Watch: a Hale watchtower. The horde never used it. A raider once said it was 'too polite'."
+    ],
+    "E": [
+      "The tower door, wedged shut with five hundred years of ivy and one very stubborn broom."
+    ],
+    "j": [
+      "A cairn. On the top stone, a little open hand, carved by someone who wanted it to last."
+    ],
+    "G": [
+      "A road-block of sharpened stakes, very new, very pointy, and nowhere near the road. Grub put it up himself."
+    ],
+    "^": [
+      "The road north, back to the tithe camps."
+    ],
+    "_": [
+      "The road south. Past the trees, banners stand in a field, hundreds of them."
+    ]
+  },
+  "objects": [
+    {
+      "id": "orrin",
+      "type": "npc",
+      "x": 12,
+      "y": 5,
+      "sprite": "orrin",
+      "facing": "down",
+      "name": "Watchman Orrin",
+      "lines": [
+        "Halt! Who goes— oh. A visitor. We don't get visitors. We get weather.",
+        "Orrin, of the Watch. My family's kept this tower nineteen generations. We're waiting to be relieved.",
+        "Nobody's come yet. Any day now, I expect."
+      ],
+      "questions": [
+        {
+          "ask": "Relieved by who?",
+          "answer": [
+            "By the king's men. The old king. Hale. The one with the open hand.",
+            "My great-great-…-great-grandad was told: hold the watch till you're relieved. So we hold it.",
+            "The horde says there's a new king. We don't recognise him. He hasn't sent a relief."
+          ]
+        },
+        {
+          "ask": "What's south?",
+          "answer": [
+            "The Field of Banners. Where the last battle was meant to be. Every army in the world, meant to meet there.",
+            "They never did. Something stopped it. My family wrote it down: 'Day of the Field. Nobody came. Strange quiet. Ate lunch.'"
+          ]
+        }
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "News came up the road. The king's been beaten. Challenged, fair, by the old law.",
+          "Does that count as being relieved? I've been thinking about it all morning. I think I'll wait a bit longer. Just to be sure."
+        ]
+      },
+      "wander": 2,
+      "along": "x"
+    },
+    {
+      "id": "grub",
+      "type": "npc",
+      "x": 14,
+      "y": 8,
+      "sprite": "grub",
+      "facing": "up",
+      "name": "Grub",
+      "lines": [
+        "Nobody goes south. King's orders.",
+        "What's south? Dunno. Never been. King's orders.",
+        "I've stood here three years. I've got very good at standing."
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "King got beaten, they're saying. So the orders are… nobody's sure.",
+          "Go on, then. South. I'll stand here anyway. I'm good at it."
+        ]
+      }
+    },
+    {
+      "id": "waystone",
+      "type": "sign",
+      "x": 5,
+      "y": 6,
+      "lines": [
+        "A Hale waystone, the open hand carved at the top.",
+        "THE FIELD OF BANNERS, SOUTH. MAY NO ONE EVER NEED IT."
+      ]
+    }
+  ]
+}

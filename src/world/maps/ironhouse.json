@@ -1,0 +1,90 @@
+{
+  "id": "ironhouse",
+  "name": "The Ironhouse",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "################",
+    "#WWWcWWWWWWWcWW#",
+    "#Wb.b.b.b.b...W#",
+    "#W.........t..W#",
+    "#W............W#",
+    "#Wr.r.......A.W#",
+    "#WWWWWW11WWWWWW#",
+    "################"
+  ],
+  "spawn": {
+    "x": 7,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "b": [
+      "A bunk. Scratched into the frame: a tally of drills, and a little drawing of snow."
+    ],
+    "t": [
+      "The quartermaster's desk: forms in stacks, stacks of forms, and a form for the stacks."
+    ],
+    "r": [
+      "A rack of new axes, sharp, numbered, each one signed out to somebody on a form."
+    ],
+    "A": [
+      "Spare armour, labelled KALDOR'S (SPARE)."
+    ],
+    "1": [
+      "The way out, to the drill yard."
+    ]
+  },
+  "objects": [
+    {
+      "id": "abbot",
+      "type": "npc",
+      "x": 11,
+      "y": 4,
+      "sprite": "abbot",
+      "facing": "up",
+      "name": "Clerk Abbot",
+      "lines": [
+        "Name? Rank? Form? No form? You'll need the form for the form.",
+        "I'm the quartermaster. Everybody here shouts. I file. Somebody has to file."
+      ],
+      "questions": [
+        {
+          "ask": "What forms are there?",
+          "answer": [
+            "Form 12: request for an axe. Form 12b: request for a sharper axe. Form 40: grudge, formal.",
+            "Form 1: request to stop shouting. Nobody's ever filed one. I keep it on top, just in case."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leif",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "leif",
+      "facing": "up",
+      "name": "Recruit Leif",
+      "lines": [
+        "Writing to my mum. In the frozen wastes. I've never been. She's never been either.",
+        "We're Kaldari, see. We came from there. Five hundred years ago. We write to it anyway. Tradition."
+      ],
+      "questions": [
+        {
+          "ask": "Who reads the letters?",
+          "answer": [
+            "Nobody, I think. We put them in the ice house, by the old block.",
+            "Elder Skadi says the wastes hear them. I think she just likes reading them."
+          ]
+        }
+      ]
+    }
+  ]
+}

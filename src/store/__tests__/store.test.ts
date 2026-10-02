@@ -406,6 +406,9 @@ describe('loading a saved game', () => {
   it('starts with the core eight revealed and records new reveals once', () => {
     start();
     expect(useGameStore.getState().revealed).toHaveLength(8);
+    const collection = selectCollection(useGameStore.getState());
+    expect(collection.unlockedCount).toBe(8);
+    expect(Object.values(collection.party).every((e) => e.unlocked && e.copies === 1)).toBe(true);
     useGameStore.getState().markRevealed(['dessa', 'dessa', 'brannoc']);
     const revealed = useGameStore.getState().revealed!;
     expect(revealed).toHaveLength(9);

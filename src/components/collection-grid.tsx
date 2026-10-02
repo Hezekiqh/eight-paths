@@ -106,12 +106,15 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
   const alignments = ALIGNMENTS.filter(([a]) => all.some((e) => e.companion.alignment === a));
   // Rarest first: 1★ Legendary, then Epic, Rare, Uncommon, Common.
   const rarities = [...new Set(all.map((e) => e.companion.rarity))].sort((a, b) => a - b);
-  const entries = all.filter(
-    (e) =>
-      (path === null || e.companion.dimension === path) &&
-      (rarity === null || e.companion.rarity === rarity) &&
-      (alignment === null || e.companion.alignment === alignment),
-  );
+  // Heroes you have come first (in number order), so a new player's first page shows the core eight.
+  const entries = all
+    .filter(
+      (e) =>
+        (path === null || e.companion.dimension === path) &&
+        (rarity === null || e.companion.rarity === rarity) &&
+        (alignment === null || e.companion.alignment === alignment),
+    )
+    .sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
   const filter = (apply: () => void) => {
     apply();
     setPage(0);

@@ -5,15 +5,18 @@
 //
 //   node scripts/ad-video.mjs 30 out-30.mp4      # 30s, 15s or 6s cut
 //   CTA='FREE ON THE|APP STORE' node scripts/ad-video.mjs 15 out.mp4
+//   node scripts/ad-video.mjs sig-moss out.mp4     # a hero's signature move (signatures.ts)
 //
-// Needs ffmpeg. Silent on purpose: add a trending sound in TikTok/Reels.
+// Needs ffmpeg. No music on purpose (add a trending sound in TikTok/Reels): 8-bit effects
+// (chip-sounds.mjs) play on the action, and characters who talk blip in their game voices.
 // Text is centred and kept clear of TikTok's bottom caption.
 
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
 
+import { FILL, chipSounds } from './chip-sounds.mjs';
 import { COCOON_H, EYE, GH, GROUND, GW, box, drawCocoon, drawRealm, hex, mix, put } from './realm-art.mjs';
 
 const [cut = '30', out = `ad-${cut}s.mp4`] = process.argv.slice(2);
@@ -169,11 +172,13 @@ function questCard(ui, x, y, path, quest, since = -1, CW = 200) {
  * A habit lands: the quest card slams in, gets checked, XP flies into the
  * hero and they level up. `fast` is the montage version.
  */
-function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false, step = 0 }) {
+function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false, step = 0, who = null, move = null, evolve = 0 }) {
   const P = PATHS[path];
-  const tCheck = fast ? 0.1 : 0.62;
-  const tOrbs = fast ? [0.13, 0.32] : [0.68, 1.08];
-  const tLv = fast ? 0.34 : 1.15;
+  // `evolve`: the swift version for the signature cuts, the XP bar filling for `evolve` seconds, audibly, then the level
+  const tCheck = fast ? 0.1 : evolve ? 0.3 : 0.62;
+  const tOrbs = fast ? [0.13, 0.32] : evolve ? [0.34, 0.58] : [0.68, 1.08];
+  const tEvo = tOrbs[1] + 0.02;
+  const tLv = evolve ? tEvo + evolve : fast ? 0.34 : 1.15;
   const rnd = rng(path.length * 97 + quest.length);
   const HX = UX;
   const HB = GROUND + 14;
@@ -190,6 +195,9 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
       const scene = backdrop(path, t);
       const ui = blankUi();
       const lt = t - tLv;
+      // a quiet load as the bar fills, then one ding when the level lands; nothing else
+      if (evolve) cue(t, tEvo, 'xpfill');
+      if (evolve) cue(t, tLv, 'ding');
       // the hero, with rays and sparkles once they level
       if (lt >= 0) rays(scene, HX, HB - 90, 130, P.neon, t, clamp01(lt / 0.15) * (fast ? 0.8 : 1));
       const hits = orbs.filter((o) => t >= tOrbs[1] + o.d && t < tOrbs[1] + o.d + 0.05).length;
@@ -217,7 +225,9 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
         box(ui, x - 2, yb, CW + 4, 15, hex('#4A3423'));
         box(ui, x, yb + 2, CW, 11, [46, 31, 20]);
         textL(ui, `LV ${lv}`, 1, x + 5, yb + 4, CREAM, { outline: false });
-        const filled = t < tOrbs[1] ? 0.72 : lerp(0.72, 1, ease((t - tOrbs[1]) / 0.15));
+        const filled = evolve
+          ? t < tEvo ? 0.3 : lerp(0.3, 1, clamp01((t - tEvo) / (tLv - tEvo)))
+          : t < tOrbs[1] ? 0.72 : lerp(0.72, 1, ease((t - tOrbs[1]) / 0.15));
         box(ui, x + 44, yb + 5, 150, 5, [92, 70, 50]);
         box(ui, x + 44, yb + 5, Math.round(150 * filled), 5, hex(P.neon));
       }
@@ -238,15 +248,22 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
         box(ui, x - o.s, y - o.s, o.s * 2 + 1, o.s * 2 + 1, hex(P.neon));
         box(ui, x - 1, y - 1, 2, 2, WHITE);
       });
-      // LEVEL UP
-      if (lt >= 0) {
+      // LEVEL UP (or, for a signature cut: who levelled, and the move they just learned)
+      if (lt >= 0 && who) {
+        text(ui, `${P.cls} LV ${lv} > ${lv + 1}`, 2, 112, hex(P.neon), { count: Math.floor(lt / 0.02) });
+        if (lt > 0.2) text(ui, 'NEW MOVE!', 2, 134, GOLD);
+        if (lt > 0.3) {
+          const sc = textW(move, 3) <= GW - 12 ? 3 : 2;
+          text(ui, move, sc, 152, WHITE, { count: Math.floor((lt - 0.3) / 0.025) });
+        }
+      } else if (lt >= 0) {
         const sc = lt < 0.08 ? 5 : 4;
         text(ui, 'LEVEL UP!', sc, 132 - (sc - 4) * 4, GOLD);
         const label = `${P.cls} LV ${lv} > ${lv + 1}`;
         text(ui, label, 2, 170, hex(P.neon), { count: Math.floor((lt - 0.1) / 0.02) });
       }
       if (step) stepTag(ui, step);
-      headline(ui, lines);
+      headline(ui, !who ? lines : lt >= 0 ? [[who], ['LEVELED UP!', Y]] : t >= tCheck ? [['HABIT'], ['DONE!', Y]] : lines);
 
       const cam = camAt(1, [GW / 2, GH / 2]);
       if (lt >= 0) {
@@ -493,7 +510,7 @@ function battle({ linesA, linesB, dur, swapAt = 2.4 }) {
 
 /** The eight heroes, the name, the promise, where to get it. */
 const CORE = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'];
-function endCard({ dur, lines = null }) {
+function endCard({ dur, lines = null, powered = false }) {
   return {
     dur,
     frame(t) {
@@ -510,15 +527,30 @@ function endCard({ dur, lines = null }) {
       const logo = t - 0.35;
       if (lines) headline(ui, lines, 30);
       const top = lines ? 92 : 48;
-      if (logo >= 0) {
+      if (logo >= 0 && powered) {
+        const big = logo < 0.08 ? 6 : 5;
+        text(ui, '8 PATHS', big, top + 20 - (big - 5) * 4, WHITE, { cx: GW / 2 });
+        const typed = Math.floor((logo - 0.15) / 0.03);
+        text(ui, 'THE HABIT', 3, top + 72, hex('#FF4D5E'), { cx: GW / 2, count: typed });
+        text(ui, 'POWERED RPG', 3, top + 96, hex('#FF4D5E'), { cx: GW / 2, count: typed - 9 });
+      } else if (logo >= 0) {
         const big = logo < 0.08 ? 7 : 6;
         text(ui, 'EIGHT', big, top - (big - 6) * 4, WHITE, { cx: GW / 2 });
         text(ui, 'PATHS', big, top + 48 - (big - 6) * 4, WHITE, { cx: GW / 2 });
         text(ui, 'THE HABIT RPG', 3, top + 104, hex('#FF4D5E'), { cx: GW / 2, count: Math.floor((logo - 0.15) / 0.03) });
       }
-      if (logo > 0.6) text(ui, 'NO ADS · WORKS OFFLINE', 1, top + 136, CREAM, { cx: GW / 2 });
-      if (logo > 0.9) CTA.forEach((s, i) => text(ui, s, 2, top + 156 + i * 18, GOLD, { cx: GW / 2 }));
-      if (logo > 1.2) text(ui, '@8PATHSS', 2, top + 156 + CTA.length * 18 + 10, hex('#D8D2E6'), { cx: GW / 2 });
+      // The powered card: then where to follow, kept clear of the apps' captions (the bottom 125 art px) and buttons (the right 40).
+      if (powered) {
+        if (logo > 0.6) text(ui, 'FOLLOW @8PATHSS', 2, top + 140, GOLD, { cx: GW / 2 });
+        ['ON TIKTOK AND INSTAGRAM', 'FOR EARLY ACCESS AND', 'FOUNDER EXCLUSIVES'].forEach((s, i) => {
+          if (logo > 0.9 + i * 0.15) text(ui, s, 1, top + 166 + i * 13, CREAM, { cx: GW / 2 });
+        });
+        if (logo > 1.5) text(ui, '100 LEFT!', 2, top + 210, hex('#FF4D5E'), { cx: GW / 2 });
+      } else {
+        if (logo > 0.6) text(ui, 'NO ADS · WORKS OFFLINE', 1, top + 136, CREAM, { cx: GW / 2 });
+        if (logo > 0.9) CTA.forEach((s, i) => text(ui, s, 2, top + 156 + i * 18, GOLD, { cx: GW / 2 }));
+        if (logo > 1.2) text(ui, '@8PATHSS', 2, top + 156 + CTA.length * 18 + 10, hex('#D8D2E6'), { cx: GW / 2 });
+      }
       const cam = camAt(lerp(1, 1.04, t / dur), [GW / 2, GH / 2]);
       cam.flash = logo >= 0 && logo < 0.3 ? 0.7 * (1 - logo / 0.3) : 0;
       return { scene, ui, cam: opening(t, cam, false) };
@@ -676,7 +708,17 @@ function radar({ dur, lines, step }) {
 const MAPS = {};
 const map = (name) => (MAPS[name] ??= PNG.sync.read(readFileSync(`assets/world/${name}.png`)));
 const WALKERS = PNG.sync.read(readFileSync('assets/world/walkers.png'));
-const WALKER_ROW = { brannoc: 0, pell: 8, raider: 23 };
+const WALKER_ROW = {
+  ...Object.fromEntries(['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id, i) => [id, i])),
+  pell: 8,
+  jory: 10,
+  plush: 20,
+  sleeper: 21,
+  raider: 23,
+  shadow: 35,
+  rusted: 36,
+  echo: 37,
+};
 const DIRS = { down: 0, up: 1, left: 2, right: 3 };
 /** The map seen through a 90×160 window centred on (cx, cy) map pixels, drawn at 3×. */
 const MZ = 3;
@@ -847,8 +889,802 @@ function worldFight({ dur, lines, linesB, turn = 3.0 }) {
   };
 }
 
-// ---- the cuts
 const Y = hex('#FFE066');
+
+// ---- signature moves (src/world/signatures.ts): a habit takes a hero to Lv 10, then, in the Other
+// World, they fool about in character and show off their own move. One scene per core companion.
+
+/** Map pixels → screen pixels in a mapView. */
+const toS = (view, mx, my) => [(mx - view.x0) * MZ, (my - view.y0) * MZ];
+/** A ring (squashed for the floor) at screen (sx, sy). */
+function ringS(g, sx, sy, r, c, w = 3, squash = 0.75) {
+  const n = Math.max(24, Math.round(r * 5));
+  for (let a = 0; a < n; a++) {
+    const ang = (a / n) * Math.PI * 2;
+    for (let k = 0; k < w; k++) put(g, sx + Math.cos(ang) * (r + k), sy + Math.sin(ang) * (r + k) * squash, c);
+  }
+}
+/** A filled, dithered glow at screen (sx, sy). */
+function glowS(g, sx, sy, r, c, strength) {
+  for (let y = Math.max(0, Math.round(sy - r)); y < Math.min(GH, sy + r); y++)
+    for (let x = Math.max(0, Math.round(sx - r)); x < Math.min(GW, sx + r); x++) {
+      const d = Math.hypot(x - sx, y - sy) / r;
+      if (d > 1) continue;
+      const k = strength * (1 - d);
+      if (k > ((x * 5 + y * 3) % 8) / 8) g[y][x] = mix(g[y][x], c, 0.55);
+    }
+}
+/** A damage number floating up from screen (sx, sy), `age` seconds old. */
+const pop = (ui, s, sx, sy, age, c = WHITE) => {
+  if (age >= 0 && age < 0.7) text(ui, s, 2, Math.round(sy - 66 - age * 36), c, { cx: Math.round(sx) });
+};
+// ---- voices, as the game does them (portraits.ts, typewriter-text.tsx, dialogue-box.tsx):
+// 28ms a letter, longer after punctuation, and a blip every other letter in the speaker's own voice.
+const VOICES = { kaldor: 1, aurek: 1, plush: 1, bo: 1, keeper: 2, harrow: 2, hugo: 2, brannoc: 2, brunna: 5, pim: 5 };
+/** A speaker's voice, 1 (low) to 5 (high): fixed for some, otherwise from their name as the game shows it ("Sister Wren"). */
+function voiceFor(name, sprite) {
+  if (sprite && VOICES[sprite]) return VOICES[sprite];
+  let hash = 0;
+  for (const c of name ?? '') hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+  return 2 + (hash % 3);
+}
+const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+const LETTER_MS = 28;
+const PAUSES = { '.': 260, '!': 260, '?': 260, ',': 120, ':': 160, ';': 160 };
+/** When each letter appears, in seconds from the line's start. */
+function letterTimes(text) {
+  const at = [];
+  let t = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (i > 0) t += (LETTER_MS + (PAUSES[text[i - 1]] ?? 0)) / 1000;
+    at.push(t);
+  }
+  return at;
+}
+/** The clock of the whole video, set by the render loop each frame, and every sound heard so far: [seconds, effect]. */
+let NOW = 0;
+const SOUNDS = [];
+/** Plays `name` (an effect in sounds.ts, or 'evolve') if scene time `at` fell within this frame, `t` being the scene's clock. */
+function cue(t, at, name) {
+  if (at <= t && at > t - 1 / FPS) SOUNDS.push([NOW - (t - at), name]);
+}
+/**
+ * Types `text` out at the game's pace, `age` seconds in: returns how many letters show and whether the
+ * speaker's head is up (it bobs a pixel every other blip). Blips that fell in this frame are heard.
+ */
+function speak(text, age, voice) {
+  const at = letterTimes(text);
+  let shown = 0;
+  let blips = 0;
+  for (let k = 0; k < at.length; k++) {
+    if (at[k] > age) break;
+    shown = k + 1;
+    if (k % 2 !== 0 || !text[k].trim()) continue;
+    blips++;
+    if (voice && at[k] > age - 1 / FPS) SOUNDS.push([NOW - (age - at[k]), `blip${voice}`]);
+  }
+  return { shown, lift: blips % 2, done: shown >= text.length, end: at[at.length - 1] ?? 0 };
+}
+
+/** A speech bubble over a head at screen (sx, sy), typing in over `age` seconds; '|' breaks the line. */
+function bubble(ui, s, sx, sy, age, voice = null) {
+  if (age < 0) return;
+  const rows = s.split('|');
+  const sc = 2;
+  const w = Math.max(...rows.map((r) => textW(r, sc))) + 14;
+  const h = rows.length * 18 - 4 + 12;
+  const x = Math.round(Math.min(GW - w - 6, Math.max(6, sx - w / 2)));
+  // over their head, unless that would cover the move's banner: then under their feet
+  const above = sy - 92 - h >= 120;
+  const y = Math.round(above ? sy - 92 - h : sy + 14);
+  box(ui, x - 2, y - 2, w + 4, h + 4, INK);
+  box(ui, x, y, w, h, hex('#F8F4EA'));
+  const tail = above ? y + h : y - 6;
+  box(ui, Math.round(sx) - 1, above ? tail + 3 : tail, 2, 3, hex('#F8F4EA'));
+  box(ui, Math.round(sx) - 3, above ? tail : tail + 3, 6, 3, hex('#F8F4EA'));
+  let left = speak(rows.join(' '), age, voice).shown;
+  rows.forEach((r, i) => {
+    textL(ui, r, sc, x + 7, y + 6 + i * 18, INK, { outline: false, count: Math.max(0, left) });
+    left -= r.length + 1;
+  });
+}
+/** A charging glow gathering in at screen (sx, sy). */
+function charging(g, sx, sy, t, c) {
+  for (let a = 0; a < 20; a++) {
+    const r = 60 * (1 - ((t * 2 + a / 20) % 1));
+    box(g, sx + Math.cos(a) * r, sy + Math.sin(a) * r, 3, 3, c);
+  }
+}
+/** A puff where an enemy fell, `age` seconds after. */
+function puffS(g, sx, sy, age) {
+  if (age < 0 || age > 0.35) return;
+  const p = age / 0.35;
+  for (let k = 0; k < 8; k++) {
+    const a = (k * Math.PI) / 4;
+    box(g, sx + Math.cos(a) * (9 + 33 * p), sy - 24 + Math.sin(a) * (9 + 33 * p) * 0.8, 6 - Math.round(p * 4), 6 - Math.round(p * 4), hex('#E8E0D0'));
+  }
+}
+/** Facing toward (dx, dy). */
+const dirTo = (dx, dy) => (Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down');
+
+/**
+ * The shared frame of every signature scene: the map, the move's banner, the
+ * shout, the hearts and the headline. `play` draws the hero and enemies and
+ * says where the hero is ({ hero: [mx, my] }), how many hearts, and any shake.
+ * The move goes off at F. Heroes keep quiet as they do it; only a `shout` (Ysolde's) is said, at F (or `shoutAt`).
+ */
+/** The core companion of each Path: whose voice a signature scene's bubbles are in. */
+const PATH_HERO = { physical: 'brannoc', financial: 'ysolde', intellectual: 'quill', spiritual: 'wren', emotional: 'oren', social: 'pip', occupational: 'tamsin', environmental: 'moss' };
+const HERO_NAME = { brannoc: 'Brannoc', ysolde: 'Ysolde', quill: 'Quill', wren: 'Sister Wren', oren: 'Oren', pip: 'Pip', tamsin: 'Tamsin', moss: 'Moss' };
+function signature({ path, map: name, at, F, dur, move, shout, shoutAt = null, sub = null, lines, play, sfx = [], chargeAt = F - 0.75 }) {
+  const P = PATHS[path];
+  /** Seconds of the scene skipped: it opens half a second before the move gathers (Oren's breath, everyone else's charge). */
+  const skip = Math.max(0, Math.min(F - 0.75, shoutAt ?? F) - 0.5);
+  const voice = voiceFor(HERO_NAME[PATH_HERO[path]], PATH_HERO[path]);
+  return {
+    dur: dur - skip,
+    frame(t0) {
+      const t = t0 + skip;
+      cue(t, chargeAt, 'load');
+      for (const [when, what] of sfx) if (when >= skip) cue(t, when, what);
+      const view = mapView(name, at[0], at[1]);
+      const ui = blankUi();
+      const S = (mx, my) => toS(view, mx, my);
+      const out = play(t, view, ui, S) ?? {};
+      const [hsx, hsy] = S(...out.hero);
+      // charging, then the move's name
+      if (t >= F - 0.75 && t < F && !out.noCharge) charging(view.g, hsx, hsy - 30, t, hex(P.neon));
+      if (sub && t >= F - 0.2 && t < F + 1.9) text(ui, sub, 1, 124, CREAM);
+      // bubbles hang over where they stand (`speaker`, if a hop shouldn't drag them about)
+      const [bsx, bsy] = out.speaker ? S(...out.speaker) : [hsx, hsy];
+      const sa = shoutAt ?? F;
+      if (shout && t >= sa && t < sa + 1.7) bubble(ui, shout, bsx, bsy, t - sa, voice);
+      for (const [s, a, age] of out.bubbles ?? []) if (age >= 0 && age < a) bubble(ui, s, bsx, bsy, age, voice);
+      hearts(ui, out.hp ?? 5, 5, 18, 104);
+      const cam = camAt(1, [GW / 2, GH / 2]);
+      if (out.shake) cam.shake = out.shake;
+      if (out.flash) cam.flash = out.flash;
+      return { scene: view.g, ui, cam: opening(t0, cam, false) };
+    },
+  };
+}
+const F0 = 3.3;
+const WORLD_LINES = [['THEN, IN THE'], ['OTHER WORLD...', Y]];
+/** Where each enemy stands at time t: walks from `from` toward `to`, arriving by `by`. */
+const approach = (from, to, t, start, by) => {
+  const k = ease(clamp01((t - start) / (by - start)));
+  return [lerp(from[0], to[0], k), lerp(from[1], to[1], k), k > 0 && k < 1];
+};
+
+const SIG_SCENES = {
+  // Brannoc sizes them up, flees, thinks better of it, spins Sweetheart, then hops well back.
+  brannoc: () => {
+    const F = F0;
+    const foes = [
+      { from: [236, 102], to: [172, 108] },
+      { from: [246, 126], to: [178, 128] },
+      { from: [236, 150], to: [170, 148] },
+      // the last one circles round behind him while he's busy being brave
+      { from: [246, 80], via: [150, 86], to: [126, 124] },
+    ];
+    const inOut = (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
+    return signature({
+      path: 'physical', map: 'barracks-hall', at: [142, 106], F, dur: F + 1.25,
+      move: 'SWEETHEART SWING', sfx: [[F, 'fire'], [F + 0.05, 'tkill'], [F + 0.55, 'hop']], shout: null, lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        let hx = 150;
+        let hy = 126;
+        let dir = 'right';
+        let moving = false;
+        if (t < 0.9) [hx, moving] = [lerp(126, 150, inOut(t / 0.9)), true];
+        else if (t < 1.15) hx = 150;
+        else if (t < 1.85) [hx, dir, moving] = [lerp(150, 112, inOut((t - 1.15) / 0.7)), 'left', true];
+        else if (t < 2.25) [hx, dir] = [112, t < 2.0 ? 'left' : 'right'];
+        else if (t < 2.75) [hx, moving] = [lerp(112, 150, inOut((t - 2.25) / 0.5)), true];
+        const spin = t >= F && t < F + 0.5;
+        if (spin) dir = ['down', 'right', 'up', 'left'][Math.floor((t - F) * 12) % 4];
+        // …and the hop back
+        if (t >= F + 0.55) {
+          const k = clamp01((t - F - 0.55) / 0.4);
+          hx = lerp(150, 128, inOut(k));
+          hy = 126 - Math.round(Math.sin(k * Math.PI) * 6);
+        }
+        foes.forEach((f, i) => {
+          let x, y, walking;
+          if (f.via) {
+            const k = clamp01((t - 1.0) / (F - 0.1 - 1.0));
+            const a = k < 0.6 ? approach(f.from, f.via, t, 1.0, 1.0 + (F - 1.1) * 0.6) : approach(f.via, f.to, t, 1.0 + (F - 1.1) * 0.6, F - 0.1);
+            [x, y, walking] = [a[0], a[1], k > 0 && k < 1];
+          } else [x, y, walking] = approach(f.from, f.to, t, 1.0, F - 0.1);
+          if (t >= F + 0.05) {
+            const k = t - F - 0.05;
+            const a = Math.atan2(y - 120, x - 150);
+            x += Math.cos(a) * k * 110;
+            y += Math.sin(a) * k * 110;
+          }
+          const fade = clamp01((t - F - 0.1) / 0.45);
+          if (fade >= 1) return;
+          walker(view, 'raider', x, y, dirTo(hx - x, hy - y), stepOf(t + i * 0.3, walking), {
+            white: t >= F + 0.05 && t < F + 0.15 ? 1 : 0,
+            fade,
+          });
+          const [sx, sy] = S(x, y);
+          pop(ui, '3', sx, sy, t - F - 0.05, GOLD);
+        });
+        walker(view, 'brannoc', hx, hy, dir, stepOf(t * 1.2, moving));
+        const [sx, sy] = S(150, 116);
+        if (spin) {
+          const k = (t - F) / 0.5;
+          for (let a = 0; a < 90; a++) {
+            const ang = (a / 90) * Math.PI * 2 + k * 20;
+            if ((a + Math.floor(k * 30)) % 9 < 5) for (let w = 0; w < 5; w++) put(view.g, sx + Math.cos(ang) * (64 + k * 20 + w), sy + Math.sin(ang) * (50 + k * 14 + w), w < 2 ? WHITE : hex('#FF4D5E'));
+          }
+        }
+        return {
+          hero: [hx, hy],
+          speaker: [hx, 126],
+          shake: spin && t < F + 0.3 ? 6 : 0,
+          flash: t >= F && t < F + 0.25 ? 0.5 * (1 - (t - F) / 0.25) : 0,
+        };
+      },
+    });
+  },
+
+  // Ysolde flips a coin while they gather; then the tab comes due, a heart at a time.
+  ysolde: () => {
+    const F = F0;
+    const H = [330, 182];
+    const foes = [
+      { from: [270, 150], to: [304, 170] },
+      { from: [390, 150], to: [356, 170] },
+      { from: [270, 220], to: [306, 200] },
+      { from: [390, 222], to: [354, 200] },
+    ];
+    const TICKS = [0.55, 0.95, 1.35];
+    return signature({
+      path: 'financial', map: 'kingdom-town', at: [330, 162], F, dur: F + 2.0,
+      move: 'COLLECT THE TAB', sfx: [[F, 'fire'], [F + 0.55, 'thit'], [F + 0.95, 'thit'], [F + 1.35, 'tkill']], shout: 'YOU OWE ME.', lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        const walking = t < 0.9;
+        const hy = walking ? lerp(150, H[1], t / 0.9) : H[1];
+        foes.forEach((f, i) => {
+          const [x, y, moving] = approach(f.from, f.to, t, 0.8, F - 0.1);
+          const frozen = t >= F;
+          const gone = t - F - TICKS[2] - i * 0.06;
+          const fade = clamp01(gone / 0.4);
+          if (fade >= 1) return;
+          const tick = TICKS.some((k) => t - F - i * 0.06 >= k && t - F - i * 0.06 < k + 0.08);
+          walker(view, 'shadow', x, y, dirTo(H[0] - x, H[1] - y), frozen ? 0 : stepOf(t + i, moving), {
+            white: tick ? 1 : 0,
+            tint: frozen ? GOLD : null,
+            fade,
+          });
+          const [sx, sy] = S(x, y);
+          if (frozen && fade === 0) {
+            // the coin of debt bobbing over their head
+            const lift = Math.floor(t * 4) % 2;
+            box(view.g, sx - 6, sy - 84 - lift * 3, 12, 12, hex('#8A5A00'));
+            box(view.g, sx - 4, sy - 82 - lift * 3, 8, 8, GOLD);
+          }
+          for (const k of TICKS) pop(ui, '-1', sx, sy, t - F - i * 0.06 - k, GOLD);
+        });
+        walker(view, 'ysolde', H[0], hy, 'down', stepOf(t, walking));
+        const [hsx, hsy] = S(H[0], hy);
+        // the coin flip
+        for (const at of [1.1, 1.7, 2.3]) {
+          const k = (t - at) / 0.5;
+          if (k >= 0 && k < 1) {
+            const w = 2 + Math.round(4 * Math.abs(Math.sin(k * 12)));
+            box(view.g, hsx + 14 - w / 2, hsy - 72 - Math.sin(k * Math.PI) * 40, w, 8, GOLD);
+          }
+        }
+        // the coins flung in a ring
+        if (t >= F && t < F + 0.5) {
+          const k = (t - F) / 0.5;
+          for (let c = 0; c < 16; c++) {
+            const a = (c / 16) * Math.PI * 2 + k * 2;
+            const r = 20 + k * 100;
+            box(view.g, hsx + Math.cos(a) * r - 3, hsy - 30 + Math.sin(a) * r * 0.75 - 3, 6, 6, k > 0.8 ? hex('#8A5A00') : GOLD);
+          }
+        }
+        return {
+          hero: [H[0], hy],
+          shake: TICKS.some((k) => t - F >= k && t - F < k + 0.08) ? 2 : 0,
+          flash: t >= F && t < F + 0.2 ? 0.4 : 0,
+        };
+      },
+    });
+  },
+
+  // Quill paces the Archive with her biting book, talking; then five footnotes, in fire.
+  quill: () => {
+    const F = F0;
+    const foes = [
+      { from: [140, 140], to: [178, 146] },
+      { from: [140, 176], to: [180, 176] },
+      { from: [276, 136], to: [240, 144] },
+      { from: [276, 170], to: [238, 176] },
+      { from: [208, 230], to: [208, 196] },
+    ];
+    return signature({
+      path: 'intellectual', map: 'archive', at: [208, 122], F, dur: F + 1.1,
+      move: 'FOOTNOTE BARRAGE', sfx: [[F, 'fire'], [F + 0.25, 'tkill']], shout: null, lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        const pacing = t < 2.6;
+        const hx = pacing ? 208 + Math.sin(t * 2.4) * 22 : 208;
+        const dir = pacing ? (Math.cos(t * 2.4) > 0 ? 'right' : 'left') : 'down';
+        const hy = 160;
+        foes.forEach((f, i) => {
+          const [x, y, moving] = approach(f.from, f.to, t, 1.0, F - 0.1);
+          const hitAt = F + 0.25 + i * 0.03;
+          const fade = clamp01((t - hitAt) / 0.35);
+          if (fade < 1)
+            walker(view, 'shadow', x, y, dirTo(208 - x, 160 - y), stepOf(t + i, moving), { white: t >= hitAt && t < hitAt + 0.1 ? 1 : 0, fade });
+          const [sx, sy] = S(x, y);
+          puffS(view.g, sx, sy, t - hitAt);
+          pop(ui, '3', sx, sy, t - hitAt, hex('#FF8A3D'));
+          // the bolt on its way
+          const k = (t - F) / (hitAt - F);
+          if (k >= 0 && k < 1) {
+            const [hsx, hsy] = S(hx, hy - 10);
+            const bx = lerp(hsx, sx, k);
+            const by = lerp(hsy, sy - 24, k);
+            box(view.g, bx - 6, by - 6, 12, 12, hex('#FF8A3D'));
+            box(view.g, bx - 3, by - 3, 6, 6, hex('#FFE9A0'));
+            box(view.g, bx - 4 - (sx - hsx) * 0.08, by - 2 - (sy - hsy) * 0.08, 5, 5, hex('#FF8A3D'));
+          }
+        });
+        walker(view, 'quill', hx, hy, dir, stepOf(t * 1.6, pacing));
+        // the book that bites, hovering at her shoulder, snapping
+        const [sx, sy] = S(hx + 9, hy - 26 + Math.sin(t * 5) * 2);
+        const open = Math.floor(t * (t > F ? 14 : 5)) % 2;
+        box(view.g, sx - 9, sy - 6 - open * 3, 18, 6, hex('#7A3B1E'));
+        box(view.g, sx - 9, sy + 3 + open * 3, 18, 6, hex('#7A3B1E'));
+        if (open) box(view.g, sx - 7, sy - 1, 14, 5, hex('#F3ECDD'));
+        return {
+          hero: [hx, hy],
+          shake: t >= F + 0.25 && t < F + 0.45 ? 4 : 0,
+        };
+      },
+    });
+  },
+
+  // Sister Wren rings her bell and listens; the lantern flares, a heart comes back, and the light holds them.
+  wren: () => {
+    const F = F0;
+    const H = [96, 90];
+    const foes = [
+      { from: [170, 80], to: [120, 84] },
+      { from: [170, 104], to: [118, 102] },
+      { from: [20, 92], to: [72, 92] },
+    ];
+    return signature({
+      path: 'spiritual', map: 'chapel', at: [96, 70], F, dur: F + 1.6,
+      move: 'LANTERN VIGIL', sfx: [[F, 'fire'], [F + 0.1, 'mend'], [F + 0.8, 'tkill']], shout: null, lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        const walking = t < 1.5;
+        const hx = walking ? lerp(74, H[0], t / 1.5) : H[0];
+        const [hsx, hsy] = S(hx, H[1]);
+        // her lantern: a warm pool, breathing; at F it flares wide
+        const flare = t >= F ? Math.max(0, 1 - (t - F) / 1.4) : 0;
+        glowS(view.g, hsx, hsy - 24, 40 + flare * 120, hex('#FFE9A0'), 0.35 + 0.08 * Math.sin(t * 4) + flare * 0.6);
+        const burst = F + 0.8;
+        foes.forEach((f, i) => {
+          const [x, y, moving] = approach(f.from, f.to, t, 0.7, F - 0.1);
+          const frozen = t >= F;
+          const fade = clamp01((t - burst - 0.15) / 0.4);
+          if (fade >= 1) return;
+          walker(view, 'rusted', x, y, dirTo(H[0] - x, H[1] - y), frozen ? 0 : stepOf(t + i, moving), {
+            tint: frozen ? hex('#CFE8FF') : null,
+            white: t >= burst && t < burst + 0.1 ? 1 : 0,
+            fade,
+          });
+          const [sx, sy] = S(x, y);
+          pop(ui, '2', sx, sy, t - burst, hex('#FFE9A0'));
+          puffS(view.g, sx, sy, t - burst - 0.15);
+        });
+        walker(view, 'wren', hx, H[1], walking ? 'right' : 'down', stepOf(t * 0.7, walking));
+        // the bell: a little shimmer by her hand
+        for (const at of [1.7, 2.2]) if (t >= at && t < at + 0.3) sparkle(view.g, hsx + 18, hsy - 30 - (t - at) * 30, 3, WHITE);
+        if (t >= burst && t < burst + 0.35) ringS(view.g, hsx, hsy - 24, 20 + (t - burst) * 260, hex('#FFE9A0'), 4);
+        if (t >= F + 0.1 && t < F + 0.8) pop(ui, '+1 HEART', hsx, hsy - 20, (t - F - 0.1) * 0.9, hex('#FF4D5E'));
+        return {
+          hero: [hx, H[1]],
+          hp: t >= F + 0.1 ? 4 : 3,
+          flash: t >= F && t < F + 0.3 ? 0.55 * (1 - (t - F) / 0.3) : 0,
+          shake: t >= burst && t < burst + 0.2 ? 4 : 0,
+        };
+      },
+    });
+  },
+
+  // Oren doesn't move. They run rings round him. He breathes in. Then they leave, quickly, through the air.
+  oren: () => {
+    const F = F0 + 0.4;
+    const H = [128, 96];
+    return signature({
+      path: 'emotional', map: 'the-pit', at: [128, 78], F, dur: F + 1.1,
+      move: 'ONE BREATH', sfx: [[F, 'boom'], [F + 0.15, 'tkill']], chargeAt: F - 0.6, shout: null, shoutAt: F - 0.6, lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        const [hsx, hsy] = S(...H);
+        const breathe = t >= F - 0.6 && t < F;
+        if (breathe) ringS(view.g, hsx, hsy - 24, 90 * (1 - (t - F + 0.6) / 0.6) + 14, hex('#2DD4BF'), 3);
+        // their circling slows as he breathes in, then stops
+        const spin = (tt) => tt * 2.4 - Math.max(0, tt - (F - 0.6)) * 2.0;
+        for (let i = 0; i < 4; i++) {
+          const ang = spin(Math.min(t, F)) + (i * Math.PI) / 2;
+          const r = 34 * clamp01((t - 0.2) / 0.8) + 4;
+          let x = H[0] + Math.cos(ang) * r * 1.2;
+          let y = H[1] + Math.sin(ang) * r * 0.7;
+          if (t < 0.5) x += (1 - t / 0.5) * 80 * (i % 2 ? 1 : -1);
+          if (t >= F) {
+            const k = t - F;
+            const a = Math.atan2(y - H[1], x - H[0]);
+            x += Math.cos(a) * k * 220;
+            y += Math.sin(a) * k * 160 - Math.sin(Math.min(1, k * 2) * Math.PI) * 20;
+          }
+          const fade = clamp01((t - F - 0.3) / 0.5);
+          if (fade < 1)
+            walker(view, 'shadow', x, y, t >= F ? ['down', 'left', 'up', 'right'][Math.floor(t * 14 + i) % 4] : dirTo(Math.cos(ang + 1.6), Math.sin(ang + 1.6)), t < F ? stepOf(t * 1.5 + i, true) : 0, {
+              white: t >= F && t < F + 0.1 ? 1 : 0,
+              fade,
+            });
+          const [sx, sy] = S(x, y);
+          pop(ui, '6', sx, sy, t - F, hex('#2DD4BF'));
+        }
+        // one of them swings; he leans, slightly
+        const lean = t >= 1.3 && t < 1.55 ? -4 : 0;
+        walker(view, 'oren', H[0] + lean, H[1], t >= F && t < F + 0.6 ? 'right' : 'down', 0, { white: breathe && Math.floor(t * 10) % 2 ? 0.35 : 0 });
+        if (t >= F && t < F + 0.3) {
+          const k = (t - F) / 0.3;
+          for (let a = 0; a < 6; a++) {
+            const ang = (a * Math.PI) / 3;
+            box(view.g, hsx + 30 + Math.cos(ang) * (16 + k * 30), hsy - 30 + Math.sin(ang) * (16 + k * 30), 8, 8, hex('#2DD4BF'));
+          }
+          box(view.g, hsx + 22, hsy - 38, 16, 16, WHITE);
+        }
+        return {
+          hero: H,
+          noCharge: true,
+          shake: t >= F && t < F + 0.4 ? 8 : 0,
+          flash: t >= F && t < F + 0.25 ? 0.6 * (1 - (t - F) / 0.25) : 0,
+        };
+      },
+    });
+  },
+
+  // Pip can't keep still: hops, cartwheels, waves at the enemy. Then the lute plays, and plays again.
+  pip: () => {
+    const F = F0;
+    const H = [264, 176];
+    const foes = [0, 1, 2, 3].map((i) => {
+      const a = (i * Math.PI) / 2 + 0.6;
+      return { from: [H[0] + Math.cos(a) * 80, H[1] + Math.sin(a) * 60], to: [H[0] + Math.cos(a) * 22, H[1] + Math.sin(a) * 15] };
+    });
+    const R2 = F + 0.4;
+    return signature({
+      path: 'social', map: 'millbrook', at: [264, 156], F, dur: F + 1.2,
+      move: 'ENCORE', sfx: [[F, 'fire'], [F + 0.4, 'tkill']], shout: null, shoutAt: F + 0.2, lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        const busy = t < F - 0.7;
+        const hx = busy ? H[0] + Math.sin(t * 3) * 18 : H[0];
+        const hop = busy ? Math.round(Math.abs(Math.sin(t * 11)) * 5) : 0;
+        const hy = (busy ? H[1] + Math.sin(t * 6) * 7 : H[1]) - hop;
+        const wheel = t >= 1.0 && t < 1.6;
+        const dir = wheel ? ['down', 'left', 'up', 'right'][Math.floor(t * 14) % 4] : busy ? (Math.cos(t * 3) > 0 ? 'right' : 'left') : 'down';
+        const [hsx, hsy] = S(H[0], H[1]);
+        foes.forEach((f, i) => {
+          let [x, y, moving] = approach(f.from, f.to, t, 0.6, F - 0.1);
+          const a = Math.atan2(y - H[1], x - H[0]);
+          if (t >= F) {
+            const k = ease(clamp01((t - F) / 0.25));
+            x += Math.cos(a) * k * 18;
+            y += Math.sin(a) * k * 12;
+          }
+          if (t >= R2) {
+            const k = t - R2;
+            x += Math.cos(a) * k * 120;
+            y += Math.sin(a) * k * 90;
+          }
+          const fade = clamp01((t - R2 - 0.1) / 0.4);
+          if (fade < 1)
+            walker(view, 'sleeper', x, y, dirTo(H[0] - x, H[1] - y), stepOf(t * 0.6 + i, moving), {
+              white: (t >= F && t < F + 0.1) || (t >= R2 && t < R2 + 0.1) ? 1 : 0,
+              fade,
+            });
+          const [sx, sy] = S(x, y);
+          pop(ui, '2', sx, sy, t - F, hex('#FF4FD8'));
+          pop(ui, '2', sx, sy, t - R2, WHITE);
+        });
+        walker(view, 'pip', hx, hy, dir, stepOf(t * 2, busy && !wheel));
+        // notes drifting up as she goes
+        for (let n = 0; n < 6; n++) {
+          const k = (t * 0.9 + n / 6) % 1;
+          if (!busy) break;
+          const [nx, ny] = S(hx + Math.sin(n * 2.1) * 10, hy - 20 - k * 20);
+          box(view.g, nx, ny, 4, 4, hex('#FF4FD8'));
+          box(view.g, nx + 3, ny - 9, 2, 10, hex('#FF4FD8'));
+        }
+        if (t >= F && t < F + 0.35) ringS(view.g, hsx, hsy - 24, 10 + ((t - F) / 0.35) * 90, hex('#FF4FD8'), 4);
+        if (t >= R2 && t < R2 + 0.45) {
+          const r = 10 + ((t - R2) / 0.45) * 150;
+          ringS(view.g, hsx, hsy - 24, r, hex('#FF4FD8'), 5);
+          ringS(view.g, hsx, hsy - 24, r * 0.7, WHITE, 2);
+        }
+        return {
+          hero: [hx, hy],
+          shake: (t >= F && t < F + 0.2 ? 3 : 0) + (t >= R2 && t < R2 + 0.3 ? 6 : 0),
+          flash: t >= R2 && t < R2 + 0.2 ? 0.4 : 0,
+        };
+      },
+    });
+  },
+
+  // Tamsin has work to do; Baron Plush would rather nap. The wrench settles it: he leaves, tumbling, through the air.
+  tamsin: () => {
+    const F = 0.8;
+    const H = [126, 96];
+    const PLUSH = [158, 96];
+    const HIT = F + 0.12;
+    return signature({
+      path: 'occupational', map: 'sleeping-keep', at: [150, 80], F, dur: F + 1.9,
+      move: 'HOLD THIS', sfx: [[F, 'fire'], [HIT, 'clunk'], [HIT + 0.04, 'boom'], [F + 0.75, 'clunk'], [F + 0.85, 'tkill']], shout: null, lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        // the wrench: out through all of them to the far wall, and back to her hand
+        const out = t >= F && t < F + 0.9;
+        const k = (t - F) / 0.9;
+        const wx = k < 0.5 ? lerp(H[0] + 12, 200, k * 2) : lerp(200, H[0] + 12, (k - 0.5) * 2);
+        // up and away to the right, tumbling, still asleep
+        const pa = t >= HIT ? t - HIT : 0;
+        const px = PLUSH[0] + pa * 70;
+        const py = PLUSH[1] - pa * 90 + pa * pa * 40;
+        walker(view, 'plush', px, py, pa > 0 ? ['down', 'left', 'up', 'right'][Math.floor(t * 12) % 4] : 'left', 0, { white: pa > 0 && pa < 0.1 ? 1 : 0 });
+        for (let z = 0; z < 3; z++) {
+          const za = pa - z * 0.18;
+          if (za <= 0) continue;
+          const [sx, sy] = S(PLUSH[0] + za * 62, PLUSH[1] - za * 80);
+          pop(ui, 'Z', sx, sy, za * 0.5, CREAM);
+        }
+        walker(view, 'tamsin', H[0], H[1], 'right', 0);
+        if (out) {
+          // the game's wrench, nine times as big, spinning
+          const [cx, cy] = S(wx, H[1] - 10);
+          const spin = (t - F) * 16;
+          const L = 42;
+          for (let q = -L; q <= L; q += 2) {
+            const qx = cx + Math.cos(spin) * q;
+            const qy = cy + Math.sin(spin) * q;
+            box(view.g, qx - 4, qy - 4, 9, 9, q > L - 14 ? hex('#D8D8E0') : hex('#C8C8D0'));
+            if (q < -L + 8) box(view.g, qx - 4, qy - 4, 9, 9, hex('#8A8A94'));
+          }
+          for (const side of [-1, 1]) {
+            const qx = cx + Math.cos(spin) * L + Math.cos(spin + (side * Math.PI) / 2) * 10;
+            const qy = cy + Math.sin(spin) * L + Math.sin(spin + (side * Math.PI) / 2) * 10;
+            box(view.g, qx - 6, qy - 6, 12, 12, hex('#C8C8D0'));
+          }
+        }
+        return { hero: H, shake: t >= HIT && t < HIT + 0.25 ? 7 : 0, flash: t >= HIT && t < HIT + 0.15 ? 0.4 : 0 };
+      },
+    });
+  },
+
+  // Moss wanders off and turns up somewhere else. Then he looses a volley straight up, and it comes down on all of them.
+  moss: () => {
+    const F = F0;
+    const foes = [
+      { from: [260, 40], to: [214, 62] },
+      { from: [264, 110], to: [216, 100] },
+      { from: [120, 40], to: [168, 60] },
+      { from: [124, 120], to: [166, 102] },
+    ];
+    const VOLLEYS = [0.45, 0.75];
+    const FALL = 0.3;
+    return signature({
+      path: 'environmental', map: 'field-of-banners', at: [190, 64], F, dur: F + 1.4,
+      move: 'ARROW BARRAGE', sfx: [[F, 'fire'], [F + 0.45, 'thit'], [F + 0.75, 'tkill']], shout: null, sub: 'ONCE A DAY · AFTER A REAL HABIT', lines: WORLD_LINES,
+      play(t, view, ui, S) {
+        // Moss: walks in, fades out, turns up a little way off
+        let mx = lerp(164, 184, clamp01(t / 0.9));
+        let fade = 0;
+        if (t >= 0.9 && t < 1.3) fade = (t - 0.9) / 0.4;
+        else if (t >= 1.3 && t < 1.6) fade = 1;
+        else if (t >= 1.6 && t < 2.0) fade = 1 - (t - 1.6) / 0.4;
+        if (t >= 1.45) mx = 192;
+        const my = t >= 1.45 ? 80 : 84;
+        const [msx, msy] = S(mx, my);
+        foes.forEach((f, i) => {
+          const [x, y, moving] = approach(f.from, f.to, t, 0.8, F - 0.1);
+          const lands = VOLLEYS.map((v) => F + v + i * 0.04);
+          const gone = clamp01((t - lands[1] - 0.05) / 0.35);
+          const [sx, sy] = S(x, y);
+          // the shadow of what's coming, growing as it falls
+          for (const at of lands) {
+            const k = (t - (at - FALL)) / FALL;
+            if (k >= 0 && k < 1) box(view.g, sx - 3 - k * 9, sy - 2, 6 + k * 18, 4, mix(hex('#2F5A22'), INK, 0.4));
+          }
+          if (gone < 1)
+            walker(view, 'shadow', x, y, dirTo(mx - x, my - y), stepOf(t + i, moving), {
+              white: lands.some((at) => t >= at && t < at + 0.1) ? 1 : 0,
+              fade: gone,
+            });
+          // three arrows a volley, dropping out of the sky
+          for (const at of lands) {
+            const k = (t - (at - FALL)) / FALL;
+            if (k < 0 || k >= 1) continue;
+            for (const dx of [-12, 0, 12]) {
+              const ax = sx + dx + (1 - k) * 20;
+              const ay = sy - 30 - (1 - k) * 260 + Math.abs(dx);
+              box(view.g, ax, ay - 24, 3, 24, hex('#C8A870'));
+              box(view.g, ax - 3, ay, 9, 6, hex('#D8D8E0'));
+              box(view.g, ax - 3, ay - 27, 3, 6, hex('#4ADE80'));
+              box(view.g, ax + 3, ay - 27, 3, 6, hex('#4ADE80'));
+            }
+          }
+          for (const at of lands) pop(ui, '2', sx, sy, t - at, hex('#4ADE80'));
+          puffS(view.g, sx, sy, t - lands[1] - 0.05);
+        });
+        walker(view, 'moss', mx, my, t >= F - 0.7 ? 'up' : 'down', stepOf(t, t < 0.9), { fade });
+        // the volley going up
+        if (t >= F && t < F + 0.35) {
+          const k = (t - F) / 0.35;
+          for (const dx of [-14, -5, 4, 13]) box(view.g, msx + dx + k * dx, msy - 70 - k * 300, 3, 22, hex('#C8A870'));
+        }
+        return {
+          hero: [mx, my],
+          noCharge: fade > 0,
+          shake: VOLLEYS.some((v) => t >= F + v && t < F + v + 0.12) ? 4 : 0,
+        };
+      },
+    });
+  },
+};
+
+/** Splits text into lines of at most `n` letters, on spaces. */
+function wrap(text, n) {
+  const out = [''];
+  for (const w of text.split(' ')) {
+    const cur = out[out.length - 1];
+    if (cur && cur.length + 1 + w.length > n) out.push(w);
+    else out[out.length - 1] = cur ? `${cur} ${w}` : w;
+  }
+  return out;
+}
+/** The top of a walker (head and shoulders), drawn big in a dialogue box: the game's portraits (portraits.ts). */
+function portrait(ui, id, x, y, sc, lift) {
+  const sy = WALKER_ROW[id] * 24;
+  for (let py = 0; py < 17; py++)
+    for (let px = 0; px < 16; px++) {
+      const i = ((sy + py) * WALKERS.width + px) * 4;
+      if (WALKERS.data[i + 3] < 128) continue;
+      box(ui, x + px * sc, y + py * sc - lift, sc, sc, [WALKERS.data[i], WALKERS.data[i + 1], WALKERS.data[i + 2]]);
+    }
+}
+// The Scroll theme (palettes.ts), the game's dialogue box.
+const SCROLL = { background: hex('#F0D9A7'), card: hex('#F8EACB'), frame: hex('#4A3423'), accent: hex('#9A3412'), text: hex('#2E1F14') };
+
+/**
+ * Straight after the move: someone they know walks up, and they talk, in the
+ * game's dialogue box (portrait, name, the line typing in). `lines` are
+ * [speaker id, name, text].
+ */
+function talk({ map: name, at, hero, friend, from, lines }) {
+  const ARRIVE = 0.7;
+  const spans = [];
+  let t0 = ARRIVE;
+  for (const [, , txt] of lines) {
+    const len = letterTimes(txt).at(-1) + 1.0;
+    spans.push([t0, t0 + len]);
+    t0 += len;
+  }
+  const voices = lines.map(([id, label]) => voiceFor(titleCase(label), id));
+  const dur = t0 + 0.2;
+  const BX = 8;
+  const BW = GW - 16;
+  const PS = 3;
+  const TX = BX + 10 + 16 * PS + 10;
+  const PER = Math.floor((BX + BW - 8 - TX) / 12);
+  return {
+    dur,
+    frame(t) {
+      const view = mapView(name, at[0], at[1]);
+      const ui = blankUi();
+      const k = ease(clamp01(t / ARRIVE));
+      const fx = lerp(from[0], friend.at[0], k);
+      const fy = lerp(from[1], friend.at[1], k);
+      const n = spans.findIndex(([a, b]) => t >= a && t < b);
+      const cur = n >= 0 ? n : t < ARRIVE ? -1 : lines.length - 1;
+      const speaking = cur >= 0 ? lines[cur][0] : null;
+      const age = cur >= 0 ? t - spans[cur][0] : 0;
+      // only the line being typed speaks: the last one, held after it's done, stays quiet
+      const said = cur >= 0 ? speak(lines[cur][2].toUpperCase(), age, n === cur ? voices[cur] : null) : null;
+      const typed = said ? said.shown : 0;
+      const blip = said && !said.done ? said.lift : 0;
+      // the two of them, face to face; whoever's talking bobs with their voice
+      walker(view, friend.id, fx, fy - (speaking === friend.id ? blip : 0), k < 1 ? dirTo(friend.at[0] - from[0], friend.at[1] - from[1]) : dirTo(hero.at[0] - fx, hero.at[1] - fy), stepOf(t, k < 1));
+      walker(view, hero.id, hero.at[0], hero.at[1] - (speaking === hero.id ? blip : 0), t < ARRIVE * 0.5 ? 'down' : dirTo(fx - hero.at[0], fy - hero.at[1]), 0);
+      if (cur >= 0) {
+        const [who, label, txt] = lines[cur];
+        const rows = wrap(txt.toUpperCase(), PER);
+        const BH = Math.max(16 * PS + 14, 30 + rows.length * 18);
+        const BY = 262;
+        box(ui, BX - 3, BY - 3, BW + 6, BH + 6, SCROLL.frame);
+        box(ui, BX, BY, BW, BH, SCROLL.card);
+        box(ui, BX + 6, BY + 6, 16 * PS + 8, 16 * PS + 8, SCROLL.frame);
+        box(ui, BX + 8, BY + 8, 16 * PS + 4, 16 * PS + 4, SCROLL.background);
+        portrait(ui, who, BX + 10, BY + 8, PS, blip);
+        box(ui, BX + 8, BY + 8 + 16 * PS + 4, 16 * PS + 4, 2, SCROLL.frame);
+        textL(ui, label, 2, TX, BY + 8, SCROLL.accent, { outline: false });
+        let left = typed;
+        rows.forEach((r, i) => {
+          textL(ui, r, 2, TX, BY + 28 + i * 18, SCROLL.text, { outline: false, count: Math.max(0, left) });
+          left -= r.length + 1;
+        });
+        // the "more" arrow once the line's out
+        if (said.done && Math.floor(t * 3) % 2) box(ui, BX + BW - 14, BY + BH - 10, 6, 4, SCROLL.accent);
+      }
+      // in close on the two of them (4 screen pixels to an art pixel), their feet just above the box
+      const [ax, ay] = toS(view, (hero.at[0] + friend.at[0]) / 2, hero.at[1]);
+      const cam = camAt(4 / 3, [ax, ay - 30]);
+      cam.anchor = [GW / 2, 210];
+      return { scene: view.g, ui, cam: opening(t, cam, false) };
+    },
+  };
+}
+/** Who comes to find each hero after the fight, and what they say. */
+const TALKS = {
+  brannoc: { friend: 'oren', lines: [['brannoc', 'BRANNOC', 'That was so scary.'], ['oren', 'OREN', 'You beat them with one swing.'], ['brannoc', 'BRANNOC', "I didn't see. I had my eyes closed."]] },
+  ysolde: { friend: 'tamsin', lines: [['ysolde', 'YSOLDE', 'They owe me six coppers.'], ['tamsin', 'TAMSIN', "They're gone."], ['ysolde', 'YSOLDE', 'Then I want their next of kin.']] },
+  quill: { friend: 'ysolde', lines: [['quill', 'QUILL', "That's odd... the ladies will go crazy for this new move."], ['ysolde', 'YSOLDE', "No they won't."], ['quill', 'QUILL', 'I know...']] },
+  wren: { friend: 'brannoc', lines: [['wren', 'SISTER WREN', 'Are you hurt?'], ['brannoc', 'BRANNOC', 'Gravely. My pride.'], ['wren', 'SISTER WREN', "I'm sorry. I can't help with that."]] },
+  oren: { friend: 'pip', lines: [['pip', 'PIP', 'That was AMAZING! Again!'], ['oren', 'OREN', 'No.'], ['pip', 'PIP', 'Encore?'], ['oren', 'OREN', '...No.']] },
+  pip: { friend: 'pell', lines: [['pip', 'PIP', 'Pell! Did you like the performance?'], ['pell', 'PELL', 'Eh. It was mid.'], ['pip', 'PIP', '...Why do you talk like that?']] },
+  // Tamsin's talk comes first: she walks up to Plush, and then the wrench answers him.
+  tamsin: { friend: 'tamsin', host: 'plush', first: true, lines: [['tamsin', 'TAMSIN', "There's work to be done."], ['plush', 'BARON PLUSH', 'Can we take a nap first?']] },
+  moss: { friend: 'jory', lines: [['moss', 'MOSS', 'Sorry about the birds.'], ['jory', 'JORY', 'What birds?'], ['moss', 'MOSS', '...Exactly.']] },
+};
+/** Where each talk happens: the fight's own place, the hero where they ended up, the friend walking in from one side. */
+const TALK_SPOTS = {
+  brannoc: { map: 'barracks-hall', at: [142, 106], hero: [134, 126], friend: [156, 126], from: [210, 126] },
+  ysolde: { map: 'kingdom-town', at: [330, 162], hero: [320, 182], friend: [342, 182], from: [400, 182] },
+  quill: { map: 'archive', at: [208, 140], hero: [198, 160], friend: [220, 160], from: [270, 160] },
+  wren: { map: 'chapel', at: [96, 70], hero: [86, 90], friend: [108, 90], from: [170, 90] },
+  oren: { map: 'the-pit', at: [128, 76], hero: [118, 96], friend: [140, 96], from: [200, 96] },
+  pip: { map: 'millbrook', at: [264, 156], hero: [254, 176], friend: [276, 176], from: [330, 176] },
+  tamsin: { map: 'sleeping-keep', at: [150, 80], hero: [158, 96], friend: [132, 96], from: [80, 96] },
+  moss: { map: 'field-of-banners', at: [190, 64], hero: [180, 80], friend: [202, 80], from: [260, 80] },
+};
+
+/** The real-life habit that levels each hero, in their Path's words. */
+const SIG_HABITS = {
+  brannoc: { path: 'physical', quest: 'MOVE 30 MIN', name: 'BRANNOC', move: 'SWEETHEART SWING', lines: [['I WENT'], ['FOR A RUN.', Y]] },
+  ysolde: { path: 'financial', quest: 'LOG SPENDING', name: 'YSOLDE', move: 'COLLECT THE TAB', lines: [['I CHECKED'], ['MY BUDGET.', Y]] },
+  quill: { path: 'intellectual', quest: 'READ 20 MIN', name: 'QUILL', move: 'FOOTNOTE BARRAGE', lines: [['I READ'], ['20 PAGES.', Y]] },
+  wren: { path: 'spiritual', quest: 'GRATITUDE', name: 'SISTER WREN', move: 'LANTERN VIGIL', lines: [['I WROTE 3'], ['THANK-YOUS.', Y]] },
+  oren: { path: 'emotional', quest: 'JOURNAL', name: 'OREN', move: 'ONE BREATH', lines: [['I JOURNALED'], ['FOR 5 MIN.', Y]] },
+  pip: { path: 'social', quest: 'CALL A FRIEND', name: 'PIP', move: 'ENCORE', lines: [['I CALLED'], ['MY MOM.', Y]] },
+  tamsin: { path: 'occupational', quest: 'DEEP WORK', name: 'TAMSIN', move: 'HOLD THIS', lines: [['1 HOUR OF'], ['DEEP WORK.', Y]] },
+  moss: { path: 'environmental', quest: 'WALK OUTSIDE', name: 'MOSS', move: 'ARROW BARRAGE', lines: [['I WENT'], ['OUTSIDE.', Y]] },
+};
+/** Habit done → hero levels to 10 and learns their move → the move in the Other World → someone they know comes over to talk → 8 PATHS. */
+const signatureCut = (hero) => {
+  const h = SIG_HABITS[hero];
+  // who stands waiting (`host`, else the hero after their fight) and who walks up (`friend`)
+  const conversation = talk({
+    map: TALK_SPOTS[hero].map,
+    at: TALK_SPOTS[hero].at,
+    hero: { id: TALKS[hero].host ?? hero, at: TALK_SPOTS[hero].hero },
+    friend: { id: TALKS[hero].friend, at: TALK_SPOTS[hero].friend },
+    from: TALK_SPOTS[hero].from,
+    lines: TALKS[hero].lines,
+  });
+  return [
+    habit({ path: h.path, hero, quest: h.quest, lv: 9, dur: 0.6 + FILL + 1.05, evolve: FILL, impact: true, lines: h.lines, who: h.name, move: h.move }),
+    ...(TALKS[hero].first ? [conversation, SIG_SCENES[hero]()] : [SIG_SCENES[hero](), conversation]),
+    endCard({ dur: 4.2, powered: true }),
+  ];
+};
+
+// ---- the cuts
 const brannoc = (dur, impact = true) =>
   habit({ path: 'physical', hero: 'brannoc', quest: 'MOVE 30 MIN', lv: 14, dur, impact, lines: [['I WENT'], ['FOR A RUN.', Y]] });
 const quill = (dur) => habit({ path: 'intellectual', hero: 'quill', quest: 'READ 20 MIN', lv: 8, dur, lines: [['I READ'], ['20 PAGES.', Y]] });
@@ -897,6 +1733,23 @@ const CUTS = {
     endCard({ dur: 3.7 }),
   ],
   6: () => [brannoc(2.7), endCard({ dur: 3.3, lines: [['YOUR HABITS'], ['ARE THE XP.', Y]] })],
+  // the cold open for the story series: Brannoc hatches, and the title drops
+  prince: () => [
+    hatch({
+      path: 'physical',
+      hero: 'brannoc',
+      name: 'BRANNOC',
+      number: '#008',
+      rarity: 3,
+      sub: 'STRONGEST MAN ALIVE. ALLEGEDLY.',
+      linesA: [['SOMEONE IS'], ['WAKING UP!', Y]],
+      linesB: [['THE PRINCE'], ['WHO RAN.', Y]],
+      dur: 7.0,
+      at: 4.4,
+      wiggles: [0.3, 1.4, 2.4],
+      impact: true,
+    }),
+  ],
   // the egg, then how it works, then the game, then where to get it
   tour: () => [
     hatch({
@@ -923,7 +1776,9 @@ const CUTS = {
     endCard({ dur: 5.0 }),
   ],
 };
-if (!CUTS[cut]) throw new Error(`Unknown cut ${cut}: use 30, 15, 6 or tour.`);
+// one per core companion: `node scripts/ad-video.mjs sig-brannoc out.mp4`
+for (const hero of Object.keys(SIG_SCENES)) CUTS[`sig-${hero}`] = () => signatureCut(hero);
+if (!CUTS[cut]) throw new Error(`Unknown cut ${cut}: use 30, 15, 6, tour, prince or sig-<hero> (${Object.keys(SIG_SCENES).join(', ')}).`);
 const scenes = CUTS[cut]();
 
 // ---- render: sample the scene through the camera, lay the overlay on top
@@ -934,13 +1789,15 @@ const shakeRnd = rng(3);
 const ff = spawn(
   'ffmpeg',
   ['-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
-    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', '17', '-movflags', '+faststart', out],
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', '17',
+    '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart', `${out}.silent.mp4`],
   { stdio: ['pipe', 'ignore', 'inherit'] },
 );
 let total = 0;
 for (const sc of scenes) {
   const n = Math.round(sc.dur * FPS);
   for (let f = 0; f < n; f++) {
+    NOW = total / FPS;
     const { scene, ui, cam } = sc.frame(f / FPS);
     const sx0 = cam.shake ? (shakeRnd() - 0.5) * 2 * cam.shake : 0;
     const sy0 = cam.shake ? (shakeRnd() - 0.5) * 2 * cam.shake : 0;
@@ -968,4 +1825,56 @@ for (const sc of scenes) {
   }
 }
 ff.stdin.end();
-ff.on('close', (code) => console.log(code === 0 ? `Wrote ${out} (${total} frames, ${(total / FPS).toFixed(1)}s).` : `ffmpeg failed: ${code}`));
+await once(ff, 'close');
+
+// ---- the voices: each blip at the game's volume (sounds.ts EFFECT_VOLUME 0.5); no music, add a sound when posting
+const silent = `${out}.silent.mp4`;
+if (SOUNDS.length === 0) renameSync(silent, out);
+else {
+  const RATE = 22050;
+  const pcm = (path) => {
+    const b = readFileSync(path);
+    const at = b.indexOf('data') + 8;
+    return new Int16Array(b.buffer.slice(b.byteOffset + at, b.byteOffset + b.length));
+  };
+  // The 8-bit bank (chip-sounds.mjs) for everything but the voices, which are the game's own blips.
+  const clips = chipSounds(RATE);
+  for (let v = 1; v <= 5; v++) clips[`blip${v}`] = Float32Array.from(pcm(`assets/audio/blip-${v}.wav`), (x) => x / 32768);
+  const VOLUME = { blip1: 0.5, blip2: 0.5, blip3: 0.5, blip4: 0.5, blip5: 0.5 };
+  const mix = new Float32Array(Math.ceil((total / FPS) * RATE));
+  for (const [at, name] of SOUNDS) {
+    const start = Math.round(at * RATE);
+    const clip = clips[name];
+    const gain = VOLUME[name] ?? 1;
+    for (let i = 0; i < clip.length && start + i < mix.length; i++) if (start + i >= 0) mix[start + i] += clip[i] * gain;
+  }
+  const wav = Buffer.alloc(44 + mix.length * 2);
+  wav.write('RIFF', 0);
+  wav.writeUInt32LE(36 + mix.length * 2, 4);
+  wav.write('WAVEfmt ', 8);
+  wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20);
+  wav.writeUInt16LE(1, 22);
+  wav.writeUInt32LE(RATE, 24);
+  wav.writeUInt32LE(RATE * 2, 28);
+  wav.writeUInt16LE(2, 32);
+  wav.writeUInt16LE(16, 34);
+  wav.write('data', 36);
+  wav.writeUInt32LE(mix.length * 2, 40);
+  mix.forEach((v, i) => wav.writeInt16LE(Math.round(Math.max(-1, Math.min(1, v)) * 32767), 44 + i * 2));
+  const voices = `${out}.voices.wav`;
+  writeFileSync(voices, wav);
+  // Upload-safe for Instagram, TikTok and YouTube: 48 kHz stereo AAC, BT.709 colour tags, the index up front.
+  const mux = spawn(
+    'ffmpeg',
+    ['-y', '-loglevel', 'error', '-i', silent, '-i', voices, '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
+      '-bsf:v', 'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
+      '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', '-shortest', out],
+    { stdio: ['ignore', 'ignore', 'inherit'] },
+  );
+  const [code] = await once(mux, 'close');
+  unlinkSync(silent);
+  unlinkSync(voices);
+  if (code !== 0) throw new Error(`ffmpeg mux failed: ${code}`);
+}
+console.log(`Wrote ${out} (${total} frames, ${(total / FPS).toFixed(1)}s, ${SOUNDS.length} sounds).`);

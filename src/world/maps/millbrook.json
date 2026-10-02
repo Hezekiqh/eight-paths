@@ -96,7 +96,8 @@
             "There's a lesson in that, my mum said. She never said what it was."
           ]
         }
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "wenna",
@@ -138,7 +139,8 @@
           "Heard you won in the pit. Three of the king's own.",
           "Still soft. Less soft. Sit down. Arm."
         ]
-      }
+      },
+      "wander": 1
     },
     {
       "id": "oriel",

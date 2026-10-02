@@ -29,6 +29,7 @@ import {
   deleteAccount,
   refreshFriends,
   signInWithApple,
+  signInWithEmail,
   shareFriendCode,
   signInWithGoogle,
   signOut,
@@ -64,6 +65,9 @@ function FounderBadge({ number, color }: { number: number | null; color: string 
 /** Before an account: what joining means, and Sign in with Apple. */
 function Join() {
   const [busy, setBusy] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const signIn = (provider: () => Promise<'ok' | 'canceled'>) => async () => {
     setBusy(true);
     try {
@@ -104,6 +108,42 @@ function Join() {
             <Text style={styles.googleG}>G</Text>
             <Text style={styles.googleText}>Continue with Google</Text>
           </Pressable>
+          {/* For the App Review demo account; there's no email sign-up. */}
+          {emailOpen ? (
+            <>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="email"
+                placeholderTextColor={colors.textFaint}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="username"
+                style={styles.input}
+              />
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="password"
+                placeholderTextColor={colors.textFaint}
+                secureTextEntry
+                textContentType="password"
+                returnKeyType="go"
+                onSubmitEditing={signIn(() => signInWithEmail(email, password))}
+                style={styles.input}
+              />
+              <Button
+                title="Sign in"
+                onPress={signIn(() => signInWithEmail(email, password))}
+                disabled={!email.trim() || !password}
+              />
+            </>
+          ) : (
+            <Pressable accessibilityRole="button" onPress={() => setEmailOpen(true)}>
+              <Text style={[styles.hint, styles.emailLink]}>Sign in with email</Text>
+            </Pressable>
+          )}
         </>
       )}
     </View>
@@ -381,6 +421,7 @@ const styles = StyleSheet.create({
   googleText: { color: '#1F1F1F', fontSize: 19, fontWeight: '500' },
   input: { ...windowStyle, color: colors.text, fontFamily: fonts.regular, fontSize: 18, padding: spacing.md },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
+  emailLink: { textAlign: 'center', textDecorationLine: 'underline', paddingVertical: spacing.sm },
   error: { color: colors.danger },
   card: { ...windowStyle, borderWidth: 3, padding: spacing.lg, gap: spacing.sm },
   cardTop: { flexDirection: 'row', gap: spacing.lg, alignItems: 'center', marginBottom: spacing.sm },

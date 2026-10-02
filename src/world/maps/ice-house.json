@@ -1,0 +1,61 @@
+{
+  "id": "ice-house",
+  "name": "The Ice House",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "############",
+    "#WWWcWWcWWW#",
+    "#W........W#",
+    "#W...ii...W#",
+    "#W...ii...W#",
+    "#W........W#",
+    "#WWWW11WWWW#",
+    "############"
+  ],
+  "spawn": {
+    "x": 5,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "i": [
+      "The last block of ice from the frozen wastes. Five hundred years old, and it hasn't melted a drop.",
+      "It's a normal block of ice. Everybody agrees it's the most important thing in the city."
+    ],
+    "1": [
+      "The way out, to the Frost Ward."
+    ]
+  },
+  "objects": [
+    {
+      "id": "torvi",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "gudrun",
+      "facing": "right",
+      "name": "Old Torvi",
+      "lines": [
+        "I come every day. I put my hand on it. Very cold.",
+        "My grandad put his hand on it. His grandad put his hand on it. It's a family thing. Our hands are freezing."
+      ]
+    },
+    {
+      "id": "letters",
+      "type": "sign",
+      "x": 8,
+      "y": 2,
+      "lines": [
+        "A pile of letters, addressed TO THE WASTES. The newest is from a recruit called Leif.",
+        "'Dear Mum. The food is grey. The drillmaster can't count. I'm doing all right.'"
+      ]
+    }
+  ]
+}

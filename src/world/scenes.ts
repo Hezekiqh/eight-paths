@@ -23,8 +23,6 @@ export type Scene = {
   choices?: { label: string; lines: string[]; outcome: Outcome }[];
 };
 
-const FIELD = { map: 'field-of-banners' as MapId, x: 11, y: 7, facing: 'up' as const };
-
 /** The scene for winning the fight on `map`. `brannoc`: he's in your party. */
 export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | null {
   switch (map) {
@@ -87,8 +85,9 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
               "KALDOR: …Mercy. From a stranger. I didn't think I'd see that again.",
               'KALDOR: The cages stay open. The horde guards the border, not the streets. For now. For you.',
               "You receive the Warrior's Blessing. Kaldor keeps his throne, and his army. The march is only waiting.",
+              'KALDOR: The south road is yours. Tell Grub I said so. He likes to hear it from me.',
             ],
-            outcome: { flags: ['kaldor-beaten', 'kaldor-allowed', 'warrior-blessing'], next: FIELD },
+            outcome: { flags: ['kaldor-beaten', 'kaldor-allowed', 'warrior-blessing'] },
           },
           {
             label: 'Take his throne.',
@@ -106,18 +105,52 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
               "Brannoc lays Aurek the Tall to rest, and puts his name back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
               'Widow Aldane brings the old portrait out from under her floor and hangs it in the war hall.',
               'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+              'Word runs down the south road ahead of you. For the first time in three years, Grub steps aside.',
             ],
             outcome: {
               flags: ['kaldor-beaten', 'kaldor-dethroned'],
               joins: ['ingrid', 'aurek', 'aldane'],
-              next: FIELD,
             },
           },
         ],
       };
+    case 'kaldorium-maximus':
+      return ladderScene(flag);
     default:
       return null;
   }
+}
+
+/** Out of the Maximus after a bout, to the Ring Ward: the next rung waits for your next visit. */
+const RING_GATE = { map: 'ring-ward' as MapId, x: 15, y: 5, facing: 'down' as const };
+
+/** Winning a rung of the Maximus's ladder. Drafts, for the author. */
+function ladderScene(flag: string): Scene | null {
+  const lines: Record<string, string[]> = {
+    'maximus-1': [
+      'Ugg goes down. Ogg, on the sideline, shouts "GET UP! No, stay down! No, get up!"',
+      'LADY HOLLER: RUNG ONE, CLIMBED! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
+    ],
+    'maximus-2': [
+      'Matron Sorrel lowers her rattle, and pats you on the head.',
+      "MATRON SORREL: Good. Very good. Now go and have a sit down at Tova's. You've earned a biscuit.",
+    ],
+    'maximus-3': [
+      'Fennick stops running. He looks down at himself. For the first time in nine years, he has been hit.',
+      "FENNICK: Oh. Oh, that's what it's like. I'm going to go and sit down at Tova's for a long time.",
+    ],
+    'maximus-4': [
+      'The Masked Brute pulls off the mask. Nobody gasps, because everybody knew.',
+      "CAPTAIN VARGA: …Don't tell the king I do this on my day off.",
+    ],
+    'maximus-5': [
+      'Grand Champion Hroth sits down in the sand, and laughs, and laughs.',
+      'HROTH: Forty years. Forty YEARS. Thank you. Thank you. I can retire.',
+      "Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.",
+      "HROTH: Find me at Tova's. I'll be the one smiling.",
+    ],
+  };
+  return lines[flag] ? { lines: lines[flag], outcome: { flags: [flag], next: RING_GATE } } : null;
 }
 
 /** Said at the sealed portal once Season 1 is finished. */
@@ -145,3 +178,12 @@ export function seasonFinale(memory: HabitMemory | null, flags: string[]): strin
 
 /** Coming back to the seal once the season's done. */
 export const SEASON_END = FINALE.end;
+
+/** The seal can't open yet, but it can take you home: through it to the Keeper, who has the kettle on. */
+export const PORTAL_HOME = {
+  lines: [
+    'The seal hums a second, lower note. In the stone, faint as breath on glass: candlelight, shelves, a kettle.',
+    "It won't take you onward. Not yet. But it will take you home.",
+  ],
+  to: { map: 'archive' as MapId, x: 15, y: 5, facing: 'up' as const },
+};
