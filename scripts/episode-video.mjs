@@ -1270,7 +1270,7 @@ const EPISODES = {
       ],
     };
   },
-  // You, as Brannoc, break open the roadside cocoon: out comes Felix Rook, the Academy's
+  // You (the wizard, as in every episode) break open the roadside cocoon: out comes Felix Rook, the Academy's
   // strategist, who chats, then strolls off toward Kaldor's towers. Written for this episode.
   4: () => {
     const map = loadMap('courier-road', 'outdoor');
@@ -1281,7 +1281,7 @@ const EPISODES = {
       number: 4,
       title: 'BOTH SIDES',
       map,
-      hero: { sprite: 'brannoc', at: [9, 6], facing: 'left' },
+      hero: { sprite: 'quill', at: [9, 6], facing: 'left' },
       hide: ['nib', 'felix'],
       titleDur: 3.0,
       endDur: 4.5,
