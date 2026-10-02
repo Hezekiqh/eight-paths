@@ -113,7 +113,8 @@
       "character": "brannoc",
       "lines": [
         "You're up! Good, good. I was guarding you. From over here. Tactically."
-      ]
+      ],
+      "meets": true
     },
     {
       "id": "ysolde",

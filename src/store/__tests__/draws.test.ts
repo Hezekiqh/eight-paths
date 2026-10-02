@@ -118,11 +118,17 @@ describe('reconcileDraws', () => {
 describe('the core eight are met, not drawn', () => {
   const core = Object.values(DEFAULT_PARTY);
 
-  it('wakes Brannoc with the first XP, with his hatch', () => {
-    expect(reconcileDraws(fresh({ owned: {} }), zeroXp, seeded())!.owned?.brannoc).toBeUndefined();
-    const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 } }), { ...zeroXp, financial: 10 }, seeded())!;
-    expect(out.owned?.brannoc).toBe(1);
-    expect(out.drops).toEqual(['brannoc']);
+  it('wakes the hero you chose to be with the first XP, with their hatch', () => {
+    const chose = { player: { origin: 'quill' as const } };
+    expect(reconcileDraws(fresh({ owned: {}, ...chose }), zeroXp, seeded())!.owned?.quill).toBeUndefined();
+    const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 }, ...chose }), { ...zeroXp, financial: 10 }, seeded())!;
+    expect(out.owned).toEqual({ quill: 1 });
+    expect(out.drops).toEqual(['quill']);
+  });
+
+  it("wakes nobody before the Keeper's question is answered", () => {
+    const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 } }), { ...zeroXp, financial: 10 }, seeded());
+    expect(out?.owned ?? {}).toEqual({});
   });
 
   it('never hands out a core hero you have not met', () => {

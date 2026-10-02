@@ -36,7 +36,7 @@ import {
   type XpGain,
 } from '@/game';
 
-import { COMPANIONS, DEFAULT_PARTY, SHARDS_TO_UNLOCK, isUnlocked, type CharacterId } from '@/story/companions';
+import { COMPANIONS, DEFAULT_PARTY, SHARDS_TO_UNLOCK, STARTERS, isUnlocked, type CharacterId } from '@/story/companions';
 
 import { currentTier } from '@/premium/store';
 import { blessedPath } from '@/world/blessings';
@@ -152,6 +152,11 @@ type Actions = {
   markRevealed: (ids: CharacterId[]) => void;
   /** Unlocks characters as a gift (a friend joined): gives each a full set of shards. */
   giftCharacters: (ids: CharacterId[]) => void;
+  /**
+   * The Keeper's question: who the player wakes as (one of STARTERS, once). They
+   * take their Path's party slot, and wake now if a habit is already done.
+   */
+  chooseOrigin: (id: CharacterId) => void;
   /** Met in the Other World: they join at once, no hatch (the core eight, found along the road). */
   meetCharacters: (ids: CharacterId[]) => void;
   /** Applies trade moves from the server that this save hasn't seen yet. */
@@ -494,6 +499,16 @@ export const useGameStore = create<GameState>()(
           for (const id of ids) shards[id] = Math.max(shards[id] ?? 0, SHARDS_TO_UNLOCK);
           return { shards };
         }),
+
+      chooseOrigin: (id) => {
+        const { player } = get();
+        if (!player || player.origin || !STARTERS.includes(id)) return;
+        set((s) => ({
+          player: { ...player, origin: id },
+          party: { ...s.party, [COMPANIONS[id].dimension]: id },
+        }));
+        get().reconcileDraws();
+      },
 
       meetCharacters: (ids) =>
         set((s) => {

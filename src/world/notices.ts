@@ -34,7 +34,7 @@ export const npcNotice = (map: MapId, npc: string) => `npc:${map}:${npc}`;
 export const fightNotice = (map: MapId) => `fight:${map}`;
 
 /**
- * "A Warrior can do this: walk as Brannoc (pause, then Party)." Or, for a Path
+ * "A Warrior can do this: Brannoc will step up." (a field move). Or, for a Path
  * you haven't met yet, where its hero is waiting. `owned` left out: everyone (old saves).
  */
 export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>, owned?: Owned | null): string {
@@ -42,7 +42,7 @@ export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>, o
   const { className } = CLASSES[path];
   const article = /^[AEIOU]/.test(className) ? 'An' : 'A';
   if (!walker) return `${article} ${className} can do this. ${whereToMeet(path) ?? "You haven't met one yet."}`;
-  return `${article} ${className} can do this: walk as ${COMPANIONS[walker].name} (pause, then Party).`;
+  return `${article} ${className} can do this: ${COMPANIONS[walker].name} will step up.`;
 }
 
 /** How to beat what's in a room: each boss's tell, and what to do about it. */

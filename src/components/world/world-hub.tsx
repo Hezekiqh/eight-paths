@@ -9,7 +9,7 @@ import { LoreScroll } from '@/components/world/lore-scroll';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
-import { FIRST_HERO } from '@/store/draws';
+import { COMPANIONS, type CharacterId } from '@/story/companions';
 import { useGameStore } from '@/store';
 import { useWorldStore } from '@/world/store';
 
@@ -29,8 +29,10 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const position = useWorldStore((s) => s.position);
   const discovered = useWorldStore((s) => s.discovered);
   const heard = useWorldStore((s) => s.heard);
-  // No Other World until the first habit wakes Brannoc (an old save, with no `owned`, has him already).
-  const awake = useGameStore((s) => s.owned === null || (s.owned[FIRST_HERO] ?? 0) > 0);
+  // First the Keeper asks who you look like (stepping outside asks it); then no Other World
+  // until the first habit wakes that hero (an old save, with no `owned`, has everyone already).
+  const origin = useGameStore((s) => s.player?.origin);
+  const awake = useGameStore((s) => !s.player?.origin || s.owned === null || (s.owned[s.player.origin] ?? 0) > 0);
   // `/world?tab=settings` opens straight on Settings (the Character tab links here).
   const params = useLocalSearchParams<{ tab?: string }>();
   const asked: Tab = params.tab === 'settings' ? 'settings' : 'world';
@@ -60,7 +62,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
         ) : (
           <>
             <View ref={playRef} collapsable={false}>
-              {awake ? <Play started={position !== null} onPlay={onPlay} /> : <Asleep />}
+              {awake || !origin ? <Play started={position !== null} onPlay={onPlay} /> : <Asleep id={origin} />}
             </View>
 
             <LoreScroll heard={heard} />
@@ -88,12 +90,13 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
   );
 }
 
-/** Before the first habit: the door stays shut, and Brannoc sleeps. */
-function Asleep() {
+/** Before the first habit: the door stays shut, and the hero you chose sleeps. */
+function Asleep({ id }: { id: CharacterId }) {
+  const { name } = COMPANIONS[id];
   return (
     <View style={styles.asleep} accessible>
-      <Text style={styles.asleepLabel}>BRANNOC IS ASLEEP</Text>
-      <Text style={styles.how}>Finish your first habit to wake him. Then you can step outside.</Text>
+      <Text style={styles.asleepLabel}>{name.toUpperCase()} IS ASLEEP</Text>
+      <Text style={styles.how}>Finish your first habit to wake {name}. Then you can step outside.</Text>
     </View>
   );
 }

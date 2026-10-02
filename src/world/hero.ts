@@ -10,8 +10,6 @@ export const isWalker = (id: string): id is WalkerId => Object.prototype.hasOwnP
 /** A party member who can walk the World: a character with overworld art. */
 export type HeroId = CharacterId & WalkerId;
 
-/** Everyone walks first as Brannoc: he wakes with your first habit. */
-export const FIRST_WALKER: HeroId = 'brannoc';
 
 /** Met (in the collection), or an old save that has everyone. */
 const met = (id: CharacterId, owned: Owned | null | undefined) => !owned || (owned[id] ?? 0) > 0;
@@ -31,16 +29,18 @@ export function walkersFor(party: Record<Dimension, CharacterId>, owned?: Owned 
 
 /**
  * Who walks the World: the one the player picked, as long as they can still
- * walk (see walkersFor). Otherwise the player's class companion if met, else Brannoc.
+ * walk (see walkersFor). Otherwise the player's class companion if met, else
+ * the hero they woke as (`origin`, see Player), else Brannoc.
  */
 export function worldHero(
   picked: CharacterId | null,
   party: Record<Dimension, CharacterId>,
   classDimension: Dimension,
   owned?: Owned | null,
+  origin?: CharacterId,
 ): HeroId {
   const walkers = walkersFor(party, owned);
   if (picked && walkers.includes(picked as HeroId)) return picked as HeroId;
   const own = walkers.find((h) => h === party[classDimension] || h === DEFAULT_PARTY[classDimension]);
-  return own ?? FIRST_WALKER;
+  return own ?? ((origin && isWalker(origin) ? origin : 'brannoc') as HeroId);
 }

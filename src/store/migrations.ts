@@ -13,7 +13,7 @@ import {
   type RestDay,
 } from '@/game';
 
-import { COMPANIONS, DEFAULT_PARTY, isCharacterId, type CharacterId } from '@/story/companions';
+import { COMPANIONS, DEFAULT_PARTY, STARTERS, isCharacterId, type CharacterId } from '@/story/companions';
 
 import type { GameData } from './index';
 
@@ -67,6 +67,7 @@ function cleanPlayer(raw: unknown): Player | null {
   const time = typeof raw.notificationTime === 'string' ? parseTime(raw.notificationTime) : parseTime('');
   return {
     name: typeof raw.name === 'string' && raw.name.trim() ? raw.name : 'Adventurer',
+    ...(isCharacterId(raw.origin) && STARTERS.includes(raw.origin) ? { origin: raw.origin } : {}),
     classDimension: raw.classDimension,
     restTokens: Math.min(MAX_REST_TOKENS, Math.max(0, Math.round(tokens))),
     onboardedAt: isDateKey(raw.onboardedAt) ? raw.onboardedAt : '1970-01-01',

@@ -253,6 +253,7 @@ describe('loading a saved game', () => {
 
   it('levels whoever is in the party, and only lets unlocked characters join', () => {
     start();
+    useGameStore.getState().chooseOrigin('brannoc');
     const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
     useGameStore.getState().toggleQuest(read.id, today);
     expect(useGameStore.getState().completions.at(-1)?.characterId).toBe('quill');
@@ -409,23 +410,36 @@ describe('loading a saved game', () => {
     expect(last.kind === 'completed' && last.milestone?.title).toBe('Level 10');
   });
 
-  it('starts with nobody met, Brannoc waking with the first habit, and the rest met in the World', () => {
+  it('starts with nobody met, the chosen hero waking with the first habit, and the rest met in the World', () => {
     start();
     expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(0);
-    useGameStore.getState().reconcileDraws();
-    expect(useGameStore.getState().owned?.brannoc).toBeUndefined();
-
+    // A habit before the Keeper's question wakes nobody: nobody is chosen yet.
     useGameStore.getState().toggleQuest('tutorial', today);
     useGameStore.getState().reconcileDraws();
-    expect(useGameStore.getState().owned?.brannoc).toBe(1);
-    expect(useGameStore.getState().drops).toEqual(['brannoc']);
+    expect(useGameStore.getState().owned).toEqual({});
+
+    // Answering it wakes them at once (a habit is done), and they take their Path's slot. Not Brannoc.
+    useGameStore.getState().chooseOrigin('wren');
+    expect(useGameStore.getState().owned).toEqual({ wren: 1 });
+    expect(useGameStore.getState().drops).toEqual(['wren']);
+    expect(useGameStore.getState().party.spiritual).toBe('wren');
     const party = selectCollection(useGameStore.getState()).party;
-    expect(Object.values(party).filter((e) => e.unlocked).map((e) => e.companion.id)).toEqual(['brannoc']);
+    expect(Object.values(party).filter((e) => e.unlocked).map((e) => e.companion.id)).toEqual(['wren']);
+
+    // Asked once: a second answer changes nothing, and only the four starters can be chosen.
+    useGameStore.getState().chooseOrigin('quill');
+    expect(useGameStore.getState().player?.origin).toBe('wren');
 
     // Found in the Other World: they join at once, with no hatch.
-    useGameStore.getState().meetCharacters(['moss']);
-    expect(useGameStore.getState().owned?.moss).toBe(1);
-    expect(useGameStore.getState().drops).toEqual(['brannoc']);
+    useGameStore.getState().meetCharacters(['brannoc']);
+    expect(useGameStore.getState().owned?.brannoc).toBe(1);
+    expect(useGameStore.getState().drops).toEqual(['wren']);
+  });
+
+  it('only lets one of the four starters be chosen', () => {
+    start();
+    useGameStore.getState().chooseOrigin('moss');
+    expect(useGameStore.getState().player?.origin).toBeUndefined();
   });
 
   it('starts with the core eight revealed and records new reveals once', () => {

@@ -18,6 +18,7 @@ import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
+import { HeroSelect } from '@/components/world/hero-select';
 import { VhsOverlay } from '@/components/world/vhs-overlay';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { pickData, useGameStore } from '@/store';
@@ -99,13 +100,15 @@ let keepSideways = false;
 function usePlaying() {
   const playing = useSession((s) => s.worldPlaying);
   const setPlaying = useCallback((worldPlaying: boolean) => useSession.setState({ worldPlaying }), []);
+  // The Keeper's first question is asked upright; the game turns sideways once it's answered.
+  const sideways = useGameStore((s) => playing && heroAwake(s));
   const focused = useIsFocused();
   useEffect(() => {
     if (!focused) return;
     ScreenOrientation.lockAsync(
-      playing ? ScreenOrientation.OrientationLock.LANDSCAPE : ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      sideways ? ScreenOrientation.OrientationLock.LANDSCAPE : ScreenOrientation.OrientationLock.PORTRAIT_UP,
     );
-  }, [focused, playing]);
+  }, [focused, sideways]);
   useFocusEffect(
     useCallback(() => {
       keepSideways = false;
@@ -131,6 +134,30 @@ export default function WorldScreen() {
   const [trip, setTrip] = useState(0);
   const dark = useSharedValue(0);
   const darkStyle = useAnimatedStyle(() => ({ opacity: dark.value }));
+  const awake = useGameStore(heroAwake);
+  const origin = useGameStore((s) => s.player?.origin);
+  const flash = useSharedValue(0);
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+
+  // "Yes": a white flash, and out of it the Archive, in the chosen hero's body.
+  const chooseHero = useCallback(
+    (id: CharacterId) => {
+      playSound('levelUp');
+      haptics.celebrate();
+      flash.set(withTiming(1, { duration: FLASH_IN_MS }));
+      setTimeout(() => {
+        // Who you woke as: forever (Player.origin). They walk first, and their roadside meeting is skipped.
+        useGameStore.getState().chooseOrigin(id);
+        useWorldStore.getState().setHero(id);
+        useWorldStore.getState().setFlag(metFlag(id));
+        useSession.setState({ heroIntro: id });
+        // No habit done yet: they sleep until the first one, so it's back to the World menu.
+        if (!heroAwake(useGameStore.getState())) setPlaying(false);
+        flash.set(withDelay(FLASH_HOLD_MS, withTiming(0, { duration: FLASH_OUT_MS })));
+      }, FLASH_IN_MS);
+    },
+    [flash, setPlaying],
+  );
 
   // Fade to black, step through, fade back in.
   const travel = useCallback(
@@ -147,21 +174,31 @@ export default function WorldScreen() {
   );
 
   if (!hydrated) return <View style={styles.root} />;
-  if (!playing) return <WorldHub onPlay={() => setPlaying(true)} />;
-  // Wait for the phone to finish turning sideways.
-  if (width < height) return <View style={styles.root} />;
-  // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
   return (
     <View style={styles.root}>
-      <RoomGuard key={`${hero}-${trip}`} onFail={() => setPlaying(false)}>
-        <World hero={hero} width={width} height={height} onTravel={travel} onMenu={() => setPlaying(false)} />
-      </RoomGuard>
+      {/* Chosen, but still asleep until the first habit: the menu says so. */}
+      {!playing || (origin && !awake) ? (
+        <WorldHub onPlay={() => setPlaying(true)} />
+      ) : !origin ? (
+        <HeroSelect onChoose={chooseHero} />
+      ) : width < height ? null : (
+        // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
+        // (Until the phone finishes turning sideways, nothing is drawn.)
+        <RoomGuard key={`${hero}-${trip}`} onFail={() => setPlaying(false)}>
+          <World hero={hero} width={width} height={height} onTravel={travel} onMenu={() => setPlaying(false)} />
+        </RoomGuard>
+      )}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.fade, darkStyle]} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.flash, flashStyle]} />
     </View>
   );
 }
 
 const FADE_MS = 350;
+/** The hero-select flash: quick to white, held while the phone turns sideways, then a slow fade into the Archive. */
+const FLASH_IN_MS = 180;
+const FLASH_HOLD_MS = 700;
+const FLASH_OUT_MS = 700;
 
 /**
  * If a room ever fails to draw, the player lands back on the World menu (their
@@ -190,7 +227,35 @@ function useParty(): HeroId[] {
   const party = useGameStore((s) => s.party);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   const owned = useGameStore((s) => s.owned);
-  return useMemo(() => [worldHero(picked, party, classDimension, owned)], [picked, party, classDimension, owned]);
+  const origin = useGameStore((s) => s.player?.origin);
+  return useMemo(
+    () => [worldHero(picked, party, classDimension, owned, origin)],
+    [picked, party, classDimension, owned, origin],
+  );
+}
+
+/**
+ * The hero the player woke as is up and about: chosen (the Keeper's question)
+ * and woken by a first habit. An old save (owned null) has everyone already.
+ */
+function heroAwake(s: { player: { origin?: CharacterId } | null; owned: Owned | null }): boolean {
+  const origin = s.player?.origin;
+  return !!origin && (s.owned === null || (s.owned[origin] ?? 0) > 0);
+}
+
+/**
+ * Out of the flash, the first room tells the player who they are now. Only
+ * right after the Keeper's question (see HeroSelect); null any other time.
+ */
+function heroIntroFor(hero: HeroId): Dialogue | null {
+  if (useSession.getState().heroIntro !== hero) return null;
+  const { name, dimension } = COMPANIONS[hero];
+  return {
+    lines: [
+      `You look down at your hands. You are ${name}, the ${CLASSES[dimension].className}.`,
+      'Anyone in your party can walk the Other World: pause, then Party.',
+    ],
+  };
 }
 
 /** Where to start: the saved spot, unless someone now stands there (then the map's spawn). */
@@ -336,13 +401,17 @@ function World({
   }, [map, discover]);
   const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
     !bossOn
-      ? null
+      ? heroIntroFor(hero)
       : start.map.boss?.intro
         ? { speaker: start.map.boss.intro.speaker ?? undefined, lines: start.map.boss.intro.lines }
         : bossNpc
           ? { speaker: bossNpc.name, lines: bossNpc.lines }
           : null,
   );
+  // Said once: a later room (or the same one, re-entered) doesn't repeat it.
+  useEffect(() => {
+    if (useSession.getState().heroIntro) useSession.setState({ heroIntro: null });
+  }, []);
 
   // Points per art pixel: about eight and a half tiles top to bottom, in whole steps so pixels stay sharp.
   const scale = Math.min(4, Math.max(2, Math.round(height / (TILE * 8.5))));
@@ -658,9 +727,11 @@ function useAct(
     // a party member may chime in (see banter.ts)
     const banter = thing ? banterFor(map.id, thing.id, Object.values(useGameStore.getState().party)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
-      const who = COMPANIONS[hero];
       const job = thing.job;
-      if (job.path === 'any' || who.dimension === job.path) {
+      // Like a field move: if you can't, a party member of the right Path steps in.
+      const doer = job.path === 'any' || COMPANIONS[hero].dimension === job.path ? hero : stepsIn(job.path as Dimension, hero);
+      if (doer) {
+        const who = COMPANIONS[doer];
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
         // A way out of here that this opens (the checkpoint, the Kaldorium) opens now, not next visit.
@@ -673,7 +744,7 @@ function useAct(
         };
         setDialogue({
           speaker: thing.name,
-          lines: job.done.map((l) => l.replace('{name}', who.name)),
+          lines: [...stepAside(hero, doer), ...job.done.map((l) => l.replace('{name}', who.name))],
           then: opens ? () => onTravel(here) : undefined,
         });
       } else {
@@ -687,14 +758,18 @@ function useAct(
     if (thing?.type === 'npc' && thing.meets && thing.character) {
       const id = thing.character;
       const flags = useWorldStore.getState().flags;
-      if (!flags.includes(metFlag(id))) {
+      const { owned, player } = useGameStore.getState();
+      // Already with you (you woke as them, or an old save has everyone): no joining, just a chat.
+      if (!flags.includes(metFlag(id)) && (owned === null || (owned[id] ?? 0) > 0)) {
+        useWorldStore.getState().setFlag(metFlag(id));
+      } else if (!flags.includes(metFlag(id))) {
         sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
         useGameStore.getState().meetCharacters([id]);
         haptics.celebrate();
         playSound('levelUp');
         setDialogue({
           speaker: thing.name,
-          lines: meetingLines(thing),
+          lines: meetingLines(thing, player?.origin),
           then: () => useWorldStore.getState().setFlag(metFlag(id)),
         });
         return;
@@ -856,17 +931,17 @@ function useAct(
     const isExit = EXITS.some((e) => e.from === map.id && e.tile === tile);
     if (job) {
       const { flags, setFlag } = useWorldStore.getState();
-      const who = COMPANIONS[hero];
+      const doer = !job.path || COMPANIONS[hero].dimension === job.path ? hero : stepsIn(job.path, hero);
       if (flags.includes(job.flag)) {
         if (!isExit) {
           setDialogue({ lines: job.already });
           return;
         }
         // An opened doorway: carry on to it below.
-      } else if (job.path && who.dimension !== job.path) {
+      } else if (!doer) {
         useWorldStore.getState().notice(jobNotice(map.id as MapId, tile));
         setDialogue({
-          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path, useGameStore.getState().party, useGameStore.getState().owned)],
+          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path!, useGameStore.getState().party, useGameStore.getState().owned)],
         });
         return;
       } else {
@@ -877,7 +952,11 @@ function useAct(
           y: Math.floor((sim.y.get() - 1) / TILE),
           facing: FACINGS[facing],
         };
-        setDialogue({ lines: job.done.map((l) => l.replace('{name}', who.name)), then: () => onTravel(here) });
+        const who = COMPANIONS[doer];
+        setDialogue({
+          lines: [...stepAside(hero, doer), ...job.done.map((l) => l.replace('{name}', who.name))],
+          then: () => onTravel(here),
+        });
         return;
       }
     }
@@ -934,12 +1013,27 @@ function needsFlag(needs: Requirement, flag: string): boolean {
   return false;
 }
 
-/** Who to walk as for a job only one Path can do. */
+/**
+ * Who steps in for a job only `path` can do, like a field move: a party
+ * member of that Path you've met who can walk the World. Undefined if none.
+ */
+function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
+  const { party, owned } = useGameStore.getState();
+  return walkersFor(party, owned).find((h) => h !== hero && COMPANIONS[h].dimension === path);
+}
+
+/** "Ysolde steps aside. Brannoc steps up!": said first when someone else does the job. */
+function stepAside(hero: HeroId, doer: HeroId): string[] {
+  if (doer === hero) return [];
+  return [`${COMPANIONS[hero].name} steps aside. ${COMPANIONS[doer].name} steps up!`];
+}
+
+/** Who does a job only one Path can do: whoever will step up for it, or where to meet them. */
 function swapHint(path: Dimension, party: Record<Dimension, CharacterId>, owned: Owned | null): string {
   const walker = walkersFor(party, owned).find((h) => COMPANIONS[h].dimension === path);
   if (!walker) return whereToMeet(path) ?? `Find a ${CLASSES[path].className}`;
   const name = COMPANIONS[walker].name;
-  return `Walk as ${name} (${CLASSES[path].className}): pause, then Party`;
+  return `${name} (${CLASSES[path].className}) will step up for it`;
 }
 
 const styles = StyleSheet.create({
@@ -961,6 +1055,7 @@ const styles = StyleSheet.create({
   drowsyFill: { height: '100%', backgroundColor: '#B89AE0' },
   hearts: { position: 'absolute', flexDirection: 'row', gap: 4 },
   fade: { backgroundColor: '#000000' },
+  flash: { backgroundColor: '#FFFFFF' },
   root: { flex: 1, backgroundColor: '#0C0806' },
 });
 

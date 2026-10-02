@@ -1,4 +1,4 @@
-import { COMPANIONS } from '@/story/companions';
+import { COMPANIONS, STARTERS, type CharacterId } from '@/story/companions';
 
 import { JOBS } from '../jobs';
 import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
@@ -6,7 +6,7 @@ import { EXITS, type Requirement } from '../progress';
 import { winScene } from '../scenes';
 
 // A whole run of Season 1, as a player with every level they need (levels only
-// take real habits). They start walking as Brannoc alone and meet the rest of
+// take real habits). They start walking as the hero they woke as and meet the rest of
 // the core eight along the road; a job only one Path can do waits until that
 // Path's hero has been met. Starting in the Archive, it keeps doing whatever can
 // be done — doors, jobs, people's jobs, meetings, fights, the plate puzzle —
@@ -53,12 +53,12 @@ function tiles(map: WorldMap, letter: string): [number, number][] {
   return out;
 }
 
-function play() {
+function play(start: CharacterId) {
   const flags = new Set<string>();
   const arrivals: Arrive[] = [{ map: 'archive', ...MAPS.archive.spawn }];
   const visited = new Set<MapId>();
-  // Who you can walk as: Brannoc from the first habit, the rest once met.
-  const paths = new Set<string>(['physical']);
+  // Who you can walk as: the hero you woke as from the first habit, the rest once met.
+  const paths = new Set<string>([COMPANIONS[start].dimension]);
   const canDo = (path: string | null | undefined) => !path || path === 'any' || paths.has(path);
   let changed = true;
   while (changed) {
@@ -121,8 +121,9 @@ function play() {
   return { flags, visited, arrivals, met: paths };
 }
 
-describe('a run through Season 1', () => {
-  const run = play();
+// Whichever of the four starters you woke as (the Keeper's question), nobody gets stuck.
+describe.each(STARTERS)('a run through Season 1, waking as %s', (start) => {
+  const run = play(start);
 
   it('meets every one of the core eight along the way', () => {
     expect(run.met.size).toBe(8);
