@@ -62,7 +62,7 @@ import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
-import { ATTACKS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
+import { ATTACKS, attackFor, damageFor, drowsyRate, levelHearts, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
 import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { ambienceOf, flamesOn } from '@/world/ambience';
@@ -289,8 +289,8 @@ function World({
     return tilesOf(map, letters).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
   }, [bossOn, map]);
   const flames = useMemo(() => flamesOn(map), [map]);
-  // Hearts for this visit: five, plus one for every four pieces found.
-  const [hearts] = useState(() => maxHearts(arrivalFlags));
+  // Hearts for this visit: five, plus one for every four pieces found (the walker's level adds more below).
+  const [pieceHearts] = useState(() => maxHearts(arrivalFlags));
   const autopilotOn = useSession((s) => s.autopilot);
   const sim = useWorldSim(start, map.npcs);
   const today = useToday();
@@ -394,6 +394,9 @@ function World({
   const heroPath = COMPANIONS[hero].dimension;
   const collection = useCollection();
   const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
+  const hearts = pieceHearts + levelHearts(heroLevel);
+  // Their reach grows a little with every level, too.
+  const heroAttack = useMemo(() => attackFor(heroPath, heroLevel), [heroPath, heroLevel]);
   const gameParty = useGameStore((s) => s.party);
   // Their own move, if they have one (signatures.ts); else their Path's special at Lv 20.
   const signature = signatureOf(hero);
@@ -500,7 +503,7 @@ function World({
         boulders={boulders}
         plates={map.plates}
         onPlates={onPlates}
-        attack={ATTACKS[heroPath]}
+        attack={heroAttack}
         damage={damageFor(ATTACKS[heroPath], heroLevel)}
         level={heroLevel}
         special={signature?.kind ?? SPECIALS[heroPath].kind}
@@ -590,7 +593,7 @@ function World({
           party={walkers}
           hero={hero}
           pieces={heartPieces(liveFlags) % PIECES_PER_HEART}
-          hearts={maxHearts(liveFlags)}
+          hearts={maxHearts(liveFlags) + levelHearts(heroLevel)}
           items={satchel(liveFlags).map((id) => ({ id, name: ITEMS[id]?.name ?? id }))}
           autopilot={
             __DEV__
