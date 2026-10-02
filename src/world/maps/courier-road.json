@@ -69,7 +69,7 @@
       "id": "felix",
       "type": "npc",
       "x": 8,
-      "y": 7,
+      "y": 6,
       "sprite": "felix",
       "facing": "right",
       "name": "Felix",

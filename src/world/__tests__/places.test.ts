@@ -1,6 +1,7 @@
 import { JOBS } from '../jobs';
 import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
 import { EXITS } from '../progress';
+import { COCOONS } from '../cocoons';
 
 /** Every tile you can walk to from `start`, optionally treating hidden gaps ('h') as walls. */
 function reachable(map: WorldMap, start: [number, number], throughGaps: boolean): Set<string> {
@@ -22,7 +23,11 @@ describe('places', () => {
   it('stand every NPC on ground that is otherwise open', () => {
     for (const id of Object.keys(MAPS) as MapId[]) {
       const map = MAPS[id];
-      for (const npc of map.npcs) expect(map.walkable).toContain(map.tiles[npc.y][npc.x]);
+      for (const npc of map.npcs) {
+        // except whoever hatched from a cocoon, standing where its silk was (they only come after it breaks)
+        const hatchling = COCOONS.some((c) => c.map === id && c.x === npc.x && c.y === npc.y && npc.comesAfter === c.hatched);
+        if (!hatchling) expect(map.walkable).toContain(map.tiles[npc.y][npc.x]);
+      }
     }
   });
 

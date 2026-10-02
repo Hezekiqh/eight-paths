@@ -639,12 +639,14 @@ function compile(ep) {
         const [bx, by] = pts[i];
         const len = Math.hypot(bx - ax, by - ay);
         if (len === 0) continue;
-        const dir = Math.abs(bx - ax) > Math.abs(by - ay) ? (bx > ax ? 'right' : 'left') : by > ay ? 'down' : 'up';
+        // `look`: keep facing one way while moving (pushed back, say)
+        const dir = step.look ?? (Math.abs(bx - ax) > Math.abs(by - ay) ? (bx > ax ? 'right' : 'left') : by > ay ? 'down' : 'up');
         legs.push({ a: [ax, ay], b: [bx, by], d0: dist, len, dir });
         dist += len;
       }
-      const dur = dist / SPEED;
-      segs.push({ kind: 'walk', t0: t, t1: t + dur, legs, dist });
+      const speed = step.speed ?? SPEED;
+      const dur = dist / speed;
+      segs.push({ kind: 'walk', t0: t, t1: t + dur, legs, dist, speed });
       // `cut`: the episode ends this many seconds into the walk, mid-stride
       t += step.cut ?? dur;
       pos = pts[pts.length - 1];
@@ -773,7 +775,7 @@ function stateAt(ep, compiled, t) {
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'walk') {
-      const d = Math.min(s.dist, (t - s.t0) * SPEED);
+      const d = Math.min(s.dist, (t - s.t0) * (s.speed ?? SPEED));
       const leg = s.legs.findLast((l) => l.d0 <= d) ?? s.legs[0];
       const k = Math.min(1, (d - leg.d0) / leg.len);
       hx = leg.a[0] + (leg.b[0] - leg.a[0]) * k;
@@ -901,9 +903,9 @@ function drawWorld(canvas, ep, st, t) {
     .filter((n) => (!ep.hide?.includes(n.id) || st.shown.includes(n.id)) && !sitting.includes(n.id) && !st.npcAt[n.id]?.gone)
     .map((n) => {
       const at = st.npcAt[n.id];
-      if (at) return [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y];
-      const [x, y] = center(n.x, n.y);
       const lt = st.laughing[n.id];
+      if (at && lt === undefined) return [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y];
+      const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // laughing: a quick shake and a hop, head thrown back on every other beat
       if (lt !== undefined) {
         const beat = Math.floor(lt * 12);
@@ -927,7 +929,7 @@ function drawWorld(canvas, ep, st, t) {
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
-    const [x, y] = center(map.npcs[id].x, map.npcs[id].y);
+    const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(map.npcs[id].x, map.npcs[id].y);
     for (let k = 0; k < 3; k++) {
       const age = lt - k * 0.35;
       if (age < 0 || age > 0.9) continue;
@@ -1273,7 +1275,7 @@ const EPISODES = {
   4: () => {
     const map = loadMap('courier-road', 'outdoor');
     map.npcs.felix = { id: 'felix', type: 'npc', x: 8,
-      y: 7, sprite: 'felix', facing: 'right', name: 'Felix', lines: [] };
+      y: 6, sprite: 'felix', facing: 'right', name: 'Felix', lines: [] };
     const QUESTIONS = ['Who are you?', 'What now?'];
     return {
       number: 4,
@@ -1301,6 +1303,8 @@ const EPISODES = {
         },
         { open: { at: [8, 6], grass: [10, 6] } },
         { show: 'felix' },
+        // you step back a tile, still facing him: face to face, one tile between you
+        { walk: [[10, 6]], look: 'left', speed: 50 },
         { say: 'felix', lines: ['...Ah. Awake. How long was I out?'] },
         { menu: { speaker: 'Felix', options: ['Five hundred years.', "I don't know."], pick: 0, hold: 1.1 } },
         { say: 'felix', lines: ["Five hundred. Hm. I'd have bet four."] },
@@ -1320,11 +1324,14 @@ const EPISODES = {
         // he laughs, then he's gone, lightning fast, east toward the towers
         { laugh: 'felix', dur: 1.4 },
         { npcWalk: 'felix',
-          to: [[42, 7]], speed: 520, hide: true, dash: true },
+          to: [
+            [8, 7],
+            [42, 7],
+          ], speed: 520, hide: true, dash: true },
         { wait: 0.5 },
         // and you set off after him, toward the next place the story goes
         { walk: [
-            [9, 7],
+            [10, 7],
             [42, 7],
           ],
           cut: 2.4 },
