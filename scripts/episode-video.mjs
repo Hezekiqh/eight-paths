@@ -939,7 +939,11 @@ const r = spawnSync(
   'ffmpeg',
   ['-y', '-loglevel', 'error', '-i', silent, '-i', voices,
     // the game's blips are soft under a phone's own volume; a feed needs them up front
-    '-map', '0:v', '-map', '1:a', '-af', 'volume=14dB,alimiter=limit=0.9', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', out],
+    // Instagram and YouTube reject uploads part-way through without 44.1/48 kHz audio and the index
+    // up front (faststart): 48 kHz stereo, BT.709 tags, moov first.
+    '-map', '0:v', '-map', '1:a', '-af', 'volume=14dB,alimiter=limit=0.9', '-c:v', 'copy',
+    '-bsf:v', 'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
+    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', '-shortest', out],
   { stdio: 'inherit' },
 );
 if (r.status !== 0) throw new Error('ffmpeg mux failed');
