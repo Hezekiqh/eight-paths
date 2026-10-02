@@ -15,7 +15,7 @@ export const ENVIRONMENTAL = {
   },
   fern: {
     number: 27,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Fern',
     fullName: 'Fern Ashby',
@@ -27,7 +27,7 @@ export const ENVIRONMENTAL = {
   },
   brimsby: {
     number: 65,
-    rarity: 2,
+    rarity: 4,
     alignment: 'True Neutral',
     name: 'Mother Brimsby',
     dimension: 'environmental',
@@ -38,7 +38,7 @@ export const ENVIRONMENTAL = {
   },
   tully: {
     number: 32,
-    rarity: 4,
+    rarity: 2,
     alignment: 'True Neutral',
     name: 'Old Tully',
     dimension: 'environmental',
@@ -49,7 +49,7 @@ export const ENVIRONMENTAL = {
   },
   sprout: {
     number: 18,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Sprout',
     dimension: 'environmental',
@@ -60,7 +60,7 @@ export const ENVIRONMENTAL = {
   },
   cora: {
     number: 11,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Cora',
     fullName: 'Cora Glen',
@@ -72,7 +72,7 @@ export const ENVIRONMENTAL = {
   },
   rufus: {
     number: 6,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Neutral',
     name: 'Rufus',
     dimension: 'environmental',
@@ -95,7 +95,7 @@ export const ENVIRONMENTAL = {
   },
   tala: {
     number: 25,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Good',
     name: 'Tala',
     fullName: 'Tala Riverstone',
@@ -107,7 +107,7 @@ export const ENVIRONMENTAL = {
   },
   hugo: {
     number: 17,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Neutral',
     name: 'Hugo',
     fullName: 'Hugo Thornbeard',
@@ -119,7 +119,7 @@ export const ENVIRONMENTAL = {
   },
   antler: {
     number: 49,
-    rarity: 1,
+    rarity: 5,
     alignment: 'Neutral Good',
     name: 'Old Antler',
     dimension: 'environmental',
@@ -130,7 +130,7 @@ export const ENVIRONMENTAL = {
   },
   ivy: {
     number: 48,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Ivy',
     fullName: 'Ivy Greenmantle',
@@ -142,7 +142,7 @@ export const ENVIRONMENTAL = {
   },
   warden: {
     number: 30,
-    rarity: 1,
+    rarity: 5,
     alignment: 'True Neutral',
     name: 'The Green Warden',
     dimension: 'environmental',

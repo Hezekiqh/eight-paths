@@ -16,7 +16,7 @@ export const SOCIAL = {
   },
   marigold: {
     number: 9,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Marigold',
     fullName: 'Marigold Tumble',
@@ -28,7 +28,7 @@ export const SOCIAL = {
   },
   marisol: {
     number: 13,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Neutral Evil',
     name: 'Marisol Vane',
     dimension: 'social',
@@ -39,7 +39,7 @@ export const SOCIAL = {
   },
   barnaby: {
     number: 34,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Barnaby',
     fullName: 'Barnaby Crumb',
@@ -51,7 +51,7 @@ export const SOCIAL = {
   },
   fitz: {
     number: 15,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Fitz',
     fullName: 'Fitz Tattle',
@@ -63,7 +63,7 @@ export const SOCIAL = {
   },
   amara: {
     number: 98,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Amara',
     fullName: 'Amara Bright',
@@ -75,7 +75,7 @@ export const SOCIAL = {
   },
   duke: {
     number: 61,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Duke',
     dimension: 'social',
@@ -86,7 +86,7 @@ export const SOCIAL = {
   },
   ruth: {
     number: 53,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Good',
     name: 'Ruth',
     fullName: 'Ruth Letterly',
@@ -98,7 +98,7 @@ export const SOCIAL = {
   },
   bastian: {
     number: 67,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Neutral',
     name: 'Bastian',
     fullName: 'Bastian Drum',
@@ -110,7 +110,7 @@ export const SOCIAL = {
   },
   lola: {
     number: 35,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Lola',
     fullName: 'Lola Marchetti',
@@ -122,7 +122,7 @@ export const SOCIAL = {
   },
   kitkat: {
     number: 3,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Chaotic Neutral',
     name: 'Kit and Kat',
     dimension: 'social',
@@ -133,7 +133,7 @@ export const SOCIAL = {
   },
   oyelaran: {
     number: 100,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Good',
     name: 'Ambassador Oyelaran',
     dimension: 'social',
@@ -144,7 +144,7 @@ export const SOCIAL = {
   },
   aldane: {
     number: 110,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Widow Aldane',
     dimension: 'social',

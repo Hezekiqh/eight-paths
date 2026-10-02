@@ -11,7 +11,7 @@ import { useClassInfo } from '@/store/hooks';
 import { RARITY_TIERS, type Rarity } from '@/story/companions';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
-const STARS: Rarity[] = [1, 2, 3, 4, 5];
+const STARS: Rarity[] = [5, 4, 3, 2, 1];
 
 const percent = (p: number) => (p === 0 ? '—' : p < 0.01 ? '<1%' : `${Math.round(p * 100)}%`);
 
@@ -65,7 +65,7 @@ export default function DropOdds() {
           })}
         </View>
         <Text style={styles.fine}>
-          1★ is the rarest. Premium doubles the weight of each 1★ character. A Premium redo draws again from the same
+          5★ is the rarest. Premium doubles the weight of each 5★ character. A Premium redo draws again from the same
           Path at Premium odds, leaving out the character being redone.
         </Text>
       </ScrollView>

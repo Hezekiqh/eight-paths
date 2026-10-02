@@ -16,7 +16,7 @@ export const PHYSICAL = {
   },
   dessa: {
     number: 81,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Dessa',
     fullName: 'Dessa Quickstep',
@@ -28,7 +28,7 @@ export const PHYSICAL = {
   },
   plush: {
     number: 62,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Baron Plush',
     fullName: 'Baron Aldric Plush',
@@ -40,7 +40,7 @@ export const PHYSICAL = {
   },
   harrow: {
     number: 36,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Neutral',
     name: 'Old Harrow',
     dimension: 'physical',
@@ -51,7 +51,7 @@ export const PHYSICAL = {
   },
   tobin: {
     number: 1,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Good',
     name: 'Tobin',
     fullName: 'Tobin Fleet',
@@ -63,7 +63,7 @@ export const PHYSICAL = {
   },
   marta: {
     number: 57,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Marta',
     fullName: 'Marta Oakhand',
@@ -75,7 +75,7 @@ export const PHYSICAL = {
   },
   bo: {
     number: 44,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Neutral',
     name: 'Bo',
     fullName: 'Bo Tumble',
@@ -87,7 +87,7 @@ export const PHYSICAL = {
   },
   ingrid: {
     number: 37,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Good',
     name: 'Captain Ingrid',
     fullName: 'Captain Ingrid Vale',
@@ -99,7 +99,7 @@ export const PHYSICAL = {
   },
   kofi: {
     number: 51,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Good',
     name: 'Kofi',
     fullName: 'Kofi Stone',
@@ -111,7 +111,7 @@ export const PHYSICAL = {
   },
   yuki: {
     number: 78,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Yuki',
     fullName: 'Yuki Hollowbrook',
@@ -123,7 +123,7 @@ export const PHYSICAL = {
   },
   sable: {
     number: 2,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Neutral Evil',
     name: 'Sable',
     dimension: 'physical',
@@ -134,7 +134,7 @@ export const PHYSICAL = {
   },
   nana: {
     number: 26,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Good',
     name: 'Nana Birch',
     dimension: 'physical',
@@ -145,7 +145,7 @@ export const PHYSICAL = {
   },
   aurelio: {
     number: 68,
-    rarity: 1,
+    rarity: 5,
     alignment: 'Lawful Good',
     name: 'Aurelio',
     fullName: 'Aurelio the Unbowed',
@@ -157,7 +157,7 @@ export const PHYSICAL = {
   },
   aurek: {
     number: 106,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Good',
     name: 'Aurek',
     fullName: 'Aurek the Tall',
@@ -180,7 +180,7 @@ export const PHYSICAL = {
   },
   kett: {
     number: 108,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Kett',
     dimension: 'physical',
@@ -191,7 +191,7 @@ export const PHYSICAL = {
   },
   brunna: {
     number: 109,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Neutral',
     name: 'Little Brunna',
     dimension: 'physical',

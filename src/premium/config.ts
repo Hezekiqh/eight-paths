@@ -24,7 +24,7 @@ export type Perk = { title: string; free: string; premium: string };
 export const PERKS: Perk[] = [
   { title: 'XP per habit', free: '10 XP, up to 30 a Path a day', premium: '20 XP, up to 60 a Path a day' },
   { title: 'Habits', free: 'Up to 10', premium: 'Unlimited' },
-  { title: '1★ odds', free: 'Standard', premium: 'About twice as likely' },
+  { title: '5★ odds', free: 'Standard', premium: 'About twice as likely' },
   { title: 'Redo a drop', free: '—', premium: 'Once per drop' },
   { title: 'Themes', free: 'The default', premium: 'Every theme' },
 ];

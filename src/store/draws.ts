@@ -10,15 +10,15 @@ import {
 } from '@/story/companions';
 
 /**
- * How likely each star is to be drawn, per character. 5★ Commons turn up all
- * the time; a 1★ Legendary is a real event.
+ * How likely each star is to be drawn, per character. 1★ Commons turn up all
+ * the time; a 5★ Legendary is a real event.
  */
-export const RARITY_WEIGHT: Record<Rarity, number> = { 5: 12, 4: 8, 3: 5, 2: 2.5, 1: 1 };
+export const RARITY_WEIGHT: Record<Rarity, number> = { 1: 12, 2: 8, 3: 5, 4: 2.5, 5: 1 };
 
-/** Premium doubles the weight of a 1★, so one turns up about twice as often. */
+/** Premium doubles the weight of a 5★, so one turns up about twice as often. */
 export const RARITY_WEIGHTS: Record<Tier, Record<Rarity, number>> = {
   free: RARITY_WEIGHT,
-  premium: { ...RARITY_WEIGHT, 1: RARITY_WEIGHT[1] * 2 },
+  premium: { ...RARITY_WEIGHT, 5: RARITY_WEIGHT[5] * 2 },
 };
 
 /** A new character arrives on a Path every 3 to 5 of its levels. */

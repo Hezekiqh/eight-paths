@@ -16,7 +16,7 @@ export const INTELLECTUAL = {
   },
   ottilie: {
     number: 55,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Ottilie',
     fullName: 'Ottilie Page',
@@ -28,7 +28,7 @@ export const INTELLECTUAL = {
   },
   thane: {
     number: 92,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Magister Thane',
     fullName: 'Magister Oriel Thane',
@@ -40,7 +40,7 @@ export const INTELLECTUAL = {
   },
   bramble: {
     number: 58,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Professor Bramble',
     fullName: 'Professor Mungo Bramble',
@@ -52,7 +52,7 @@ export const INTELLECTUAL = {
   },
   nib: {
     number: 20,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Good',
     name: 'Nib',
     fullName: 'Nib Wickett',
@@ -64,7 +64,7 @@ export const INTELLECTUAL = {
   },
   astra: {
     number: 70,
-    rarity: 4,
+    rarity: 2,
     alignment: 'True Neutral',
     name: 'Astra',
     fullName: 'Astra Voss',
@@ -76,7 +76,7 @@ export const INTELLECTUAL = {
   },
   felix: {
     number: 93,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Chaotic Evil',
     name: 'Felix',
     fullName: 'Felix Rook',
@@ -100,7 +100,7 @@ export const INTELLECTUAL = {
   },
   quimby: {
     number: 28,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Doctor Quimby',
     dimension: 'intellectual',
@@ -123,7 +123,7 @@ export const INTELLECTUAL = {
   },
   solomon: {
     number: 19,
-    rarity: 1,
+    rarity: 5,
     alignment: 'Lawful Good',
     name: 'Old Solomon',
     dimension: 'intellectual',
@@ -134,7 +134,7 @@ export const INTELLECTUAL = {
   },
   hoot: {
     number: 29,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'Professor Hoot',
     dimension: 'intellectual',
@@ -145,7 +145,7 @@ export const INTELLECTUAL = {
   },
   elowen: {
     number: 76,
-    rarity: 1,
+    rarity: 5,
     alignment: 'Neutral Good',
     name: 'Archmage Elowen',
     dimension: 'intellectual',

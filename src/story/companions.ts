@@ -92,19 +92,16 @@ export const KIND_LABEL: Record<CharacterKind, string> = {
   legend: 'Legend',
 };
 
-/** What each star count means. Fewer stars is rarer: 1★ is a first-rank, legendary figure. */
+/** What each star count means. More stars is rarer: 5★ is a first-rank, legendary figure. */
 export const RARITY_TIERS: Record<Rarity, { name: string; color: string }> = {
-  1: { name: 'Legendary', color: '#E8A317' },
-  2: { name: 'Epic', color: '#9B59E8' },
+  5: { name: 'Legendary', color: '#E8A317' },
+  4: { name: 'Epic', color: '#9B59E8' },
   3: { name: 'Rare', color: '#3B8BEB' },
-  4: { name: 'Uncommon', color: '#3FAE5A' },
-  5: { name: 'Common', color: '#8C8A94' },
+  2: { name: 'Uncommon', color: '#3FAE5A' },
+  1: { name: 'Common', color: '#8C8A94' },
 };
 
-/**
- * Just the stars. The joke is left unexplained: one star is the grandest,
- * five the plainest. (Tier names stay for VoiceOver only.)
- */
+/** Just the stars: five is the grandest, one the plainest. (Tier names stay for VoiceOver only.) */
 export const rarityLabel = (r: Rarity) => '★'.repeat(r);
 
 /** Whether the player has this character: at least one copy, or (old saves not yet reconciled) the old rule. */
