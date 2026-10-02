@@ -1286,7 +1286,41 @@ if (process.env.AUDIO_ONLY) {
     stdio: 'inherit',
   });
   if (r.status !== 0) throw new Error(`AUDIO_ONLY needs an existing ${out}`);
+} else if (!process.env.PART) {
+  // CanvasKit wears out over a long run (after ~850 frames it can crash in canvas.clear), so every
+  // episode is drawn in fresh runs of at most CHUNK frames, also cut either side of a hatch, then
+  // joined losslessly.
+  const CHUNK = 600;
+  const marks = [
+    0,
+    frames,
+    ...compiled.segs.filter((x) => x.kind === 'hatch').flatMap((x) => [Math.round(x.t0 * FPS), Math.round(x.t1 * FPS)]),
+  ];
+  for (let f = CHUNK; f < frames; f += CHUNK) marks.push(f);
+  const cuts = [...new Set(marks)].filter((f) => f >= 0 && f <= frames).sort((a, b) => a - b);
+  const list = [];
+  for (let i = 0; i < cuts.length - 1; i++) {
+    if (cuts[i + 1] <= cuts[i]) continue;
+    const part = join(work, `part-${i}.mp4`);
+    const r = spawnSync(process.execPath, [process.argv[1], episode, part], {
+      env: { ...process.env, PART: `${cuts[i]},${cuts[i + 1]}` },
+      stdio: ['ignore', 'ignore', 'inherit'],
+    });
+    if (r.status !== 0) throw new Error(`part ${i} (frames ${cuts[i]}–${cuts[i + 1]}) failed`);
+    list.push(`file '${part}'`);
+  }
+  writeFileSync(join(work, 'parts.txt'), list.join('\n'));
+  const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', join(work, 'parts.txt'), '-c', 'copy', silent], {
+    stdio: 'inherit',
+  });
+  if (r.status !== 0) throw new Error('joining the parts failed');
 } else await renderPicture();
+
+// PART='from,to' draws only those frames, picture only, to `out` (one run of a split render)
+if (process.env.PART) {
+  spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-c', 'copy', out], { stdio: 'inherit' });
+  process.exit(0);
+}
 
 async function renderPicture() {
   const ff = spawn(
@@ -1339,7 +1373,8 @@ async function renderPicture() {
   const surface = CK.MakeSurface(W, H);
   const canvas = surface.getCanvas();
   const black = (a) => a > 0 && canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#000000', Math.min(1, a)));
-  for (let f = 0; f < frames; f++) {
+  const [from, to] = process.env.PART ? process.env.PART.split(',').map(Number) : [0, frames];
+  for (let f = from; f < to; f++) {
     const t = f / FPS;
     if (t < ep.titleDur) {
       drawTitle(canvas, ep, t);
@@ -1403,7 +1438,7 @@ const place = (sound, at, gain) => {
 for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
-  if (s.kind === 'hatch') place(HATCH_SOUND, s.t0 + HATCH_AT, 1);
+  if (s.kind === 'hatch') place(HATCH_SOUND, s.t0 + HATCH_AT, 0.3); // loud already, and boosted with the voices below
 }
 const wav = Buffer.alloc(44 + mix.length * 2);
 wav.write('RIFF', 0);
