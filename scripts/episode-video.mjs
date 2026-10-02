@@ -466,6 +466,17 @@ let hseed = 11;
 const hrnd = () => (hseed = (hseed * 1103515245 + 12345) % 2147483648) / 2147483648;
 const HATCH_PX = new Uint8Array(W * H * 4);
 const HNAME = fontOf(JERSEY, 150);
+/** A 3×5 pixel font, just enough for a laugh. */
+const TINY = { H: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'], A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], '!': ['X', 'X', 'X', '.', 'X'] };
+function tinyText(canvas, text, x, y, p) {
+  let cx = Math.round(x);
+  for (const ch of text) {
+    const g = TINY[ch];
+    g.forEach((row, r) => [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(cx + k, Math.round(y) + r, 1, 1), p)));
+    cx += g[0].length + 1;
+  }
+}
+
 /** One hatch frame as raw RGBA (1080×1920), name card included. */
 function hatchFrame(canvas, h) {
   const { t } = h;
@@ -611,7 +622,8 @@ function compile(ep) {
       }
       const dur = dist / SPEED;
       segs.push({ kind: 'walk', t0: t, t1: t + dur, legs, dist });
-      t += dur;
+      // `cut`: the episode ends this many seconds into the walk, mid-stride
+      t += step.cut ?? dur;
       pos = pts[pts.length - 1];
       if (legs.length) facing = legs[legs.length - 1].dir;
       if (step.face) {
@@ -656,8 +668,13 @@ function compile(ep) {
         speed,
         hide: step.hide,
         tears: step.tears,
+        dash: step.dash,
       });
       if (!step.together) t += dur + 0.15;
+    } else if (step.laugh) {
+      // someone laughs: shoulders shaking, a burst of HA over their head
+      segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh });
+      t += step.dur;
     } else if (step.cards) {
       segs.push({ kind: 'cards', t0: t, t1: t + step.cards });
       t += step.cards;
@@ -721,8 +738,10 @@ function stateAt(ep, compiled, t) {
   let line = null;
   let menu = null;
   let cards = null;
-  /** Where people have walked to, by id: { x, y, dir, frame, gone, tears }. */
+  /** Where people have walked to, by id: { x, y, dir, frame, gone, tears, dash }. */
   const npcAt = {};
+  /** Who's laughing, by id: seconds into it. */
+  const laughing = {};
   let hatch = null;
   /** People hidden at the start who have since appeared (someone hatched), and cocoons broken open. */
   const shown = [];
@@ -752,7 +771,10 @@ function stateAt(ep, compiled, t) {
         frame: walkFrame(d, !done),
         gone: done && s.hide,
         tears: s.tears && !done,
+        dash: s.dash && !done ? { from: s.legs[0].a, since: t - s.t0, dir: leg.dir } : null,
       };
+    } else if (s.kind === 'laugh' && t < s.t1) {
+      laughing[s.id] = t - s.t0;
     } else if (s.kind === 'line' && t < s.t1) {
       const lt = t - s.t0;
       const shown = s.at.filter((a) => a <= lt).length;
@@ -764,7 +786,7 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'show') shown.push(s.id);
     else if (s.kind === 'open') opened.push(s.at);
   }
-  return { hx, hy, facing, walked, moving, npcFacing, npcAt, line, menu, cards, hatch, shown, opened };
+  return { hx, hy, facing, walked, moving, npcFacing, npcAt, laughing, line, menu, cards, hatch, shown, opened };
 }
 
 function walkFrame(distance, moving) {
@@ -855,9 +877,15 @@ function drawWorld(canvas, ep, st, t) {
     .filter((n) => (!ep.hide?.includes(n.id) || st.shown.includes(n.id)) && !sitting.includes(n.id) && !st.npcAt[n.id]?.gone)
     .map((n) => {
       const at = st.npcAt[n.id];
-      return at
-        ? [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y]
-        : [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, ...center(n.x, n.y)];
+      if (at) return [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y];
+      const [x, y] = center(n.x, n.y);
+      const lt = st.laughing[n.id];
+      // laughing: a quick shake and a hop, head thrown back on every other beat
+      if (lt !== undefined) {
+        const beat = Math.floor(lt * 12);
+        return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x + (beat % 2 ? 1 : -1), y - (beat % 3 === 0 ? 2 : 0)];
+      }
+      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y];
     });
   if (!st.cards)
     ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
@@ -873,6 +901,33 @@ function drawWorld(canvas, ep, st, t) {
     );
   }
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
+  // HA! HA! popping out over a laughing head, rising and fading
+  for (const [id, lt] of Object.entries(st.laughing)) {
+    const [x, y] = center(map.npcs[id].x, map.npcs[id].y);
+    for (let k = 0; k < 3; k++) {
+      const age = lt - k * 0.35;
+      if (age < 0 || age > 0.9) continue;
+      const side = k % 2 ? 6 : -10;
+      tinyText(canvas, 'HA', x + side, y - 30 - age * 10, paint('#FFF4C0', 1 - age / 0.9));
+    }
+  }
+  // a dash: a puff of dust where they set off, and speed streaks behind them
+  for (const at of Object.values(st.npcAt)) {
+    if (!at.dash || at.gone) continue;
+    const { from, since, dir } = at.dash;
+    if (since < 0.35) {
+      const puff = paint('#D8D0C0', 1 - since / 0.35);
+      for (const [dx, dy] of [[-4, -2], [3, -3], [-1, -6], [5, 0], [-6, 1]])
+        canvas.drawRect(CK.XYWHRect(from[0] + dx * (1 + since * 4), from[1] + dy * (1 + since * 2) - 2, 2, 2), puff);
+    }
+    const back = dir === 'right' ? -1 : dir === 'left' ? 1 : 0;
+    const up = dir === 'down' ? -1 : dir === 'up' ? 1 : 0;
+    const streak = paint('#FFFFFF', 0.7);
+    for (const [len, oy] of [[18, -14], [26, -9], [14, -4]]) {
+      if (back) canvas.drawRect(CK.XYWHRect(back < 0 ? at.x - 6 - len : at.x + 6, at.y + oy, len, 1), streak);
+      else canvas.drawRect(CK.XYWHRect(at.x + oy / 2 + 4, up < 0 ? at.y - 24 - len : at.y + 2, 1, len), streak);
+    }
+  }
   // tears, flung back off a crying face as they run
   for (const [id, at] of Object.entries(st.npcAt)) {
     if (!at.tears || at.gone) continue;
@@ -1235,11 +1290,12 @@ const EPISODES = {
             "Thank you for the door. I'll remember it. Probably.",
           ],
         },
-        // he strolls off as the narration plays
-        { npcWalk: 'felix', to: [[5, 10], [5, 9], [20, 9], [20, 8], [42, 8]], speed: 70, hide: true, together: true },
-        { wait: 1.2 },
-        { narrate: true, lines: ['Felix strolls off toward the towers, whistling.'] },
-        { wait: 0.6 },
+        // he laughs, then he's gone, lightning fast, east toward the towers
+        { laugh: 'felix', dur: 1.4 },
+        { npcWalk: 'felix', to: [[5, 9], [42, 9]], speed: 520, hide: true, dash: true },
+        { wait: 0.5 },
+        // and you set off after him, toward the next place the story goes
+        { walk: [[6, 9], [42, 9]], cut: 2.4 },
       ],
     };
   },
