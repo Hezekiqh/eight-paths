@@ -1789,7 +1789,8 @@ const shakeRnd = rng(3);
 const ff = spawn(
   'ffmpeg',
   ['-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
-    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', '17', '-movflags', '+faststart', `${out}.silent.mp4`],
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', '17',
+    '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart', `${out}.silent.mp4`],
   { stdio: ['pipe', 'ignore', 'inherit'] },
 );
 let total = 0;
@@ -1863,7 +1864,14 @@ else {
   mix.forEach((v, i) => wav.writeInt16LE(Math.round(Math.max(-1, Math.min(1, v)) * 32767), 44 + i * 2));
   const voices = `${out}.voices.wav`;
   writeFileSync(voices, wav);
-  const mux = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-i', voices, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', out], { stdio: ['ignore', 'ignore', 'inherit'] });
+  // Upload-safe for Instagram, TikTok and YouTube: 48 kHz stereo AAC, BT.709 colour tags, the index up front.
+  const mux = spawn(
+    'ffmpeg',
+    ['-y', '-loglevel', 'error', '-i', silent, '-i', voices, '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
+      '-bsf:v', 'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
+      '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', '-shortest', out],
+    { stdio: ['ignore', 'ignore', 'inherit'] },
+  );
   const [code] = await once(mux, 'close');
   unlinkSync(silent);
   unlinkSync(voices);
