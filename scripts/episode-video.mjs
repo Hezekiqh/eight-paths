@@ -482,8 +482,9 @@ function hatchFrame(canvas, h) {
   const { t } = h;
   hseed = 11 + Math.floor(t * FPS);
   const realm = realmOf(h.dimension);
-  const scene = realm.base.map((r) => r.slice());
-  realm.lights.forEach(([x, y, c], n) => {
+  // the build-up is the cocoon alone in the dark (as in the game); the realm appears with the burst
+  const scene = t < HATCH_AT ? realm.base.map((r) => r.map(() => [5, 3, 10])) : realm.base.map((r) => r.slice());
+  if (t >= HATCH_AT) realm.lights.forEach(([x, y, c], n) => {
     if (Math.sin(t * 3 + n * 1.7) > 0.2) {
       const col = hex(c);
       put(scene, x, y, mixRgb(col, [255, 255, 255], 0.6));
@@ -519,7 +520,16 @@ function hatchFrame(canvas, h) {
     drawCocoon(scene, HCX + jitter, HBY, { shear, lift, cracks, glow, eye, iris: h.color, rnd: hrnd });
   } else {
     const rt = t - HATCH_AT;
-    drawBigSprite(scene, h.character, Math.floor(rt * 3), 3, HCX, HBY);
+    // a character with their own reveal move (src/components/reveal-move.tsx) does it; Felix laughs
+    let mx = 0;
+    let my = 0;
+    const s = rt % 3;
+    if (h.move === 'laugh' && s < 1.6) {
+      const beat = Math.floor(s * 12);
+      mx = beat % 2 === 1 ? 3 : -3;
+      my = beat % 3 === 0 ? -6 : 0;
+    }
+    drawBigSprite(scene, h.character, h.move ? 0 : Math.floor(rt * 3), 3, HCX + mx, HBY + my);
     let sseed = 5;
     const srnd = () => (sseed = (sseed * 1103515245 + 12345) % 2147483648) / 2147483648;
     for (let i = 0; i < 120; i++) {
@@ -558,6 +568,19 @@ function hatchFrame(canvas, h) {
     if (rt > 0.2) pixelStars(canvas, h.rarity, 384);
     if (rt > 0.35) centred(canvas, h.subtitle, 500, CARD_SMALL, '#FFFFFF', Math.floor((rt - 0.35) / 0.015));
     if (rt > 0.6) centred(canvas, h.number, 570, CARD_SMALL, '#D8D2E6', Math.floor((rt - 0.6) / 0.05));
+    if (h.move === 'laugh') {
+      const s = rt % 3;
+      for (let k = 0; k < 3; k++) {
+        const age = s - k * 0.4;
+        if (age < 0 || age > 0.9) continue;
+        // above his head (the sprite's top), through the camera
+        const sx = HCX + (k % 2 === 1 ? 30 : -46);
+        const sy = HBY - 150 - age * 12;
+        const X = HK * ((sx - cam.focus[0]) * cam.z + cam.anchor[0]);
+        const Y = HK * ((sy - cam.focus[1]) * cam.z + cam.anchor[1]);
+        canvas.drawText('HA', X, Y, paint('#FFF4C0', 1 - age / 0.9), CARD_MID);
+      }
+    }
   }
   const text = canvas.readPixels(0, 0, {
     width: W,
@@ -1268,8 +1291,9 @@ const EPISODES = {
             name: 'FELIX',
             subtitle: 'THE STRATEGIST',
             number: '#093',
-            rarity: 4,
+            rarity: 2,
             color: '#9B74F8',
+            move: 'laugh',
           },
         },
         { open: { at: [5, 11], grass: [2, 11] } },
@@ -1477,7 +1501,6 @@ const pcm = (path) => {
   return new Int16Array(b.buffer.slice(b.byteOffset + at, b.byteOffset + b.length));
 };
 const blips = [1, 2, 3, 4, 5].map((v) => pcm(join(ROOT, `assets/audio/blip-${v}.wav`)));
-const HATCH_SOUND = pcm(join(ROOT, 'assets/audio/hatch.wav'));
 const VOICE_SOUNDS = [pcm(join(ROOT, 'assets/audio/blip-0.wav')), ...blips];
 /** The pick of a menu choice: a short, bright two-note tick. */
 const SELECT = (() => {
@@ -1498,7 +1521,6 @@ const place = (sound, at, gain) => {
 for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
-  if (s.kind === 'hatch') place(HATCH_SOUND, s.t0 + HATCH_AT, 0.3); // loud already, and boosted with the voices below
 }
 const wav = Buffer.alloc(44 + mix.length * 2);
 wav.write('RIFF', 0);
