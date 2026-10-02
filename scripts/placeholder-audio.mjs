@@ -128,6 +128,15 @@ wav('gutter', 0.6, (b) => {
 [110, 165, 247, 330, 494].forEach((f, i) =>
   wav(`blip-${i + 1}`, 0.05, (b) => note(b, { f, at: 0, len: 0.04, vol: 0.14, wave: 'pulse' })),
 );
+// The Keeper's own voice, below everyone's: an octave under the lowest blip. Short enough
+// (a blip plays every other letter, 56ms apart) that his blips stay separate, not one drone.
+wav('blip-0', 0.05, (b) => note(b, { f: 55, at: 0, len: 0.042, vol: 0.2, wave: 'pulse' }));
+
+// Picking an option in a conversation: a short, bright two-note tick.
+wav('select', 0.1, (b) => {
+  note(b, { f: 988, at: 0, len: 0.035, vol: 0.12 });
+  note(b, { f: 1319, at: 0.035, len: 0.05, vol: 0.12 });
+});
 
 if (process.argv.includes('--effects')) process.exit(0);
 

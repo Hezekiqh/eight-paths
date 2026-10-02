@@ -42,7 +42,8 @@ export function splitSpeaker(line: string): { speaker?: string; sprite?: WalkerI
   return { speaker, sprite, text: m[2] };
 }
 
-export type Voice = 1 | 2 | 3 | 4 | 5;
+/** 0 is the Keeper's alone: deeper than anyone. */
+export type Voice = 0 | 1 | 2 | 3 | 4 | 5;
 
 /** The big and the old speak low; children speak high. */
 const VOICES: Partial<Record<WalkerId, Voice>> = {
@@ -50,7 +51,7 @@ const VOICES: Partial<Record<WalkerId, Voice>> = {
   aurek: 1,
   plush: 1,
   bo: 1,
-  keeper: 2,
+  keeper: 0,
   harrow: 2,
   hugo: 2,
   brannoc: 2,
@@ -60,7 +61,7 @@ const VOICES: Partial<Record<WalkerId, Voice>> = {
 
 /** A speaker's voice, lowest (1) to highest (5): set for some, otherwise one of the middle three, fixed by their name. */
 export function voiceFor(name: string | undefined, sprite: WalkerId | undefined): Voice {
-  if (sprite && VOICES[sprite]) return VOICES[sprite]!;
+  if (sprite && VOICES[sprite] !== undefined) return VOICES[sprite]!;
   let hash = 0;
   for (const c of name ?? '') hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
   return (2 + (hash % 3)) as Voice;

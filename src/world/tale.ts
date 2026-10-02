@@ -17,12 +17,12 @@ export const TALE: Chapter[] = [
     title: 'Where you woke',
     blocks: [
       {
-        from: [said('The Keeper', 'What is this place?')],
-        text: 'You woke in the Archive, where everything the old world knew was written down before it was lost. Time doesn’t pass there the way it does outside.',
+        from: [said('The Keeper', 'Where am I?')],
+        text: 'You woke in the Archive, a pocket dimension, where the Keeper has kept you company for five hundred years. It’s a long story, he says.',
       },
       {
-        from: [said('The Keeper', 'Who are you?')],
-        text: 'Its Keeper kept you safe while you slept. He knows more than he’s saying, and he says who you were is yours to find.',
+        from: [said('The Keeper', 'Who are you?'), said('The Keeper', 'How do you know me?')],
+        text: 'Its Keeper says he’s an old friend. He knows more than he’s saying, and he says who you were is yours to find.',
       },
     ],
   },
