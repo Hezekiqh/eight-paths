@@ -540,11 +540,12 @@ export const useGameStore = create<GameState>()(
         ),
 
       settle: (today = todayKey()) => {
-        const { player, completions, restDays, lastSettledDate } = get();
+        const { player, completions, quests, restDays, lastSettledDate } = get();
         if (!player) return;
         const ledger = settleRestDays(
           { restTokens: player.restTokens, restDays, lastSettledDate },
           completions,
+          quests,
           player.onboardedAt,
           today,
         );

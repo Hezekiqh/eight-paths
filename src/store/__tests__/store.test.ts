@@ -204,10 +204,13 @@ describe('game store', () => {
 
   it('settles missed days with a rest token', () => {
     start();
+    const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
+    useGameStore.getState().toggleQuest(read.id, today);
+    // The 26th started a streak; the 27th, with nothing done, would break it.
     useGameStore.getState().settle('2026-09-28');
     const s = useGameStore.getState();
     expect(s.player?.restTokens).toBe(0);
-    expect(s.restDays).toEqual([{ date: today, dimension: 'all' }]);
+    expect(s.restDays).toEqual([{ date: '2026-09-27', dimension: 'all' }]);
     expect(s.lastSettledDate).toBe('2026-09-27');
   });
 });
