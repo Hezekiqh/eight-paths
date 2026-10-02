@@ -441,6 +441,58 @@ const O = {
   canvasDark: '#A89868',
 };
 
+/** Kaldor's statues: stone lit from the upper left, an outline, the gold of his vanity, moss. */
+const KS = {
+  o: '#2A2422',
+  d: '#4A4442',
+  m: '#6A6260',
+  l: '#8A8280',
+  h: '#ACA5A0',
+  g: '#C8963A',
+  G: '#F0C860',
+  b: '#8A6420',
+  w: '#4E6E34',
+};
+// prettier-ignore
+const KALDOR_STATUE = [
+  '.......o........................',
+  '......olo.o...........o.........',
+  '...ooooloolo..ooooo..olo........',
+  '..ohlldlo.oloohllmmoomo.........',
+  '.ohllmdlo..olhlllmmdmo..........',
+  '.ohlmmdlo...odddddddo...........',
+  '.ohlmddlo....olohomo............',
+  '..ohmddlo....ohllmmo............',
+  '...ooooloohlmohllmmomddo........',
+  '......oloohlmolhlmdolmddo.......',
+  '......olohlmolmolmomdoldo.......',
+  '.....ohllmoolmmohomddoldo.......',
+  '.....ollmmo.olmmmmddoolmdo......',
+  '......olo...oddgGgddoomddo......',
+  '......olo...olmmlmddo.ooo.......',
+  '......olo..olmomlodddo..........',
+  '......olo..ohlmdoolmdo..........',
+  '......olo..ohlmdo.olmdo.........',
+  '......olo..ohlmdo..olmdo........',
+  '......olo..ohlmdo..ommmdo.......',
+  '......olo.ohllmdo..obgGgbo......',
+  '......ooo.ooooooo..obgbgbbo.....',
+];
+
+// prettier-ignore
+const HEADLESS_STATUE = [
+  '......oo.o......',
+  '.....ohhohho....',
+  '...ooohmmmdooo..',
+  '..ohlllmmmmddo..',
+  '..ohlolmmmoddo..',
+  '..ohlolmmmoddo..',
+  '..ollolmmdoddo..',
+  '...oooldmdooo...',
+  '....olmdmmdo....',
+  '...olmdmmmddo...',
+];
+
 /** Snow instead of grass (a map with ground: 'snow'). */
 const SNOW = {
   grass: ['#D8E0EA', '#CED8E4', '#E2E8F0'],
@@ -644,24 +696,98 @@ const OUTDOOR_ART = {
     box(g, x, y + 14, TILE, 2, O.stoneDark);
   },
   K(g, x, y, m) {
-    // Kaldor's colossal statue, drawn once across its 2x2 tiles.
+    // Kaldor's colossal statue, drawn once across its 2x2 tiles: horned helm,
+    // beard, fur mantle, his axe planted beside him and one boot on a broken
+    // crown, on a plinth with a gilded plaque. Kaldorhold's second statue faces
+    // the first, admiringly.
     if (m.at(-1, 0) === 'K' || m.at(0, -1) === 'K') return;
-    box(g, x + 6, y + 2, 20, 30, O.stoneDark);
-    ellipse(g, x + 16, y + 8, 5, 5, O.stoneLight);
-    box(g, x + 9, y + 12, 14, 12, O.stoneLight);
-    box(g, x + 4, y + 13, 5, 3, O.stoneLight);
-    box(g, x + 23, y + 13, 5, 3, O.stoneLight);
-    box(g, x + 10, y + 24, 5, 6, O.stoneLight);
-    box(g, x + 17, y + 24, 5, 6, O.stoneLight);
-    ellipse(g, x + 22, y + 28, 4, 2, P.rugGold);
+    const mirror = [2, 3, 4, 5, 6, 7, 8, 9, 10].some((i) => m.at(-i, 0) === 'K');
+    // Its shadow on the ground, falling down and to the right.
+    for (let j = 21; j < 32; j++)
+      for (let i = 5; i < 32; i++) {
+        const c = g[y + j]?.[x + i];
+        if (c) g[y + j][x + i] = mix(c, [16, 12, 10], 0.4);
+      }
+    // The plinth.
+    box(g, x + 3, y + 19, 26, 1, KS.o);
+    box(g, x + 3, y + 20, 26, 2, KS.l);
+    box(g, x + 4, y + 20, 3, 2, KS.h);
+    box(g, x + 3, y + 22, 26, 1, KS.h);
+    put(g, x + 3, y + 20, KS.o);
+    put(g, x + 3, y + 21, KS.o);
+    put(g, x + 3, y + 22, KS.o);
+    put(g, x + 28, y + 20, KS.o);
+    put(g, x + 28, y + 21, KS.o);
+    put(g, x + 28, y + 22, KS.o);
+    box(g, x + 2, y + 23, 28, 1, KS.o);
+    box(g, x + 2, y + 24, 28, 4, KS.m);
+    box(g, x + 3, y + 24, 1, 4, KS.l);
+    box(g, x + 26, y + 24, 3, 4, KS.d);
+    box(g, x + 2, y + 24, 1, 4, KS.o);
+    box(g, x + 29, y + 24, 1, 4, KS.o);
+    box(g, x + 1, y + 28, 30, 1, KS.o);
+    box(g, x + 1, y + 29, 30, 1, KS.l);
+    put(g, x + 2, y + 29, KS.h);
+    box(g, x + 27, y + 29, 3, 1, KS.d);
+    put(g, x + 1, y + 29, KS.o);
+    put(g, x + 30, y + 29, KS.o);
+    box(g, x + 1, y + 30, 30, 1, KS.o);
+    // The plaque, and a crack the masons hoped he wouldn't notice.
+    box(g, x + 11, y + 24, 10, 3, KS.b);
+    box(g, x + 12, y + 25, 8, 1, KS.g);
+    put(g, x + 12, y + 25, KS.G);
+    for (let i = 13; i < 19; i += 2) put(g, x + i, y + 25, KS.b);
+    put(g, x + 7, y + 24, KS.d);
+    put(g, x + 7, y + 25, KS.d);
+    put(g, x + 8, y + 26, KS.d);
+    put(g, x + 8, y + 27, KS.d);
+    // Moss at the foot.
+    for (const [i, j] of [[2, 29], [3, 29], [4, 29], [2, 27], [3, 27], [27, 29], [24, 29]]) put(g, x + i, y + j, KS.w);
+    // Kaldor himself.
+    KALDOR_STATUE.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch !== '.') put(g, x + (mirror ? 31 - i : i), y + j, KS[ch]);
+      }),
+    );
   },
   Z(g, x, y) {
-    // The headless king.
-    box(g, x + 3, y + 12, 10, 4, O.stoneDark);
-    box(g, x + 4, y + 3, 8, 10, O.stone);
-    box(g, x + 2, y + 4, 3, 3, O.stone);
-    box(g, x + 11, y + 4, 3, 3, O.stone);
-    box(g, x + 7, y + 2, 2, 1, O.stoneDark);
+    // The headless king: a robed statue snapped off at the neck, the break
+    // still pale, on a plinth whose plaque has been pried off.
+    for (let i = 2; i < 16; i++) {
+      const c = g[y + 15]?.[x + i];
+      if (c) g[y + 15][x + i] = mix(c, [16, 12, 10], 0.4);
+    }
+    for (let j = 10; j < 15; j++) {
+      const c = g[y + j]?.[x + 15];
+      if (c) g[y + j][x + 15] = mix(c, [16, 12, 10], 0.4);
+    }
+    box(g, x + 2, y + 9, 12, 1, KS.o);
+    box(g, x + 2, y + 10, 12, 1, KS.l);
+    box(g, x + 3, y + 10, 2, 1, KS.h);
+    put(g, x + 2, y + 10, KS.o);
+    put(g, x + 13, y + 10, KS.o);
+    box(g, x + 1, y + 11, 14, 1, KS.o);
+    box(g, x + 1, y + 12, 14, 2, KS.m);
+    box(g, x + 2, y + 12, 1, 2, KS.l);
+    box(g, x + 12, y + 12, 2, 2, KS.d);
+    put(g, x + 1, y + 12, KS.o);
+    put(g, x + 1, y + 13, KS.o);
+    put(g, x + 14, y + 12, KS.o);
+    put(g, x + 14, y + 13, KS.o);
+    box(g, x + 1, y + 14, 14, 1, KS.o);
+    // Where the plaque was: a pale patch, four nail holes, a pry mark.
+    box(g, x + 5, y + 12, 6, 2, KS.l);
+    for (const [i, j] of [[5, 12], [10, 12], [5, 13], [10, 13]]) put(g, x + i, y + j, KS.o);
+    put(g, x + 8, y + 13, KS.d);
+    put(g, x + 4, y + 13, KS.w);
+    // Chips of the head, never swept up.
+    put(g, x + 11, y + 10, KS.d);
+    put(g, x + 12, y + 10, KS.m);
+    HEADLESS_STATUE.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch !== '.') put(g, x + i, y + j, KS[ch]);
+      }),
+    );
   },
   X(g, x, y) {
     // An iron cage.

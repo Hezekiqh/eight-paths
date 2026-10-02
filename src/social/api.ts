@@ -102,6 +102,18 @@ export async function signInWithApple(): Promise<'ok' | 'canceled'> {
   return 'ok';
 }
 
+/**
+ * Email and password sign-in, for accounts made in the Supabase dashboard
+ * (the App Review demo account). There's no sign-up here on purpose.
+ */
+export async function signInWithEmail(email: string, password: string): Promise<'ok' | 'canceled'> {
+  const { data, error } = await supabase().auth.signInWithPassword({ email: email.trim(), password });
+  if (error?.status === 400) fail("That email and password don't match.");
+  if (error || !data.user) fail(OFFLINE);
+  await loadAccount(data.user!.id);
+  return 'ok';
+}
+
 /** Reads `key=value` pairs from a URL's fragment and query (tokens come back in either). */
 function urlParams(url: string): Record<string, string> {
   const params: Record<string, string> = {};
