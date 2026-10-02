@@ -18,7 +18,6 @@ import { PauseMenu } from '@/components/world/pause-menu';
 import { WorldMapView } from '@/components/world/world-map';
 import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
-import { CardGame } from '@/components/world/card-game';
 import { VhsOverlay } from '@/components/world/vhs-overlay';
 import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { pickData, useGameStore } from '@/store';
@@ -393,24 +392,7 @@ function World({
     },
     [save, onTravel],
   );
-  // Cards with the Keeper: they go on until you walk off, and then he asks if you're leaving.
-  // Kept as the room they were dealt in, so walking through a door ends the game.
-  const [cardsIn, setCardsIn] = useState<string | null>(null);
-  const cards = cardsIn === map.id;
-  const playCards = useCallback(() => setCardsIn(map.id), [map]);
-  const leavingCards = useCallback(
-    () =>
-      setDialogue({
-        speaker: 'The Keeper',
-        lines: ['Leaving so soon?'],
-        choices: [
-          { label: 'Yes.', then: () => setCardsIn(null) },
-          { label: 'No.', then: () => {} },
-        ],
-      }),
-    [],
-  );
-  const act = useAct(map, sim, setDialogue, save, xpRef, travel, hero, playCards);
+  const act = useAct(map, sim, setDialogue, save, xpRef, travel, hero);
   const setFlag = useWorldStore((s) => s.setFlag);
   // How the walking character fights: their Path's attack, harder the more real habits they have.
   const heroPath = COMPANIONS[hero].dimension;
@@ -568,7 +550,6 @@ function World({
           }}
         />
       )}
-      {cards && <CardGame moving={sim.moving} paused={dialogue !== null} onMove={leavingCards} />}
       {fightMap.enemies.length > 0 && <Hearts hp={sim.hp} max={hearts} />}
       {shouting && <SignatureShout key={shouting.at} name={shouting.name} line={shouting.line} />}
       {bossOn && !map.boss?.kind && <Drowsiness sleepy={sim.sleepy} />}
@@ -664,7 +645,6 @@ function useAct(
   xp: { current: XpTotals },
   onTravel: (to: Arrival) => void,
   hero: HeroId,
-  onCards: () => void,
 ) {
   const busy = useRef(false);
   const act = useCallback(() => {
@@ -729,14 +709,6 @@ function useAct(
         thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
       const own = thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
       const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
-      // In the Archive the Keeper will always deal you a hand of cards (card-game.tsx).
-      const choices =
-        thing.id === 'keeper' && map.id === 'archive'
-          ? [
-              { label: 'Play cards.', then: onCards },
-              { label: 'Goodbye.', then: () => {} },
-            ]
-          : undefined;
       // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
       if (thing.id === 'keeper' && map.id === 'archive') {
         const w = useWorldStore.getState();
@@ -754,7 +726,6 @@ function useAct(
             speaker: thing.name,
             lines: talk.lines.length ? talk.lines : thing.lines,
             questions,
-            choices,
           });
           return;
         }
@@ -764,7 +735,6 @@ function useAct(
         speaker: thing.name,
         lines: after ? thing.after!.lines : [...thing.lines, ...banter],
         questions,
-        choices,
       });
       return;
     }
@@ -945,7 +915,7 @@ function useAct(
     }
     const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero, onCards]);
+  }, [map, sim, setDialogue, save, xp, onTravel, hero]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
   return useCallback(() => {
     try {
