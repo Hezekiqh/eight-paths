@@ -27,19 +27,31 @@ export type Goal = {
   mark: { box: TileBox; tag: string; exitId?: string } | null;
   /** The legend line: what to do. */
   line: string;
+  /** Only a character of this Path can do it (walk as them: pause, then Party). */
+  path?: Dimension;
 };
 
 /** Something that sets a story flag, and where. */
-type Setter = { map: MapId; box: TileBox; tag: string; who?: string; talk?: boolean; exitId?: string };
+type Setter = {
+  map: MapId;
+  box: TileBox;
+  tag: string;
+  who?: string;
+  path?: Dimension;
+  talk?: boolean;
+  exitId?: string;
+};
 
 const ONE = (x: number, y: number): TileBox => ({ x, y, w: 1, h: 1 });
 
 /** "a Bard can do it", for a job only one Path can do. */
 function whoCan(path: string | null | undefined): string | undefined {
-  if (!path || !(path in CLASSES)) return undefined;
+  if (!isPath(path)) return undefined;
   const name = CLASSES[path as Dimension].className;
   return `${/^[AEIOU]/.test(name) ? 'an' : 'a'} ${name} can do it`;
 }
+
+const isPath = (path: string | null | undefined): path is Dimension => !!path && path in CLASSES;
 
 /** The bounding box, in tiles, of every tile with this letter. */
 export function tileBox(map: WorldMap, letter: string): TileBox | null {
@@ -66,7 +78,14 @@ export function settersOf(flag: string): Setter[] {
     const map: WorldMap = MAPS[id];
     for (const npc of map.npcs) {
       if (npc.job?.flag !== flag) continue;
-      out.push({ map: id, box: ONE(npc.x, npc.y), tag: npc.name, who: whoCan(npc.job.path), talk: true });
+      out.push({
+        map: id,
+        box: ONE(npc.x, npc.y),
+        tag: npc.name,
+        who: whoCan(npc.job.path),
+        path: isPath(npc.job.path) ? npc.job.path : undefined,
+        talk: true,
+      });
     }
     if (map.boss?.flag === flag) out.push({ map: id, box: ONE(map.boss.x, map.boss.y), tag: 'The fight' });
     if (map.platesFlag === flag) {
@@ -77,7 +96,7 @@ export function settersOf(flag: string): Setter[] {
   for (const job of JOBS) {
     if (job.flag !== flag) continue;
     const box = tileBox(MAPS[job.map], job.tile);
-    if (box) out.push({ map: job.map, box, tag: job.label, who: whoCan(job.path) });
+    if (box) out.push({ map: job.map, box, tag: job.label, who: whoCan(job.path), path: job.path ?? undefined });
   }
   return out;
 }
@@ -116,11 +135,15 @@ function firstStep(from: MapId, to: MapId, xp: XpTotals): Exit | null {
 
 /** Point at `target` on `map` if it's here, or at the way toward it if it isn't. */
 function pointAt(here: MapId, target: Setter, line: string, xp: XpTotals): Goal {
-  if (target.map === here) return { mark: { box: target.box, tag: target.tag, exitId: target.exitId }, line };
+  const path = target.path;
+  if (target.map === here) return { mark: { box: target.box, tag: target.tag, exitId: target.exitId }, line, path };
   const step = firstStep(here, target.map, xp);
   const box = step && tileBox(MAPS[here], step.tile);
-  return { mark: step && box ? { box, tag: step.label, exitId: step.id } : null, line };
+  return { mark: step && box ? { box, tag: step.label, exitId: step.id } : null, line, path };
 }
+
+/** The portal at the end of Season 1, in the Field of Banners: touched once, it sets this flag. */
+export const SEASON_FLAG = 'season-1';
 
 /** What to do next to get on with the story, and what to mark on `here`'s map for it. */
 export function nextGoal(here: MapId, discovered: MapId[], xp: XpTotals): Goal {
@@ -129,11 +152,14 @@ export function nextGoal(here: MapId, discovered: MapId[], xp: XpTotals): Goal {
   const step = EXITS.find((e) => !e.back && e.to && !(standing(e.needs, xp).met && been(e.to.map)));
 
   if (!step) {
+    const flags = xp.flags ?? [];
+    if (flags.includes(SEASON_FLAG)) return { mark: null, line: 'Season 1 is done. Keep your Paths strong.' };
+    // The road is walked: the last thing is the portal (it opens at the final level).
     const s = standing(FINAL_GOAL, xp);
-    const line = s.met
-      ? 'Season 1 is done. Keep your Paths strong.'
-      : `${describeRequirement(FINAL_GOAL)}: ${howToProgress(s)}`;
-    return { mark: null, line };
+    const portal = tileBox(MAPS['field-of-banners'], 'Q');
+    const line = s.met ? 'Touch the portal' : `${describeRequirement(FINAL_GOAL)}: ${howToProgress(s)}`;
+    if (!portal) return { mark: null, line };
+    return pointAt(here, { map: 'field-of-banners', box: portal, tag: 'The portal' }, line, xp);
   }
 
   const door = (): Setter => ({

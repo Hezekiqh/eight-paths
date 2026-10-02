@@ -6,6 +6,7 @@ import { isObjectiveDone } from '@/game';
 import { useGameStore } from '@/store';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import type { HeroId } from '@/world/hero';
+import { nextGoal } from '@/world/guide';
 import { openNotices } from '@/world/notices';
 import { useWorldStore } from '@/world/store';
 import { classColors, colors, fonts, spacing } from '@/theme';
@@ -33,6 +34,8 @@ export function ObjectivesPanel({ map, hero, onOpenBoard }: Props) {
   const noticed = useWorldStore((s) => s.noticed);
   const party = useGameStore((s) => s.party);
   const collection = useCollection();
+  const discovered = useWorldStore((s) => s.discovered);
+  const goal = nextGoal(map, discovered, xp);
   // This area's ways on are listed above; everything else found stays here until it's done.
   const found = useMemo(() => {
     const levelOf = (id: HeroId) => collection.entries.find((e) => e.companion.id === id)?.progress.level ?? 1;
@@ -47,7 +50,18 @@ export function ObjectivesPanel({ map, hero, onOpenBoard }: Props) {
 
   return (
     <View style={styles.panel}>
-      <Text style={styles.section}>TO GO ON</Text>
+      <Text style={styles.section}>NEXT STEP</Text>
+      <View style={[styles.item, styles.next]} accessible>
+        <Text style={styles.label}>{goal.line}</Text>
+        {goal.mark && (
+          <Text style={styles.how}>
+            {goal.mark.exitId
+              ? `Follow the gold arrow to ${goal.mark.tag.replace(/^The /, 'the ')}.`
+              : `${goal.mark.tag} is marked with a gold arrow. Walk up and press A.`}
+          </Text>
+        )}
+      </View>
+      <Text style={styles.section}>WAYS ON FROM HERE</Text>
       {exits.map((exit) => {
         const s = standing(exit.needs, xp);
         const waiting = s.met && exit.to === null;
@@ -112,6 +126,7 @@ export function ObjectivesPanel({ map, hero, onOpenBoard }: Props) {
 
 const styles = StyleSheet.create({
   panel: { gap: spacing.xs },
+  next: { borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: spacing.sm },
   section: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
   item: { gap: 4, marginBottom: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.sm },

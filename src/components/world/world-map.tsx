@@ -21,7 +21,7 @@ import { haptics } from '@/haptics';
 import { colors, fonts, spacing } from '@/theme';
 import { MAPS, TILE, type MapId, type WorldMap } from '@/world/maps';
 import { nextGoal, tileBox, type Goal } from '@/world/guide';
-import { EXITS, describeRequirement, standing } from '@/world/progress';
+import { EXITS } from '@/world/progress';
 
 const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
 const GOLD = '#FFD27A';
@@ -80,6 +80,8 @@ type Props = {
   discovered: MapId[];
   width: number;
   height: number;
+  /** Who to walk as, when the next step takes a particular Path. */
+  swap?: string | null;
   onClose: () => void;
 };
 
@@ -88,16 +90,15 @@ type Props = {
  * World shows only the places you've been, everything else solid black: no
  * outlines, no names, no hints. Ways out show as a short stub into the dark.
  */
-export function WorldMapView({ map, you, discovered, width, height, onClose }: Props) {
+export function WorldMapView({ map, you, discovered, width, height, swap, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const [zoom, setZoom] = useState<Zoom>('area');
   const xp = useWorldProgress();
-  const exits = EXITS.filter((e) => e.from === map.id && !e.back);
   const goal = nextGoal(map.id as MapId, discovered, xp);
   const left = Math.max(insets.left, spacing.lg);
   const right = Math.max(insets.right, spacing.lg);
   const boxW = width - left - right;
-  const boxH = height - 64 - 56 - Math.max(insets.bottom, spacing.sm);
+  const boxH = height - 64 - 64 - Math.max(insets.bottom, spacing.sm);
 
   return (
     <View style={styles.root} accessibilityViewIsModal>
@@ -126,21 +127,27 @@ export function WorldMapView({ map, you, discovered, width, height, onClose }: P
       </View>
 
       <View style={[styles.legend, { paddingLeft: left, paddingRight: right }]}>
-        <Text style={styles.legendText}>
-          <Text style={{ color: GOLD }}>➜ </Text>Next: {goal.line}
-        </Text>
-        {exits.map((exit) => {
-          const s = standing(exit.needs, xp);
-          return (
-            <Text key={exit.id} style={styles.legendText}>
-              <Text style={{ color: GOLD }}>▢ </Text>
-              {exit.label} · {describeRequirement(exit.needs)}
-              {s.met ? ' ✓' : ` (you're Lv ${s.have})`}
+        <View style={styles.next} accessible accessibilityLabel={`Next step: ${goal.line}${swap ? `. ${swap}` : ''}`}>
+          <Text style={styles.nextTitle}>NEXT STEP</Text>
+          <View style={styles.nextWords}>
+            <Text style={styles.nextLine} numberOfLines={1}>
+              {goal.line}
             </Text>
-          );
-        })}
+            {swap ? (
+              <Text style={styles.nextSwap} numberOfLines={1}>
+                {swap}
+              </Text>
+            ) : goal.mark ? (
+              <Text style={styles.nextSwap} numberOfLines={1}>
+                {goal.mark.exitId ? `Head for the gold arrow: ${goal.mark.tag}` : `Find ${goal.mark.tag}, marked in gold`}
+              </Text>
+            ) : null}
+          </View>
+        </View>
         <Text style={styles.legendText}>
-          <Text style={{ color: GOLD }}>♥ </Text>You
+          <Text style={{ color: GOLD }}>♥ </Text>You{'   '}
+          <Text style={{ color: GOLD }}>▢ </Text>Go here{'   '}
+          <Text style={{ color: MUTED }}>▢ </Text>Other ways
         </Text>
       </View>
     </View>
@@ -215,9 +222,10 @@ function AreaMap({
             y={y - 2}
             width={w + 4}
             height={h + 4}
-            color={exit.back ? MUTED : GOLD}
+            color={exit.id === mark?.exitId ? GOLD : MUTED}
             style="stroke"
-            strokeWidth={2}
+            strokeWidth={exit.id === mark?.exitId ? 3 : 1}
+            opacity={exit.id === mark?.exitId ? 1 : 0.7}
           />
         ))}
         {guide && (
@@ -246,8 +254,8 @@ function AreaMap({
       {exits.map((e) => (
         <Tag
           key={e.exit.id}
-          label={e.exit.label}
-          color={e.exit.back ? MUTED : GOLD}
+          label={e.exit.id === mark?.exitId ? `➜ ${e.exit.label}` : e.exit.label}
+          color={e.exit.id === mark?.exitId ? GOLD : MUTED}
           box={e}
           areaW={width}
           areaH={height}
@@ -423,7 +431,12 @@ const styles = StyleSheet.create({
   title: { color: GOLD, fontFamily: fonts.bold, fontSize: 32, letterSpacing: 3 },
   zoom: { width: 220 },
   close: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 20, letterSpacing: 1, marginLeft: 'auto' },
-  legend: { height: 56, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.lg },
+  legend: { height: 64, flexDirection: 'row', alignItems: 'center', columnGap: spacing.lg },
+  next: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderWidth: 2, borderColor: GOLD, paddingHorizontal: 10, paddingVertical: 4 },
+  nextTitle: { color: GOLD, fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
+  nextWords: { flex: 1 },
+  nextLine: { color: '#FFFFFF', fontFamily: fonts.dialogue, fontSize: 16 },
+  nextSwap: { color: '#C9C5DA', fontFamily: fonts.regular, fontSize: 12 },
   legendText: { color: '#C9C5DA', fontFamily: fonts.regular, fontSize: 13 },
   you: { position: 'absolute', color: GOLD, fontSize: 16, width: 16, textAlign: 'center' },
   dark: { backgroundColor: '#000000' },
