@@ -16,6 +16,9 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 import CanvasKitInit from 'canvaskit-wasm/bin/canvaskit.js';
+import { PNG } from 'pngjs';
+
+import { COCOON_H, EYE, GH, GROUND, GW, box, drawCocoon, drawRealm, hex, mix as mixRgb, put } from './realm-art.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const [episode = '2', out = `episode-${episode}.mp4`] = process.argv.slice(2);
@@ -394,6 +397,199 @@ function drawOverlays(canvas, st) {
   if (st.menu) drawMenu(canvas, st.menu);
 }
 
+// ---- a cocoon hatching, as the app's reveal and scripts/hatch-video.mjs play it: on the
+// Path's realm, it wiggles, cracks, goes silent while an eye opens in the silk, then bursts
+const HATCH_AT = 8.0;
+const HATCH_END = 12.6;
+const HK = 4;
+const HCX = 135;
+const HBY = GROUND + 2;
+const HWIGGLES = [0.3, 2.4, 4.2];
+const easeOut = (t) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+const clamp01 = (t) => Math.min(1, Math.max(0, t));
+const realms = new Map();
+const realmOf = (dimension) => {
+  if (!realms.has(dimension)) realms.set(dimension, drawRealm(dimension));
+  return realms.get(dimension);
+};
+const spriteSheets = new Map();
+function drawBigSprite(g, id, frame, sc, cx, by) {
+  if (!spriteSheets.has(id)) spriteSheets.set(id, PNG.sync.read(readFileSync(join(ROOT, `assets/sprites/${id}/idle.png`))));
+  const sheet = spriteSheets.get(id);
+  const frames = Math.max(1, Math.round(sheet.width / (32 * 12)));
+  for (let y = 0; y < 48 * sc; y++)
+    for (let x = 0; x < 32 * sc; x++) {
+      const i = (Math.floor(y / sc) * 12 * sheet.width + Math.floor(x / sc) * 12 + (frame % frames) * 32 * 12) * 4;
+      if (sheet.data[i + 3] < 128) continue;
+      put(g, cx - 16 * sc + x, by - 48 * sc + y, [sheet.data[i], sheet.data[i + 1], sheet.data[i + 2]]);
+    }
+}
+const wiggleAt = (t, at) => (t >= at && t < at + 0.6 ? Math.round(Math.sin((t - at) * 26) * 4 * (1 - (t - at) / 0.6)) : 0);
+function hatchCamera(t) {
+  const mid = [HCX, HBY - COCOON_H / 2];
+  let z = 1;
+  let focus = mid;
+  let shake = 0;
+  let flash = 0;
+  if (t < 0.13) flash = 1 - t / 0.13;
+  else if (t < HATCH_AT) {
+    const hit = t - 0.13;
+    z = hit < 0.12 ? lerpf(1, 2.05, easeOut(hit / 0.12)) : lerpf(2.05, 1.7, easeOut((hit - 0.12) / 0.4));
+    if (t > 0.65) z = lerpf(1.7, 1.25, easeOut((t - 0.65) / 4.4));
+    if (t > 5.0) z = lerpf(1.25, 1.4, clamp01((t - 5.0) / 1.6));
+    for (const w of HWIGGLES) if (t >= w && t < w + 0.25) z += 0.06 * (1 - (t - w) / 0.25);
+    shake = hit < 0.7 ? 6 * (1 - hit / 0.7) : 0;
+    for (const w of HWIGGLES) if (t >= w && t < w + 0.3) shake = Math.max(shake, 1.5);
+    if (t >= 5.6 && t < 6.6) shake = 1 + ((t - 5.6) / 1.0) * 2.5;
+    if (t >= 6.6 && t < 7.35) {
+      focus = [HCX + EYE.dx, HBY + EYE.dy];
+      z = lerpf(1.4, 3.4, easeOut((t - 6.6) / 0.14));
+    }
+    if (t >= 7.35) {
+      z = lerpf(2.2, 1.45, easeOut((t - 7.35) / 0.3));
+      shake = 3 + ((t - 7.35) / 0.65) * 4;
+    }
+  } else {
+    const rt = t - HATCH_AT;
+    z = rt < 0.25 ? lerpf(0.92, 1.0, easeOut(rt / 0.25)) : lerpf(1.0, 1.1, clamp01((rt - 0.25) / 4.5));
+    focus = [HCX, HBY - 70];
+    shake = rt < 0.8 ? 7 * (1 - rt / 0.8) : 0;
+    flash = rt < 0.5 ? 1 - rt / 0.5 : 0;
+    // back to the World on a white flash
+    if (t > HATCH_END - 0.3) flash = (t - (HATCH_END - 0.3)) / 0.3;
+  }
+  const k = clamp01((z - 1) / 1.2);
+  return { z, focus, anchor: [lerpf(focus[0], GW / 2, k), lerpf(focus[1], GH * 0.6, k)], shake, flash };
+}
+let hseed = 11;
+const hrnd = () => (hseed = (hseed * 1103515245 + 12345) % 2147483648) / 2147483648;
+const HATCH_PX = new Uint8Array(W * H * 4);
+const HNAME = fontOf(JERSEY, 150);
+/** One hatch frame as raw RGBA (1080×1920), name card included. */
+function hatchFrame(canvas, h) {
+  const { t } = h;
+  hseed = 11 + Math.floor(t * FPS);
+  const realm = realmOf(h.dimension);
+  const scene = realm.base.map((r) => r.slice());
+  realm.lights.forEach(([x, y, c], n) => {
+    if (Math.sin(t * 3 + n * 1.7) > 0.2) {
+      const col = hex(c);
+      put(scene, x, y, mixRgb(col, [255, 255, 255], 0.6));
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) put(scene, x + dx, y + dy, col);
+    }
+  });
+  if (t < HATCH_AT) {
+    let shear = 0;
+    let lift = 0;
+    let cracks = 0;
+    let glow = 0;
+    let eye = 0;
+    if (t < 5.6) {
+      lift = Math.round(Math.sin(t * 2.5));
+      for (const w of HWIGGLES) shear += wiggleAt(t, w);
+      if (t >= 4.2) cracks = 0.12;
+    } else if (t < 6.6) {
+      const k = (t - 5.6) / 1.0;
+      shear = Math.round(Math.sin(t * (24 + k * 30)) * (1.5 + k * 4));
+      cracks = lerpf(0.12, 0.55, k);
+      glow = k * 0.5;
+    } else if (t < 7.35) {
+      cracks = 0.55;
+      glow = 0.5;
+      const et = t - 6.6;
+      eye = clamp01(et / 0.3);
+      if (et > 0.5 && et < 0.65) eye = Math.abs(et - 0.575) / 0.075;
+    } else {
+      const k = (t - 7.35) / 0.65;
+      shear = Math.round(Math.sin(t * 60) * (4 + k * 5));
+      lift = Math.round(Math.abs(Math.sin(t * 34)) * k * 3);
+      cracks = lerpf(0.55, 1, k);
+      glow = 0.5 + k * 0.5;
+      eye = 1;
+    }
+    const jitter = t >= 7.35 ? Math.round((hrnd() - 0.5) * 4) : 0;
+    drawCocoon(scene, HCX + jitter, HBY, { shear, lift, cracks, glow, eye, iris: h.color, rnd: hrnd });
+  } else {
+    const rt = t - HATCH_AT;
+    drawBigSprite(scene, h.character, Math.floor(rt * 3), 3, HCX, HBY);
+    let sseed = 5;
+    const srnd = () => (sseed = (sseed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    for (let i = 0; i < 120; i++) {
+      const sx = HCX + (srnd() - 0.5) * 50;
+      const sy = HBY - 10 - srnd() * 90;
+      const vx = (srnd() - 0.5) * 5;
+      const vy = -2 - srnd() * 4;
+      const c = srnd() > 0.5 ? hex('#EDE6D6') : hex('#C9BFAE');
+      if (rt < 1.5) box(scene, sx + vx * rt * 34, sy + vy * rt * 34 + 70 * rt * rt, 2, 2, c);
+    }
+  }
+  // the camera: sample the 270×480 scene through the zoom, at 4px a pixel
+  const cam = hatchCamera(t);
+  const sx0 = cam.shake ? (hrnd() - 0.5) * 2 * cam.shake : 0;
+  const sy0 = cam.shake ? (hrnd() - 0.5) * 2 * cam.shake : 0;
+  const colX = new Int32Array(W);
+  for (let X = 0; X < W; X++) colX[X] = Math.min(GW - 1, Math.max(0, Math.floor(cam.focus[0] + (X / HK - cam.anchor[0]) / cam.z + sx0)));
+  for (let Y = 0; Y < H; Y++) {
+    const srow = scene[Math.min(GH - 1, Math.max(0, Math.floor(cam.focus[1] + (Y / HK - cam.anchor[1]) / cam.z + sy0)))];
+    for (let X = 0; X < W; X++) {
+      const c = srow[colX[X]];
+      const i = (Y * W + X) * 4;
+      HATCH_PX[i] = c[0] + (255 - c[0]) * cam.flash;
+      HATCH_PX[i + 1] = c[1] + (255 - c[1]) * cam.flash;
+      HATCH_PX[i + 2] = c[2] + (255 - c[2]) * cam.flash;
+      HATCH_PX[i + 3] = 255;
+    }
+  }
+  // the name card is drawn with Skia on a clear canvas and laid over these pixels (no Skia image
+  // of the scene: thousands of 8MB images corrupt CanvasKit's memory in a long render)
+  canvas.clear(CK.TRANSPARENT);
+  // who it is, in the game's fonts: name, stars, Path and number, typed on after the burst
+  if (t >= HATCH_AT && t < HATCH_END - 0.3) {
+    const rt = t - HATCH_AT;
+    centred(canvas, h.name, 330, HNAME, h.color, Math.floor(rt / 0.08));
+    if (rt > 0.4) pixelStars(canvas, h.rarity, 384);
+    if (rt > 0.9) centred(canvas, h.subtitle, 500, CARD_SMALL, '#FFFFFF', Math.floor((rt - 0.9) / 0.03));
+    if (rt > 1.6) centred(canvas, h.number, 570, CARD_SMALL, '#D8D2E6', Math.floor((rt - 1.6) / 0.1));
+  }
+  const text = canvas.readPixels(0, 0, {
+    width: W,
+    height: H,
+    colorType: CK.ColorType.RGBA_8888,
+    alphaType: CK.AlphaType.Unpremul,
+    colorSpace: CK.ColorSpace.SRGB,
+  });
+  for (let i = 0; i < text.length; i += 4) {
+    const a = text[i + 3];
+    if (a === 0) continue;
+    const k = a / 255;
+    for (let c = 0; c < 3; c++) HATCH_PX[i + c] = Math.round(HATCH_PX[i + c] * (1 - k) + text[i + c] * k);
+  }
+  return HATCH_PX;
+}
+
+/** Rarity stars as the hatch draws them: a 9×9 pixel star each, 8px a pixel, centred. */
+const STAR = ['....X....', '....X....', '...XXX...', 'XXXXXXXXX', '.XXXXXXX.', '..XXXXX..', '..XX.XX..', '.XX...XX.', '.X.....X.'];
+function pixelStars(canvas, n, y) {
+  const p = paint('#FFFFFF');
+  for (let s = 0; s < n; s++) {
+    const x0 = Math.round(W / 2 + (s - (n - 1) / 2) * 104 - 36);
+    STAR.forEach((row, r) => [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x0 + k * 8, y + r * 8, 8, 8), p)));
+  }
+}
+
+/** A cocoon after it's hatched: the silk split open and slumped on the ground. */
+function drawSplitCocoon(canvas, x, y) {
+  const silk = paint('#EDE6D6');
+  const shade = paint('#C9BFAE');
+  const deep = paint('#A69C8C');
+  canvas.drawRect(CK.XYWHRect(x + 2, y + 12, 12, 3), deep);
+  canvas.drawRect(CK.XYWHRect(x + 2, y + 6, 4, 7), silk);
+  canvas.drawRect(CK.XYWHRect(x + 3, y + 4, 2, 3), shade);
+  canvas.drawRect(CK.XYWHRect(x + 10, y + 7, 4, 6), silk);
+  canvas.drawRect(CK.XYWHRect(x + 11, y + 5, 2, 3), shade);
+  canvas.drawRect(CK.XYWHRect(x + 6, y + 11, 4, 2), shade);
+}
+
 // ---- the script: walk, face, say, narrate, wait; compiled into timed segments
 const center = (tx, ty) => [tx * TILE + TILE / 2, ty * TILE + TILE - 2];
 const HOLD = (text) => Math.min(2.6, 1.1 + text.length * 0.022);
@@ -505,6 +701,14 @@ function compile(ep) {
         t += dur;
       });
       t += 0.25;
+    } else if (step.hatch) {
+      // the app's hatch, full screen (scripts/hatch-video.mjs beats), then back to the World
+      segs.push({ kind: 'hatch', t0: t, t1: t + HATCH_END, ...step.hatch });
+      t += HATCH_END;
+    } else if (step.show) {
+      segs.push({ kind: 'show', t0: t, t1: t, id: step.show });
+    } else if (step.open) {
+      segs.push({ kind: 'open', t0: t, t1: t, at: step.open });
     } else if (step.wait) t += step.wait;
   }
   return { segs, end: t };
@@ -522,6 +726,10 @@ function stateAt(ep, compiled, t) {
   let cards = null;
   /** Where people have walked to, by id: { x, y, dir, frame, gone, tears }. */
   const npcAt = {};
+  let hatch = null;
+  /** People hidden at the start who have since appeared (someone hatched), and cocoons broken open. */
+  const shown = [];
+  const opened = [];
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'walk') {
@@ -555,8 +763,11 @@ function stateAt(ep, compiled, t) {
       line = { ...s, shown, typed: lt >= s.typing, lift: blipsSoFar % 2 === 1 };
     } else if (s.kind === 'menu' && t < s.t1) menu = { ...s, pressed: t >= s.pressAt };
     else if (s.kind === 'cards' && t < s.t1 + 0.4) cards = { t: t - s.t0, dur: s.t1 - s.t0 };
+    else if (s.kind === 'hatch' && t < s.t1) hatch = { ...s, t: t - s.t0 };
+    else if (s.kind === 'show') shown.push(s.id);
+    else if (s.kind === 'open') opened.push(s.at);
   }
-  return { hx, hy, facing, walked, moving, npcFacing, npcAt, line, menu, cards };
+  return { hx, hy, facing, walked, moving, npcFacing, npcAt, line, menu, cards, hatch, shown, opened };
 }
 
 function walkFrame(distance, moving) {
@@ -606,6 +817,11 @@ function drawWorld(canvas, ep, st, t) {
     canvas.drawRect(CK.XYWHRect(x + lean, y - (k % 2), 2, 2 + (k % 2)), lit);
     if (Math.floor(t * 7 + i) % 4 !== 0) canvas.drawRect(CK.XYWHRect(x, y + 1, 1, 1), core);
   });
+  // a cocoon broken open: the grass from the tile beside it laid over, and the split silk on top
+  for (const { at: [cx, cy], grass: [gx, gy] } of st.opened) {
+    canvas.drawImageRectOptions(map.image, CK.XYWHRect(gx * TILE, gy * TILE, TILE, TILE), CK.XYWHRect(cx * TILE, cy * TILE, TILE, TILE), NEAREST.filter, NEAREST.mipmap, null);
+    drawSplitCocoon(canvas, cx * TILE, cy * TILE);
+  }
   // signs and chests, drawn over the map as the game does (world-view.tsx Sign, Chest)
   for (const o of map.signs) {
     const x = o.x * TILE;
@@ -631,7 +847,7 @@ function drawWorld(canvas, ep, st, t) {
   // everyone, back to front by their feet; while you play cards, you and the Keeper sit on the floor
   const sitting = st.cards ? ['keeper'] : [];
   const ents = Object.values(map.npcs)
-    .filter((n) => !ep.hide?.includes(n.id) && !sitting.includes(n.id) && !st.npcAt[n.id]?.gone)
+    .filter((n) => (!ep.hide?.includes(n.id) || st.shown.includes(n.id)) && !sitting.includes(n.id) && !st.npcAt[n.id]?.gone)
     .map((n) => {
       const at = st.npcAt[n.id];
       return at
@@ -967,6 +1183,62 @@ const EPISODES = {
       ],
     };
   },
+  // You, as Brannoc, break open the roadside cocoon: out comes Felix Rook, the Academy's
+  // strategist, who chats, then strolls off toward Kaldor's towers. Written for this episode.
+  4: () => {
+    const map = loadMap('courier-road', 'outdoor');
+    map.npcs.felix = { id: 'felix', type: 'npc', x: 5, y: 11, sprite: 'felix', facing: 'right', name: 'Felix', lines: [] };
+    const QUESTIONS = ['Who are you?', 'What now?'];
+    return {
+      number: 4,
+      title: 'BOTH SIDES',
+      map,
+      hero: { sprite: 'brannoc', at: [6, 11], facing: 'left' },
+      hide: ['nib', 'felix'],
+      titleDur: 3.0,
+      endDur: 4.5,
+      script: [
+        { wait: 0.6 },
+        { narrate: true, lines: ['A cocoon, half hidden in the long grass at the roadside.'] },
+        { menu: { options: ['Break it open.', 'Leave it.'], pick: 0, hold: 1.2 } },
+        {
+          hatch: {
+            character: 'felix',
+            dimension: 'intellectual',
+            name: 'FELIX',
+            subtitle: 'THE STRATEGIST',
+            number: '#093',
+            rarity: 4,
+            color: '#9B74F8',
+          },
+        },
+        { open: { at: [5, 11], grass: [3, 11] } },
+        { show: 'felix' },
+        { wait: 0.8 },
+        { say: 'felix', lines: ['...Ah. Awake. How long was I out?'] },
+        { menu: { speaker: 'Felix', options: ['Five hundred years.', "I don't know."], pick: 0, hold: 1.1 } },
+        { say: 'felix', lines: ["Five hundred. Hm. I'd have bet four."] },
+        { menu: { speaker: 'Felix', options: QUESTIONS, pick: 0 } },
+        {
+          say: 'felix',
+          lines: ['Felix Rook. I advised the last war.', 'Both sides, actually. It lasted much longer that way. Much more interesting.'],
+        },
+        { menu: { speaker: 'Felix', options: QUESTIONS, pick: 1 } },
+        {
+          say: 'felix',
+          lines: [
+            'I hear a king up the road never grows old. A man like that needs good advice.',
+            "Thank you for the door. I'll remember it. Probably.",
+          ],
+        },
+        // he strolls off as the narration plays
+        { npcWalk: 'felix', to: [[5, 10], [5, 9], [20, 9], [20, 8], [42, 8]], speed: 70, hide: true, together: true },
+        { wait: 1.2 },
+        { narrate: true, lines: ['Felix strolls off toward the towers, whistling.'] },
+        { wait: 0.6 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -981,13 +1253,20 @@ if (process.env.STILLS) {
   const surface = CK.MakeSurface(W, H);
   const canvas = surface.getCanvas();
   for (const s of process.env.STILLS.split(',').map(Number)) {
+    const file = out.replace(/\.\w+$/, `-${s}.png`);
+    const st = s >= ep.titleDur && s < compiled.end ? stateAt(ep, compiled, s) : null;
+    if (st?.hatch) {
+      const png = new PNG({ width: W, height: H });
+      png.data = Buffer.from(hatchFrame(canvas, st.hatch));
+      writeFileSync(file, PNG.sync.write(png));
+      continue;
+    }
     if (s < ep.titleDur) drawTitle(canvas, ep, s);
-    else if (s < compiled.end) {
-      const st = stateAt(ep, compiled, s);
+    else if (st) {
       drawWorld(canvas, ep, st, s);
       drawOverlays(canvas, st);
     } else drawEnd(canvas, ep, s - compiled.end);
-    writeFileSync(out.replace(/\.\w+$/, `-${s}.png`), surface.makeImageSnapshot().encodeToBytes());
+    writeFileSync(file, surface.makeImageSnapshot().encodeToBytes());
   }
   console.log(
     `total ${total.toFixed(1)}s`,
@@ -1067,6 +1346,12 @@ async function renderPicture() {
       black((t - (ep.titleDur - FADE)) / FADE);
     } else if (t < compiled.end) {
       const st = stateAt(ep, compiled, t);
+      // a hatch frame is raw pixels, straight to the video
+      if (st.hatch) {
+        const px = hatchFrame(canvas, st.hatch);
+        if (!ff.stdin.write(Buffer.from(px))) await once(ff.stdin, 'drain');
+        continue;
+      }
       drawWorld(canvas, ep, st, t);
       drawOverlays(canvas, st);
       black(1 - (t - ep.titleDur) / FADE);
@@ -1097,6 +1382,7 @@ const pcm = (path) => {
   return new Int16Array(b.buffer.slice(b.byteOffset + at, b.byteOffset + b.length));
 };
 const blips = [1, 2, 3, 4, 5].map((v) => pcm(join(ROOT, `assets/audio/blip-${v}.wav`)));
+const HATCH_SOUND = pcm(join(ROOT, 'assets/audio/hatch.wav'));
 const VOICE_SOUNDS = [pcm(join(ROOT, 'assets/audio/blip-0.wav')), ...blips];
 /** The pick of a menu choice: a short, bright two-note tick. */
 const SELECT = (() => {
@@ -1117,6 +1403,7 @@ const place = (sound, at, gain) => {
 for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
+  if (s.kind === 'hatch') place(HATCH_SOUND, s.t0 + HATCH_AT, 1);
 }
 const wav = Buffer.alloc(44 + mix.length * 2);
 wav.write('RIFF', 0);

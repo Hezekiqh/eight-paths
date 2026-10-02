@@ -37,7 +37,20 @@
       "The way back to the doors."
     ]
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "felix",
+      "type": "npc",
+      "x": 12,
+      "y": 2,
+      "sprite": "felix",
+      "facing": "down",
+      "name": "Felix",
+      "lines": ["Check.", "Hm. That was me."],
+      "comesAfter": "felix-left",
+      "goneAfter": "kaldor-beaten"
+    }
+  ],
   "art": {
     "1": "E"
   },

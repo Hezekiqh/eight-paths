@@ -554,10 +554,8 @@ const OUTDOOR_ART = {
     put(g, x + 8, y + 2, P.flame2);
   },
   J(g, x, y) {
-    // Dessa's cocoon, the same egg as every cocoon, in the long grass with a satchel strap poking out.
+    // Felix's cocoon, the same egg as every cocoon, half hidden in the long grass (see src/world/cocoons.ts).
     egg(g, x + 8, y + 16, 9, 15);
-    box(g, x + 10, y + 11, 5, 1, '#6A4A2A');
-    box(g, x + 14, y + 11, 1, 4, '#6A4A2A');
   },
   '='(g, x, y, m) {
     // The Archive's great door, set into a hill of old stone.
@@ -1414,6 +1412,8 @@ const WALKERS = {
   brug: { top: '#8A7A64', shade: '#6A5A48', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['short', '#6A4028'], beard: '#6A4028', cloak: '#C8B8A0' },
   ylva: { robe: true, top: '#C8D6E6', shade: '#A8B6C6', boots: '#4A4A58', belt: '#6A1216', skin: '#E0B898', hair: ['bun', '#E8D26A'], collar: '#F4F0EA' },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
+  // Felix Rook, the Academy's grand strategist: a checkered waistcoat under a dark plum coat
+  felix: { top: '#3A2A40', shade: '#2A1E30', legs: '#2A2030', boots: '#5C3A28', hair: ['short', '#2A1E1E'], checks: ['#F0E6D0', '#4A3A30'] },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -1496,6 +1496,8 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     b(5, 11, 6, 3, w.patchwork[1]);
     b(5, 14, 6, 3, w.patchwork[2]);
   }
+  // a fine check, pixel by pixel (Felix's waistcoat): front only, with the coat showing at the sides
+  if (w.checks && !back) for (let y = 11; y < 17; y++) for (let x = side ? 6 : 5; x < (side ? 10 : 11); x++) p(x, y, w.checks[(x + y) % 2]);
   if (w.stripes) for (const y of [12, 14, 16]) b(side ? 5 : 4, y, side ? 6 : 8, 1, w.stripes);
   if (w.medals && !back) {
     const medal = ['#F2C14E', '#C4442A', '#C8CCD8'];

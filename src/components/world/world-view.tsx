@@ -226,6 +226,8 @@ type Props = {
   /** Chests (open or not) and signs standing on tiles, drawn live so they can change. */
   chests?: { x: number; y: number; open: boolean }[];
   signs?: { x: number; y: number }[];
+  /** Cocoons broken open (see cocoons.ts): split silk drawn over the whole one in the map's art. */
+  husks?: { x: number; y: number }[];
   /** How dark it is here and what drifts in the air; every flame [x, y, light reach] (see ambience.ts). */
   ambience?: Ambience;
   flames?: number[][];
@@ -274,6 +276,7 @@ export function WorldView({
   onWin,
   chests = [],
   signs = [],
+  husks = [],
   sealed = [],
   ambience = { darkness: 0, motes: null },
   flames = [],
@@ -895,6 +898,9 @@ export function WorldView({
         {chests.map((p) => (
           <Chest key={`c${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} open={p.open} />
         ))}
+        {husks.map((p) => (
+          <Husk key={`h${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
         {flames.length > 0 && (
           <>
             <Path path={snuffed} color="#1A1410" />
@@ -1079,6 +1085,31 @@ function FlameLight({
 }
 
 /** A chest on its tile: shut (gold-banded wood), or open and empty. */
+/**
+ * A cocoon after its hatch, over the whole one baked into the map (world-art.mjs
+ * egg()): grass laid over the egg, then the bottom of the shell, hollow, with its
+ * torn rim and two flaps of silk fallen either side.
+ */
+function Husk({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x + 2} y={y + 1} width={13} height={15} color="#4E7A3A" />
+      <Rect x={x + 4} y={y + 3} width={2} height={1} color="#46703A" />
+      <Rect x={x + 11} y={y + 5} width={2} height={1} color="#568240" />
+      <Rect x={x + 3} y={y + 9} width={11} height={7} color="#3A3044" />
+      <Rect x={x + 4} y={y + 9} width={9} height={6} color="#EDE6D6" />
+      <Rect x={x + 10} y={y + 9} width={3} height={6} color="#C9BFAE" />
+      <Rect x={x + 5} y={y + 9} width={7} height={3} color="#2A2430" />
+      <Rect x={x + 4} y={y + 8} width={1} height={1} color="#EDE6D6" />
+      <Rect x={x + 7} y={y + 8} width={1} height={1} color="#EDE6D6" />
+      <Rect x={x + 11} y={y + 8} width={1} height={1} color="#C9BFAE" />
+      <Rect x={x + 0} y={y + 13} width={4} height={2} color="#EDE6D6" />
+      <Rect x={x + 0} y={y + 15} width={4} height={1} color="#A69C8C" />
+      <Rect x={x + 13} y={y + 12} width={3} height={3} color="#C9BFAE" />
+    </Group>
+  );
+}
+
 function Chest({ x, y, open }: { x: number; y: number; open: boolean }) {
   return (
     <Group>

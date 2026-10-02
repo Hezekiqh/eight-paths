@@ -3,8 +3,14 @@ import { DEFAULT_PARTY } from '@/story/companions';
 import { walkersFor, worldHero } from '../hero';
 
 describe('worldHero', () => {
-  it("walks with your class's companion until you pick someone", () => {
-    expect(worldHero(null, DEFAULT_PARTY, 'intellectual')).toBe(DEFAULT_PARTY.intellectual);
+  it('starts everyone as Brannoc until they pick someone', () => {
+    expect(worldHero(null, DEFAULT_PARTY, 'intellectual')).toBe('brannoc');
+  });
+
+  it("walks with your class's companion when Brannoc can't walk for the Warriors", () => {
+    const party = { ...DEFAULT_PARTY, physical: 'tobin' as const };
+    // Tobin has no overworld art, so Brannoc still walks for the Warriors: he's who you start as.
+    expect(worldHero(null, party, 'intellectual')).toBe('brannoc');
   });
 
   it('walks with the party member you picked', () => {

@@ -44,11 +44,7 @@
     "c": [
       "A candle in an iron lantern, burning steadily at the roadside. It feels like the Archive's candles. Somehow, it feels safe."
     ],
-    "J": [
-      "A cocoon, half hidden in the long grass at the roadside. A leather satchel strap pokes out of the silk.",
-      "Whoever is inside was going somewhere in a hurry.",
-      "The silk won't give. Not yet."
-    ],
+    "J": ["A cocoon, half hidden in the long grass at the roadside.", "The silk is thin here. Something inside is ticking, very softly, like a clock."],
     "=": [
       "The great door of the Archive, set into a hill of old stone. From out here, it looks like it has always been part of the hill."
     ],
@@ -69,6 +65,33 @@
     ]
   },
   "objects": [
+    {
+      "id": "felix",
+      "type": "npc",
+      "x": 5,
+      "y": 10,
+      "sprite": "felix",
+      "facing": "down",
+      "name": "Felix",
+      "lines": ["...Ah. Awake.", "Five hundred years, by the look of the grass. Hm. I'd have bet four."],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": ["Felix Rook. I advised the last war.", "Both sides, actually. It lasted much longer that way. Much more interesting."]
+        },
+        {
+          "ask": "What now?",
+          "answer": [
+            "I hear a king up the road never grows old. A man like that needs good advice.",
+            "Thank you for the door. I'll remember it. Probably."
+          ],
+          "sets": "felix-left",
+          "then": ["Felix strolls off toward the towers, whistling."]
+        }
+      ],
+      "comesAfter": "felix-hatched",
+      "goneAfter": "felix-left"
+    },
     {
       "id": "nib",
       "type": "npc",

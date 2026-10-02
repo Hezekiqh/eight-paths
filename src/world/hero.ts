@@ -20,7 +20,8 @@ export function walkersFor(party: Record<Dimension, CharacterId>): HeroId[] {
 
 /**
  * Who walks the World: the one the player picked, as long as they can still
- * walk for their Path (see walkersFor). Otherwise it's the player's class companion.
+ * walk for their Path (see walkersFor). Until they pick, everyone starts as
+ * Brannoc (while he walks for the Warriors); otherwise it's their class companion.
  */
 export function worldHero(
   picked: CharacterId | null,
@@ -28,6 +29,7 @@ export function worldHero(
   classDimension: Dimension,
 ): HeroId {
   if (picked && walkersFor(party).includes(picked as HeroId)) return picked as HeroId;
+  if (!picked && walkersFor(party).includes('brannoc')) return 'brannoc';
   const own = party[classDimension];
   if (isWalker(own)) return own;
   return DEFAULT_PARTY[classDimension] as HeroId;

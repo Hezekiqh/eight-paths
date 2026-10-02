@@ -27,6 +27,7 @@ import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
+import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
 import { COMPANIONS, type CharacterId } from '@/story/companions';
@@ -262,10 +263,12 @@ function World({
             enemies: [
               ...map.enemies,
               ...map.boss.bearers.map(([x, y]) => ({ kind: (map.boss?.kind ?? 'sleeper') as EnemyKind, x, y })),
+              // Felix, if you let him out, has told the king you're coming: two guards stand with him
+              ...(advisedBy(map.id, arrivalFlags)?.guards ?? []),
             ],
           }
         : map,
-    [map, bossOn],
+    [map, bossOn, arrivalFlags],
   );
   // A solved plate puzzle stays solved: its boulders start on the plates.
   const boulders = useMemo(() => {
@@ -298,6 +301,7 @@ function World({
     [map, liveFlags],
   );
   const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  const husks = useMemo(() => brokenCocoons(map.id, liveFlags), [map, liveFlags]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
   const sealed = useMemo(() => {
@@ -336,7 +340,10 @@ function World({
     !bossOn
       ? null
       : start.map.boss?.intro
-        ? { speaker: start.map.boss.intro.speaker ?? undefined, lines: start.map.boss.intro.lines }
+        ? {
+            speaker: start.map.boss.intro.speaker ?? undefined,
+            lines: [...start.map.boss.intro.lines, ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? [])],
+          }
         : bossNpc
           ? { speaker: bossNpc.name, lines: bossNpc.lines }
           : null,
@@ -531,6 +538,7 @@ function World({
         onSignature={onSignature}
         hearts={hearts}
         chests={chests}
+        husks={husks}
         signs={signs}
         ambience={ambience}
         flames={flames}
@@ -829,6 +837,45 @@ function useAct(
       return;
     }
     const tile = tileAt(map, tx, ty);
+    // A cocoon (cocoons.ts): break it open, and whoever's inside hatches, then stands by the silk to talk.
+    const cocoon = cocoonAt(map.id, tile);
+    if (cocoon) {
+      const { flags, setFlag } = useWorldStore.getState();
+      if (flags.includes(cocoon.hatched)) {
+        setDialogue({ lines: cocoon.empty });
+        return;
+      }
+      const here: Arrival = {
+        map: map.id as MapId,
+        x: Math.floor(sim.x.get() / TILE),
+        y: Math.floor((sim.y.get() - 1) / TILE),
+        facing: FACINGS[facing],
+      };
+      setDialogue({
+        lines: map.examine[tile] ?? [],
+        choices: [
+          {
+            label: 'Break it open.',
+            then: () => {
+              setFlag(cocoon.hatched);
+              save();
+              // The hatch plays over the World and comes back to it, still sideways.
+              keepSideways = true;
+              const game = useGameStore.getState();
+              // Someone new joins your collection, and the reveal queue hatches them; someone you
+              // already have hatches here anyway (a preview: nothing is counted twice).
+              if ((game.owned?.[cocoon.character] ?? 0) > 0)
+                router.push({ pathname: '/reveal/[id]', params: { id: cocoon.character, preview: '1' } });
+              else game.giftCharacters([cocoon.character]);
+              // Re-entered, so they're standing by the silk when the hatch ends.
+              onTravel(here);
+            },
+          },
+          { label: 'Leave it.', then: () => {} },
+        ],
+      });
+      return;
+    }
     if (map.id === 'field-of-banners' && tile === 'Q') {
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {
