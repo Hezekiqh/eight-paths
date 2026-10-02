@@ -77,6 +77,8 @@ export type NpcObject = {
   /** Strolls about, at most this many tiles from where they stand (wander.ts); `along` keeps them to a row or a column. */
   wander?: number;
   along?: 'x' | 'y';
+  /** Stays put but looks about now and then: a glance another way, then back (wander.ts). Ignored if they wander. */
+  look?: boolean;
 };
 
 /**

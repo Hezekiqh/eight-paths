@@ -93,7 +93,8 @@
         "A poem. 'Axe.' 'Axe.' 'Axe.' 'Axe.' 'Blood.'",
         "…'Axe.'",
         "Thank you. Thank you. It's called Tuesday."
-      ]
+      ],
+      "look": true
     },
     {
       "id": "hekla",
@@ -119,7 +120,8 @@
       "lines": [
         "Zzz… charge… zzz…",
         "(He's been asleep since the last war. Tova says it's the best guard she's ever had.)"
-      ]
+      ],
+      "look": true
     },
     {
       "id": "durn-bar",

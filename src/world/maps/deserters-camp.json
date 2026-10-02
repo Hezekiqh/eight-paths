@@ -181,7 +181,8 @@
             "Doesn't stop me walking. Just stops me walking fast."
           ]
         }
-      ]
+      ],
+      "look": true
     },
     {
       "id": "heart-camp",
