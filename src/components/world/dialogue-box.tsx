@@ -63,7 +63,14 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   }, [round, index]);
   const feelRumbles = useCallback(
     (upTo: number) => {
-      while (felt.current < rumbles.length && rumbles[felt.current].at <= upTo) haptics.rumble(rumbles[felt.current++].kind);
+      // One step at a time: a ref bumped mid-expression (`rumbles[felt.current++]`) can be
+      // reordered by the React Compiler and read past the end, which crashed Kaldor's speech.
+      for (;;) {
+        const next = rumbles[felt.current];
+        if (!next || next.at > upTo) return;
+        felt.current += 1;
+        haptics.rumble(next.kind);
+      }
     },
     [rumbles],
   );

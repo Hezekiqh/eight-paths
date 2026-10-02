@@ -21,6 +21,7 @@ import { PixelSprite } from '@/components/pixel-sprite';
 import { CLASSES } from '@/game';
 import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
+import { levelPerks } from '@/world/perks';
 import { COMPANIONS, REALMS, type CharacterId } from '@/story/companions';
 import { fonts, spacing } from '@/theme';
 
@@ -113,6 +114,8 @@ export function LevelUp({ characterId, level, onDone }: Props) {
   const info = CLASSES[companion.dimension];
   const art = CHARACTER_ART[characterId];
   const custom = CELEBRATION_ART[characterId];
+  // What the level brings in the World: reach, hearts, a new move.
+  const perks = levelPerks(characterId, level - 1, level);
 
   // The realm covers the screen, like the hatch; the character stands on its ground.
   const px = Math.max(W / REALM_ART.width, H / REALM_ART.height);
@@ -167,7 +170,7 @@ export function LevelUp({ characterId, level, onDone }: Props) {
           style={StyleSheet.absoluteFill}
           onPress={onDone}
           accessibilityRole="button"
-          accessibilityLabel={`${companion.name} levelled up to level ${level}. Tap to continue.`}>
+          accessibilityLabel={`${companion.name} levelled up to level ${level}. ${perks.join(' ')} Tap to continue.`}>
           {custom ? (
             <Image source={custom} contentFit="cover" style={StyleSheet.absoluteFill} accessible={false} />
           ) : (
@@ -221,6 +224,14 @@ export function LevelUp({ characterId, level, onDone }: Props) {
             <Text style={styles.detail}>
               {info.className} · {REALMS[companion.dimension]}
             </Text>
+            {perks.map((perk, i) => (
+              <Animated.Text
+                key={perk}
+                entering={FadeIn.delay(700 + i * 250).duration(300)}
+                style={[styles.perk, { color: i === 0 && perk.startsWith('New move') ? info.color : '#FFFFFF' }]}>
+                {perk}
+              </Animated.Text>
+            ))}
             <Text style={styles.hint}>Tap to continue</Text>
           </Animated.View>
         </Pressable>
@@ -250,5 +261,6 @@ const styles = StyleSheet.create({
   },
   levels: { color: '#FFFFFF', fontFamily: fonts.bold, fontSize: 30 },
   detail: { color: '#D8D2E6', fontFamily: fonts.regular, fontSize: 14 },
+  perk: { fontFamily: fonts.bold, fontSize: 18, textAlign: 'center' },
   hint: { color: '#B9B3C9', fontFamily: fonts.regular, fontSize: 13, marginTop: spacing.xs },
 });

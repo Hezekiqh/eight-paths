@@ -15,7 +15,8 @@ import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
 import { worldHero } from '@/world/hero';
 import { MAPS, type MapId } from '@/world/maps';
-import { EXITS, FINAL_GOAL, howToProgress, requirementLabel, standing } from '@/world/progress';
+import { SEASON_FLAG, nextGoal } from '@/world/guide';
+import { FINAL_GOAL, howToProgress, requirementLabel, standing } from '@/world/progress';
 import { useWorldProgress } from '@/world/use-progress';
 import { useWorldStore } from '@/world/store';
 
@@ -78,7 +79,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
             </View>
 
             <View ref={objectivesRef} collapsable={false}>
-              <Objectives discovered={discovered} />
+              <Objectives discovered={discovered} here={position?.map ?? 'archive'} />
             </View>
             <LoreScroll heard={heard} />
           </>
@@ -104,49 +105,45 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
   );
 }
 
-function Objectives({ discovered }: { discovered: MapId[] }) {
+function Objectives({ discovered, here }: { discovered: MapId[]; here: MapId }) {
   const today = useToday();
   const xp = useWorldProgress();
   const objectives = useObjectives(today);
   const all = [...objectives.daily, ...objectives.weekly];
   const done = all.filter(isObjectiveDone).length;
 
-  // Every way onward from anywhere you've been that's still shut, or sealed at the end of the road.
-  const been = discovered.length > 0 ? discovered : (['archive'] as MapId[]);
-  const exits = EXITS.filter((e) => been.includes(e.from) && !e.back)
-    .map((exit) => ({ exit, s: standing(exit.needs, xp) }))
-    .filter(({ exit, s }) => !s.met || exit.to === null);
-
+  // One thing at a time: the next step from where you left off (the same one the game marks in gold).
+  const goal = nextGoal(here, discovered, xp);
   const final = standing(FINAL_GOAL, xp);
+  const finished = (xp.flags ?? []).includes(SEASON_FLAG);
 
   return (
     <View style={styles.window}>
       <Text style={styles.section}>OBJECTIVES</Text>
 
+      <View style={[styles.goal, styles.next]} accessible>
+        <Text style={styles.need}>NEXT STEP</Text>
+        <Text style={styles.label}>{goal.line}</Text>
+        <Text style={styles.how}>
+          {goal.mark
+            ? `In ${MAPS[here].name}, follow the gold arrow${goal.mark.exitId ? ` to ${goal.mark.tag.replace(/^The /, 'the ')}` : ` to ${goal.mark.tag}`}.`
+            : 'Jump in and look around.'}
+        </Text>
+      </View>
+
       <Goal
         label="Season 1"
-        need={
-          requirementLabel(FINAL_GOAL, xp)
-        }
-        met={final.met}
-        fraction={final.fraction}
+        need={requirementLabel(FINAL_GOAL, xp)}
+        met={finished}
+        fraction={finished ? 1 : final.fraction}
         how={
-          final.met
+          finished
             ? "You've finished Season 1. The portal stays sealed; keep your Paths strong."
-            : `Season 1 ends at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
+            : final.met
+              ? 'You have the strength. Follow the next step to the portal at the end of the road.'
+              : `Season 1 ends at the portal, which opens at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
         }
       />
-
-      {exits.map(({ exit, s }) => (
-        <Goal
-          key={exit.id}
-          label={exit.label}
-          need={requirementLabel(exit.needs, xp)}
-          met={s.met}
-          fraction={s.fraction}
-          how={s.met ? 'The way is sealed. You have walked as far as the Other World goes.' : howToProgress(s)}
-        />
-      ))}
 
       <Pressable accessibilityRole="button" onPress={() => router.push('/quest-board')} style={styles.goal}>
         {({ pressed }) => (
@@ -202,6 +199,7 @@ const styles = StyleSheet.create({
   window: { ...windowStyle, padding: spacing.lg, gap: spacing.sm },
   section: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
   goal: { gap: 4, marginBottom: spacing.xs },
+  next: { borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.sm },
   label: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 16, flexShrink: 1 },
   need: { color: colors.accent, fontFamily: fonts.bold, fontSize: 16 },

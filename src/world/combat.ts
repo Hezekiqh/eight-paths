@@ -107,6 +107,18 @@ export function damageFor(attack: Attack, level: number): number {
   return attack.damage + Math.floor(Math.max(0, level) / 10);
 }
 
+/** Longer reach from real habits: 1% more for every level past 1, up to half again at Lv 51. */
+export function rangeFor(attack: Attack, level: number): number {
+  'worklet';
+  return attack.range * (1 + Math.min(50, Math.max(0, level - 1)) / 100);
+}
+
+/** A Path's attack at a character's real level: same blow, a little more reach. */
+export function attackFor(path: Dimension, level: number): Attack {
+  const attack = ATTACKS[path];
+  return { ...attack, range: rangeFor(attack, level) };
+}
+
 export const ENEMY_KINDS = ['shadow', 'rusted', 'echo', 'sleeper', 'raider', 'aurek', 'kaldor'] as const;
 export type EnemyKind = (typeof ENEMY_KINDS)[number];
 
@@ -190,6 +202,11 @@ export function sizeOf(e: Enemy): number {
 
 /** Hearts you start each visit with. */
 export const HEARTS = 5;
+
+/** Extra hearts from real habits: one at Lv 5, then every 10 levels (15, 25...), up to five. */
+export function levelHearts(level: number): number {
+  return Math.min(5, Math.floor((Math.max(0, level) + 5) / 10));
+}
 /** Seconds you can't be hurt again after a hit. */
 export const MERCY = 1;
 /** A shout stuns you for this long. */
