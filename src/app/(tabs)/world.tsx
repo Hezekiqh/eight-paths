@@ -253,6 +253,9 @@ function World({
   const map = useMemo(() => withoutGone(roomMap, flagsNow), [roomMap, flagsNow]);
   /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
   const afterTalk = useRef<string[] | null>(null);
+  /** Someone to see off once the conversation closes (Question.leaves), and who's leaving now. */
+  const leaving = useRef<{ id: string; flag: string } | null>(null);
+  const [exit, setExit] = useState<{ id: string; flag: string } | null>(null);
   const patches = useMemo(() => openPatches(map, arrivalFlags), [map, arrivalFlags]);
   // The boss's bearers join the room's enemies while the fight is on.
   const fightMap = useMemo(
@@ -539,6 +542,11 @@ function World({
         hearts={hearts}
         chests={chests}
         husks={husks}
+        exit={exit}
+        onExited={() => {
+          if (exit) useWorldStore.getState().setFlag(exit.flag);
+          setExit(null);
+        }}
         signs={signs}
         ambience={ambience}
         flames={flames}
@@ -586,10 +594,16 @@ function World({
             const narration = afterTalk.current;
             afterTalk.current = null;
             if (narration) setDialogue({ lines: narration });
+            if (leaving.current) {
+              setExit(leaving.current);
+              leaving.current = null;
+            }
           }}
           onAsk={(q) => {
             if (q.sets) useWorldStore.getState().setFlag(q.sets);
             if (q.then) afterTalk.current = q.then;
+            const who = q.leaves ? map.npcs.find((n) => n.questions?.includes(q)) : undefined;
+            if (who && q.leaves) leaving.current = { id: who.id, flag: q.leaves };
             // Everything a character tells you goes in the World menu's lore journal.
             const speaker = dialogue.speaker;
             if (speaker) hear({ id: loreId(speaker, q.ask), speaker, ask: q.ask, answer: q.answer, at: Date.now() });

@@ -85,8 +85,7 @@
             "Hmmmm. Good question.", "Whatever will cause the most fun, I guess.",
             "Thank you for the door. I'll remember it. Probably."
           ],
-          "sets": "felix-left",
-          "then": ["Felix strolls off toward the towers, whistling."]
+          "leaves": "felix-left"
         }
       ],
       "comesAfter": "felix-hatched",

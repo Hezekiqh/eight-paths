@@ -27,11 +27,11 @@ describe('Felix', () => {
   const road = MAPS['courier-road'];
   const here = (map: (typeof MAPS)[MapId], flags: string[]) => withoutGone(map, flags).npcs.some((n) => n.id === 'felix');
 
-  it('stands by the cocoon once it hatches, and leaves for good when he says what he will do', () => {
+  it('stands by the cocoon once it hatches, and leaves for good (laughing, then a dash) when he says what he will do', () => {
     expect(here(road, [])).toBe(false);
     expect(here(road, ['felix-hatched'])).toBe(true);
-    const what = road.npcs.find((n) => n.id === 'felix')!.questions!.find((q) => q.sets)!;
-    expect(what.sets).toBe('felix-left');
+    const what = road.npcs.find((n) => n.id === 'felix')!.questions!.find((q) => q.leaves)!;
+    expect(what.leaves).toBe('felix-left');
     expect(here(road, ['felix-hatched', 'felix-left'])).toBe(false);
   });
 
