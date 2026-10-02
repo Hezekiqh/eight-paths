@@ -1,13 +1,17 @@
+import { COMPANIONS } from '@/story/companions';
+
 import { JOBS } from '../jobs';
 import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
 import { EXITS, type Requirement } from '../progress';
 import { winScene } from '../scenes';
 
 // A whole run of Season 1, as a player with every level they need (levels only
-// take real habits) and every core companion to walk as. Starting in the
-// Archive, it keeps doing whatever can be done — doors, jobs, people's jobs,
-// fights, the plate puzzle — until nothing new opens, then checks the arc can
-// be finished: the King beaten and the portal at the end reached.
+// take real habits). They start walking as Brannoc alone and meet the rest of
+// the core eight along the road; a job only one Path can do waits until that
+// Path's hero has been met. Starting in the Archive, it keeps doing whatever can
+// be done — doors, jobs, people's jobs, meetings, fights, the plate puzzle —
+// until nothing new opens, then checks the arc can be finished: the King beaten
+// and the portal at the end reached.
 
 type Arrive = { map: MapId; x: number; y: number };
 
@@ -53,6 +57,9 @@ function play() {
   const flags = new Set<string>();
   const arrivals: Arrive[] = [{ map: 'archive', ...MAPS.archive.spawn }];
   const visited = new Set<MapId>();
+  // Who you can walk as: Brannoc from the first habit, the rest once met.
+  const paths = new Set<string>(['physical']);
+  const canDo = (path: string | null | undefined) => !path || path === 'any' || paths.has(path);
   let changed = true;
   while (changed) {
     changed = false;
@@ -82,11 +89,20 @@ function play() {
       for (const exit of EXITS.filter((e) => e.from === id && e.to && met(e.needs, flags))) {
         if (tiles(map, exit.tile).some(([x, y]) => near(map, seen, x, y))) arrive(exit.to!);
       }
-      for (const job of JOBS.filter((j) => j.map === id)) {
+      for (const npc of map.npcs) {
+        if (npc.meets && npc.character && near(map, seen, npc.x, npc.y)) {
+          const path = COMPANIONS[npc.character].dimension;
+          if (!paths.has(path)) {
+            paths.add(path);
+            changed = true;
+          }
+        }
+      }
+      for (const job of JOBS.filter((j) => j.map === id && canDo(j.path))) {
         if (tiles(map, job.tile).some(([x, y]) => near(map, seen, x, y))) add(job.flag);
       }
       for (const npc of map.npcs) {
-        if (npc.job && near(map, seen, npc.x, npc.y)) add(npc.job.flag);
+        if (npc.job && canDo(npc.job.path) && near(map, seen, npc.x, npc.y)) add(npc.job.flag);
       }
       if (map.platesFlag) add(map.platesFlag);
       // A ladder is a fight a visit, one after another; climbing it here means winning every rung.
@@ -102,11 +118,15 @@ function play() {
       }
     }
   }
-  return { flags, visited, arrivals };
+  return { flags, visited, arrivals, met: paths };
 }
 
 describe('a run through Season 1', () => {
   const run = play();
+
+  it('meets every one of the core eight along the way', () => {
+    expect(run.met.size).toBe(8);
+  });
 
   it('reaches every place in the Other World', () => {
     expect([...Object.keys(MAPS)].filter((id) => !run.visited.has(id as MapId))).toEqual([]);

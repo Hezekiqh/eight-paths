@@ -122,7 +122,8 @@
       "lines": [
         "Rolf. Rolf, you're holding it upside down.",
         "…He joined to impress me. It's working, a bit. Don't tell him."
-      ]
+      ],
+      "look": true
     },
     {
       "id": "gorm",

@@ -16,6 +16,7 @@ import { usePremium } from '@/premium/store';
 import { shareFriendCode } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useGameStore } from '@/store';
+import { startOver } from '@/store/start-over';
 import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
@@ -67,6 +68,19 @@ export function SettingsPanel() {
   const reminder = new Date();
   reminder.setHours(hour, minute, 0, 0);
 
+  // Asks first, and offers a backup, since it can't be undone.
+  const confirmStartOver = () => {
+    haptics.tap();
+    Alert.alert(
+      'Start over?',
+      "Every quest, level, hero and place in the Other World on this phone is erased, and you begin again from the very start. Your account and Premium stay. This can't be undone.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Back up first', onPress: shareBackup },
+        { text: 'Start over', style: 'destructive', onPress: startOver },
+      ],
+    );
+  };
   const shareBackup = () => {
     Share.share({ title: 'Eight Paths backup', message: exportSave() }).catch(() =>
       Alert.alert('Backup failed', 'The share sheet could not open. Please try again.'),
@@ -242,6 +256,14 @@ export function SettingsPanel() {
           title="Restore from backup"
           subtitle="Replace this phone's progress with a backup"
           onPress={() => router.push('/backup')}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="trash"
+          iconColor={colors.danger}
+          title="Start over"
+          subtitle="Erase this phone's progress and begin again from the very start"
+          onPress={confirmStartOver}
         />
         <View style={styles.divider} />
         <SettingsRow

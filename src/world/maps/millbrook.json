@@ -182,7 +182,8 @@
           "You've met a tall man named Gerald.",
           "Don't tell me. I know. Once a year, exactly, and this was the year."
         ]
-      }
+      },
+      "look": true
     },
     {
       "id": "hoot",
@@ -218,6 +219,23 @@
         "Behind the toppled statues, deep in the moss: a Heart Piece.",
         "Someone hid it where the forgotten things are. Nobody looks there."
       ]
+    },
+    {
+      "id": "moss-found",
+      "type": "npc",
+      "x": 30,
+      "y": 12,
+      "sprite": "moss",
+      "facing": "left",
+      "name": "Moss",
+      "lines": [
+        "Shh. Tuft's watching a beetle.",
+        "...Oh. It's you. Tuft noticed you before I did. He notices everything.",
+        "I'm Moss. I've been sleeping in this hedge since the door shut. Tuft says it's time to stop."
+      ],
+      "character": "moss",
+      "meets": true,
+      "goneAfter": "met:moss"
     }
   ]
 }

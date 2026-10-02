@@ -9,6 +9,8 @@ import { LoreScroll } from '@/components/world/lore-scroll';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
+import { FIRST_HERO } from '@/store/draws';
+import { useGameStore } from '@/store';
 import { useWorldStore } from '@/world/store';
 
 const TABS = [
@@ -27,6 +29,8 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const position = useWorldStore((s) => s.position);
   const discovered = useWorldStore((s) => s.discovered);
   const heard = useWorldStore((s) => s.heard);
+  // No Other World until the first habit wakes Brannoc (an old save, with no `owned`, has him already).
+  const awake = useGameStore((s) => s.owned === null || (s.owned[FIRST_HERO] ?? 0) > 0);
   // `/world?tab=settings` opens straight on Settings (the Character tab links here).
   const params = useLocalSearchParams<{ tab?: string }>();
   const asked: Tab = params.tab === 'settings' ? 'settings' : 'world';
@@ -56,7 +60,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
         ) : (
           <>
             <View ref={playRef} collapsable={false}>
-              <Play started={position !== null} onPlay={onPlay} />
+              {awake ? <Play started={position !== null} onPlay={onPlay} /> : <Asleep />}
             </View>
 
             <LoreScroll heard={heard} />
@@ -81,6 +85,16 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
       <Text style={styles.playLabel}>{started ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
       <Text style={styles.playHint}>Turn your phone sideways</Text>
     </Pressable>
+  );
+}
+
+/** Before the first habit: the door stays shut, and Brannoc sleeps. */
+function Asleep() {
+  return (
+    <View style={styles.asleep} accessible>
+      <Text style={styles.asleepLabel}>BRANNOC IS ASLEEP</Text>
+      <Text style={styles.how}>Finish your first habit to wake him. Then you can step outside.</Text>
+    </View>
   );
 }
 
@@ -132,6 +146,8 @@ const styles = StyleSheet.create({
   playLabel: { color: colors.background, fontFamily: fonts.bold, fontSize: 26, letterSpacing: 1 },
   playHint: { color: colors.background, fontFamily: fonts.regular, fontSize: 13, opacity: 0.8 },
   how: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  asleep: { ...windowStyle, padding: spacing.lg, gap: 4, alignItems: 'center' },
+  asleepLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 22, letterSpacing: 1 },
   restart: { ...windowStyle, padding: spacing.lg, gap: 4, alignItems: 'center' },
   restartLabel: { color: colors.danger, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
 });

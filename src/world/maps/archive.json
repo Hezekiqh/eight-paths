@@ -17,18 +17,42 @@
     "#___________==___________#",
     "##########################"
   ],
-  "spawn": { "x": 12, "y": 5, "facing": "down" },
+  "spawn": {
+    "x": 12,
+    "y": 5,
+    "facing": "down"
+  },
   "examine": {
-    "W": ["Scroll racks, floor to ceiling. The labels are in a script you almost remember."],
-    "T": ["Scrolls, thousands of them, tied with faded ribbon."],
-    "B": ["Scrolls, thousands of them, tied with faded ribbon."],
-    "M": ["A high window. Somewhere up there is the sky."],
-    "c": ["A candle that never seems to burn down."],
-    "p": ["A pile of scrolls waiting to be shelved. Nobody has got round to it in a while."],
-    "D": ["The Keeper's desk. A ledger lies open, every line in the same careful hand."],
-    "O": ["Your cocoon. The silk is split where you pushed your way out."],
-    "_": ["Cold stone. The rest of the world is out there somewhere."],
-    "=": ["The great door. It won't budge. Not yet."]
+    "W": [
+      "Scroll racks, floor to ceiling. The labels are in a script you almost remember."
+    ],
+    "T": [
+      "Scrolls, thousands of them, tied with faded ribbon."
+    ],
+    "B": [
+      "Scrolls, thousands of them, tied with faded ribbon."
+    ],
+    "M": [
+      "A high window. Somewhere up there is the sky."
+    ],
+    "c": [
+      "A candle that never seems to burn down."
+    ],
+    "p": [
+      "A pile of scrolls waiting to be shelved. Nobody has got round to it in a while."
+    ],
+    "D": [
+      "The Keeper's desk. A ledger lies open, every line in the same careful hand."
+    ],
+    "O": [
+      "Your cocoon. The silk is split where you pushed your way out."
+    ],
+    "_": [
+      "Cold stone. The rest of the world is out there somewhere."
+    ],
+    "=": [
+      "The great door. It won't budge. Not yet."
+    ]
   },
   "objects": [
     {
@@ -54,7 +78,9 @@
         },
         {
           "ask": "Who are you?",
-          "answer": ["Let's just say I'm an old friend."]
+          "answer": [
+            "Let's just say I'm an old friend."
+          ]
         },
         {
           "ask": "How do you know me?",
@@ -66,7 +92,7 @@
         {
           "ask": "What am I supposed to do now?",
           "answer": [
-            "Well, you could stay here, if you'd like. We could play cards.",
+            "Well, you could stay here, if you'd like.",
             "Outside of this Archive is the Other World.",
             "You don't have the same power you once had. You'll have to grow stronger, a little each day.",
             "Your actions in the real world affect your strength in this one.",
@@ -100,7 +126,8 @@
       "character": "ysolde",
       "lines": [
         "Awake at last. Five hundred years of lodging, and not a coin paid. I'm joking. Mostly."
-      ]
+      ],
+      "comesAfter": "met:ysolde"
     },
     {
       "id": "quill",
@@ -113,7 +140,8 @@
       "character": "quill",
       "lines": [
         "Oh! You're awake! Do you know how many books are in here? I do. Roughly. Give or take a shelf."
-      ]
+      ],
+      "comesAfter": "met:quill"
     },
     {
       "id": "wren",
@@ -126,7 +154,8 @@
       "character": "wren",
       "lines": [
         "Welcome back. Take it slowly. The first steps are always the strangest."
-      ]
+      ],
+      "comesAfter": "met:wren"
     },
     {
       "id": "oren",
@@ -140,7 +169,8 @@
       "lines": [
         "You're awake.",
         "Good."
-      ]
+      ],
+      "comesAfter": "met:oren"
     },
     {
       "id": "pip",
@@ -153,7 +183,8 @@
       "character": "pip",
       "lines": [
         "There you are! I wrote you a welcome song. It's mostly about sleeping. Very restful chorus."
-      ]
+      ],
+      "comesAfter": "met:pip"
     },
     {
       "id": "tamsin",
@@ -166,7 +197,8 @@
       "character": "tamsin",
       "lines": [
         "Mind that shelf. It wobbles. I'll fix it. Later."
-      ]
+      ],
+      "comesAfter": "met:tamsin"
     },
     {
       "id": "moss",
@@ -179,8 +211,14 @@
       "character": "moss",
       "lines": [
         "Tuft noticed you before I did. He notices everything."
-      ]
+      ],
+      "comesAfter": "met:moss"
     },
-    { "id": "board", "type": "board", "x": 6, "y": 2 }
+    {
+      "id": "board",
+      "type": "board",
+      "x": 6,
+      "y": 2
+    }
   ]
 }

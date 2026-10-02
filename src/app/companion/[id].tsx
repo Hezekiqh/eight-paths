@@ -11,10 +11,12 @@ import { XpBar } from '@/components/xp-bar';
 import { CLASSES } from '@/game';
 import { useGameStore } from '@/store';
 import { useCollection } from '@/store/hooks';
-import { KIND_LABEL, RARITY_TIERS, REALMS, formatNumber, isCharacterId } from '@/story/companions';
+import { DEFAULT_PARTY, KIND_LABEL, RARITY_TIERS, REALMS, formatNumber, isCharacterId } from '@/story/companions';
 import { colors, fonts, radius, spacing } from '@/theme';
 import { useSocial, type CharacterStat } from '@/social/store';
 import { isWalker, worldHero } from '@/world/hero';
+import { whereToMeet } from '@/world/meet';
+import { FIRST_HERO } from '@/store/draws';
 import { movesFor } from '@/world/fight';
 import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { useWorldStore } from '@/world/store';
@@ -39,6 +41,7 @@ export default function CompanionSheet() {
   const pickedHero = useWorldStore((s) => s.hero);
   const setHero = useWorldStore((s) => s.setHero);
   const party = useGameStore((s) => s.party);
+  const owned = useGameStore((s) => s.owned);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   if (!isCharacterId(id)) return null;
 
@@ -51,7 +54,7 @@ export default function CompanionSheet() {
   const swapIn = () => {
     if (swapCharacter(companion.id)) haptics.success();
   };
-  const exploring = worldHero(pickedHero, party, classDimension) === companion.id;
+  const exploring = worldHero(pickedHero, party, classDimension, owned) === companion.id;
   const explore = () => {
     setHero(companion.id);
     haptics.success();
@@ -148,7 +151,11 @@ export default function CompanionSheet() {
         </>
       ) : (
         <NoteBox symbol="lock.fill" color={colors.border} iconColor={colors.textMuted}>
-          {`Not yet awake. A random ${info.className} arrives every few ${info.dimensionLabel} Path levels (next at Lv ${nextArrival ?? '?'}; you're Lv ${pathLevel}). Rarer characters turn up less often.`}
+          {companion.id === FIRST_HERO
+            ? `Not yet awake. ${companion.name} wakes with your first habit.`
+            : DEFAULT_PARTY[companion.dimension] === companion.id
+              ? `Not met yet. ${whereToMeet(companion.dimension) ?? ''} Find them in the Other World and they'll join you, already at your ${info.dimensionLabel} level.`
+              : `Not yet awake. A random ${info.className} arrives every few ${info.dimensionLabel} Path levels (next at Lv ${nextArrival ?? '?'}; you're Lv ${pathLevel}). Rarer characters turn up less often.`}
         </NoteBox>
       )}
     </View>

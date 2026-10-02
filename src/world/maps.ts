@@ -68,9 +68,17 @@ export type NpcObject = {
   goneAfter?: string;
   /** Only here once this story flag is set: beaten champions turn up at the bar. */
   comesAfter?: string;
+  /**
+   * One of the core eight, found here along the road (author, Oct 2, 2026):
+   * talking to them the first time, they join your party (meetCharacters) and set
+   * `met:<id>`, then head home to wait in the Archive.
+   */
+  meets?: boolean;
   /** Strolls about, at most this many tiles from where they stand (wander.ts); `along` keeps them to a row or a column. */
   wander?: number;
   along?: 'x' | 'y';
+  /** Stays put but looks about now and then: a glance another way, then back (wander.ts). Ignored if they wander. */
+  look?: boolean;
 };
 
 /**

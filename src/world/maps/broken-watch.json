@@ -108,7 +108,8 @@
           "King got beaten, they're saying. So the orders are… nobody's sure.",
           "Go on, then. South. I'll stand here anyway. I'm good at it."
         ]
-      }
+      },
+      "look": true
     },
     {
       "id": "waystone",

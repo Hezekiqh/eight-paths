@@ -79,7 +79,7 @@ function OfferCard({ offer, incoming, color }: { offer: TradeOffer; incoming: bo
   const accept = () => {
     // Only the phone knows which copies are still waiting to hatch or walking the Other World.
     const { owned, drops, party, player } = useGameStore.getState();
-    const walking = worldHero(useWorldStore.getState().hero, party, player?.classDimension ?? 'physical');
+    const walking = worldHero(useWorldStore.getState().hero, party, player?.classDimension ?? 'physical', owned);
     if (!covers(giveable(countCopies(give), { owned, drops }, walking as CharacterId), give)) {
       Alert.alert(
         'Not yet',

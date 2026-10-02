@@ -165,7 +165,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     moving: useSharedValue(false),
     trail: useSharedValue(startTrail(start.x, start.y)),
     npcWalk: useSharedValue(
-      newWanderers(npcs.map((n) => ({ x: n.x, y: n.y, facing: FACINGS.indexOf(n.facing), wander: n.wander, along: n.along }))),
+      newWanderers(npcs.map((n) => ({ x: n.x, y: n.y, facing: FACINGS.indexOf(n.facing), wander: n.wander, along: n.along, look: n.look }))),
     ),
     npcIds: useState(() => npcs.map((n) => n.id))[0],
     inputX: useSharedValue(0),
@@ -380,7 +380,7 @@ export function WorldView({
     () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], sim.npcIds.indexOf(n.id)] as [number, number]),
     [map, sim.npcIds],
   );
-  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0), [map]);
+  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
   const count = partyRows.length + npcs.length + map.enemies.length;
 
   const camX = useSharedValue(0);
@@ -638,7 +638,7 @@ export function WorldView({
         if (changed) rockPos.set(next);
       }
 
-      // Townsfolk stroll about (wander.ts), but not while you're talking or paused.
+      // Townsfolk stroll and look about (wander.ts), but not while you're talking or paused.
       if (wanders && !frozen) {
         const walked = stepWanderers(
           sim.npcWalk.get(),

@@ -6,8 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { CollectionGrid } from '@/components/collection-grid';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
-import { fetchMyValue } from '@/social/api';
-import { founderLabel } from '@/social/username';
+import { fetchMyStanding } from '@/social/api';
 import { socialEnabled } from '@/social/config';
 import { useSocial } from '@/social/store';
 import { XpBar } from '@/components/xp-bar';
@@ -22,17 +21,17 @@ export default function CharacterScreen() {
   const overall = useOverallProgress();
   const collection = useCollection();
   const profile = useSocial((s) => s.profile);
-  const [value, setValue] = useState<number | null>(null);
+  const [standing, setStanding] = useState<{ rank: number | null; value: number | null } | null>(null);
   const scroller = useTourScroller();
   const collectionRef = useTourTarget('collection', scroller);
 
-  // Collection value shifts as other players wake heroes, so refresh on every visit.
+  // Collection value and rank shift as other players wake heroes, so refresh on every visit.
   useFocusEffect(
     useCallback(() => {
       if (!profile) return;
       let live = true;
-      fetchMyValue()
-        .then((v) => live && setValue(v))
+      fetchMyStanding()
+        .then((v) => live && setStanding(v))
         .catch(() => {});
       return () => {
         live = false;
@@ -45,43 +44,41 @@ export default function CharacterScreen() {
   return (
     <Screen scrollRef={scroller.ref} onScroll={scroller.onScroll}>
       <View style={[styles.hero, { borderColor: classInfo.color }]}>
-        <View style={styles.heroTop}>
+        {profile && standing && (
+          <View
+            style={styles.rank}
+            accessible
+            accessibilityLabel={standing.rank ? `Collection rank ${standing.rank}` : 'Collection rank outside the top 100'}>
+            <Text style={[styles.rankNumber, { color: classInfo.color }]}>
+              {standing.rank ? `#${standing.rank}` : '100+'}
+            </Text>
+            <Text style={styles.rankLabel}>RANK</Text>
+          </View>
+        )}
+        <View style={[styles.heroTop, profile && standing && styles.heroTopRanked]}>
           <View style={[styles.emblem, { borderColor: classInfo.color }]}>
             <SymbolView name={classInfo.symbol} tintColor={classInfo.color} size={30} />
           </View>
-          <View style={styles.heroText}>
-            <Text style={styles.name}>{player.name}</Text>
-            <Text style={[styles.heroClass, { color: classInfo.color }]}>
-              {classInfo.className} · <Text style={styles.epithet}>{classInfo.epithet}</Text>
-            </Text>
-            {profile && (
-              <Text style={styles.handle}>
-                @{profile.username}
-                {profile.founderNumber !== null ? ` · Second 100 ${founderLabel(profile.founderNumber)}` : ''}
-              </Text>
-            )}
-          </View>
-        </View>
-        <View style={styles.overallTop}>
-          <Text style={styles.overallLevel}>Level {overall.level}</Text>
-          <Text style={styles.overallXp}>
-            {overall.xpIntoLevel} / {overall.xpForNext} XP
+          <Text style={styles.name} numberOfLines={1}>
+            {player.name}
           </Text>
+          <Text style={styles.level}>Lv {overall.level}</Text>
         </View>
         <XpBar fill={overall.xpIntoLevel / overall.xpForNext} color={classInfo.color} height={10} />
-        <View style={styles.tokens}>
-          <View style={styles.tokenIcons}>
-            {Array.from({ length: MAX_REST_TOKENS }, (_, i) => (
-              <SymbolView
-                key={i}
-                name={i < player.restTokens ? 'moon.stars.fill' : 'moon.stars'}
-                tintColor={i < player.restTokens ? classInfo.color : colors.textFaint}
-                size={20}
-              />
-            ))}
-          </View>
+        <View
+          style={styles.tokens}
+          accessible
+          accessibilityLabel={`${player.restTokens} of ${MAX_REST_TOKENS} rest days`}>
+          {Array.from({ length: MAX_REST_TOKENS }, (_, i) => (
+            <SymbolView
+              key={i}
+              name={i < player.restTokens ? 'moon.stars.fill' : 'moon.stars'}
+              tintColor={i < player.restTokens ? classInfo.color : colors.textFaint}
+              size={20}
+            />
+          ))}
           <Text style={styles.tokenText}>
-            {player.restTokens} rest {player.restTokens === 1 ? 'token' : 'tokens'} · protects your streaks on a day off
+            {player.restTokens} rest {player.restTokens === 1 ? 'day' : 'days'}
           </Text>
         </View>
       </View>
@@ -91,8 +88,8 @@ export default function CharacterScreen() {
         <View ref={collectionRef} collapsable={false} style={styles.tourCollection} pointerEvents="none" />
         <View style={styles.sectionRow}>
           <Text style={styles.section}>YOUR COLLECTION</Text>
-          {profile && value !== null && (
-            <Text style={[styles.sectionCount, { color: classInfo.color }]}>{value.toLocaleString()} value</Text>
+          {profile && standing?.value != null && (
+            <Text style={[styles.sectionCount, { color: classInfo.color }]}>{standing.value.toLocaleString()} value</Text>
           )}
           <Text style={styles.sectionCount}>
             {collection.unlockedCount} / {collection.entries.length}
@@ -133,6 +130,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  // Room for the rank in the corner.
+  heroTopRanked: { paddingRight: 56 },
   emblem: {
     width: 60,
     height: 60,
@@ -142,17 +141,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.cardRaised,
   },
-  heroText: { flex: 1, gap: 2 },
-  handle: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, marginTop: 2 },
-  name: { color: colors.text, fontSize: 29, fontFamily: fonts.bold },
-  heroClass: { fontSize: 20, fontFamily: fonts.bold },
-  epithet: { color: colors.textMuted, fontStyle: 'italic', fontFamily: fonts.medium },
-  overallTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  overallLevel: { color: colors.text, fontSize: 26, fontFamily: fonts.bold },
-  overallXp: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, fontVariant: ['tabular-nums'] },
-  tokens: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  tokenIcons: { flexDirection: 'row', gap: spacing.xs },
-  tokenText: { flex: 1, color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  name: { flexShrink: 1, color: colors.text, fontSize: 29, fontFamily: fonts.bold },
+  level: { color: colors.textMuted, fontSize: 22, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
+  rank: { position: 'absolute', top: spacing.md, right: spacing.md, alignItems: 'center', zIndex: 1 },
+  rankNumber: { fontSize: 22, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
+  rankLabel: { color: colors.textFaint, fontSize: 11, fontFamily: fonts.bold, letterSpacing: 1.2 },
+  tokens: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  tokenText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, marginLeft: spacing.xs },
   section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.md },
   list: { ...windowStyle, overflow: 'hidden' },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
