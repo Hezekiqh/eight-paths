@@ -1093,7 +1093,7 @@ function FlameLight({
 function Husk({ x, y }: { x: number; y: number }) {
   return (
     <Group>
-      <Rect x={x + 2} y={y + 1} width={13} height={15} color="#4E7A3A" />
+      <Rect x={x + 1} y={y - 3} width={15} height={19} color="#4E7A3A" />
       <Rect x={x + 4} y={y + 3} width={2} height={1} color="#46703A" />
       <Rect x={x + 11} y={y + 5} width={2} height={1} color="#568240" />
       <Rect x={x + 3} y={y + 9} width={11} height={7} color="#3A3044" />

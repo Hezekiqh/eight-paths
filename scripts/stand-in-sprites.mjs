@@ -431,6 +431,19 @@ const LAYOUT = {
 const HAIR = {
   none() {},
   short: (f, L, c) => f.rect(12, L.h - 1, 8, 2, c),
+  // slicked back, with a sharp widow's peak and sideburns: the villain's cut
+  slick: (f, L, c) =>
+    f.rect(12, L.h - 1, 8, 2, c).px(
+      [
+        [15, L.h + 1],
+        [16, L.h + 1],
+        [12, L.h + 1],
+        [12, L.h + 2],
+        [19, L.h + 1],
+        [19, L.h + 2],
+      ],
+      c,
+    ),
   spiky: (f, L, c) =>
     f.rect(12, L.h - 1, 8, 2, c).px(
       [
@@ -775,6 +788,22 @@ function person(f, s) {
     if (s.beard[1]) f.rect(13, L.h + 8, 6, s.beard[1], bc);
   }
   if (s.mustache) f.rect(14, L.h + 5, 4, 1, C[s.mustache] ?? s.mustache);
+  // an obvious villain: a handlebar mustache curling up past the cheeks and a pointed goatee
+  if (s.villain) {
+    const vc = C[s.villain] ?? s.villain;
+    f.rect(13, L.h + 5, 6, 1, vc).px(
+      [
+        [12, L.h + 5],
+        [19, L.h + 5],
+        [11, L.h + 4],
+        [20, L.h + 4],
+        [15, L.h + 7],
+        [16, L.h + 7],
+        [15, L.h + 8],
+      ],
+      vc,
+    );
+  }
   if (s.hair) HAIR[s.hair[0]](f, L, hairC);
   if (s.hat) {
     const [kind, c] = s.hat;
@@ -1417,12 +1446,12 @@ const SPECS = {
   },
   felix: {
     skin: 'skin2',
-    hair: ['short', 'hairBlack'],
+    hair: ['slick', 'hairBlack'],
     top: C.white,
     checks: C.black,
     shade: C.black,
     legs: C.black,
-    mustache: 'hairBlack',
+    villain: 'hairBlack',
   },
   hana: {
     skin: 'skin1',

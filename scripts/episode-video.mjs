@@ -399,12 +399,13 @@ function drawOverlays(canvas, st) {
 
 // ---- a cocoon hatching, as the app's reveal and scripts/hatch-video.mjs play it: on the
 // Path's realm, it wiggles, cracks, goes silent while an eye opens in the silk, then bursts
-const HATCH_AT = 8.0;
-const HATCH_END = 12.6;
+// Short, for a feed: two quick shakes, the eye, the burst, a moment on who it is, then back to the story.
+const HATCH_AT = 2.2;
+const HATCH_END = 4.2;
 const HK = 4;
 const HCX = 135;
 const HBY = GROUND + 2;
-const HWIGGLES = [0.3, 2.4, 4.2];
+const HWIGGLES = [0.3, 0.75];
 const easeOut = (t) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
 const clamp01 = (t) => Math.min(1, Math.max(0, t));
 const realms = new Map();
@@ -424,39 +425,39 @@ function drawBigSprite(g, id, frame, sc, cx, by) {
       put(g, cx - 16 * sc + x, by - 48 * sc + y, [sheet.data[i], sheet.data[i + 1], sheet.data[i + 2]]);
     }
 }
-const wiggleAt = (t, at) => (t >= at && t < at + 0.6 ? Math.round(Math.sin((t - at) * 26) * 4 * (1 - (t - at) / 0.6)) : 0);
+const wiggleAt = (t, at) => (t >= at && t < at + 0.35 ? Math.round(Math.sin((t - at) * 40) * 5 * (1 - (t - at) / 0.35)) : 0);
 function hatchCamera(t) {
   const mid = [HCX, HBY - COCOON_H / 2];
-  let z = 1;
+  let z = 1.5;
   let focus = mid;
   let shake = 0;
   let flash = 0;
-  if (t < 0.13) flash = 1 - t / 0.13;
-  else if (t < HATCH_AT) {
-    const hit = t - 0.13;
-    z = hit < 0.12 ? lerpf(1, 2.05, easeOut(hit / 0.12)) : lerpf(2.05, 1.7, easeOut((hit - 0.12) / 0.4));
-    if (t > 0.65) z = lerpf(1.7, 1.25, easeOut((t - 0.65) / 4.4));
-    if (t > 5.0) z = lerpf(1.25, 1.4, clamp01((t - 5.0) / 1.6));
-    for (const w of HWIGGLES) if (t >= w && t < w + 0.25) z += 0.06 * (1 - (t - w) / 0.25);
-    shake = hit < 0.7 ? 6 * (1 - hit / 0.7) : 0;
-    for (const w of HWIGGLES) if (t >= w && t < w + 0.3) shake = Math.max(shake, 1.5);
-    if (t >= 5.6 && t < 6.6) shake = 1 + ((t - 5.6) / 1.0) * 2.5;
-    if (t >= 6.6 && t < 7.35) {
+  if (t < HATCH_AT) {
+    // in on a white flash, already close
+    if (t < 0.15) flash = 1 - t / 0.15;
+    z = t < 0.15 ? lerpf(1.9, 1.5, easeOut(t / 0.15)) : 1.5;
+    for (const w of HWIGGLES)
+      if (t >= w && t < w + 0.3) {
+        z += 0.08 * (1 - (t - w) / 0.3);
+        shake = 2.5;
+      }
+    if (t >= 1.1 && t < 1.8) {
+      // silence: the eye opens, the camera punches in on it
       focus = [HCX + EYE.dx, HBY + EYE.dy];
-      z = lerpf(1.4, 3.4, easeOut((t - 6.6) / 0.14));
+      z = lerpf(1.5, 3.2, easeOut((t - 1.1) / 0.12));
     }
-    if (t >= 7.35) {
-      z = lerpf(2.2, 1.45, easeOut((t - 7.35) / 0.3));
-      shake = 3 + ((t - 7.35) / 0.65) * 4;
+    if (t >= 1.8) {
+      z = lerpf(2.2, 1.45, easeOut((t - 1.8) / 0.2));
+      shake = 3 + ((t - 1.8) / 0.4) * 5;
     }
   } else {
     const rt = t - HATCH_AT;
-    z = rt < 0.25 ? lerpf(0.92, 1.0, easeOut(rt / 0.25)) : lerpf(1.0, 1.1, clamp01((rt - 0.25) / 4.5));
+    z = rt < 0.2 ? lerpf(0.92, 1.0, easeOut(rt / 0.2)) : lerpf(1.0, 1.05, clamp01((rt - 0.2) / 1.8));
     focus = [HCX, HBY - 70];
-    shake = rt < 0.8 ? 7 * (1 - rt / 0.8) : 0;
-    flash = rt < 0.5 ? 1 - rt / 0.5 : 0;
+    shake = rt < 0.5 ? 7 * (1 - rt / 0.5) : 0;
+    flash = rt < 0.35 ? 1 - rt / 0.35 : 0;
     // back to the World on a white flash
-    if (t > HATCH_END - 0.3) flash = (t - (HATCH_END - 0.3)) / 0.3;
+    if (t > HATCH_END - 0.25) flash = (t - (HATCH_END - 0.25)) / 0.25;
   }
   const k = clamp01((z - 1) / 1.2);
   return { z, focus, anchor: [lerpf(focus[0], GW / 2, k), lerpf(focus[1], GH * 0.6, k)], shake, flash };
@@ -484,30 +485,26 @@ function hatchFrame(canvas, h) {
     let cracks = 0;
     let glow = 0;
     let eye = 0;
-    if (t < 5.6) {
-      lift = Math.round(Math.sin(t * 2.5));
+    if (t < 1.1) {
+      // two quick shakes, a crack with each
       for (const w of HWIGGLES) shear += wiggleAt(t, w);
-      if (t >= 4.2) cracks = 0.12;
-    } else if (t < 6.6) {
-      const k = (t - 5.6) / 1.0;
-      shear = Math.round(Math.sin(t * (24 + k * 30)) * (1.5 + k * 4));
-      cracks = lerpf(0.12, 0.55, k);
-      glow = k * 0.5;
-    } else if (t < 7.35) {
-      cracks = 0.55;
-      glow = 0.5;
-      const et = t - 6.6;
-      eye = clamp01(et / 0.3);
-      if (et > 0.5 && et < 0.65) eye = Math.abs(et - 0.575) / 0.075;
+      cracks = t >= HWIGGLES[1] ? 0.35 : t >= HWIGGLES[0] ? 0.15 : 0;
+      glow = t >= HWIGGLES[1] ? 0.25 : 0;
+    } else if (t < 1.8) {
+      cracks = 0.45;
+      glow = 0.4;
+      const et = t - 1.1;
+      eye = clamp01(et / 0.2);
+      if (et > 0.4 && et < 0.52) eye = Math.abs(et - 0.46) / 0.06;
     } else {
-      const k = (t - 7.35) / 0.65;
+      const k = (t - 1.8) / 0.4;
       shear = Math.round(Math.sin(t * 60) * (4 + k * 5));
       lift = Math.round(Math.abs(Math.sin(t * 34)) * k * 3);
-      cracks = lerpf(0.55, 1, k);
+      cracks = lerpf(0.45, 1, k);
       glow = 0.5 + k * 0.5;
       eye = 1;
     }
-    const jitter = t >= 7.35 ? Math.round((hrnd() - 0.5) * 4) : 0;
+    const jitter = t >= 1.8 ? Math.round((hrnd() - 0.5) * 4) : 0;
     drawCocoon(scene, HCX + jitter, HBY, { shear, lift, cracks, glow, eye, iris: h.color, rnd: hrnd });
   } else {
     const rt = t - HATCH_AT;
@@ -546,10 +543,10 @@ function hatchFrame(canvas, h) {
   // who it is, in the game's fonts: name, stars, Path and number, typed on after the burst
   if (t >= HATCH_AT && t < HATCH_END - 0.3) {
     const rt = t - HATCH_AT;
-    centred(canvas, h.name, 330, HNAME, h.color, Math.floor(rt / 0.08));
-    if (rt > 0.4) pixelStars(canvas, h.rarity, 384);
-    if (rt > 0.9) centred(canvas, h.subtitle, 500, CARD_SMALL, '#FFFFFF', Math.floor((rt - 0.9) / 0.03));
-    if (rt > 1.6) centred(canvas, h.number, 570, CARD_SMALL, '#D8D2E6', Math.floor((rt - 1.6) / 0.1));
+    centred(canvas, h.name, 330, HNAME, h.color, Math.floor(rt / 0.04));
+    if (rt > 0.2) pixelStars(canvas, h.rarity, 384);
+    if (rt > 0.35) centred(canvas, h.subtitle, 500, CARD_SMALL, '#FFFFFF', Math.floor((rt - 0.35) / 0.015));
+    if (rt > 0.6) centred(canvas, h.number, 570, CARD_SMALL, '#D8D2E6', Math.floor((rt - 0.6) / 0.05));
   }
   const text = canvas.readPixels(0, 0, {
     width: W,
@@ -819,7 +816,15 @@ function drawWorld(canvas, ep, st, t) {
   });
   // a cocoon broken open: the grass from the tile beside it laid over, and the split silk on top
   for (const { at: [cx, cy], grass: [gx, gy] } of st.opened) {
-    canvas.drawImageRectOptions(map.image, CK.XYWHRect(gx * TILE, gy * TILE, TILE, TILE), CK.XYWHRect(cx * TILE, cy * TILE, TILE, TILE), NEAREST.filter, NEAREST.mipmap, null);
+    // (the cocoon stands a few pixels taller than its tile, so the grass reaches up into the one above)
+    canvas.drawImageRectOptions(
+      map.image,
+      CK.XYWHRect(gx * TILE, gy * TILE - 4, TILE, TILE + 4),
+      CK.XYWHRect(cx * TILE, cy * TILE - 4, TILE, TILE + 4),
+      NEAREST.filter,
+      NEAREST.mipmap,
+      null,
+    );
     drawSplitCocoon(canvas, cx * TILE, cy * TILE);
   }
   // signs and chests, drawn over the map as the game does (world-view.tsx Sign, Chest)
@@ -1212,9 +1217,8 @@ const EPISODES = {
             color: '#9B74F8',
           },
         },
-        { open: { at: [5, 11], grass: [3, 11] } },
+        { open: { at: [5, 11], grass: [2, 11] } },
         { show: 'felix' },
-        { wait: 0.8 },
         { say: 'felix', lines: ['...Ah. Awake. How long was I out?'] },
         { menu: { speaker: 'Felix', options: ['Five hundred years.', "I don't know."], pick: 0, hold: 1.1 } },
         { say: 'felix', lines: ["Five hundred. Hm. I'd have bet four."] },
