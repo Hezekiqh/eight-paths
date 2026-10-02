@@ -92,7 +92,8 @@
       "lines": [
         "Kaldor's Sweat! Genuine sweat of the king! Tiny bottles! Makes you strong!",
         "…It's water. It's water from the well. But it's Kaldor's Well, so technically."
-      ]
+      ],
+      "look": true
     },
     {
       "id": "brakka",
@@ -118,7 +119,8 @@
       "lines": [
         "Sharpening! Axes, swords, spoons, bread, a cat's patience. I sharpen anything.",
         "Brought me a pillow once. Took a week. Very pointy pillow now."
-      ]
+      ],
+      "look": true
     },
     {
       "id": "chisk",

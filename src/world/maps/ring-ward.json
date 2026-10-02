@@ -112,7 +112,8 @@
       "lines": [
         "Souvenirs! Foam fists! Little cardboard Kaldors! A real tooth from a real fight!",
         "The tooth is mine. I needed the money."
-      ]
+      ],
+      "look": true
     },
     {
       "id": "ladder-board",

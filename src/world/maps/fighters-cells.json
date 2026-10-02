@@ -73,7 +73,8 @@
       "lines": [
         "Tithe fighter. Never held an axe. I held a goose once. It went badly.",
         "They say you do the ladder. Beat Hroth and the tithe might change. That's what people whisper."
-      ]
+      ],
+      "look": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { MAPS } from '../maps';
 import {
   W_FACING,
+  W_HF,
   W_HX,
   W_HY,
   W_TX,
@@ -45,7 +46,7 @@ function run(
 }
 
 /** Stands someone at (x, y), taking their tile in the grid as the map does. */
-function place(solid: number[], spec: { x: number; y: number; wander?: number; along?: 'x' | 'y' }[]) {
+function place(solid: number[], spec: { x: number; y: number; wander?: number; along?: 'x' | 'y'; look?: boolean }[]) {
   for (const s of spec) solid[s.y * W + s.x] = 1;
   return newWanderers(spec.map((s) => ({ ...s, facing: 0 })));
 }
@@ -134,6 +135,36 @@ describe('people strolling about', () => {
   });
 });
 
+describe('people looking about', () => {
+  it('stays on their tile, glances another way now and then, and turns back to how they stand', () => {
+    const solid = yard();
+    const rows = place(solid, [{ x: 2, y: 2, look: true }]);
+    const faced = new Set<number>();
+    let home = 0;
+    let steps = 0;
+    const after = run(rows, solid, 120, FAR, [], (rs) => {
+      const w = rs[0];
+      expect([w[W_X], w[W_Y], w[W_TX], w[W_TY]]).toEqual([2, 2, 2, 2]);
+      faced.add(w[W_FACING]);
+      if (w[W_FACING] === w[W_HF]) home++;
+      steps++;
+    });
+    expect(after.solid).toEqual(solid);
+    expect(faced.size).toBeGreaterThan(1);
+    // a glance is short; most of the time they face their own way
+    expect(home / steps).toBeGreaterThan(0.6);
+  });
+
+  it('turns back to how they stand once you have finished talking', () => {
+    const solid = yard();
+    let rows = place(solid, [{ x: 2, y: 2, look: true }]);
+    rows = turnToTalk(rows, 0, 2);
+    expect(rows[0][W_FACING]).toBe(2);
+    const after = run(rows, solid, 4.5);
+    expect(after.rows[0][W_FACING]).toBe(0);
+  });
+});
+
 describe('talking to someone mid-stroll', () => {
   it('finds them where they are now, not where they started', () => {
     const npcs = [{ id: 'pim', x: 2, y: 2 }];
@@ -167,6 +198,18 @@ describe('who strolls in the Other World', () => {
   it('only lets people stroll in places without a fight', () => {
     const strolling = people.filter(({ n }) => (n.wander ?? 0) > 0);
     expect(strolling.filter(({ map }) => map.boss || map.ladder || map.enemies.length > 0)).toEqual([]);
+  });
+
+  it('lets people look about only where there is no fight, and never also stroll', () => {
+    const lookers = people.filter(({ n }) => n.look);
+    expect(lookers.filter(({ map }) => map.boss || map.ladder || map.enemies.length > 0).map(({ n }) => n.name)).toEqual([]);
+    expect(lookers.filter(({ n }) => (n.wander ?? 0) > 0)).toEqual([]);
+    expect(lookers.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('marches one drum-warden round the square; the other two keep their post', () => {
+    const wardens = MAPS['kingdom-town'].npcs.filter((n) => n.name.startsWith('Drum-warden'));
+    expect(wardens.filter((n) => (n.wander ?? 0) > 0).map((n) => n.name)).toEqual(['Drum-warden Tuk']);
   });
 
   it('gives the towns some life', () => {

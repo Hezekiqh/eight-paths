@@ -196,7 +196,8 @@
             "Neither of them would let go first. Fierce, see. Somebody ought to remind them."
           ]
         }
-      ]
+      ],
+      "look": true
     },
     {
       "id": "barnaby",
@@ -548,7 +549,8 @@
           "Fight's off. Eleven days of the best odds in the kingdom, and they go for a DRINK.",
           "Worst day of my life. Don't talk to me."
         ]
-      }
+      },
+      "look": true
     },
     {
       "id": "hild",
@@ -568,7 +570,8 @@
           "They've gone for a drink. Together. Eleven days, and it was the bread.",
           "I'll finish the scarf anyway. It's a very long scarf now."
         ]
-      }
+      },
+      "look": true
     },
     {
       "id": "tuk",
@@ -596,9 +599,7 @@
       "lines": [
         "BOOM. …BOOM.",
         "I'm in step. Tuk's out of step. Rumm hasn't got a drum. Some patrol."
-      ],
-      "wander": 3,
-      "along": "x"
+      ]
     },
     {
       "id": "rumm",
@@ -612,9 +613,7 @@
         "*slap* *slap*",
         "Lost my drum. Belly works fine. Don't tell the captain.",
         "*slap*"
-      ],
-      "wander": 3,
-      "along": "x"
+      ]
     },
     {
       "id": "gudrun",
@@ -628,7 +627,8 @@
         "Ninety-one. Ninety-two. Don't interrupt.",
         "Chin-ups on the cage bars. The bars are the only thing in this town that don't wobble.",
         "Ninety-three. When I was a girl I did these on the old king's gate. Ninety-four."
-      ]
+      ],
+      "look": true
     },
     {
       "id": "hamm",

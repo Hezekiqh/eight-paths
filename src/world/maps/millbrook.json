@@ -182,7 +182,8 @@
           "You've met a tall man named Gerald.",
           "Don't tell me. I know. Once a year, exactly, and this was the year."
         ]
-      }
+      },
+      "look": true
     },
     {
       "id": "hoot",

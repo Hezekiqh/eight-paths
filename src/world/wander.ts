@@ -1,5 +1,7 @@
 // People who walk about (NpcObject.wander): a stroll to a tile nearby, a
-// pause, a look around, another stroll, never far from home. Runs on the UI
+// pause, a look around, another stroll, never far from home. People who only
+// look about (NpcObject.look) stay on their tile: a glance another way now and
+// then, and back to how they stand. Runs on the UI
 // thread inside the World's frame callback (hence 'worklet'), and in plain Jest.
 // A walker takes the tile they're stepping into in the solid grid before they
 // set off and gives the old one back when they get there, so the player bumps
@@ -14,7 +16,7 @@ export const WANDER_SPEED = 24;
  * One row per NPC, in map order, as a flat tuple so it's cheap to copy each frame:
  * [home x, home y, tile x, tile y, to x, to y, how far along the step (0 to 1),
  * seconds to wait, how far from home (0: stands still), which way (0 any, 1 across, 2 up and down),
- * random seed, facing].
+ * random seed, facing, looks about (1) while standing still, the way they face at home].
  */
 export type Wanderer = number[];
 export const W_HX = 0;
@@ -29,6 +31,8 @@ export const W_R = 8;
 export const W_AXIS = 9;
 export const W_SEED = 10;
 export const W_FACING = 11;
+export const W_LOOK = 12;
+export const W_HF = 13;
 
 /** Facing indices, as in engine.ts: down, up, left, right. */
 const STEPS = [
@@ -38,7 +42,7 @@ const STEPS = [
   [1, 0],
 ];
 
-export type WanderSpec = { x: number; y: number; facing: number; wander?: number; along?: 'x' | 'y' };
+export type WanderSpec = { x: number; y: number; facing: number; wander?: number; along?: 'x' | 'y'; look?: boolean };
 
 /** Everyone standing at home, facing their own way, each with a seed of their own. */
 export function newWanderers(npcs: WanderSpec[]): Wanderer[] {
@@ -54,6 +58,8 @@ export function newWanderers(npcs: WanderSpec[]): Wanderer[] {
     n.wander ?? 0,
     n.along === 'x' ? 1 : n.along === 'y' ? 2 : 0,
     (n.x * 7919 + n.y * 104729 + i * 31) % 2147483646 || 1,
+    n.facing,
+    n.look ? 1 : 0,
     n.facing,
   ]);
 }
@@ -94,7 +100,22 @@ export function stepWanderers(
   for (let i = 0; i < rows.length; i++) {
     const w = rows[i].slice();
     out.push(w);
-    if (w[W_R] <= 0) continue;
+    if (w[W_R] <= 0) {
+      if (w[W_LOOK] !== 1) continue;
+      // Standing still, looking about: a short glance another way, then a longer while back as they stand.
+      w[W_WAIT] -= dt;
+      if (w[W_WAIT] > 0) continue;
+      const [s, r] = roll(w[W_SEED]);
+      w[W_SEED] = s;
+      if (w[W_FACING] === w[W_HF]) {
+        w[W_FACING] = (w[W_HF] + 1 + Math.floor(r * 3)) % 4;
+        w[W_WAIT] = 1.2 + r * 1.5;
+      } else {
+        w[W_FACING] = w[W_HF];
+        w[W_WAIT] = 3 + r * 4;
+      }
+      continue;
+    }
     const stepping = w[W_TX] !== w[W_X] || w[W_TY] !== w[W_Y];
     if (stepping) {
       w[W_T] += (WANDER_SPEED * dt) / TILE;
