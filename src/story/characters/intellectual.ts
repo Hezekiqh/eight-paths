@@ -76,7 +76,7 @@ export const INTELLECTUAL = {
   },
   felix: {
     number: 93,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Evil',
     name: 'Felix',
     fullName: 'Felix Rook',
