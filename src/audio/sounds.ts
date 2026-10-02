@@ -28,12 +28,15 @@ export const EFFECTS = {
   roll: require('../../assets/audio/roll.wav'),
   slam: require('../../assets/audio/slam.wav'),
   gutter: require('../../assets/audio/gutter.wav'),
-  /** Dialogue voices, lowest to highest (see voiceFor in dialogue-box.tsx). */
+  /** Dialogue voices, lowest to highest (see voiceFor in portraits.ts); blip0 is the Keeper's alone. */
+  blip0: require('../../assets/audio/blip-0.wav'),
   blip1: require('../../assets/audio/blip-1.wav'),
   blip2: require('../../assets/audio/blip-2.wav'),
   blip3: require('../../assets/audio/blip-3.wav'),
   blip4: require('../../assets/audio/blip-4.wav'),
   blip5: require('../../assets/audio/blip-5.wav'),
+  /** Picking an option in a conversation. */
+  select: require('../../assets/audio/select.wav'),
 } satisfies Record<string, AudioSource>;
 
 /**
@@ -75,11 +78,13 @@ export const EFFECT_VOLUME: Record<Effect, number> = {
   roll: 0.5,
   slam: 1,
   gutter: 0.9,
+  blip0: 0.7,
   blip1: 0.5,
   blip2: 0.5,
   blip3: 0.5,
   blip4: 0.5,
   blip5: 0.5,
+  select: 0.5,
 };
 
 /** Music sits under the game (and under whatever else the phone is playing). */

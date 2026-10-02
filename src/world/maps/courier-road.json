@@ -83,28 +83,17 @@
         "Go on, pass. I'm counting it as a win. That's forty-one."
       ],
       "questions": [
+        { "ask": "Who are you?", "answer": ["I'm Nib. What's it to ya?"] },
+        { "ask": "What are you doing out here?", "answer": ["Dueling chumps like you."] },
+        { "ask": "Got any gossip?", "answer": ["Don't you have a job or something?"] },
         {
-          "ask": "Who taught you to fight?",
-          "answer": [
-            "Nobody. I watch the grass. The wind shoves it flat, and it gets back up.",
-            "That's the whole secret. Don't tell anyone. Especially the grass."
-          ]
-        },
-        {
-          "ask": "What's down the road?",
-          "answer": [
-            "Towers. Mum says a king lives there who never gets any older.",
-            "I asked if that's because he eats his greens. She said not to ask that loudly."
-          ]
-        },
-        {
-          "ask": "Seen anything strange?",
-          "answer": [
-            "There's a lady asleep in the long grass, all wrapped up. She looks like she's still running.",
-            "I leave her a flower sometimes. Runners get tired."
-          ]
+          "ask": "Beat it, kid.",
+          "answer": ["...", "I'm telling my MUM!"],
+          "sets": "nib-ran-off",
+          "then": ["Nib bursts into tears and runs off down the road."]
         }
       ],
+      "goneAfter": "nib-ran-off",
       "after": {
         "flag": "pit-champion",
         "lines": [

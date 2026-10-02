@@ -34,3 +34,10 @@ describe('the Entity stays a mystery', () => {
     for (const text of allText()) expect(text).not.toMatch(/Entity/);
   });
 });
+
+describe("the Keeper's voice", () => {
+  it('is deeper than anyone else, his alone', () => {
+    expect(voiceFor('The Keeper', 'keeper')).toBe(0);
+    expect(voiceFor('Kaldor the Kingbreaker', 'kaldor')).toBeGreaterThan(0);
+  });
+});

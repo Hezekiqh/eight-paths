@@ -37,6 +37,7 @@ import {
   tilesOf,
   withOpenTiles,
   withoutCharacter,
+  withoutGone,
   type MapId,
   type WorldMap,
 } from '@/world/maps';
@@ -223,10 +224,15 @@ function World({
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
   const [arrivalFlags] = useState(() => xpNow.flags ?? []);
-  const map = useMemo(
+  const roomMap = useMemo(
     () => withOpenTiles(start.map, [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)]),
     [start, ways, arrivalFlags],
   );
+  // Someone who leaves for good (Nib, if you're mean to him) is gone as soon as the talk ends, not on the next visit.
+  const flagsNow = useWorldStore((s) => s.flags);
+  const map = useMemo(() => withoutGone(roomMap, flagsNow), [roomMap, flagsNow]);
+  /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
+  const afterTalk = useRef<string[] | null>(null);
   const patches = useMemo(() => openPatches(map, arrivalFlags), [map, arrivalFlags]);
   // The boss's bearers join the room's enemies while the fight is on.
   const fightMap = useMemo(
@@ -513,8 +519,13 @@ function World({
           onClose={() => {
             setDialogue(null);
             dialogue.then?.();
+            const narration = afterTalk.current;
+            afterTalk.current = null;
+            if (narration) setDialogue({ lines: narration });
           }}
           onAsk={(q) => {
+            if (q.sets) useWorldStore.getState().setFlag(q.sets);
+            if (q.then) afterTalk.current = q.then;
             // Everything a character tells you goes in the World menu's lore journal.
             const speaker = dialogue.speaker;
             if (speaker) hear({ id: loreId(speaker, q.ask), speaker, ask: q.ask, answer: q.answer, at: Date.now() });
