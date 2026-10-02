@@ -1231,7 +1231,7 @@ const EPISODES = {
         {
           say: 'felix',
           lines: [
-            'I hear a king up the road never grows old. A man like that needs good advice.',
+            'Hmmmm. Good question.', 'Whatever will cause the most fun, I guess.',
             "Thank you for the door. I'll remember it. Probably.",
           ],
         },
