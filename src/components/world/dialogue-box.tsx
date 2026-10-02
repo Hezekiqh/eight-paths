@@ -105,7 +105,9 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     setSkip(false);
   };
 
+  // Picking an option clicks (a question, a choice or Goodbye); moving on to the next line doesn't.
   const ask = (question: Question) => {
+    playSound('select');
     haptics.select();
     onAsk?.(question);
     setLines(question.answer);
@@ -136,6 +138,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
               key={c.label}
               label={c.label}
               onPress={() => {
+                playSound('select');
                 haptics.select();
                 onClose();
                 c.then();
@@ -146,6 +149,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
             <Choice
               label="Goodbye."
               onPress={() => {
+                playSound('select');
                 haptics.select();
                 onClose();
               }}

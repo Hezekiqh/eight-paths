@@ -50,6 +50,8 @@ export type NpcObject = {
   after?: { flag: string; lines: string[] };
   /** A job only one Path can do by talking to them. */
   job?: NpcJob;
+  /** Gone from the map once this story flag is set. */
+  goneAfter?: string;
 };
 
 /**
@@ -68,8 +70,12 @@ export type Boss = {
 /** A job done by talking to someone, as one Path: it sets a story flag. */
 export type NpcJob = { flag: string; path: string; done: string[]; cant: string[]; joins?: CharacterId[] };
 
-/** Something the player can ask an NPC, and the answer, a line per box. */
-export type Question = { ask: string; answer: string[] };
+/**
+ * Something the player can ask an NPC, and the answer, a line per box. Asking
+ * can set a story flag (`sets`), and leave a line of narration once the
+ * conversation closes (`then`): how Nib runs off when you're mean to him.
+ */
+export type Question = { ask: string; answer: string[]; sets?: string; then?: string[] };
 
 /** The Archive's quest board: opens the objectives. */
 export type BoardObject = { id: string; type: 'board'; x: number; y: number };
@@ -203,6 +209,14 @@ export function tilesOf(map: WorldMap, letters: string[]): number[] {
 export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   if (!map.npcs.some((n) => n.character === id)) return map;
   const objects = map.objects.filter((o) => o.type !== 'npc' || o.character !== id);
+  const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
+  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
+/** The map without anyone who has left for good (see NpcObject.goneAfter); the same map if nobody has. */
+export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
+  if (!map.npcs.some((n) => n.goneAfter && flags.includes(n.goneAfter))) return map;
+  const objects = map.objects.filter((o) => o.type !== 'npc' || !o.goneAfter || !flags.includes(o.goneAfter));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
