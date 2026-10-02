@@ -116,7 +116,9 @@
             "She bit a king once. Not this one. Not yet. She's waiting, I think."
           ]
         }
-      ]
+      ],
+      "wander": 2,
+      "along": "x"
     },
     {
       "id": "ylva",
@@ -129,7 +131,8 @@
       "lines": [
         "Pilgrim. I've come to see the ice. The last ice from the wastes, kept five hundred years.",
         "It's very cold. That's how you know it's real."
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "duck-sign",

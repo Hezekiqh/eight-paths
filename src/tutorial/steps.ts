@@ -47,8 +47,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     route: '/world',
-    target: 'objectives',
-    line: 'Out there is the Other World. The stronger your habits make you, the farther you can go. Your objectives wait here.',
+    target: 'step-outside',
+    line: 'Out there is the Other World. The stronger your habits make you, the farther you can go.',
   },
   {
     route: '/world',

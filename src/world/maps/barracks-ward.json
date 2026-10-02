@@ -93,7 +93,9 @@
             "Forty years. FORTY YEARS. You there! Recruit! You've done more for this yard than any of 'em."
           ]
         }
-      ]
+      ],
+      "wander": 2,
+      "along": "x"
     },
     {
       "id": "rolf",
@@ -106,7 +108,8 @@
       "lines": [
         "I joined up to impress a girl.",
         "She joined up too. She's my sergeant now. I've never been less impressive."
-      ]
+      ],
+      "wander": 1
     },
     {
       "id": "kaya",
@@ -132,7 +135,8 @@
       "lines": [
         "Sorry. Sorry, I'm going to headbutt you now. Sorry.",
         "…Sorry, I've changed my mind. You look nice. Sorry."
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "bruni",
@@ -145,7 +149,8 @@
       "lines": [
         "This is my pet rock. His name's Kaldor.",
         "Not after the king. It's a coincidence. He was called Kaldor before the king was."
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "dummy-sign",

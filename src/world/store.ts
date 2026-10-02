@@ -44,7 +44,21 @@ type WorldState = {
   /** The day (YYYY-MM-DD) Moss last loosed his Arrow Barrage: once a day. */
   barrageDay: string | null;
   useBarrage: (day: string) => void;
+  /** Starts the Other World over from the Archive floor. Keeps the controls and who walks; never touches habits. */
+  restart: () => void;
 };
+
+/** A fresh World save: everything the game remembers, before any of it happened. */
+export const FRESH_WORLD = {
+  position: null,
+  discovered: [],
+  heard: [],
+  flags: [],
+  noticed: [],
+  candles: [],
+  lastCandle: null,
+  barrageDay: null,
+} satisfies Partial<WorldState>;
 
 /** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`; v6 `barrageDay`. All start empty. */
 const SAVE_VERSION = 6;
@@ -103,6 +117,7 @@ export const useWorldStore = create<WorldState>()(
         set((s) => ({ candles: [...s.candles.filter((c) => c.map !== spot.map), spot], lastCandle: spot.map })),
       barrageDay: null,
       useBarrage: (day) => set({ barrageDay: day }),
+      restart: () => set(FRESH_WORLD),
     }),
     {
       name: 'eight-paths-world',

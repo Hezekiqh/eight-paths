@@ -131,7 +131,8 @@
       "lines": [
         "The king wants another statue. I've done Kaldor standing. Kaldor striding. Kaldor looking at Kaldor.",
         "Kaldor… sitting? Kaldor… thinking? Does he think? I can't ask. You can't ask."
-      ]
+      ],
+      "wander": 1
     },
     {
       "id": "mott",
@@ -144,7 +145,8 @@
       "lines": [
         "Tax collector. Not coin. Fights. Everybody here owes the king fights.",
         "You, for example. Visitor. You owe nothing yet. I've opened a page for you, though. Just in case."
-      ]
+      ],
+      "wander": 3
     },
     {
       "id": "tib",
@@ -157,7 +159,8 @@
       "lines": [
         "Fight club. Behind the houses. Rule one: tell everyone about fight club.",
         "Rule two: no crying. Rule three: Brunna's not allowed. She bites."
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "bazaar-sign",

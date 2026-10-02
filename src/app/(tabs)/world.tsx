@@ -28,12 +28,12 @@ import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
+import { turnToTalk, whoIsAt } from '@/world/wander';
 import { COMPANIONS, type CharacterId } from '@/story/companions';
 import {
   FACINGS,
   MAPS,
   TILE,
-  objectAt,
   tileAt,
   tilesOf,
   withLadder,
@@ -667,7 +667,10 @@ function useAct(
     if (busy.current) return;
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
-    const thing = objectAt(map, tx, ty);
+    // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
+    const thing =
+      whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
+      map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
     // a party member may chime in (see banter.ts)
     const banter = thing ? banterFor(map.id, thing.id, Object.values(useGameStore.getState().party)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
@@ -698,10 +701,7 @@ function useAct(
     }
     if (thing?.type === 'npc') {
       // they turn to face you
-      const i = map.npcs.indexOf(thing);
-      const turned = [...sim.npcFacing.get()];
-      turned[i] = OPPOSITE[facing];
-      sim.npcFacing.set(turned);
+      sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
       // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =

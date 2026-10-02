@@ -85,7 +85,9 @@
           "News came up the road. The king's been beaten. Challenged, fair, by the old law.",
           "Does that count as being relieved? I've been thinking about it all morning. I think I'll wait a bit longer. Just to be sure."
         ]
-      }
+      },
+      "wander": 2,
+      "along": "x"
     },
     {
       "id": "grub",

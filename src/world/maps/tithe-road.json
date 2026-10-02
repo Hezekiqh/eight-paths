@@ -94,7 +94,8 @@
         "I've brought my iron. For the tithe.",
         "…It's a spoon. It's iron, though. Mostly. The handle's iron.",
         "If the king wants a fighter out of my house he can have the goat. The goat's meaner than all of us."
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "bellow",
@@ -117,7 +118,9 @@
             "(whispering) The horde made me a sergeant to toughen me up. Now everybody whispers back. It's quite nice."
           ]
         }
-      ]
+      ],
+      "wander": 2,
+      "along": "x"
     },
     {
       "id": "tithe-sign",

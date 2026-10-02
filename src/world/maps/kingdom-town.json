@@ -271,7 +271,8 @@
             "…I made that one up. It costs the most because it's the least true."
           ]
         }
-      ]
+      ],
+      "wander": 2
     },
     {
       "id": "kett",
@@ -299,7 +300,8 @@
             "The cage guard takes bribes. Fat ones. Don't tell him I told you."
           ]
         }
-      ]
+      ],
+      "wander": 1
     },
     {
       "id": "guard",
@@ -579,7 +581,9 @@
       "lines": [
         "BOOM. Curfew patrol. BOOM. Keep moving. BOOM.",
         "We march in step. Tok is out of step. Tok has always been out of step."
-      ]
+      ],
+      "wander": 3,
+      "along": "x"
     },
     {
       "id": "tok",
@@ -592,7 +596,9 @@
       "lines": [
         "BOOM. …BOOM.",
         "I'm in step. Tuk's out of step. Rumm hasn't got a drum. Some patrol."
-      ]
+      ],
+      "wander": 3,
+      "along": "x"
     },
     {
       "id": "rumm",
@@ -606,7 +612,9 @@
         "*slap* *slap*",
         "Lost my drum. Belly works fine. Don't tell the captain.",
         "*slap*"
-      ]
+      ],
+      "wander": 3,
+      "along": "x"
     },
     {
       "id": "gudrun",
@@ -633,7 +641,8 @@
       "lines": [
         "Training. Carrying the boulder. Six years now.",
         "Same boulder. I named him Pebble. Pebble isn't a pebble. That's the joke. I don't get many visitors."
-      ]
+      ],
+      "wander": 2
     }
   ],
   "art": {

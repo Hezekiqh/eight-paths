@@ -68,6 +68,9 @@ export type NpcObject = {
   goneAfter?: string;
   /** Only here once this story flag is set: beaten champions turn up at the bar. */
   comesAfter?: string;
+  /** Strolls about, at most this many tiles from where they stand (wander.ts); `along` keeps them to a row or a column. */
+  wander?: number;
+  along?: 'x' | 'y';
 };
 
 /**

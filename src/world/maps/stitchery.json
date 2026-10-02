@@ -68,7 +68,8 @@
       "lines": [
         "Broke my leg. Doctor said walk it off.",
         "I'm walking it off. Very slowly. This is day ninety."
-      ]
+      ],
+      "wander": 1
     },
     {
       "id": "patient2",
@@ -81,7 +82,8 @@
       "lines": [
         "Arrow in the shoulder. Walk it off, he said.",
         "I've walked to the bazaar and back eleven times. Still there. Very fit now, though."
-      ]
+      ],
+      "wander": 1
     }
   ]
 }

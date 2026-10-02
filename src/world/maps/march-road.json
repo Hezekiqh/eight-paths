@@ -74,7 +74,9 @@
             "Because moving is how you know you're awake. Try it. Every day. Just a bit."
           ]
         }
-      ]
+      ],
+      "wander": 3,
+      "along": "x"
     },
     {
       "id": "grask",

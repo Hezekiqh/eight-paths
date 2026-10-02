@@ -18,7 +18,7 @@ import {
   useRSXformBuffer,
   useRectBuffer,
 } from '@shopify/react-native-skia';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDerivedValue, useFrameCallback, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -38,6 +38,7 @@ import {
   walkFrame,
   type Grid,
 } from '@/world/engine';
+import { W_FACING, newWanderers, stepWanderers, strolling, wandererFeet, type Wanderer } from '@/world/wander';
 import {
   E_ALIVE,
   E_AWAKE,
@@ -132,8 +133,10 @@ export type WorldSim = {
   walked: SharedValue<number>;
   moving: SharedValue<boolean>;
   trail: SharedValue<number[]>;
-  /** Each NPC's facing, in map order. */
-  npcFacing: SharedValue<number[]>;
+  /** Each NPC where they stand or stroll, and which way they face (wander.ts), in arrival order. */
+  npcWalk: SharedValue<Wanderer[]>;
+  /** The NPCs' ids in that order: people can leave mid-visit, and the rows stay theirs. */
+  npcIds: string[];
   /** The stick: -1 to 1 on each axis, written by the controls. */
   inputX: SharedValue<number>;
   inputY: SharedValue<number>;
@@ -161,7 +164,10 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     walked: useSharedValue(0),
     moving: useSharedValue(false),
     trail: useSharedValue(startTrail(start.x, start.y)),
-    npcFacing: useSharedValue(npcs.map((n) => FACINGS.indexOf(n.facing))),
+    npcWalk: useSharedValue(
+      newWanderers(npcs.map((n) => ({ x: n.x, y: n.y, facing: FACINGS.indexOf(n.facing), wander: n.wander, along: n.along }))),
+    ),
+    npcIds: useState(() => npcs.map((n) => n.id))[0],
     inputX: useSharedValue(0),
     inputY: useSharedValue(0),
     frozen: useSharedValue(false),
@@ -332,10 +338,12 @@ export function WorldView({
   /** Seconds since the room opened: flames flicker and motes drift by it. */
   const clock = useSharedValue(0);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
+  // [sprite row, row in sim.npcWalk] for everyone still here.
   const npcs = useMemo(
-    () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], ...npcFeet(n)] as [number, number, number]),
-    [map],
+    () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], sim.npcIds.indexOf(n.id)] as [number, number]),
+    [map, sim.npcIds],
   );
+  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0), [map]);
   const count = partyRows.length + npcs.length + map.enemies.length;
 
   const camX = useSharedValue(0);
@@ -593,6 +601,22 @@ export function WorldView({
         if (changed) rockPos.set(next);
       }
 
+      // Townsfolk stroll about (wander.ts), but not while you're talking or paused.
+      if (wanders && !frozen) {
+        const walked = stepWanderers(
+          sim.npcWalk.get(),
+          solid.get(),
+          mapWidth,
+          mapHeight,
+          sim.x.get(),
+          sim.y.get(),
+          dt,
+          stepTiles,
+        );
+        sim.npcWalk.set(walked.rows);
+        if (walked.solid !== solid.get()) solid.set(walked.solid);
+      }
+
       // The camera follows the lead and stops at the map's edges (or centres a small map).
       const round = (v: number) => Math.round(v * scale) / scale;
       const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(sim.x.get() - viewW / 2, 0), mapW - viewW);
@@ -605,8 +629,13 @@ export function WorldView({
       // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
       // Each: [row, facing, frame, x, y, tint (0 none, 1 white: struck, 2 red: winding up), size].
       const ents: number[][] = [];
-      const npcFacing = sim.npcFacing.get();
-      for (let i = 0; i < npcs.length; i++) ents.push([npcs[i][0], npcFacing[i] ?? 0, 0, npcs[i][1], npcs[i][2], 0, 1]);
+      const walkers = sim.npcWalk.get();
+      for (let i = 0; i < npcs.length; i++) {
+        const w = walkers[npcs[i][1]];
+        if (!w) continue;
+        const [fx, fy] = wandererFeet(w);
+        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, 1]);
+      }
       const whites = whiteFor.get();
       const now = fight.get();
       const all = now.enemies;

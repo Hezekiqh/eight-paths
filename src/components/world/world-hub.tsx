@@ -1,23 +1,14 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Segmented } from '@/components/segmented';
 import { SettingsPanel } from '@/components/settings-panel';
 import { LoreScroll } from '@/components/world/lore-scroll';
-import { isObjectiveDone } from '@/game';
 import { haptics } from '@/haptics';
-import { useGameStore } from '@/store';
-import { useObjectives, useToday } from '@/store/hooks';
-import { COMPANIONS } from '@/story/companions';
-import { classColors, colors, fonts, spacing, windowStyle } from '@/theme';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
-import { worldHero } from '@/world/hero';
-import { MAPS, type MapId } from '@/world/maps';
-import { SEASON_FLAG, nextGoal } from '@/world/guide';
-import { FINAL_GOAL, howToProgress, requirementLabel, standing } from '@/world/progress';
-import { useWorldProgress } from '@/world/use-progress';
 import { useWorldStore } from '@/world/store';
 
 const TABS = [
@@ -28,28 +19,21 @@ type Tab = (typeof TABS)[number]['value'];
 
 /**
  * What the World tab opens on: an upright pause menu. The World tab jumps
- * back into the sideways game and shows what your habits need to do next,
- * and the story of the Kingdom, uncovered by what people tell you. The Settings tab
- * holds every setting in the app.
+ * back into the sideways game, keeps the story of the Kingdom, uncovered by
+ * what people tell you, and can start it all again. The Settings tab holds
+ * every setting in the app.
  */
 export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const position = useWorldStore((s) => s.position);
   const discovered = useWorldStore((s) => s.discovered);
   const heard = useWorldStore((s) => s.heard);
-  const picked = useWorldStore((s) => s.hero);
-  const party = useGameStore((s) => s.party);
-  const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
-  const walker = worldHero(picked, party, classDimension);
-  const heroName = COMPANIONS[walker].name;
-  const place = MAPS[position?.map ?? 'archive'].name;
   // `/world?tab=settings` opens straight on Settings (the Character tab links here).
   const params = useLocalSearchParams<{ tab?: string }>();
   const asked: Tab = params.tab === 'settings' ? 'settings' : 'world';
   const [tab, setTab] = useState<Tab>(asked);
   const [lastAsked, setLastAsked] = useState(asked);
-  // The Keeper's tour ends here: the objectives, then the door out.
+  // The Keeper's tour ends here, at the door out.
   const scroller = useTourScroller();
-  const objectivesRef = useTourTarget('objectives', scroller);
   const playRef = useTourTarget('step-outside', scroller);
   const { ref: scrollRef, onScroll } = scroller;
   if (asked !== lastAsked) {
@@ -65,9 +49,6 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
         scrollEventThrottle={32}
         contentContainerStyle={styles.content}>
         <Text style={styles.title}>OTHER WORLD</Text>
-        <Text style={styles.place}>
-          {heroName} · {place}
-        </Text>
         <Segmented options={TABS} value={tab} onChange={setTab} color={colors.accent} />
 
         {tab === 'settings' ? (
@@ -78,10 +59,8 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
               <Play started={position !== null} onPlay={onPlay} />
             </View>
 
-            <View ref={objectivesRef} collapsable={false}>
-              <Objectives discovered={discovered} here={position?.map ?? 'archive'} />
-            </View>
             <LoreScroll heard={heard} />
+            <Restart started={position !== null || discovered.length > 0} />
           </>
         )}
       </ScrollView>
@@ -105,79 +84,36 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
   );
 }
 
-function Objectives({ discovered, here }: { discovered: MapId[]; here: MapId }) {
-  const today = useToday();
-  const xp = useWorldProgress();
-  const objectives = useObjectives(today);
-  const all = [...objectives.daily, ...objectives.weekly];
-  const done = all.filter(isObjectiveDone).length;
-
-  // One thing at a time: the next step from where you left off (the same one the game marks in gold).
-  const goal = nextGoal(here, discovered, xp);
-  const final = standing(FINAL_GOAL, xp);
-  const finished = (xp.flags ?? []).includes(SEASON_FLAG);
-
+/** Start the Other World over, after an "are you sure". Habits, levels and the collection stay as they are. */
+function Restart({ started }: { started: boolean }) {
+  if (!started) return null;
+  const confirm = () => {
+    haptics.tap();
+    Alert.alert(
+      'Restart the Other World?',
+      "You'll start again on the Archive floor. Every place found, story choice, Heart Piece and lore page in the Other World is forgotten. Your habits, levels and heroes stay. This can't be undone.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Restart',
+          style: 'destructive',
+          onPress: () => {
+            useWorldStore.getState().restart();
+            haptics.select();
+          },
+        },
+      ],
+    );
+  };
   return (
-    <View style={styles.window}>
-      <Text style={styles.section}>OBJECTIVES</Text>
-
-      <View style={[styles.goal, styles.next]} accessible>
-        <Text style={styles.need}>NEXT STEP</Text>
-        <Text style={styles.label}>{goal.line}</Text>
-        <Text style={styles.how}>
-          {goal.mark
-            ? `In ${MAPS[here].name}, follow the gold arrow${goal.mark.exitId ? ` to ${goal.mark.tag.replace(/^The /, 'the ')}` : ` to ${goal.mark.tag}`}.`
-            : 'Jump in and look around.'}
-        </Text>
-      </View>
-
-      <Goal
-        label="Season 1"
-        need={requirementLabel(FINAL_GOAL, xp)}
-        met={finished}
-        fraction={finished ? 1 : final.fraction}
-        how={
-          finished
-            ? "You've finished Season 1. The portal stays sealed; keep your Paths strong."
-            : final.met
-              ? 'You have the strength. Follow the next step to the portal at the end of the road.'
-              : `Season 1 ends at the portal, which opens at Overall Lv ${FINAL_GOAL.level}. ${howToProgress(final)}`
-        }
-      />
-
-      <Pressable accessibilityRole="button" onPress={() => router.push('/quest-board')} style={styles.goal}>
-        {({ pressed }) => (
-          <>
-            <View style={styles.row}>
-              <Text style={[styles.label, pressed && styles.met]}>
-                Quest board · {done} of {all.length} done
-              </Text>
-              <Text style={styles.need}>OPEN ›</Text>
-            </View>
-            <Text style={styles.how}>
-              {objectives.unclaimed > 0
-                ? `${objectives.unclaimed} reward${objectives.unclaimed === 1 ? '' : 's'} waiting to be claimed.`
-                : 'Your habits fill these in as you go.'}
-            </Text>
-          </>
-        )}
-      </Pressable>
-    </View>
-  );
-}
-
-function Goal(props: { label: string; need: string; met: boolean; fraction: number; how: string }) {
-  return (
-    <View style={styles.goal} accessible>
-      <View style={styles.row}>
-        <Text style={styles.label}>{props.label}</Text>
-        <Text style={[styles.need, props.met && styles.met]}>{props.need}</Text>
-      </View>
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${Math.round(props.fraction * 100)}%` }, props.met && styles.fillMet]} />
-      </View>
-      <Text style={styles.how}>{props.how}</Text>
-    </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint="Asks first. Starts the Other World from the beginning."
+      onPress={confirm}
+      style={({ pressed }) => [styles.restart, pressed && { opacity: 0.7 }]}>
+      <Text style={styles.restartLabel}>RESTART THE OTHER WORLD</Text>
+      <Text style={styles.how}>Start the story again from the Archive floor. Your habits stay.</Text>
+    </Pressable>
   );
 }
 
@@ -185,7 +121,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: 120 },
   title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 36, letterSpacing: 2 },
-  place: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 16, marginTop: -spacing.md },
   play: {
     borderWidth: 3,
     borderColor: colors.frame,
@@ -196,16 +131,7 @@ const styles = StyleSheet.create({
   },
   playLabel: { color: colors.background, fontFamily: fonts.bold, fontSize: 26, letterSpacing: 1 },
   playHint: { color: colors.background, fontFamily: fonts.regular, fontSize: 13, opacity: 0.8 },
-  window: { ...windowStyle, padding: spacing.lg, gap: spacing.sm },
-  section: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
-  goal: { gap: 4, marginBottom: spacing.xs },
-  next: { borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: spacing.sm },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.sm },
-  label: { color: colors.text, fontFamily: fonts.dialogue, fontSize: 16, flexShrink: 1 },
-  need: { color: colors.accent, fontFamily: fonts.bold, fontSize: 16 },
-  met: { color: classColors.environmental },
-  track: { height: 6, backgroundColor: colors.border },
-  fill: { height: 6, backgroundColor: colors.accent },
-  fillMet: { backgroundColor: classColors.environmental },
   how: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  restart: { ...windowStyle, padding: spacing.lg, gap: 4, alignItems: 'center' },
+  restartLabel: { color: colors.danger, fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
 });

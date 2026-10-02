@@ -144,7 +144,8 @@
           "You did it. I'm going home.",
           "Today. It's finally today."
         ]
-      }
+      },
+      "wander": 2
     },
     {
       "id": "fen",
