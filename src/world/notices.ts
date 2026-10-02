@@ -34,7 +34,7 @@ export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>): 
   const walker = walkersFor(party).find((h) => COMPANIONS[h].dimension === path)!;
   const { className } = CLASSES[path];
   const article = /^[AEIOU]/.test(className) ? 'An' : 'A';
-  return `${article} ${className} can do this: walk as ${COMPANIONS[walker].name} (pause, then Walking as).`;
+  return `${article} ${className} can do this: walk as ${COMPANIONS[walker].name} (pause, then Party).`;
 }
 
 /** How to beat what's in a room: each boss's tell, and what to do about it. */

@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import Animated, {
@@ -28,7 +28,7 @@ import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
-import { COMPANIONS } from '@/story/companions';
+import { COMPANIONS, type CharacterId } from '@/story/companions';
 import {
   FACINGS,
   MAPS,
@@ -49,9 +49,11 @@ import {
   howToProgress,
   standing,
   type Arrival,
+  type Requirement,
   type XpTotals,
 } from '@/world/progress';
 import { SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
 import { loreId } from '@/world/lore';
@@ -149,20 +151,33 @@ export default function WorldScreen() {
   // A new World character means a fresh room: they step out of the crowd, the last one steps back in.
   return (
     <View style={styles.root}>
-      <World
-        key={`${hero}-${trip}`}
-        hero={hero}
-        width={width}
-        height={height}
-        onTravel={travel}
-        onMenu={() => setPlaying(false)}
-      />
+      <RoomGuard key={`${hero}-${trip}`} onFail={() => setPlaying(false)}>
+        <World hero={hero} width={width} height={height} onTravel={travel} onMenu={() => setPlaying(false)} />
+      </RoomGuard>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.fade, darkStyle]} />
     </View>
   );
 }
 
 const FADE_MS = 350;
+
+/**
+ * If a room ever fails to draw, the player lands back on the World menu (their
+ * place is saved) instead of the whole app going down. The error is logged.
+ */
+class RoomGuard extends Component<{ children: ReactNode; onFail: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.error('[world room]', error);
+    this.props.onFail();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 /**
  * One character walks the World: the party member picked from their sheet on
@@ -309,6 +324,8 @@ function World({
     xpRef.current = xp;
   }, [xp]);
 
+  // The one next thing to do: shown on the World map only, never over the game itself.
+  const goal = useMemo(() => nextGoal(map.id as MapId, discovered, xp), [map, discovered, xp]);
   // Setting foot somewhere puts it on the World map.
   useEffect(() => {
     discover(map.id as MapId);
@@ -622,6 +639,7 @@ function World({
           discovered={discovered}
           width={width}
           height={height}
+          swap={goal.path && goal.path !== heroPath ? swapHint(goal.path, gameParty) : null}
           onClose={() => setMapOpen(false)}
         />
       )}
@@ -643,7 +661,7 @@ function useAct(
   onCards: () => void,
 ) {
   const busy = useRef(false);
-  return useCallback(() => {
+  const act = useCallback(() => {
     if (busy.current) return;
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
@@ -656,7 +674,19 @@ function useAct(
       if (job.path === 'any' || who.dimension === job.path) {
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
-        setDialogue({ speaker: thing.name, lines: job.done.map((l) => l.replace('{name}', who.name)) });
+        // A way out of here that this opens (the checkpoint, the Kaldorium) opens now, not next visit.
+        const opens = EXITS.some((e) => e.from === map.id && e.walk && needsFlag(e.needs, job.flag));
+        const here: Arrival = {
+          map: map.id as MapId,
+          x: Math.floor(sim.x.get() / TILE),
+          y: Math.floor((sim.y.get() - 1) / TILE),
+          facing: FACINGS[facing],
+        };
+        setDialogue({
+          speaker: thing.name,
+          lines: job.done.map((l) => l.replace('{name}', who.name)),
+          then: opens ? () => onTravel(here) : undefined,
+        });
       } else {
         const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party)] : [];
         useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
@@ -801,11 +831,11 @@ function useAct(
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {
         const { flags, setFlag } = useWorldStore.getState();
-        if (flags.includes('season-1')) setDialogue({ lines: SEASON_END });
+        if (flags.includes(SEASON_FLAG)) setDialogue({ lines: SEASON_END });
         else {
           // The last seal: your real record, the king you left, and the first memory, kept in your Satchel.
           const memory = habitMemory(useGameStore.getState(), toDateKey(new Date()));
-          setFlag('season-1');
+          setFlag(SEASON_FLAG);
           setFlag(keepsakeFlag('first-memory'));
           haptics.celebrate();
           playSound('levelUp');
@@ -884,6 +914,29 @@ function useAct(
     const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
   }, [map, sim, setDialogue, save, xp, onTravel, hero, onCards]);
+  // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
+  return useCallback(() => {
+    try {
+      act();
+    } catch (e) {
+      console.error('[world act]', e);
+      setDialogue({ lines: ['Nothing happens.'] });
+    }
+  }, [act, setDialogue]);
+}
+
+/** True if a way out needs this story flag (on its own, or as one of several). */
+function needsFlag(needs: Requirement, flag: string): boolean {
+  if (needs.kind === 'flag') return needs.flag === flag;
+  if (needs.kind === 'all') return needs.of.some((r) => needsFlag(r, flag));
+  return false;
+}
+
+/** Who to walk as for a job only one Path can do. */
+function swapHint(path: Dimension, party: Record<Dimension, CharacterId>): string {
+  const walker = walkersFor(party).find((h) => COMPANIONS[h].dimension === path);
+  const name = walker ? COMPANIONS[walker].name : `a ${CLASSES[path].className}`;
+  return `Walk as ${name} (${CLASSES[path].className}): pause, then Party`;
 }
 
 const styles = StyleSheet.create({

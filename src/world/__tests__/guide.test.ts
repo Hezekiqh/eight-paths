@@ -32,6 +32,7 @@ describe('the next goal', () => {
     expect(goal.mark).toMatchObject({ tag: 'Barnaby Loudmouth' });
     expect(goal.mark?.exitId).toBeUndefined();
     expect(goal.line).toMatch(/^Talk to Barnaby Loudmouth \(an? \w+ can do it\)$/);
+    expect(goal.path).toBe('social');
   });
 
   it('then marks the Kaldorium door, and the fight once inside', () => {
@@ -56,7 +57,11 @@ describe('the next goal', () => {
       const n = e.needs;
       return n.kind === 'flag' ? [n.flag] : n.kind === 'all' ? n.of.flatMap((r) => flagsOf({ needs: r })) : [];
     });
-    const done = { ...strong(every), total: overallXpFor(20) };
+    const walked = { ...strong(every), total: overallXpFor(20) };
+    // Strong enough and every way walked: the portal is last, marked even from back in town.
+    expect(nextGoal('field-of-banners', ALL, walked)).toMatchObject({ mark: { tag: 'The portal' }, line: 'Touch the portal' });
+    expect(nextGoal('kingdom-town', ALL, walked).mark?.exitId).toBeDefined();
+    const done = { ...walked, flags: [...every, 'season-1'] };
     expect(nextGoal('field-of-banners', ALL, done)).toEqual({
       mark: null,
       line: expect.stringMatching(/Season 1 is done/),
