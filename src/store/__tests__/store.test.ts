@@ -265,7 +265,9 @@ describe('loading a saved game', () => {
     });
     // Levelling the Mage Path brings random arrivals from it; pretend Ottilie was one.
     useGameStore.getState().reconcileDraws();
-    const arrivals = useGameStore.getState().drops;
+    // Brannoc woke with the first habit; everyone else came from the Mage Path.
+    const arrivals = useGameStore.getState().drops.filter((id) => id !== 'brannoc');
+    expect(useGameStore.getState().drops).toContain('brannoc');
     expect(arrivals.length).toBeGreaterThan(0);
     expect(
       arrivals.every((id) =>
@@ -342,7 +344,8 @@ describe('loading a saved game', () => {
     useGameStore.setState({ shards: { dessa: 3 } });
     useGameStore.getState().reconcileDraws();
     expect(useGameStore.getState().swapCharacter('dessa')).toBe(true);
-    expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(9);
+    // Nobody else yet: no habit has woken Brannoc, and the rest of the core eight are still to be met.
+    expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(1);
     expect(useGameStore.getState().drops).toContain('dessa');
   });
 
@@ -403,12 +406,28 @@ describe('loading a saved game', () => {
     expect(last.kind === 'completed' && last.milestone?.title).toBe('Level 10');
   });
 
+  it('starts with nobody met, Brannoc waking with the first habit, and the rest met in the World', () => {
+    start();
+    expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(0);
+    useGameStore.getState().reconcileDraws();
+    expect(useGameStore.getState().owned?.brannoc).toBeUndefined();
+
+    useGameStore.getState().toggleQuest('tutorial', today);
+    useGameStore.getState().reconcileDraws();
+    expect(useGameStore.getState().owned?.brannoc).toBe(1);
+    expect(useGameStore.getState().drops).toEqual(['brannoc']);
+    const party = selectCollection(useGameStore.getState()).party;
+    expect(Object.values(party).filter((e) => e.unlocked).map((e) => e.companion.id)).toEqual(['brannoc']);
+
+    // Found in the Other World: they join at once, with no hatch.
+    useGameStore.getState().meetCharacters(['moss']);
+    expect(useGameStore.getState().owned?.moss).toBe(1);
+    expect(useGameStore.getState().drops).toEqual(['brannoc']);
+  });
+
   it('starts with the core eight revealed and records new reveals once', () => {
     start();
     expect(useGameStore.getState().revealed).toHaveLength(8);
-    const collection = selectCollection(useGameStore.getState());
-    expect(collection.unlockedCount).toBe(8);
-    expect(Object.values(collection.party).every((e) => e.unlocked && e.copies === 1)).toBe(true);
     useGameStore.getState().markRevealed(['dessa', 'dessa', 'brannoc']);
     const revealed = useGameStore.getState().revealed!;
     expect(revealed).toHaveLength(9);

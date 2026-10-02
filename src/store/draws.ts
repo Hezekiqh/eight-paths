@@ -40,6 +40,15 @@ export type DrawState = {
   revealed: CharacterId[] | null;
 };
 
+/**
+ * The core eight are met, not drawn (author, Oct 2, 2026): Brannoc wakes with
+ * your first habit, and the other seven are found along the road in the
+ * Other World (see meetCharacters). Until then no cocoon hands one out.
+ */
+export const FIRST_HERO: CharacterId = 'brannoc';
+const CORE = Object.values(DEFAULT_PARTY);
+const drawable = (c: Companion, owned: Owned) => !CORE.includes(c.id) || (owned[c.id] ?? 0) > 0;
+
 const gap = (random: () => number) => DRAW_GAP_MIN + Math.floor(random() * (DRAW_GAP_MAX - DRAW_GAP_MIN + 1));
 
 /** Picks one character, weighted by rarity. */
@@ -90,6 +99,13 @@ export function reconcileDraws(
     owned = { ...state.owned };
   }
 
+  // The first habit (any XP at all) wakes Brannoc, with his hatch.
+  if (!owned[FIRST_HERO] && DIMENSIONS.some((d) => pathXp[d] > 0)) {
+    owned[FIRST_HERO] = 1;
+    drops.push(FIRST_HERO);
+    changed = true;
+  }
+
   for (const c of ROSTER) {
     if (!owned[c.id] && (state.shards[c.id] ?? 0) >= SHARDS_TO_UNLOCK) {
       owned[c.id] = 1;
@@ -105,8 +121,8 @@ export function reconcileDraws(
       nextDraw[d] = level + gap(random);
       changed = true;
     }
-    const pool = ROSTER.filter((c) => c.dimension === d);
-    while (level >= nextDraw[d]!) {
+    const pool = ROSTER.filter((c) => c.dimension === d && drawable(c, owned));
+    while (level >= nextDraw[d]! && pool.length > 0) {
       const pick = pickWeighted(pool, random, RARITY_WEIGHTS[tier]);
       owned[pick.id] = (owned[pick.id] ?? 0) + 1;
       drops.push(pick.id);
@@ -132,7 +148,7 @@ export function redoDrop(
   const i = state.drops.indexOf(id);
   if (i < 0 || state.redrawn.includes(id) || !state.owned) return null;
   const dimension = ROSTER.find((c) => c.id === id)!.dimension;
-  const pool = ROSTER.filter((c) => c.dimension === dimension && c.id !== id);
+  const pool = ROSTER.filter((c) => c.dimension === dimension && c.id !== id && drawable(c, state.owned!));
   if (pool.length === 0) return null;
   const pick = pickWeighted(pool, random, RARITY_WEIGHTS.premium).id;
   const owned = { ...state.owned };

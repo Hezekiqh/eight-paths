@@ -1,10 +1,12 @@
 import { CLASSES, type Dimension } from '@/game';
+import type { Owned } from '@/store/draws';
 import { COMPANIONS, type CharacterId } from '@/story/companions';
 
 import { ATTACKS, damageFor } from './combat';
 import { CHARGE_LEVEL, SPECIALS, SPECIAL_LEVEL } from './fight';
 import { SIGNATURE_LEVEL, signatureOf } from './signatures';
 import { walkersFor, type HeroId } from './hero';
+import { whereToMeet } from './meet';
 import { JOBS } from './jobs';
 import { MAPS, isMapId, type MapId } from './maps';
 import { EXITS, describeRequirement, howToProgress, standing, type XpTotals } from './progress';
@@ -19,6 +21,8 @@ export type Notice = { id: string; map: MapId; place: string; title: string; hin
 export type NoticeContext = {
   xp: XpTotals;
   party: Record<Dimension, CharacterId>;
+  /** Who you've met (null or left out: everyone, an old save). */
+  owned?: Owned | null;
   /** A character's real level (their Path's XP), for how hard they hit. */
   levelOf: (id: HeroId) => number;
   hero: HeroId;
@@ -29,11 +33,15 @@ export const jobNotice = (map: MapId, tile: string) => `job:${map}:${tile}`;
 export const npcNotice = (map: MapId, npc: string) => `npc:${map}:${npc}`;
 export const fightNotice = (map: MapId) => `fight:${map}`;
 
-/** "A Warrior can do this: walk as Brannoc (pause, then Walking as)." */
-export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>): string {
-  const walker = walkersFor(party).find((h) => COMPANIONS[h].dimension === path)!;
+/**
+ * "A Warrior can do this: walk as Brannoc (pause, then Party)." Or, for a Path
+ * you haven't met yet, where its hero is waiting. `owned` left out: everyone (old saves).
+ */
+export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>, owned?: Owned | null): string {
+  const walker = walkersFor(party, owned).find((h) => COMPANIONS[h].dimension === path);
   const { className } = CLASSES[path];
   const article = /^[AEIOU]/.test(className) ? 'An' : 'A';
+  if (!walker) return `${article} ${className} can do this. ${whereToMeet(path) ?? "You haven't met one yet."}`;
   return `${article} ${className} can do this: walk as ${COMPANIONS[walker].name} (pause, then Party).`;
 }
 
@@ -87,14 +95,14 @@ export function describeNotice(id: string, ctx: NoticeContext): Notice | null {
   if (kind === 'job') {
     const job = JOBS.find((j) => j.map === a && j.tile === b);
     if (!job || flags.includes(job.flag)) return null;
-    const hint = job.path ? whoCan(job.path, ctx.party) : (job.cant?.at(-1) ?? '');
+    const hint = job.path ? whoCan(job.path, ctx.party, ctx.owned) : (job.cant?.at(-1) ?? '');
     return { id, map: a, place, title: job.label, hint };
   }
   if (kind === 'npc') {
     const npc = MAPS[a].npcs.find((n) => n.id === b);
     if (!npc?.job || flags.includes(npc.job.flag)) return null;
     const path = npc.job.path in CLASSES ? (npc.job.path as Dimension) : null;
-    const hint = path ? whoCan(path, ctx.party) : (npc.job.cant.at(-1) ?? '');
+    const hint = path ? whoCan(path, ctx.party, ctx.owned) : (npc.job.cant.at(-1) ?? '');
     return { id, map: a, place, title: npc.name, hint };
   }
   if (kind === 'fight') {

@@ -152,6 +152,8 @@ type Actions = {
   markRevealed: (ids: CharacterId[]) => void;
   /** Unlocks characters as a gift (a friend joined): gives each a full set of shards. */
   giftCharacters: (ids: CharacterId[]) => void;
+  /** Met in the Other World: they join at once, no hatch (the core eight, found along the road). */
+  meetCharacters: (ids: CharacterId[]) => void;
   /** Applies trade moves from the server that this save hasn't seen yet. */
   applyTradeMoves: (moves: TradeMove[]) => void;
   /** Hands out any characters now due: new arrivals every 3–5 Path levels, full shard sets. */
@@ -321,9 +323,10 @@ export const useGameStore = create<GameState>()(
             smartReminders: true,
           },
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
-          // The core eight are there from the start: no reveal needed.
+          // Nobody yet: Brannoc wakes with the first habit, and the rest of the core eight
+          // are met along the road in the Other World (store/draws, meetCharacters).
           revealed: Object.values(DEFAULT_PARTY),
-          owned: Object.fromEntries(Object.values(DEFAULT_PARTY).map((id) => [id, 1])),
+          owned: {},
           nextDraw: {},
           drops: [],
           redrawn: [],
@@ -490,6 +493,13 @@ export const useGameStore = create<GameState>()(
           const shards = { ...s.shards };
           for (const id of ids) shards[id] = Math.max(shards[id] ?? 0, SHARDS_TO_UNLOCK);
           return { shards };
+        }),
+
+      meetCharacters: (ids) =>
+        set((s) => {
+          const owned = { ...(s.owned ?? {}) };
+          for (const id of ids) owned[id] = Math.max(1, owned[id] ?? 0);
+          return { owned };
         }),
 
       applyTradeMoves: (moves) => {

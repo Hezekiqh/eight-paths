@@ -1,4 +1,5 @@
 import { DIMENSIONS, type Dimension } from '@/game';
+import type { Owned } from '@/store/draws';
 import { DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 
 import { WALKER_ROWS, type WalkerId } from './walkers';
@@ -9,26 +10,37 @@ export const isWalker = (id: string): id is WalkerId => Object.prototype.hasOwnP
 /** A party member who can walk the World: a character with overworld art. */
 export type HeroId = CharacterId & WalkerId;
 
+/** Everyone walks first as Brannoc: he wakes with your first habit. */
+export const FIRST_WALKER: HeroId = 'brannoc';
+
+/** Met (in the collection), or an old save that has everyone. */
+const met = (id: CharacterId, owned: Owned | null | undefined) => !owned || (owned[id] ?? 0) > 0;
+
 /**
- * Who can walk the World, one per Path: that Path's party member, or its core
- * companion when the member has no overworld art yet. So there's always someone
- * for every Path's jobs (a Warrior to break a wall, a Mage to read the law).
+ * Who can walk the World, at most one per Path: that Path's party member, or
+ * its core companion when the member has no overworld art yet, as long as
+ * you've met them. The core eight are found along the road, each before their
+ * Path's first job (a Warrior to break a wall, a Mage to read the law).
+ * `owned` left out: everyone (old saves).
  */
-export function walkersFor(party: Record<Dimension, CharacterId>): HeroId[] {
-  return DIMENSIONS.map((d) => (isWalker(party[d]) ? party[d] : DEFAULT_PARTY[d]) as HeroId);
+export function walkersFor(party: Record<Dimension, CharacterId>, owned?: Owned | null): HeroId[] {
+  return DIMENSIONS.map((d) => (isWalker(party[d]) && met(party[d], owned) ? party[d] : DEFAULT_PARTY[d]) as HeroId).filter(
+    (id) => met(id, owned),
+  );
 }
 
 /**
  * Who walks the World: the one the player picked, as long as they can still
- * walk for their Path (see walkersFor). Otherwise it's the player's class companion.
+ * walk (see walkersFor). Otherwise the player's class companion if met, else Brannoc.
  */
 export function worldHero(
   picked: CharacterId | null,
   party: Record<Dimension, CharacterId>,
   classDimension: Dimension,
+  owned?: Owned | null,
 ): HeroId {
-  if (picked && walkersFor(party).includes(picked as HeroId)) return picked as HeroId;
-  const own = party[classDimension];
-  if (isWalker(own)) return own;
-  return DEFAULT_PARTY[classDimension] as HeroId;
+  const walkers = walkersFor(party, owned);
+  if (picked && walkers.includes(picked as HeroId)) return picked as HeroId;
+  const own = walkers.find((h) => h === party[classDimension] || h === DEFAULT_PARTY[classDimension]);
+  return own ?? FIRST_WALKER;
 }

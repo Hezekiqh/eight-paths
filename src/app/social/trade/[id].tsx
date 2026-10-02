@@ -41,7 +41,7 @@ export default function TradeScreen() {
   const party = useGameStore((s) => s.party);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   const picked = useWorldStore((s) => s.hero);
-  const walking = worldHero(picked, party, classDimension) as CharacterId;
+  const walking = worldHero(picked, party, classDimension, owned) as CharacterId;
 
   const [mine, setMine] = useState<Copies | null>(null);
   const [theirs, setTheirs] = useState<Copies | null>(null);

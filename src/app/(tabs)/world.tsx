@@ -29,6 +29,8 @@ import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
+import { meetingLines, metFlag, whereToMeet } from '@/world/meet';
+import type { Owned } from '@/store/draws';
 import { COMPANIONS, type CharacterId } from '@/story/companions';
 import {
   FACINGS,
@@ -182,13 +184,14 @@ class RoomGuard extends Component<{ children: ReactNode; onFail: () => void }, {
 
 /**
  * One character walks the World: the party member picked from their sheet on
- * the Today screen (worldHero falls back to your class's companion).
+ * the Today screen (worldHero falls back to your class's companion if met, else Brannoc).
  */
 function useParty(): HeroId[] {
   const picked = useWorldStore((s) => s.hero);
   const party = useGameStore((s) => s.party);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
-  return useMemo(() => [worldHero(picked, party, classDimension)], [picked, party, classDimension]);
+  const owned = useGameStore((s) => s.owned);
+  return useMemo(() => [worldHero(picked, party, classDimension, owned)], [picked, party, classDimension, owned]);
 }
 
 /** Where to start: the saved spot, unless someone now stands there (then the map's spawn). */
@@ -417,6 +420,7 @@ function World({
   // Their reach grows a little with every level, too.
   const heroAttack = useMemo(() => attackFor(heroPath, heroLevel), [heroPath, heroLevel]);
   const gameParty = useGameStore((s) => s.party);
+  const owned = useGameStore((s) => s.owned);
   // Their own move, if they have one (signatures.ts); else their Path's special at Lv 20.
   const signature = signatureOf(hero);
   const habitToday = useGameStore((s) => s.completions.some((c) => c.date === today));
@@ -477,7 +481,7 @@ function World({
     });
   }, [travel, map, hero, heroLevel]);
   const setHero = useWorldStore((s) => s.setHero);
-  const walkers = useMemo(() => walkersFor(gameParty), [gameParty]);
+  const walkers = useMemo(() => walkersFor(gameParty, owned), [gameParty, owned]);
   const onPlates = useCallback(() => {
     if (!map.platesFlag) return;
     setFlag(map.platesFlag);
@@ -641,7 +645,7 @@ function World({
           discovered={discovered}
           width={width}
           height={height}
-          swap={goal.path && goal.path !== heroPath ? swapHint(goal.path, gameParty) : null}
+          swap={goal.path && goal.path !== heroPath ? swapHint(goal.path, gameParty, owned) : null}
           onClose={() => setMapOpen(false)}
         />
       )}
@@ -693,11 +697,28 @@ function useAct(
           then: opens ? () => onTravel(here) : undefined,
         });
       } else {
-        const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party)] : [];
+        const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party, useGameStore.getState().owned)] : [];
         useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
         setDialogue({ speaker: thing.name, lines: [...thing.lines, ...banter, ...job.cant, ...hint] });
       }
       return;
+    }
+    // One of the core eight, found along the road: they join you, then head home to the Archive.
+    if (thing?.type === 'npc' && thing.meets && thing.character) {
+      const id = thing.character;
+      const flags = useWorldStore.getState().flags;
+      if (!flags.includes(metFlag(id))) {
+        sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
+        useGameStore.getState().meetCharacters([id]);
+        haptics.celebrate();
+        playSound('levelUp');
+        setDialogue({
+          speaker: thing.name,
+          lines: meetingLines(thing),
+          then: () => useWorldStore.getState().setFlag(metFlag(id)),
+        });
+        return;
+      }
     }
     if (thing?.type === 'npc') {
       // they turn to face you
@@ -875,7 +896,7 @@ function useAct(
       } else if (job.path && who.dimension !== job.path) {
         useWorldStore.getState().notice(jobNotice(map.id as MapId, tile));
         setDialogue({
-          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path, useGameStore.getState().party)],
+          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path, useGameStore.getState().party, useGameStore.getState().owned)],
         });
         return;
       } else {
@@ -944,9 +965,10 @@ function needsFlag(needs: Requirement, flag: string): boolean {
 }
 
 /** Who to walk as for a job only one Path can do. */
-function swapHint(path: Dimension, party: Record<Dimension, CharacterId>): string {
-  const walker = walkersFor(party).find((h) => COMPANIONS[h].dimension === path);
-  const name = walker ? COMPANIONS[walker].name : `a ${CLASSES[path].className}`;
+function swapHint(path: Dimension, party: Record<Dimension, CharacterId>, owned: Owned | null): string {
+  const walker = walkersFor(party, owned).find((h) => COMPANIONS[h].dimension === path);
+  if (!walker) return whereToMeet(path) ?? `Find a ${CLASSES[path].className}`;
+  const name = COMPANIONS[walker].name;
   return `Walk as ${name} (${CLASSES[path].className}): pause, then Party`;
 }
 

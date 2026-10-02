@@ -115,6 +115,32 @@ describe('reconcileDraws', () => {
   });
 });
 
+describe('the core eight are met, not drawn', () => {
+  const core = Object.values(DEFAULT_PARTY);
+
+  it('wakes Brannoc with the first XP, with his hatch', () => {
+    expect(reconcileDraws(fresh({ owned: {} }), zeroXp, seeded())!.owned?.brannoc).toBeUndefined();
+    const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 } }), { ...zeroXp, financial: 10 }, seeded())!;
+    expect(out.owned?.brannoc).toBe(1);
+    expect(out.drops).toEqual(['brannoc']);
+  });
+
+  it('never hands out a core hero you have not met', () => {
+    // Many arrivals on every Path, nobody met yet but Brannoc.
+    const state = fresh({ owned: { brannoc: 1 }, nextDraw: Object.fromEntries(Object.keys(zeroXp).map((d) => [d, 6])) });
+    const lots = Object.fromEntries(Object.keys(zeroXp).map((d) => [d, xpForLevel(60)])) as typeof zeroXp;
+    const out = reconcileDraws(state, lots, seeded(7))!;
+    expect(out.drops.length).toBeGreaterThan(40);
+    expect(out.drops.filter((id) => core.includes(id) && id !== 'brannoc')).toEqual([]);
+  });
+
+  it('can draw a spare copy of one you have met', () => {
+    const state = fresh({ owned: { brannoc: 1 }, nextDraw: { physical: 6 } });
+    const out = reconcileDraws(state, { ...zeroXp, physical: xpForLevel(200) }, seeded(3))!;
+    expect(out.drops.filter((id) => id === 'brannoc').length).toBeGreaterThan(0);
+  });
+});
+
 describe('redoDrop', () => {
   const state = (over: Partial<DrawState> = {}) =>
     fresh({ owned: { ...fresh().owned, pip: 1 }, drops: ['pip'], ...over });

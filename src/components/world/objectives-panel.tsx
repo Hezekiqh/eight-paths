@@ -33,16 +33,17 @@ export function ObjectivesPanel({ map, hero, onOpenBoard }: Props) {
   const done = all.filter(isObjectiveDone).length;
   const noticed = useWorldStore((s) => s.noticed);
   const party = useGameStore((s) => s.party);
+  const owned = useGameStore((s) => s.owned);
   const collection = useCollection();
   const discovered = useWorldStore((s) => s.discovered);
   const goal = nextGoal(map, discovered, xp);
   // This area's ways on are listed above; everything else found stays here until it's done.
   const found = useMemo(() => {
     const levelOf = (id: HeroId) => collection.entries.find((e) => e.companion.id === id)?.progress.level ?? 1;
-    return openNotices(noticed, { xp, party, levelOf, hero }).filter(
+    return openNotices(noticed, { xp, party, owned, levelOf, hero }).filter(
       (n) => !(n.id.startsWith('exit:') && n.map === map),
     );
-  }, [noticed, xp, party, collection, hero, map]);
+  }, [noticed, xp, party, owned, collection, hero, map]);
   // The road onward first, then any hard-to-reach places.
   const exits = EXITS.filter((e) => e.from === map && !e.back).sort(
     (a, b) => Number(b.needs.kind === 'overall') - Number(a.needs.kind === 'overall'),
