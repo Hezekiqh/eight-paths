@@ -1,0 +1,206 @@
+{
+  "id": "gut-and-gauntlet",
+  "name": "The Gut & Gauntlet",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "##################",
+    "#WWWWcWWWWWWWcWWW#",
+    "#Wq.............W#",
+    "#W.mmmmmmmmmm...W#",
+    "#W..............W#",
+    "#W..tt...tt.....W#",
+    "#W..............W#",
+    "#Wq..tt....tt..qW#",
+    "#WWWWWWW11WWWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "m": [
+      "Sixty feet of bar, scrubbed white. Big Tova slides a mug down it. It stops exactly where it should. It always does."
+    ],
+    "t": [
+      "A table, carved all over with initials and teeth marks."
+    ],
+    "q": [
+      "A barrel of KALDOR'S ALE. Over it, in Tova's hand: THE KING'S ALE. THE KING'S PRICE. YOUR ARM."
+    ],
+    "W": [
+      "Tally on the wall: DAYS WITHOUT A BRAWL: 0. RECORD: 0."
+    ],
+    "1": [
+      "The way out, to the bazaar."
+    ]
+  },
+  "objects": [
+    {
+      "id": "tova",
+      "type": "npc",
+      "x": 13,
+      "y": 3,
+      "sprite": "tova",
+      "facing": "down",
+      "name": "Big Tova",
+      "lines": [
+        "Sit. Drink. Don't brawl on my good floor. Brawl on the other floor.",
+        "Tab's due, love. Arm or coin?"
+      ],
+      "questions": [
+        {
+          "ask": "Arm?",
+          "answer": [
+            "Arm-wrestle me for it. Win, and the drink's free.",
+            "Nobody's won. Forty years. The horde owes me one hundred and eighty thousand drinks.",
+            "Sit down, love. It's on the house. It's always on the house, eventually."
+          ]
+        },
+        {
+          "ask": "Who drinks here?",
+          "answer": [
+            "Raiders off duty. Raiders on duty. Ulfa, who reads poems. Hekla, who wins.",
+            "Snorri, who's been asleep since the last war. I dust him on Sundays."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The Maximus has a new ladder. Five champions. Hroth's been top for forty years.",
+            "He's sick of it, between you and me. Drinks here every night. Wants somebody to beat him so he can retire."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ulfa",
+      "type": "npc",
+      "x": 3,
+      "y": 6,
+      "sprite": "ulfa",
+      "facing": "right",
+      "name": "Ulfa the Skald",
+      "lines": [
+        "A poem. 'Axe.' 'Axe.' 'Axe.' 'Axe.' 'Blood.'",
+        "…'Axe.'",
+        "Thank you. Thank you. It's called Tuesday."
+      ]
+    },
+    {
+      "id": "hekla",
+      "type": "npc",
+      "x": 6,
+      "y": 4,
+      "sprite": "hekla",
+      "facing": "down",
+      "name": "Great-Gran Hekla",
+      "lines": [
+        "Arm-wrestle? Sit. I'm ninety-one. I haven't lost since I was ninety.",
+        "The year I was ninety I lost once. To Tova. We don't talk about it."
+      ]
+    },
+    {
+      "id": "snorri",
+      "type": "npc",
+      "x": 14,
+      "y": 7,
+      "sprite": "snorri",
+      "facing": "down",
+      "name": "Snorri",
+      "lines": [
+        "Zzz… charge… zzz…",
+        "(He's been asleep since the last war. Tova says it's the best guard she's ever had.)"
+      ]
+    },
+    {
+      "id": "durn-bar",
+      "type": "npc",
+      "x": 9,
+      "y": 4,
+      "sprite": "durn",
+      "facing": "right",
+      "name": "Durn",
+      "lines": [
+        "Eleven days. Over bread. Don't tell anybody.",
+        "HASKEL: Everybody knows, Durn. Bett told everybody."
+      ],
+      "comesAfter": "brawl-over"
+    },
+    {
+      "id": "haskel-bar",
+      "type": "npc",
+      "x": 10,
+      "y": 4,
+      "sprite": "haskel",
+      "facing": "left",
+      "name": "Haskel",
+      "lines": [
+        "Best friends now. We fought for eleven days. That's basically a wedding here."
+      ],
+      "comesAfter": "brawl-over"
+    },
+    {
+      "id": "sorrel-bar",
+      "type": "npc",
+      "x": 7,
+      "y": 4,
+      "sprite": "hekla",
+      "facing": "right",
+      "name": "Matron Sorrel",
+      "lines": [
+        "You beat me fair. Rattle and all. I'm proud of you.",
+        "Now sit up straight and eat something. You look peaky."
+      ],
+      "comesAfter": "maximus-2"
+    },
+    {
+      "id": "fennick-bar",
+      "type": "npc",
+      "x": 15,
+      "y": 5,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Fennick the Unbitten",
+      "lines": [
+        "You caught me. Nobody catches me. I've been running for nine years.",
+        "My legs are very tired. Tova lets me sit here. I'm sitting. It's lovely."
+      ],
+      "comesAfter": "maximus-3"
+    },
+    {
+      "id": "hroth-bar",
+      "type": "npc",
+      "x": 12,
+      "y": 6,
+      "sprite": "hroth",
+      "facing": "up",
+      "name": "Hroth",
+      "lines": [
+        "Forty years, champion. Then you.",
+        "I'm retiring. A little house. A garden. I'm going to grow one turnip and look at it.",
+        "Thank you. Truly. Buy you a drink? Tova says I can't. She says it's on the house."
+      ],
+      "comesAfter": "maximus-5"
+    },
+    {
+      "id": "tova-heart",
+      "type": "chest",
+      "x": 15,
+      "y": 2,
+      "item": "heart-piece",
+      "lines": [
+        "In Tova's tip jar, under the coins: a Heart Piece.",
+        "'Somebody left it,' Tova says. 'Take it. You look like you'll need it.'"
+      ]
+    }
+  ]
+}

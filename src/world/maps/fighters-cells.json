@@ -1,0 +1,79 @@
+{
+  "id": "fighters-cells",
+  "name": "The Fighters' Cells",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "##############",
+    "#WWWcWWWWcWWW#",
+    "#Wb.Wb..Wb..W#",
+    "#W..W...W...W#",
+    "#W..........W#",
+    "#Wr........dW#",
+    "#WWWWW11WWWWW#",
+    "##############"
+  ],
+  "spawn": {
+    "x": 6,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "b": [
+      "A bunk. Scratched in the wall above it: a tally of days, and a drawing of a cloud."
+    ],
+    "r": [
+      "A rack of practice axes, blunted. One has a little knitted cover on the blade."
+    ],
+    "d": [
+      "A practice dummy. Somebody has given it a kind face."
+    ],
+    "1": [
+      "The way out, to the Ring Ward."
+    ]
+  },
+  "objects": [
+    {
+      "id": "joss",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "joss",
+      "facing": "down",
+      "name": "Joss",
+      "lines": [
+        "I'm here for the tithe. From the camps. My mum knitted me armour.",
+        "It's wool. It's very thick wool. I'm a poet, really. I write about clouds."
+      ],
+      "questions": [
+        {
+          "ask": "Are you scared?",
+          "answer": [
+            "Yes. Very.",
+            "But I wrote a poem about it, and the poem's less scared than me, so I read it before I go out.",
+            "It's called 'Cloud, Heading Into a Storm, Being Brave About It'. It's quite long."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edda",
+      "type": "npc",
+      "x": 6,
+      "y": 3,
+      "sprite": "kids",
+      "facing": "down",
+      "name": "Edda",
+      "lines": [
+        "Tithe fighter. Never held an axe. I held a goose once. It went badly.",
+        "They say you do the ladder. Beat Hroth and the tithe might change. That's what people whisper."
+      ]
+    }
+  ]
+}

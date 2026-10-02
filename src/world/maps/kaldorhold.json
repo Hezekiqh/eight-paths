@@ -1,0 +1,194 @@
+{
+  "id": "kaldorhold",
+  "name": "Kaldorhold",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "s"
+  ],
+  "art": {
+    "5": "D",
+    "6": "D"
+  },
+  "tiles": [
+    "MMMMMMMMMMMMMMMMMMM^^MMMMMMMMMMMMMMMMMMM",
+    "M..................ss..................M",
+    "M..IIIIIIII...n....ss....n..IIIIIIIII..M",
+    "M..IIIIIIIIq.......ss.......IIIIIIIII..M",
+    "M..III5IIIIq.......ss......qIIII6IIII..M",
+    "M.....s............ss...........s......M",
+    "M.....s............ss...........s......M",
+    "M.....s..mm..mm....ss...mm......s......M",
+    "M.q...s............ss...........s......M",
+    "M.....s............ss...........s......M",
+    "<ssssssssssssssssssssssssssssssssssssss>",
+    "M.............sssscsssssss.............M",
+    "M.............ssssssssssss.............M",
+    "M...mm..mm..mmsKKssssssKKs.mm..mm......M",
+    "M.............sKKssssssKKs.............M",
+    "M.IIIIII......ssssssssssss......IIIIII.M",
+    "M.IIIIII......ssssssssssss......IIIIII.M",
+    "M.IIIIII............s...........IIIIII.M",
+    "M..n................s...............n..M",
+    "MMMMMMMMMMMMMMMMMMMM_MMMMMMMMMMMMMMMMMMM"
+  ],
+  "spawn": {
+    "x": 1,
+    "y": 10,
+    "facing": "right"
+  },
+  "examine": {
+    "M": [
+      "Kaldorhold's walls: new stone, no moss yet. Every tenth block is carved with a K."
+    ],
+    "I": [
+      "Tall stone houses, all built in the same year, all facing the statues."
+    ],
+    "5": [
+      "THE GUT & GAUNTLET. Under the sign, chalked: DAYS WITHOUT A BRAWL: 0. RECORD: 0."
+    ],
+    "6": [
+      "THE HALL OF KALDOR. A museum. Of Kaldor. By Kaldor. Free entry. Compulsory entry on Tuesdays."
+    ],
+    "m": [
+      "A market stall. The shopkeeper won't take your coin until you've done twenty push-ups. That's the law here."
+    ],
+    "K": [
+      "Two statues of Kaldor. The second one is looking up at the first one, admiringly."
+    ],
+    "q": [
+      "A barrel. KALDOR'S, it says. Everything here says KALDOR'S."
+    ],
+    "n": [
+      "The fist crushing the crown, on a banner so new it still has the fold lines."
+    ],
+    "c": [
+      "A lantern on a post, lit. Somebody keeps it burning."
+    ],
+    "<": [
+      "The way back west, to the old town."
+    ],
+    "^": [
+      "North, toward the roar of the Kaldorium Maximus."
+    ],
+    ">": [
+      "The east road, toward drums and shouting in time."
+    ],
+    "_": [
+      "The south street, toward the smell of ice and old furs."
+    ]
+  },
+  "objects": [
+    {
+      "id": "fliss",
+      "type": "npc",
+      "x": 9,
+      "y": 8,
+      "sprite": "fliss",
+      "facing": "down",
+      "name": "Fliss",
+      "lines": [
+        "Kaldor's Sweat! Genuine sweat of the king! Tiny bottles! Makes you strong!",
+        "…It's water. It's water from the well. But it's Kaldor's Well, so technically."
+      ]
+    },
+    {
+      "id": "brakka",
+      "type": "npc",
+      "x": 13,
+      "y": 8,
+      "sprite": "brakka",
+      "facing": "down",
+      "name": "Brakka",
+      "lines": [
+        "Furs. Best furs in Kaldorhold. Twenty push-ups and we'll talk.",
+        "No push-ups, no furs. I don't make the rules. Well. I made this one. I like it."
+      ]
+    },
+    {
+      "id": "snik",
+      "type": "npc",
+      "x": 24,
+      "y": 8,
+      "sprite": "snik",
+      "facing": "down",
+      "name": "Snik",
+      "lines": [
+        "Sharpening! Axes, swords, spoons, bread, a cat's patience. I sharpen anything.",
+        "Brought me a pillow once. Took a week. Very pointy pillow now."
+      ]
+    },
+    {
+      "id": "chisk",
+      "type": "npc",
+      "x": 19,
+      "y": 14,
+      "sprite": "chisk",
+      "facing": "down",
+      "name": "Ansel Chisk",
+      "lines": [
+        "The king wants another statue. I've done Kaldor standing. Kaldor striding. Kaldor looking at Kaldor.",
+        "Kaldor… sitting? Kaldor… thinking? Does he think? I can't ask. You can't ask."
+      ]
+    },
+    {
+      "id": "mott",
+      "type": "npc",
+      "x": 30,
+      "y": 11,
+      "sprite": "mott",
+      "facing": "left",
+      "name": "Mott",
+      "lines": [
+        "Tax collector. Not coin. Fights. Everybody here owes the king fights.",
+        "You, for example. Visitor. You owe nothing yet. I've opened a page for you, though. Just in case."
+      ]
+    },
+    {
+      "id": "tib",
+      "type": "npc",
+      "x": 9,
+      "y": 16,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Tib",
+      "lines": [
+        "Fight club. Behind the houses. Rule one: tell everyone about fight club.",
+        "Rule two: no crying. Rule three: Brunna's not allowed. She bites."
+      ]
+    },
+    {
+      "id": "bazaar-sign",
+      "type": "sign",
+      "x": 17,
+      "y": 11,
+      "lines": [
+        "THE KALDOR BAZAAR. PUSH-UPS BEFORE PURCHASES.",
+        "No haggling. Arm-wrestling only."
+      ]
+    },
+    {
+      "id": "statue-plaque",
+      "type": "sign",
+      "x": 19,
+      "y": 12,
+      "lines": [
+        "THE KING ADMIRES THE KING.",
+        "Underneath, scratched small: (so nobody else has to)"
+      ]
+    },
+    {
+      "id": "bazaar-heart",
+      "type": "chest",
+      "x": 37,
+      "y": 2,
+      "item": "heart-piece",
+      "lines": [
+        "Behind the Hall of Kaldor, in a crate marked RETURNS: a Heart Piece.",
+        "Somebody tried to sell it at the bazaar. Nobody could do enough push-ups."
+      ]
+    }
+  ]
+}

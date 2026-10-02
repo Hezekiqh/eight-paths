@@ -36,6 +36,7 @@ import {
   objectAt,
   tileAt,
   tilesOf,
+  withLadder,
   withOpenTiles,
   withoutCharacter,
   withoutGone,
@@ -186,7 +187,8 @@ function startFor(
   facing: WorldPosition['facing'];
 } {
   if (saved) {
-    const map = withoutCharacter(MAPS[saved.map], hero);
+    // A ladder (the Maximus) puts up the next fight not yet won.
+    const map = withLadder(withoutCharacter(MAPS[saved.map], hero), useWorldStore.getState().flags);
     const tile = Math.floor((saved.y - 1) / TILE) * map.width + Math.floor(saved.x / TILE);
     if (!map.solid[tile]) return { ...saved, map };
   }

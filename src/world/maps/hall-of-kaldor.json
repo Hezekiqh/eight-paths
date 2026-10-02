@@ -1,0 +1,95 @@
+{
+  "id": "hall-of-kaldor",
+  "name": "The Hall of Kaldor",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "##################",
+    "#WffffWWffffWWffW#",
+    "#W..............W#",
+    "#W.Z..Z....Z..Z.W#",
+    "#W..............W#",
+    "#W.Z..Z....Z..Z.W#",
+    "#W..............W#",
+    "#WWWWWWW11WWWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 6,
+    "facing": "up"
+  },
+  "examine": {
+    "f": [
+      "A portrait of Kaldor, painted by somebody who very much wanted to keep their hands. Each is more flattering than the last.",
+      "The fortieth isn't Kaldor at all. It's just the sun."
+    ],
+    "Z": [
+      "A small statue of Kaldor, holding a smaller statue of Kaldor."
+    ],
+    "W": [
+      "Gold leaf on the walls, peeling. Under it, the old Hale stone, plain and grey."
+    ],
+    "1": [
+      "The way out, to the bazaar."
+    ]
+  },
+  "objects": [
+    {
+      "id": "fawnley",
+      "type": "npc",
+      "x": 8,
+      "y": 4,
+      "sprite": "fawnley",
+      "facing": "down",
+      "name": "Sim Fawnley",
+      "lines": [
+        "Welcome to the Hall of Kaldor! Forty portraits! One king! Please don't say anything about the nose.",
+        "I'm the curator. I curate. Mostly I check nobody's said anything about the nose."
+      ],
+      "questions": [
+        {
+          "ask": "What about the nose?",
+          "answer": [
+            "NOTHING. There is nothing about the nose. The nose is perfect.",
+            "…The first painter painted it as it is. Nobody's seen him since. Portrait two onward: perfect nose."
+          ]
+        },
+        {
+          "ask": "Why is the last one the sun?",
+          "answer": [
+            "The fortieth painter ran out of ways to flatter him. So he painted the sun and called it 'Kaldor, Roughly'.",
+            "The king loved it. It's his favourite. Don't tell him it's the sun."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hall-plaque",
+      "type": "sign",
+      "x": 8,
+      "y": 2,
+      "lines": [
+        "KALDOR: FORTY VIEWS OF GREATNESS.",
+        "Underneath, small: Exit through the gift shop. (There is no gift shop. Kaldor took it.)"
+      ]
+    },
+    {
+      "id": "hall-heart",
+      "type": "chest",
+      "x": 15,
+      "y": 2,
+      "item": "heart-piece",
+      "lines": [
+        "Behind the fortieth portrait, the one that's just the sun: a Heart Piece.",
+        "The painter hid it there. He wanted somebody to find something real in here."
+      ]
+    }
+  ]
+}

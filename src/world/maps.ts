@@ -23,6 +23,12 @@ import warHallData from './maps/war-hall.json';
 import fieldOfBannersData from './maps/field-of-banners.json';
 import titheRoadData from './maps/tithe-road.json';
 import brokenWatchData from './maps/broken-watch.json';
+import kaldorholdData from './maps/kaldorhold.json';
+import gutAndGauntletData from './maps/gut-and-gauntlet.json';
+import hallOfKaldorData from './maps/hall-of-kaldor.json';
+import ringWardData from './maps/ring-ward.json';
+import kaldoriumMaximusData from './maps/kaldorium-maximus.json';
+import fightersCellsData from './maps/fighters-cells.json';
 import type { CharacterId } from '@/story/companions';
 
 import { ENEMY_KINDS, type EnemyKind } from './combat';
@@ -54,6 +60,8 @@ export type NpcObject = {
   job?: NpcJob;
   /** Gone from the map once this story flag is set. */
   goneAfter?: string;
+  /** Only here once this story flag is set: beaten champions turn up at the bar. */
+  comesAfter?: string;
 };
 
 /**
@@ -106,6 +114,8 @@ type MapData = {
   enemies?: { kind: string; x: number; y: number }[];
   /** A boss fight here, until `flag` is set: the boss at (x, y) and the enemies that fight for them. */
   boss?: Boss;
+  /** Fights one after another (the Maximus): each visit, the first one not yet won. */
+  ladder?: Boss[];
   tiles: string[];
   spawn: { x: number; y: number; facing: string };
   examine: Record<string, string[]>;
@@ -131,6 +141,8 @@ export type WorldMap = {
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
   enemies: { kind: EnemyKind; x: number; y: number }[];
   boss?: Boss;
+  /** Fights one after another, a visit each; see withLadder. */
+  ladder?: Boss[];
   /** The baked picture from scripts/world-art.mjs, one pixel per art pixel. */
   image: number;
   /** Where a new game starts, in tiles. */
@@ -182,6 +194,7 @@ function build(data: MapData, image: number): WorldMap {
     plates: letterTiles(data.tiles, 'P'),
     platesFlag: data.platesFlag,
     boss: data.boss,
+    ladder: data.ladder,
     enemies: (data.enemies ?? []).filter((e): e is { kind: EnemyKind; x: number; y: number } =>
       (ENEMY_KINDS as readonly string[]).includes(e.kind),
     ),
@@ -215,12 +228,25 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
-/** The map without anyone who has left for good (see NpcObject.goneAfter); the same map if nobody has. */
+const away = (n: NpcObject, flags: string[]) =>
+  (!!n.goneAfter && flags.includes(n.goneAfter)) || (!!n.comesAfter && !flags.includes(n.comesAfter));
+
+/**
+ * The map without anyone who isn't here: who has left for good (NpcObject.goneAfter)
+ * or hasn't come yet (comesAfter). The same map if everybody's here.
+ */
 export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
-  if (!map.npcs.some((n) => n.goneAfter && flags.includes(n.goneAfter))) return map;
-  const objects = map.objects.filter((o) => o.type !== 'npc' || !o.goneAfter || !flags.includes(o.goneAfter));
+  if (!map.npcs.some((n) => away(n, flags))) return map;
+  const objects = map.objects.filter((o) => o.type !== 'npc' || !away(o, flags));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
+/** A ladder's fight for this visit: the first not yet won (the last, already won, once you've climbed it). */
+export function withLadder(map: WorldMap, flags: string[]): WorldMap {
+  if (!map.ladder || map.ladder.length === 0) return map;
+  const next = map.ladder.find((b) => !flags.includes(b.flag)) ?? map.ladder[map.ladder.length - 1];
+  return { ...map, boss: next };
 }
 
 export const MAPS = {
@@ -249,6 +275,12 @@ export const MAPS = {
   'field-of-banners': build(fieldOfBannersData as MapData, require('@/assets/world/field-of-banners.png')),
   'tithe-road': build(titheRoadData as MapData, require('@/assets/world/tithe-road.png')),
   'broken-watch': build(brokenWatchData as MapData, require('@/assets/world/broken-watch.png')),
+  kaldorhold: build(kaldorholdData as MapData, require('@/assets/world/kaldorhold.png')),
+  'gut-and-gauntlet': build(gutAndGauntletData as MapData, require('@/assets/world/gut-and-gauntlet.png')),
+  'hall-of-kaldor': build(hallOfKaldorData as MapData, require('@/assets/world/hall-of-kaldor.png')),
+  'ring-ward': build(ringWardData as MapData, require('@/assets/world/ring-ward.png')),
+  'kaldorium-maximus': build(kaldoriumMaximusData as MapData, require('@/assets/world/kaldorium-maximus.png')),
+  'fighters-cells': build(fightersCellsData as MapData, require('@/assets/world/fighters-cells.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

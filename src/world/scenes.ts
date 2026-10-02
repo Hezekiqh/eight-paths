@@ -114,9 +114,43 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
           },
         ],
       };
+    case 'kaldorium-maximus':
+      return ladderScene(flag);
     default:
       return null;
   }
+}
+
+/** Out of the Maximus after a bout, to the Ring Ward: the next rung waits for your next visit. */
+const RING_GATE = { map: 'ring-ward' as MapId, x: 15, y: 5, facing: 'down' as const };
+
+/** Winning a rung of the Maximus's ladder. Drafts, for the author. */
+function ladderScene(flag: string): Scene | null {
+  const lines: Record<string, string[]> = {
+    'maximus-1': [
+      'Ugg goes down. Ogg, on the sideline, shouts "GET UP! No, stay down! No, get up!"',
+      'LADY HOLLER: RUNG ONE, CLIMBED! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
+    ],
+    'maximus-2': [
+      'Matron Sorrel lowers her rattle, and pats you on the head.',
+      "MATRON SORREL: Good. Very good. Now go and have a sit down at Tova's. You've earned a biscuit.",
+    ],
+    'maximus-3': [
+      'Fennick stops running. He looks down at himself. For the first time in nine years, he has been hit.',
+      "FENNICK: Oh. Oh, that's what it's like. I'm going to go and sit down at Tova's for a long time.",
+    ],
+    'maximus-4': [
+      'The Masked Brute pulls off the mask. Nobody gasps, because everybody knew.',
+      "CAPTAIN VARGA: …Don't tell the king I do this on my day off.",
+    ],
+    'maximus-5': [
+      'Grand Champion Hroth sits down in the sand, and laughs, and laughs.',
+      'HROTH: Forty years. Forty YEARS. Thank you. Thank you. I can retire.',
+      "Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.",
+      "HROTH: Find me at Tova's. I'll be the one smiling.",
+    ],
+  };
+  return lines[flag] ? { lines: lines[flag], outcome: { flags: [flag], next: RING_GATE } } : null;
 }
 
 /** Said at the sealed portal once Season 1 is finished. */

@@ -1,0 +1,137 @@
+{
+  "id": "ring-ward",
+  "name": "The Ring Ward",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "s"
+  ],
+  "art": {
+    "4": "D"
+  },
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "T.....UUUUUUUUUUUUUUUUUUUU.....T",
+    "T.n...UUUUUUUUUUUUUUUUUUUU...n.T",
+    "T.....UUUUUUUUUUUUUUUUUUUU.III.T",
+    "T.....UUUUUUUUU88UUUUUUUUU.I4I.T",
+    "T..............ss...........s..T",
+    "T..q...........ss..........ss..T",
+    "T..............ssssssssssssss..T",
+    "T.......g......ss..............T",
+    "T..............ss.....q........T",
+    "T....g.........ss.........g....T",
+    "T..............ss..............T",
+    "TT.............ss.............TT",
+    "TTTTTTTTTTTTTTT__TTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 15,
+    "y": 12,
+    "facing": "up"
+  },
+  "examine": {
+    "T": [
+      "Trees, every one with a wooden sword stuck in it by a child."
+    ],
+    "U": [
+      "The Kaldorium Maximus. The old pit wasn't loud enough, so Kaldor built this. You can hear it breathing."
+    ],
+    "8": [
+      "The great gate of the Maximus. Every time you go in, the next champion on the ladder is waiting."
+    ],
+    "I": [
+      "The fighters' entrance: a squat stone hut against the arena wall."
+    ],
+    "4": [
+      "THE FIGHTERS' DOOR. TITHE FIGHTERS REPORT HERE. BRING YOUR OWN COURAGE."
+    ],
+    "q": [
+      "A barrel of sand for the arena floor. Somebody has written HELP in it with a finger."
+    ],
+    "n": [
+      "The fist crushing the crown."
+    ],
+    "_": [
+      "South, back down to the bazaar."
+    ]
+  },
+  "objects": [
+    {
+      "id": "evenbett",
+      "type": "npc",
+      "x": 13,
+      "y": 6,
+      "sprite": "evenbett",
+      "facing": "right",
+      "name": "Even Bett",
+      "lines": [
+        "Bets on the ladder! Five champions, five bouts, odds chalked fresh every morning.",
+        "My cousin Odd Bett does the street brawls. I do the proper fights. We don't speak."
+      ]
+    },
+    {
+      "id": "tilda",
+      "type": "npc",
+      "x": 5,
+      "y": 9,
+      "sprite": "kids",
+      "facing": "right",
+      "name": "Tilda",
+      "lines": [
+        "I'm Hroth! I'm the champion! You have to fall over!",
+        "BRAM: I don't want to fall over. I'm Fennick. I run away."
+      ]
+    },
+    {
+      "id": "bram",
+      "type": "npc",
+      "x": 6,
+      "y": 9,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Bram",
+      "lines": [
+        "Fennick never gets hit. 'Cause he runs. I'm going to be Fennick when I grow up.",
+        "TILDA: You're scared!",
+        "BRAM: I'm STRATEGIC."
+      ]
+    },
+    {
+      "id": "hob",
+      "type": "npc",
+      "x": 22,
+      "y": 8,
+      "sprite": "pim",
+      "facing": "down",
+      "name": "Hob",
+      "lines": [
+        "Souvenirs! Foam fists! Little cardboard Kaldors! A real tooth from a real fight!",
+        "The tooth is mine. I needed the money."
+      ]
+    },
+    {
+      "id": "ladder-board",
+      "type": "sign",
+      "x": 18,
+      "y": 6,
+      "lines": [
+        "THE LADDER OF THE MAXIMUS:",
+        "1. THE TWINS UGG.  2. MATRON SORREL.  3. FENNICK THE UNBITTEN.",
+        "4. THE MASKED BRUTE (DEFINITELY NOT CAPTAIN VARGA).  5. GRAND CHAMPION HROTH."
+      ]
+    },
+    {
+      "id": "ring-heart",
+      "type": "chest",
+      "x": 4,
+      "y": 4,
+      "item": "heart-piece",
+      "lines": [
+        "Under the arena's outer stairs, where the children hide their wooden swords: a Heart Piece."
+      ]
+    }
+  ]
+}

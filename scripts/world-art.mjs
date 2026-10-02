@@ -622,7 +622,7 @@ const OUTDOOR_ART = {
   s() {}, // cobbles are laid with the roads
   I(g, x, y, m) {
     // A stone house: slate roof over the top rows, stone wall with a shuttered window below.
-    const wall = !'IDd5673'.includes(m.at(0, 1) ?? '');
+    const wall = !'IDd567384'.includes(m.at(0, 1) ?? '');
     if (!wall) {
       box(g, x, y, TILE, TILE, O.slate);
       for (let j = 3; j < TILE; j += 4) box(g, x, y + j, TILE, 1, O.slateDark);
@@ -713,6 +713,46 @@ const OUTDOOR_ART = {
     box(g, x + (left ? 3 : 0), y + 5, 13, 11, '#1A1030');
     for (let i = 0; i < 6; i++) put(g, x + 4 + Math.floor(hash(x, y, i) * 9), y + 7 + Math.floor(hash(y, x, i) * 8), '#6A4AB0');
     box(g, x, y + 2, TILE, 2, O.stoneLight);
+  },
+  m(g, x, y) {
+    // A market stall: a striped awning over a plank counter piled with wares.
+    for (let i = 0; i < TILE; i += 4) box(g, x + i, y + 1, 2, 6, '#B3261E');
+    for (let i = 2; i < TILE; i += 4) box(g, x + i, y + 1, 2, 6, O.plaster);
+    box(g, x, y + 7, TILE, 1, O.beam);
+    box(g, x + 1, y + 8, 1, 8, O.beam);
+    box(g, x + 14, y + 8, 1, 8, O.beam);
+    box(g, x + 1, y + 11, 14, 3, O.trunk);
+    for (let i = 0; i < 4; i++) box(g, x + 2 + i * 3, y + 9, 2, 2, ['#E8D26A', '#C86A8A', '#E8E0D0', '#8A6A44'][(i + Math.floor(hash(x, y, 1) * 4)) % 4]);
+  },
+  q(g, x, y) {
+    // A barrel, iron-hooped.
+    ellipse(g, x + 8, y + 9, 5, 6, O.trunk);
+    box(g, x + 3, y + 6, 11, 1, P.iron);
+    box(g, x + 3, y + 12, 11, 1, P.iron);
+    ellipse(g, x + 8, y + 4, 4, 2, '#6A4A2A');
+  },
+  U(g, x, y, m) {
+    // The Kaldorium Maximus: tall sandstone, arched windows up top, dark arches at the bottom.
+    box(g, x, y, TILE, TILE, '#B89A6A');
+    for (let j = 0; j < TILE; j += 5) box(g, x, y + j, TILE, 1, '#9A7E52');
+    const bottom = m.at(0, 1) !== 'U' && m.at(0, 1) !== '8';
+    if (m.at(0, -1) !== 'U') box(g, x, y, TILE, 3, '#D8BC8A');
+    if (bottom) {
+      box(g, x + 3, y + 5, 10, 11, '#2A1E14');
+      ellipse(g, x + 8, y + 5, 5, 3, '#2A1E14');
+      box(g, x, y + 14, TILE, 2, '#7A6040');
+    } else if (m.at(0, -1) === 'U') {
+      box(g, x + 5, y + 5, 6, 7, '#5A4630');
+      ellipse(g, x + 8, y + 5, 3, 2, '#5A4630');
+    }
+  },
+  8(g, x, y, m) {
+    // The Maximus's great gate: a wide dark arch with a red banner above.
+    OUTDOOR_ART.U(g, x, y, { at: (dx, dy) => (dy < 0 ? m.at(dx, dy) : 'U') });
+    box(g, x, y + 4, TILE, 12, '#140C08');
+    if (m.at(-1, 0) !== '8') box(g, x, y + 4, 2, 12, '#D8BC8A');
+    if (m.at(1, 0) !== '8') box(g, x + 14, y + 4, 2, 12, '#D8BC8A');
+    box(g, x + 3, y, 10, 4, '#6A1216');
   },
   Q(g, x, y) {
     // A faceless statue, toppled face-down in the moss.
@@ -834,7 +874,7 @@ const DUNGEON_ART = {
     // Stone wall: a face where the floor meets it, a top view elsewhere.
     // A hole broken sideways through the wall below is still the same wall, seen from above.
     const sideHole = m.at(0, 1) === 'o' && 'WBCcRGE#'.includes(m.at(0, 2));
-    const face = !sideHole && m.at(0, 1) !== 'W' && m.at(0, 1) !== '#' && m.at(0, 1) !== 'B' && m.at(0, 1) !== 'C' && m.at(0, 1) !== 'c';
+    const face = !sideHole && !'W#BCcf'.includes(m.at(0, 1));
     if (!face) {
       box(g, x, y, TILE, TILE, DG.wallDark);
       box(g, x, y, TILE, 1, DG.mortar);
@@ -1005,6 +1045,45 @@ const DUNGEON_ART = {
     box(g, x + 18, y + 6, 12, 10, DG.banner);
     box(g, x + 18, y + 6, 12, 1, DG.gold);
   },
+  m(g, x, y, m) {
+    // Big Tova's bar: a long counter, sixty feet of it, and mugs that never spill.
+    box(g, x, y + 3, TILE, 10, DG.timber);
+    box(g, x, y + 3, TILE, 2, '#7A5A3A');
+    box(g, x, y + 12, TILE, 1, DG.timberDark);
+    if (hash(x, y, 2) < 0.6) {
+      box(g, x + 5, y, 4, 5, '#C8B070');
+      box(g, x + 5, y, 4, 1, '#F4F0EA');
+      box(g, x + 9, y + 1, 1, 3, '#C8B070');
+    }
+  },
+  q(g, x, y) {
+    ellipse(g, x + 8, y + 9, 5, 6, DG.timber);
+    box(g, x + 3, y + 6, 11, 1, DG.iron);
+    box(g, x + 3, y + 12, 11, 1, DG.iron);
+    ellipse(g, x + 8, y + 4, 4, 2, DG.timberDark);
+  },
+  f(g, x, y, m) {
+    // A portrait of Kaldor, each more flattering than the last.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 2, y + 1, 12, 12, DG.gold);
+    box(g, x + 3, y + 2, 10, 10, '#4A3A5A');
+    // The fortieth, last on the wall, is just the sun ('Kaldor, Roughly').
+    const sun = m.at(1, 0) !== 'f' && m.at(2, 0) === '#';
+    if (sun) {
+      ellipse(g, x + 8, y + 7, 3, 3, '#FFD27A');
+    } else {
+      ellipse(g, x + 8, y + 6, 2, 2, '#D8A880');
+      box(g, x + 6, y + 8, 5, 4, '#6A1216');
+      box(g, x + 6, y + 3, 5, 1, '#FFC940');
+    }
+  },
+  Z(g, x, y) {
+    // A small statue of Kaldor on a plinth (one of many).
+    box(g, x + 3, y + 12, 10, 4, DG.wallDark);
+    box(g, x + 5, y + 5, 6, 7, DG.wallLight);
+    ellipse(g, x + 8, y + 3, 2, 2, DG.wallLight);
+    box(g, x + 6, y + 1, 5, 1, DG.gold);
+  },
   k(g, x, y) {
     // A candle on an iron stand: rest here.
     box(g, x + 7, y + 7, 2, 9, P.iron);
@@ -1042,7 +1121,7 @@ function drawDungeon(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const c = at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;
@@ -1143,6 +1222,24 @@ const WALKERS = {
   bellow: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#D8A880', hair: ['short', '#1A1210'], cloak: '#4A1E20', sword: true },
   orrin: { top: '#5A6A8A', shade: '#42506A', legs: '#3A4050', boots: '#2A2A30', belt: '#C8B070', hair: ['short', '#9A9490'], beard: '#9A9490', cloak: '#2A3450', back: 'sword' },
   grub: { top: '#5A3A2A', shade: '#42281E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], sword: true },
+  // Kaldorhold (KINGDOM-EXPANSION.md): the Market Ward, the Ring Ward, Big Tova's bar and the Hall of Kaldor.
+  tova: { top: '#8A3A2A', shade: '#6A2A1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#C8B070', skin: '#E0B898', hair: ['bun', '#E8D26A'], apron: '#E8E0D0', beads: '#C8B070' },
+  ulfa: { robe: true, top: '#5A6A8A', shade: '#42506A', boots: '#2A2030', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#E8E4E0'], beads: '#E8E0D0' },
+  hekla: { robe: true, top: '#6A4A5A', shade: '#4E3642', boots: '#2A1A12', skin: '#E0B898', hair: ['bun', '#F4F0EA'], collar: '#E8E0D0' },
+  snorri: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#8A6A4A'], beard: '#8A6A4A', sleepy: true, sword: true },
+  fawnley: { top: '#3A4A6A', shade: '#2A3650', legs: '#2A2A3A', boots: '#1A1A24', belt: '#C8B070', hair: ['short', '#C8A060'], glasses: true, collar: '#E8E0D0' },
+  fliss: { top: '#3E8A7A', shade: '#2E6A5E', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['bun', '#C4442A'], apron: '#C8B890' },
+  brakka: { top: '#6A5A4A', shade: '#4E4236', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], beard: '#1A1210', cloak: '#8A7A64' },
+  snik: { top: '#5A5A6A', shade: '#42424E', legs: '#3A3A42', boots: '#2A2A30', belt: '#8A6A3A', hair: ['spiky', '#9A9490'], apron: '#3A2A1A', goggles: '#8A8A9A' },
+  chisk: { top: '#C8C0B0', shade: '#A8A090', legs: '#6A6A6A', boots: '#4A4A4A', hair: ['spiky', '#E8E4E0'], apron: '#E8E0D0' },
+  mott: { robe: true, top: '#3A3A2A', shade: '#2A2A1E', boots: '#1A1A12', belt: '#C8B070', hair: ['short', '#4A3A2A'], glasses: true },
+  tib: { top: '#B8913A', shade: '#8A6A28', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
+  holler: { top: '#8A2A6A', shade: '#6A1E50', legs: '#3A2A30', boots: '#2A1A20', belt: '#FFC940', hair: ['bun', '#1A1210'], cloak: '#6A1216', hat: 'wizard' },
+  ogg: { top: '#6A7A3A', shade: '#4E5A2A', legs: '#3A2A20', boots: '#2A1A12', belt: '#2A1A12', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#4A3A2A' },
+  hroth: { top: '#4A3A2A', shade: '#36281E', legs: '#2A2020', boots: '#1A1212', belt: '#FFC940', skin: '#C89870', hair: ['short', '#B8B0A8'], beard: '#B8B0A8', cloak: '#6A1216', sleepy: true },
+  evenbett: { top: '#6A9A8A', shade: '#4E7A6A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
+  joss: { top: '#C8B8E0', shade: '#A898C0', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['short', '#6A4028'], collar: '#E8E0D0' },
+  kids: { top: '#C86A8A', shade: '#A84A6A', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['short', '#E8D26A'] },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -1561,6 +1658,12 @@ const MAPS = [
   'field-of-banners',
   'tithe-road',
   'broken-watch',
+  'kaldorhold',
+  'gut-and-gauntlet',
+  'hall-of-kaldor',
+  'ring-ward',
+  'kaldorium-maximus',
+  'fighters-cells',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {
