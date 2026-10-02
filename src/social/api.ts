@@ -519,10 +519,17 @@ export async function fetchLeaderboard(scope: 'friends' | 'all'): Promise<Leader
   }));
 }
 
-/** The player's own collection value (their row of the friends leaderboard). */
-export async function fetchMyValue(): Promise<number | null> {
+/**
+ * The player's collection value and their place among everyone. The global
+ * board only holds the top 100, so outside it `rank` is null and the value
+ * comes from the friends board instead.
+ */
+export async function fetchMyStanding(): Promise<{ rank: number | null; value: number | null } | null> {
   const me = useSocial.getState().profile;
   if (!me) return null;
-  const rows = await fetchLeaderboard('friends');
-  return rows.find((r) => r.userId === me.id)?.value ?? null;
+  const all = await fetchLeaderboard('all');
+  const i = all.findIndex((r) => r.userId === me.id);
+  if (i >= 0) return { rank: i + 1, value: all[i].value };
+  const friends = await fetchLeaderboard('friends');
+  return { rank: null, value: friends.find((r) => r.userId === me.id)?.value ?? null };
 }
