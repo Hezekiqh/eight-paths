@@ -19,7 +19,7 @@ describe('cocoons', () => {
 
   it('show as split silk once broken', () => {
     expect(brokenCocoons('courier-road', [])).toEqual([]);
-    expect(brokenCocoons('courier-road', ['felix-hatched'])).toEqual([{ x: 5, y: 11 }]);
+    expect(brokenCocoons('courier-road', ['felix-hatched'])).toEqual([{ x: 8, y: 6 }]);
   });
 });
 

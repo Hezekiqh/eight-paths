@@ -711,7 +711,8 @@ function compile(ep) {
         const [nx, ny] = center(npc.x, npc.y);
         const dx = pos[0] - nx;
         const dy = pos[1] - ny;
-        const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+        // a diagonal turns them sideways, so they face you rather than show their back
+        const dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
         segs.push({ kind: 'npcFace', t0: t, t1: t, id: step.say, dir });
       }
       const lines = step.you ?? step.lines ?? (npc ? npc.lines : []);
@@ -1257,8 +1258,9 @@ const EPISODES = {
         // the episode ends as you reach the cocoon in the long grass
         {
           walk: [
-            [10, 11],
-            [6, 11],
+            [10, 9],
+            [10, 6],
+            [9, 6],
           ],
           face: 'left',
         },
@@ -1270,13 +1272,14 @@ const EPISODES = {
   // strategist, who chats, then strolls off toward Kaldor's towers. Written for this episode.
   4: () => {
     const map = loadMap('courier-road', 'outdoor');
-    map.npcs.felix = { id: 'felix', type: 'npc', x: 5, y: 11, sprite: 'felix', facing: 'right', name: 'Felix', lines: [] };
+    map.npcs.felix = { id: 'felix', type: 'npc', x: 8,
+      y: 7, sprite: 'felix', facing: 'right', name: 'Felix', lines: [] };
     const QUESTIONS = ['Who are you?', 'What now?'];
     return {
       number: 4,
       title: 'BOTH SIDES',
       map,
-      hero: { sprite: 'brannoc', at: [6, 11], facing: 'left' },
+      hero: { sprite: 'brannoc', at: [9, 6], facing: 'left' },
       hide: ['nib', 'felix'],
       titleDur: 3.0,
       endDur: 4.5,
@@ -1296,7 +1299,7 @@ const EPISODES = {
             move: 'laugh',
           },
         },
-        { open: { at: [5, 11], grass: [2, 11] } },
+        { open: { at: [8, 6], grass: [10, 6] } },
         { show: 'felix' },
         { say: 'felix', lines: ['...Ah. Awake. How long was I out?'] },
         { menu: { speaker: 'Felix', options: ['Five hundred years.', "I don't know."], pick: 0, hold: 1.1 } },
@@ -1316,10 +1319,15 @@ const EPISODES = {
         },
         // he laughs, then he's gone, lightning fast, east toward the towers
         { laugh: 'felix', dur: 1.4 },
-        { npcWalk: 'felix', to: [[5, 9], [42, 9]], speed: 520, hide: true, dash: true },
+        { npcWalk: 'felix',
+          to: [[42, 7]], speed: 520, hide: true, dash: true },
         { wait: 0.5 },
         // and you set off after him, toward the next place the story goes
-        { walk: [[6, 9], [42, 9]], cut: 2.4 },
+        { walk: [
+            [9, 7],
+            [42, 7],
+          ],
+          cut: 2.4 },
       ],
     };
   },

@@ -26,8 +26,8 @@ export const COCOONS: Cocoon[] = [
     // The first one you find: open to anyone, to show what cocoons are. Felix Rook,
     // the Academy's strategist, goes to advise Kaldor (see advisedBy).
     map: 'courier-road',
-    x: 5,
-    y: 11,
+    x: 8,
+    y: 6,
     tile: 'J',
     character: 'felix',
     hatched: 'felix-hatched',

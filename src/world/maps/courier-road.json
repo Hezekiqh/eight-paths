@@ -15,12 +15,12 @@
     "TT..........,,..HHHHHHTTTTTTT.......TTTT",
     "T...FFFF....,,..HHHHHH......TTTThTTTT..T",
     "T.......g...,,..HHDHHH..gg......h......T",
-    "T...........,,.c................S......T",
+    "T.......J...,,.c................S......T",
     "<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,>",
     "<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,>",
     "T......................................T",
     "T..gg.................FFFFF...gg.......T",
-    "T...gJ..........gg.............g.......T",
+    "T...g...........gg.............g.......T",
     "T.....gg..........................g...TT",
     "TTT......T..........TT...............TTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
@@ -68,10 +68,10 @@
     {
       "id": "felix",
       "type": "npc",
-      "x": 5,
-      "y": 10,
+      "x": 8,
+      "y": 7,
       "sprite": "felix",
-      "facing": "down",
+      "facing": "right",
       "name": "Felix",
       "lines": ["...Ah. Awake.", "Five hundred years, by the look of the grass. Hm. I'd have bet four."],
       "questions": [
