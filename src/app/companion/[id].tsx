@@ -16,6 +16,7 @@ import { colors, fonts, radius, spacing } from '@/theme';
 import { useSocial, type CharacterStat } from '@/social/store';
 import { isWalker, worldHero } from '@/world/hero';
 import { movesFor } from '@/world/fight';
+import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { useWorldStore } from '@/world/store';
 
 /** "Woken by 3% of players · first: @moss_fan", or a note that no one has yet. */
@@ -134,7 +135,7 @@ export default function CompanionSheet() {
           {inParty && isWalker(companion.id) && (
             <View style={styles.moves} accessibilityLabel="Moves in the Other World">
               <Text style={styles.movesTitle}>MOVES IN THE OTHER WORLD</Text>
-              {movesFor(companion.dimension, progress.level).map((m) => (
+              {movesFor(companion.dimension, progress.level, signatureOf(companion.id), SIGNATURE_LEVEL).map((m) => (
                 <Text key={m.level} style={[styles.move, !m.unlocked && styles.moveLocked]}>
                   <Text style={[styles.moveName, m.unlocked && { color: info.color }]}>
                     {m.unlocked ? m.name : `Lv ${m.level} · ${m.name}`}

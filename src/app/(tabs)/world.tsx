@@ -62,6 +62,7 @@ import { walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import { ATTACKS, damageFor, drowsyRate, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
+import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { ambienceOf, flamesOn } from '@/world/ambience';
 import {
   ITEMS,
@@ -370,6 +371,16 @@ function World({
   const collection = useCollection();
   const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
   const gameParty = useGameStore((s) => s.party);
+  // Their own move, if they have one (signatures.ts); else their Path's special at Lv 20.
+  const signature = signatureOf(hero);
+  const habitToday = useGameStore((s) => s.completions.some((c) => c.date === today));
+  const barrageDay = useWorldStore((s) => s.barrageDay);
+  const [shouting, setShouting] = useState<{ name: string; line: string; at: number } | null>(null);
+  const onSignature = useCallback(() => {
+    if (!signature) return;
+    if (signature.shout) setShouting({ name: COMPANIONS[hero].name, line: signature.shout, at: Date.now() });
+    if (signature.kind === 'barrage') useWorldStore.getState().useBarrage(today);
+  }, [signature, hero, today]);
   const giftCharacters = useGameStore((s) => s.giftCharacters);
   // Winning a fight: its scene plays, then its flags are set, anyone who joins you joins, and on you go.
   const finish = useCallback(
@@ -468,7 +479,10 @@ function World({
         attack={ATTACKS[heroPath]}
         damage={damageFor(ATTACKS[heroPath], heroLevel)}
         level={heroLevel}
-        special={SPECIALS[heroPath].kind}
+        special={signature?.kind ?? SPECIALS[heroPath].kind}
+        specialLevel={signature ? SIGNATURE_LEVEL : undefined}
+        barrageReady={habitToday && barrageDay !== today}
+        onSignature={onSignature}
         hearts={hearts}
         chests={chests}
         signs={signs}
@@ -505,6 +519,7 @@ function World({
         />
       )}
       {fightMap.enemies.length > 0 && <Hearts hp={sim.hp} max={hearts} />}
+      {shouting && <SignatureShout key={shouting.at} name={shouting.name} line={shouting.line} />}
       {bossOn && !map.boss?.kind && <Drowsiness sleepy={sim.sleepy} />}
       {dialogue && (
         <DialogueBox
@@ -825,6 +840,18 @@ function useAct(
 
 const styles = StyleSheet.create({
   drowsy: { position: 'absolute', width: 180, gap: 2 },
+  shout: {
+    position: 'absolute',
+    alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8EACB',
+    borderColor: '#2E1F14',
+    borderWidth: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  shoutName: { color: '#9A3412', fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
+  shoutLine: { color: '#2E1F14', fontFamily: fonts.dialogue, fontSize: 20 },
   drowsyLabel: { color: '#E8D8F0', fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
   drowsyTrack: { height: 8, backgroundColor: 'rgba(20, 14, 28, 0.6)', borderWidth: 2, borderColor: '#E8D8F0' },
   drowsyFill: { height: '100%', backgroundColor: '#B89AE0' },
@@ -853,6 +880,27 @@ function Heart({ index, hp }: { index: number; hp: SharedValue<number> }) {
   return (
     <Animated.View style={style}>
       <SymbolView name="heart.fill" tintColor="#E0454F" size={20} />
+    </Animated.View>
+  );
+}
+
+/** A signature move's shout, over the hero's head for a moment, then gone. */
+function SignatureShout({ name, line }: { name: string; line: string }) {
+  const insets = useSafeAreaInsets();
+  const shown = useSharedValue(0);
+  useEffect(() => {
+    shown.set(withTiming(1, { duration: 120 }));
+    shown.set(withDelay(1500, withTiming(0, { duration: 300 })));
+  }, [shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shown.get(), transform: [{ scale: 0.9 + 0.1 * shown.get() }] }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.shout, { top: Math.max(insets.top, 12) + 36 }, style]}
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={`${name}: ${line}`}>
+      <Text style={styles.shoutName}>{name.toUpperCase()}</Text>
+      <Text style={styles.shoutLine}>{line}</Text>
     </Animated.View>
   );
 }

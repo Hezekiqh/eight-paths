@@ -3,6 +3,7 @@ import { COMPANIONS, type CharacterId } from '@/story/companions';
 
 import { ATTACKS, damageFor } from './combat';
 import { CHARGE_LEVEL, SPECIALS, SPECIAL_LEVEL } from './fight';
+import { SIGNATURE_LEVEL, signatureOf } from './signatures';
 import { walkersFor, type HeroId } from './hero';
 import { JOBS } from './jobs';
 import { MAPS, isMapId, type MapId } from './maps';
@@ -54,12 +55,17 @@ export function fightHint(hero: HeroId, level: number, map?: MapId): string {
   const c = COMPANIONS[hero];
   const damage = damageFor(ATTACKS[c.dimension], level);
   const next = (Math.floor(level / 10) + 1) * 10;
+  const signature = signatureOf(hero);
   const unlock =
-    next === CHARGE_LEVEL
-      ? 'can charge a blow (hold, then let go)'
-      : next === SPECIAL_LEVEL
-        ? `learn ${SPECIALS[c.dimension].name}`
-        : 'hit harder';
+    signature && next === SIGNATURE_LEVEL
+      ? `learn ${signature.name} (hold, then let go)`
+      : signature && next > SIGNATURE_LEVEL
+        ? 'hit harder'
+        : next === CHARGE_LEVEL
+          ? 'can charge a blow (hold, then let go)'
+          : next === SPECIAL_LEVEL
+            ? `learn ${SPECIALS[c.dimension].name}`
+            : 'hit harder';
   const tell = map && TELLS[map] ? `${TELLS[map]} ` : '';
   return `${tell}${c.name} is Lv ${level} and hits for ${damage}. At Lv ${next} they ${unlock}: finish ${CLASSES[c.dimension].className} habits, or walk as a stronger party member.`;
 }

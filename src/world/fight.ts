@@ -2,7 +2,11 @@ import type { Dimension } from '@/game';
 
 import {
   E_ALIVE,
+  E_DEBT,
+  E_HP,
+  E_MODE,
   E_STUN,
+  E_TAKEN,
   E_X,
   E_Y,
   HEARTS,
@@ -16,8 +20,11 @@ import {
   unstunnable,
   type Attack,
   type Enemy,
+  EXPOSED,
+  guarded,
 } from './combat';
 import { move, type Grid } from './engine';
+import type { SignatureKind } from './signatures';
 
 // One frame of a fight, the same everywhere: the World's frame loop (on the
 // UI thread, hence 'worklet') and the headless fight bot in the tests both
@@ -50,8 +57,10 @@ const TILE_PX = 16;
  * fight. stun: everyone near is stopped. rush: a charging palm. return: the
  * wrench flies back.
  */
-export type Special = 'spin' | 'spread' | 'mend' | 'stun' | 'rush' | 'return';
-export const SPECIALS: Record<Dimension, { kind: Special; name: string; does: string }> = {
+export type PathSpecial = 'spin' | 'spread' | 'mend' | 'stun' | 'rush' | 'return';
+/** A Path's special, or a character's own signature (signatures.ts). */
+export type Special = PathSpecial | SignatureKind;
+export const SPECIALS: Record<Dimension, { kind: PathSpecial; name: string; does: string }> = {
   physical: { kind: 'spin', name: 'Whirlwind', does: 'the charged swing hits all around' },
   intellectual: { kind: 'spread', name: 'Firestorm', does: 'three fire bolts at once' },
   spiritual: { kind: 'mend', name: 'Mending Light', does: 'a heart back, once a fight' },
@@ -62,8 +71,23 @@ export const SPECIALS: Record<Dimension, { kind: Special; name: string; does: st
   environmental: { kind: 'spread', name: 'Volley', does: 'three arrows at once' },
 };
 
-/** What a character can do in a fight, by their real level: for their sheet. */
-export function movesFor(dimension: Dimension, level: number) {
+/** Ysolde's debt: seconds between each heart it takes. */
+export const DEBT_TICK = 0.8;
+/** Moss's Arrow Barrage: how far it reaches, and when each volley lands after he lets go. */
+export const BARRAGE = { range: 140, volleys: [0.3, 0.55], radius: 14 };
+/** Oren's still breath, and the beat between Pip's two shockwaves. */
+const BREATH = 0.5;
+const ENCORE = 0.35;
+
+/** What a character can do in a fight, by their real level: for their sheet. A signature replaces both. */
+export function movesFor(
+  dimension: Dimension,
+  level: number,
+  signature: { name: string; does: string } | null = null,
+  signatureLevel = CHARGE_LEVEL,
+) {
+  if (signature)
+    return [{ level: signatureLevel, name: signature.name, does: signature.does, unlocked: level >= signatureLevel }];
   return [
     {
       level: CHARGE_LEVEL,
@@ -83,7 +107,7 @@ export function movesFor(dimension: Dimension, level: number) {
 /** Everything that changes in a fight from frame to frame. */
 export type Fight = {
   enemies: Enemy[];
-  /** Bolts in flight: [x, y, dx, dy, travelled, power, returned (0/1), enemies already hit (a bit each)]. */
+  /** Bolts in flight: [x, y, dx, dy, travelled, power, turns back this many more times, enemies already hit (a bit each), size]. */
   bolts: number[][];
   hp: number;
   /** Seconds you can't be hurt again; seconds until you can attack again; seconds dazed by a shout. */
@@ -101,6 +125,12 @@ export type Fight = {
   primed: boolean;
   /** The Cleric's mend is used up this fight. */
   mended: boolean;
+  /** A blow still to come: [seconds left, what (1 Oren's palm, 2 Pip's encore), facing]. */
+  delayed: number[];
+  /** Arrows falling from Moss's Arrow Barrage: [x, y, seconds until they land]. */
+  rain: number[][];
+  /** The barrage is spent for this fight (once a day: see `barrageReady`). */
+  rained: boolean;
   /** Baron Plush's pillows [x, y, dx, dy], and seconds until the next throw. */
   pillows: number[][];
   throwIn: number;
@@ -136,6 +166,9 @@ export function startFight(enemies: Enemy[], hearts: number = HEARTS): Fight {
     charge: 0,
     primed: false,
     mended: false,
+    delayed: [0, 0, 0],
+    rain: [],
+    rained: false,
     pillows: [],
     throwIn: 1.5,
     waves: [],
@@ -154,9 +187,13 @@ export type FightRules = {
   attack: Attack;
   /** Damage per blow (their real level adds to it). */
   damage: number;
-  /** Their real level: Lv 10 charges, Lv 20 adds the special. */
+  /** Their real level: Lv 10 charges, and from `specialLevel` the charged blow becomes `special`. */
   level: number;
   special: Special;
+  /** SPECIAL_LEVEL for a Path's special; a signature comes at SIGNATURE_LEVEL. */
+  specialLevel?: number;
+  /** Moss can loose his Arrow Barrage: a real habit done today, and not yet used today. */
+  barrageReady?: boolean;
   /** A boss fight: won once every enemy is down. Plush throws pillows from (bossX, bossY). */
   boss: boolean;
   bossX: number;
@@ -200,6 +237,12 @@ export type FightEvents = {
   hurt: boolean;
   rolled: boolean;
   mended: boolean;
+  /** A signature went off: they shout. */
+  signature: boolean;
+  /** The Arrow Barrage went up (its one use of the day). */
+  barrage: boolean;
+  /** Enemies (by index) that paid a heart of debt this frame. */
+  ticked: number[];
   slam: boolean;
   guttered: boolean;
   shout: boolean;
@@ -244,6 +287,21 @@ export function aim(enemies: Enemy[], x: number, y: number, facing: number, sx: 
   return [ax / d, ay / d];
 }
 
+const PATH_SPECIALS: Special[] = ['spin', 'spread', 'mend', 'stun', 'rush', 'return'];
+
+/** How far a charging palm goes, up to `most`, stopping short of whoever's in the way. */
+function rushReach(enemies: Enemy[], px: number, py: number, fc: number, most: number): number {
+  'worklet';
+  let reach = most;
+  for (const e of enemies) {
+    if (e[E_ALIVE] === 0) continue;
+    const ahead = (e[E_X] - px) * FACE_X[fc] + (e[E_Y] - py) * FACE_Y[fc];
+    const across = Math.abs((e[E_X] - px) * FACE_Y[fc] - (e[E_Y] - py) * FACE_X[fc]);
+    if (ahead > 0 && across < 14) reach = Math.min(reach, Math.max(0, ahead - 12 - 4 * (sizeOf(e) - 1)));
+  }
+  return reach;
+}
+
 /** One frame of a fight. Returns the fight after, and what happened. */
 export function stepFight(
   f0: Fight,
@@ -265,6 +323,9 @@ export function stepFight(
     hurt: false,
     rolled: false,
     mended: false,
+    signature: false,
+    barrage: false,
+    ticked: [],
     slam: false,
     guttered: false,
     shout: false,
@@ -305,7 +366,7 @@ export function stepFight(
   // ---- your attack: a tap strikes at once; from Lv 10, holding charges it and letting go unleashes it.
   let enemies = f.enemies;
   const canCharge = rules.level >= CHARGE_LEVEL;
-  const special = rules.level >= SPECIAL_LEVEL;
+  const special = rules.level >= (rules.specialLevel ?? SPECIAL_LEVEL);
   let strike = 0; // 0 none, 1 normal, 2 charged
   if (input.press && f.cooldown === 0 && f.roll === 0) strike = 1;
   if (canCharge) {
@@ -326,39 +387,62 @@ export function stepFight(
     f.cooldown = attack.cooldown * (strike === 2 ? CHARGE_RECOVERY : 1);
     ev.swing = true;
     ev.charged = strike === 2;
-    const kind = strike === 2 && special ? rules.special : null;
-    if (kind === 'mend' && !f.mended) {
+    let kind: Special | null = strike === 2 && special ? rules.special : null;
+    // The barrage goes up once a day, and only after a real habit: otherwise Moss's charged arrow is just that.
+    if (kind === 'barrage') {
+      if (rules.barrageReady && !f.rained) {
+        const rain = f.rain.slice();
+        for (const e of enemies) {
+          if (e[E_ALIVE] === 0 || Math.hypot(e[E_X] - px, e[E_Y] - py) > BARRAGE.range) continue;
+          for (const at of BARRAGE.volleys) rain.push([e[E_X], e[E_Y], at]);
+        }
+        f.rain = rain;
+        f.rained = true;
+        ev.barrage = true;
+      } else kind = null;
+    }
+    ev.signature = kind !== null && !PATH_SPECIALS.includes(kind);
+    if ((kind === 'mend' || kind === 'vigil') && !f.mended) {
       f.mended = true;
       f.hp = Math.min(rules.maxHp, f.hp + 1);
       ev.mended = true;
     }
-    if (kind === 'stun') {
+    if (kind === 'stun' || kind === 'tab' || kind === 'vigil') {
+      // A bribe or a lullaby stops everyone near; Ysolde's tab puts them in debt too; Wren's lantern reaches only the close.
+      const reach = kind === 'vigil' ? 54 : 90;
       for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
-        if (e[E_ALIVE] === 1 && !unstunnable(e) && Math.hypot(e[E_X] - px, e[E_Y] - py) < 90) {
+        if (e[E_ALIVE] === 1 && Math.hypot(e[E_X] - px, e[E_Y] - py) < reach) {
           const n = e.slice();
-          n[E_STUN] = Math.max(n[E_STUN], 2.2);
+          if (!unstunnable(e)) n[E_STUN] = Math.max(n[E_STUN], kind === 'tab' ? 2 : 2.2);
+          if (kind === 'tab' && !(n[E_DEBT] > 0)) n[E_DEBT] = DEBT_TICK;
           enemies = [...enemies.slice(0, i), n, ...enemies.slice(i + 1)];
         }
       }
+      if (kind !== 'stun') f.ring = [px, py - 8, reach, 0.4, 0.4];
     }
     if (kind === 'rush') {
-      // Charge forward, stopping short of whoever's in the way.
-      let reach = 36;
-      for (const e of enemies) {
-        if (e[E_ALIVE] === 0) continue;
-        const ahead = (e[E_X] - px) * FACE_X[fc] + (e[E_Y] - py) * FACE_Y[fc];
-        const across = Math.abs((e[E_X] - px) * FACE_Y[fc] - (e[E_Y] - py) * FACE_X[fc]);
-        if (ahead > 0 && across < 14) reach = Math.min(reach, Math.max(0, ahead - 12 - 4 * (sizeOf(e) - 1)));
-      }
+      const reach = rushReach(enemies, px, py, fc, 36);
       ev.moveX += FACE_X[fc] * reach;
       ev.moveY += FACE_Y[fc] * reach;
       f.mercy = Math.max(f.mercy, 0.6);
     }
-    if (kind === 'spin') {
+    if (kind === 'breath') {
+      // Oren stands still a beat, untouchable, then the palm goes (below, in the delayed blow).
+      f.delayed = [BREATH, 1, fc];
+      f.mercy = Math.max(f.mercy, BREATH + 0.3);
+      f.dazed = Math.max(f.dazed, BREATH);
+      f.ring = [px, py - 9, 14, BREATH, BREATH];
+    } else if (kind === 'spin' || kind === 'sweetheart') {
       enemies = hitAround(grid, enemies, px, py - 6, attack.range + 8, damage, attack.knock * 1.5, attack.stun);
       f.flash = [px, py - 4, attack.range + 8, 0.3, px, py, fc, 0.3];
       f.ring = [px, py - 6, attack.range + 8, 0.3, 0.3];
+      if (kind === 'sweetheart') {
+        // …and then Brannoc remembers he's brave from a distance.
+        ev.moveX -= FACE_X[fc] * 30;
+        ev.moveY -= FACE_Y[fc] * 30;
+        f.mercy = Math.max(f.mercy, 0.6);
+      }
     } else if (attack.kind === 'melee') {
       const reach = attack.range * (strike === 2 ? 1.4 : 1);
       const [sx, sy] = strikePoint(px + ev.moveX, py + ev.moveY, fc, reach);
@@ -370,23 +454,69 @@ export function stepFight(
       const r = attack.range * (strike === 2 ? 1.5 : 1);
       enemies = hitAround(grid, enemies, px, py - 6, r, damage, attack.knock * power, attack.stun * power);
       f.flash = [px, py - 8, r, 0.35, px, py, fc, 0.35];
-      if (strike === 2) f.ring = [px, py - 8, r, 0.35, 0.35];
+      if (strike === 2 && kind !== 'vigil') f.ring = [px, py - 8, r, 0.35, 0.35];
+      if (kind === 'encore') f.delayed = [ENCORE, 2, fc];
     } else {
       const [dx, dy] = aim(enemies, px, py, fc, input.stickX, input.stickY, attack.range);
-      const shots = kind === 'spread' ? [-0.3, 0, 0.3] : [0];
+      const shots = kind === 'footnotes' ? [-0.5, -0.25, 0, 0.25, 0.5] : kind === 'spread' ? [-0.3, 0, 0.3] : [0];
+      const fan = kind === 'footnotes' || kind === 'spread';
+      const turns = kind === 'holdthis' ? 3 : kind === 'return' ? 1 : 0;
+      const size = kind === 'holdthis' ? 3 : 1;
       const bolts = f.bolts.slice();
       for (const a of shots) {
         const c = Math.cos(a);
         const s = Math.sin(a);
-        // A spread is three ordinary bolts; any other charged bolt is one heavy, piercing one.
-        const each = kind === 'spread' ? 1 : power;
-        bolts.push([px, py - 8, dx * c - dy * s, dx * s + dy * c, 0, each, kind === 'return' ? 0 : 1, 0]);
+        // A fan is ordinary bolts; any other charged bolt is one heavy, piercing one.
+        const each = fan ? 1 : power;
+        bolts.push([px, py - 8, dx * c - dy * s, dx * s + dy * c, 0, each, turns, 0, size]);
       }
       f.bolts = bolts;
-      if (strike === 2) f.ring = [px, py - 8, 12, 0.2, 0.2];
+      if (strike === 2) f.ring = [px, py - 8, 12 * size, 0.2, 0.2];
     }
   }
 
+  // ---- a blow still to come: Oren's palm after his breath, Pip's second shockwave.
+  if (f.delayed[0] > 0) {
+    f.delayed = [f.delayed[0] - dt, f.delayed[1], f.delayed[2]];
+    if (f.delayed[0] <= 0) {
+      const what = f.delayed[1];
+      const dfc = f.delayed[2];
+      f.delayed = [0, 0, 0];
+      if (what === 1) {
+        const reach = rushReach(enemies, px, py, dfc, 28);
+        ev.moveX += FACE_X[dfc] * reach;
+        ev.moveY += FACE_Y[dfc] * reach;
+        const r0 = attack.range * 1.6;
+        const [sx, sy] = strikePoint(px + ev.moveX, py + ev.moveY, dfc, r0);
+        const r = r0 * 0.6 + 8;
+        enemies = hitAround(grid, enemies, sx, sy, r, chargedDamage(rules.damage), attack.knock * 3, 0.6);
+        f.flash = [sx, sy - 4, r, 0.3, px, py, dfc, 0.3];
+        f.ring = [sx, sy - 4, r + 6, 0.3, 0.3];
+        f.mercy = Math.max(f.mercy, 0.4);
+        ev.swing = true;
+        ev.charged = true;
+      } else if (what === 2) {
+        // The encore carries further: it catches everyone the first wave knocked back.
+        const r = attack.range * 2.2;
+        enemies = hitAround(grid, enemies, px, py - 6, r, rules.damage, attack.knock * 1.5, attack.stun);
+        f.flash = [px, py - 8, r, 0.35, px, py, dfc, 0.35];
+        f.ring = [px, py - 8, r * 1.15, 0.35, 0.35];
+        ev.swing = true;
+        ev.charged = true;
+      }
+    }
+  }
+
+  // ---- the barrage lands where everyone stood when Moss let go: fast feet get out from under it.
+  if (f.rain.length > 0) {
+    const falling: number[][] = [];
+    for (const r of f.rain) {
+      const left = r[2] - dt;
+      if (left > 0) falling.push([r[0], r[1], left]);
+      else enemies = hitAround(grid, enemies, r[0], r[1], BARRAGE.radius, rules.damage, 4, 0.2, 0, false);
+    }
+    f.rain = falling;
+  }
   // ---- bolts fly until they hit a wall, an enemy (a charged bolt goes through), or run out of range.
   if (f.bolts.length > 0) {
     const next: number[][] = [];
@@ -402,7 +532,8 @@ export function stepFight(
       let fresh = 0;
       for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
-        const touching = e[E_ALIVE] === 1 && Math.hypot(e[E_X] - bx, e[E_Y] - 8 * sizeOf(e) - by) < 9 * sizeOf(e);
+        const touching =
+          e[E_ALIVE] === 1 && Math.hypot(e[E_X] - bx, e[E_Y] - 8 * sizeOf(e) - by) < 9 * sizeOf(e) + (b[8] - 1) * 7;
         if (touching && !(b[7] & (1 << i))) fresh |= 1 << i;
       }
       const struck = fresh !== 0;
@@ -412,7 +543,7 @@ export function stepFight(
           enemies,
           bx,
           by + 8,
-          10,
+          10 + (b[8] - 1) * 7,
           b[5] > 1 ? chargedDamage(rules.damage) : rules.damage,
           attack.knock,
           attack.stun,
@@ -421,9 +552,14 @@ export function stepFight(
         );
       }
       const pierce = b[5] > 1;
+      // Tamsin's huge wrench bounces off walls and comes back; anything else stops there.
+      if (wall && b[8] > 1 && b[6] > 0) {
+        next.push([b[0], b[1], -b[2], -b[3], 0, b[5], b[6] - 1, 0, b[8]]);
+        continue;
+      }
       if (wall || (struck && !pierce)) continue;
-      if (travelled < attack.range) next.push([bx, by, b[2], b[3], travelled, b[5], b[6], b[7] | fresh]);
-      else if (b[6] === 0) next.push([bx, by, -b[2], -b[3], 0, b[5], 1, 0]); // the boomerang comes back, and can hit again
+      if (travelled < attack.range) next.push([bx, by, b[2], b[3], travelled, b[5], b[6], b[7] | fresh, b[8]]);
+      else if (b[6] > 0) next.push([bx, by, -b[2], -b[3], 0, b[5], b[6] - 1, 0, b[8]]); // a boomerang comes back, and can hit again
     }
     f.bolts = next;
   }
@@ -437,9 +573,40 @@ export function stepFight(
   ev.fell = s.fell;
   ev.struck = s.struck;
 
+  // ---- debt: each enemy on Ysolde's tab pays a heart every DEBT_TICK until there's nothing left (Kaldor's guard only pauses it).
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i];
+    if (e[E_ALIVE] === 0 || !(e[E_DEBT] > 0)) continue;
+    const n = e.slice();
+    n[E_DEBT] -= dt;
+    if (n[E_DEBT] <= 0) {
+      n[E_DEBT] = DEBT_TICK;
+      if (!guarded(n)) {
+        n[E_HP] -= 1;
+        if (n[E_MODE] === EXPOSED) n[E_TAKEN] += 1;
+        ev.ticked.push(i);
+        if (n[E_HP] <= 0) {
+          n[E_ALIVE] = 0;
+          n[E_DEBT] = 0;
+          ev.kills += 1;
+          ev.fell = [...ev.fell, n[E_X], n[E_Y]];
+        }
+      }
+    }
+    enemies = [...enemies.slice(0, i), n, ...enemies.slice(i + 1)];
+  }
+
   // ---- the enemies' turn.
   const rolling = f.roll > 0;
-  const r = stepEnemies(grid, enemies, px, py, dt, f.mercy === 0 && !rolling, rules.level < CHARGE_LEVEL ? SLAM_REST_LOW : PATTERNS.slam.rest);
+  const r = stepEnemies(
+    grid,
+    enemies,
+    px,
+    py,
+    dt,
+    f.mercy === 0 && !rolling,
+    rules.level < CHARGE_LEVEL ? SLAM_REST_LOW : PATTERNS.slam.rest,
+  );
   f.enemies = r.enemies;
   let hurt = r.hurt;
   let pushX = r.pushX;

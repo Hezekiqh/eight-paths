@@ -152,7 +152,7 @@ export function drowsyRate(resilienceLevel: number): number {
  * An enemy on the UI thread, as a flat tuple so it's cheap to copy each frame:
  * [kind, x, y, hp, awake (0/1), timer, stun, alive (0/1), mode, time in mode,
  * locked direction x, y, struck-but-unhurt this frame (0/1), charges since the last window,
- * damage taken in this window].
+ * damage taken in this window, seconds to the next tick of debt (0: owes nothing; Ysolde's Collect the Tab)].
  */
 export type Enemy = number[];
 export const E_KIND = 0;
@@ -170,6 +170,7 @@ export const E_DY = 11;
 export const E_CLANG = 12;
 export const E_COUNT = 13;
 export const E_TAKEN = 14;
+export const E_DEBT = 15;
 
 /** What a patterned enemy is doing: chasing, winding up (the tell), lunging or charging, getting up, or (Kaldor) open to hits. */
 export const CHASE = 0;
@@ -179,7 +180,7 @@ export const RECOVER = 3;
 export const EXPOSED = 4;
 
 export function spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
-  return [ENEMY_KINDS.indexOf(kind), x, y, ENEMIES[kind].hp, 0, 0, 0, 1, CHASE, 0, 0, 0, 0, 0, 0];
+  return [ENEMY_KINDS.indexOf(kind), x, y, ENEMIES[kind].hp, 0, 0, 0, 1, CHASE, 0, 0, 0, 0, 0, 0, 0];
 }
 
 export function sizeOf(e: Enemy): number {
