@@ -122,8 +122,13 @@ const cast = {
     const steel = hex('#9AA0B4'),
       steel2 = hex('#6A7088'),
       red = hex('#C4442A');
-    f.rect(24, 8, 2, 16, hex('#D8DCE8')).rect(22, 21, 6, 1, hex('#8A6A3A')).rect(24, 22, 2, 2, hex('#5C3A28')); // Sweetheart on his back
     f.rect(10, 24, 12, 10, steel).arms(steel2).rect(10, 31, 12, 1, hex('#5C3A28'));
+    // Sweetheart, held upright in his right hand: blade, guard, the grip in his fist, pommel
+    f.rect(23, 13, 2, 17, hex('#D8DCE8'))
+      .rect(21, 30, 6, 1, hex('#8A6A3A'))
+      .rect(23, 31, 2, 3, hex('#5C3A28'))
+      .rect(21, 32, 4, 2, SKIN)
+      .rect(23, 34, 2, 1, hex('#8A6A3A'));
     f.rect(12, 34, 3, 8, steel2)
       .rect(17, 34, 3, 8, steel2)
       .rect(11, 42, 4, 3, hex('#5C3A28'))

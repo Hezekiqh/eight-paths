@@ -42,6 +42,7 @@ import {
   E_ALIVE,
   E_AWAKE,
   E_CLANG,
+  E_DEBT,
   E_KIND,
   E_MODE,
   E_MT,
@@ -206,6 +207,12 @@ type Props = {
   /** Their real level (Lv 10 charges; Lv 20 adds their Path's special), and that special. */
   level?: number;
   special?: Special;
+  /** When the charged blow becomes `special`: Lv 20 for a Path's, Lv 10 for a character's own signature. */
+  specialLevel?: number;
+  /** Moss can loose his Arrow Barrage in this fight (a real habit today, and not yet used today). */
+  barrageReady?: boolean;
+  /** A signature went off: show the shout (and spend the barrage's day). */
+  onSignature?: () => void;
   /** Out of hearts. */
   onDefeat?: () => void;
   /** Doorways shut for a boss fight: drawn barred. */
@@ -249,6 +256,9 @@ export function WorldView({
   damage = 1,
   level = 1,
   special = 'spin',
+  specialLevel,
+  barrageReady = false,
+  onSignature,
   hearts = HEARTS,
   autopilot = false,
   onDefeat,
@@ -291,6 +301,7 @@ export function WorldView({
   const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
+  const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
   const bossX = boss ? boss.x : -1;
   const bossY = boss ? boss.y : -1;
   const bolts = useDerivedValue(() => fight.get().bolts);
@@ -459,7 +470,21 @@ export function WorldView({
             release,
             dodge,
           },
-          { grid, attack, damage, level, special, boss: bossX >= 0, bossX, bossY, throws, drowsy, maxHp: hearts },
+          {
+            grid,
+            attack,
+            damage,
+            level,
+            special,
+            specialLevel,
+            barrageReady,
+            boss: bossX >= 0,
+            bossX,
+            bossY,
+            throws,
+            drowsy,
+            maxHp: hearts,
+          },
           dt,
         );
         const f = r.fight;
@@ -478,6 +503,19 @@ export function WorldView({
         if (ev.swing) scheduleOnRN(feel, ev.charged ? 'charged' : 'swing');
         if (ev.rolled) scheduleOnRN(feel, 'roll');
         if (ev.mended) scheduleOnRN(feel, 'mend');
+        if (ev.signature) scheduleOnRN(signed);
+        // Debt paid: the debtor flashes, a light tap, and a puff if that was the last of them.
+        if (ev.ticked.length > 0 && ev.hits === 0) {
+          const white = whiteFor.get().slice();
+          for (const i of ev.ticked) white[i] = FEEL.flash;
+          whiteFor.set(white);
+          if (ev.kills > 0) {
+            const next = puffs.get().slice(-3);
+            for (let k = 0; k < ev.fell.length; k += 2) next.push([ev.fell[k], ev.fell[k + 1], FEEL.puff]);
+            puffs.set(next);
+          }
+          scheduleOnRN(feel, ev.kills > 0 ? 'kill' : 'hit');
+        }
         if (ev.hits > 0) {
           const kill = ev.kills > 0;
           hitStop.set(ev.big ? FEEL.bigStop : kill ? FEEL.killStop : FEEL.hitStop);
@@ -704,6 +742,46 @@ export function WorldView({
     return path;
   });
   const dim = useDerivedValue(() => gutter.get() * 1.2);
+  // Ysolde's debt: a gold coin bobbing over everyone who still owes.
+  const debtPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const lift = Math.floor(clock.get() * 4) % 2;
+    for (const e of fight.get().enemies) {
+      if (e[E_ALIVE] === 0 || !(e[E_DEBT] > 0)) continue;
+      const top = e[E_Y] - FEET * sizeOf(e) - 5 - lift;
+      path.addOval(Skia.XYWHRect(Math.round(e[E_X]) - 2, Math.round(top), 5, 5));
+    }
+    return path;
+  });
+  // Moss's barrage: each arrow dropping out of the sky toward where it lands, over a shadow that grows as it falls.
+  const rainArrows = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, left] of fight.get().rain) {
+      const ax = Math.round(x + left * 30);
+      const ay = Math.round(y - 10 - left * 180);
+      path.addRect(Skia.XYWHRect(ax, ay - 8, 1, 8));
+      path.addRect(Skia.XYWHRect(ax - 1, ay, 3, 2));
+    }
+    return path;
+  });
+  const rainHeads = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, left] of fight.get().rain) {
+      const ax = Math.round(x + left * 30);
+      const ay = Math.round(y - 10 - left * 180);
+      path.addRect(Skia.XYWHRect(ax - 1, ay - 9, 1, 2));
+      path.addRect(Skia.XYWHRect(ax + 1, ay - 9, 1, 2));
+    }
+    return path;
+  });
+  const rainMarks = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, left] of fight.get().rain) {
+      const r = Math.max(1, 5 - left * 8);
+      path.addOval(Skia.XYWHRect(x - r, y - r * 0.4, r * 2, r * 0.8));
+    }
+    return path;
+  });
 
   // ---- the living room: flames that flicker (or, in the war hall, gutter out), motes in the air, and the dark.
   const flameLit = useDerivedValue(() => {
@@ -838,6 +916,10 @@ export function WorldView({
             )}
             <Path path={puffPath} color="#E8E0D0" />
             {attack && <AttackEffects attack={attack} flash={flash} bolts={bolts} />}
+            <Path path={debtPath} color="#FFC940" />
+            <Path path={rainMarks} color="#000000" opacity={0.35} />
+            <Path path={rainArrows} color="#C8A870" />
+            <Path path={rainHeads} color="#A0D060" />
             <Shout shout={shout} />
           </>
         )}

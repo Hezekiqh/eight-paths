@@ -50,7 +50,7 @@ describe('notices', () => {
   it("explains a lost boss fight by its tell and the walking character's level", () => {
     const n = describeNotice(fightNotice('war-hall'), ctx())!;
     expect(n.hint).toBe(
-      'Your blows glance off Kaldor while he casts no shadow. Roll aside when he charges: when a torch gutters and his shadow comes back, strike. Quill is Lv 12 and hits for 3. At Lv 20 they learn Firestorm: finish Mage habits, or walk as a stronger party member.',
+      'Your blows glance off Kaldor while he casts no shadow. Roll aside when he charges: when a torch gutters and his shadow comes back, strike. Quill is Lv 12 and hits for 3. At Lv 20 they hit harder: finish Mage habits, or walk as a stronger party member.',
     );
     expect(describeNotice(fightNotice('war-hall'), ctx(['kaldor-beaten']))).toBeNull();
   });
