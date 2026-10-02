@@ -51,7 +51,19 @@ export const WALKER_ROWS = {
   chaplain: 40,
   maelis: 41,
   lamplighter: 42,
-  keeper: 43,
+  durn: 43,
+  haskel: 44,
+  bett: 45,
+  hild: 46,
+  drummer: 47,
+  gudrun: 48,
+  hamm: 49,
+  marta: 50,
+  dobb: 51,
+  bellow: 52,
+  orrin: 53,
+  grub: 54,
+  keeper: 55,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

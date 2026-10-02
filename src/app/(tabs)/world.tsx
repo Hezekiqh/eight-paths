@@ -51,7 +51,7 @@ import {
   type Arrival,
   type XpTotals,
 } from '@/world/progress';
-import { SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
 import { loreId } from '@/world/lore';
@@ -798,7 +798,11 @@ function useAct(
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {
         const { flags, setFlag } = useWorldStore.getState();
-        if (flags.includes('season-1')) setDialogue({ lines: SEASON_END });
+        const home = [
+          { label: 'Go home.', then: () => onTravel(PORTAL_HOME.to) },
+          { label: 'Not yet.', then: () => {} },
+        ];
+        if (flags.includes('season-1')) setDialogue({ lines: [...SEASON_END, ...PORTAL_HOME.lines], choices: home });
         else {
           // The last seal: your real record, the king you left, and the first memory, kept in your Satchel.
           const memory = habitMemory(useGameStore.getState(), toDateKey(new Date()));
@@ -807,7 +811,12 @@ function useAct(
           haptics.celebrate();
           playSound('levelUp');
           setDialogue({
-            lines: [...seasonFinale(memory, flags), `${ITEMS['first-memory'].name} is in your Satchel (pause).`],
+            lines: [
+              ...seasonFinale(memory, flags),
+              `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
+              ...PORTAL_HOME.lines,
+            ],
+            choices: home,
           });
         }
       } else

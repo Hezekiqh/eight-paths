@@ -43,6 +43,8 @@ const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
   'barracks-hall': { x: 0.86, y: 0.72 },
   'march-road': { x: 0.62, y: 0.9 },
   'kingdom-town': { x: 0.37, y: 0.9 },
+  'tithe-road': { x: 0.26, y: 0.96 },
+  'broken-watch': { x: 0.16, y: 0.88 },
   'field-of-banners': { x: 0.12, y: 0.78 },
 };
 

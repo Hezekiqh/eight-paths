@@ -510,6 +510,8 @@ const OUTDOOR_ART = {
   },
   '>'() {},
   '<'() {},
+  '^'() {}, // road ends: the way north and the way south
+  _() {},
   H(g, x, y, m) {
     // A cottage: thatched roof over the top rows, timber and plaster on the bottom row.
     const wall = m.at(0, 1) !== 'H' && m.at(0, 1) !== 'D' && m.at(0, 1) !== 'd';
@@ -736,7 +738,7 @@ function drawOutdoor(map) {
   const W = rows[0].length;
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
-  const isPath = (tx, ty) => at(tx, ty) === ',' || at(tx, ty) === '>' || at(tx, ty) === '<' || at(tx, ty) === 's';
+  const isPath = (tx, ty) => ',><^_s'.includes(at(tx, ty));
 
   // Grass everywhere, in soft patches.
   for (let y = 0; y < g.h; y++)
@@ -1127,6 +1129,20 @@ const WALKERS = {
   chaplain: { robe: true, top: '#8A94B8', shade: '#6A7498', boots: '#6A7498', skin: '#C8D0E8', hair: ['bald', '#B8C0D8'], collar: '#E8ECF8', lantern: true },
   maelis: { top: '#7A7A8A', shade: '#5A5A6A', legs: '#4A4A58', boots: '#3A2A20', belt: '#8A6A3A', hair: ['bun', '#4A3A2A'], cloak: '#4A4A5A' },
   lamplighter: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['hood', '#4A3228'], lantern: true },
+  // Old Town street life (KINGDOM-EXPANSION.md): the brawlers, their bookie and medic, a patrol, a grandmother, a boulder.
+  durn: { top: '#7A3A2A', shade: '#5A2A1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#C4442A'], beard: '#C4442A' },
+  haskel: { top: '#4A5A3A', shade: '#36442A', legs: '#3A2A20', boots: '#2A1A12', belt: '#2A1A12', skin: '#C89870', hair: ['short', '#2A1A12'], beard: '#2A1A12' },
+  bett: { top: '#8A6A9A', shade: '#6A4E7A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
+  hild: { robe: true, top: '#E8E0D0', shade: '#C8B8A0', boots: '#4A3A2A', belt: '#B3261E', hair: ['veil', '#6A5A4A'], collar: '#B3261E' },
+  drummer: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#C8B070', skin: '#D8A880', hair: ['hood', '#6A1216'], beads: '#E8E0D0' },
+  gudrun: { robe: true, top: '#5A4A3A', shade: '#42362A', boots: '#2A1A12', belt: '#8A3A2A', skin: '#E0B898', hair: ['bun', '#E8E4E0'], beads: '#E8E0D0' },
+  hamm: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['bald', '#D8A880'], boulder: true },
+  // The south road: a knitting mother, a farmer with a spoon, a whispering sergeant, the watchman, a road-block raider.
+  marta: { robe: true, top: '#8A5A3A', shade: '#6A4428', boots: '#3A2A20', hair: ['bun', '#6A4028'], apron: '#C8B890' },
+  dobb: { top: '#7A8A5A', shade: '#5A6A40', legs: '#5A4A3A', boots: '#3A2A1A', belt: '#4A3020', hair: ['short', '#B8B0A8'], beard: '#B8B0A8', apron: '#8A6A40' },
+  bellow: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#D8A880', hair: ['short', '#1A1210'], cloak: '#4A1E20', sword: true },
+  orrin: { top: '#5A6A8A', shade: '#42506A', legs: '#3A4050', boots: '#2A2A30', belt: '#C8B070', hair: ['short', '#9A9490'], beard: '#9A9490', cloak: '#2A3450', back: 'sword' },
+  grub: { top: '#5A3A2A', shade: '#42281E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], sword: true },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
 };
 
@@ -1475,6 +1491,13 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     for (const x of side ? [5, 8, 11] : [4, 7, 8, 11]) p(x, cy - 1, w.crown);
   }
 
+  if (w.boulder && !back) {
+    // a boulder carried on the shoulder, for training (six years, same boulder)
+    const bx = side ? 8 : 12;
+    ellipse(f, bx, 7, 4, 4, '#6A6260');
+    ellipse(f, bx - 1, 6, 2, 2, '#8A8280');
+  }
+
   // a dark outline around the whole silhouette, then a soft shadow at the feet
   const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
   const outline = [];
@@ -1536,6 +1559,8 @@ const MAPS = [
   'war-doors',
   'war-hall',
   'field-of-banners',
+  'tithe-road',
+  'broken-watch',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {

@@ -20,7 +20,7 @@
     "Ms..n..........ssssssss..........n...s.M",
     "Ms......X.X....s..KK..s....b.........s.M",
     "Ms.............s..KK..s..............s.M",
-    "<sssssssssssssss......ssssssssssssssss.M",
+    "<sssssssssssssss......sssssssssssssssss>",
     "Ms......X.X....s..Z...s..............s.M",
     "Ms.............ssssssss..............s.M",
     "Ms...IIIIIII.........s....TTTTTTTTT..s.M",
@@ -28,8 +28,8 @@
     "Ms...III3III.........s....TTTThTTTT..s.M",
     "Ms...................ssssssssssss....s.M",
     "Msssssssssssssssssssssssssssssssssssss.M",
-    "M......................................M",
-    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+    "M...................s..................M",
+    "MMMMMMMMMMMMMMMMMMMM_MMMMMMMMMMMMMMMMMMM"
   ],
   "spawn": {
     "x": 1,
@@ -90,6 +90,12 @@
     ],
     "<": [
       "The gate back out to the March Road."
+    ],
+    ">": [
+      "The east gate. Past it, the roofs of Kaldorhold, the city Kaldor built on top of the old one. It's loud from here."
+    ],
+    "_": [
+      "The south gate. A worn road runs south, toward the tithe camps and the old watchtower."
     ]
   },
   "objects": [
@@ -180,6 +186,14 @@
           "answer": [
             "Flour. Water. And, in exactly one loaf a day, my opinion.",
             "I have a system for choosing which."
+          ]
+        },
+        {
+          "ask": "Why are Durn and Haskel fighting?",
+          "answer": [
+            "Day eleven, is it? I was there when it started.",
+            "Last loaf of Kaldorbread on my cart. They both reached for it. Then they both remembered nobody likes it.",
+            "Neither of them would let go first. Fierce, see. Somebody ought to remind them."
           ]
         }
       ]
@@ -464,6 +478,161 @@
       "lines": [
         "Wedged behind a rain barrel, out of the horde's sight: a Heart Piece.",
         "Somebody in this town still hides good things."
+      ]
+    },
+    {
+      "id": "durn",
+      "type": "npc",
+      "x": 16,
+      "y": 9,
+      "sprite": "durn",
+      "facing": "right",
+      "name": "Durn",
+      "lines": [
+        "He looked at my axe.",
+        "HASKEL: I looked AT it. Not FOR it. There's a difference!",
+        "DURN: Day eleven. I'm not stopping first."
+      ],
+      "questions": [
+        {
+          "ask": "Is this about the last Kaldorbread?",
+          "answer": [
+            "DURN: …",
+            "HASKEL: …",
+            "DURN: Nobody even likes Kaldorbread.",
+            "HASKEL: It tastes of nothing. Like the king likes it.",
+            "DURN: Eleven days.",
+            "HASKEL: Drink?",
+            "DURN: Drink."
+          ],
+          "sets": "brawl-over",
+          "then": [
+            "Durn and Haskel let go of each other, stare at their fists for a while, and wander off east toward the city, arm in arm, for a drink."
+          ]
+        }
+      ],
+      "goneAfter": "brawl-over"
+    },
+    {
+      "id": "haskel",
+      "type": "npc",
+      "x": 17,
+      "y": 9,
+      "sprite": "haskel",
+      "facing": "left",
+      "name": "Haskel",
+      "lines": [
+        "I don't remember why we started. That's not the point.",
+        "The point is he started it.",
+        "DURN: YOU started it!"
+      ],
+      "goneAfter": "brawl-over"
+    },
+    {
+      "id": "bett",
+      "type": "npc",
+      "x": 14,
+      "y": 8,
+      "sprite": "bett",
+      "facing": "right",
+      "name": "Odd Bett",
+      "lines": [
+        "Bets! Bets on the brawl! Odds on Durn: same as yesterday. Odds on Haskel: also same as yesterday.",
+        "Kaldor coins only. No markers, no IOUs, no 'I'll owe you a headbutt'."
+      ],
+      "after": {
+        "flag": "brawl-over",
+        "lines": [
+          "Fight's off. Eleven days of the best odds in the kingdom, and they go for a DRINK.",
+          "Worst day of my life. Don't talk to me."
+        ]
+      }
+    },
+    {
+      "id": "hild",
+      "type": "npc",
+      "x": 17,
+      "y": 11,
+      "sprite": "hild",
+      "facing": "up",
+      "name": "Sister Hild",
+      "lines": [
+        "Day eleven. I've brought a stool, a bucket, and a lot of yarn.",
+        "Whoever drops first, I'll patch him up. Neither of them has dropped. I've knitted a scarf."
+      ],
+      "after": {
+        "flag": "brawl-over",
+        "lines": [
+          "They've gone for a drink. Together. Eleven days, and it was the bread.",
+          "I'll finish the scarf anyway. It's a very long scarf now."
+        ]
+      }
+    },
+    {
+      "id": "tuk",
+      "type": "npc",
+      "x": 30,
+      "y": 7,
+      "sprite": "drummer",
+      "facing": "left",
+      "name": "Drum-warden Tuk",
+      "lines": [
+        "BOOM. Curfew patrol. BOOM. Keep moving. BOOM.",
+        "We march in step. Tok is out of step. Tok has always been out of step."
+      ]
+    },
+    {
+      "id": "tok",
+      "type": "npc",
+      "x": 31,
+      "y": 7,
+      "sprite": "drummer",
+      "facing": "left",
+      "name": "Drum-warden Tok",
+      "lines": [
+        "BOOM. …BOOM.",
+        "I'm in step. Tuk's out of step. Rumm hasn't got a drum. Some patrol."
+      ]
+    },
+    {
+      "id": "rumm",
+      "type": "npc",
+      "x": 32,
+      "y": 7,
+      "sprite": "drummer",
+      "facing": "left",
+      "name": "Drum-warden Rumm",
+      "lines": [
+        "*slap* *slap*",
+        "Lost my drum. Belly works fine. Don't tell the captain.",
+        "*slap*"
+      ]
+    },
+    {
+      "id": "gudrun",
+      "type": "npc",
+      "x": 8,
+      "y": 7,
+      "sprite": "gudrun",
+      "facing": "down",
+      "name": "Old Gudrun",
+      "lines": [
+        "Ninety-one. Ninety-two. Don't interrupt.",
+        "Chin-ups on the cage bars. The bars are the only thing in this town that don't wobble.",
+        "Ninety-three. When I was a girl I did these on the old king's gate. Ninety-four."
+      ]
+    },
+    {
+      "id": "hamm",
+      "type": "npc",
+      "x": 4,
+      "y": 12,
+      "sprite": "hamm",
+      "facing": "right",
+      "name": "Hamm",
+      "lines": [
+        "Training. Carrying the boulder. Six years now.",
+        "Same boulder. I named him Pebble. Pebble isn't a pebble. That's the joke. I don't get many visitors."
       ]
     }
   ],

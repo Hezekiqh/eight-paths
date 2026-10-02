@@ -1,0 +1,133 @@
+{
+  "id": "tithe-road",
+  "name": "The Tithe Road",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTT^TTTTTTTTTTT",
+    "TT.....g......T.....,......g..TT",
+    "T..AA.......n.......,..........T",
+    "T..AA...x...........,,,,.....j.T",
+    "T......g.......AA......,.......T",
+    "T..S...........AA......,...g...T",
+    "T....j.....x...........,.......T",
+    "TT.......,,,,,,,,,,,,,,,.......T",
+    "T........,.......g.......AA....T",
+    "T...g....,...........x...AA..j.T",
+    "TT.......,...................TTT",
+    "TTTTTTTTT_TTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 20,
+    "y": 1,
+    "facing": "down"
+  },
+  "examine": {
+    "T": [
+      "Pines, black with smoke from a hundred campfires."
+    ],
+    "A": [
+      "A family's tent, patched with regiment scarves. Inside, someone is practising a war cry, quietly, so as not to wake the baby."
+    ],
+    "x": [
+      "A campfire. A pot of something grey. It might be Kaldorbread soup. It might be glue."
+    ],
+    "n": [
+      "A tithe banner: the fist crushing a crown, and under it, chalked: ONE FIGHTER OR ONE IRON. PER HOUSE. PER YEAR."
+    ],
+    "j": [
+      "A cairn of small stones, one for each fighter who walked this road and didn't walk back."
+    ],
+    "S": [
+      "A signpost. NORTH: KALDOR. SOUTH: NOT KALDOR (YET)."
+    ],
+    "^": [
+      "The road north, back up to the kingdom's south gate."
+    ],
+    "_": [
+      "The road south, toward an old watchtower on the hill."
+    ]
+  },
+  "objects": [
+    {
+      "id": "marta",
+      "type": "npc",
+      "x": 6,
+      "y": 4,
+      "sprite": "marta",
+      "facing": "right",
+      "name": "Marta",
+      "lines": [
+        "Knitting armour for my boy. He goes to the city in the spring, for the tithe.",
+        "Wool armour. I know. But it's very thick wool, and I've put a lot of love in it, and love is heavier than you'd think."
+      ],
+      "questions": [
+        {
+          "ask": "What is the tithe?",
+          "answer": [
+            "Every house gives one fighter to the pit a year. Or iron, if you've got iron.",
+            "Nobody's got iron. The king has all the iron. So it's fighters."
+          ]
+        },
+        {
+          "ask": "Is your boy a fighter?",
+          "answer": [
+            "He's a poet. He writes about clouds.",
+            "He's going to headbutt somebody, very sadly, and then he's going to write about it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dobb",
+      "type": "npc",
+      "x": 22,
+      "y": 9,
+      "sprite": "dobb",
+      "facing": "left",
+      "name": "Old Dobb",
+      "lines": [
+        "I've brought my iron. For the tithe.",
+        "…It's a spoon. It's iron, though. Mostly. The handle's iron.",
+        "If the king wants a fighter out of my house he can have the goat. The goat's meaner than all of us."
+      ]
+    },
+    {
+      "id": "bellow",
+      "type": "npc",
+      "x": 13,
+      "y": 7,
+      "sprite": "bellow",
+      "facing": "down",
+      "name": "Sergeant Bellow",
+      "lines": [
+        "(whispering) Tithe camp. Fighters on the left. Iron on the right.",
+        "(whispering) Spoons are not iron. Tell Dobb. He won't hear it from me.",
+        "(whispering) I can't shout. Never could. The whole squad has to lean in. We're very close as a squad."
+      ],
+      "questions": [
+        {
+          "ask": "Why do you whisper?",
+          "answer": [
+            "(whispering) Born like it. My mum says I came out, looked around, and said 'oh no' very quietly.",
+            "(whispering) The horde made me a sergeant to toughen me up. Now everybody whispers back. It's quite nice."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tithe-sign",
+      "type": "sign",
+      "x": 13,
+      "y": 3,
+      "lines": [
+        "TITHE CAMP. NO FIGHTING IN THE CAMP.",
+        "Underneath, smaller: (ALL FIGHTING TO BE SAVED FOR THE PIT.)"
+      ]
+    }
+  ]
+}

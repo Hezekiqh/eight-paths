@@ -21,6 +21,8 @@ import thePitData from './maps/the-pit.json';
 import warDoorsData from './maps/war-doors.json';
 import warHallData from './maps/war-hall.json';
 import fieldOfBannersData from './maps/field-of-banners.json';
+import titheRoadData from './maps/tithe-road.json';
+import brokenWatchData from './maps/broken-watch.json';
 import type { CharacterId } from '@/story/companions';
 
 import { ENEMY_KINDS, type EnemyKind } from './combat';
@@ -245,6 +247,8 @@ export const MAPS = {
   'war-doors': build(warDoorsData as MapData, require('@/assets/world/war-doors.png')),
   'war-hall': build(warHallData as MapData, require('@/assets/world/war-hall.png')),
   'field-of-banners': build(fieldOfBannersData as MapData, require('@/assets/world/field-of-banners.png')),
+  'tithe-road': build(titheRoadData as MapData, require('@/assets/world/tithe-road.png')),
+  'broken-watch': build(brokenWatchData as MapData, require('@/assets/world/broken-watch.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;
