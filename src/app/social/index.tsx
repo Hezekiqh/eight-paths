@@ -40,7 +40,7 @@ import { FOUNDER_COUNT } from '@/social/config';
 import { useSocial, type Profile } from '@/social/store';
 import { USERNAME_RULES, extractFriendCode, founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
-import { deleteEverything } from '@/store/delete-everything';
+import { NOT_CONFIRMED, deleteEverything } from '@/store/delete-everything';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 
@@ -270,7 +270,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteEverything();
+              if ((await deleteEverything()) === 'canceled') Alert.alert('Nothing was deleted', NOT_CONFIRMED);
             } catch (e) {
               Alert.alert('Not deleted', message(e));
             }

@@ -1,21 +1,27 @@
-import { deleteAccount } from '@/social/api';
+import { deleteAccount, forgetAccountHere, signedInHere } from '@/social/api';
 import { useTradeNotices } from '@/social/notices';
-import { useSocial } from '@/social/store';
 import { useTour } from '@/tutorial/tour';
 import { useWorldStore } from '@/world/store';
 
 import { useGameStore } from './index';
 
+/** Said when the player backs out of confirming with Apple: the delete didn't happen. */
+export const NOT_CONFIRMED = "You didn't confirm with Apple, so your account and your game are untouched.";
+
 /**
- * Delete account: everything goes. If signed in, the account and everything
- * the server holds (username, founder number, friends, heroes, trades) is
- * deleted first; if that fails or is cancelled, nothing is erased. Then the
+ * Delete account: everything goes. If this phone holds a sign-in at all (even
+ * one social hasn't finished loading), the account and everything the server
+ * holds (username, founder number, friends, heroes, trades) is deleted first;
+ * if that fails or is cancelled, nothing is erased. The sign-in is then
+ * forgotten on this phone, so the old username can't come back on the next
+ * launch, and the server's old trades can't flow back into the new collection. Then the
  * game on this phone is erased too, as on the first launch: no player, quests,
  * levels or heroes (back to the start), a fresh Other World, and the Keeper's
  * tour to come. Premium and the app's own settings (theme, sound) stay.
  */
 export async function deleteEverything(): Promise<'deleted' | 'canceled'> {
-  if (useSocial.getState().status === 'ready' && (await deleteAccount()) === 'canceled') return 'canceled';
+  if ((await signedInHere()) && (await deleteAccount()) === 'canceled') return 'canceled';
+  await forgetAccountHere();
   useTradeNotices.setState({ moments: [] });
   useGameStore.getState().resetGame();
   useWorldStore.getState().restart();

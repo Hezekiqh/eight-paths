@@ -473,6 +473,33 @@ export async function signOut() {
 }
 
 /**
+ * Whether this phone holds a sign-in, whatever social's status says (it can
+ * still be loading, or have given up offline at launch while the session stays saved).
+ */
+export async function signedInHere(): Promise<boolean> {
+  if (!socialEnabled) return false;
+  const { data } = await supabase().auth.getSession();
+  return !!data.session;
+}
+
+/** Forgets the account on this phone: the saved sign-in and everything social remembers this launch. */
+export async function forgetAccountHere() {
+  if (socialEnabled)
+    await supabase()
+      .auth.signOut({ scope: 'local' })
+      .catch(() => {});
+  useSocial.setState({
+    status: socialEnabled ? 'signedOut' : 'off',
+    profile: null,
+    friends: [],
+    stats: {},
+    offers: [],
+    pendingFriendCode: null,
+    shareConsistency: true,
+  });
+}
+
+/**
  * Deletes the account and everything the server holds for it. For Apple
  * accounts, the player confirms with Sign in with Apple first, which gives a
  * fresh code the server uses to revoke the app's access to their Apple ID.

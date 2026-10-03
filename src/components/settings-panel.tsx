@@ -16,7 +16,7 @@ import { usePremium } from '@/premium/store';
 import { shareFriendCode } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useGameStore } from '@/store';
-import { deleteEverything } from '@/store/delete-everything';
+import { NOT_CONFIRMED, deleteEverything } from '@/store/delete-everything';
 import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
@@ -80,7 +80,10 @@ export function SettingsPanel() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteEverything().catch((e: Error) => Alert.alert('Not deleted', e.message)),
+          onPress: () =>
+            deleteEverything()
+              .then((r) => r === 'canceled' && Alert.alert('Nothing was deleted', NOT_CONFIRMED))
+              .catch((e: Error) => Alert.alert('Not deleted', e.message)),
         },
       ],
     );
