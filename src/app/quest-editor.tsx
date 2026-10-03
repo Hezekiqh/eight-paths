@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ClassChips } from '@/components/class-chips';
+import { KeeperTour } from '@/components/keeper-tour';
+import { useTourTarget } from '@/tutorial/tour';
 import { ModalHeader } from '@/components/modal-header';
 import { Segmented } from '@/components/segmented';
 import { NoteBox } from '@/components/note-box';
@@ -41,7 +43,9 @@ const DAY_TOGGLES = [
 ];
 
 export default function QuestEditor() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  // `tour`: opened by the Keeper's tour, to explain the eight Paths (no keyboard popping up).
+  const { id, tour } = useLocalSearchParams<{ id?: string; tour?: string }>();
+  const pathsRef = useTourTarget('paths');
   const existing = useQuest(id);
   const player = usePlayer();
   const addQuest = useGameStore((s) => s.addQuest);
@@ -113,14 +117,16 @@ export default function QuestEditor() {
           placeholder="e.g. Stretch for 10 min"
           placeholderTextColor={colors.textFaint}
           style={styles.input}
-          autoFocus={!existing}
+          autoFocus={!existing && !tour}
           maxLength={60}
           returnKeyType="done"
         />
 
-        <Text style={styles.label}>Class</Text>
-        <ClassChips value={dimension} onChange={(d) => d && setDimension(d)} />
-        <Text style={styles.hint}>{info.growth}</Text>
+        <View ref={pathsRef} collapsable={false} style={styles.paths}>
+          <Text style={styles.label}>Class</Text>
+          <ClassChips value={dimension} onChange={(d) => d && setDimension(d)} />
+          <Text style={styles.hint}>{info.growth}</Text>
+        </View>
 
         <Text style={styles.label}>Repeat</Text>
         <Segmented options={SCHEDULES} value={kind} onChange={setKind} color={info.color} />
@@ -149,6 +155,8 @@ export default function QuestEditor() {
           </Pressable>
         )}
       </ScrollView>
+      {/* The Keeper's tour, when it brings the player here (a sheet covers its usual overlay). */}
+      <KeeperTour inside />
     </View>
   );
 }
@@ -156,6 +164,7 @@ export default function QuestEditor() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl * 2 },
+  paths: { gap: spacing.md },
   label: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.sm },
   input: {
     ...windowStyle,

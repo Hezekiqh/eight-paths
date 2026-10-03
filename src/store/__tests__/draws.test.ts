@@ -121,19 +121,42 @@ describe('the core eight are met, not drawn', () => {
   it('wakes the hero you chose to be with the first XP, with their hatch', () => {
     const chose = { player: { origin: 'quill' as const } };
     expect(reconcileDraws(fresh({ owned: {}, ...chose }), zeroXp, seeded())!.owned?.quill).toBeUndefined();
-    const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 }, ...chose }), { ...zeroXp, financial: 10 }, seeded())!;
+    const out = reconcileDraws(
+      fresh({ owned: {}, nextDraw: { physical: 99 }, ...chose }),
+      { ...zeroXp, financial: 10 },
+      seeded(),
+    )!;
+    expect(out.owned).toEqual({ quill: 1 });
+    expect(out.drops).toEqual(['quill']);
+  });
+
+  it("wakes the class's hero with the first habit, before any hero is chosen (Quill for a Mage)", () => {
+    const mage = { player: { classDimension: 'intellectual' as const } };
+    expect(reconcileDraws(fresh({ owned: {}, ...mage }), zeroXp, seeded())?.owned?.quill).toBeUndefined();
+    const out = reconcileDraws(
+      fresh({ owned: {}, nextDraw: { physical: 99 }, ...mage }),
+      { ...zeroXp, intellectual: 10 },
+      seeded(),
+    )!;
     expect(out.owned).toEqual({ quill: 1 });
     expect(out.drops).toEqual(['quill']);
   });
 
   it("wakes nobody before the Keeper's question is answered", () => {
-    const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 } }), { ...zeroXp, financial: 10 }, seeded());
+    const out = reconcileDraws(
+      fresh({ owned: {}, nextDraw: { physical: 99 } }),
+      { ...zeroXp, financial: 10 },
+      seeded(),
+    );
     expect(out?.owned ?? {}).toEqual({});
   });
 
   it('never hands out a core hero you have not met', () => {
     // Many arrivals on every Path, nobody met yet but Brannoc.
-    const state = fresh({ owned: { brannoc: 1 }, nextDraw: Object.fromEntries(Object.keys(zeroXp).map((d) => [d, 6])) });
+    const state = fresh({
+      owned: { brannoc: 1 },
+      nextDraw: Object.fromEntries(Object.keys(zeroXp).map((d) => [d, 6])),
+    });
     const lots = Object.fromEntries(Object.keys(zeroXp).map((d) => [d, xpForLevel(60)])) as typeof zeroXp;
     const out = reconcileDraws(state, lots, seeded(7))!;
     expect(out.drops.length).toBeGreaterThan(40);

@@ -148,7 +148,10 @@ export default function WorldScreen() {
       flash.set(withTiming(1, { duration: FLASH_IN_MS }));
       setTimeout(() => {
         // Who you woke as: forever (Player.origin). They walk first, and their roadside meeting is skipped.
+        const hatches = !(useGameStore.getState().owned?.[id] ?? 0);
         useGameStore.getState().chooseOrigin(id);
+        // Someone new hatches over the game: come back to it afterwards, not to the World menu.
+        if (hatches && heroAwake(useGameStore.getState())) keepSideways = true;
         useWorldStore.getState().setHero(id);
         useWorldStore.getState().setFlag(metFlag(id));
         useSession.setState({ heroIntro: id });

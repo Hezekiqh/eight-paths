@@ -1,59 +1,101 @@
 export type Rect = { x: number; y: number; width: number; height: number };
 
-/** The tab screens the tour walks through. */
-export type TourRoute = '/' | '/character' | '/social-tab' | '/journey' | '/world';
+/** The screens the tour walks through: the tabs, and the habit creator. */
+export type TourRoute = '/' | '/character' | '/social-tab' | '/journey' | '/world' | '/quest-editor';
 
 export type TourStep = {
-  /** What the Keeper says. */
+  /** What the Keeper says. `{name}` is the player's name; `{hero}` the first hero to wake. */
   line: string;
-  /** The tab to open first. */
+  /** The screen to be on. */
   route: TourRoute;
+  /** Where to go to get there, when it isn't just `route` (the habit creator opens for the tour). */
+  href?: string;
   /** The tour target to point at (see useTourTarget); none, or not on screen, centres the box. */
   target?: string;
+  /**
+   * The player does it: tapping completes the first habit, and the tour waits,
+   * hidden, while it lands and the first hero hatches, then carries on.
+   */
+  complete?: 'first-quest';
 };
 
 /**
- * The Keeper's walk through the app: it starts on Today, opens each tab in
- * turn and points at what matters there, and ends at the Other World's door.
- * Finishing it steps the player outside.
+ * The Keeper's walk through the game, straight after the player gives their
+ * name. A habit is made (the habit creator, where the eight Paths are
+ * explained), the graph is shown, the first habit is completed together (its
+ * hero hatches), then each tab, ending at the Other World's door. The player
+ * steps outside when they're ready.
  */
 export const TOUR_STEPS: TourStep[] = [
-  { route: '/', line: 'Ah, there you are. Let me show you how things work around here.' },
+  { route: '/', line: 'Ah, {name}. There you are. Let me show you how things work around here.' },
+  {
+    route: '/',
+    target: 'add-quest',
+    line: 'Everything here begins with a habit: something real that you do. New ones are made here. Let me show you.',
+  },
+  {
+    route: '/quest-editor',
+    href: '/quest-editor?tour=1',
+    target: 'paths',
+    line: 'Every habit walks one of eight Paths, the eight parts of a whole life. Neglect one, and the others feel it.',
+  },
+  {
+    route: '/quest-editor',
+    href: '/quest-editor?tour=1',
+    target: 'paths',
+    line: 'The Warrior is your body: sleep, movement, what you eat. The Noble is your money. The Mage is your mind, and everything it is still curious about.',
+  },
+  {
+    route: '/quest-editor',
+    href: '/quest-editor?tour=1',
+    target: 'paths',
+    line: 'The Cleric is meaning: faith, values, quiet. The Monk is your heart, and how kindly you treat yourself. The Bard is your people, the ones you call.',
+  },
+  {
+    route: '/quest-editor',
+    href: '/quest-editor?tour=1',
+    target: 'paths',
+    line: 'The Artificer is your work and your craft. The Ranger is the world around you: fresh air, and the places you live. Make habits here whenever you like.',
+  },
   {
     route: '/',
     target: 'radar',
-    line: 'This is you. Eight Paths, one for every part of a life. Each grows as you do.',
+    line: 'This is a reflection of you. As time goes on, you will see which habits you put first, and you may want to adjust.',
   },
   {
     route: '/',
     target: 'first-quest',
-    line: "These are your quests: real things you do. When you've done one, tap it, and its Path grows stronger.",
+    complete: 'first-quest',
+    line: "Here you'll find your habits. Let's complete this first one together. Tap it.",
   },
-  { route: '/', target: 'add-quest', line: 'Want to build a new habit? Add it here. Every quest strengthens a Path.' },
+  {
+    route: '/',
+    line: 'Congratulations. {hero} is awake, and joins you. Only 199 heroes to go.',
+  },
   {
     route: '/character',
     target: 'collection',
-    line: 'Every few levels on a Path, a cocoon hatches and someone new joins you. Watch the ones with fewer stars.',
+    line: "Here are the heroes you've collected. The more stars, the rarer they are: five-star heroes are the rarest of all.",
   },
   {
     route: '/social-tab',
     target: 'social',
-    line: 'No one walks alone for long. Find friends by name, or share your code: each friend who joins wakes a 5★ hero for you.',
+    line: 'In Social you can search for friends, look through their collections, and add them to your leaderboard.',
   },
   {
     route: '/journey',
     target: 'journey',
-    line: "Your Journey remembers every day you've walked, so you can see how far you've come.",
+    line: 'Here you will find more charts of your days. Health data is coming soon.',
   },
   {
     route: '/world',
     target: 'step-outside',
-    line: 'Out there is the Other World. The stronger your habits make you, the farther you can go.',
+    line: 'And lastly, the Other World. The habits you keep in your life strengthen your party here.',
   },
   {
     route: '/world',
     target: 'step-outside',
-    line: "The rest you'll find on your own. Go on, step outside. I'll be watching.",
+    line: "Step in whenever you're ready. I have been waiting for you for a long time.",
   },
 ];
 

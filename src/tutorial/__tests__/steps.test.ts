@@ -6,7 +6,12 @@ describe('placeTour', () => {
   it('puts the box under a target in the top half, arrow pointing up', () => {
     const out = placeTour({ x: 20, y: 120, width: 350, height: 200 }, screen);
     expect(out.arrow.dir).toBe('up');
-    expect(out.hole).toEqual({ x: 20 - HOLE_PAD, y: 120 - HOLE_PAD, width: 350 + HOLE_PAD * 2, height: 200 + HOLE_PAD * 2 });
+    expect(out.hole).toEqual({
+      x: 20 - HOLE_PAD,
+      y: 120 - HOLE_PAD,
+      width: 350 + HOLE_PAD * 2,
+      height: 200 + HOLE_PAD * 2,
+    });
     expect(out.arrow.y).toBe(320 + HOLE_PAD + GAP);
     expect(out.box).toEqual({ top: out.arrow.y + ARROW_H + GAP });
   });
@@ -43,8 +48,23 @@ describe('TOUR_STEPS', () => {
     expect(last.target).toBe('step-outside');
   });
 
-  it('visits each tab once, in tab-bar order', () => {
+  it('makes a habit, comes back to Today, then visits each tab once, in tab-bar order', () => {
     const visited = TOUR_STEPS.map((s) => s.route).filter((r, i, all) => r !== all[i - 1]);
-    expect(visited).toEqual(['/', '/character', '/social-tab', '/journey', '/world']);
+    expect(visited).toEqual(['/', '/quest-editor', '/', '/character', '/social-tab', '/journey', '/world']);
+  });
+
+  it('explains all eight Paths in the habit creator', () => {
+    const said = TOUR_STEPS.filter((s) => s.route === '/quest-editor')
+      .map((s) => s.line)
+      .join(' ');
+    for (const cls of ['Warrior', 'Noble', 'Mage', 'Cleric', 'Monk', 'Bard', 'Artificer', 'Ranger'])
+      expect(said).toContain(cls);
+  });
+
+  it('completes the first habit together, then celebrates the first hero', () => {
+    const at = TOUR_STEPS.findIndex((s) => s.complete === 'first-quest');
+    expect(TOUR_STEPS[at].target).toBe('first-quest');
+    expect(TOUR_STEPS[at + 1].line).toContain('{hero}');
+    expect(TOUR_STEPS[at + 1].line).toContain('199');
   });
 });

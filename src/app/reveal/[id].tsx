@@ -239,7 +239,15 @@ export default function RevealScreen() {
   const redoDrop = useGameStore((s) => s.redoDrop);
   const premium = usePremium((s) => s.premium);
   // A Premium redo is offered once per drop, never on a preview or on a drop that is already a redo.
-  const canRedo = useGameStore((s) => !preview && isCharacterId(id) && s.drops.includes(id) && !s.redrawn.includes(id));
+  // Never for the core eight: they're the heroes you're given, not a draw.
+  const canRedo = useGameStore(
+    (s) =>
+      !preview &&
+      isCharacterId(id) &&
+      COMPANIONS[id].kind !== 'core' &&
+      s.drops.includes(id) &&
+      !s.redrawn.includes(id),
+  );
   const flair = FLAIR[isCharacterId(id) ? COMPANIONS[id].rarity : 3];
   const SHAKE = flair.shake;
   const EYE_OPEN = flair.eye;

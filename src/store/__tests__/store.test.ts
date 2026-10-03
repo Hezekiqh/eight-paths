@@ -91,7 +91,9 @@ describe('game store', () => {
     start();
     const [, read, move] = useGameStore.getState().quests;
     useGameStore.getState().setQuestOrder([move.id, read.id]);
-    useGameStore.getState().addQuest({ title: 'Call a friend', dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+    useGameStore
+      .getState()
+      .addQuest({ title: 'Call a friend', dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
     const titles = () => selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.title);
     expect(titles()).toEqual(['Move 30 min', 'Read 20 min', 'Call a friend']);
     useGameStore.getState().setQuestOrder(null);
@@ -178,7 +180,9 @@ describe('game store', () => {
     expect(useGameStore.getState().skipQuest(read.id, today)).toBe(false);
     expect(selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.title)).toEqual(['Move 30 min']);
     expect(selectTodayQuests(useGameStore.getState(), '2026-09-27').map((v) => v.quest.title)).toContain('Read 20 min');
-    const intellectual = selectDimensionStats(useGameStore.getState(), today).find((d) => d.dimension === 'intellectual');
+    const intellectual = selectDimensionStats(useGameStore.getState(), today).find(
+      (d) => d.dimension === 'intellectual',
+    );
     expect(intellectual?.consistency.due).toBe(0);
   });
 
@@ -410,30 +414,29 @@ describe('loading a saved game', () => {
     expect(last.kind === 'completed' && last.milestone?.title).toBe('Level 10');
   });
 
-  it('starts with nobody met, the chosen hero waking with the first habit, and the rest met in the World', () => {
+  it('starts with nobody met, wakes the class hero with the first habit, then the chosen hero, and meets the rest', () => {
     start();
     expect(selectCollection(useGameStore.getState()).unlockedCount).toBe(0);
-    // A habit before the Keeper's question wakes nobody: nobody is chosen yet.
+    // The first habit wakes the class's hero, Quill for a Mage, with their hatch.
     useGameStore.getState().toggleQuest('tutorial', today);
     useGameStore.getState().reconcileDraws();
-    expect(useGameStore.getState().owned).toEqual({});
+    expect(useGameStore.getState().owned).toEqual({ quill: 1 });
+    expect(useGameStore.getState().drops).toEqual(['quill']);
 
-    // Answering it wakes them at once (a habit is done), and they take their Path's slot. Not Brannoc.
+    // Entering the Other World, the hero chosen to be wakes too, and takes their Path's slot.
     useGameStore.getState().chooseOrigin('wren');
-    expect(useGameStore.getState().owned).toEqual({ wren: 1 });
-    expect(useGameStore.getState().drops).toEqual(['wren']);
+    expect(useGameStore.getState().owned).toEqual({ quill: 1, wren: 1 });
+    expect(useGameStore.getState().drops).toEqual(['quill', 'wren']);
     expect(useGameStore.getState().party.spiritual).toBe('wren');
-    const party = selectCollection(useGameStore.getState()).party;
-    expect(Object.values(party).filter((e) => e.unlocked).map((e) => e.companion.id)).toEqual(['wren']);
 
-    // Asked once: a second answer changes nothing, and only the four starters can be chosen.
-    useGameStore.getState().chooseOrigin('quill');
+    // Asked once: a second answer changes nothing.
+    useGameStore.getState().chooseOrigin('brannoc');
     expect(useGameStore.getState().player?.origin).toBe('wren');
 
     // Found in the Other World: they join at once, with no hatch.
     useGameStore.getState().meetCharacters(['brannoc']);
     expect(useGameStore.getState().owned?.brannoc).toBe(1);
-    expect(useGameStore.getState().drops).toEqual(['wren']);
+    expect(useGameStore.getState().drops).toEqual(['quill', 'wren']);
   });
 
   it('only lets one of the four starters be chosen', () => {

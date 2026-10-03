@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts, spacing } from '@/theme';
 
 type Props = PropsWithChildren<{
-  step: number;
+  /** Which step of how many, when onboarding has more than one. */
+  step?: { at: number; of: number };
   title: string;
   subtitle?: string;
   footer: ReactNode;
@@ -16,7 +17,11 @@ export function OnboardingStep({ step, title, subtitle, footer, children }: Prop
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.step}>STEP {step} OF 3</Text>
+          {step && (
+            <Text style={styles.step}>
+              STEP {step.at} OF {step.of}
+            </Text>
+          )}
           <Text style={styles.title}>{title}</Text>
           {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           <View style={styles.body}>{children}</View>
