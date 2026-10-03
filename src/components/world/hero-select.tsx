@@ -14,7 +14,7 @@ import { COMPANIONS, STARTERS, type CharacterId } from '@/story/companions';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 const KEEPER_LINE =
-  "Oh good, you're finally awake. I was beginning to forget what you look like. Which hero do you look like?";
+  "Oh good, you're finally awake. I was beginning to forget what you look like.";
 
 /**
  * The first step into the Other World, like Pokémon's "boy or girl": the

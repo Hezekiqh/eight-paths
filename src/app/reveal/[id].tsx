@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -247,6 +248,11 @@ export default function RevealScreen() {
   const legendSpin = useSharedValue(0);
   const copies = useGameStore((s) => (isCharacterId(id) ? (s.owned?.[id] ?? 0) : 0));
   const reduceMotion = useReducedMotion();
+  // A hatch is always upright, even over the sideways World (a cocoon broken there); the World turns
+  // the phone back when it's in front again.
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+  }, []);
   const { width: W, height: H } = useWindowDimensions();
   const [phase, setPhase] = useState<Phase>('waking');
   const [crack, setCrack] = useState(0);
