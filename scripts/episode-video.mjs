@@ -900,7 +900,13 @@ function drawWorld(canvas, ep, st, t) {
   // everyone, back to front by their feet; while you play cards, you and the Keeper sit on the floor
   const sitting = st.cards ? ['keeper'] : [];
   const ents = Object.values(map.npcs)
-    .filter((n) => (!ep.hide?.includes(n.id) || st.shown.includes(n.id)) && !sitting.includes(n.id) && !st.npcAt[n.id]?.gone)
+    // someone who only comes later in the story (comesAfter: Felix, once his cocoon breaks) isn't here yet
+    .filter(
+      (n) =>
+        ((!ep.hide?.includes(n.id) && !n.comesAfter) || st.shown.includes(n.id)) &&
+        !sitting.includes(n.id) &&
+        !st.npcAt[n.id]?.gone,
+    )
     .map((n) => {
       const at = st.npcAt[n.id];
       const lt = st.laughing[n.id];
