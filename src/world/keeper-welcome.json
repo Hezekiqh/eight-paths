@@ -1,0 +1,50 @@
+{
+  "welcome": [
+    "Welcome back, my dear.",
+    "Would you care to play a hand of cards?"
+  ],
+  "cards": [
+    "You sit on the floor and deal. The Keeper shuffles like he's done it for five hundred years."
+  ],
+  "noCards": [
+    "THE KEEPER: As you wish."
+  ],
+  "asks": [
+    {
+      "ask": "How did that passage lead me here?",
+      "answer": [
+        "I made those passages, in case you should need to rest along your journey.",
+        "I am still a little sore from the making of them. I shall be quite myself again in another five hundred years."
+      ]
+    },
+    {
+      "ask": "What is this place?",
+      "answer": [
+        "As I told you before, I spent a tremendous amount of power to make this place.",
+        "It is a space between realities.",
+        "I made it to give you privacy, until you woke."
+      ]
+    },
+    {
+      "ask": "Are you immortal?",
+      "answer": [
+        "I am.",
+        "But that is another long story."
+      ]
+    }
+  ],
+  "candle": [
+    "I see you have stumbled upon that curious candle.",
+    "It will carry you to a destination of some importance. Whether that proves good or ill is up to you.",
+    "Or, of course, you may always go back the way you came."
+  ],
+  "cardsEnd": [
+    "The Keeper wins, and pretends to be surprised about it."
+  ],
+  "confronted": "I do wonder why he has not confronted you yet.",
+  "afterThoughts": [
+    "(He's immortal.)",
+    "(And someone else is watching me?)",
+    "(What did he mean by privacy?)"
+  ]
+}

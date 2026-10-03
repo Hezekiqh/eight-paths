@@ -10,7 +10,8 @@ import { WALKER_ROWS, type WalkerId } from './walkers';
 const BY_NAME = new Map<string, WalkerId>();
 for (const map of Object.values(MAPS)) {
   for (const npc of map.npcs) {
-    if (npc.sprite in WALKER_ROWS) BY_NAME.set(npc.name.toUpperCase(), npc.sprite);
+    // (a variant walker, like Brannoc without his sword, never stands for their name: pass `sprite` for it)
+    if (npc.sprite in WALKER_ROWS && npc.sprite !== 'brannocbare') BY_NAME.set(npc.name.toUpperCase(), npc.sprite);
   }
 }
 

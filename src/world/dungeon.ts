@@ -16,10 +16,33 @@ const DOOR = [21, 2] as [number, number];
 /** Under the guards' stair, where you arrive: the march starts here. */
 export const ESCORT_START = { x: 21, y: 3 };
 
+/** At the foot of the guards' stair, before the march: a guard either side of you, standing. */
+export const escortStand = (guard: number): Actor[] => [
+  { row: guard, path: [[21, 4]], face: 1 },
+  { row: -1, path: [[21, 3]], face: 0 },
+  { row: guard, path: [DOOR], face: 0 },
+];
+
 /** Down from the guards' stair and along the corridor to the cell door: a guard ahead, you, a guard behind. */
 export const escortIn = (guard: number): Actor[] => [
-  { row: guard, path: [[21, 4], [21, 6], [5, 6]], face: 1 },
-  { row: -1, path: [[21, 3], [21, 6], [6, 6]], face: 1 },
+  {
+    row: guard,
+    path: [
+      [21, 4],
+      [21, 6],
+      [5, 6],
+    ],
+    face: 1,
+  },
+  {
+    row: -1,
+    path: [
+      [21, 3],
+      [21, 6],
+      [6, 6],
+    ],
+    face: 1,
+  },
   { row: guard, path: [DOOR, [21, 6], [7, 6]], face: 1 },
 ];
 
@@ -27,7 +50,14 @@ export const escortIn = (guard: number): Actor[] => [
 export const CELL_DOOR = { x: 6, y: 5 };
 export const shovedIn = (guard: number): Actor[] => [
   { row: guard, path: [[5, 6]], face: 1 },
-  { row: -1, path: [[6, 6], [6, 4]], face: 0 },
+  {
+    row: -1,
+    path: [
+      [6, 6],
+      [6, 4],
+    ],
+    face: 0,
+  },
   { row: guard, path: [[7, 6]], face: 1 },
 ];
 
@@ -39,6 +69,8 @@ export const guardsLeave = (guard: number): Actor[] => [
 ];
 
 export const ESCORT_LINES = {
+  // at the foot of the guards' stair, before they march you down
+  start: ['GUARD: Walk. And no plotting.'],
   door: ['GUARD: In you go.'],
   // after the door slams and the guards have gone
   cell: [
@@ -52,17 +84,26 @@ export const ESCORT_LINES = {
 
 /** Brannoc, out of the corner: past you, through the bars, along the corridor and up the ladder. */
 export const brannocBolts = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [[2, 4], [5, 4], [5, 5], [5, 6], [20, 6], [20, 8]] },
+  {
+    row: brannoc,
+    path: [
+      [2, 4],
+      [5, 4],
+      [5, 5],
+      [5, 6],
+      [20, 6],
+      [20, 8],
+    ],
+  },
   { row: -1, path: [[6, 4]], face: 2 },
 ];
 
 /** Gary, at his table, as Brannoc goes by. */
 export const GARY_STARTLED = [
-  'GARY: !',
   'GARY: ...',
-  "GARY: I didn't see that.",
-  "GARY: I don't get paid enough to have seen that.",
-];
+  'GARY: I did not see that.',
+  'GARY: ... I do not get paid enough to have seen that.',
+]
 
 // ---- Up the ladder, into the Kaldorium (author, Oct 3, 2026). Brannoc got there first, and the guards
 // have him. He faints. Five guards, then the warden, who can't be hurt: twenty strikes and he hasn't
@@ -93,7 +134,7 @@ export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }
   'pit-guards': {
     lines: [
       'GUARD: STOP RIGHT THERE!',
-      "Brannoc, halfway across the sand, freezes. He goes white. Then grey. Then he faints, flat on his back, right in front of you.",
+      'Brannoc, halfway across the sand, freezes. He goes white. Then grey. Then he faints, flat on his back, right in front of you.',
       'BARNABY: WELL, WELL! An ESCAPE! The crowd LOVES an escape!',
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
@@ -133,9 +174,9 @@ export const brannocSleepwalks = (brannoc: number): Actor[] => [
   { row: brannoc, path: [BRANNOC_FAINTED, [10, 9], UNDER_WARDEN], face: 1 },
 ];
 export const SNOT_SWING_HIT = [
-  "Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.",
+  'Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
   'He lifts his sword.',
-  'BRANNOC: Zzz... five more minutes...',
+  'BRANNOC: Zzz... five more minutes, mother...',
   'BRANNOC SUPER SUPER SWING!',
   'The warden goes up, up, over the banners, and out of the Kaldorium. Somewhere in town, a roof gives way.',
   'Silence.',
@@ -147,20 +188,27 @@ export const SNOT_SWING_HIT = [
 /** Brannoc wakes: will you pair up? */
 export const BRANNOC_OFFER = [
   'The snot bubble pops. Brannoc blinks.',
-  'BRANNOC: Whoa. Where am I?',
-  'He looks around. At the crowd. At the hole in the banners. At you.',
-  "BRANNOC: Whoa. Did YOU do that? You're incredibly strong.",
-  'BRANNOC: Do you mind if we pair up? I have no idea what is going on here. If I stuck by you, I might make it out of this.',
-  "BRANNOC: I'm not very strong. But I'll offer you my sword.",
+  'BRANNOC: Wha... where am I? Is it morning? Did I miss the battle?',
+  'He looks at the crowd. At the hole in the banners. At you.',
+  'BRANNOC: Did YOU do that? By the saints, you are mighty.',
+  'BRANNOC: I know not what is happening in this strange land. But if I kept to your side, I might yet live through it.',
+  'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
 ];
 /** Coming down from the top as the Kaldorium's champion: Brannoc's heard. No mouse needed. */
 export const CHAMPION_IN_CELL = [
-  'BRANNOC: Wait. Wait wait wait. You beat the warden?',
-  "BRANNOC: Everyone's talking about it. Even Gary woke up for it.",
-  "BRANNOC: Do you mind if we pair up? I'm not very strong. But I'll offer you my sword.",
+  'BRANNOC: Hold. You are the one who felled the Warden?',
+  'BRANNOC: The whole gaol speaks of it. Even Gary woke for it.',
+  'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
 ];
-export const BRANNOC_YES = ['BRANNOC: Really? REALLY? Okay! Okay. I won\'t let you down. Probably.', 'Brannoc joins you.'];
-export const BRANNOC_NO = ['BRANNOC: Oh.', 'BRANNOC: No, that\'s... that\'s fine. That\'s fine.', 'He shuffles off, very slowly, the way you came.'];
+export const BRANNOC_YES = [
+  'BRANNOC: Truly? Then I am your sworn sword! I shall not fail you. Probably.',
+  'Brannoc joins you.',
+];
+export const BRANNOC_NO = [
+  'BRANNOC: Oh.',
+  'BRANNOC: No, I understand. Who would want a knight who faints.',
+  'He shuffles off, very slowly, the way you came.',
+];
 /** Back to the ladder, very slowly. */
 export const brannocShuffles = (brannoc: number): Actor[] => [
   { row: brannoc, path: [UNDER_WARDEN, [10, 9], [3, 9], [2, 9]] },
@@ -176,7 +224,7 @@ export const ALONE_WARDEN = [
   'BRANNOC SUPER SUPER SWING!',
   '...',
   'You wake up on the sand. Your sword is in your hand. There is a warden-shaped hole in the banners.',
-  'GUARD: Hey. Hey, buddy. We don\'t want any smoke with you.',
+  "GUARD: Hey. Hey, buddy. We don't want any smoke with you.",
   "GUARD: You're free to leave. Please leave.",
   'You have no idea what just happened.',
 ];
@@ -196,8 +244,8 @@ export const MAZE_HOLES: MazeHole[] = [
   { tile: '0', needs: MAGE(10), to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' } },
 ];
 
-/** What your hero thinks at a twinkling hole. */
+/** What your hero thinks at a twinkling hole (then "Take it?" is asked plainly, PASSAGE_LINES.ask). */
 export const holeLines = (asBrannoc: boolean) =>
   asBrannoc
-    ? ["(What's that?)", "(It's a hidden passage!)", 'Take it?']
-    : ["(What's that?)", "(It's a hole in the wall. It is exactly Brannoc-shaped.)", 'Take it?'];
+    ? ['(What is that shiny thing?)', "(It's a hidden passage!)"]
+    : ['(What is that shiny thing?)', "(It's a hole in the wall. It is exactly Brannoc-shaped.)"];

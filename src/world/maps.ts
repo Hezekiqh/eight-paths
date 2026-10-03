@@ -36,7 +36,6 @@ import ironhouseData from './maps/ironhouse.json';
 import frostWardData from './maps/frost-ward.json';
 import iceHouseData from './maps/ice-house.json';
 import felixMazeData from './maps/felix-maze.json';
-import mirrorRoomData from './maps/mirror-room.json';
 import kingdomDungeonData from './maps/kingdom-dungeon.json';
 import dungeonMazesData from './maps/dungeon-mazes.json';
 import roomBrannocData from './maps/room-brannoc.json';
@@ -345,7 +344,6 @@ export const MAPS = {
   'frost-ward': build(frostWardData as MapData, require('@/assets/world/frost-ward.png')),
   'ice-house': build(iceHouseData as MapData, require('@/assets/world/ice-house.png')),
   'felix-maze': build(felixMazeData as MapData, require('@/assets/world/felix-maze.png')),
-  'mirror-room': build(mirrorRoomData as MapData, require('@/assets/world/mirror-room.png')),
   'kingdom-dungeon': build(kingdomDungeonData as MapData, require('@/assets/world/kingdom-dungeon.png')),
   'dungeon-mazes': build(dungeonMazesData as MapData, require('@/assets/world/dungeon-mazes.png')),
   'room-brannoc': build(roomBrannocData as MapData, require('@/assets/world/room-brannoc.png')),

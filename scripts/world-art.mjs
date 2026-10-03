@@ -1457,6 +1457,8 @@ const WALKERS = {
   felix: { top: '#3A2A40', shade: '#2A1E30', legs: '#2A2030', boots: '#5C3A28', hair: ['slick', '#1A1416'], villain: '#1A1416', checks: ['#F0E6D0', '#4A3A30'] },
   // The Kaldorium's warden: the biggest guard in the kingdom, drawn twice as big. Same colours as his guards, more of him.
   warden: { top: '#5A3A2E', shade: '#3E2820', legs: '#3A2A20', boots: '#2A1A12', belt: '#FFC940', skin: '#C8956C', hair: ['bald', '#C8956C'], beard: '#2A1810', sword: true },
+  // Brannoc with no sword: the cell (author, Oct 3, 2026: they took it; he picks one up in the Kaldorium).
+  brannocbare: { top: '#9AA0B4', shade: '#6A7088', legs: '#6A7088', boots: '#5C3A28', belt: '#5C3A28', hair: ['short', '#C4442A'], beard: '#C4442A' },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -1912,7 +1914,6 @@ const MAPS = [
   'frost-ward',
   'ice-house',
   'felix-maze',
-  'mirror-room',
   'kingdom-dungeon',
   'dungeon-mazes',
   'room-brannoc',

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SymbolView, type SFSymbol } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { playSound } from '@/audio';
@@ -25,9 +26,9 @@ export type Dialogue = {
   /**
    * A decision at the end of the lines: each option runs its own `then`, instead of the usual goodbye.
    * A `locked` option is shown greyed out with what it needs (e.g. "Warrior Lv 10") and can't be picked,
-   * so players see what their habits would unlock.
+   * so players see what their habits would unlock. `icon`: the Path's symbol, beside the choice.
    */
-  choices?: { label: string; then: () => void; locked?: string }[];
+  choices?: { label: string; then: () => void; locked?: string; icon?: SFSymbol }[];
 };
 
 type Props = {
@@ -159,6 +160,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
               key={c.label}
               label={c.label}
               locked={c.locked}
+              icon={c.icon}
               onPress={() => {
                 playSound('select');
                 haptics.select();
@@ -214,7 +216,20 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
 }
 
 /** One thing to say, with the heart cursor from the tab bar beside it while pressed. */
-function Choice({ label, onPress, locked }: { label: string; onPress: () => void; locked?: string }) {
+function Choice({
+  label,
+  onPress,
+  locked,
+  icon,
+}: {
+  label: string;
+  onPress: () => void;
+  locked?: string;
+  icon?: SFSymbol;
+}) {
+  const mark = icon && (
+    <SymbolView name={icon} size={14} tintColor={locked ? colors.textFaint : colors.accent} style={styles.icon} />
+  );
   if (locked)
     return (
       <View
@@ -222,9 +237,9 @@ function Choice({ label, onPress, locked }: { label: string; onPress: () => void
         accessibilityRole="button"
         accessibilityState={{ disabled: true }}
         accessibilityLabel={`${label}. Locked: needs ${locked}`}
-        style={styles.choice}
-      >
+        style={styles.choice}>
         <Text style={[styles.cursor, styles.cursorIdle]}>🔒</Text>
+        {mark}
         <Text style={[styles.text, styles.choiceLocked]}>
           {label} <Text style={styles.lockNeed}>({locked})</Text>
         </Text>
@@ -235,6 +250,7 @@ function Choice({ label, onPress, locked }: { label: string; onPress: () => void
       {({ pressed }) => (
         <>
           <Text style={[styles.cursor, !pressed && styles.cursorIdle]}>♥</Text>
+          {mark}
           <Text style={[styles.text, pressed && styles.choicePressed]}>{label}</Text>
         </>
       )}
@@ -259,6 +275,7 @@ const styles = StyleSheet.create({
   cursor: { color: colors.accent, fontSize: 14, width: 16 },
   cursorIdle: { color: colors.textFaint },
   choicePressed: { color: colors.accent },
+  icon: { width: 14, height: 14 },
   choiceLocked: { color: colors.textFaint, flexShrink: 1 },
   lockNeed: { color: colors.textFaint, fontSize: 13 },
   more: { position: 'absolute', right: spacing.md, bottom: spacing.sm, color: colors.accent, fontSize: 12 },

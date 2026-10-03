@@ -15,13 +15,28 @@ export const NEXT_ASK = 'What should we do next?';
 
 /** How each of them talks about it: an opener, then how they hand you the next step. */
 const VOICE: Record<string, { so: string; next: string }> = {
-  brannoc: { so: "Honestly? Better than I thought. I've only fainted the once.", next: "Okay. Okay. Don't panic. I think we should" },
-  ysolde: { so: 'By my count we are ahead. Not by much. I keep the books on these things.', next: 'The sensible move, and I am always sensible:' },
-  quill: { so: 'Fascinating, mostly. Occasionally terrifying. I am writing all of it down.', next: 'If my notes are right, and they usually are, we' },
-  wren: { so: 'We are further than we were. That is all a path ever asks.', next: 'I lit a candle for it last night. The flame leaned this way:' },
+  brannoc: {
+    so: 'Better than I feared. I have only fainted the once.',
+    next: 'Fear not. Well, I fear plenty. But I think we should',
+  },
+  ysolde: {
+    so: 'By my count we are ahead. Not by much. I keep the books on these things.',
+    next: 'The sensible move, and I am always sensible:',
+  },
+  quill: {
+    so: 'Fascinating, mostly. Occasionally terrifying. I am writing all of it down.',
+    next: 'If my notes are right, and they usually are, we',
+  },
+  wren: {
+    so: 'We are further than we were. That is all a path ever asks.',
+    next: 'I lit a candle for it last night. The flame leaned this way:',
+  },
   oren: { so: 'Breathe. Look how far you have come. Now breathe again.', next: 'No rush. But when you are ready,' },
   pip: { so: "It's a great story so far! Needs a chorus. I'm working on it.", next: 'Next verse goes like this:' },
-  tamsin: { so: "Running, mostly. A few squeaky bits. I'd tighten things up.", next: "Here's the plan. I drew it on a napkin:" },
+  tamsin: {
+    so: "Running, mostly. A few squeaky bits. I'd tighten things up.",
+    next: "Here's the plan. I drew it on a napkin:",
+  },
   moss: { so: 'Good.', next: 'Next:' },
 };
 
@@ -73,12 +88,16 @@ export function withRoster(map: WorldMap, day: number): WorldMap {
       map.npcs.filter((n) => n.id.startsWith('hall-') && !outToday(n.id.slice('hall-'.length), day)).map((n) => n.id),
     );
   const owner = roomOwner(map.id);
-  return owner && outToday(owner, day) ? withoutNpcs(map, map.npcs.filter((n) => n.character === owner).map((n) => n.id)) : map;
+  return owner && outToday(owner, day)
+    ? withoutNpcs(
+        map,
+        map.npcs.filter((n) => n.character === owner).map((n) => n.id),
+      )
+    : map;
 }
 
 /** Today, as a day count (local midnight to midnight). */
-export const dayNumber = (now = new Date()) =>
-  Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000);
+export const dayNumber = (now = new Date()) => Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000);
 
 // ---- Something new to say: a beat in their own arc, or a level you've reached on their Path.
 // Their door twinkles until you've heard it; it's what they open with next time you talk.
@@ -97,27 +116,27 @@ export const HERO_NEWS: Partial<Record<CharacterId, News[]>> = {
       id: 'brannoc-room',
       when: { flag: 'brannoc-joined' },
       lines: [
-        "So this is mine? A whole room? With a door?",
-        "Thank you. For the cell. For coming back. I'm going to put that on my list. The list of things I'm not scared of. It's got one thing on it now.",
+        'A chamber of my own? With a door that bolts from the INSIDE?',
+        'I thank you. For the cell. For coming back for me. I have begun a list of things I do not fear. It has one thing on it now.',
       ],
     },
     {
       id: 'brannoc-lv10',
       when: { level: 10 },
-      lines: ["I felt that. Lv 10. My arms are... are my arms bigger? Don't answer that. Yes. Answer that."],
+      lines: ['I felt that. Are my arms grown greater? Do not answer. Yes. Answer.'],
     },
     {
       id: 'brannoc-lv20',
       when: { level: 20 },
-      lines: [
-        'Lv 20. I tried the swing. Awake, this time.',
-        'I broke a shelf. Quill is furious. I am thrilled.',
-      ],
+      lines: ['I tried the swing. Awake, this time.', 'I felled a bookshelf. Quill is furious. I am overjoyed.'],
     },
     {
       id: 'brannoc-king',
       when: { flag: 'kaldor-beaten' },
-      lines: ['We beat the Kingbreaker. Me. Fainting Brannoc.', "I didn't faint once. I nearly did. Twice. But I didn't."],
+      lines: [
+        'We bested the Kingbreaker. Me. Brannoc the Fainter.',
+        'I did not faint once. I very nearly did. Twice. But I did not.',
+      ],
     },
   ],
 };

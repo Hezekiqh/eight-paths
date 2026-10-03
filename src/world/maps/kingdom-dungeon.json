@@ -70,44 +70,55 @@
       "type": "npc",
       "x": 2,
       "y": 4,
-      "sprite": "brannoc",
+      "sprite": "brannocbare",
       "facing": "right",
       "name": "Brannoc",
       "character": "brannoc",
       "lines": [
-        "AH!",
-        "Who are you? What do you want?"
+        "AH! Stay back! I am armed!",
+        "...I am not armed. They took my sword. Who are you? What do you want of me?"
       ],
       "questions": [
         {
           "ask": "Who are you?",
           "answer": [
-            "My name is Brannoc.",
-            "I woke up here two days ago. I have no idea what's going on."
+            "I am Brannoc. Before I slept, I was a prince.",
+            "In my dream I still was. Banners, feasts, a people who loved me.",
+            "I knew that dream was too good to be true."
+          ]
+        },
+        {
+          "ask": "Why are you cowering in the corner?",
+          "answer": [
+            "Cowering? I am not cowering. I am guarding the corner.",
+            "From the inside. It is a very dangerous corner."
           ]
         },
         {
           "ask": "What are you in for?",
           "answer": [
-            "Well. I kind of woke up out of this... cocoon-like fixture.",
-            "I walked into town, and everything was different. I barely recognised it.",
-            "Some guards came over. To help me, maybe? I wasn't sure what they wanted. They shouted.",
-            "I got scared and bumped into an apple cart.",
-            "They say I'm serving fifty to life.",
-            "Fifty years. To life."
+            "So there I was, wandering through town. Nothing looked as I remembered it.",
+            "A cat startled me, and I leapt backward, straight into an apple cart.",
+            "And now I serve three life sentences."
           ]
         },
         {
-          "ask": "We need to break out of here.",
+          "ask": "Are you dangerous?",
           "answer": [
-            "Impossible. The guards watch this place 24/7.",
-            "And besides, these bars look impenetrable."
+            "Only to apples."
+          ]
+        },
+        {
+          "ask": "We need to escape.",
+          "answer": [
+            "Escape? Impossible! The guards keep watch day and night.",
+            "And these bars... forged by giants, surely. Not even a battering ram could—"
           ],
           "sets": "brannoc-bolts"
         }
       ],
       "farewell": [
-        "Go on. I'll keep the corner safe. Someone has to."
+        "Go on, then. I shall hold this corner. Someone must."
       ],
       "goneAfter": "cell-bars-bent"
     },
@@ -251,33 +262,32 @@
       "name": "Brannoc",
       "character": "brannoc",
       "lines": [
-        "Oh. It's you.",
-        "I'm not sulking. I'm guarding the corner. Again."
+        "Oh. It is you.",
+        "I am not sulking. I am holding the corner. Again."
       ],
       "questions": [
         {
           "ask": "Come with me.",
           "answer": [
-            "...Really?",
-            "You're sure? You're not just saying it?",
-            "Okay. Okay! I'll offer you my sword. Again. Properly this time."
+            "...Truly? You would have me?",
+            "You jest. You do not jest? Then my sword is yours. Truly, this time."
           ],
           "sets": "brannoc-joined",
           "then": [
-            "Brannoc grabs his sword and hurries out after you, beaming.",
+            "Brannoc snatches up his sword and hurries after you, beaming.",
             "Brannoc joins you."
           ]
         },
         {
           "ask": "Why did you come back here?",
           "answer": [
-            "It's the only place I know.",
-            "Also the guards wave at me now. It's very confusing."
+            "It is the only place in this world I know.",
+            "And the guards wave at me now. Most unsettling."
           ]
         }
       ],
       "farewell": [
-        "I'll be here. In the corner. If you need a corner guarded."
+        "I shall be here. In the corner. Should you need a corner held."
       ],
       "comesAfter": "brannoc-declined",
       "goneAfter": "brannoc-joined"

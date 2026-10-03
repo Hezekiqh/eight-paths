@@ -1,5 +1,7 @@
 import type { Dimension } from '@/game';
 
+import keeperWelcome from './keeper-welcome.json';
+
 import type { MapId } from './maps';
 import type { Arrival, Requirement } from './progress';
 
@@ -7,7 +9,7 @@ import type { Arrival, Requirement } from './progress';
 // (author, Oct 3, 2026). Anyone can solve it; push a boulder the wrong way and
 // you're stuck, so you walk back out to the road and in again, which puts every
 // boulder back. A Mage of Lv 6 sees a hidden passage instead: it leads to the
-// Mirror Room, where the Keeper waits, and its green candle sets you down past
+// Archive, where the Keeper waits, and its green candle sets you down past
 // the maze. Either way you walk into Felix framing you to the king's guards.
 
 export const MAZE = 'felix-maze';
@@ -25,15 +27,22 @@ export const JAIL_WOKE = 'jail-woke';
 /** The tree that hides the passage, and the tile you step onto past the maze (where the scene starts). */
 export const PASSAGE_TILE = 'Z';
 export const CLEARING_TILE = 'X';
-/** The green candle in the Mirror Room. */
+/** The Archive's green candle: lit only while it has somewhere to take you (past the maze). */
 export const GREEN_CANDLE = 'g';
+/** You took the hidden passage: the green candle in the Archive is lit until you've used it. */
+export const PASSAGE_TAKEN = 'felix-passage';
+/** The green candle is lit: you came through the passage, and haven't gone on past the maze yet. */
+export const greenLit = (flags: string[]) => flags.includes(PASSAGE_TAKEN) && !flags.includes(MAZE_SOLVED);
 
 /** Intellect (the Mage's Path) to notice the passage. */
 export const PASSAGE: Requirement = { kind: 'path', dimension: 'intellectual', level: 6 };
 /** The level each clever answer to the guards needs. */
 export const ANSWER_LEVEL = 10;
 
-export const INTO_MIRROR_ROOM: Arrival = { map: 'mirror-room', x: 6, y: 6, facing: 'up' };
+/** Back through the passage the way you came: at the foot of the hidden tree, by the maze's start. */
+export const PASSAGE_RETURN: Arrival = { map: 'felix-maze', x: 2, y: 2, facing: 'down' };
+/** Out of the passage: the Archive, a step in front of the Keeper. */
+export const INTO_THE_ARCHIVE: Arrival = { map: 'archive', x: 20, y: 6, facing: 'up' };
 /** Out of the green candle: in front of Felix and the guards, one tile between you and him. */
 export const PAST_THE_MAZE: Arrival = { map: 'felix-maze', x: 22, y: 4, facing: 'right' };
 /** Under the guards' stair: the guards march you down to the cell from here (dungeon.ts). */
@@ -44,8 +53,8 @@ export const INTO_THE_CELL: Arrival = { map: 'kingdom-dungeon', x: 21, y: 3, fac
  * the green candle, and the guards' "What king?" (any answer can be the wrong one).
  */
 export const SIDE_WAYS: { from: MapId; tile: string; to: Arrival }[] = [
-  { from: 'felix-maze', tile: PASSAGE_TILE, to: INTO_MIRROR_ROOM },
-  { from: 'mirror-room', tile: GREEN_CANDLE, to: PAST_THE_MAZE },
+  { from: 'felix-maze', tile: PASSAGE_TILE, to: INTO_THE_ARCHIVE },
+  { from: 'archive', tile: GREEN_CANDLE, to: PAST_THE_MAZE },
   { from: 'felix-maze', tile: CLEARING_TILE, to: INTO_THE_CELL },
 ];
 
@@ -68,31 +77,69 @@ export const scenePending = (flags: string[]) => flags.includes('felix-hatched')
 
 export const PASSAGE_LINES = {
   // thoughts, in brackets: the player never says anything out loud except through a choice
-  notice: ["(What's that?)"],
-  found: ["(It's a hidden passage!)", 'Take it?'],
+  notice: ['(What is that shiny thing?)'],
+  found: ["(It's a hidden passage!)"],
+  // the choice is put plainly, by nobody: your hero thinks, you decide
+  ask: ['Take it?'],
   plain: ['Old trees, packed close.'],
+};
+
+// The Keeper, as you come out of the passage (author, Oct 3, 2026). The words live in
+// keeper-welcome.json, so the episodes (scripts/episode-video.mjs) say exactly the same.
+export const KEEPER_WELCOME = keeperWelcome.welcome;
+/** Yes, cards: you sit on the floor and deal, and he talks while you play. */
+export const KEEPER_CARDS = keeperWelcome.cards;
+export const KEEPER_NO_CARDS = keeperWelcome.noCards;
+/** What you can ask him: all of them, before he gets to the candle. */
+export const KEEPER_ASKS: { ask: string; answer: string[] }[] = keeperWelcome.asks;
+/** Your hero, once he's answered everything: left wondering (thoughts, in brackets). */
+export const KEEPER_AFTERTHOUGHTS = keeperWelcome.afterThoughts;
+/** Then he points at the green candle. */
+export const KEEPER_CANDLE = keeperWelcome.candle;
+/** You've won (or lost) the hand, and he's said his piece. */
+export const KEEPER_CARDS_END = keeperWelcome.cardsEnd;
+/** The green candle, unlit or lit. */
+export const GREEN_CANDLE_LINES = {
+  unlit: ['A candle with a green wick, unlit.', 'The Keeper says it burns only when it has somewhere to carry you.'],
+  lit: ['A candle burning green, not orange like the others.', "The flame leans east, as if it already knows where it's going."],
 };
 
 /** The Keeper, as you touch the green flame. */
 export const KEEPER_PARTING = [
   'THE KEEPER: Wait...',
-  'THE KEEPER: Remember. You can do whatever you want in the Other World...',
-  'THE KEEPER: But you are the grand sum of your good and bad deeds...',
-  'THE KEEPER: People will remember your actions, too...',
-  'THE KEEPER: Ta-ta for now.',
-  'The green flame swallows the room.',
-];
+  'THE KEEPER: Remember. You may do whatever you wish in the Other World...',
+  'THE KEEPER: But you are the sum of your good deeds and your bad...',
+  'THE KEEPER: And people will remember what you have done...',
+  `THE KEEPER: ${keeperWelcome.confronted}`,
+  'The green flame flashes, and the room is gone.',
+]
+
+/** The guard who does the talking: a captain, and very proud of it (author, Oct 3, 2026). */
+export const HIMOTHY = 'SIR HIMOTHY THE THIRD';
 
 export const SCENE_OPEN = [
   'FELIX: That one, sir! That is the one plotting to take the throne!',
   "You have no idea what's happening.",
-  "GUARD: Is this true? Here, it's guilty until proven innocent! Explain yourself.",
+  `${HIMOTHY}: Is this true? Here, it's guilty until proven innocent! Explain yourself.`,
 ];
+
+/** Who the guards are after, for "Seize him!": they only want you. ('them' for anyone not listed.) */
+export const PRONOUN: Record<string, 'him' | 'her' | 'them'> = {
+  brannoc: 'him',
+  quill: 'him',
+  oren: 'him',
+  pip: 'him',
+  moss: 'him',
+  ysolde: 'her',
+  wren: 'her',
+  tamsin: 'her',
+};
 
 export type Answer = {
   label: string;
-  /** The Path and level it takes (null: anyone can say it). */
+  /** The Path and level it takes (null: anyone can say it). Shown with that Path's icon. */
   path: Dimension | null;
+  /** `{them}` becomes him or her (PRONOUN) for whoever you're walking as. */
   lines: string[];
   /** Story flags it sets, beyond FRAMED. */
   sets?: string[];
@@ -100,14 +147,20 @@ export type Answer = {
   jailed?: boolean;
 };
 
-/** The guards' question: three clever answers (Lv 10 in their Path, greyed out until then), a bribe anyone can make, and the wrong one. */
+/** Said as you're taken, whichever wrong answer it was. */
+export const SEIZED = ['Rough hands. A sack over your head. A long, bumpy walk.'];
+
+/**
+ * The guards' question: three clever answers (Lv 10 in their Path, greyed out with the Path's icon
+ * until then) that talk you free, and three anyone can say that land you in the cells.
+ */
 export const ANSWERS: Answer[] = [
   {
     label: 'Warrior: "Say that again. Slower."',
     path: 'physical',
     lines: [
       'You crack your knuckles. Then your neck. Then, somehow, a nearby log.',
-      'GUARD: ...Right. Well. Nobody\'s accusing anybody of anything. Carry on, citizen.',
+      `${HIMOTHY}: ...Right. Well. Nobody's accusing anybody of anything. Carry on, citizen.`,
     ],
   },
   {
@@ -115,33 +168,40 @@ export const ANSWERS: Answer[] = [
     path: 'intellectual',
     lines: [
       "You explain: you've been awake a matter of days, you don't know where the throne is, and you'd need a map, a plan, and allies, which you also don't have.",
-      'GUARD: ...That is a very good point.',
-      'GUARD: He does have a lot of maps, though. The mustache one.',
+      `${HIMOTHY}: ...That is a very good point.`,
     ],
   },
   {
-    label: 'Bard: "Take a throne? I can\'t even take a compliment."',
+    label: 'Bard: "Let me buy you both a drink."',
     path: 'social',
     lines: [
-      'The guards look at each other. One of them snorts.',
-      'GUARD: Ha! Can\'t take a compliment. That\'s good. I\'m stealing that.',
-      'GUARD: Go on, get out of here.',
-    ],
-  },
-  {
-    label: '"I\'ll buy you both a drink later."',
-    path: null,
-    lines: [
-      'GUARD: ...A drink?',
-      "GUARD: Now you're talking. The Candle Inn, when you're in town. Don't forget.",
-      'GUARD: You owe us.',
+      `${HIMOTHY}: ...A drink?`,
+      `${HIMOTHY}: Now you're talking. The Candle Inn, when you're in town. Don't forget.`,
+      `${HIMOTHY}: You owe us.`,
     ],
     sets: [OWES_GUARDS],
   },
   {
+    label: '"I\'m innocent!"',
+    path: null,
+    lines: [`${HIMOTHY}: Innocent, huh? Sounds like something a guilty person would say.`, `${HIMOTHY}: Seize {them}!`],
+    sets: [JAILED],
+    jailed: true,
+  },
+  {
+    label: '"How did you know!?"',
+    path: null,
+    lines: [
+      `${HIMOTHY}: How did I know? See this badge? Sir Himothy the Third. I always know.`,
+      `${HIMOTHY}: Seize {them}!`,
+    ],
+    sets: [JAILED],
+    jailed: true,
+  },
+  {
     label: '"What king?"',
     path: null,
-    lines: ['GUARD: Do not insult our lord! Seize them!', 'Rough hands. A sack over your head. A long, bumpy walk.'],
+    lines: [`${HIMOTHY}: Playing dumb? Not very smart. Seize {them}!`],
     sets: [JAILED],
     jailed: true,
   },

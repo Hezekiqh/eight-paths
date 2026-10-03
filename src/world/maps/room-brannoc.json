@@ -46,7 +46,7 @@
       "name": "Brannoc",
       "character": "brannoc",
       "lines": [
-        "Oh! It's you. Come in. Mind the fern. Its name is Gerald."
+        "Ah! Oh, it is you. Come in. Mind the fern. His name is Gerald."
       ],
       "comesAfter": "met:brannoc"
     }

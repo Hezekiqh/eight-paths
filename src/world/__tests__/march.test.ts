@@ -1,6 +1,6 @@
 import { MARCH_HEAD, marchPoses, newMarch } from '../march';
 import { MAPS, TILE } from '../maps';
-import { brannocBolts, escortIn, guardsLeave, shovedIn } from '../dungeon';
+import { brannocBolts, escortIn, escortStand, guardsLeave, shovedIn } from '../dungeon';
 
 const at = (x: number, y: number) => [x * TILE + TILE / 2, y * TILE + TILE - 2];
 
@@ -24,6 +24,7 @@ describe('the escort to the cell', () => {
   const cells = MAPS['kingdom-dungeon'];
   const open = new Set(['.', ',', '3']);
   it.each([
+    ['stand', escortStand(23)],
     ['in', escortIn(23)],
     ['shoved', shovedIn(23)],
     ['out', guardsLeave(23)],

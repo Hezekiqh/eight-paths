@@ -78,7 +78,6 @@ const REGION: Partial<Record<MapId, MapId>> = {
   ironhouse: 'barracks-ward',
   'ice-house': 'frost-ward',
   // A room between, reached through Felix's maze: shown as the Archive, its twin.
-  'mirror-room': 'archive',
   'kingdom-dungeon': 'kingdom-town',
   'dungeon-mazes': 'kingdom-town',
   'room-brannoc': 'archive',

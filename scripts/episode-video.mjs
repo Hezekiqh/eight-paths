@@ -4,24 +4,31 @@
 // a voice blip every other letter. Same Skia (CanvasKit), same art files.
 // No music: just the voices.
 //
-//   node scripts/episode-video.mjs 2 out.mp4
+//   node scripts/episode-video.mjs 9            → ~/Movies/Eight Paths Episodes/Episode 09 - The One in the Corner.mp4
+//   node scripts/episode-video.mjs 2 out.mp4    (or anywhere you like)
 //
 // Needs ffmpeg. Lines come straight from the map JSONs, so they match the game.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 import CanvasKitInit from 'canvaskit-wasm/bin/canvaskit.js';
 import { PNG } from 'pngjs';
 
+import { laugh } from './laugh-sound.mjs';
 import { COCOON_H, EYE, GH, GROUND, GW, box, drawCocoon, drawRealm, hex, mix as mixRgb, put } from './realm-art.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const [episode = '2', out = `episode-${episode}.mp4`] = process.argv.slice(2);
+const [episode = '2', outArg] = process.argv.slice(2);
+/**
+ * Where finished episodes go unless a path is given (author, Oct 3, 2026): one folder on the Mac,
+ * each named by number and title, "Episode 05 - Welcome Back.mp4".
+ */
+export const EPISODE_FOLDER = join(homedir(), 'Movies', 'Eight Paths Episodes');
 
 const W = 1080;
 const H = 1920;
@@ -99,8 +106,13 @@ function loadMap(id, style) {
   const signs = json.objects.filter((o) => o.type === 'sign');
   const chests = json.objects.filter((o) => o.type === 'chest');
   const motes = style === 'outdoor' ? 'pollen' : 'dust';
+  // pushable boulders, drawn over the picture so they can move (the bake leaves floor under them)
+  const boulders = [];
+  if (json.pushable)
+    json.tiles.forEach((row, ty) => [...row].forEach((c, tx) => c === json.pushable && boulders.push([tx, ty])));
   return {
     ...json,
+    boulders,
     style,
     image: image(join(ROOT, `assets/world/${id}.png`)),
     flames,
@@ -239,14 +251,19 @@ function drawBox(canvas, { speaker, sprite, text, shown, lift, typed, last }) {
   lines.forEach((line, i) => {
     const part = line.slice(0, Math.max(0, left));
     left -= line.length + 1;
-    if (part)
-      canvas.drawText(
-        part,
-        tx,
-        ty + i * PT.lineHeight * U + (PT.lineHeight * 0.5 + PT.text * 0.36) * U,
-        ink,
-        TEXT_FONT,
-      );
+    if (!part) return;
+    const base = ty + i * PT.lineHeight * U + (PT.lineHeight * 0.5 + PT.text * 0.36) * U;
+    // the pixel font has no emoji, so Felix's 😛 is drawn as pixels (on the phone, iOS draws its own)
+    const at = part.indexOf(TONGUE);
+    if (at === -1) {
+      canvas.drawText(part, tx, base, ink, TEXT_FONT);
+      return;
+    }
+    const before = part.slice(0, at);
+    canvas.drawText(before, tx, base, ink, TEXT_FONT);
+    drawTongue(canvas, tx + widthOf(TEXT_FONT, before) + 2 * U, base - PT.text * 0.95 * U, 2.25 * U);
+    const after = part.slice(at + TONGUE.length);
+    if (after) canvas.drawText(after, tx + widthOf(TEXT_FONT, before) + 22 * U, base, ink, TEXT_FONT);
   });
   if (typed) {
     const mx = x + (boxW - PT.frame - 12) * U;
@@ -259,6 +276,21 @@ function drawBox(canvas, { speaker, sprite, text, shown, lift, typed, last }) {
         canvas.drawRect(CK.XYWHRect(mx - (4 - r) * U, my + (r * 2 - 3) * U, (8 - r * 2) * U, 2 * U), p);
     }
   }
+}
+
+const fittedFonts = new Map();
+const fitted = (px) => {
+  if (!fittedFonts.has(px)) fittedFonts.set(px, fontOf(DIALOGUE, px));
+  return fittedFonts.get(px);
+};
+const TONGUE = '\u{1F61B}';
+/** 😛 as an 8×8 pixel face: yellow, two eyes, a grin and its tongue out. */
+const TONGUE_FACE = ['..YYYY..', '.YYYYYY.', 'YYKYYKYY', 'YYYYYYYY', 'YKYYYYKY', 'YYKKKKYY', '.YYRRYY.', '...RR...'];
+function drawTongue(canvas, x, y, cell) {
+  const inks = { Y: paint('#FFC940'), K: paint('#2E1F14'), R: paint('#E0454F') };
+  TONGUE_FACE.forEach((row, r) =>
+    [...row].forEach((c, k) => inks[c] && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), inks[c])),
+  );
 }
 
 // ---- the question menu (dialogue-box.tsx, asking): the speaker, then each choice with the heart cursor
@@ -279,12 +311,47 @@ function drawMenu(canvas, { speaker, options, pick, pressed }) {
     canvas.drawText(speaker, tx, ty + PT.speaker * U * 0.82, paint(C.accent), SPEAKER_FONT);
     ty += speakerH * U;
   }
-  options.forEach((label, i) => {
+  // a choice too long for one line is set smaller to fit, as the phone's text shrinks to fit its row
+  const room = (boxW - PT.frame * 2 - PT.padX * 2 - 24) * U;
+  options.forEach((option, i) => {
+    // a locked choice (`{ label, locked }`): greyed out with a lock and what it needs, as in the game
+    const locked = typeof option === 'object' ? option.locked : null;
+    const icon = typeof option === 'object' ? option.icon : null;
+    const label = typeof option === 'object' ? (locked ? `${option.label} (${locked})` : option.label) : option;
     const on = pressed && i === pick;
     const base = ty + i * rowH * U + (rowH * 0.5 + PT.text * 0.36) * U;
-    heart(canvas, tx + 1 * U, base - 11 * U, 2 * U, on ? C.accent : C.faint);
-    canvas.drawText(label, tx + 24 * U, base, paint(on ? C.accent : C.text), TEXT_FONT);
+    if (locked) padlock(canvas, tx + 1 * U, base - 12 * U, 2 * U, C.faint);
+    else heart(canvas, tx + 1 * U, base - 11 * U, 2 * U, on ? C.accent : C.faint);
+    // the Path's icon, as the game shows it beside the choice
+    const indent = icon ? 44 : 24;
+    if (icon) pathIcon(canvas, icon, tx + 22 * U, base - 12 * U, 2 * U, locked ? C.faint : C.accent);
+    const fits = room - (indent - 24) * U;
+    const wide = widthOf(TEXT_FONT, label);
+    const font = wide <= fits ? TEXT_FONT : fitted(Math.floor((PT.text * U * fits) / wide));
+    canvas.drawText(label, tx + indent * U, base, paint(on ? C.accent : locked ? C.faint : C.text), font);
   });
+}
+
+/** A pixel padlock, 7 × 7 cells of `cell` px, top-left at (x, y): a locked choice. */
+const PADLOCK = ['..XXX..', '.X...X.', '.X...X.', 'XXXXXXX', 'XXX.XXX', 'XXX.XXX', 'XXXXXXX'];
+function padlock(canvas, x, y, cell, hex) {
+  const p = paint(hex);
+  PADLOCK.forEach((row, r) =>
+    [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), p)),
+  );
+}
+
+/** Each Path's icon in pixels (7 × 7): the Warrior's sword, the Mage's book, the Bard's note. */
+const PATH_ICONS = {
+  physical: ['......X', '.....X.', '....X..', 'X..X...', '.XX....', '.XX....', 'X..X...'],
+  intellectual: ['.......', '.XX.XX.', 'X..X..X', 'X..X..X', 'X..X..X', 'XXXXXXX', '.......'],
+  social: ['...XXX.', '...X..X', '...X...', '...X...', '.XXX...', 'XXXX...', '.XX....'],
+};
+function pathIcon(canvas, path, x, y, cell, hex) {
+  const p = paint(hex);
+  (PATH_ICONS[path] ?? []).forEach((row, r) =>
+    [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), p)),
+  );
 }
 
 /** A pixel heart, 7 × 6 cells of `cell` px, top-left at (x, y). */
@@ -624,11 +691,17 @@ function drawSplitCocoon(canvas, x, y) {
 // ---- the script: walk, face, say, narrate, wait; compiled into timed segments
 const center = (tx, ty) => [tx * TILE + TILE / 2, ty * TILE + TILE - 2];
 const HOLD = (text) => Math.min(2.6, 1.1 + text.length * 0.022);
+/** A change of place: half of it fading out, half fading in. */
+const SCENE_GAP = 1.0;
+/** Pushing a boulder: leaning on it (engine.ts PUSH_DELAY), then the slide. */
+const PUSH_LEAN = 0.35;
+const PUSH_TIME = 0.3;
 function compile(ep) {
   const segs = [];
   let t = ep.titleDur;
   let pos = center(...ep.hero.at);
   let facing = ep.hero.facing;
+  let map = ep.map;
   for (const step of ep.script) {
     if (step.walk) {
       const pts = [pos, ...step.walk.map((p) => center(...p))];
@@ -667,7 +740,7 @@ function compile(ep) {
       t += dur + 0.15;
     } else if (step.npcWalk) {
       // someone else moves (Nib running off): their own speed, optionally gone at the end, crying on the way
-      const npc = ep.map.npcs[step.npcWalk];
+      const npc = map.npcs[step.npcWalk];
       const from = step.from ?? center(npc.x, npc.y);
       const pts = [from, ...step.to.map((p) => center(...p))];
       const legs = [];
@@ -697,14 +770,43 @@ function compile(ep) {
       });
       if (!step.together) t += dur + 0.15;
     } else if (step.laugh) {
-      // someone laughs: shoulders shaking, a burst of HA over their head
-      segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh });
+      // someone laughs: shoulders shaking, a burst of HA over their head (`quiet`: just the shaking, a cower)
+      segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh, quiet: step.quiet });
       t += step.dur;
+    } else if (step.scene) {
+      // somewhere else: fade to black, and up again there (a new map, you standing at `at`)
+      const sc = step.scene;
+      segs.push({ kind: 'scene', t0: t, t1: t + SCENE_GAP, ...sc, at: center(...sc.at) });
+      map = sc.map;
+      pos = center(...sc.at);
+      facing = sc.facing;
+      t += SCENE_GAP + 0.1;
+    } else if (step.push) {
+      // lean on the boulder in front a moment, then shove it a tile, stepping in behind it
+      const [dx, dy] = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] }[step.push];
+      const tx = Math.floor(pos[0] / TILE);
+      const ty = Math.floor(pos[1] / TILE);
+      const next = [pos[0] + dx * TILE, pos[1] + dy * TILE];
+      segs.push({ kind: 'face', t0: t, t1: t, dir: step.push });
+      t += PUSH_LEAN;
+      segs.push({
+        kind: 'walk', t0: t, t1: t + PUSH_TIME, speed: TILE / PUSH_TIME, dist: TILE,
+        legs: [{ a: pos, b: next, d0: 0, len: TILE, dir: step.push }],
+      });
+      segs.push({ kind: 'push', t0: t, t1: t + PUSH_TIME, from: [tx + dx, ty + dy], dx, dy });
+      pos = next;
+      facing = step.push;
+      t += PUSH_TIME + 0.15;
     } else if (step.cards) {
-      segs.push({ kind: 'cards', t0: t, t1: t + step.cards });
-      t += step.cards;
+      // `under`: the cards keep going under whatever's said next, until a `cardsEnd`
+      segs.push({ kind: 'cards', t0: t, t1: t + (step.under ? 9999 : step.cards) });
+      if (!step.under) t += step.cards;
+    } else if (step.cardsEnd) {
+      const game = segs.findLast((x) => x.kind === 'cards');
+      game.t1 = t + 0.6;
+      t += 0.75;
     } else if (step.say || step.narrate || step.you) {
-      const npc = step.say ? ep.map.npcs[step.say] : null;
+      const npc = step.say ? map.npcs[step.say] : null;
       const speaker = step.you ? 'You' : npc ? npc.name : undefined;
       const sprite = step.you ? ep.hero.sprite : npc ? npc.sprite : undefined;
       const voice = step.you ? 3 : voiceFor(speaker, sprite);
@@ -724,7 +826,8 @@ function compile(ep) {
         const blips = speaker
           ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null)
           : [];
-        const dur = typing + HOLD(text);
+        // `hold`: how long a finished line stays, against the usual (a talky episode reads a touch quicker)
+        const dur = typing + HOLD(text) * (ep.hold ?? 1);
         segs.push({
           kind: 'line',
           t0: t,
@@ -749,6 +852,8 @@ function compile(ep) {
       segs.push({ kind: 'show', t0: t, t1: t, id: step.show });
     } else if (step.open) {
       segs.push({ kind: 'open', t0: t, t1: t, at: step.open });
+    } else if (step.gap) {
+      segs.push({ kind: 'gap', t0: t, t1: t, at: step.gap });
     } else if (step.wait) t += step.wait;
   }
   return { segs, end: t };
@@ -760,20 +865,65 @@ function stateAt(ep, compiled, t) {
   let facing = ep.hero.facing;
   let walked = 0;
   let moving = false;
-  const npcFacing = Object.fromEntries(Object.entries(ep.map.npcs).map(([id, n]) => [id, n.facing ?? 'down']));
+  let map = ep.map;
+  let hide = ep.hide ?? [];
+  let twinkles = ep.twinkles ?? [];
+  let blackout = 0;
+  let white = false;
+  /** Boulders where they are now, in tiles (fractions while sliding). */
+  let boulders = (map.boulders ?? []).map((b) => [...b]);
+  let npcFacing = Object.fromEntries(Object.entries(map.npcs).map(([id, n]) => [id, n.facing ?? 'down']));
   let line = null;
   let menu = null;
   let cards = null;
   /** Where people have walked to, by id: { x, y, dir, frame, gone, tears, dash }. */
-  const npcAt = {};
-  /** Who's laughing, by id: seconds into it. */
-  const laughing = {};
+  let npcAt = {};
+  /** Who's laughing, by id: seconds into it; and who's only shaking (a cower), no HA. */
+  let laughing = {};
+  const quiet = new Set();
   let hatch = null;
   /** People hidden at the start who have since appeared (someone hatched), and cocoons broken open. */
-  const shown = [];
-  const opened = [];
+  let shown = [...(ep.shown ?? [])];
+  let opened = [];
+  /** Tiles broken open (bars bent wide), drawn as the game's dark gap. */
+  let gaps = [...(ep.gaps ?? [])];
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
+    if (s.kind === 'scene') {
+      const half = SCENE_GAP / 2;
+      white = !!s.flash;
+      if (t < s.t0 + half) {
+        blackout = (t - s.t0) / half;
+        continue;
+      }
+      blackout = Math.max(0, 1 - (t - s.t0 - half) / half);
+      map = s.map;
+      [hx, hy] = s.at;
+      facing = s.facing;
+      walked = 0;
+      moving = false;
+      hide = s.hide ?? [];
+      twinkles = s.twinkles ?? [];
+      boulders = (map.boulders ?? []).map((b) => [...b]);
+      npcFacing = Object.fromEntries(Object.entries(map.npcs).map(([id, n]) => [id, n.facing ?? 'down']));
+      npcAt = {};
+      laughing = {};
+      shown = [...(s.show ?? [])];
+      opened = [];
+      line = null;
+      menu = null;
+      continue;
+    }
+    if (s.kind === 'push') {
+      const k = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      // (every earlier push has finished, so the one being shoved sits squarely on its tile)
+      const b = boulders.find((p) => p[0] === s.from[0] && p[1] === s.from[1]);
+      if (b) {
+        b[0] = s.from[0] + s.dx * k;
+        b[1] = s.from[1] + s.dy * k;
+      }
+      continue;
+    }
     if (s.kind === 'walk') {
       const d = Math.min(s.dist, (t - s.t0) * (s.speed ?? SPEED));
       const leg = s.legs.findLast((l) => l.d0 <= d) ?? s.legs[0];
@@ -801,6 +951,7 @@ function stateAt(ep, compiled, t) {
       };
     } else if (s.kind === 'laugh' && t < s.t1) {
       laughing[s.id] = t - s.t0;
+      if (s.quiet) quiet.add(s.id);
     } else if (s.kind === 'line' && t < s.t1) {
       const lt = t - s.t0;
       const shown = s.at.filter((a) => a <= lt).length;
@@ -811,8 +962,12 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'hatch' && t < s.t1) hatch = { ...s, t: t - s.t0 };
     else if (s.kind === 'show') shown.push(s.id);
     else if (s.kind === 'open') opened.push(s.at);
+    else if (s.kind === 'gap') gaps.push(s.at);
   }
-  return { hx, hy, facing, walked, moving, npcFacing, npcAt, laughing, line, menu, cards, hatch, shown, opened };
+  return {
+    hx, hy, facing, walked, moving, npcFacing, npcAt, laughing, quiet, line, menu, cards, hatch, shown, opened, gaps,
+    map, hide, twinkles, boulders, blackout, white,
+  };
 }
 
 function walkFrame(distance, moving) {
@@ -825,7 +980,7 @@ function walkFrame(distance, moving) {
 const VIEW_W = W / K;
 const VIEW_H = H / K;
 function drawWorld(canvas, ep, st, t) {
-  const map = ep.map;
+  const map = st.map ?? ep.map;
   const mapW = map.image.width();
   const mapH = map.image.height();
   // the camera follows you; for the card game it eases in close on the two of you, and back out
@@ -862,6 +1017,12 @@ function drawWorld(canvas, ep, st, t) {
     canvas.drawRect(CK.XYWHRect(x + lean, y - (k % 2), 2, 2 + (k % 2)), lit);
     if (Math.floor(t * 7 + i) % 4 !== 0) canvas.drawRect(CK.XYWHRect(x, y + 1, 1, 1), core);
   });
+  // bars bent wide, a wall broken through: a dark gap with rubble at its foot, as the game draws it
+  for (const [gx, gy] of st.gaps ?? []) {
+    canvas.drawRect(CK.XYWHRect(gx * TILE + 1, gy * TILE + 1, TILE - 2, TILE - 1), paint('#0C0908'));
+    canvas.drawRect(CK.XYWHRect(gx * TILE + 2, gy * TILE + TILE - 2, 3, 2), paint('#5A524C'));
+    canvas.drawRect(CK.XYWHRect(gx * TILE + 10, gy * TILE + TILE - 3, 4, 3), paint('#5A524C'));
+  }
   // a cocoon broken open: the grass from the tile beside it laid over, and the split silk on top
   for (const { at: [cx, cy], grass: [gx, gy] } of st.opened) {
     // (the cocoon stands a few pixels taller than its tile, so the grass reaches up into the one above)
@@ -897,13 +1058,34 @@ function drawWorld(canvas, ep, st, t) {
     canvas.drawRect(CK.XYWHRect(x + 7, y + 5, 2, 4), paint('#FFC940'));
     canvas.drawRect(CK.XYWHRect(x + 2, y + 6, 12, 1), paint('#FFC940'));
   }
+  // boulders (world-view.tsx Boulder): three ovals, dark under light
+  for (const [bx, by] of st.boulders ?? []) {
+    const x = bx * TILE;
+    const y = by * TILE;
+    const oval = (ox, oy, w, h, hexc) => canvas.drawOval(CK.XYWHRect(x + ox, y + oy, w, h), paint(hexc));
+    oval(1, 4, 14, 12, '#2E2A28');
+    oval(1, 2, 13, 11, '#4A4440');
+    oval(3, 4, 5, 3, '#625A54');
+  }
+  // something hidden that you're strong enough to notice: a four-point star, swelling and gone (world-view.tsx)
+  (st.twinkles ?? []).forEach(([tx, ty], i) => {
+    const phase = (t * 0.8 + i * 0.37) % 1;
+    const r = Math.round(Math.sin(Math.min(phase / 0.35, 1) * Math.PI) * 4);
+    if (r <= 0) return;
+    const cx = tx * TILE + 9;
+    const cy = ty * TILE + 6;
+    const star = paint('#FFF7DC');
+    canvas.drawRect(CK.XYWHRect(cx - r, cy, r * 2 + 1, 1), star);
+    canvas.drawRect(CK.XYWHRect(cx, cy - r, 1, r * 2 + 1), star);
+    if (r > 2) canvas.drawRect(CK.XYWHRect(cx - 1, cy - 1, 3, 3), star);
+  });
   // everyone, back to front by their feet; while you play cards, you and the Keeper sit on the floor
   const sitting = st.cards ? ['keeper'] : [];
   const ents = Object.values(map.npcs)
     // someone who only comes later in the story (comesAfter: Felix, once his cocoon breaks) isn't here yet
     .filter(
       (n) =>
-        ((!ep.hide?.includes(n.id) && !n.comesAfter) || st.shown.includes(n.id)) &&
+        ((!(st.hide ?? ep.hide)?.includes(n.id) && !n.comesAfter) || st.shown.includes(n.id)) &&
         !sitting.includes(n.id) &&
         !st.npcAt[n.id]?.gone,
     )
@@ -935,6 +1117,7 @@ function drawWorld(canvas, ep, st, t) {
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
+    if (st.quiet?.has(id)) continue;
     const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(map.npcs[id].x, map.npcs[id].y);
     for (let k = 0; k < 3; k++) {
       const age = lt - k * 0.35;
@@ -1143,6 +1326,9 @@ function drawEnd(canvas, ep, t) {
 }
 
 // ---- episodes
+/** The heroes who can be out exploring the Archive hall: kept out of the episodes' Archive. */
+const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id) => `hall-${id}`);
+
 const EPISODES = {
   // Just you and the Keeper. Written by the author for this episode (not in the game yet).
   2: () => {
@@ -1344,10 +1530,233 @@ const EPISODES = {
       ],
     };
   },
+  // 30 seconds (author, Oct 3, 2026): no title card. It opens on Felix laughing (out loud) and
+  // dashing off down the road, leaving his sign. You spot the shiny thing only a Mage sees, take the
+  // hidden passage, and come out in the Archive, where the Keeper's waiting. The lines are the game's
+  // (felix-maze.json, felix-maze.ts).
+  5: () => {
+    const maze = loadMap('felix-maze', 'outdoor');
+    const archive = loadMap('archive', 'rooms');
+    maze.npcs.felix = { id: 'felix', type: 'npc', x: 4, y: 5, sprite: 'felix', facing: 'left', name: 'Felix', lines: [] };
+    const sign = maze.examine.S.slice(-1);
+    const twinkle = [[2, 1]];
+    return {
+      number: 5,
+      title: 'WELCOME BACK',
+      map: maze,
+      hero: { sprite: 'quill', at: [1, 5], facing: 'right' },
+      hide: ['felix-maze', 'guard-1', 'guard-2'],
+      twinkles: twinkle,
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: Felix, laughing, then gone down the road east
+        { laugh: 'felix', dur: 1.4 },
+        { npcWalk: 'felix', to: [[4, 5], [31, 5]], speed: 520, hide: true, dash: true },
+        // what he left behind
+        { walk: [[2, 5], [2, 4]], face: 'up' },
+        { narrate: true, lines: sign },
+        // the shiny thing: only a Mage of Lv 6 sees it
+        { you: ['(What is that shiny thing?)'] },
+        { walk: [[2, 2]], face: 'up' },
+        { you: ["(It's a hidden passage!)"] },
+        // the choice is put plainly, by nobody, as in the game
+        { narrate: true, lines: ['Take it?'] },
+        { menu: { options: ['Yes', 'No'], pick: 0, hold: 0.8 } },
+        // out in the Archive, right in front of the Keeper
+        { scene: { map: archive, at: [20, 6], facing: 'up', hide: HALL } },
+        { wait: 0.3 },
+        { say: 'keeper', lines: ['Welcome back.', 'You wanna play cards?'] },
+        { wait: 0.5 },
+      ],
+    };
+  },
+  // 30 seconds each (author, Oct 3, 2026). 6: the lore (this place, his privacy, he's immortal:
+  // you're left wondering who's watching), 7: leaving by the green candle, into Felix and the king's
+  // guards, 8: "What king?". The Keeper is soft-spoken and polite, like a noble; your thoughts are in
+  // brackets; the lines are the game's (src/world/keeper-welcome.json, felix-maze.ts).
+  6: () => {
+    const archive = loadMap('archive', 'rooms');
+    const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
+    const asks = keeper.asks;
+    return {
+      number: 6,
+      title: 'ANOTHER LONG STORY',
+      next: 'THE GREEN CANDLE',
+      hold: 0.75,
+      map: archive,
+      hero: { sprite: 'quill', at: [20, 6], facing: 'up' },
+      hide: HALL,
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        { cards: 1, under: true },
+        { say: 'keeper', lines: ['Stop peeking.'] },
+        { menu: { speaker: 'The Keeper', options: asks.map((q) => q.ask), pick: 1, hold: 0.6 } },
+        { say: 'keeper', lines: asks[1].answer },
+        { menu: { speaker: 'The Keeper', options: [asks[2].ask], pick: 0, hold: 0.2 } },
+        { say: 'keeper', lines: asks[2].answer },
+        // and you're left wondering
+        { you: keeper.afterThoughts },
+      ],
+    };
+  },
+  7: () => {
+    const archive = loadMap('archive', 'rooms');
+    const maze = loadMap('felix-maze', 'outdoor');
+    const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
+    return {
+      number: 7,
+      title: 'THE GREEN CANDLE',
+      next: 'SIR HIMOTHY THE THIRD',
+      map: archive,
+      hero: { sprite: 'quill', at: [25, 4], facing: 'up' },
+      hide: HALL,
+      twinkles: [[25, 3]],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: at the green candle, the Keeper calling over
+        { say: 'keeper', lines: keeper.candle },
+        { menu: { options: ['Touch the green flame', 'Go back the way I came'], pick: 0, hold: 0.6 } },
+        { say: 'keeper', lines: [keeper.confronted] },
+        // the flash, and out past the maze, in front of Felix and the king's guards
+        { scene: { map: maze, at: [22, 4], facing: 'right', show: ['felix-maze', 'guard-1', 'guard-2'], flash: true } },
+        { say: 'felix-maze', lines: ['That one, sir! That is the one plotting to take the throne!'] },
+        { wait: 0.4 },
+      ],
+    };
+  },
+  8: () => {
+    const maze = loadMap('felix-maze', 'outdoor');
+    const lock = (path, cls) => ({ locked: `${cls} Lv 10`, icon: path });
+    const answers = [
+      { label: 'Warrior: "Say that again. Slower."', ...lock('physical', 'Warrior') },
+      { label: 'Mage: "Plots take weeks. I woke up today."', ...lock('intellectual', 'Mage') },
+      { label: 'Bard: "Let me buy you both a drink."', ...lock('social', 'Bard') },
+      '"I\'m innocent!"',
+      '"How did you know!?"',
+      '"What king?"',
+    ];
+    return {
+      number: 8,
+      title: 'SIR HIMOTHY THE THIRD',
+      next: 'THE ONE IN THE CORNER',
+      map: maze,
+      hero: { sprite: 'quill', at: [22, 4], facing: 'right' },
+      shown: ['felix-maze', 'guard-1', 'guard-2'],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the captain, in your face
+        { say: 'guard-2', lines: ["Is this true? Here, it's guilty until proven innocent! Explain yourself."] },
+        // the clever answers are there, greyed out until Lv 10; the wizard isn't there yet
+        { menu: { speaker: 'Sir Himothy the Third', options: answers, pick: 4, hold: 2.4 } },
+        { say: 'guard-2', lines: ['How did I know? See this badge? Sir Himothy the Third. I always know.', 'Seize him!'] },
+        // they close in
+        { npcWalk: 'guard-1', to: [[23, 3], [22, 3]], speed: 70, together: true },
+        { npcWalk: 'guard-2', to: [[25, 5], [23, 5], [22, 5]], speed: 70, together: true },
+        { wait: 0.4 },
+        { laugh: 'felix-maze', dur: 1.4 },
+        { narrate: true, lines: ['Rough hands. A sack over your head. A long, bumpy walk.'] },
+        { wait: 0.3 },
+      ],
+    };
+  },
+  // 9–10 (the author's direction, Oct 3, 2026): the Kingdom Dungeon, as the game plays it
+  // (kingdom-dungeon.json, dungeon.ts). The menus show all of Brannoc's questions, but the episodes
+  // only pick what the story needs: the rest are there for players to try for themselves.
+  // 9: marched to the cells; the one in the corner was a prince, once.
+  9: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    // the two guards who march you down from the stair (in the game, a march: dungeon.ts escortIn)
+    cells.npcs['escort-1'] = { id: 'escort-1', type: 'npc', x: 21, y: 4, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
+    cells.npcs['escort-2'] = { id: 'escort-2', type: 'npc', x: 21, y: 2, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
+    const brannoc = cells.npcs['brannoc-cell'];
+    const asks = brannoc.questions.map((q) => q.ask);
+    const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
+    return {
+      number: 9,
+      title: 'THE ONE IN THE CORNER',
+      next: 'FOR THE APPLES',
+      hold: 0.75,
+      map: cells,
+      hero: { sprite: 'quill', at: [21, 3], facing: 'down' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: marched down from the guards' stair
+        { say: 'escort-1', lines: ['Walk. And no plotting.'] },
+        { npcWalk: 'escort-1', to: [[21, 6], [5, 6]], speed: 150, together: true },
+        { npcWalk: 'escort-2', to: [[21, 6], [7, 6]], speed: 150, together: true },
+        { walk: [[21, 6], [6, 6]], face: 'up', speed: 150 },
+        { say: 'escort-1', lines: ['In you go.'] },
+        // shoved in; the door slams
+        { scene: { map: cells, at: [6, 4], facing: 'down', hide: ['escort-1', 'escort-2'] } },
+        { narrate: true, lines: ['CLANG.'] },
+        { face: 'left' },
+        // (visibly unarmed)
+        { say: 'brannoc-cell', lines: brannoc.lines.slice(0, 1) },
+        { menu: { speaker: 'Brannoc', options: asks, pick: 0, hold: 0.9 } },
+        { say: 'brannoc-cell', lines: [answer('Who are you?')[0], answer('Who are you?')[2]] },
+        // and he begins to explain how he got here; it cuts there
+        { menu: { speaker: 'Brannoc', options: asks.slice(1), pick: 1, hold: 0.6 } },
+        { say: 'brannoc-cell', lines: answer('What are you in for?').slice(0, 1) },
+      ],
+    };
+  },
+  // 10: the apple cart, "We need to escape", the bars, and Gary saw nothing.
+  10: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const brannoc = cells.npcs['brannoc-cell'];
+    const asks = brannoc.questions.map((q) => q.ask);
+    const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
+    const garySaw = ['...', 'I did not see that.', '... I do not get paid enough to have seen that.'];
+    return {
+      number: 10,
+      title: 'FOR THE APPLES',
+      next: 'GARY',
+      hold: 0.6,
+      map: cells,
+      hero: { sprite: 'quill', at: [4, 4], facing: 'left' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: mid-story
+        { say: 'brannoc-cell', lines: answer('What are you in for?').slice(1) },
+        { menu: { speaker: 'Brannoc', options: asks.filter((a) => a !== 'What are you in for?'), pick: 3, hold: 0.5 } },
+        { say: 'brannoc-cell', lines: answer('We need to escape.') },
+        { narrate: true, lines: ['*squeak*'] },
+        { say: 'brannoc-cell', lines: ['AAAAAAH!'] },
+        // straight past you, through the bars, along the corridor and up the ladder
+        { npcWalk: 'brannoc-cell', to: [[5, 4], [5, 5], [5, 6], [20, 6], [20, 8]], speed: 260, hide: true, together: true },
+        // the bars bend as he goes through them
+        { wait: 0.3 },
+        { gap: [5, 5] },
+        { wait: 0.6 },
+        { face: 'down' },
+        { say: 'jailer', lines: garySaw },
+        { wait: 0.3 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
 const ep = EPISODES[episode]();
+/** "THE ONE IN THE CORNER" → "The One in the Corner" (no "?": file names). */
+const SMALL = new Set(['a', 'an', 'and', 'at', 'for', 'in', 'of', 'on', 'or', 'the', 'to']);
+const titleCase = (t) =>
+  t
+    .replace(/\?/g, '')
+    .toLowerCase()
+    .split(' ')
+    .map((w, i) => (i > 0 && SMALL.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
+const out =
+  outArg ??
+  (mkdirSync(EPISODE_FOLDER, { recursive: true }),
+  join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`));
 const compiled = compile(ep);
 const FADE = 0.5;
 const total = compiled.end + ep.endDur;
@@ -1370,6 +1779,8 @@ if (process.env.STILLS) {
     else if (st) {
       drawWorld(canvas, ep, st, s);
       drawOverlays(canvas, st);
+      if (st.blackout > 0)
+        canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint(st.white ? '#FFFFFF' : '#000000', Math.min(1, st.blackout)));
     } else drawEnd(canvas, ep, s - compiled.end);
     writeFileSync(file, surface.makeImageSnapshot().encodeToBytes());
   }
@@ -1494,7 +1905,11 @@ async function renderPicture() {
       }
       drawWorld(canvas, ep, st, t);
       drawOverlays(canvas, st);
-      black(1 - (t - ep.titleDur) / FADE);
+      if (st.white) {
+        if (st.blackout > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', Math.min(1, st.blackout)));
+      } else black(st.blackout);
+      // no title card: the first frame is already the scene (author: open on the line, not a fade)
+      if (ep.titleDur > 0) black(1 - (t - ep.titleDur) / FADE);
       black((t - (compiled.end - FADE)) / FADE);
     } else {
       drawEnd(canvas, ep, t - compiled.end);
@@ -1534,6 +1949,7 @@ const SELECT = (() => {
   }
   return out;
 })();
+const LAUGH = laugh(RATE);
 const mix = new Float32Array(Math.ceil(total * RATE));
 const place = (sound, at, gain) => {
   const start = Math.round(at * RATE);
@@ -1542,6 +1958,13 @@ const place = (sound, at, gain) => {
 for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
+  // a laugh out loud, as in the game (a quiet one is only a cower)
+  if (s.kind === 'laugh' && !s.quiet) {
+    const start = Math.round(s.t0 * RATE);
+    LAUGH.forEach((v, i) => {
+      if (start + i < mix.length) mix[start + i] += v * 0.5;
+    });
+  }
 }
 const wav = Buffer.alloc(44 + mix.length * 2);
 wav.write('RIFF', 0);

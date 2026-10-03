@@ -28,6 +28,10 @@ export const EFFECTS = {
   roll: require('../../assets/audio/roll.wav'),
   slam: require('../../assets/audio/slam.wav'),
   gutter: require('../../assets/audio/gutter.wav'),
+  /** Someone laughing as they leave with a flourish (Felix): HA HA HA (scripts/laugh-sound.mjs). */
+  laugh: require('../../assets/audio/laugh.wav'),
+  /** The Keeper's phone ringing in your pocket (scripts/ring-sound.mjs). */
+  ring: require('../../assets/audio/ring.wav'),
   /** Dialogue voices, lowest to highest (see voiceFor in portraits.ts); blip0 is the Keeper's alone. */
   blip0: require('../../assets/audio/blip-0.wav'),
   blip1: require('../../assets/audio/blip-1.wav'),
@@ -78,6 +82,8 @@ export const EFFECT_VOLUME: Record<Effect, number> = {
   roll: 0.5,
   slam: 1,
   gutter: 0.9,
+  laugh: 0.5,
+  ring: 0.6,
   blip0: 0.7,
   blip1: 0.5,
   blip2: 0.5,

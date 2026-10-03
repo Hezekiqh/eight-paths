@@ -5,7 +5,7 @@
     "####################################",
     "#WWWWWWWWWWWWWWWWMMWWWWWWWWWWWWWWWW#",
     "#WW1WWWWWWWQW2WWWMMWWW3WWWWWWWWW4WW#",
-    "#c..............rOOr..............c#",
+    "#c..............rOOr.....g........c#",
     "#...............rOOr...............#",
     "#.TT...TTTT.TTT.rrrr.TTT.TTTT...TT.#",
     "#.BB...BBBB.BBB.rrrr.BBB.BBBB...BB.#",
@@ -76,6 +76,9 @@
     ],
     "8": [
       "Cold stone. The rest of the world is out there somewhere."
+    ],
+    "g": [
+      "A candle with a green wick."
     ]
   },
   "objects": [
@@ -142,8 +145,8 @@
       "name": "Brannoc",
       "character": "brannoc",
       "lines": [
-        "Just... having a look around. Not hiding. Looking.",
-        "These shelves are very tall. Taller than they need to be. Suspiciously tall."
+        "Merely surveying the keep. Not hiding. Surveying.",
+        "These shelves are very tall. Suspiciously tall. A man could be ambushed."
       ],
       "comesAfter": "met:brannoc",
       "look": true
