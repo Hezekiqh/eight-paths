@@ -187,3 +187,61 @@ export const PORTAL_HOME = {
   ],
   to: { map: 'archive' as MapId, x: 15, y: 5, facing: 'up' as const },
 };
+
+/**
+ * The party splits at the end of Season 1 (author, Oct 2, 2026): at the last
+ * seal, the four of the Original 8 who aren't starters say goodbye and go home,
+ * each to the kingdom of a later season. Only those you met. Draft lines, cut
+ * down from WORLDS.md "the other four leave", for the author to edit.
+ */
+export const PARTING: { id: CharacterId; lines: string[] }[] = [
+  {
+    id: 'tamsin',
+    lines: [
+      'TAMSIN: I left a job unfinished. Back home, in the Guild City. A big one.',
+      "TAMSIN: Don't ask what. Poor thing's been running too long without me.",
+      'TAMSIN: Something breaks, ask Gert. Good hands. Nobody ever asks him anything.',
+    ],
+  },
+  {
+    id: 'oren',
+    lines: [
+      'OREN: Someone is telling the Still Valley to breathe. That was my line. They are using it wrong.',
+      "OREN: There's an argument I've not had for five hundred years. I should go and have it.",
+      'OREN: Drink some water.',
+    ],
+  },
+  {
+    id: 'pip',
+    lines: [
+      'PIP: Somebody in the Festival City is singing my song. Every night, they say.',
+      'PIP: I wrote it for one night, for one room. I need to know who.',
+      "PIP: Good news: I'm off to make some friends. Bad news: one will probably be a goose.",
+    ],
+  },
+  {
+    id: 'moss',
+    lines: [
+      'MOSS: That storm over the far green has no clouds.',
+      "MOSS: I've seen one of those before. Once.",
+      'When you look round, Moss is already gone.',
+    ],
+  },
+];
+
+/** Who leaves at the split: their story flag, so they stop walking the World and leave the Archive. */
+export const leftFlag = (id: CharacterId) => `left:${id}`;
+
+/** The goodbyes, for whoever of the four you met. Empty if none (then there's no scene). */
+export function partySplit(flags: string[]): { lines: string[]; leaving: CharacterId[] } {
+  const going = PARTING.filter((p) => flags.includes(`met:${p.id}`) && !flags.includes(leftFlag(p.id)));
+  if (going.length === 0) return { lines: [], leaving: [] };
+  return {
+    lines: [
+      'Behind you, the party has gone quiet. Not everyone is coming through.',
+      ...going.flatMap((p) => p.lines),
+      'The rest of you stand before the seal.',
+    ],
+    leaving: going.map((p) => p.id),
+  };
+}

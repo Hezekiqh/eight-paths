@@ -19,12 +19,12 @@ const met = (id: CharacterId, owned: Owned | null | undefined) => !owned || (own
  * its core companion when the member has no overworld art yet, as long as
  * you've met them. The core eight are found along the road, each before their
  * Path's first job (a Warrior to break a wall, a Mage to read the law).
- * `owned` left out: everyone (old saves).
+ * `owned` left out: everyone (old saves). `flags`: the World's story flags, so
+ * anyone who went home when the party split (`left:<id>`, scenes.ts) can't walk.
  */
-export function walkersFor(party: Record<Dimension, CharacterId>, owned?: Owned | null): HeroId[] {
-  return DIMENSIONS.map((d) => (isWalker(party[d]) && met(party[d], owned) ? party[d] : DEFAULT_PARTY[d]) as HeroId).filter(
-    (id) => met(id, owned),
-  );
+export function walkersFor(party: Record<Dimension, CharacterId>, owned?: Owned | null, flags: string[] = []): HeroId[] {
+  const here = (id: CharacterId) => met(id, owned) && !flags.includes(`left:${id}`);
+  return DIMENSIONS.map((d) => (isWalker(party[d]) && here(party[d]) ? party[d] : DEFAULT_PARTY[d]) as HeroId).filter(here);
 }
 
 /**
@@ -38,8 +38,9 @@ export function worldHero(
   classDimension: Dimension,
   owned?: Owned | null,
   origin?: CharacterId,
+  flags: string[] = [],
 ): HeroId {
-  const walkers = walkersFor(party, owned);
+  const walkers = walkersFor(party, owned, flags);
   if (picked && walkers.includes(picked as HeroId)) return picked as HeroId;
   const own = walkers.find((h) => h === party[classDimension] || h === DEFAULT_PARTY[classDimension]);
   return own ?? ((origin && isWalker(origin) ? origin : 'brannoc') as HeroId);
