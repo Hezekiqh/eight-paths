@@ -286,6 +286,12 @@ export default function RevealScreen() {
   const eyeAt = at(135 - COCOON_ART.width / 2 + COCOON_ART.eye.x, standY - 102 + COCOON_ART.eye.y);
   const revealFocus = at(135, standY - 70);
   const anchor = at(135, REALM_ART.height * 0.6);
+  // The camera aims at the layout as it is now: a hatch opened over the sideways World turns upright
+  // after it mounts, and aiming at the sideways layout pushed the cocoon off to one side.
+  const layout = useRef({ cocoonMid, eyeAt, revealFocus, anchor, px });
+  useEffect(() => {
+    layout.current = { cocoonMid, eyeAt, revealFocus, anchor, px };
+  });
 
   useEffect(() => {
     if (!valid) return;
@@ -304,6 +310,7 @@ export default function RevealScreen() {
       const t = (now - tl.start) / 1000;
       clock.set(now / 1000);
       let z = 1;
+      const { cocoonMid, eyeAt, revealFocus, anchor, px } = layout.current;
       let focus: readonly [number, number] = cocoonMid;
       let shake = 0;
       let fl = 0;
