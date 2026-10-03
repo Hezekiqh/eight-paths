@@ -1,0 +1,53 @@
+{
+  "id": "room-wren",
+  "name": "Wren's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c...cc...c#",
+    "#..........#",
+    "#.p......p.#",
+    "#..........#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "c": [
+      "Candles. Wren lights one for everyone still asleep. There are a lot of candles."
+    ],
+    "p": [
+      "White flowers in a jar of water, changed every morning."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "wren",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "wren",
+      "facing": "down",
+      "name": "Wren",
+      "character": "wren",
+      "lines": [
+        "Welcome. Sit, if you like. The candles don't mind."
+      ],
+      "comesAfter": "met:wren"
+    }
+  ]
+}

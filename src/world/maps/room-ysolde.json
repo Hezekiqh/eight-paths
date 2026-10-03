@@ -1,0 +1,56 @@
+{
+  "id": "room-ysolde",
+  "name": "Ysolde's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c...DD...c#",
+    "#.BB....BB.#",
+    "#..........#",
+    "#.........p#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "D": [
+      "Ledgers, every column added twice. The last line reads: OWED TO ME BY THE KINGDOM: EVERYTHING."
+    ],
+    "B": [
+      "Account books, sorted by how much each person owes. One shelf is just for the Crown."
+    ],
+    "p": [
+      "A plant. Its watering is logged."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "ysolde",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "ysolde",
+      "facing": "down",
+      "name": "Ysolde",
+      "character": "ysolde",
+      "lines": [
+        "Ah. Come in. Don't touch the ledgers. Touching is a fee."
+      ],
+      "comesAfter": "met:ysolde"
+    }
+  ]
+}

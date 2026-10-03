@@ -1,0 +1,56 @@
+{
+  "id": "room-quill",
+  "name": "Quill's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c..BBBB..c#",
+    "#.........D#",
+    "#..........#",
+    "#p.........#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "B": [
+      "Spellbooks, mostly. One is a cookbook with SPELLS written over COOKBOOK in pencil."
+    ],
+    "D": [
+      "A desk drowned in notes. A teacup on top has gone fully cold, then grown a little forest."
+    ],
+    "p": [
+      "A plant that Quill swears has learned to read."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "quill",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "quill",
+      "facing": "down",
+      "name": "Quill",
+      "character": "quill",
+      "lines": [
+        "Come in, come in! Shift that pile. No, the other pile. Perfect."
+      ],
+      "comesAfter": "met:quill"
+    }
+  ]
+}

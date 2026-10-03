@@ -1,6 +1,7 @@
 import { DEFAULT_PARTY, ROSTER } from '@/story/companions';
 
-import { MAPS, withoutCharacter, withoutGone } from '../maps';
+import { MAPS, withoutCharacter, withoutGone, type MapId } from '../maps';
+import { EXITS } from '../progress';
 import { ABOUT_ASK, GOSSIP_ASK, PATH_TALK, characterQuestions } from '../talk';
 
 describe('characterQuestions', () => {
@@ -24,18 +25,33 @@ describe('characterQuestions', () => {
 });
 
 describe('the Archive', () => {
-  it('has the core eight standing in it, and the Keeper with his own questions', () => {
-    const here = MAPS.archive.npcs.map((n) => n.character).filter(Boolean);
-    expect(new Set(here)).toEqual(new Set(Object.values(DEFAULT_PARTY)));
+  // Author, Oct 3, 2026: nobody's in the Archive until you've met them; then they wait in their own room off it.
+  const rooms = Object.values(DEFAULT_PARTY).map((id) => MAPS[`room-${id}` as MapId]);
+
+  it('has the Keeper with his own questions, and the core eight only once met (out exploring, some days)', () => {
+    for (const n of MAPS.archive.npcs.filter((n) => n.character))
+      expect([n.id, n.comesAfter]).toEqual([`hall-${n.character}`, `met:${n.character}`]);
     expect(MAPS.archive.npcs.find((n) => n.id === 'keeper')?.questions).toHaveLength(4);
   });
 
+  it('gives each of the core eight a room, behind a door that opens once you have met them', () => {
+    for (const id of Object.values(DEFAULT_PARTY)) {
+      const room = MAPS[`room-${id}` as MapId];
+      expect(room.npcs.map((n) => [n.character, n.comesAfter])).toEqual([[id, `met:${id}`]]);
+      const door = EXITS.find((e) => e.from === 'archive' && e.to?.map === room.id)!;
+      expect(door.needs).toMatchObject({ kind: 'flag', flag: `met:${id}` });
+      expect(EXITS.some((e) => e.from === room.id && e.to?.map === 'archive')).toBe(true);
+    }
+    expect(rooms).toHaveLength(8);
+  });
+
   it('frees the tile of whoever is walking the World', () => {
-    const map = withoutCharacter(MAPS.archive, 'pip');
-    const pip = MAPS.archive.npcs.find((n) => n.character === 'pip')!;
+    const room = MAPS['room-pip'];
+    const map = withoutCharacter(room, 'pip');
+    const pip = room.npcs.find((n) => n.character === 'pip')!;
     expect(map.npcs.some((n) => n.character === 'pip')).toBe(false);
     expect(map.solid[pip.y * map.width + pip.x]).toBe(0);
-    expect(MAPS.archive.solid[pip.y * map.width + pip.x]).toBe(1);
+    expect(room.solid[pip.y * map.width + pip.x]).toBe(1);
   });
 });
 

@@ -1,0 +1,57 @@
+{
+  "id": "room-tamsin",
+  "name": "Tamsin's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c.DD..DD.c#",
+    "#..........#",
+    "#.TT.......#",
+    "#.........p#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "D": [
+      "A workbench. Gears, springs, and a clock that runs backwards on purpose."
+    ],
+    "T": [
+      "Half a crossbow. Or half a teapot. Tamsin won't say which."
+    ],
+    "p": [
+      "A plant in a pot Tamsin built. The pot waters it. The plant seems nervous."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "tamsin",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "tamsin",
+      "facing": "down",
+      "name": "Tamsin",
+      "character": "tamsin",
+      "lines": [
+        "Don't step there. Or there. Actually just stand still. Hi!"
+      ],
+      "comesAfter": "met:tamsin",
+      "goneAfter": "left:tamsin"
+    }
+  ]
+}

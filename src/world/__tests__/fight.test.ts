@@ -40,6 +40,23 @@ const withMode = (e: Enemy, mode: number) => {
 };
 
 describe('fights', () => {
+  it('takes exactly one hp off the warden a strike, however hard you hit', () => {
+    const f = startFight([withMode(spawnEnemy('warden', 112, 100), RECOVER)]);
+    const r = stepFight(f, input({ press: true }), rules({ damage: 9 }), DT);
+    expect(r.fight.enemies[0][E_HP]).toBe(29);
+  });
+
+  it('ends a hold-out fight once the boss has taken enough, still standing (the prison-route warden)', () => {
+    const hurt = spawnEnemy('warden', 300, 300);
+    hurt[E_HP] = 11; // 19 strikes taken
+    const before = stepFight(startFight([hurt]), input(), rules({ boss: true, holdOut: 20 }), DT);
+    expect(before.fight.won).toBe(false);
+    hurt[E_HP] = 10;
+    const after = stepFight(startFight([hurt]), input(), rules({ boss: true, holdOut: 20 }), DT);
+    expect(after.fight.won).toBe(true);
+    expect(after.fight.enemies[0][7]).toBe(1);
+  });
+
   it("shrugs off Kaldor's hits until a torch gutters", () => {
     const guarded = startFight([spawnEnemy('kaldor', 112, 100)]);
     const a = stepFight(guarded, input({ press: true }), rules(), DT);

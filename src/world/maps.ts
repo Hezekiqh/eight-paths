@@ -35,6 +35,18 @@ import stitcheryData from './maps/stitchery.json';
 import ironhouseData from './maps/ironhouse.json';
 import frostWardData from './maps/frost-ward.json';
 import iceHouseData from './maps/ice-house.json';
+import felixMazeData from './maps/felix-maze.json';
+import mirrorRoomData from './maps/mirror-room.json';
+import kingdomDungeonData from './maps/kingdom-dungeon.json';
+import dungeonMazesData from './maps/dungeon-mazes.json';
+import roomBrannocData from './maps/room-brannoc.json';
+import roomYsoldeData from './maps/room-ysolde.json';
+import roomQuillData from './maps/room-quill.json';
+import roomWrenData from './maps/room-wren.json';
+import roomOrenData from './maps/room-oren.json';
+import roomPipData from './maps/room-pip.json';
+import roomTamsinData from './maps/room-tamsin.json';
+import roomMossData from './maps/room-moss.json';
 import type { CharacterId } from '@/story/companions';
 
 import { ENEMY_KINDS, type EnemyKind } from './combat';
@@ -239,6 +251,17 @@ export function withOpenTiles(map: WorldMap, letters: string[]): WorldMap {
   return { ...map, walkable, solid: solidFor(map.tiles, walkable, blocking(map.objects)) };
 }
 
+/**
+ * The map with its pushable boulders out of the way, for working out where you
+ * can get to: every boulder puzzle can be solved (see boulders.test.ts).
+ */
+export function withBouldersMoved(map: WorldMap): WorldMap {
+  if (map.boulders.length === 0) return map;
+  const solid = map.solid.slice();
+  for (const b of map.boulders) solid[b] = 0;
+  return { ...map, solid };
+}
+
 /** Every tile (as y * width + x) with one of these letters. */
 export function tilesOf(map: WorldMap, letters: string[]): number[] {
   const out: number[] = [];
@@ -264,6 +287,14 @@ const away = (n: NpcObject, flags: string[]) =>
 export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
   if (!map.npcs.some((n) => away(n, flags))) return map;
   const objects = map.objects.filter((o) => o.type !== 'npc' || !away(o, flags));
+  const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
+  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
+/** The map without these people (by id): who's out of their room today, say (hero-rooms.ts). */
+export function withoutNpcs(map: WorldMap, ids: string[]): WorldMap {
+  if (!map.npcs.some((n) => ids.includes(n.id))) return map;
+  const objects = map.objects.filter((o) => o.type !== 'npc' || !ids.includes(o.id));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
@@ -313,6 +344,18 @@ export const MAPS = {
   'ironhouse': build(ironhouseData as MapData, require('@/assets/world/ironhouse.png')),
   'frost-ward': build(frostWardData as MapData, require('@/assets/world/frost-ward.png')),
   'ice-house': build(iceHouseData as MapData, require('@/assets/world/ice-house.png')),
+  'felix-maze': build(felixMazeData as MapData, require('@/assets/world/felix-maze.png')),
+  'mirror-room': build(mirrorRoomData as MapData, require('@/assets/world/mirror-room.png')),
+  'kingdom-dungeon': build(kingdomDungeonData as MapData, require('@/assets/world/kingdom-dungeon.png')),
+  'dungeon-mazes': build(dungeonMazesData as MapData, require('@/assets/world/dungeon-mazes.png')),
+  'room-brannoc': build(roomBrannocData as MapData, require('@/assets/world/room-brannoc.png')),
+  'room-ysolde': build(roomYsoldeData as MapData, require('@/assets/world/room-ysolde.png')),
+  'room-quill': build(roomQuillData as MapData, require('@/assets/world/room-quill.png')),
+  'room-wren': build(roomWrenData as MapData, require('@/assets/world/room-wren.png')),
+  'room-oren': build(roomOrenData as MapData, require('@/assets/world/room-oren.png')),
+  'room-pip': build(roomPipData as MapData, require('@/assets/world/room-pip.png')),
+  'room-tamsin': build(roomTamsinData as MapData, require('@/assets/world/room-tamsin.png')),
+  'room-moss': build(roomMossData as MapData, require('@/assets/world/room-moss.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

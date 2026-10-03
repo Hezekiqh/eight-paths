@@ -1,0 +1,54 @@
+{
+  "id": "room-brannoc",
+  "name": "Brannoc's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c........c#",
+    "#..TT......#",
+    "#..........#",
+    "#p.......p.#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "T": [
+      "A table. A sword lies on it, polished to a mirror. Next to it, a list titled THINGS I AM NOT SCARED OF.",
+      "The list is blank."
+    ],
+    "p": [
+      "A potted fern. Someone has named it Gerald and is clearly scared of it."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "brannoc",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "brannoc",
+      "facing": "down",
+      "name": "Brannoc",
+      "character": "brannoc",
+      "lines": [
+        "Oh! It's you. Come in. Mind the fern. Its name is Gerald."
+      ],
+      "comesAfter": "met:brannoc"
+    }
+  ]
+}

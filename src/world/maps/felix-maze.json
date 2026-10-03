@@ -1,0 +1,96 @@
+{
+  "id": "felix-maze",
+  "name": "The Boulder Maze",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "X"
+  ],
+  "pushable": "B",
+  "art": {
+    "B": ".",
+    "Z": "T",
+    "X": "."
+  },
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTZTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "T....T.TTT....T..B.TTTT....TTT",
+    "T.S..T..TT....B..B.TTT......TT",
+    "T....T..T..TTTT.T..TT........T",
+    "<,,,,..TTT..T....T..X,,,,,,,,>",
+    "<....T...TB.T.T..T.TT,,,,,,,,>",
+    "T....T.B.B..TT...T.TT........T",
+    "T....T.TT.TT.TT.T..TTT......TT",
+    "TTTTTTTTTTTTTTTTTTTTTTT....TTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 1,
+    "y": 5,
+    "facing": "right"
+  },
+  "examine": {
+    "T": [
+      "Old trees, packed close. Someone has dragged boulders between them, and recently: the grass is still flat."
+    ],
+    "Z": [
+      "Old trees, packed close."
+    ],
+    "S": [
+      "A fresh sign, hammered in crooked. The paint is still wet:",
+      "\"This should keep you busy while I set things up. -F 😛\""
+    ],
+    "<": [
+      "The road back west, to the Courier Road."
+    ],
+    ">": [
+      "The road runs on east, toward a camp in the hills."
+    ]
+  },
+  "objects": [
+    {
+      "id": "felix-maze",
+      "type": "npc",
+      "x": 24,
+      "y": 4,
+      "sprite": "felix",
+      "facing": "right",
+      "name": "Felix",
+      "lines": [
+        "Ah! Mon ami! Do come and meet my new friends."
+      ],
+      "comesAfter": "felix-hatched",
+      "goneAfter": "felix-framed"
+    },
+    {
+      "id": "guard-1",
+      "type": "npc",
+      "x": 25,
+      "y": 3,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Guard",
+      "lines": [
+        "Stay where you are."
+      ],
+      "comesAfter": "felix-hatched",
+      "goneAfter": "felix-framed"
+    },
+    {
+      "id": "guard-2",
+      "type": "npc",
+      "x": 26,
+      "y": 4,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Guard",
+      "lines": [
+        "Don't move."
+      ],
+      "comesAfter": "felix-hatched",
+      "goneAfter": "felix-framed"
+    }
+  ]
+}

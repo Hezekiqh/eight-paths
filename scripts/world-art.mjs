@@ -279,6 +279,39 @@ const TILE_ART = {
     box(g, x, y + 2, TILE, 1, '#1A1210');
     for (let i = 0; i < TILE; i += 8) box(g, x + i + ((y / TILE) % 2) * 4, y + 3, 1, 13, '#2A221E');
   },
+  m(g, x, y, m) {
+    // The Mirror Room's great mirror, a 2×2 block of wall: drawn once, from its top-left tile.
+    if (m.at(-1, 0) === 'm' || m.at(0, -1) === 'm') return;
+    // the wall behind all four tiles first, so the tiles after this one don't paint over the glass
+    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+      const at = (a, b) => (m.at(a + dx, b + dy) === 'm' ? 'W' : m.at(a + dx, b + dy));
+      TILE_ART.W(g, x + dx * TILE, y + dy * TILE, { at });
+    }
+    box(g, x + 3, y + 1, 26, 30, P.trim);
+    box(g, x + 4, y + 2, 24, 28, '#B8C0D0');
+    box(g, x + 5, y + 3, 22, 26, '#5A6A88');
+    for (let j = 0; j < 26; j++)
+      for (let i = 0; i < 22; i++)
+        if (hash(i, j, 77) < 0.08) put(g, x + 5 + i, y + 3 + j, '#7A8AB0');
+    // a pale sheen across the glass
+    for (let i = 0; i < 12; i++) put(g, x + 8 + i, y + 22 - i, '#C8D4F0');
+    for (let i = 0; i < 8; i++) put(g, x + 9 + i, y + 25 - i, '#A8B4D8');
+    put(g, x + 15, y, P.rugGold);
+    box(g, x + 14, y + 1, 3, 1, P.rugGold);
+  },
+  g(g, x, y) {
+    // The green candle: the same candelabra, but its flames burn green.
+    ellipse(g, x + 8, y + 14, 4, 1, '#1A1210');
+    box(g, x + 7, y + 6, 2, 8, P.iron);
+    box(g, x + 4, y + 7, 8, 1, P.iron);
+    box(g, x + 5, y + 13, 6, 1, P.iron);
+    for (const cx of [4, 7, 11]) {
+      const top = cx === 7 ? 1 : 3;
+      box(g, x + cx, y + top, 1 + (cx === 7 ? 1 : 0), 7 - top, P.wax);
+      put(g, x + cx, y + top - 1, '#3AC85A');
+      put(g, x + cx, y + top - 2, '#9AF0A0');
+    }
+  },
   '='(g, x, y, m) {
     const left = m.at(-1, 0) !== '=';
     box(g, x, y, TILE, TILE, P.woodDark);
@@ -371,9 +404,11 @@ function drawMap(map) {
 
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
-      const draw = TILE_ART[at(tx, ty)];
+      // `art` draws a letter as another (a hidden door as the wall it hides in)
+      const look = (c) => map.art?.[c] ?? c;
+      const draw = TILE_ART[look(at(tx, ty))];
       if (!draw) throw new Error(`No art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => look(at(tx + dx, ty + dy)) });
     }
 
   // Moonlight from the high window falls onto the cocoon.
@@ -394,7 +429,7 @@ function drawMap(map) {
   // Candlelight pools around every candelabra.
   rows.forEach((r, ty) =>
     [...r].forEach((c, tx) => {
-      if (c !== 'c') return;
+      if (c !== 'c' && c !== 'g') return;
       const lx = tx * TILE + 8;
       const ly = ty * TILE + 3;
       const R = 44;
@@ -403,7 +438,7 @@ function drawMap(map) {
           if (y < 0 || x < 0 || y >= g.h || x >= g.w) continue;
           if (at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#') continue;
           const d = Math.hypot(x - lx, (y - ly) * 1.2) / R;
-          if (d < 1) g[y][x] = mix(g[y][x], hex('#FFB04A'), dither(0.3 * (1 - d) ** 2, x, y));
+          if (d < 1) g[y][x] = mix(g[y][x], hex(c === 'g' ? '#4AE070' : '#FFB04A'), dither(0.3 * (1 - d) ** 2, x, y));
         }
     }),
   );
@@ -1420,6 +1455,8 @@ const WALKERS = {
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
   // Felix Rook, the Academy's grand strategist: a checkered waistcoat under a dark plum coat
   felix: { top: '#3A2A40', shade: '#2A1E30', legs: '#2A2030', boots: '#5C3A28', hair: ['slick', '#1A1416'], villain: '#1A1416', checks: ['#F0E6D0', '#4A3A30'] },
+  // The Kaldorium's warden: the biggest guard in the kingdom, drawn twice as big. Same colours as his guards, more of him.
+  warden: { top: '#5A3A2E', shade: '#3E2820', legs: '#3A2A20', boots: '#2A1A12', belt: '#FFC940', skin: '#C8956C', hair: ['bald', '#C8956C'], beard: '#2A1810', sword: true },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -1874,6 +1911,18 @@ const MAPS = [
   'ironhouse',
   'frost-ward',
   'ice-house',
+  'felix-maze',
+  'mirror-room',
+  'kingdom-dungeon',
+  'dungeon-mazes',
+  'room-brannoc',
+  'room-ysolde',
+  'room-quill',
+  'room-wren',
+  'room-oren',
+  'room-pip',
+  'room-tamsin',
+  'room-moss',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {

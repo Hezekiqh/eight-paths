@@ -2,23 +2,23 @@
   "id": "archive",
   "name": "The Archive",
   "tiles": [
-    "##########################",
-    "#WWWWWWWWWWWMMWWWWWWWWWWW#",
-    "#WWWWWQWWWWWMMWWWWWWWWWWW#",
-    "#c.........rOOr.........c#",
-    "#..........rOOr..........#",
-    "#.TTTT.TTT.rrrr.TTT.TTTT.#",
-    "#.BBBB.BBB.rrrr.BBB.BBBB.#",
-    "#..........rrrr..........#",
-    "#.TTTT.TTT.rrrr.DD..TTTT.#",
-    "#.BBBB.BBB.rrrr.....BBBB.#",
-    "#c.........rrrr.........c#",
-    "#.p........rrrr......pp..#",
-    "#___________==___________#",
-    "##########################"
+    "####################################",
+    "#WWWWWWWWWWWWWWWWMMWWWWWWWWWWWWWWWW#",
+    "#WW1WWWWWWWQW2WWWMMWWW3WWWWWWWWW4WW#",
+    "#c..............rOOr..............c#",
+    "#...............rOOr...............#",
+    "#.TT...TTTT.TTT.rrrr.TTT.TTTT...TT.#",
+    "#.BB...BBBB.BBB.rrrr.BBB.BBBB...BB.#",
+    "#...............rrrr...............#",
+    "#.TT...TTTT.TTT.rrrr.DD..TTTT...TT.#",
+    "#.BB...BBBB.BBB.rrrr.....BBBB...BB.#",
+    "#c..............rrrr..............c#",
+    "#.p....p........rrrr......pp.....p.#",
+    "#___5_______6____==____7_______8___#",
+    "####################################"
   ],
   "spawn": {
-    "x": 12,
+    "x": 17,
     "y": 5,
     "facing": "down"
   },
@@ -52,13 +52,37 @@
     ],
     "=": [
       "The great door. It won't budge. Not yet."
+    ],
+    "1": [
+      "Scroll racks, floor to ceiling. The labels are in a script you almost remember."
+    ],
+    "2": [
+      "Scroll racks, floor to ceiling. The labels are in a script you almost remember."
+    ],
+    "3": [
+      "Scroll racks, floor to ceiling. The labels are in a script you almost remember."
+    ],
+    "4": [
+      "Scroll racks, floor to ceiling. The labels are in a script you almost remember."
+    ],
+    "5": [
+      "Cold stone. The rest of the world is out there somewhere."
+    ],
+    "6": [
+      "Cold stone. The rest of the world is out there somewhere."
+    ],
+    "7": [
+      "Cold stone. The rest of the world is out there somewhere."
+    ],
+    "8": [
+      "Cold stone. The rest of the world is out there somewhere."
     ]
   },
   "objects": [
     {
       "id": "keeper",
       "type": "npc",
-      "x": 15,
+      "x": 20,
       "y": 4,
       "sprite": "keeper",
       "facing": "left",
@@ -103,127 +127,145 @@
       ]
     },
     {
-      "id": "brannoc",
+      "id": "board",
+      "type": "board",
+      "x": 11,
+      "y": 2
+    },
+    {
+      "id": "hall-brannoc",
       "type": "npc",
-      "x": 3,
-      "y": 3,
+      "x": 4,
+      "y": 4,
       "sprite": "brannoc",
-      "facing": "down",
+      "facing": "right",
       "name": "Brannoc",
       "character": "brannoc",
       "lines": [
-        "You're up! Good, good. I was guarding you. From over here. Tactically."
+        "Just... having a look around. Not hiding. Looking.",
+        "These shelves are very tall. Taller than they need to be. Suspiciously tall."
       ],
-      "meets": true
+      "comesAfter": "met:brannoc",
+      "look": true
     },
     {
-      "id": "ysolde",
+      "id": "hall-ysolde",
       "type": "npc",
-      "x": 5,
-      "y": 3,
+      "x": 12,
+      "y": 7,
       "sprite": "ysolde",
       "facing": "down",
       "name": "Ysolde",
       "character": "ysolde",
       "lines": [
-        "Awake at last. Five hundred years of lodging, and not a coin paid. I'm joking. Mostly."
+        "Do you know what this place would fetch at auction? Neither do I. I'm working it out."
       ],
-      "comesAfter": "met:ysolde"
+      "comesAfter": "met:ysolde",
+      "look": true
     },
     {
-      "id": "quill",
+      "id": "hall-quill",
       "type": "npc",
-      "x": 7,
-      "y": 3,
+      "x": 9,
+      "y": 10,
       "sprite": "quill",
-      "facing": "down",
+      "facing": "up",
       "name": "Quill",
       "character": "quill",
       "lines": [
-        "Oh! You're awake! Do you know how many books are in here? I do. Roughly. Give or take a shelf."
+        "I found a book about books. It cites itself. I'm in love."
       ],
-      "comesAfter": "met:quill"
+      "comesAfter": "met:quill",
+      "look": true
     },
     {
-      "id": "wren",
+      "id": "hall-wren",
       "type": "npc",
-      "x": 9,
-      "y": 3,
+      "x": 25,
+      "y": 4,
       "sprite": "wren",
       "facing": "down",
       "name": "Wren",
       "character": "wren",
       "lines": [
-        "Welcome back. Take it slowly. The first steps are always the strangest."
+        "I like it out here. You can hear the candles breathing."
       ],
-      "comesAfter": "met:wren"
+      "comesAfter": "met:wren",
+      "look": true
     },
     {
-      "id": "oren",
+      "id": "hall-oren",
       "type": "npc",
-      "x": 17,
-      "y": 3,
+      "x": 30,
+      "y": 7,
       "sprite": "oren",
-      "facing": "down",
+      "facing": "left",
       "name": "Oren",
       "character": "oren",
       "lines": [
-        "You're awake.",
-        "Good."
+        "Walking helps. Want to walk with me? No? That's fine too."
       ],
       "comesAfter": "met:oren",
-      "goneAfter": "left:oren"
+      "goneAfter": "left:oren",
+      "look": true
     },
     {
-      "id": "pip",
+      "id": "hall-pip",
       "type": "npc",
-      "x": 19,
-      "y": 3,
+      "x": 6,
+      "y": 7,
       "sprite": "pip",
-      "facing": "down",
+      "facing": "right",
       "name": "Pip",
       "character": "pip",
       "lines": [
-        "There you are! I wrote you a welcome song. It's mostly about sleeping. Very restful chorus."
+        "The echo in here! Listen. La! ...La. Ha! It's brilliant."
       ],
       "comesAfter": "met:pip",
-      "goneAfter": "left:pip"
+      "goneAfter": "left:pip",
+      "look": true
     },
     {
-      "id": "tamsin",
+      "id": "hall-tamsin",
       "type": "npc",
-      "x": 21,
-      "y": 3,
+      "x": 24,
+      "y": 10,
       "sprite": "tamsin",
-      "facing": "down",
+      "facing": "up",
       "name": "Tamsin",
       "character": "tamsin",
       "lines": [
-        "Mind that shelf. It wobbles. I'll fix it. Later."
+        "That window latch is held on with string. I'm going to fix it. Nobody stop me."
       ],
       "comesAfter": "met:tamsin",
-      "goneAfter": "left:tamsin"
+      "goneAfter": "left:tamsin",
+      "look": true
     },
     {
-      "id": "moss",
+      "id": "hall-moss",
       "type": "npc",
-      "x": 23,
-      "y": 3,
+      "x": 31,
+      "y": 4,
       "sprite": "moss",
-      "facing": "down",
+      "facing": "left",
       "name": "Moss",
       "character": "moss",
       "lines": [
-        "Tuft noticed you before I did. He notices everything."
+        "Stretching my legs."
       ],
       "comesAfter": "met:moss",
-      "goneAfter": "left:moss"
-    },
-    {
-      "id": "board",
-      "type": "board",
-      "x": 6,
-      "y": 2
+      "goneAfter": "left:moss",
+      "look": true
     }
-  ]
+  ],
+  "art": {
+    "1": "W",
+    "2": "W",
+    "3": "W",
+    "4": "W",
+    "5": "_",
+    "6": "_",
+    "7": "_",
+    "8": "_"
+  }
 }

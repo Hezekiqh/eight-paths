@@ -1,7 +1,9 @@
 import { COMPANIONS, STARTERS, type CharacterId } from '@/story/companions';
 
+import { BRANNOC_SCENES } from '../dungeon';
+import { SIDE_WAYS } from '../felix-maze';
 import { JOBS } from '../jobs';
-import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
+import { MAPS, withBouldersMoved, withOpenTiles, type MapId, type WorldMap } from '../maps';
 import { EXITS, type Requirement } from '../progress';
 import { winScene } from '../scenes';
 
@@ -59,6 +61,8 @@ function play(start: CharacterId) {
   const visited = new Set<MapId>();
   // Who you can walk as: the hero you woke as from the first habit, the rest once met.
   const paths = new Set<string>([COMPANIONS[start].dimension]);
+  // the hero you woke as is met from the start: their room off the Archive is open
+  flags.add(`met:${start}`);
   const canDo = (path: string | null | undefined) => !path || path === 'any' || paths.has(path);
   let changed = true;
   while (changed) {
@@ -81,7 +85,7 @@ function play(start: CharacterId) {
         ...EXITS.filter((e) => e.from === id && e.walk && met(e.needs, flags)).map((e) => e.tile),
         ...JOBS.filter((j) => j.map === id && j.opens && flags.has(j.flag)).map((j) => j.tile),
       ];
-      const map = withOpenTiles(MAPS[id], open);
+      const map = withBouldersMoved(withOpenTiles(MAPS[id], open));
       const seen = reachable(
         map,
         arrivals.filter((a) => a.map === id).map((a) => [a.x, a.y]),
@@ -89,8 +93,14 @@ function play(start: CharacterId) {
       for (const exit of EXITS.filter((e) => e.from === id && e.to && met(e.needs, flags))) {
         if (tiles(map, exit.tile).some(([x, y]) => near(map, seen, x, y))) arrive(exit.to!);
       }
+      for (const way of SIDE_WAYS.filter((w) => w.from === id)) {
+        if (tiles(map, way.tile).some(([x, y]) => near(map, seen, x, y))) arrive(way.to);
+      }
       for (const npc of map.npcs) {
-        if (npc.meets && npc.character && near(map, seen, npc.x, npc.y)) {
+        // the core eight join on first talk; Brannoc after his scene in the dungeon (dungeon.ts: say yes)
+        const joins = npc.meets || (npc.character && BRANNOC_SCENES.includes(npc.id));
+        if (joins && npc.character && near(map, seen, npc.x, npc.y)) {
+          add(`met:${npc.character}`);
           const path = COMPANIONS[npc.character].dimension;
           if (!paths.has(path)) {
             paths.add(path);

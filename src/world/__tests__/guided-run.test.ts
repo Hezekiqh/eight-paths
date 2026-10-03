@@ -2,7 +2,7 @@ import { BASE_XP, emptyDimensionRecord, overallLevelFromXp } from '@/game';
 
 import { nextGoal } from '../guide';
 import { JOBS } from '../jobs';
-import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
+import { MAPS, withBouldersMoved, withLadder, withOpenTiles, type MapId, type WorldMap } from '../maps';
 import { EXITS, standing, type XpTotals } from '../progress';
 import { winScene } from '../scenes';
 
@@ -62,12 +62,13 @@ function guidedRun(): { steps: Step[]; flags: string[]; stuck?: string } {
 
   for (let n = 0; n < 200; n++) {
     const here = at.map;
-    const base = MAPS[here];
+    // as in the game: a ladder of fights (the Kaldorium) puts up its next rung each visit
+    const base = withLadder(MAPS[here], flags);
     const open = [
       ...EXITS.filter((e) => e.from === here && e.walk && standing(e.needs, xp()).met).map((e) => e.tile),
       ...JOBS.filter((j) => j.map === here && j.opens && flags.includes(j.flag)).map((j) => j.tile),
     ];
-    const map = withOpenTiles(base, open);
+    const map = withBouldersMoved(withOpenTiles(base, open));
     const seen = reachable(map, [at.x, at.y]);
 
     // A boss fight starts as you come in, before anything else.

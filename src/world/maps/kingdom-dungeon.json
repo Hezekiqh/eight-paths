@@ -1,0 +1,293 @@
+{
+  "id": "kingdom-dungeon",
+  "name": "The Deep Cells",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "p"
+  ],
+  "tiles": [
+    "########################",
+    "#WWWWWWWWWWWWWWWWWWcW3W#",
+    "#Wb...,kW,.bW.b,W,.bW.W#",
+    "#W,.....W...W...W...W.W#",
+    "#W,,....W...W...W...W.W#",
+    "#WGGG24GWGpGWGpGWGpGW.W#",
+    "#W....................W#",
+    "#Wt...................W#",
+    "#W...................1W#",
+    "#WWWWWWWWWWWWWWWWWWWWWW#",
+    "########################"
+  ],
+  "spawn": {
+    "x": 4,
+    "y": 3,
+    "facing": "down"
+  },
+  "examine": {
+    "W": [
+      "Wet stone. Someone has scratched a tally into it. They stopped at forty."
+    ],
+    "G": [
+      "Iron bars, cold and close together. Down the passage, a guard is snoring."
+    ],
+    "b": [
+      "A bunk with a straw mattress. It has seen better centuries."
+    ],
+    ",": [
+      "Old straw. Something small lives in it, and would like you to leave."
+    ],
+    "k": [
+      "A stub of candle on an iron stand. The guards must have missed it.",
+      "It burns like the Archive's candles."
+    ],
+    "2": [
+      "Iron bars, cold and close together. Down the passage, a guard is snoring."
+    ],
+    "p": [
+      "Iron bars. Somebody on the other side is breathing very loudly."
+    ],
+    "1": [
+      "A ladder up, to the floor above."
+    ],
+    "t": [
+      "The guards' table. Half a sandwich, a dice cup, and a sign: ON WATCH 24/7. Under it, in different handwriting: (mostly)."
+    ],
+    "c": [
+      "A torch in a bracket, guttering."
+    ],
+    "3": [
+      "The guards' stair, up to the town. Locked from the other side. Of course it is."
+    ],
+    "4": [
+      "The cell door. Locked, and the key is upstairs with somebody who doesn't like you."
+    ]
+  },
+  "objects": [
+    {
+      "id": "brannoc-cell",
+      "type": "npc",
+      "x": 2,
+      "y": 4,
+      "sprite": "brannoc",
+      "facing": "right",
+      "name": "Brannoc",
+      "character": "brannoc",
+      "lines": [
+        "AH!",
+        "Who are you? What do you want?"
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "My name is Brannoc.",
+            "I woke up here two days ago. I have no idea what's going on."
+          ]
+        },
+        {
+          "ask": "What are you in for?",
+          "answer": [
+            "Well. I kind of woke up out of this... cocoon-like fixture.",
+            "I walked into town, and everything was different. I barely recognised it.",
+            "Some guards came over. To help me, maybe? I wasn't sure what they wanted. They shouted.",
+            "I got scared and bumped into an apple cart.",
+            "They say I'm serving fifty to life.",
+            "Fifty years. To life."
+          ]
+        },
+        {
+          "ask": "We need to break out of here.",
+          "answer": [
+            "Impossible. The guards watch this place 24/7.",
+            "And besides, these bars look impenetrable."
+          ],
+          "sets": "brannoc-bolts"
+        }
+      ],
+      "farewell": [
+        "Go on. I'll keep the corner safe. Someone has to."
+      ],
+      "goneAfter": "cell-bars-bent"
+    },
+    {
+      "id": "prisoner-1",
+      "type": "npc",
+      "x": 10,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Nails",
+      "lines": [
+        "Don't look at me like that.",
+        "I only stole the king's spoon.",
+        "Then the king's other spoon. Then I got greedy."
+      ],
+      "questions": [
+        {
+          "ask": "Why the spoons?",
+          "answer": [
+            "Soup.",
+            "You wouldn't understand. You've never had the king's soup."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prisoner-2",
+      "type": "npc",
+      "x": 14,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Old Mott",
+      "lines": [
+        "Five hundred years I've been in here.",
+        "...No, wait. Five. Five years. It feels like five hundred."
+      ],
+      "questions": [
+        {
+          "ask": "What did you do?",
+          "answer": [
+            "Said the statue in the square looked like a potato.",
+            "It does, though. Look at it. Potato."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prisoner-3",
+      "type": "npc",
+      "x": 18,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "The Quiet One",
+      "lines": [
+        "...",
+        "...",
+        "Gary's asleep again, isn't he."
+      ],
+      "questions": [
+        {
+          "ask": "Are you the worst prisoner?",
+          "answer": [
+            "Yes.",
+            "I return library books late. On purpose."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jailer",
+      "type": "npc",
+      "x": 3,
+      "y": 7,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Gary",
+      "lines": [
+        "Zzz.",
+        "...Hm? Oh. You're out.",
+        "I'm not going to stop you. I don't get paid enough for this."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Gary."
+          ]
+        },
+        {
+          "ask": "Just Gary?",
+          "answer": [
+            "Gary. Of the cells.",
+            "There was a Gary of the gate. He got promoted. Now he's Gary of the other gate."
+          ]
+        },
+        {
+          "ask": "How much do they pay you?",
+          "answer": [
+            "We don't get paid at all.",
+            "They call it 'the honour of the Crown.'",
+            "I can't eat the honour of the Crown. I've tried."
+          ]
+        },
+        {
+          "ask": "Where are the other guards?",
+          "answer": [
+            "At the Kaldorium. Big fight tonight.",
+            "Somebody had to stay. Somebody is always Gary."
+          ]
+        },
+        {
+          "ask": "Aren't you going to stop me?",
+          "answer": [
+            "No.",
+            "...",
+            "Still no."
+          ]
+        },
+        {
+          "ask": "Isn't this place watched 24/7?",
+          "answer": [
+            "It says that on the sign.",
+            "I'm the 24/7."
+          ]
+        }
+      ],
+      "farewell": [
+        "Close the door on your way out. There is no door. Close it anyway."
+      ]
+    },
+    {
+      "id": "brannoc-sulk",
+      "type": "npc",
+      "x": 2,
+      "y": 4,
+      "sprite": "brannoc",
+      "facing": "right",
+      "name": "Brannoc",
+      "character": "brannoc",
+      "lines": [
+        "Oh. It's you.",
+        "I'm not sulking. I'm guarding the corner. Again."
+      ],
+      "questions": [
+        {
+          "ask": "Come with me.",
+          "answer": [
+            "...Really?",
+            "You're sure? You're not just saying it?",
+            "Okay. Okay! I'll offer you my sword. Again. Properly this time."
+          ],
+          "sets": "brannoc-joined",
+          "then": [
+            "Brannoc grabs his sword and hurries out after you, beaming.",
+            "Brannoc joins you."
+          ]
+        },
+        {
+          "ask": "Why did you come back here?",
+          "answer": [
+            "It's the only place I know.",
+            "Also the guards wave at me now. It's very confusing."
+          ]
+        }
+      ],
+      "farewell": [
+        "I'll be here. In the corner. If you need a corner guarded."
+      ],
+      "comesAfter": "brannoc-declined",
+      "goneAfter": "brannoc-joined"
+    }
+  ],
+  "art": {
+    "2": "G",
+    "p": "G",
+    "1": "H",
+    "3": "E",
+    "4": "G"
+  }
+}

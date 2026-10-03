@@ -119,7 +119,7 @@ export function attackFor(path: Dimension, level: number): Attack {
   return { ...attack, range: rangeFor(attack, level) };
 }
 
-export const ENEMY_KINDS = ['shadow', 'rusted', 'echo', 'sleeper', 'raider', 'aurek', 'kaldor'] as const;
+export const ENEMY_KINDS = ['shadow', 'rusted', 'echo', 'sleeper', 'raider', 'aurek', 'kaldor', 'warden'] as const;
 export type EnemyKind = (typeof ENEMY_KINDS)[number];
 
 type EnemyStats = {
@@ -136,6 +136,8 @@ type EnemyStats = {
   behaviour: 'chase' | 'ambush' | 'shout' | 'lunge' | 'slam' | 'king';
   /** 2 for the giants: drawn twice as big, and bigger to hit and to touch. */
   size?: number;
+  /** Every strike takes exactly one hp, however strong the blow: `hp` is how many strikes it takes. */
+  fixedHits?: boolean;
 };
 
 export const ENEMIES: Record<EnemyKind, EnemyStats> = {
@@ -146,6 +148,8 @@ export const ENEMIES: Record<EnemyKind, EnemyStats> = {
   raider: { hp: 8, speed: 36, sight: 200, behaviour: 'lunge' }, // the horde's pit fighters
   aurek: { hp: 12, speed: 24, sight: 300, behaviour: 'slam', size: 2 }, // Aurek the Tall, raised and bound
   kaldor: { hp: 20, speed: 32, sight: 400, behaviour: 'king' }, // the Kingbreaker himself
+  // The Kaldorium's warden (author, Oct 3, 2026): 30 strikes to bring down, whatever your level (see fixedHits).
+  warden: { hp: 30, speed: 22, sight: 300, behaviour: 'slam', size: 2, fixedHits: true },
 };
 
 /**
@@ -459,7 +463,11 @@ export function hitAround(
         continue;
       }
       // Aurek's stitched hide turns half of every close blow, except while he's getting up after a slam.
-      const dealt = close && armoured(e) ? Math.max(1, Math.floor(damage / 2)) : damage;
+      const dealt = ENEMIES[ENEMY_KINDS[e[E_KIND]]].fixedHits
+        ? 1
+        : close && armoured(e)
+          ? Math.max(1, Math.floor(damage / 2))
+          : damage;
       e[E_HP] -= dealt;
       if (e[E_MODE] === EXPOSED) e[E_TAKEN] += dealt;
       e[E_AWAKE] = 1;
@@ -491,7 +499,7 @@ export type Strikes = {
   struck: number[];
 };
 
-const BIG = ['aurek', 'kaldor'];
+const BIG = ['aurek', 'kaldor', 'warden'];
 
 export function strikes(before: Enemy[], after: Enemy[]): Strikes {
   'worklet';

@@ -87,7 +87,9 @@ export function settersOf(flag: string): Setter[] {
         talk: true,
       });
     }
-    if (map.boss?.flag === flag) out.push({ map: id, box: ONE(map.boss.x, map.boss.y), tag: 'The fight' });
+    // a boss, or any rung of a ladder of fights (the Kaldorium: the guards, then the warden)
+    for (const b of [map.boss, ...(map.ladder ?? [])])
+      if (b?.flag === flag) out.push({ map: id, box: ONE(b.x, b.y), tag: 'The fight' });
     if (map.platesFlag === flag) {
       const box = tileBox(map, 'P');
       if (box) out.push({ map: id, box, tag: 'The pressure plates' });

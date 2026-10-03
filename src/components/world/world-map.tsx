@@ -39,6 +39,7 @@ const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
   'courier-road': { x: 0.5, y: 0.45 },
   waystation: { x: 0.74, y: 0.22 },
   millbrook: { x: 0.14, y: 0.45 },
+  'felix-maze': { x: 0.68, y: 0.45 },
   'deserters-camp': { x: 0.86, y: 0.45 },
   'barracks-hall': { x: 0.86, y: 0.72 },
   'march-road': { x: 0.62, y: 0.9 },
@@ -76,6 +77,18 @@ const REGION: Partial<Record<MapId, MapId>> = {
   stitchery: 'barracks-ward',
   ironhouse: 'barracks-ward',
   'ice-house': 'frost-ward',
+  // A room between, reached through Felix's maze: shown as the Archive, its twin.
+  'mirror-room': 'archive',
+  'kingdom-dungeon': 'kingdom-town',
+  'dungeon-mazes': 'kingdom-town',
+  'room-brannoc': 'archive',
+  'room-ysolde': 'archive',
+  'room-quill': 'archive',
+  'room-wren': 'archive',
+  'room-oren': 'archive',
+  'room-pip': 'archive',
+  'room-tamsin': 'archive',
+  'room-moss': 'archive',
 };
 const regionOf = (id: MapId): MapId => REGION[id] ?? id;
 /** What a place is called on the World view. */

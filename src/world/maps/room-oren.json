@@ -1,0 +1,51 @@
+{
+  "id": "room-oren",
+  "name": "Oren's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c..p..p..c#",
+    "#..........#",
+    "#..........#",
+    "#p..p..p..p#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "p": [
+      "Plants, arranged so you breathe a little slower walking past them."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "oren",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "oren",
+      "facing": "down",
+      "name": "Oren",
+      "character": "oren",
+      "lines": [
+        "Hello. You look like you could use a slow breath. Go on."
+      ],
+      "comesAfter": "met:oren",
+      "goneAfter": "left:oren"
+    }
+  ]
+}

@@ -22,8 +22,12 @@ export type Dialogue = {
   farewell?: string[];
   /** Runs once the conversation closes (e.g. stepping through a door). */
   then?: () => void;
-  /** A decision at the end of the lines: each option runs its own `then`, instead of the usual goodbye. */
-  choices?: { label: string; then: () => void }[];
+  /**
+   * A decision at the end of the lines: each option runs its own `then`, instead of the usual goodbye.
+   * A `locked` option is shown greyed out with what it needs (e.g. "Warrior Lv 10") and can't be picked,
+   * so players see what their habits would unlock.
+   */
+  choices?: { label: string; then: () => void; locked?: string }[];
 };
 
 type Props = {
@@ -154,6 +158,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
             <Choice
               key={c.label}
               label={c.label}
+              locked={c.locked}
               onPress={() => {
                 playSound('select');
                 haptics.select();
@@ -209,7 +214,22 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
 }
 
 /** One thing to say, with the heart cursor from the tab bar beside it while pressed. */
-function Choice({ label, onPress }: { label: string; onPress: () => void }) {
+function Choice({ label, onPress, locked }: { label: string; onPress: () => void; locked?: string }) {
+  if (locked)
+    return (
+      <View
+        accessible
+        accessibilityRole="button"
+        accessibilityState={{ disabled: true }}
+        accessibilityLabel={`${label}. Locked: needs ${locked}`}
+        style={styles.choice}
+      >
+        <Text style={[styles.cursor, styles.cursorIdle]}>🔒</Text>
+        <Text style={[styles.text, styles.choiceLocked]}>
+          {label} <Text style={styles.lockNeed}>({locked})</Text>
+        </Text>
+      </View>
+    );
   return (
     <Pressable accessibilityRole="button" onPress={onPress} hitSlop={4} style={styles.choice}>
       {({ pressed }) => (
@@ -239,5 +259,7 @@ const styles = StyleSheet.create({
   cursor: { color: colors.accent, fontSize: 14, width: 16 },
   cursorIdle: { color: colors.textFaint },
   choicePressed: { color: colors.accent },
+  choiceLocked: { color: colors.textFaint, flexShrink: 1 },
+  lockNeed: { color: colors.textFaint, fontSize: 13 },
   more: { position: 'absolute', right: spacing.md, bottom: spacing.sm, color: colors.accent, fontSize: 12 },
 });

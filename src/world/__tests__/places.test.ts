@@ -1,5 +1,5 @@
 import { JOBS } from '../jobs';
-import { MAPS, withOpenTiles, type MapId, type WorldMap } from '../maps';
+import { MAPS, withBouldersMoved, withOpenTiles, type MapId, type WorldMap } from '../maps';
 import { EXITS } from '../progress';
 import { COCOONS } from '../cocoons';
 
@@ -49,7 +49,7 @@ describe('every room', () => {
       ...EXITS.filter((e) => e.from === id).map((e) => e.tile),
       ...JOBS.filter((j) => j.map === id).map((j) => j.tile),
     ];
-    const map = withOpenTiles(MAPS[id], letters);
+    const map = withBouldersMoved(withOpenTiles(MAPS[id], letters));
     const arrivals = [
       [map.spawn.x, map.spawn.y],
       ...EXITS.filter((e) => e.to?.map === id).map((e) => [e.to!.x, e.to!.y]),

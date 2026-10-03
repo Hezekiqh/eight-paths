@@ -46,11 +46,24 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
         outcome: { flags: [flag], joins: ['plush'] },
       };
     case 'the-pit':
+      // The Kaldorium (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
+      if (flag === 'pit-guards')
+        return {
+          lines: [
+            'The fifth guard hits the sand. The crowd goes quiet.',
+            'Then the floor shakes. Then it shakes again. Something very big is walking up the tunnel.',
+          ],
+          // stay where you are: coming back in starts the warden's fight
+          outcome: { flags: [flag] },
+        };
       return {
         lines: [
-          'The third fighter hits the sand. For a heartbeat the Kaldorium is silent.',
-          'Then the crowd roars, the real roar, the one nobody told them to make.',
+          'The warden sways, and sits down in the sand with a thump that rattles the banners.',
+          'For a heartbeat the Kaldorium is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
           ...(brannoc ? ["BRANNOC: I… I didn't run. Did you see? I didn't run!"] : []),
+          'GUARD: Strength is valued more than anything here. You\'re free to explore the prison.',
+          'GUARD: We don\'t get paid enough for this.',
+          'THE WARDEN: (grunts) We don\'t get paid at all.',
           "Barnaby chalks a new name on the champions' wall. The first one in three hundred years that isn't crossed out.",
         ],
         outcome: { flags: [flag] },
@@ -187,7 +200,7 @@ export const PORTAL_HOME = {
     'The seal hums a second, lower note. In the stone, faint as breath on glass: candlelight, shelves, a kettle.',
     "It won't take you onward. Not yet. But it will take you home.",
   ],
-  to: { map: 'archive' as MapId, x: 15, y: 5, facing: 'up' as const },
+  to: { map: 'archive' as MapId, x: 20, y: 5, facing: 'up' as const },
 };
 
 /**

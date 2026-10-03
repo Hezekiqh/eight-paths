@@ -69,6 +69,7 @@ import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 import { cameoAt } from '@/world/step-aside';
+import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
 
 const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
 const WALKERS_IMAGE = require('@/assets/world/walkers.png');
@@ -156,6 +157,8 @@ export type WorldSim = {
   sleepy: SharedValue<number>;
   /** A field move playing out (step-aside.ts): the walker steps aside and a party member walks out. Empty: none. */
   cameo: SharedValue<number[]>;
+  /** A scripted walk playing out (march.ts): guards marching you to a cell, say. Empty: none. */
+  march: SharedValue<number[]>;
 };
 
 export function useWorldSim(start: { x: number; y: number; facing: Facing }, npcs: NpcObject[]): WorldSim {
@@ -181,6 +184,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     dodgePressed: useSharedValue(false),
     sleepy: useSharedValue(0),
     cameo: useSharedValue<number[]>([]),
+    march: useSharedValue<number[]>([]),
   };
 }
 
@@ -197,6 +201,8 @@ type Props = {
   active: boolean;
   /** Tiles to mark with a bobbing "!", like the quest board when something's ready to claim. */
   marks?: { x: number; y: number }[];
+  /** Tiles that twinkle now and then: something hidden that you're strong enough to notice (Felix's maze). */
+  twinkles?: { x: number; y: number }[];
   /** Tiles (as y * width + x) that take you somewhere the moment you step on them: doorways, holes, road ends. */
   stepTiles?: number[];
   onStep?: (tile: number) => void;
@@ -242,6 +248,8 @@ type Props = {
   /** The boss lobs pillows (Baron Plush). */
   throws?: boolean;
   drowsy?: number;
+  /** The boss can only be held out against: over once an enemy has taken this many hp (fight.ts). */
+  holdOut?: number;
   onWin?: () => void;
   /**
    * Someone leaving with a flourish (Felix): they laugh, shoulders shaking, then dash
@@ -249,6 +257,8 @@ type Props = {
    */
   exit?: { id: string } | null;
   onExited?: () => void;
+  /** A march (sim.march) has finished. */
+  onMarched?: () => void;
 };
 
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
@@ -281,6 +291,7 @@ export function WorldView({
   scale,
   active,
   marks = [],
+  twinkles = [],
   stepTiles = [],
   onStep,
   patches = [],
@@ -300,9 +311,11 @@ export function WorldView({
   boss = null,
   throws = false,
   drowsy = 0,
+  holdOut = 0,
   onWin,
   exit = null,
   onExited,
+  onMarched,
   chests = [],
   signs = [],
   husks = [],
@@ -341,6 +354,7 @@ export function WorldView({
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
   const exited = useMemo(() => (onExited ? onExited : () => {}), [onExited]);
+  const marched = useMemo(() => (onMarched ? onMarched : () => {}), [onMarched]);
   const bossX = boss ? boss.x : -1;
   const bossY = boss ? boss.y : -1;
   const bolts = useDerivedValue(() => fight.get().bolts);
@@ -386,7 +400,8 @@ export function WorldView({
   );
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
   // One more for a party member stepping in for a job (a cameo).
-  const count = partyRows.length + npcs.length + map.enemies.length + 1;
+  // And room for a march's actors.
+  const count = partyRows.length + npcs.length + map.enemies.length + 1 + MARCH_ACTORS;
 
   const camX = useSharedValue(0);
   const camY = useSharedValue(0);
@@ -533,6 +548,7 @@ export function WorldView({
             bossY,
             throws,
             drowsy,
+            holdOut,
             maxHp: hearts,
           },
           dt,
@@ -728,6 +744,39 @@ export function WorldView({
         const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
         ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
       }
+      // A march: everyone in it walks their path; you too, if you're in it.
+      const march = sim.march.get();
+      let leadWalking = false;
+      if (march.length > MARCH_HEAD) {
+        const t = march[0] + realDt;
+        const { poses, done } = marchPoses(march, t);
+        for (const [row, facing, frame, x, y, walking] of poses) {
+          if (row >= 0) {
+            ents.push([row, facing, frame, x, y, 0, 1]);
+            continue;
+          }
+          if (walking === 1) sim.walked.set(sim.walked.get() + Math.hypot(x - sim.x.get(), y - sim.y.get()));
+          sim.x.set(x);
+          sim.y.set(y);
+          sim.facing.set(facing);
+          leadWalking = walking === 1;
+        }
+        if (done && march[3] === 0) {
+          sim.march.set([]);
+          sim.trail.set(startTrail(sim.x.get(), sim.y.get()));
+          scheduleOnRN(marched);
+        } else {
+          // still walking; or there, and lingering until the next march (reported once)
+          const next = march.slice();
+          next[0] = t;
+          if (done && march[4] === 0) {
+            next[4] = 1;
+            sim.trail.set(startTrail(sim.x.get(), sim.y.get()));
+            scheduleOnRN(marched);
+          }
+          sim.march.set(next);
+        }
+      }
       // A field move: the lead sidesteps while the party member the job needs walks into their place.
       const cameo = sim.cameo.get();
       let asideX = 0;
@@ -752,7 +801,7 @@ export function WorldView({
         ents.push([
           partyRows[0],
           f,
-          walkFrame(sim.walked.get(), moving || now.roll > 0),
+          walkFrame(sim.walked.get(), moving || leadWalking || now.roll > 0),
           sim.x.get() + lx + asideX,
           sim.y.get() + ly + asideY,
           0,
@@ -974,6 +1023,21 @@ export function WorldView({
     { scale },
   ]);
   const markLift = useDerivedValue(() => [{ translateY: -bob.get() }]);
+  // A four-point star that swells and fades on each twinkling tile, a beat apart.
+  const twinklePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    twinkles.forEach((t, i) => {
+      const phase = (clock.get() * 0.8 + i * 0.37) % 1;
+      const r = Math.round(Math.sin(Math.min(phase / 0.35, 1) * Math.PI) * 4);
+      if (r <= 0) return;
+      const cx = t.x * TILE + 9;
+      const cy = t.y * TILE + 6;
+      path.addRect(Skia.XYWHRect(cx - r, cy, r * 2 + 1, 1));
+      path.addRect(Skia.XYWHRect(cx, cy - r, 1, r * 2 + 1));
+      if (r > 2) path.addRect(Skia.XYWHRect(cx - 1, cy - 1, 3, 3));
+    });
+    return path;
+  });
 
   return (
     <Canvas style={{ width, height, backgroundColor: '#0C0806' }}>
@@ -1084,6 +1148,7 @@ export function WorldView({
             </Circle>
           </Group>
         )}
+        {twinkles.length > 0 && <Path path={twinklePath} color="#FFF7DC" />}
         <Group transform={markLift}>
           {marks.map((m) => (
             <Group key={`${m.x},${m.y}`}>

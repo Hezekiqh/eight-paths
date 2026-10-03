@@ -1,0 +1,51 @@
+{
+  "id": "room-moss",
+  "name": "Moss's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#p..p..p..p#",
+    "#..........#",
+    "#p........p#",
+    "#..p....p..#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "p": [
+      "More plants. Moss calls this 'keeping it simple.' There are forty-one."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "moss",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "moss",
+      "facing": "down",
+      "name": "Moss",
+      "character": "moss",
+      "lines": [
+        "Hey."
+      ],
+      "comesAfter": "met:moss",
+      "goneAfter": "left:moss"
+    }
+  ]
+}

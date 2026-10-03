@@ -125,6 +125,18 @@ export const JOBS: Job[] = [
     already: ['"Any warrior may challenge the crown in single combat, and the court must bear witness."'],
     cant: ['The old law, carved in stone. The letters are too old to make out.', 'A Mage could read it.'],
   },
+  {
+    // The cell's bars (author, Oct 3, 2026): a mouse squeaks, and whoever's most scared goes straight through them.
+    // Brannoc does it when you ask him to break out (dungeon.ts); walking as Brannoc, you do it yourself.
+    map: 'kingdom-dungeon',
+    tile: '2',
+    flag: 'cell-bars-bent',
+    label: 'The cell bars',
+    path: null,
+    done: ['Something squeaks in the straw, right by your foot.', '{name} yelps and throws themself at the bars. The bars lose.'],
+    already: ['Two bars, bent wide apart. Somebody went through here in a hurry.'],
+    opens: true,
+  },
 ];
 
 export const jobAt = (map: MapId, tile: string) => JOBS.find((j) => j.map === map && j.tile === tile);

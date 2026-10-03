@@ -7,20 +7,22 @@
     ","
   ],
   "tiles": [
-    "################",
-    "#WWWWBWWWWBWWWW#",
-    "#W,,,,,,,,,,,,W#",
-    "#W,..........,W#",
-    "#W,..........,W#",
-    "#W,..........,W#",
-    "#W,..........,W#",
-    "#W,,,,,,,,,,,,W#",
-    "#WWWWWW11WWWWWW#",
-    "################"
+    "######################",
+    "#WWWcWWWBWWWWBWWWcWWW#",
+    "#W,,,,,,,,,,,,,,,,,,W#",
+    "#W,................,W#",
+    "#W,................,W#",
+    "#W,................,W#",
+    "#W,................,W#",
+    "#W,................,W#",
+    "#W,,,,,,,,,,,,,,,,,,W#",
+    "#W3...k........r....W#",
+    "#WWWWWWWWW11WWWWWWWWW#",
+    "######################"
   ],
   "spawn": {
-    "x": 7,
-    "y": 6,
+    "x": 10,
+    "y": 9,
     "facing": "up"
   },
   "examine": {
@@ -29,14 +31,20 @@
     ],
     "1": [
       "The way out to the street."
+    ],
+    "3": [
+      "A ladder down through a trapdoor. The guards call it 'the quick way to the cells.'"
+    ],
+    "r": [
+      "A rack of clubs. Each one has a name burned into the handle. One just says 'CLUB'."
     ]
   },
   "objects": [
     {
       "id": "maelis",
       "type": "npc",
-      "x": 13,
-      "y": 6,
+      "x": 17,
+      "y": 9,
       "sprite": "maelis",
       "facing": "left",
       "name": "Sergeant Maelis",
@@ -78,36 +86,202 @@
         "A smaller line at the bottom: CHEERING IS COMPULSORY.",
         "Under that, in pencil: \"whoo.\""
       ]
+    },
+    {
+      "id": "crowd-1",
+      "type": "npc",
+      "x": 5,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Guard",
+      "lines": [
+        "Go on. Hit him. Not me. Him."
+      ],
+      "after": {
+        "flag": "brannoc-declined",
+        "lines": [
+          "Hey. We're not gonna mess with you.",
+          "Your big friend's down on level three, if you want to talk to him. Crying about an apple cart."
+        ]
+      }
+    },
+    {
+      "id": "crowd-2",
+      "type": "npc",
+      "x": 8,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Guard",
+      "lines": [
+        "I've got two coppers on the big one. No offence."
+      ]
+    },
+    {
+      "id": "crowd-3",
+      "type": "npc",
+      "x": 12,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Guard",
+      "lines": [
+        "We don't get paid enough for this."
+      ]
+    },
+    {
+      "id": "crowd-4",
+      "type": "npc",
+      "x": 16,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Guard",
+      "lines": [
+        "Strength is valued more than anything here. Also snacks."
+      ]
+    },
+    {
+      "id": "crowd-5",
+      "type": "npc",
+      "x": 2,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Guard",
+      "lines": [
+        "Is it starting? It's starting."
+      ]
+    },
+    {
+      "id": "crowd-6",
+      "type": "npc",
+      "x": 19,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Guard",
+      "lines": [
+        "Shh. Shh. It's starting."
+      ]
+    },
+    {
+      "id": "crowd-7",
+      "type": "npc",
+      "x": 19,
+      "y": 7,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Guard",
+      "lines": [
+        "I came for the warden. Everyone comes for the warden."
+      ]
+    },
+    {
+      "id": "crowd-8",
+      "type": "npc",
+      "x": 2,
+      "y": 7,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Guard",
+      "lines": [
+        "Mind the sand. It gets everywhere. Everywhere."
+      ]
+    },
+    {
+      "id": "brannoc-pit",
+      "type": "npc",
+      "x": 4,
+      "y": 9,
+      "sprite": "brannoc",
+      "facing": "up",
+      "name": "Brannoc",
+      "character": "brannoc",
+      "lines": [
+        "Zzz...",
+        "(He's out cold. A snot bubble swells and shrinks.)"
+      ],
+      "questions": [],
+      "comesAfter": "cell-bars-bent",
+      "goneAfter": "pit-champion"
+    },
+    {
+      "id": "brannoc-awake",
+      "type": "npc",
+      "x": 10,
+      "y": 6,
+      "sprite": "brannoc",
+      "facing": "down",
+      "name": "Brannoc",
+      "character": "brannoc",
+      "lines": [
+        "Whoa. Did you do that?"
+      ],
+      "questions": [],
+      "comesAfter": "brannoc-swung",
+      "goneAfter": "brannoc-woke"
     }
   ],
   "art": {
-    "1": "E"
+    "1": "E",
+    "3": "H"
   },
-  "boss": {
-    "flag": "pit-champion",
-    "x": 7,
-    "y": 2,
-    "kind": "raider",
-    "bearers": [
-      [
-        4,
-        3
+  "ladder": [
+    {
+      "flag": "pit-guards",
+      "x": 10,
+      "y": 3,
+      "kind": "raider",
+      "bearers": [
+        [
+          6,
+          4
+        ],
+        [
+          14,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          10,
+          4
+        ]
       ],
-      [
-        11,
-        3
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "HEAR YE! In this corner: a stranger! In the other corner: FIVE OF THE KING'S OWN!",
+          "Nobody here is paid. Everybody here is angry about it. FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "pit-champion",
+      "x": 10,
+      "y": 3,
+      "kind": "warden",
+      "bearers": [
+        [
+          10,
+          4
+        ]
       ],
-      [
-        7,
-        3
-      ]
-    ],
-    "intro": {
-      "speaker": "Barnaby Loudmouth",
-      "lines": [
-        "HEAR YE! In this corner: a stranger! And their very large, very nervous friend!",
-        "In the other corner: THREE OF THE KING'S OWN! FIGHT!"
-      ]
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "Oh, you've done it now. You've woken up THE WARDEN!",
+          "Thirty strikes, they say. Nobody's ever counted past twelve. FIGHT!"
+        ]
+      }
     }
-  }
+  ]
 }

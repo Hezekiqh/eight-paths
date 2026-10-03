@@ -1,0 +1,54 @@
+{
+  "id": "room-pip",
+  "name": "Pip's Room",
+  "tiles": [
+    "############",
+    "#WWWWWWWWWW#",
+    "#WWWWWWWWWW#",
+    "#c........c#",
+    "#.TT....TT.#",
+    "#..........#",
+    "#p........p#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "T": [
+      "A table covered in song sheets. Every song is about the same girl. The girl changes every page."
+    ],
+    "p": [
+      "A plant with a tiny hat on it."
+    ],
+    "W": [
+      "The Archive's shelves run right through into here."
+    ],
+    "1": [
+      "The door back out to the Archive."
+    ]
+  },
+  "objects": [
+    {
+      "id": "pip",
+      "type": "npc",
+      "x": 5,
+      "y": 4,
+      "sprite": "pip",
+      "facing": "down",
+      "name": "Pip",
+      "character": "pip",
+      "lines": [
+        "My audience! Sit, sit. I've nearly finished a song. It's about you. It's mostly about me."
+      ],
+      "comesAfter": "met:pip",
+      "goneAfter": "left:pip"
+    }
+  ]
+}

@@ -4,6 +4,9 @@ import {
   E_ALIVE,
   E_DEBT,
   E_HP,
+  E_KIND,
+  ENEMIES,
+  ENEMY_KINDS,
   E_MODE,
   E_STUN,
   E_TAKEN,
@@ -203,6 +206,11 @@ export type FightRules = {
   drowsy: number;
   /** Most hearts you can have (mending stops here). */
   maxHp: number;
+  /**
+   * A boss you can't beat, only hold out against: the fight is "won" (over) once any enemy has
+   * taken this many hp, still standing. 0: off. The Kaldorium's warden on the prison route.
+   */
+  holdOut?: number;
 };
 
 export type FightInput = {
@@ -689,8 +697,13 @@ export function stepFight(
 
   if (rules.boss && !f.fallen) {
     let standing = 0;
-    for (const e of f.enemies) standing += e[E_ALIVE];
-    if (standing === 0) {
+    let held = false;
+    for (const e of f.enemies) {
+      standing += e[E_ALIVE];
+      const hold = rules.holdOut ?? 0;
+      if (hold > 0 && e[E_ALIVE] === 1 && ENEMIES[ENEMY_KINDS[e[E_KIND]]].hp - e[E_HP] >= hold) held = true;
+    }
+    if (standing === 0 || held) {
       f.won = true;
       f.pillows = [];
       f.waves = [];
