@@ -1,21 +1,34 @@
-import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
+import { StyleSheet, Text, TextInput } from 'react-native';
 
 import { Button } from '@/components/button';
 import { OnboardingStep } from '@/components/onboarding-step';
+import { useGameStore } from '@/store';
 import { DEFAULT_PLAYER_NAME, useOnboardingDraft } from '@/store/onboarding';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
+/** Everyone starts as a Mage, with only the first habit; the Keeper's tour takes it from here. */
+const START_CLASS = 'intellectual';
+
+/**
+ * The only onboarding screen: your name. Then the game starts, and the Keeper
+ * walks you through making a habit, the graph, your first habit and the tabs.
+ */
 export default function WelcomeScreen() {
   const name = useOnboardingDraft((s) => s.name);
   const setName = useOnboardingDraft((s) => s.setName);
+  const reset = useOnboardingDraft((s) => s.reset);
+  const startGame = useGameStore((s) => s.startGame);
+
+  const start = () => {
+    startGame({ name: name.trim() || DEFAULT_PLAYER_NAME, classDimension: START_CLASS, quests: [] });
+    reset();
+  };
 
   return (
     <OnboardingStep
-      step={1}
       title="Eight Paths"
       subtitle="Turn your habits into quests and watch all eight sides of your life level up."
-      footer={<Button title="Continue" onPress={() => router.push('/onboarding/class')} />}>
+      footer={<Button title="Begin" onPress={start} />}>
       <Text style={styles.label}>What should we call you?</Text>
       <TextInput
         value={name}
@@ -25,13 +38,10 @@ export default function WelcomeScreen() {
         style={styles.input}
         autoCapitalize="words"
         autoCorrect={false}
-        returnKeyType="next"
-        onSubmitEditing={() => router.push('/onboarding/class')}
+        returnKeyType="go"
+        onSubmitEditing={start}
         maxLength={24}
       />
-      <Pressable accessibilityRole="button" onPress={() => router.push('/backup')} hitSlop={8} style={styles.restore}>
-        <Text style={styles.restoreText}>New phone? Restore from a backup</Text>
-      </Pressable>
     </OnboardingStep>
   );
 }
@@ -45,6 +55,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     padding: spacing.lg,
   },
-  restore: { alignSelf: 'center', paddingVertical: spacing.sm },
-  restoreText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, textDecorationLine: 'underline' },
 });

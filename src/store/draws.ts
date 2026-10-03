@@ -38,8 +38,8 @@ export type DrawState = {
   redrawn: CharacterId[];
   shards: Partial<Record<CharacterId, number>>;
   revealed: CharacterId[] | null;
-  /** Only `origin` is read: who wakes with the first habit. */
-  player?: { origin?: CharacterId } | null;
+  /** Who wakes with the first habit: the class's hero, and the hero chosen to be (`origin`). */
+  player?: { origin?: CharacterId; classDimension?: Dimension } | null;
 };
 
 /**
@@ -100,9 +100,17 @@ export function reconcileDraws(
     owned = { ...state.owned };
   }
 
-  // The first habit (any XP at all) wakes the hero you chose to be, with their hatch.
+  // The first habit (any XP at all) wakes your class's hero (Quill, for a Mage), with their hatch;
+  // the hero you choose to be on entering the Other World wakes too, if they're someone else.
+  const own = state.player?.classDimension ? DEFAULT_PARTY[state.player.classDimension] : undefined;
+  const begun = DIMENSIONS.some((d) => pathXp[d] > 0);
+  if (own && !owned[own] && begun) {
+    owned[own] = 1;
+    drops.push(own);
+    changed = true;
+  }
   const first = state.player?.origin;
-  if (first && !owned[first] && DIMENSIONS.some((d) => pathXp[d] > 0)) {
+  if (first && !owned[first] && begun) {
     owned[first] = 1;
     drops.push(first);
     changed = true;

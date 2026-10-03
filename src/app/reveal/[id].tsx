@@ -239,7 +239,15 @@ export default function RevealScreen() {
   const redoDrop = useGameStore((s) => s.redoDrop);
   const premium = usePremium((s) => s.premium);
   // A Premium redo is offered once per drop, never on a preview or on a drop that is already a redo.
-  const canRedo = useGameStore((s) => !preview && isCharacterId(id) && s.drops.includes(id) && !s.redrawn.includes(id));
+  // Never for the core eight: they're the heroes you're given, not a draw.
+  const canRedo = useGameStore(
+    (s) =>
+      !preview &&
+      isCharacterId(id) &&
+      COMPANIONS[id].kind !== 'core' &&
+      s.drops.includes(id) &&
+      !s.redrawn.includes(id),
+  );
   const flair = FLAIR[isCharacterId(id) ? COMPANIONS[id].rarity : 3];
   const SHAKE = flair.shake;
   const EYE_OPEN = flair.eye;
@@ -286,6 +294,12 @@ export default function RevealScreen() {
   const eyeAt = at(135 - COCOON_ART.width / 2 + COCOON_ART.eye.x, standY - 102 + COCOON_ART.eye.y);
   const revealFocus = at(135, standY - 70);
   const anchor = at(135, REALM_ART.height * 0.6);
+  // The camera aims at the layout as it is now: a hatch opened over the sideways World turns upright
+  // after it mounts, and aiming at the sideways layout pushed the cocoon off to one side.
+  const layout = useRef({ cocoonMid, eyeAt, revealFocus, anchor, px });
+  useEffect(() => {
+    layout.current = { cocoonMid, eyeAt, revealFocus, anchor, px };
+  });
 
   useEffect(() => {
     if (!valid) return;
@@ -304,6 +318,7 @@ export default function RevealScreen() {
       const t = (now - tl.start) / 1000;
       clock.set(now / 1000);
       let z = 1;
+      const { cocoonMid, eyeAt, revealFocus, anchor, px } = layout.current;
       let focus: readonly [number, number] = cocoonMid;
       let shake = 0;
       let fl = 0;

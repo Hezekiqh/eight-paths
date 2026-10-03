@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { CHARACTER_ART } from '@/art/sprites';
 import { Button } from '@/components/button';
 import { PixelSprite } from '@/components/pixel-sprite';
+import { PlayerSearch } from '@/components/player-search';
 import { Screen } from '@/components/screen';
 import { Segmented } from '@/components/segmented';
 import { SettingsRow } from '@/components/settings-row';
@@ -46,7 +47,12 @@ export default function SocialTab() {
   // Results are tagged with who and which board they're for, so a stale list never shows.
   const [board, setBoard] = useState<{ key: string; rows: LeaderRow[] | null; failed: boolean } | null>(null);
   const key = `${profile?.id ?? ''}:${scope}`;
-  const incoming = useSocial((s) => s.offers.filter((o) => o.toId === s.profile?.id).map((o) => o.id).join(','));
+  const incoming = useSocial((s) =>
+    s.offers
+      .filter((o) => o.toId === s.profile?.id)
+      .map((o) => o.id)
+      .join(','),
+  );
   const markOffersSeen = useTradeNotices((s) => s.markOffersSeen);
 
   // Offers on screen count as seen: the tab's dot goes out.
@@ -111,11 +117,7 @@ export default function SocialTab() {
   return (
     <Screen title="Social">
       <View ref={tourRef} collapsable={false}>
-        <Button
-          title={`Share your code · ${profile.friendCode}`}
-          onPress={() => shareFriendCode(profile.friendCode)}
-          color={color}
-        />
+        <PlayerSearch color={color} />
       </View>
 
       <TradeInbox color={color} />
@@ -167,7 +169,8 @@ export default function SocialTab() {
           })}
           {rows.length <= 1 && scope === 'friends' && (
             <Text style={[styles.body, { padding: spacing.md }]}>
-              Share your code to see friends here. Each friend who joins with it wakes a hero for you.
+              Find friends by name above, or share your code below: each friend who joins with it wakes a guaranteed 5★
+              hero for you.
             </Text>
           )}
         </View>
@@ -180,6 +183,17 @@ export default function SocialTab() {
           title="Friends and account"
           subtitle={`${friends.length} friend${friends.length === 1 ? '' : 's'} · add by code, sign out`}
           onPress={() => router.push('/social')}
+        />
+      </View>
+
+      {/* Inviting a friend: at the bottom, with what it's worth. */}
+      <View style={[styles.card, { marginTop: spacing.lg }]}>
+        <Text style={styles.heading}>Share with a friend</Text>
+        <Text style={styles.body}>Each friend who joins with your code wakes a guaranteed 5★ hero for you.</Text>
+        <Button
+          title={`Share your code · ${profile.friendCode}`}
+          onPress={() => shareFriendCode(profile.friendCode)}
+          color={color}
         />
       </View>
     </Screen>

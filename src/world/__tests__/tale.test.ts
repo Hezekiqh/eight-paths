@@ -1,6 +1,6 @@
 import { COMPANIONS } from '@/story/companions';
 
-import { loreId, type LoreEntry } from '../lore';
+import { loreId, talkedId, type LoreEntry } from '../lore';
 import { MAPS } from '../maps';
 import { TALE, taleProgress, toldBy } from '../tale';
 import { characterQuestions } from '../talk';
@@ -12,6 +12,7 @@ function askable(): Map<string, string[]> {
     for (const npc of map.npcs) {
       const qs = npc.questions ?? (npc.character ? characterQuestions(COMPANIONS[npc.character]) : []);
       for (const q of qs) out.set(loreId(npc.name, q.ask), q.answer);
+      out.set(talkedId(npc.name), npc.lines);
     }
   }
   return out;
@@ -35,13 +36,26 @@ describe('the tale of the Kingdom', () => {
     expect(text).not.toMatch(/Entity|Chosen One|Erasure|Halecrest|cocoon/i);
   });
 
-  it('uncovers a block from any of its sources, in any order, and counts what is found', () => {
-    const shared = blocks.find((b) => b.from.length > 1)!;
-    expect(toldBy(shared, [])).toBeUndefined();
-    expect(toldBy(shared, [heard(shared.from[1])])?.id).toBe(shared.from[1]);
-    expect(taleProgress(TALE, [])).toEqual({ found: 0, total: blocks.length });
+  it('uncovers a block by talking to its person, in any order, and counts what is found', () => {
     const last = blocks[blocks.length - 1];
+    expect(toldBy(last, [])).toBeUndefined();
+    expect(toldBy(last, [heard(last.from[0])])?.id).toBe(last.from[0]);
+    expect(taleProgress(TALE, [])).toEqual({ found: 0, total: blocks.length });
     expect(taleProgress(TALE, [heard(last.from[0])]).found).toBe(1);
-    expect(taleProgress(TALE, [heard(shared.from[0])]).found).toBeGreaterThanOrEqual(1);
+  });
+
+  it('gives each person their own sentence or two, about a minute of reading in all', () => {
+    const people = blocks.flatMap((b) => b.from);
+    expect(new Set(people).size).toBe(people.length);
+    const words = blocks.map((b) => b.text).join(' ').split(/\s+/).length;
+    expect(words).toBeGreaterThan(200);
+    expect(words).toBeLessThan(350);
+  });
+
+  it('names the Shadow Monarch, and tells of the Mad King and the puppet king', () => {
+    const text = blocks.map((b) => b.text).join(' ');
+    expect(text).toMatch(/Shadow Monarch/);
+    expect(text).toMatch(/Mad King/);
+    expect(text).toMatch(/I need to be strong\. I need to protect them\./);
   });
 });

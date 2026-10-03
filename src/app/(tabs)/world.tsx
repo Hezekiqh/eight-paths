@@ -60,7 +60,7 @@ import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
-import { loreId } from '@/world/lore';
+import { TALKED, loreId, talkedId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
 import { characterQuestions } from '@/world/talk';
 import { keeperQuestions } from '@/world/keeper-advice';
@@ -148,7 +148,10 @@ export default function WorldScreen() {
       flash.set(withTiming(1, { duration: FLASH_IN_MS }));
       setTimeout(() => {
         // Who you woke as: forever (Player.origin). They walk first, and their roadside meeting is skipped.
+        const hatches = !(useGameStore.getState().owned?.[id] ?? 0);
         useGameStore.getState().chooseOrigin(id);
+        // Someone new hatches over the game: come back to it afterwards, not to the World menu.
+        if (hatches && heroAwake(useGameStore.getState())) keepSideways = true;
         useWorldStore.getState().setHero(id);
         useWorldStore.getState().setFlag(metFlag(id));
         useSession.setState({ heroIntro: id });
@@ -800,6 +803,10 @@ function useAct(
     if (thing?.type === 'npc') {
       // they turn to face you
       sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
+      // talking to anyone writes their part of the story on the Story scroll (tale.ts)
+      useWorldStore
+        .getState()
+        .hear({ id: talkedId(thing.name), speaker: thing.name, ask: TALKED, answer: thing.lines, at: Date.now() });
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
       // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =

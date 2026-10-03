@@ -13,6 +13,14 @@ type Tour = {
   ready: boolean;
   /** The tour is on screen now, walking from tab to tab. Not saved. */
   running: boolean;
+  /**
+   * Which step it's on, and whether it has stepped aside (the first habit's hatch). Shared, because
+   * the tour is drawn in two places: over the tabs, and inside the habit creator's sheet. Not saved.
+   */
+  step: number;
+  paused: boolean;
+  go: (step: number) => void;
+  pause: (paused: boolean) => void;
   begin: () => void;
   finish: () => void;
   replay: () => void;
@@ -29,8 +37,12 @@ export const useTour = create<Tour>()(
       done: false,
       ready: false,
       running: false,
-      begin: () => set({ running: true }),
-      finish: () => set({ done: true, running: false }),
+      step: 0,
+      paused: false,
+      go: (step) => set({ step }),
+      pause: (paused) => set({ paused }),
+      begin: () => set({ running: true, step: 0, paused: false }),
+      finish: () => set({ done: true, running: false, step: 0, paused: false }),
       replay: () => set({ done: false }),
     }),
     {

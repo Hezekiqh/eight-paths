@@ -13,6 +13,10 @@ export type LoreEntry = {
 
 export const loreId = (speaker: string, ask: string) => `${speaker}::${ask}`;
 
+/** Talking to someone at all is written down too (the Story scroll is uncovered by talking to everyone). */
+export const TALKED = 'talked';
+export const talkedId = (speaker: string) => loreId(speaker, TALKED);
+
 /** The journal with `entry` written in, unless it was already heard. */
 export function addLore(journal: LoreEntry[], entry: LoreEntry): LoreEntry[] {
   return journal.some((e) => e.id === entry.id) ? journal : [...journal, entry];

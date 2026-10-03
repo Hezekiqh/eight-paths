@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { Alert, Linking, Share, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { playSound, useAudioSettings } from '@/audio';
 import { Segmented } from '@/components/segmented';
@@ -16,7 +16,7 @@ import { usePremium } from '@/premium/store';
 import { shareFriendCode } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useGameStore } from '@/store';
-import { startOver } from '@/store/start-over';
+import { deleteEverything } from '@/store/delete-everything';
 import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
@@ -53,7 +53,6 @@ export function SettingsPanel() {
   const setSmartReminders = useGameStore((s) => s.setSmartReminders);
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const { music, sounds, setMusic, setSounds } = useAudioSettings();
-  const exportSave = useGameStore((s) => s.exportSave);
   const learnedTime = useLearnedReminderTime();
   const replayTour = useTour((s) => s.replay);
   const controls = useWorldStore((s) => s.controls);
@@ -68,28 +67,27 @@ export function SettingsPanel() {
   const reminder = new Date();
   reminder.setHours(hour, minute, 0, 0);
 
-  // Asks first, and offers a backup, since it can't be undone.
-  const confirmStartOver = () => {
+  // Asks first, since it can't be undone.
+  const confirmDelete = () => {
     haptics.tap();
     Alert.alert(
-      'Start over?',
-      "Every quest, level, hero and place in the Other World on this phone is erased, and you begin again from the very start. Your account and Premium stay. This can't be undone.",
+      'Delete your account?',
+      profile
+        ? "Your username, founder number, friends and heroes are deleted from the server, and everything in the game on this phone is erased. You begin again from the very start. Premium stays. This can't be undone, and your founder number won't come back."
+        : "Every quest, level, hero and place in the Other World on this phone is erased, and you begin again from the very start. Premium stays. This can't be undone.",
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Back up first', onPress: shareBackup },
-        { text: 'Start over', style: 'destructive', onPress: startOver },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteEverything().catch((e: Error) => Alert.alert('Not deleted', e.message)),
+        },
       ],
-    );
-  };
-  const shareBackup = () => {
-    Share.share({ title: 'Eight Paths backup', message: exportSave() }).catch(() =>
-      Alert.alert('Backup failed', 'The share sheet could not open. Please try again.'),
     );
   };
 
   return (
     <View style={styles.panel}>
-
       <Text style={styles.section}>GAMEPLAY</Text>
       <View style={styles.list}>
         <View style={styles.controls}>
@@ -243,27 +241,15 @@ export function SettingsPanel() {
           </>
         )}
         <SettingsRow
-          icon="upload"
-          iconColor={color}
-          title="Back up progress"
-          subtitle="Save a copy to Notes, Files or email. Your progress only lives on this phone."
-          onPress={shareBackup}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          icon="download"
-          iconColor={color}
-          title="Restore from backup"
-          subtitle="Replace this phone's progress with a backup"
-          onPress={() => router.push('/backup')}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
           icon="trash"
           iconColor={colors.danger}
-          title="Start over"
-          subtitle="Erase this phone's progress and begin again from the very start"
-          onPress={confirmStartOver}
+          title="Delete account"
+          subtitle={
+            profile
+              ? 'Deletes your account and erases the game, on the server and this phone'
+              : 'Erases the game on this phone and begins again'
+          }
+          onPress={confirmDelete}
         />
         <View style={styles.divider} />
         <SettingsRow

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { haptics } from '@/haptics';
 import { FRAME, colors, fonts, spacing } from '@/theme';
-import type { LoreEntry } from '@/world/lore';
+import { TALKED, type LoreEntry } from '@/world/lore';
 import { TALE, taleProgress, toldBy, type Chapter } from '@/world/tale';
 
 /**
@@ -39,7 +39,7 @@ export function LoreScroll({ heard }: { heard: LoreEntry[] }) {
           <View style={styles.sheet}>
             <Text style={styles.how}>
               {found === 0
-                ? 'Talk to people in the Other World and ask them things. What they tell you is written here.'
+                ? 'Talk to everyone in the Other World. Each of them knows a little of the story, and what they tell you is written here.'
                 : 'Where the page is blank, someone has yet to tell you. Tap a passage to see who told you.'}
             </Text>
             {TALE.map((chapter) => (
@@ -98,7 +98,7 @@ function TaleChapter({ chapter, heard }: { chapter: Chapter; heard: LoreEntry[] 
         )}
       {who && (
         <Text style={styles.who}>
-          {who.speaker} told you this, when you asked “{who.ask}”
+          {who.ask === TALKED ? `${who.speaker} told you this.` : `${who.speaker} told you this, when you asked “${who.ask}”`}
         </Text>
       )}
     </View>

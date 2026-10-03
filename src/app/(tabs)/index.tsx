@@ -53,10 +53,10 @@ export default function TodayScreen() {
   const introDone = useSession((s) => s.introDone);
   const tourDue = useTour((s) => s.ready && !s.done && !s.running);
   const beginTour = useTour((s) => s.begin);
-  // The Keeper's tour waits for the first quest and its wrap-up, and for the screen to be quiet.
-  // It then walks the tabs from above them (see KeeperTour in the tabs layout).
+  // The Keeper's tour starts as soon as the player has a name (and the screen is quiet), and walks
+  // them through their first habit and the tabs from above them (see KeeperTour in the tabs layout).
   const touring =
-    tourDue && introDone && focused && !!player && !tutorial && !wrapUpPending && !wrapUpVisible && !banner && !levelUp;
+    tourDue && introDone && focused && !!player && !wrapUpPending && !wrapUpVisible && !banner && !levelUp;
   useEffect(() => {
     if (touring) beginTour();
   }, [touring, beginTour]);
@@ -78,12 +78,16 @@ export default function TodayScreen() {
         gain: outcome.gain,
         milestone: outcome.milestone,
       });
-      if (outcome.characterLevelUp) setLevelUp(outcome.characterLevelUp);
+      // Only for someone already awake: the first habit levels Quill before they've even hatched.
+      const levelled = outcome.characterLevelUp;
+      if (levelled && (useGameStore.getState().owned?.[levelled.characterId] ?? 0) > 0) setLevelUp(levelled);
       if (questId === TUTORIAL_QUEST_ID) {
         completeTutorial();
-        setWrapUpPending(true);
-        // The Keeper waits until the wrap-up card has closed.
-        setKeeperHold(true);
+        // In the tour, the Keeper says it himself; otherwise the wrap-up card does, and he waits for it.
+        if (!useTour.getState().running) {
+          setWrapUpPending(true);
+          setKeeperHold(true);
+        }
       }
     } else if (outcome.kind === 'undone') {
       haptics.select();
@@ -164,7 +168,13 @@ export default function TodayScreen() {
           <View style={styles.tutorial}>
             <Text style={styles.greeting}>Welcome, {player.name}.</Text>
             <Text style={styles.hint}>Complete your first quest to earn XP as a {classInfo.className}.</Text>
-            <QuestCard view={tutorial} pinned onPress={() => onToggle(tutorial.quest.id)} />
+            <View ref={questRef} collapsable={false}>
+              <QuestCard view={tutorial} pinned onPress={() => onToggle(tutorial.quest.id)} />
+            </View>
+            {/* The eight Paths, still empty: the Keeper's tour shows it off before the first habit. */}
+            <View ref={radarRef} collapsable={false}>
+              <RadarCard today={today} classInfo={classInfo} />
+            </View>
           </View>
         ) : (
           <>

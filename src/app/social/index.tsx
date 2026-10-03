@@ -26,7 +26,6 @@ import {
   addFriend,
   checkUsername,
   claimUsername,
-  deleteAccount,
   refreshFriends,
   signInWithApple,
   signInWithEmail,
@@ -41,6 +40,7 @@ import { FOUNDER_COUNT } from '@/social/config';
 import { useSocial, type Profile } from '@/social/store';
 import { USERNAME_RULES, extractFriendCode, founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
+import { deleteEverything } from '@/store/delete-everything';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 
@@ -204,7 +204,7 @@ function ChooseUsername({ color }: { color: string }) {
         autoCorrect={false}
         style={styles.input}
       />
-      <Text style={styles.hint}>Joining with a friend&apos;s code wakes a hero for them.</Text>
+      <Text style={styles.hint}>Joining with a friend&apos;s code wakes a guaranteed 5★ hero for them.</Text>
       <Button title={busy ? 'Checking…' : 'Claim name'} onPress={claim} color={color} disabled={busy || !name.trim()} />
     </View>
   );
@@ -262,7 +262,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
   const confirmDelete = () =>
     Alert.alert(
       'Delete your account?',
-      "Your username, founder number, friends and shared collection are deleted from the server. Your game on this phone stays. This can't be undone, and your founder number won't come back.",
+      "Your username, founder number, friends and heroes are deleted from the server, and everything in the game on this phone is erased. You begin again from the very start. This can't be undone, and your founder number won't come back.",
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -270,7 +270,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              if ((await deleteAccount()) === 'deleted') Alert.alert('Account deleted');
+              await deleteEverything();
             } catch (e) {
               Alert.alert('Not deleted', message(e));
             }
@@ -353,7 +353,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           icon="trash"
           iconColor={colors.danger}
           title="Delete account"
-          subtitle="Removes everything the server holds about you"
+          subtitle="Deletes your account and erases the game"
           onPress={confirmDelete}
         />
       </View>
