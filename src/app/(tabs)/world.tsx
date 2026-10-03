@@ -194,6 +194,12 @@ export default function WorldScreen() {
   const darkStyle = useAnimatedStyle(() => ({ opacity: dark.value }));
   const awake = useGameStore(heroAwake);
   const origin = useGameStore((s) => s.player?.origin);
+  // The hero you woke as is always met in the story, after a restart of the Other World too:
+  // their room off the Archive is open, and they walk with you.
+  const originMet = useWorldStore((s) => !origin || s.flags.includes(metFlag(origin)));
+  useEffect(() => {
+    if (hydrated && origin && !originMet) useWorldStore.getState().setFlag(metFlag(origin));
+  }, [hydrated, origin, originMet]);
   const flash = useSharedValue(0);
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
 
@@ -288,9 +294,11 @@ function useParty(): HeroId[] {
   const owned = useGameStore((s) => s.owned);
   const origin = useGameStore((s) => s.player?.origin);
   const gone = useLeft();
+  // the core eight walk with you once met in this run of the story (hero.ts)
+  const metHere = useWorldStore((s) => s.flags.filter((f) => f.startsWith('met:')).join(','));
   return useMemo(
-    () => [worldHero(picked, party, classDimension, owned, origin, gone)],
-    [picked, party, classDimension, owned, origin, gone],
+    () => [worldHero(picked, party, classDimension, owned, origin, gone, metHere.split(','))],
+    [picked, party, classDimension, owned, origin, gone, metHere],
   );
 }
 
@@ -669,7 +677,7 @@ function World({
       });
       return;
     }
-    const scene = winScene(map.id as MapId, map.boss.flag, partyWithYou(gameParty, owned).includes('brannoc'));
+    const scene = winScene(map.id as MapId, map.boss.flag, partyWithYou(gameParty, owned, useWorldStore.getState().flags).includes('brannoc'));
     if (!scene) return;
     setDialogue({
       lines: scene.lines,
@@ -735,7 +743,7 @@ function World({
   }, [travel, map, hero, heroLevel]);
   const setHero = useWorldStore((s) => s.setHero);
   const gone = useLeft();
-  const walkers = useMemo(() => walkersFor(gameParty, owned, gone), [gameParty, owned, gone]);
+  const walkers = useMemo(() => walkersFor(gameParty, owned, gone, flagsNow), [gameParty, owned, gone, flagsNow]);
   const onPlates = useCallback(() => {
     if (!map.platesFlag) return;
     setFlag(map.platesFlag);
@@ -1149,7 +1157,7 @@ function useAct(
   const talk = useCallback(
     (thing: NpcObject, facing: number) => {
       const game = useGameStore.getState();
-      const banter = banterFor(map.id, thing.id, partyWithYou(game.party, game.owned));
+      const banter = banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags));
       // they turn to face you
       sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
       // talking to anyone writes their part of the story on the Story scroll (tale.ts)
@@ -1248,7 +1256,7 @@ function useAct(
       map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
     // party members you have may chime in, after the person's own lines (see banter.ts)
     const game = useGameStore.getState();
-    const banter = thing ? banterFor(map.id, thing.id, partyWithYou(game.party, game.owned)) : [];
+    const banter = thing ? banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const job = thing.job;
       // Like a field move: if you can't, a party member of the right Path steps in.
@@ -1271,7 +1279,7 @@ function useAct(
           then: opens ? () => onTravel(here) : undefined,
         });
       } else {
-        const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party, useGameStore.getState().owned)] : [];
+        const hint = job.path in CLASSES ? [whoCan(job.path as Dimension, useGameStore.getState().party, useGameStore.getState().owned, useWorldStore.getState().flags)] : [];
         useWorldStore.getState().notice(npcNotice(map.id as MapId, thing.id));
         setDialogue({ speaker: thing.name, lines: [...thing.lines, ...banter, ...job.cant, ...hint] });
       }
@@ -1282,12 +1290,11 @@ function useAct(
       const id = thing.character;
       const flags = useWorldStore.getState().flags;
       const { owned, player } = useGameStore.getState();
-      // Already with you (you woke as them, or an old save has everyone): no joining, just a chat.
-      if (!flags.includes(metFlag(id)) && (owned === null || (owned[id] ?? 0) > 0)) {
-        useWorldStore.getState().setFlag(metFlag(id));
-      } else if (!flags.includes(metFlag(id))) {
+      // Meeting them joins them to you in this run of the story. The collection only gains them the
+      // first time ever (author, Oct 3, 2026): after a restart they're already yours, so it's unchanged.
+      if (!flags.includes(metFlag(id))) {
         sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
-        useGameStore.getState().meetCharacters([id]);
+        if (owned !== null && !(owned[id] ?? 0)) useGameStore.getState().meetCharacters([id]);
         haptics.celebrate();
         playSound('levelUp');
         setDialogue({
@@ -1536,7 +1543,7 @@ function useAct(
       } else if (!doer) {
         useWorldStore.getState().notice(jobNotice(map.id as MapId, tile));
         setDialogue({
-          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path!, useGameStore.getState().party, useGameStore.getState().owned)],
+          lines: [...(job.cant ?? map.examine[tile] ?? []), whoCan(job.path!, useGameStore.getState().party, useGameStore.getState().owned, useWorldStore.getState().flags)],
         });
         return;
       } else {
@@ -1615,7 +1622,8 @@ function needsFlag(needs: Requirement, flag: string): boolean {
  */
 function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
   const { party, owned } = useGameStore.getState();
-  return walkersFor(party, owned, useWorldStore.getState().flags).find(
+  const flags = useWorldStore.getState().flags;
+  return walkersFor(party, owned, flags, flags).find(
     (h) => h !== hero && COMPANIONS[h].dimension === path,
   );
 }
@@ -1628,7 +1636,9 @@ function stepAside(hero: HeroId, doer: HeroId): string[] {
 
 /** Who does a job only one Path can do: whoever will step up for it, or where to meet them. */
 function swapHint(path: Dimension, party: Record<Dimension, CharacterId>, owned: Owned | null): string {
-  const walker = walkersFor(party, owned).find((h) => COMPANIONS[h].dimension === path);
+  const walker = walkersFor(party, owned, [], useWorldStore.getState().flags).find(
+    (h) => COMPANIONS[h].dimension === path,
+  );
   if (!walker) return whereToMeet(path) ?? `Find a ${CLASSES[path].className}`;
   const name = COMPANIONS[walker].name;
   return `${name} (${CLASSES[path].className}) will step up for it`;

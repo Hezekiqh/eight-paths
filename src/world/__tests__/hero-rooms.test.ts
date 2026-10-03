@@ -48,3 +48,16 @@ describe('who is where', () => {
     expect(pendingNews('moss', ['said:moss-lv10'], 12)).toBeNull();
   });
 });
+
+describe('the story and the collection', () => {
+  const { walkersFor, partyWithYou } = jest.requireActual('../hero') as typeof import('../hero');
+  const owned = Object.fromEntries(Object.values(DEFAULT_PARTY).map((id) => [id, 1]));
+
+  it('walks the core eight with you only once met in this run of the story, though all are yours', () => {
+    expect(walkersFor(DEFAULT_PARTY, owned, [], [])).toEqual([]);
+    expect(walkersFor(DEFAULT_PARTY, owned, [], ['met:brannoc'])).toEqual(['brannoc']);
+    expect(partyWithYou(DEFAULT_PARTY, owned, ['met:quill'])).toEqual(['quill']);
+    // outside the World, the collection alone
+    expect(walkersFor(DEFAULT_PARTY, owned)).toHaveLength(8);
+  });
+});

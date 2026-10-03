@@ -37,8 +37,13 @@ export const fightNotice = (map: MapId) => `fight:${map}`;
  * "A Warrior can do this: Brannoc will step up." (a field move). Or, for a Path
  * you haven't met yet, where its hero is waiting. `owned` left out: everyone (old saves).
  */
-export function whoCan(path: Dimension, party: Record<Dimension, CharacterId>, owned?: Owned | null): string {
-  const walker = walkersFor(party, owned).find((h) => COMPANIONS[h].dimension === path);
+export function whoCan(
+  path: Dimension,
+  party: Record<Dimension, CharacterId>,
+  owned?: Owned | null,
+  world?: string[],
+): string {
+  const walker = walkersFor(party, owned, [], world).find((h) => COMPANIONS[h].dimension === path);
   const { className } = CLASSES[path];
   const article = /^[AEIOU]/.test(className) ? 'An' : 'A';
   if (!walker) return `${article} ${className} can do this. ${whereToMeet(path) ?? "You haven't met one yet."}`;
@@ -95,14 +100,14 @@ export function describeNotice(id: string, ctx: NoticeContext): Notice | null {
   if (kind === 'job') {
     const job = JOBS.find((j) => j.map === a && j.tile === b);
     if (!job || flags.includes(job.flag)) return null;
-    const hint = job.path ? whoCan(job.path, ctx.party, ctx.owned) : (job.cant?.at(-1) ?? '');
+    const hint = job.path ? whoCan(job.path, ctx.party, ctx.owned, flags) : (job.cant?.at(-1) ?? '');
     return { id, map: a, place, title: job.label, hint };
   }
   if (kind === 'npc') {
     const npc = MAPS[a].npcs.find((n) => n.id === b);
     if (!npc?.job || flags.includes(npc.job.flag)) return null;
     const path = npc.job.path in CLASSES ? (npc.job.path as Dimension) : null;
-    const hint = path ? whoCan(path, ctx.party, ctx.owned) : (npc.job.cant.at(-1) ?? '');
+    const hint = path ? whoCan(path, ctx.party, ctx.owned, flags) : (npc.job.cant.at(-1) ?? '');
     return { id, map: a, place, title: npc.name, hint };
   }
   if (kind === 'fight') {

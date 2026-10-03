@@ -14,13 +14,26 @@ export type HeroId = CharacterId & WalkerId;
 /** Met (in the collection), or an old save that has everyone. */
 const met = (id: CharacterId, owned: Owned | null | undefined) => !owned || (owned[id] ?? 0) > 0;
 
+const CORE = new Set<string>(Object.values(DEFAULT_PARTY));
+/**
+ * In this run of the story (author, Oct 3, 2026): the collection is your real habits' and never
+ * changes with the story, but the core eight only walk with you in the World once you've met them
+ * there (`met:<id>`), so restarting the Other World means meeting them again. `world` left out: the
+ * collection alone (outside the World).
+ */
+const inStory = (id: CharacterId, world?: string[]) => !world || !CORE.has(id) || world.includes(`met:${id}`);
+
 /**
  * The party members you actually have: met on the road, hatched, or (old
  * saves) everyone. A new save's party lists all eight core companions from the
  * start, but only these are with you, so only these chime in or show up in scenes.
  */
-export function partyWithYou(party: Record<Dimension, CharacterId>, owned?: Owned | null): CharacterId[] {
-  return Object.values(party).filter((id) => met(id, owned));
+export function partyWithYou(
+  party: Record<Dimension, CharacterId>,
+  owned?: Owned | null,
+  world?: string[],
+): CharacterId[] {
+  return Object.values(party).filter((id) => met(id, owned) && inStory(id, world));
 }
 
 /**
@@ -31,8 +44,13 @@ export function partyWithYou(party: Record<Dimension, CharacterId>, owned?: Owne
  * `owned` left out: everyone (old saves). `flags`: the World's story flags, so
  * anyone who went home when the party split (`left:<id>`, scenes.ts) can't walk.
  */
-export function walkersFor(party: Record<Dimension, CharacterId>, owned?: Owned | null, flags: string[] = []): HeroId[] {
-  const here = (id: CharacterId) => met(id, owned) && !flags.includes(`left:${id}`);
+export function walkersFor(
+  party: Record<Dimension, CharacterId>,
+  owned?: Owned | null,
+  flags: string[] = [],
+  world?: string[],
+): HeroId[] {
+  const here = (id: CharacterId) => met(id, owned) && inStory(id, world) && !flags.includes(`left:${id}`);
   return DIMENSIONS.map((d) => (isWalker(party[d]) && here(party[d]) ? party[d] : DEFAULT_PARTY[d]) as HeroId).filter(here);
 }
 
@@ -48,8 +66,9 @@ export function worldHero(
   owned?: Owned | null,
   origin?: CharacterId,
   flags: string[] = [],
+  world?: string[],
 ): HeroId {
-  const walkers = walkersFor(party, owned, flags);
+  const walkers = walkersFor(party, owned, flags, world);
   if (picked && walkers.includes(picked as HeroId)) return picked as HeroId;
   const own = walkers.find((h) => h === party[classDimension] || h === DEFAULT_PARTY[classDimension]);
   return own ?? ((origin && isWalker(origin) ? origin : 'brannoc') as HeroId);

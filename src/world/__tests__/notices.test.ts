@@ -31,14 +31,18 @@ const ctx = (flags: string[] = []): NoticeContext => ({
 
 describe('notices', () => {
   it('says which Path can do a job, and who will step up, until it is done', () => {
-    const wall = describeNotice(jobNotice('barracks-armoury', 'C'), ctx())!;
+    // in this run of the story, only once you've met him (he's in your collection either way)
+    expect(describeNotice(jobNotice('barracks-armoury', 'C'), ctx())!.hint).toBe(
+      "A Warrior can do this. You haven't met one yet.",
+    );
+    const wall = describeNotice(jobNotice('barracks-armoury', 'C'), ctx(['met:brannoc']))!;
     expect(wall.title).toBe('The cracked wall');
     expect(wall.hint).toBe('A Warrior can do this: Brannoc will step up.');
     expect(describeNotice(jobNotice('barracks-armoury', 'C'), ctx(['armoury-wall']))).toBeNull();
   });
 
   it("names someone's job by them, and the Path it needs", () => {
-    const n = describeNotice(npcNotice('kingdom-town', 'barnaby'), ctx())!;
+    const n = describeNotice(npcNotice('kingdom-town', 'barnaby'), ctx(['met:pip']))!;
     expect(n.hint).toMatch(/^A Bard can do this: \w+ will step up\.$/);
   });
 
