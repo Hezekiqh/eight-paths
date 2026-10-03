@@ -3,6 +3,7 @@ import {
   MAX_REST_TOKENS,
   formatTime,
   parseTime,
+  DEFAULT_QUEST_SORT,
   type Boost,
   type Completion,
   type Dimension,
@@ -10,6 +11,7 @@ import {
   type XpGrant,
   type Player,
   type Quest,
+  type QuestSort,
   type RestDay,
 } from '@/game';
 
@@ -21,7 +23,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -51,6 +53,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   9: (save) => save,
   // v11 adds trades: net copies traded and the server moves applied; sanitizeSave starts both empty.
   10: (save) => save,
+  // How Today is ordered became a choice (questSort): a dragged order stays the player's own.
+  11: (save) => ({ ...save, questSort: { by: Array.isArray(save.questOrder) ? 'mine' : 'auto', unfinishedFirst: false } }),
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -232,6 +236,7 @@ export function sanitizeSave(raw: unknown): GameData {
     questOrder: Array.isArray(save.questOrder)
       ? save.questOrder.filter((id): id is string => typeof id === 'string')
       : null,
+    questSort: cleanQuestSort(save.questSort, Array.isArray(save.questOrder)),
     traded: cleanTraded(save.traded),
     tradeMoves: asArray(save.tradeMoves).filter((id): id is number => Number.isSafeInteger(id)),
   };
@@ -254,4 +259,11 @@ export function migrateSave(
     if (step) save = step(save);
   }
   return sanitizeSave(save);
+}
+
+/** How Today is ordered; anything unreadable falls back to the dragged order if there is one, else auto. */
+function cleanQuestSort(value: unknown, hasOrder: boolean): QuestSort {
+  const v = isObject(value) ? value : {};
+  const by = v.by === 'auto' || v.by === 'mine' || v.by === 'done' ? v.by : hasOrder ? 'mine' : DEFAULT_QUEST_SORT.by;
+  return { by, unfinishedFirst: v.unfinishedFirst === true };
 }

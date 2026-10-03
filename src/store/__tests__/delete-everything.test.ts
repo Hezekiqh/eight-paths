@@ -1,4 +1,4 @@
-import { deleteAccount } from '@/social/api';
+import { deleteAccount, forgetAccountHere } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useTour } from '@/tutorial/tour';
 import { useWorldStore } from '@/world/store';
@@ -6,7 +6,13 @@ import { useWorldStore } from '@/world/store';
 import { initialData, useGameStore } from '../index';
 import { deleteEverything } from '../delete-everything';
 
-jest.mock('@/social/api', () => ({ deleteAccount: jest.fn(async () => 'deleted') }));
+// A saved sign-in on this phone, unless a test says otherwise.
+let mockSignedIn = false;
+jest.mock('@/social/api', () => ({
+  deleteAccount: jest.fn(async () => 'deleted'),
+  signedInHere: jest.fn(async () => mockSignedIn),
+  forgetAccountHere: jest.fn(async () => {}),
+}));
 
 describe('deleting the account', () => {
   beforeEach(() => {
@@ -54,20 +60,31 @@ describe('deleting the account', () => {
     expect(useGameStore.getState().owned).toEqual({});
   });
 
-  it('deletes the account on the server first, when signed in', async () => {
-    useSocial.setState({ status: 'ready' });
+  it('deletes the account on the server first, when signed in, then forgets the sign-in here', async () => {
+    mockSignedIn = true;
     await deleteEverything();
     expect(deleteAccount).toHaveBeenCalled();
+    expect(forgetAccountHere).toHaveBeenCalled();
+    mockSignedIn = false;
+  });
+
+  it("deletes the account even when social hadn't finished loading (the old username never comes back)", async () => {
+    (deleteAccount as jest.Mock).mockClear();
+    mockSignedIn = true;
+    useSocial.setState({ status: 'signedOut' });
+    await deleteEverything();
+    expect(deleteAccount).toHaveBeenCalled();
+    mockSignedIn = false;
     useSocial.setState({ status: 'off' });
   });
 
   it("erases nothing if the account can't be deleted, or the player backs out", async () => {
-    useSocial.setState({ status: 'ready' });
+    mockSignedIn = true;
     (deleteAccount as jest.Mock).mockRejectedValueOnce(new Error('offline'));
     await expect(deleteEverything()).rejects.toThrow('offline');
     (deleteAccount as jest.Mock).mockResolvedValueOnce('canceled');
     expect(await deleteEverything()).toBe('canceled');
     expect(useGameStore.getState().player).not.toBeNull();
-    useSocial.setState({ status: 'off' });
+    mockSignedIn = false;
   });
 });

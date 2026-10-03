@@ -16,6 +16,8 @@ type Session = {
   worldPlaying: boolean;
   /** Just chosen on the Keeper's question: the World's first room says who you are now, once. */
   heroIntro: string | null;
+  /** Someone just hatched from a cocoon in the World: once the hatch closes, they talk to you (an NPC id). */
+  talkAfterHatch: string | null;
   /** Dev only: the fight bot plays the World's fights (autopilot.ts), for recording footage. */
   autopilot: boolean;
 };
@@ -29,6 +31,7 @@ export const useSession = create<Session>((set) => ({
   handledResponses: [],
   worldPlaying: false,
   heroIntro: null,
+  talkAfterHatch: null,
   // Dev only; EXPO_PUBLIC_AUTOPILOT=1 starts it on, for recording.
   autopilot: __DEV__ && process.env.EXPO_PUBLIC_AUTOPILOT === '1',
 }));

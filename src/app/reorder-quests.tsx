@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -12,13 +12,26 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { Screen } from '@/components/screen';
+import { Segmented } from '@/components/segmented';
 import { haptics } from '@/haptics';
+import type { QuestSort } from '@/game';
 import { useGameStore } from '@/store';
 import { useClassInfo, useToday, useTodayQuests } from '@/store/hooks';
 import type { QuestView } from '@/store/selectors';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 const ROW = 64;
+
+/** The ways Today can be ordered, and what each does, in the player's words. */
+const SORTS: { value: QuestSort['by']; label: string; about: string }[] = [
+  {
+    value: 'auto',
+    label: 'Auto',
+    about: 'The game learns when you usually do each quest and re-orders the list day by day.',
+  },
+  { value: 'mine', label: 'Mine', about: 'Your own order. Touch and hold a quest, then drag it.' },
+  { value: 'done', label: 'Done', about: "Today's finished quests come first, in the order you finished them." },
+];
 const SLOT = ROW + spacing.sm;
 
 type Positions = Record<string, number>;
@@ -90,11 +103,11 @@ function DraggableRow({
     };
   });
 
-  const { quest, info } = view;
+  const { quest, info, done } = view;
   return (
     <GestureDetector gesture={pan}>
       <Animated.View
-        accessibilityLabel={`${quest.title}, ${info.className}`}
+        accessibilityLabel={`${quest.title}, ${info.className}${done ? ', done today' : ''}`}
         accessibilityHint="Touch and hold, then drag to move"
         style={[styles.row, style]}>
         <View style={styles.body}>
@@ -103,19 +116,25 @@ function DraggableRow({
             {quest.title}
           </Text>
         </View>
+        {done && <SymbolView name="checkmark" tintColor={info.color} size={18} />}
         <SymbolView name="line.3.horizontal" tintColor={colors.textMuted} size={22} />
       </Animated.View>
     </GestureDetector>
   );
 }
 
-/** Drag Today's quests into the player's own order. */
+/**
+ * How Today is ordered: auto (the order the player usually does them in,
+ * re-learned day by day), their own dragged order, or as finished today; and
+ * whether unfinished quests go on top. Dragging a quest switches to their own order.
+ */
 export default function ReorderQuestsScreen() {
   const today = useToday();
   const quests = useTodayQuests(today);
   const classInfo = useClassInfo();
-  const custom = useGameStore((s) => s.questOrder !== null);
+  const sort = useGameStore((s) => s.questSort);
   const setQuestOrder = useGameStore((s) => s.setQuestOrder);
+  const setQuestSort = useGameStore((s) => s.setQuestSort);
   const accent = classInfo?.color ?? colors.accent;
   // Remount the rows when the list itself changes (e.g. back to the usual order).
   const key = quests.map((v) => v.quest.id).join(',');
@@ -125,6 +144,13 @@ export default function ReorderQuestsScreen() {
     positions.set(Object.fromEntries(quests.map((v, i) => [v.quest.id, i])));
     setListKey(key);
   }
+
+  const pickSort = (by: QuestSort['by']) => {
+    if (by === 'auto') return setQuestOrder(null);
+    // "Mine" with nothing dragged yet starts from the list as it stands now.
+    if (by === 'mine' && !useGameStore.getState().questOrder) return save();
+    setQuestSort({ by });
+  };
 
   const save = () => {
     const order = Object.entries(positions.value)
@@ -148,6 +174,24 @@ export default function ReorderQuestsScreen() {
           <Text style={styles.doneText}>Done</Text>
         </Pressable>
       }>
+      <Text style={styles.label}>SORT BY</Text>
+      <Segmented options={SORTS} value={sort.by} onChange={pickSort} color={accent} />
+      <Text style={styles.about}>{SORTS.find((s) => s.value === sort.by)?.about}</Text>
+      <View style={styles.toggle}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.toggleTitle}>Unfinished on top</Text>
+          <Text style={styles.about}>Quests still to do today move above the ones you&apos;ve finished.</Text>
+        </View>
+        <Switch
+          accessibilityLabel="Unfinished on top"
+          value={sort.unfinishedFirst}
+          onValueChange={(unfinishedFirst) => {
+            haptics.tap();
+            setQuestSort({ unfinishedFirst });
+          }}
+          trackColor={{ true: accent }}
+        />
+      </View>
       <Text style={styles.tip}>* Touch and hold a quest, then drag it. New quests start at the bottom.</Text>
       <View key={listKey} style={{ height: quests.length * SLOT }}>
         {quests.map((view) => (
@@ -161,23 +205,16 @@ export default function ReorderQuestsScreen() {
           />
         ))}
       </View>
-      {custom && (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => {
-            haptics.tap();
-            setQuestOrder(null);
-          }}
-          style={({ pressed }) => [styles.reset, pressed && { opacity: 0.6 }]}>
-          <Text style={[styles.resetText, { color: accent }]}>Go back to the order I usually do them</Text>
-        </Pressable>
-      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   tip: { color: colors.textFaint, fontFamily: fonts.regular, fontSize: 13 },
+  label: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
+  about: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  toggle: { ...windowStyle, flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md },
+  toggleTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 17 },
   row: {
     position: 'absolute',
     left: 0,
@@ -197,6 +234,4 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 19, fontFamily: fonts.semibold },
   done: { paddingHorizontal: spacing.md, height: 36, borderRadius: radius.pill, justifyContent: 'center' },
   doneText: { color: colors.background, fontFamily: fonts.bold, fontSize: 16 },
-  reset: { alignSelf: 'center', padding: spacing.sm },
-  resetText: { fontFamily: fonts.bold, fontSize: 15 },
 });

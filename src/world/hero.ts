@@ -15,6 +15,15 @@ export type HeroId = CharacterId & WalkerId;
 const met = (id: CharacterId, owned: Owned | null | undefined) => !owned || (owned[id] ?? 0) > 0;
 
 /**
+ * The party members you actually have: met on the road, hatched, or (old
+ * saves) everyone. A new save's party lists all eight core companions from the
+ * start, but only these are with you, so only these chime in or show up in scenes.
+ */
+export function partyWithYou(party: Record<Dimension, CharacterId>, owned?: Owned | null): CharacterId[] {
+  return Object.values(party).filter((id) => met(id, owned));
+}
+
+/**
  * Who can walk the World, at most one per Path: that Path's party member, or
  * its core companion when the member has no overworld art yet, as long as
  * you've met them. The core eight are found along the road, each before their
