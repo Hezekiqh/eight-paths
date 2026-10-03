@@ -349,6 +349,7 @@ export function selectReminderState(data: GameData, today: string, tier: Tier = 
   const tomorrow = settleRestDays(
     { restTokens: player.restTokens, restDays: data.restDays, lastSettledDate: data.lastSettledDate },
     data.completions,
+    data.quests,
     player.onboardedAt,
     addDays(today, 1),
   );

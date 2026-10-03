@@ -53,6 +53,12 @@ export const DEFAULT_PARTY = Object.fromEntries(
   ROSTER.filter((c) => c.kind === 'core').map((c) => [c.dimension, c.id]),
 ) as Record<Dimension, CharacterId>;
 
+/**
+ * The four of the Original 8 a player can wake as (author, Oct 2, 2026): the
+ * Season 1 cast who stay together until the party splits at the season's end.
+ */
+export const STARTERS: CharacterId[] = ['brannoc', 'ysolde', 'quill', 'wren'];
+
 export function isCharacterId(value: unknown): value is CharacterId {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(CHARACTERS, value);
 }

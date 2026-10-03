@@ -1,3 +1,4 @@
+import type { CharacterId } from '@/story/companions';
 export const DIMENSIONS = [
   'physical',
   'financial',
@@ -13,6 +14,12 @@ export type Dimension = (typeof DIMENSIONS)[number];
 
 export type Player = {
   name: string;
+  /**
+   * Who the player woke as: their answer to the Keeper's "Which hero do you look
+   * like?" (one of STARTERS). Unset until asked, on the first trip into the
+   * Other World. It wakes with the first habit and never changes.
+   */
+  origin?: CharacterId;
   classDimension: Dimension;
   restTokens: number;
   onboardedAt: string;

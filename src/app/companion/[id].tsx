@@ -16,7 +16,6 @@ import { colors, fonts, radius, spacing } from '@/theme';
 import { useSocial, type CharacterStat } from '@/social/store';
 import { isWalker, worldHero } from '@/world/hero';
 import { whereToMeet } from '@/world/meet';
-import { FIRST_HERO } from '@/store/draws';
 import { movesFor } from '@/world/fight';
 import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { useWorldStore } from '@/world/store';
@@ -43,6 +42,7 @@ export default function CompanionSheet() {
   const party = useGameStore((s) => s.party);
   const owned = useGameStore((s) => s.owned);
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
+  const origin = useGameStore((s) => s.player?.origin);
   if (!isCharacterId(id)) return null;
 
   const entry = collection.entries.find((e) => e.companion.id === id)!;
@@ -151,7 +151,7 @@ export default function CompanionSheet() {
         </>
       ) : (
         <NoteBox symbol="lock.fill" color={colors.border} iconColor={colors.textMuted}>
-          {companion.id === FIRST_HERO
+          {companion.id === origin
             ? `Not yet awake. ${companion.name} wakes with your first habit.`
             : DEFAULT_PARTY[companion.dimension] === companion.id
               ? `Not met yet. ${whereToMeet(companion.dimension) ?? ''} Find them in the Other World and they'll join you, already at your ${info.dimensionLabel} level.`

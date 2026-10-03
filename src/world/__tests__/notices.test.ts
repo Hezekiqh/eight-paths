@@ -30,16 +30,16 @@ const ctx = (flags: string[] = []): NoticeContext => ({
 });
 
 describe('notices', () => {
-  it('says which Path can do a job, and who to walk as, until it is done', () => {
+  it('says which Path can do a job, and who will step up, until it is done', () => {
     const wall = describeNotice(jobNotice('barracks-armoury', 'C'), ctx())!;
     expect(wall.title).toBe('The cracked wall');
-    expect(wall.hint).toBe('A Warrior can do this: walk as Brannoc (pause, then Party).');
+    expect(wall.hint).toBe('A Warrior can do this: Brannoc will step up.');
     expect(describeNotice(jobNotice('barracks-armoury', 'C'), ctx(['armoury-wall']))).toBeNull();
   });
 
   it("names someone's job by them, and the Path it needs", () => {
     const n = describeNotice(npcNotice('kingdom-town', 'barnaby'), ctx())!;
-    expect(n.hint).toMatch(/^A Bard can do this: walk as /);
+    expect(n.hint).toMatch(/^A Bard can do this: \w+ will step up\.$/);
   });
 
   it('says what a locked door needs, in habits', () => {

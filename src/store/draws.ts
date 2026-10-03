@@ -38,14 +38,15 @@ export type DrawState = {
   redrawn: CharacterId[];
   shards: Partial<Record<CharacterId, number>>;
   revealed: CharacterId[] | null;
+  /** Only `origin` is read: who wakes with the first habit. */
+  player?: { origin?: CharacterId } | null;
 };
 
 /**
- * The core eight are met, not drawn (author, Oct 2, 2026): Brannoc wakes with
- * your first habit, and the other seven are found along the road in the
- * Other World (see meetCharacters). Until then no cocoon hands one out.
+ * The core eight are met, not drawn (author, Oct 2, 2026): the hero you chose
+ * to wake as (Player.origin) wakes with your first habit, and the rest are
+ * found in the Other World (see meetCharacters). Until then no cocoon hands one out.
  */
-export const FIRST_HERO: CharacterId = 'brannoc';
 const CORE = Object.values(DEFAULT_PARTY);
 const drawable = (c: Companion, owned: Owned) => !CORE.includes(c.id) || (owned[c.id] ?? 0) > 0;
 
@@ -99,10 +100,11 @@ export function reconcileDraws(
     owned = { ...state.owned };
   }
 
-  // The first habit (any XP at all) wakes Brannoc, with his hatch.
-  if (!owned[FIRST_HERO] && DIMENSIONS.some((d) => pathXp[d] > 0)) {
-    owned[FIRST_HERO] = 1;
-    drops.push(FIRST_HERO);
+  // The first habit (any XP at all) wakes the hero you chose to be, with their hatch.
+  const first = state.player?.origin;
+  if (first && !owned[first] && DIMENSIONS.some((d) => pathXp[d] > 0)) {
+    owned[first] = 1;
+    drops.push(first);
     changed = true;
   }
 
