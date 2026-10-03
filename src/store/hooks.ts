@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
-import { msUntilNextMidnight, toDateKey, usualReminderTime, type RadarFilter } from '@/game';
+import { msUntilNextMidnight, stats, toDateKey, usualReminderTime, type RadarFilter, type StatsPeriod } from '@/game';
 import { syncReminders } from '@/notifications';
 import { usePremium } from '@/premium/store';
 import { useTradeNotices } from '@/social/notices';
@@ -118,6 +118,12 @@ export function useMonthComparison(today: string) {
 export function useCalendar(month: string, today: string) {
   const data = useGameData();
   return useMemo(() => selectCalendar(data, month, today), [data, month, today]);
+}
+
+/** Everything on the Stats tab for a week, a month or a year (game/stats). */
+export function useStats(period: StatsPeriod, today: string) {
+  const data = useGameData();
+  return useMemo(() => stats(data.quests, data.completions, data.restDays, today, period), [data, today, period]);
 }
 
 export function useMilestones() {

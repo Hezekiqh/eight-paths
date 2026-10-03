@@ -1,152 +1,205 @@
-import { SymbolView } from 'expo-symbols';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ActivityCalendar } from '@/components/activity-calendar';
-import { describeChange, formatRate } from '@/components/progress-strip';
 import { Screen } from '@/components/screen';
-import type { Consistency } from '@/game';
-import { useClassInfo, useMilestones, useMonthComparison, useProgressSummary, useToday } from '@/store/hooks';
-import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+import { Segmented } from '@/components/segmented';
+import { BarChart } from '@/components/stats/bar-chart';
+import { Highlight } from '@/components/stats/highlight';
+import { PathBars } from '@/components/stats/path-bars';
+import { CLASSES, WEEKDAY_NAMES, type Stats, type StatsPeriod } from '@/game';
+import { useClassInfo, useStats, useToday } from '@/store/hooks';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourTarget } from '@/tutorial/tour';
 
-/** Milestone badges per row, so rows line up as a grid. */
-const BADGE_COLUMNS = 7;
+const PERIODS = [
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
+  { value: 'year', label: 'Year' },
+] as const;
 
-type TileProps = { label: string; value: string; detail?: string | null; width: number };
+/** "this week", and the period it's compared with. */
+const NOW: Record<StatsPeriod, string> = { week: 'this week', month: 'the last 30 days', year: 'the last year' };
+const BEFORE: Record<StatsPeriod, string> = { week: 'last week', month: 'the 30 days before', year: 'the year before' };
+const TIMELINE: Record<StatsPeriod, string> = {
+  week: 'Each day of the last 7',
+  month: 'The last 30 days, 6 days at a time',
+  year: 'Each month of the last year',
+};
 
-function Tile({ label, value, detail, width }: TileProps) {
-  return (
-    <View style={[styles.tile, { width }]}>
-      <Text style={styles.tileLabel}>{label}</Text>
-      <Text style={styles.tileValue}>{value}</Text>
-      {detail ? <Text style={styles.tileDetail}>{detail}</Text> : null}
-    </View>
-  );
-}
+const pct = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)}%`);
+const pts = (change: number) => `${change > 0 ? '+' : ''}${Math.round(change * 100)} pts`;
 
-function CompareRow({ label, now, before }: { label: string; now: string; before: string }) {
-  return (
-    <View style={styles.compareRow}>
-      <Text style={styles.compareLabel}>{label}</Text>
-      <Text style={styles.compareBefore}>{before}</Text>
-      <SymbolView name="arrow.right" tintColor={colors.textFaint} size={12} />
-      <Text style={styles.compareNow}>{now}</Text>
-    </View>
-  );
-}
-
-const rate = (c: Consistency) => formatRate(c);
-
-export default function JourneyScreen() {
+/**
+ * The Stats tab: how reliably you keep what you schedule, for a week, a month
+ * or a year. First the overall rate, then what's worth pointing out (most
+ * improved, most consistent, needs tending), then the same rate over time, by
+ * Path and by weekday, a few patterns in words, and the calendar.
+ */
+export default function StatsScreen() {
   const today = useToday();
   const classInfo = useClassInfo();
-  const summary = useProgressSummary(today);
-  const month = useMonthComparison(today);
-  const milestones = useMilestones();
-  const { width } = useWindowDimensions();
-  const shownUpRef = useTourTarget('journey');
+  const [period, setPeriod] = useState<StatsPeriod>('week');
+  const s = useStats(period, today);
+  const summaryRef = useTourTarget('journey');
 
   if (!classInfo) return null;
   const color = classInfo.color;
-  // Two tiles a row, sized exactly: flex sizing let long tiles push past the screen edge.
-  const tile = Math.floor((width - spacing.lg * 2 - spacing.sm) / 2);
-  const next = milestones.find((m) => !m.reached);
+  const { current, change } = s.overall;
 
   return (
     <Screen>
-      <Text style={styles.lede}>* Every day you show up counts, even the small ones. This is the proof.</Text>
+      <Segmented options={PERIODS} value={period} onChange={setPeriod} color={color} />
 
-      <View ref={shownUpRef} collapsable={false} style={styles.tiles}>
-        <Tile
-          width={tile}
-          label="DAYS SHOWN UP"
-          value={String(summary.daysShownUp)}
-          detail={summary.nextMilestone ? `Next milestone: ${summary.nextMilestone}` : 'Every milestone reached'}
-        />
-        <Tile
-          width={tile}
-          label="STREAK"
-          value={`${summary.showUp.current}`}
-          detail={`Best ever: ${summary.showUp.best}`}
-        />
+      <View ref={summaryRef} collapsable={false} style={styles.card}>
+        <Text style={styles.label}>HABITS KEPT · {NOW[period].toUpperCase()}</Text>
+        <View style={styles.summaryRow}>
+          <Text style={[styles.big, { color }]}>{pct(current.rate)}</Text>
+          <View style={styles.summaryText}>
+            <Text style={styles.summaryLine}>
+              {current.due > 0 ? `${current.done} of ${current.due} done` : 'Nothing was due yet'}
+            </Text>
+            {change !== null && (
+              <Text style={[styles.change, change > 0 ? styles.up : change < 0 ? styles.down : null]}>
+                {change === 0 ? `Same as ${BEFORE[period]}` : `${pts(change)} vs ${BEFORE[period]}`}
+              </Text>
+            )}
+          </View>
+        </View>
       </View>
-      <View style={styles.tiles}>
-        <Tile
-          width={tile}
-          label="THIS WEEK"
-          value={rate(summary.week.current)}
-          detail={describeChange(summary.week.current, summary.week.previous, 'week')}
-        />
-        <Tile
-          width={tile}
-          label="THIS MONTH"
-          value={rate(summary.month.current)}
-          detail={describeChange(summary.month.current, summary.month.previous, 'month')}
-        />
+
+      <Text style={styles.section}>HIGHLIGHTS</Text>
+      <Highlights s={s} />
+
+      <Text style={styles.section}>OVER TIME</Text>
+      <View style={styles.card}>
+        <BarChart bars={s.timeline} color={color} />
+        <Text style={styles.caption}>{TIMELINE[period]} · share of what was due that got done</Text>
+      </View>
+
+      <Text style={styles.section}>BY PATH</Text>
+      <View style={styles.card}>
+        <PathBars paths={s.paths} />
+        <Text style={styles.caption}>▲▼ points since {BEFORE[period]}</Text>
+      </View>
+
+      <Text style={styles.section}>PATTERNS</Text>
+      <View style={styles.card}>
+        {period !== 'week' && (
+          <>
+            <Text style={styles.label}>BY WEEKDAY</Text>
+            <BarChart bars={s.weekdays} color={color} height={80} highlight={s.bestDay?.label ?? null} />
+          </>
+        )}
+        <Patterns s={s} />
       </View>
 
       <Text style={styles.section}>CALENDAR</Text>
       <ActivityCalendar today={today} color={color} />
-
-      <Text style={styles.section}>LAST 30 DAYS VS THE 30 BEFORE</Text>
-      <View style={styles.card}>
-        <CompareRow label="Days shown up" before={String(month.daysShownUp[1])} now={String(month.daysShownUp[0])} />
-        <CompareRow label="Quests done" before={String(month.completions[1])} now={String(month.completions[0])} />
-        <CompareRow label="Consistency" before={rate(month.consistency[1])} now={rate(month.consistency[0])} />
-      </View>
-
-      <Text style={styles.section}>MILESTONES</Text>
-      <View style={styles.card}>
-        <View style={styles.badges}>
-          {milestones.map((m) => (
-            <View key={m.days} style={styles.badgeSlot}>
-              <View
-                style={[
-                  styles.badge,
-                  m.reached ? { backgroundColor: color } : { borderColor: color, borderWidth: 1.5 },
-                ]}>
-                <Text style={[styles.badgeText, { color: m.reached ? colors.background : color }]}>{m.days}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-        <Text style={styles.badgeCaption}>
-          {next
-            ? `${next.days - summary.daysShownUp} more ${next.days - summary.daysShownUp === 1 ? 'day' : 'days'} of showing up to reach ${next.days}.`
-            : 'You have reached every milestone. Legendary.'}
-        </Text>
-      </View>
     </Screen>
   );
 }
 
+function Highlights({ s }: { s: Stats }) {
+  const p = s.period;
+  return (
+    <View style={styles.highlights}>
+      <Highlight
+        title="MOST IMPROVED"
+        icon="arrow.up.right"
+        dimension={s.mostImproved?.dimension ?? null}
+        figure={s.mostImproved?.change ? pts(s.mostImproved.change) : undefined}
+        detail={
+          s.mostImproved
+            ? `${pct(s.mostImproved.previous.rate)} ${BEFORE[p]}, ${pct(s.mostImproved.current.rate)} ${NOW[p]}.`
+            : `Nothing has climbed since ${BEFORE[p]} yet. Keep showing up and it will.`
+        }
+      />
+      <Highlight
+        title="MOST CONSISTENT"
+        icon="checkmark.seal.fill"
+        dimension={s.mostConsistent?.dimension ?? null}
+        figure={s.mostConsistent ? pct(s.mostConsistent.current.rate) : undefined}
+        detail={
+          s.mostConsistent
+            ? `${s.mostConsistent.current.done} of ${s.mostConsistent.current.due} kept ${NOW[p]}. Your steadiest Path.`
+            : 'A few days of habits, and your steadiest Path shows up here.'
+        }
+      />
+      <Highlight
+        title="NEEDS TENDING"
+        icon="leaf.fill"
+        dimension={s.needsTending?.dimension ?? null}
+        figure={s.needsTending ? pct(s.needsTending.current.rate) : undefined}
+        detail={
+          s.needsTending
+            ? `Kept ${pct(s.needsTending.current.rate)} of the time. One small habit here goes a long way.`
+            : 'Nothing is falling behind. Every Path you keep is holding up.'
+        }
+      />
+    </View>
+  );
+}
+
+/** A few plain sentences about how the period went: when, what, and what's slipping. */
+function Patterns({ s }: { s: Stats }) {
+  const lines: string[] = [];
+  if (s.bestDay?.rate != null) {
+    const name = WEEKDAY_NAMES[['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(s.bestDay.label)];
+    lines.push(`${name} is your strongest day: ${pct(s.bestDay.rate)} kept.`);
+  }
+  const timed = s.timeOfDay.reduce((n, t) => n + t.count, 0);
+  const peak = [...s.timeOfDay].sort((a, b) => b.count - a.count)[0];
+  if (timed >= 3 && peak.count > 0) {
+    lines.push(`You do most habits in the ${peak.label.toLowerCase()} (${Math.round((peak.count / timed) * 100)}%).`);
+  }
+  if (s.questsDone > 0) lines.push(`${s.questsDone} ${s.questsDone === 1 ? 'habit' : 'habits'} done ${NOW[s.period]}.`);
+  if (s.slipping) lines.push(`"${s.slipping.quest.title}" is slipping: ${pct(s.slipping.rate)} kept.`);
+
+  return (
+    <View style={styles.patterns}>
+      {lines.length === 0 && <Text style={styles.patternLine}>Patterns show up after a few days of habits.</Text>}
+      {lines.map((l) => (
+        <Text key={l} style={styles.patternLine}>
+          • {l}
+        </Text>
+      ))}
+      {s.topHabits.length > 0 && (
+        <View style={styles.top}>
+          <Text style={styles.label}>BEST KEPT</Text>
+          {s.topHabits.map((h) => (
+            <View key={h.quest.id} style={styles.habit}>
+              <View style={[styles.dot, { backgroundColor: CLASSES[h.quest.dimension].color }]} />
+              <Text style={styles.habitTitle} numberOfLines={1}>
+                {h.quest.title}
+              </Text>
+              <Text style={styles.habitRate}>{pct(h.rate)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  lede: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, marginBottom: spacing.md },
-  tiles: { flexDirection: 'row', gap: spacing.sm },
-  tile: {
-    ...windowStyle,
-    padding: spacing.lg,
-    gap: 2,
-  },
-  tileLabel: { color: colors.textMuted, fontSize: 14, fontFamily: fonts.bold, letterSpacing: 1 },
-  tileValue: { color: colors.text, fontSize: 36, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
-  tileDetail: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
-  section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.lg },
-  card: { ...windowStyle, padding: spacing.lg, gap: spacing.md, marginTop: spacing.sm },
-  compareRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  compareLabel: { flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 15 },
-  compareBefore: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 15, fontVariant: ['tabular-nums'] },
-  compareNow: {
-    color: colors.text,
-    fontSize: 20,
-    fontFamily: fonts.bold,
-    fontVariant: ['tabular-nums'],
-    minWidth: 44,
-    textAlign: 'right',
-  },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -3, rowGap: spacing.sm },
-  badgeSlot: { width: `${100 / BADGE_COLUMNS}%`, paddingHorizontal: 3 },
-  badge: { height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { fontSize: 18, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
-  badgeCaption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13 },
+  card: { ...windowStyle, padding: spacing.lg, gap: spacing.md },
+  label: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  big: { fontFamily: fonts.bold, fontSize: 52, fontVariant: ['tabular-nums'] },
+  summaryText: { flex: 1, gap: 4 },
+  summaryLine: { color: colors.text, fontFamily: fonts.regular, fontSize: 16 },
+  change: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14 },
+  up: { color: '#2F7D32' },
+  down: { color: colors.danger },
+  section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2, marginTop: spacing.sm },
+  highlights: { gap: spacing.sm },
+  caption: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center' },
+  patterns: { gap: spacing.sm },
+  patternLine: { color: colors.text, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },
+  top: { gap: spacing.sm, marginTop: spacing.xs },
+  habit: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  habitTitle: { flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 15 },
+  habitRate: { color: colors.text, fontFamily: fonts.bold, fontSize: 15, fontVariant: ['tabular-nums'] },
 });

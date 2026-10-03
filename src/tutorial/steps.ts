@@ -85,7 +85,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     route: '/journey',
     target: 'journey',
-    line: 'Here you will find more charts of your days. Health data is coming soon.',
+    line: 'Here are your stats: what is improving, what needs tending, and when you do best. Health data is coming soon.',
   },
   {
     route: '/world',

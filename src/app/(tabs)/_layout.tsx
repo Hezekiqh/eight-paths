@@ -69,7 +69,7 @@ export default function TabsLayout() {
           <RetroTabButton label="Social" icon="users" badge={newOffers > 0} badgeLabel="new trade offers" />
         </TabTrigger>
         <TabTrigger name="journey" href="/journey" asChild>
-          <RetroTabButton label="Journey" icon="map" />
+          <RetroTabButton label="Stats" icon="chart" />
         </TabTrigger>
         {/* Last, since opening it turns the phone sideways. The quest board inside holds the objectives. */}
         <TabTrigger name="world" href="/world" asChild>

@@ -47,7 +47,7 @@ export const EFFECTS = {
 export const MUSIC = {
   /** The Keeper's telling at launch. */
   intro: [require('../../assets/audio/intro.m4a')],
-  /** Today, Profile, Social and Journey. */
+  /** Today, Profile, Social and Stats. */
   home: [require('../../assets/audio/home-1.m4a'), require('../../assets/audio/home-2.m4a')],
   /** The Archive and the caves under it. */
   world: [require('../../assets/audio/world-1.m4a'), require('../../assets/audio/world-2.m4a')],
