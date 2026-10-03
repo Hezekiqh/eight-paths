@@ -102,7 +102,14 @@ export type NpcJob = { flag: string; path: string; done: string[]; cant: string[
  * can set a story flag (`sets`), and leave a line of narration once the
  * conversation closes (`then`): how Nib runs off when you're mean to him.
  */
-export type Question = { ask: string; answer: string[]; sets?: string; then?: string[] };
+export type Question = {
+  ask: string;
+  answer: string[];
+  sets?: string;
+  then?: string[];
+  /** The one answering leaves with a flourish once the talk ends (a laugh, then a dash), and then this flag is set. */
+  leaves?: string;
+};
 
 /** The Archive's quest board: opens the objectives. */
 export type BoardObject = { id: string; type: 'board'; x: number; y: number };

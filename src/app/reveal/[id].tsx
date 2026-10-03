@@ -19,9 +19,9 @@ import { COCOON_ART, COCOON_STAGES, REALM_ART, REALM_BACKGROUNDS, REALM_LIGHTS }
 import { CHARACTER_ART } from '@/art/sprites';
 import { CocoonEye } from '@/components/cocoon-eye';
 import { PixelSprite } from '@/components/pixel-sprite';
+import { REVEAL_MOVES, RevealMove } from '@/components/reveal-move';
 import { TypewriterText } from '@/components/typewriter-text';
 import { CLASSES } from '@/game';
-import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
 import { premiumEnabled } from '@/premium/config';
 import { usePremium } from '@/premium/store';
@@ -391,8 +391,8 @@ export default function RevealScreen() {
     lift.set(0);
     glow.set(0);
     eye.set(0);
+    // no fanfare: the burst and the buzz are enough
     haptics.celebrate();
-    playSound('hatch');
     if (flair.legendary) {
       // A Legendary gets a drumroll of buzzes and slow-turning golden light.
       setTimeout(haptics.celebrate, 350);
@@ -461,19 +461,23 @@ export default function RevealScreen() {
       }>
       <StatusBar style="light" />
       <Animated.View style={[styles.scene, { width: W, height: H }, sceneStyle]}>
-        <Image
-          source={REALM_BACKGROUNDS[companion.dimension]}
-          contentFit="fill"
-          style={{
-            position: 'absolute',
-            left: sceneLeft,
-            top: sceneTop,
-            width: REALM_ART.width * px,
-            height: REALM_ART.height * px,
-          }}
-          accessible={false}
-        />
-        {!reduceMotion &&
+        {/* the build-up is the cocoon alone in the dark; the realm appears with the burst */}
+        {hatched && (
+          <Image
+            source={REALM_BACKGROUNDS[companion.dimension]}
+            contentFit="fill"
+            style={{
+              position: 'absolute',
+              left: sceneLeft,
+              top: sceneTop,
+              width: REALM_ART.width * px,
+              height: REALM_ART.height * px,
+            }}
+            accessible={false}
+          />
+        )}
+        {hatched &&
+          !reduceMotion &&
           REALM_LIGHTS[companion.dimension].map(([x, y, color], i) => {
             const [lx, ly] = at(x, y);
             return <Twinkle key={i} x={lx} y={ly} color={color} index={i} clock={clock} px={px} />;
@@ -520,7 +524,13 @@ export default function RevealScreen() {
                 <Rays color="#FFD27A" size={spriteH * 2.6} spin={legendSpin} />
               </View>
             )}
-            {art && <PixelSprite sheet={art.idle} scale={spriteScale} animate={revealed} />}
+            {art && isCharacterId(id) && REVEAL_MOVES[id] ? (
+              <RevealMove kind={REVEAL_MOVES[id]!} play={revealed} px={spriteScale}>
+                <PixelSprite sheet={art.idle} scale={spriteScale} />
+              </RevealMove>
+            ) : (
+              art && <PixelSprite sheet={art.idle} scale={spriteScale} animate={revealed} />
+            )}
           </View>
         )}
 

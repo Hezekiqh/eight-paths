@@ -31,7 +31,7 @@ export function walkersFor(party: Record<Dimension, CharacterId>, owned?: Owned 
 
 /**
  * Who walks the World: the one the player picked, as long as they can still
- * walk (see walkersFor). Otherwise the player's class companion if met, else Brannoc.
+ * walk (see walkersFor). Until they pick, the wizard; otherwise their class companion if met, else Brannoc.
  */
 export function worldHero(
   picked: CharacterId | null,
@@ -41,6 +41,9 @@ export function worldHero(
 ): HeroId {
   const walkers = walkersFor(party, owned);
   if (picked && walkers.includes(picked as HeroId)) return picked as HeroId;
+  // Until they pick someone, everyone starts the Other World as the wizard (Brannoc stays
+  // a character of his own: his lines, and his road to the throne).
+  if (!picked && walkers.includes('quill')) return 'quill';
   const own = walkers.find((h) => h === party[classDimension] || h === DEFAULT_PARTY[classDimension]);
   return own ?? FIRST_WALKER;
 }

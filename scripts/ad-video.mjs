@@ -295,7 +295,8 @@ function hatch({ path, hero, name, number, rarity, linesA, linesB, dur, at, wigg
   return {
     dur,
     frame(t) {
-      const scene = backdrop(path, t);
+      // the build-up is the cocoon alone in the dark (as in the game); the realm appears with the burst
+      const scene = t < at ? realm(path).base.map((row) => row.map(() => INK)) : backdrop(path, t);
       const ui = blankUi();
       const cam = camAt(1, [CX, BY - COCOON_H / 2]);
       cam.anchor = [GW / 2, GH * 0.6];

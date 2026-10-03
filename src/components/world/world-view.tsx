@@ -226,6 +226,8 @@ type Props = {
   /** Chests (open or not) and signs standing on tiles, drawn live so they can change. */
   chests?: { x: number; y: number; open: boolean }[];
   signs?: { x: number; y: number }[];
+  /** Cocoons broken open (see cocoons.ts): split silk drawn over the whole one in the map's art. */
+  husks?: { x: number; y: number }[];
   /** How dark it is here and what drifts in the air; every flame [x, y, light reach] (see ambience.ts). */
   ambience?: Ambience;
   flames?: number[][];
@@ -237,7 +239,30 @@ type Props = {
   throws?: boolean;
   drowsy?: number;
   onWin?: () => void;
+  /**
+   * Someone leaving with a flourish (Felix): they laugh, shoulders shaking, then dash
+   * east off the map, lightning fast. `onExited` runs once they're gone.
+   */
+  exit?: { id: string } | null;
+  onExited?: () => void;
 };
+
+/** A leaver's laugh (seconds), then their dash (art pixels a second). */
+const EXIT_LAUGH = 1.4;
+const EXIT_SPEED = 520;
+/** "HA" in a 3×5 pixel font, as [x, y] cells. */
+const HA = [
+  ...['X.X', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : []))),
+  ...['.X.', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x + 4, y]] : []))),
+];
+/** Dust kicked up where a dash starts. */
+const PUFF = [
+  [-4, -2],
+  [3, -3],
+  [-1, -6],
+  [5, 0],
+  [-6, 1],
+];
 
 /**
  * Draws a map and everyone on it with Skia, sharp-pixelled at `scale`, and
@@ -272,8 +297,11 @@ export function WorldView({
   throws = false,
   drowsy = 0,
   onWin,
+  exit = null,
+  onExited,
   chests = [],
   signs = [],
+  husks = [],
   sealed = [],
   ambience = { darkness: 0, motes: null },
   flames = [],
@@ -308,6 +336,7 @@ export function WorldView({
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
+  const exited = useMemo(() => (onExited ? onExited : () => {}), [onExited]);
   const bossX = boss ? boss.x : -1;
   const bossY = boss ? boss.y : -1;
   const bolts = useDerivedValue(() => fight.get().bolts);
@@ -337,6 +366,14 @@ export function WorldView({
   const guttered = useSharedValue(0);
   /** Seconds since the room opened: flames flicker and motes drift by it. */
   const clock = useSharedValue(0);
+  /** The leaver's row in sim.npcWalk, seconds into their exit (-1: nobody leaving), and where they are: [x, y, dashing]. */
+  const exitRow = useSharedValue(-1);
+  const exitT = useSharedValue(-1);
+  const exitAt = useSharedValue<number[]>([0, 0, 0]);
+  useEffect(() => {
+    exitRow.set(exit ? sim.npcIds.indexOf(exit.id) : -1);
+    exitT.set(exit ? 0 : -1);
+  }, [exit, sim.npcIds, exitRow, exitT]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   // [sprite row, row in sim.npcWalk] for everyone still here.
   const npcs = useMemo(
@@ -625,6 +662,7 @@ export function WorldView({
       camY.set(round(cy));
       bob.set(Math.floor(info.timestamp / 350) % 2);
       clock.set(clock.get() + realDt);
+      if (exitT.get() >= 0) exitT.set(exitT.get() + realDt);
 
       // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
       // Each: [row, facing, frame, x, y, tint (0 none, 1 white: struck, 2 red: winding up), size].
@@ -634,6 +672,26 @@ export function WorldView({
         const w = walkers[npcs[i][1]];
         if (!w) continue;
         const [fx, fy] = wandererFeet(w);
+        // the one leaving: a laugh (a shake and a hop, facing you), then a dash east
+        const et = npcs[i][1] === exitRow.get() ? exitT.get() : -1;
+        if (et >= 0 && et < EXIT_LAUGH) {
+          const beat = Math.floor(et * 12);
+          const lx = fx + (beat % 2 === 1 ? 1 : -1);
+          const ly = fy - (beat % 3 === 0 ? 2 : 0);
+          exitAt.set([lx, ly, 0]);
+          ents.push([npcs[i][0], 0, 0, lx, ly, 0, 1]);
+          continue;
+        }
+        if (et >= EXIT_LAUGH) {
+          const d = (et - EXIT_LAUGH) * EXIT_SPEED;
+          exitAt.set([fx + d, fy, d]);
+          if (fx + d > mapW + 24) {
+            exitT.set(-1);
+            scheduleOnRN(exited);
+          }
+          ents.push([npcs[i][0], 3, walkFrame(d, true), fx + d, fy, 0, 1]);
+          continue;
+        }
         ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, 1]);
       }
       const whites = whiteFor.get();
@@ -844,6 +902,33 @@ export function WorldView({
     }
     return path;
   });
+  // A laugh's HA popping out over the head, then the dash's dust and speed streaks.
+  const exitPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = exitT.get();
+    if (t < 0) return path;
+    const [x, y, d] = exitAt.get();
+    if (t < EXIT_LAUGH) {
+      for (let k = 0; k < 3; k++) {
+        const age = t - k * 0.35;
+        if (age < 0 || age > 0.9) continue;
+        const ox = Math.round(x + (k % 2 === 1 ? 6 : -10));
+        const oy = Math.round(y - 30 - age * 10);
+        for (let r = 0; r < HA.length; r++) path.addRect(Skia.XYWHRect(ox + HA[r][0], oy + HA[r][1], 1, 1));
+      }
+      return path;
+    }
+    // dust where they set off, for a moment
+    if (d < EXIT_SPEED * 0.3) {
+      const s = 1 + d / 60;
+      for (let k = 0; k < PUFF.length; k++)
+        path.addRect(Skia.XYWHRect(Math.round(x - d + PUFF[k][0] * s), Math.round(y - 2 + PUFF[k][1] * s), 2, 2));
+    }
+    path.addRect(Skia.XYWHRect(Math.round(x) - 24, Math.round(y) - 14, 18, 1));
+    path.addRect(Skia.XYWHRect(Math.round(x) - 32, Math.round(y) - 9, 26, 1));
+    path.addRect(Skia.XYWHRect(Math.round(x) - 20, Math.round(y) - 4, 14, 1));
+    return path;
+  });
   const motePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     if (!ambience.motes) return path;
@@ -894,6 +979,9 @@ export function WorldView({
         ))}
         {chests.map((p) => (
           <Chest key={`c${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} open={p.open} />
+        ))}
+        {husks.map((p) => (
+          <Husk key={`h${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
         ))}
         {flames.length > 0 && (
           <>
@@ -956,6 +1044,7 @@ export function WorldView({
         {ambience.motes && (
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
+        <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
@@ -1079,6 +1168,31 @@ function FlameLight({
 }
 
 /** A chest on its tile: shut (gold-banded wood), or open and empty. */
+/**
+ * A cocoon after its hatch, over the whole one baked into the map (world-art.mjs
+ * egg()): grass laid over the egg, then the bottom of the shell, hollow, with its
+ * torn rim and two flaps of silk fallen either side.
+ */
+function Husk({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x + 1} y={y - 3} width={15} height={19} color="#4E7A3A" />
+      <Rect x={x + 4} y={y + 3} width={2} height={1} color="#46703A" />
+      <Rect x={x + 11} y={y + 5} width={2} height={1} color="#568240" />
+      <Rect x={x + 3} y={y + 9} width={11} height={7} color="#3A3044" />
+      <Rect x={x + 4} y={y + 9} width={9} height={6} color="#EDE6D6" />
+      <Rect x={x + 10} y={y + 9} width={3} height={6} color="#C9BFAE" />
+      <Rect x={x + 5} y={y + 9} width={7} height={3} color="#2A2430" />
+      <Rect x={x + 4} y={y + 8} width={1} height={1} color="#EDE6D6" />
+      <Rect x={x + 7} y={y + 8} width={1} height={1} color="#EDE6D6" />
+      <Rect x={x + 11} y={y + 8} width={1} height={1} color="#C9BFAE" />
+      <Rect x={x + 0} y={y + 13} width={4} height={2} color="#EDE6D6" />
+      <Rect x={x + 0} y={y + 15} width={4} height={1} color="#A69C8C" />
+      <Rect x={x + 13} y={y + 12} width={3} height={3} color="#C9BFAE" />
+    </Group>
+  );
+}
+
 function Chest({ x, y, open }: { x: number; y: number; open: boolean }) {
   return (
     <Group>

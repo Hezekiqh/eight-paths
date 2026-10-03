@@ -26,6 +26,7 @@ import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
+import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
 import { meetingLines, metFlag, whereToMeet } from '@/world/meet';
@@ -254,6 +255,9 @@ function World({
   const map = useMemo(() => withoutGone(roomMap, flagsNow), [roomMap, flagsNow]);
   /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
   const afterTalk = useRef<string[] | null>(null);
+  /** Someone to see off once the conversation closes (Question.leaves), and who's leaving now. */
+  const leaving = useRef<{ id: string; flag: string } | null>(null);
+  const [exit, setExit] = useState<{ id: string; flag: string } | null>(null);
   const patches = useMemo(() => openPatches(map, arrivalFlags), [map, arrivalFlags]);
   // The boss's bearers join the room's enemies while the fight is on.
   const fightMap = useMemo(
@@ -264,10 +268,12 @@ function World({
             enemies: [
               ...map.enemies,
               ...map.boss.bearers.map(([x, y]) => ({ kind: (map.boss?.kind ?? 'sleeper') as EnemyKind, x, y })),
+              // Felix, if you let him out, has told the king you're coming: two guards stand with him
+              ...(advisedBy(map.id, arrivalFlags)?.guards ?? []),
             ],
           }
         : map,
-    [map, bossOn],
+    [map, bossOn, arrivalFlags],
   );
   // A solved plate puzzle stays solved: its boulders start on the plates.
   const boulders = useMemo(() => {
@@ -300,6 +306,7 @@ function World({
     [map, liveFlags],
   );
   const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  const husks = useMemo(() => brokenCocoons(map.id, liveFlags), [map, liveFlags]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
   const sealed = useMemo(() => {
@@ -338,7 +345,10 @@ function World({
     !bossOn
       ? null
       : start.map.boss?.intro
-        ? { speaker: start.map.boss.intro.speaker ?? undefined, lines: start.map.boss.intro.lines }
+        ? {
+            speaker: start.map.boss.intro.speaker ?? undefined,
+            lines: [...start.map.boss.intro.lines, ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? [])],
+          }
         : bossNpc
           ? { speaker: bossNpc.name, lines: bossNpc.lines }
           : null,
@@ -517,6 +527,12 @@ function World({
         onSignature={onSignature}
         hearts={hearts}
         chests={chests}
+        husks={husks}
+        exit={exit}
+        onExited={() => {
+          if (exit) useWorldStore.getState().setFlag(exit.flag);
+          setExit(null);
+        }}
         signs={signs}
         ambience={ambience}
         flames={flames}
@@ -563,10 +579,16 @@ function World({
             const narration = afterTalk.current;
             afterTalk.current = null;
             if (narration) setDialogue({ lines: narration });
+            if (leaving.current) {
+              setExit(leaving.current);
+              leaving.current = null;
+            }
           }}
           onAsk={(q) => {
             if (q.sets) useWorldStore.getState().setFlag(q.sets);
             if (q.then) afterTalk.current = q.then;
+            const who = q.leaves ? map.npcs.find((n) => n.questions?.includes(q)) : undefined;
+            if (who && q.leaves) leaving.current = { id: who.id, flag: q.leaves };
             // Everything a character tells you goes in the World menu's lore journal.
             const speaker = dialogue.speaker;
             if (speaker) hear({ id: loreId(speaker, q.ask), speaker, ask: q.ask, answer: q.answer, at: Date.now() });
@@ -820,6 +842,45 @@ function useAct(
       return;
     }
     const tile = tileAt(map, tx, ty);
+    // A cocoon (cocoons.ts): break it open, and whoever's inside hatches, then stands by the silk to talk.
+    const cocoon = cocoonAt(map.id, tile);
+    if (cocoon) {
+      const { flags, setFlag } = useWorldStore.getState();
+      if (flags.includes(cocoon.hatched)) {
+        setDialogue({ lines: cocoon.empty });
+        return;
+      }
+      const here: Arrival = {
+        map: map.id as MapId,
+        x: Math.floor(sim.x.get() / TILE),
+        y: Math.floor((sim.y.get() - 1) / TILE),
+        facing: FACINGS[facing],
+      };
+      setDialogue({
+        lines: map.examine[tile] ?? [],
+        choices: [
+          {
+            label: 'Break it open.',
+            then: () => {
+              setFlag(cocoon.hatched);
+              save();
+              // The hatch plays over the World and comes back to it, still sideways.
+              keepSideways = true;
+              const game = useGameStore.getState();
+              // Someone new joins your collection, and the reveal queue hatches them; someone you
+              // already have hatches here anyway (a preview: nothing is counted twice).
+              if ((game.owned?.[cocoon.character] ?? 0) > 0)
+                router.push({ pathname: '/reveal/[id]', params: { id: cocoon.character, preview: '1' } });
+              else game.giftCharacters([cocoon.character]);
+              // Re-entered, so they're standing by the silk when the hatch ends.
+              onTravel(here);
+            },
+          },
+          { label: 'Leave it.', then: () => {} },
+        ],
+      });
+      return;
+    }
     if (map.id === 'field-of-banners' && tile === 'Q') {
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {

@@ -67,10 +67,12 @@ function egg(g, cx, by, w, h) {
     const hw = Math.round((w / 2) * Math.sqrt(Math.max(0, 1 - ny * ny * (ny < 0 ? 0.9 : 1.6))));
     rows.push(hw);
     for (let i = -hw; i <= hw; i++) {
+      // as the hatch draws it: a bright edge on the left, shade on the right, pale wrap bands
       let c = P.silk;
       if (i > hw * 0.45) c = P.silkShade;
       if (i > hw * 0.8) c = P.silkDark;
-      if ((y + Math.round(i * 0.5)) % 6 === 0) c = P.silkShade;
+      if (i < -hw * 0.6 && y > 1) c = P.silkBright;
+      if ((y + Math.round(i * 0.5)) % 4 === 0) c = P.silkBand;
       put(g, cx + i, by - h + y, c);
     }
     put(g, cx - hw - 1, by - h + y, '#3A3044');
@@ -120,9 +122,12 @@ const P = {
   wax: '#F3ECDD',
   cork: '#8A6038',
   paper: '#EFE4C8',
-  silk: '#E8E0D0',
-  silkShade: '#B8AE9C',
-  silkDark: '#8A8070',
+  // the hatch's own silk (realm-art.mjs drawCocoon), so a cocoon in the World is the one that hatches
+  silk: '#EDE6D6',
+  silkShade: '#C9BFAE',
+  silkDark: '#A69C8C',
+  silkBand: '#D8CFBD',
+  silkBright: '#FFF7DC',
 };
 
 /** A row of scroll ends lying on a shelf whose board is at `y`. */
@@ -554,10 +559,9 @@ const OUTDOOR_ART = {
     put(g, x + 8, y + 2, P.flame2);
   },
   J(g, x, y) {
-    // Dessa's cocoon, the same egg as every cocoon, in the long grass with a satchel strap poking out.
-    egg(g, x + 8, y + 16, 9, 15);
-    box(g, x + 10, y + 11, 5, 1, '#6A4A2A');
-    box(g, x + 14, y + 11, 1, 4, '#6A4A2A');
+    // Felix's cocoon, the same egg as every cocoon, half hidden in the long grass (see src/world/cocoons.ts).
+    // A little taller than its tile, so the silk's wrap shows.
+    egg(g, x + 8, y + 16, 11, 19);
   },
   '='(g, x, y, m) {
     // The Archive's great door, set into a hill of old stone.
@@ -1414,6 +1418,8 @@ const WALKERS = {
   brug: { top: '#8A7A64', shade: '#6A5A48', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['short', '#6A4028'], beard: '#6A4028', cloak: '#C8B8A0' },
   ylva: { robe: true, top: '#C8D6E6', shade: '#A8B6C6', boots: '#4A4A58', belt: '#6A1216', skin: '#E0B898', hair: ['bun', '#E8D26A'], collar: '#F4F0EA' },
   keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
+  // Felix Rook, the Academy's grand strategist: a checkered waistcoat under a dark plum coat
+  felix: { top: '#3A2A40', shade: '#2A1E30', legs: '#2A2030', boots: '#5C3A28', hair: ['slick', '#1A1416'], villain: '#1A1416', checks: ['#F0E6D0', '#4A3A30'] },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -1496,6 +1502,8 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     b(5, 11, 6, 3, w.patchwork[1]);
     b(5, 14, 6, 3, w.patchwork[2]);
   }
+  // a fine check, pixel by pixel (Felix's waistcoat): front only, with the coat showing at the sides
+  if (w.checks && !back) for (let y = 11; y < 17; y++) for (let x = side ? 6 : 5; x < (side ? 10 : 11); x++) p(x, y, w.checks[(x + y) % 2]);
   if (w.stripes) for (const y of [12, 14, 16]) b(side ? 5 : 4, y, side ? 6 : 8, 1, w.stripes);
   if (w.medals && !back) {
     const medal = ['#F2C14E', '#C4442A', '#C8CCD8'];
@@ -1595,6 +1603,24 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     if (side) b(4, 9, 2, 1, w.mustache);
     else b(6, 9, 4, 1, w.mustache);
   }
+  // an obvious villain: a handlebar mustache with its ends curled up and a pointed goatee
+  if (w.villain && !back) {
+    const v = w.villain;
+    if (side) {
+      // facing left the face is on the left of the frame, facing right on the right
+      const left = dir === 'left';
+      b(left ? 4 : 9, 9, 3, 1, v);
+      p(left ? 3 : 12, 8, v);
+      p(left ? 5 : 10, 6, v);
+      p(left ? 4 : 11, 10, v);
+    } else {
+      b(5, 9, 6, 1, v);
+      p(4, 8, v);
+      p(11, 8, v);
+      p(7, 10, v);
+      p(8, 10, v);
+    }
+  }
   void face;
   if (w.skull && !back) {
     // hollow sockets with a pinprick of candlelight
@@ -1612,7 +1638,7 @@ function drawWalker(g, ox, oy, w, dir, frame) {
   }
 
   // hair and headwear
-  if (style === 'short' || style === 'spiky') {
+  if (style === 'short' || style === 'spiky' || style === 'slick') {
     if (back) b(4, 3, 8, 7, hair);
     else if (side) {
       b(4, 3, 8, 2, hair);
@@ -1680,6 +1706,11 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       }
     }
     if (style === 'hood') b(back ? 3 : 4, 2, back ? 10 : 8, 1, w.shade);
+  }
+  // the slick cut's widow's peak
+  if (style === 'slick' && !back && !side) {
+    p(7, 5, hair);
+    p(8, 5, hair);
   }
   if (w.beard && !back) {
     if (side) b(4, 9, 4, 2, w.beard);

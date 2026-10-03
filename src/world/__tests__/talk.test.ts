@@ -52,6 +52,7 @@ describe('Nib', () => {
   });
 
   it('stays put otherwise', () => {
-    expect(withoutGone(MAPS['courier-road'], ['pit-champion'])).toBe(MAPS['courier-road']);
+    // (Felix is there too, once his cocoon's broken: see cocoons.test.ts.)
+    expect(withoutGone(MAPS['courier-road'], ['pit-champion', 'felix-hatched'])).toBe(MAPS['courier-road']);
   });
 });
