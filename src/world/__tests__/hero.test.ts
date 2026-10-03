@@ -3,14 +3,15 @@ import { DEFAULT_PARTY } from '@/story/companions';
 import { walkersFor, worldHero } from '../hero';
 
 describe('worldHero', () => {
-  it('starts everyone as Brannoc until they pick someone', () => {
-    expect(worldHero(null, DEFAULT_PARTY, 'intellectual')).toBe('brannoc');
+  it('starts everyone as the wizard until they pick someone, whatever their class', () => {
+    expect(worldHero(null, DEFAULT_PARTY, 'physical')).toBe('quill');
+    expect(worldHero(null, DEFAULT_PARTY, 'social')).toBe('quill');
   });
 
-  it("walks with your class's companion when Brannoc can't walk for the Warriors", () => {
-    const party = { ...DEFAULT_PARTY, physical: 'tobin' as const };
-    // Tobin has no overworld art, so Brannoc still walks for the Warriors: he's who you start as.
-    expect(worldHero(null, party, 'intellectual')).toBe('brannoc');
+  it('starts as the wizard even when the Mage slot holds someone without overworld art', () => {
+    // Tobin-style stand-ins have no walker, so Quill still walks for the Mages: she's who you start as.
+    const party = { ...DEFAULT_PARTY, intellectual: 'ottilie' as const };
+    expect(worldHero(null, party, 'physical')).toBe('quill');
   });
 
   it('walks with the party member you picked', () => {
@@ -30,8 +31,8 @@ describe('worldHero', () => {
     expect(worldHero(DEFAULT_PARTY.intellectual, party, 'physical')).toBe(DEFAULT_PARTY.physical);
   });
 
-  it('falls back to a core companion when your class slot has no overworld art', () => {
+  it('falls back to a core companion when your pick and your class slot have no overworld art', () => {
     const party = { ...DEFAULT_PARTY, physical: 'dessa' as const };
-    expect(worldHero(null, party, 'physical')).toBe(DEFAULT_PARTY.physical);
+    expect(worldHero('dessa', party, 'physical')).toBe(DEFAULT_PARTY.physical);
   });
 });
