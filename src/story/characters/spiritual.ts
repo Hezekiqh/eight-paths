@@ -15,7 +15,7 @@ export const SPIRITUAL = {
   },
   hollis: {
     number: 69,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Good',
     name: 'Hollis',
     dimension: 'spiritual',
@@ -26,7 +26,7 @@ export const SPIRITUAL = {
   },
   honeywell: {
     number: 99,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Chaotic Neutral',
     name: 'Lucian Honeywell',
     dimension: 'spiritual',
@@ -37,7 +37,7 @@ export const SPIRITUAL = {
   },
   sage: {
     number: 66,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Mother Sage',
     dimension: 'spiritual',
@@ -48,7 +48,7 @@ export const SPIRITUAL = {
   },
   moth: {
     number: 71,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Moth',
     dimension: 'spiritual',
@@ -59,7 +59,7 @@ export const SPIRITUAL = {
   },
   tuck: {
     number: 80,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Brother Tuck',
     dimension: 'spiritual',
@@ -70,7 +70,7 @@ export const SPIRITUAL = {
   },
   zahra: {
     number: 73,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Good',
     name: 'Zahra',
     fullName: 'Zahra of the Dunes',
@@ -82,7 +82,7 @@ export const SPIRITUAL = {
   },
   clementine: {
     number: 5,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Clementine',
     fullName: 'Clementine Chime',
@@ -94,7 +94,7 @@ export const SPIRITUAL = {
   },
   ansel: {
     number: 39,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'Ansel the Hermit',
     dimension: 'spiritual',
@@ -105,7 +105,7 @@ export const SPIRITUAL = {
   },
   lumen: {
     number: 10,
-    rarity: 1,
+    rarity: 5,
     alignment: 'Chaotic Good',
     name: 'Lumen',
     dimension: 'spiritual',
@@ -116,7 +116,7 @@ export const SPIRITUAL = {
   },
   ilse: {
     number: 38,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Neutral',
     name: 'Abbess Ilse',
     dimension: 'spiritual',
@@ -127,7 +127,7 @@ export const SPIRITUAL = {
   },
   oona: {
     number: 14,
-    rarity: 1,
+    rarity: 5,
     alignment: 'True Neutral',
     name: 'Oona',
     fullName: 'Oona Farsight',

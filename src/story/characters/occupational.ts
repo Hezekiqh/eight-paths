@@ -28,7 +28,7 @@ export const OCCUPATIONAL = {
   },
   greta: {
     number: 88,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Neutral',
     name: 'Greta',
     fullName: 'Greta Hammerfall',
@@ -40,7 +40,7 @@ export const OCCUPATIONAL = {
   },
   sprocket: {
     number: 96,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Sprocket',
     dimension: 'occupational',
@@ -51,7 +51,7 @@ export const OCCUPATIONAL = {
   },
   hilde: {
     number: 74,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Neutral',
     name: 'Hilde',
     fullName: 'Hilde Anvil',
@@ -63,7 +63,7 @@ export const OCCUPATIONAL = {
   },
   joss: {
     number: 64,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Joss',
     fullName: 'Joss Furrow',
@@ -75,7 +75,7 @@ export const OCCUPATIONAL = {
   },
   babette: {
     number: 50,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Lawful Good',
     name: 'Chef Babette',
     dimension: 'occupational',
@@ -86,7 +86,7 @@ export const OCCUPATIONAL = {
   },
   wilbur: {
     number: 85,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Wilbur',
     fullName: 'Wilbur Planewright',
@@ -110,7 +110,7 @@ export const OCCUPATIONAL = {
   },
   rosa: {
     number: 59,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Rosa',
     fullName: 'Rosa Gearheart',
@@ -133,7 +133,7 @@ export const OCCUPATIONAL = {
   },
   adaeze: {
     number: 83,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Neutral',
     name: 'Guildmaster Adaeze',
     dimension: 'occupational',
@@ -144,7 +144,7 @@ export const OCCUPATIONAL = {
   },
   gert: {
     number: 111,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'Gert',
     dimension: 'occupational',

@@ -10,8 +10,7 @@ import type { Dimension } from '@/game';
 export type CharacterKind = 'core' | 'recruit' | 'steward' | 'legend';
 
 /**
- * Stars, 1 to 5, read like a rank: 1★ is the rarest (Legendary), 5★ the most
- * common. Rarity follows lore weight: how much of the story they hold.
+ * Stars, 1 to 5: 5★ is the rarest (Legendary), 1★ the most common. Rarity follows lore weight: how much of the story they hold.
  */
 export type Rarity = 1 | 2 | 3 | 4 | 5;
 

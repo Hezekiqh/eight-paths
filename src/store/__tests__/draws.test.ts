@@ -168,11 +168,11 @@ describe('redoDrop', () => {
 });
 
 describe('pickWeighted', () => {
-  it('makes a 1★ about twice as likely with Premium odds', () => {
+  it('makes a 5★ about twice as likely with Premium odds', () => {
     const count = (weights = RARITY_WEIGHTS.free) => {
       const random = seeded(11);
       let legends = 0;
-      for (let i = 0; i < 40000; i++) if (pickWeighted(ROSTER, random, weights).rarity === 1) legends++;
+      for (let i = 0; i < 40000; i++) if (pickWeighted(ROSTER, random, weights).rarity === 5) legends++;
       return legends;
     };
     const ratio = count(RARITY_WEIGHTS.premium) / count(RARITY_WEIGHTS.free);
@@ -187,20 +187,20 @@ describe('pickWeighted', () => {
       const c = pickWeighted(ROSTER, random);
       counts[c.rarity] = (counts[c.rarity] ?? 0) + 1;
     }
-    expect(counts[5]).toBeGreaterThan(counts[4]);
-    expect(counts[4]).toBeGreaterThan(counts[3]);
-    expect(counts[3]).toBeGreaterThan(counts[2]);
-    expect(counts[2]).toBeGreaterThan(counts[1]);
+    expect(counts[1]).toBeGreaterThan(counts[2]);
+    expect(counts[2]).toBeGreaterThan(counts[3]);
+    expect(counts[3]).toBeGreaterThan(counts[4]);
+    expect(counts[4]).toBeGreaterThan(counts[5]);
   });
 });
 
 describe('dropOdds', () => {
-  it('adds up to 1 on every Path, and Premium raises the 1★ chance', () => {
+  it('adds up to 1 on every Path, and Premium raises the 5★ chance', () => {
     for (const d of ['physical', 'spiritual'] as const) {
       const free = dropOdds(d, 'free');
       const sum = Object.values(free).reduce((a, b) => a + b, 0);
       expect(sum).toBeCloseTo(1);
-      expect(dropOdds(d, 'premium')[1]).toBeGreaterThan(free[1]);
+      expect(dropOdds(d, 'premium')[5]).toBeGreaterThan(free[5]);
     }
   });
 });

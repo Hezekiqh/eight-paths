@@ -104,8 +104,8 @@ export function CollectionGrid({ entries: all }: { entries: CollectionEntry[] })
   const [rarity, setRarity] = useState<Rarity | null>(null);
   const [alignment, setAlignment] = useState<Alignment | null>(null);
   const alignments = ALIGNMENTS.filter(([a]) => all.some((e) => e.companion.alignment === a));
-  // Rarest first: 1★ Legendary, then Epic, Rare, Uncommon, Common.
-  const rarities = [...new Set(all.map((e) => e.companion.rarity))].sort((a, b) => a - b);
+  // Rarest first: 5★ Legendary, then Epic, Rare, Uncommon, Common.
+  const rarities = [...new Set(all.map((e) => e.companion.rarity))].sort((a, b) => b - a);
   // Heroes you have come first (in number order), so a new player's first page shows the core eight.
   const entries = all
     .filter(

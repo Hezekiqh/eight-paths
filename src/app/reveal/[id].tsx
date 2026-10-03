@@ -46,8 +46,8 @@ const WIGGLE_FIRST = 0.3;
 const WIGGLE_EVERY = 2.1; // while waiting for the tap
 
 /**
- * How grand each hatch is. The joke runs backwards: a 5★ Common is barely an
- * event, and a 1★ Legendary is outrageous. Each step rarer adds a layer.
+ * How grand each hatch is: a 1★ Common is barely an event, and a 5★ Legendary
+ * is outrageous. Each star more adds a layer.
  */
 type Flair = {
   headline: string;
@@ -67,7 +67,7 @@ type Flair = {
   legendary: boolean;
 };
 const FLAIR: Record<Rarity, Flair> = {
-  5: {
+  1: {
     headline: 'A cocoon.',
     impact: false,
     shake: 0.35,
@@ -79,7 +79,7 @@ const FLAIR: Record<Rarity, Flair> = {
     sparkles: false,
     legendary: false,
   },
-  4: {
+  2: {
     headline: 'Someone is waking up.',
     impact: false,
     shake: 0.6,
@@ -103,7 +103,7 @@ const FLAIR: Record<Rarity, Flair> = {
     sparkles: false,
     legendary: false,
   },
-  2: {
+  4: {
     headline: 'SOMEONE IS\nWAKING UP!',
     impact: true,
     shake: 1.0,
@@ -115,7 +115,7 @@ const FLAIR: Record<Rarity, Flair> = {
     sparkles: true,
     legendary: false,
   },
-  1: {
+  5: {
     headline: 'SOMETHING ANCIENT\nSTIRS…',
     impact: true,
     shake: 1.6,
@@ -228,7 +228,7 @@ function Twinkle({
  * their home realm: the camera slams in on a cocoon ("Someone is waking
  * up!"), which wiggles until the player taps. The tap sets off a shake that
  * cracks the silk; then silence, an eye opens and looks out, and the silk
- * bursts: a flash, shards and the character, with sparkles for a rare one (1★ or 2★). The next
+ * bursts: a flash, shards and the character, with sparkles for a rare one (4★ or 5★). The next
  * tap opens their collection entry. `preview` (from the dev test button)
  * plays it without marking anyone as revealed.
  */
@@ -538,7 +538,7 @@ export default function RevealScreen() {
           <Text
             style={[
               styles.headline,
-              companion.rarity >= 4
+              companion.rarity <= 2
                 ? { fontSize: 16 * px, lineHeight: 20 * px }
                 : { fontSize: 26 * px, lineHeight: 30 * px },
               flair.legendary && { color: '#FFD27A' },

@@ -16,7 +16,7 @@ export const EMOTIONAL = {
   },
   juniper: {
     number: 42,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Juniper',
     fullName: 'Juniper Wick',
@@ -28,7 +28,7 @@ export const EMOTIONAL = {
   },
   corwin: {
     number: 95,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Evil',
     name: 'Captain Corwin',
     dimension: 'emotional',
@@ -39,7 +39,7 @@ export const EMOTIONAL = {
   },
   lark: {
     number: 94,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Lark',
     dimension: 'emotional',
@@ -50,7 +50,7 @@ export const EMOTIONAL = {
   },
   dot: {
     number: 45,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Chaotic Good',
     name: 'Dot',
     dimension: 'emotional',
@@ -61,7 +61,7 @@ export const EMOTIONAL = {
   },
   rowan: {
     number: 16,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Rowan',
     fullName: 'Rowan Ashdown',
@@ -84,7 +84,7 @@ export const EMOTIONAL = {
   },
   teodor: {
     number: 86,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'Teodor',
     fullName: 'Teodor Grim',
@@ -96,7 +96,7 @@ export const EMOTIONAL = {
   },
   nell: {
     number: 43,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Nell',
     fullName: 'Nell Honeysuckle',
@@ -108,7 +108,7 @@ export const EMOTIONAL = {
   },
   bartholomew: {
     number: 7,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Bartholomew',
     dimension: 'emotional',
@@ -119,7 +119,7 @@ export const EMOTIONAL = {
   },
   iris: {
     number: 79,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Neutral',
     name: 'Iris',
     fullName: 'Iris Calloway',
@@ -131,7 +131,7 @@ export const EMOTIONAL = {
   },
   willa: {
     number: 54,
-    rarity: 5,
+    rarity: 1,
     alignment: 'True Neutral',
     name: 'Willa',
     fullName: 'Willa Stillpond',
@@ -143,7 +143,7 @@ export const EMOTIONAL = {
   },
   kaito: {
     number: 40,
-    rarity: 1,
+    rarity: 5,
     alignment: 'Neutral Good',
     name: 'Master Kaito',
     dimension: 'emotional',

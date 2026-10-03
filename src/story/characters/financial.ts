@@ -16,7 +16,7 @@ export const FINANCIAL = {
   },
   penny: {
     number: 33,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Good',
     name: 'Penny',
     fullName: 'Penny Vell',
@@ -28,7 +28,7 @@ export const FINANCIAL = {
   },
   tithe: {
     number: 24,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Neutral',
     name: 'Countess Tithe',
     fullName: 'Countess Constance Tithe',
@@ -40,7 +40,7 @@ export const FINANCIAL = {
   },
   aubrey: {
     number: 46,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Good',
     name: 'Lord Aubrey',
     fullName: 'Lord Aubrey Finch',
@@ -52,7 +52,7 @@ export const FINANCIAL = {
   },
   wendel: {
     number: 41,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Good',
     name: 'Wendel',
     fullName: 'Wendel Coin',
@@ -64,7 +64,7 @@ export const FINANCIAL = {
   },
   saoirse: {
     number: 60,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Saoirse',
     fullName: 'Saoirse Thrift',
@@ -76,7 +76,7 @@ export const FINANCIAL = {
   },
   hamish: {
     number: 47,
-    rarity: 5,
+    rarity: 1,
     alignment: 'Neutral Good',
     name: 'Hamish',
     fullName: 'Hamish Budge',
@@ -88,7 +88,7 @@ export const FINANCIAL = {
   },
   priya: {
     number: 97,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Lawful Neutral',
     name: 'Priya',
     fullName: 'Priya Ledgerlight',
@@ -100,7 +100,7 @@ export const FINANCIAL = {
   },
   gus: {
     number: 56,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Gus',
     fullName: 'Gus Tallow',
@@ -112,7 +112,7 @@ export const FINANCIAL = {
   },
   mirela: {
     number: 21,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Chaotic Neutral',
     name: 'Mirela',
     fullName: 'Mirela Goldvein',
@@ -124,7 +124,7 @@ export const FINANCIAL = {
   },
   ambrose: {
     number: 77,
-    rarity: 2,
+    rarity: 4,
     alignment: 'Lawful Good',
     name: 'Ambrose',
     fullName: 'Ambrose Tally',
@@ -136,7 +136,7 @@ export const FINANCIAL = {
   },
   marchbank: {
     number: 89,
-    rarity: 4,
+    rarity: 2,
     alignment: 'Neutral Good',
     name: 'Lady Marchbank',
     dimension: 'financial',
