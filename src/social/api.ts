@@ -433,19 +433,6 @@ export async function addFriendById(id: string) {
   await refreshFriends();
 }
 
-/**
- * Start over, on the server: erases this player's heroes, traded copies and
- * open trades (reset_game_data), so the leaderboard and friends see a fresh
- * start. The account itself stays. Does nothing when not signed in.
- */
-export async function resetGameData() {
-  if (useSocial.getState().status !== 'ready') return;
-  const { error } = await supabase().rpc('reset_game_data');
-  if (error) fail("Couldn't erase your heroes on the server. Check your connection and try again.");
-  useSocial.setState((s) => ({ resets: s.resets + 1, stats: {} }));
-  await refreshStats().catch(() => {});
-}
-
 export async function removeFriend(id: string) {
   const { error } = await supabase().rpc('remove_friend', { friend: id });
   if (error) fail(OFFLINE);
