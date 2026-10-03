@@ -1,158 +1,115 @@
-import { ABOUT_ASK, GOSSIP_ASK } from './talk';
-import { loreId, type LoreEntry } from './lore';
+import { talkedId, type LoreEntry } from './lore';
 
-// The World menu's lore: the story of the Kingdom, told in hidden blocks. Each
-// block appears once a character has told you it (see lore.ts), in whatever
-// order you hear them, so gaps show where someone is still to be found.
-// Spoiler rule (LORE.md): blocks only say what some character says.
+// The World menu's Story scroll: how the Mad King nearly plunged the eight
+// kingdoms into war, until the Shadow Monarch took him and set up a puppet king.
+// It's told in hidden blocks, a sentence or two for each person you talk to
+// (lore.ts talkedId), in whatever order you meet them, so the gaps show who's
+// still to be found. All of it is about a minute's read.
 
 /** A piece of the story, shown once you've heard any one of `from` (lore ids: who, asked what). */
 export type Block = { from: string[]; text: string };
 export type Chapter = { title: string; blocks: Block[] };
 
-const said = (speaker: string, ask: string) => loreId(speaker, ask);
+/** A block uncovered by talking to this person at all (lore.ts TALKED). */
+const told = (speaker: string) => talkedId(speaker);
 
 export const TALE: Chapter[] = [
   {
-    title: 'Where you woke',
+    title: 'The Mad King',
     blocks: [
+      { from: [told('The Keeper')], text: 'Long ago there were eight kingdoms, and for a while they kept the peace.' },
       {
-        from: [said('The Keeper', 'Where am I?')],
-        text: 'You woke in the Archive, a pocket dimension, where the Keeper has kept you company for five hundred years. It’s a long story, he says.',
+        from: [told('Old Wenna')],
+        text: 'The kingdom east of the old fort was ruled by the Hales. The last of them, Osric, was not well.',
       },
       {
-        from: [said('The Keeper', 'Who are you?'), said('The Keeper', 'How do you know me?')],
-        text: 'Its Keeper says he’s an old friend. He knows more than he’s saying, and he says who you were is yours to find.',
+        from: [told('Nana Birch')],
+        text: 'He used to ask the cook how the soup was. Then he stopped asking, and began counting swords.',
+      },
+      {
+        from: [told('Madame Oriel')],
+        text: 'He saw enemies in every window, and the Mage Kingdom most of all.',
+      },
+      {
+        from: [told('Lieutenant Arden')],
+        text: 'At every supper he talked of marching on the mages, smiling. His officers stopped smiling back.',
+      },
+      {
+        from: [told('Sergeant Holt')],
+        text: 'Every forge beat out blades for him, and the other seven kingdoms sharpened theirs.',
+      },
+      {
+        from: [told('Old Fen')],
+        text: 'The eight kingdoms stood one order away from a war none of them would survive.',
       },
     ],
   },
   {
-    title: 'The old Kingdom',
+    title: 'The figure in the dark',
     blocks: [
+      { from: [told('Private Dunn')], text: 'On the night of the march, the drums never sounded.' },
       {
-        from: [said('Old Wenna', 'The Kingdom?')],
-        text: 'The Kingdom east of the old fort once had another name, a pretty one. Nobody says it any more.',
+        from: [told('Sexton Rook')],
+        text: 'A figure walked into the war hall out of the darkness, and the torches threw no shadow of it.',
       },
       {
-        from: [said('Nana Birch', 'Tell me about the old days.')],
-        text: 'It was ruled by the Hales. The last Hale king asked the cook how the soup was, and went mad as a bag of cats by the end.',
+        from: [told("The Chaplain's Echo")],
+        text: 'By morning the Mad King was gone. No body, no trial, no bells: only an empty throne.',
       },
       {
-        from: [said('Old Harrow', 'Tell me about Sweetheart.')],
-        text: 'The royal smith, Old Harrow, made his finest sword, Sweetheart, for a big lad with the biggest hands he ever saw and the smallest courage. It is the only sword he made that stayed clean.',
+        from: [told('Hugo Thornbeard')],
+        text: 'The little prince was gone too, though no one could ever say where.',
       },
       {
-        from: [said('Hugo Thornbeard', GOSSIP_ASK), said('Private Dunn', GOSSIP_ASK)],
-        text: 'The little prince hid in the hedge maze instead of drilling.',
-      },
-      {
-        from: [said('The Quartermaster', "Who's snoring?")],
-        text: 'Baron Plush, lord of the court, told everyone to rest before the war. They rested. Then there was no war, and then there was nothing.',
-      },
-      {
-        from: [said('Old Fen', GOSSIP_ASK)],
-        text: 'Behind a boulder in the rock by the old fort, someone once found a child’s toy sword, and put it back.',
+        from: [told('Tallow')],
+        text: 'Those who saw it only ever whispered its name: the Shadow Monarch.',
       },
     ],
   },
   {
-    title: 'The king who came',
+    title: 'The puppet king',
     blocks: [
       {
-        from: [said('Captain Varga', 'Who are you?')],
-        text: 'Then a new king took the crown with his own two hands.',
+        from: [told('Barnaby Loudmouth')],
+        text: 'On the empty throne, the Shadow Monarch set a new king: Kaldor, the champion of the pit.',
       },
       {
-        from: [said('Old Harrow', GOSSIP_ASK), said('Gert', GOSSIP_ASK)],
-        text: 'Once he had won, he closed the Trial of Arms, so nobody could challenge him.',
+        from: [told('Gert')],
+        text: 'Kaldor was strength itself, made king to grow stronger still.',
       },
       {
-        from: [said('Barnaby Loudmouth', GOSSIP_ASK)],
-        text: 'The last to try was Aurek the Tall, who almost won and scarred the king’s face. The king… kept him.',
+        from: [told('Captain Varga')],
+        text: 'He built the army stone by stone, and named every street after himself.',
       },
       {
-        from: [said('Hugo Thornbeard', "Where's the old law?")],
-        text: 'The old law is carved at the heart of the hedge maze. The king ordered the maze left wild, so nobody would read it.',
+        from: [told('Old Harrow')],
+        text: 'He does not age. He does not fall. People say that he, too, casts no shadow.',
       },
       {
-        from: [said('Hesper', GOSSIP_ASK)],
-        text: 'He names everything after himself. There is a Kaldor Street that crosses Kaldor Street.',
+        from: [told('Sergeant Maelis')],
+        text: 'The horde grew, the pit filled, and the kingdom forgot its old name.',
       },
     ],
   },
   {
-    title: "The king who doesn't age",
+    title: 'Why',
     blocks: [
       {
-        from: [said('Nana Birch', GOSSIP_ASK), said('Madame Oriel', GOSSIP_ASK)],
-        text: 'The king hasn’t aged a day in five hundred years, and nobody finds that odd.',
+        from: [told('Mira')],
+        text: 'Why would a shadow make a king? Some say to rule. Some say to stop the war.',
       },
       {
-        from: [said('Mira', GOSSIP_ASK)],
-        text: 'The horde says he casts no shadow. Everybody casts a shadow. Somebody’s lying.',
+        from: [told('The Quartermaster')],
+        text: 'In the old stores is a scrap of paper, the same words written over and over:',
+      },
+      { from: [told('Bo Tumble')], text: '“I need to be strong. I need to protect them.”' },
+      {
+        from: [told('Hesper')],
+        text: 'A hundred years ago the Shadow Monarch fell silent. The puppet king has ruled alone ever since.',
       },
       {
-        from: [said('Tessa', GOSSIP_ASK)],
-        text: 'He eats alone: fourteen loaves, never shared.',
-      },
-      {
-        from: [said('Grask', 'Does the king ever sleep?')],
-        text: 'He never sleeps.',
-      },
-      {
-        from: [said('Hugo Thornbeard', 'Who put the head by the rose?')],
-        text: 'By a white rose in the maze sits a stone king’s head. The gardener found it in the pit’s drain, and couldn’t leave a king looking at a drain.',
-      },
-      {
-        from: [said('Pim', 'Buy the most expensive one.')],
-        text: 'The dearest rumour in the market: the prince will come back up out of the ground, with a giant’s beard. The seller swears he made it up.',
-      },
-    ],
-  },
-  {
-    title: 'Year 500',
-    blocks: [
-      {
-        from: [said('Sergeant Holt', 'What is this camp?')],
-        text: 'Soldiers who wouldn’t fight for the barbarian king, or against him, wait in a camp for the right moment.',
-      },
-      {
-        from: [said('Mira', 'Going back where?')],
-        text: 'In the town, families cheer at the pit because the horde tells them to.',
-      },
-      {
-        from: [said('The Cage Guard', "Who's in the cages?")],
-        text: 'Whoever won’t cheer goes in a cage.',
-      },
-      {
-        from: [said('Jory', GOSSIP_ASK)],
-        text: 'Even Millbrook, with nothing the king wants, lost every bit of iron to his soldiers: pots, nails, a grandad’s teeth.',
-      },
-      {
-        from: [said('Captain Varga', 'Will the march really come?')],
-        text: 'And the horde waits for the march. The king says they are finally strong enough.',
-      },
-    ],
-  },
-  {
-    title: 'The last message',
-    blocks: [
-      {
-        from: [said('Hesper', 'What is this place?')],
-        text: 'Couriers once ran post between every kingdom, the fastest people alive.',
-      },
-      {
-        from: [said('Pell', "Who's the best courier?")],
-        text: 'The fastest of them all ran the last message of the old world, and never delivered it. They say she is still out there, the letter still sealed.',
-      },
-    ],
-  },
-  {
-    title: 'The big man',
-    blocks: [
-      {
-        from: [said('Brannoc', ABOUT_ASK)],
-        text: 'The big man in your party calls himself Brannoc Hale, and carries a greatsword named Sweetheart. Hardly a scratch on her.',
+        from: [told('Felix')],
+        text: 'A king with all that strength, and no one left to answer to. What could be more fun?',
       },
     ],
   },
