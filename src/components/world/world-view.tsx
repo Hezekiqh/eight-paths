@@ -68,6 +68,7 @@ import { playSound, type Effect } from '@/audio';
 import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
+import { cameoAt } from '@/world/step-aside';
 
 const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
 const WALKERS_IMAGE = require('@/assets/world/walkers.png');
@@ -153,6 +154,8 @@ export type WorldSim = {
   dodgePressed: SharedValue<boolean>;
   /** Drowsiness in Baron Plush's fight, 0 to 1. */
   sleepy: SharedValue<number>;
+  /** A field move playing out (step-aside.ts): the walker steps aside and a party member walks out. Empty: none. */
+  cameo: SharedValue<number[]>;
 };
 
 export function useWorldSim(start: { x: number; y: number; facing: Facing }, npcs: NpcObject[]): WorldSim {
@@ -177,6 +180,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     charge: useSharedValue(0),
     dodgePressed: useSharedValue(false),
     sleepy: useSharedValue(0),
+    cameo: useSharedValue<number[]>([]),
   };
 }
 
@@ -344,7 +348,8 @@ export function WorldView({
     [map, sim.npcIds],
   );
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0), [map]);
-  const count = partyRows.length + npcs.length + map.enemies.length;
+  // One more for a party member stepping in for a job (a cameo).
+  const count = partyRows.length + npcs.length + map.enemies.length + 1;
 
   const camX = useSharedValue(0);
   const camY = useSharedValue(0);
@@ -665,6 +670,19 @@ export function WorldView({
         const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
         ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
       }
+      // A field move: the lead sidesteps while the party member the job needs walks into their place.
+      const cameo = sim.cameo.get();
+      let asideX = 0;
+      let asideY = 0;
+      if (cameo.length === 9) {
+        const pose = cameoAt(cameo, realDt);
+        if (pose[0] !== cameo[8]) {
+          sim.cameo.set([cameo[0], cameo[1], cameo[2], cameo[3], cameo[4], cameo[5], cameo[6], cameo[7], pose[0]]);
+        }
+        asideX = pose[1];
+        asideY = pose[2];
+        if (pose[6] === 1) ents.push([cameo[0], cameo[7], pose[5], pose[3], pose[4], 0, 1]);
+      }
       // the lead goes last so they're drawn on top of a follower standing in the same spot;
       // just hurt, they blink until they can be hurt again; striking, they lean into the blow
       const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
@@ -677,8 +695,8 @@ export function WorldView({
           partyRows[0],
           f,
           walkFrame(sim.walked.get(), moving || now.roll > 0),
-          sim.x.get() + lx,
-          sim.y.get() + ly,
+          sim.x.get() + lx + asideX,
+          sim.y.get() + ly + asideY,
           0,
           1,
         ]);

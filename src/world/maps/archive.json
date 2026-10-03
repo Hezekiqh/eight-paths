@@ -171,7 +171,8 @@
         "You're awake.",
         "Good."
       ],
-      "comesAfter": "met:oren"
+      "comesAfter": "met:oren",
+      "goneAfter": "left:oren"
     },
     {
       "id": "pip",
@@ -185,7 +186,8 @@
       "lines": [
         "There you are! I wrote you a welcome song. It's mostly about sleeping. Very restful chorus."
       ],
-      "comesAfter": "met:pip"
+      "comesAfter": "met:pip",
+      "goneAfter": "left:pip"
     },
     {
       "id": "tamsin",
@@ -199,7 +201,8 @@
       "lines": [
         "Mind that shelf. It wobbles. I'll fix it. Later."
       ],
-      "comesAfter": "met:tamsin"
+      "comesAfter": "met:tamsin",
+      "goneAfter": "left:tamsin"
     },
     {
       "id": "moss",
@@ -213,7 +216,8 @@
       "lines": [
         "Tuft noticed you before I did. He notices everything."
       ],
-      "comesAfter": "met:moss"
+      "comesAfter": "met:moss",
+      "goneAfter": "left:moss"
     },
     {
       "id": "board",

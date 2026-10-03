@@ -4,6 +4,10 @@ import { KEEPER_TALK } from './keeper-talk-lines';
 import { CHESTS, chestFlag } from './items';
 import { fill, type HabitMemory } from './memory';
 
+/** The Keeper's wobbly-shelf line, after Tamsin goes home (draft, WORLDS.md). */
+const TAMSIN_GONE =
+  'Tamsin came by for her other spanner before she went. She fixed the wobbly shelf while she was here. I miss the wobble.';
+
 // What the Keeper says when you come back to the Archive: one new thing each
 // time you talk to him, the most important first (like Hades' House), then
 // his usual questions. Each reaction plays once (a keeper:<id> flag), except
@@ -102,6 +106,9 @@ export function keeperTalk(c: KeeperContext): { lines: string[]; said: string | 
   }
   const habit = habitLine(c.memory, c.flags, c.day);
   if (habit) return { lines: [habit.line], said: `keeper:${habit.id}` };
-  const ambient = KEEPER_TALK.ambient;
+  // Once Tamsin has gone home (the party split), she isn't about to fix anything here.
+  const ambient = c.flags.includes('left:tamsin')
+    ? KEEPER_TALK.ambient.map((l) => (l.startsWith('Tamsin says') ? TAMSIN_GONE : l))
+    : KEEPER_TALK.ambient;
   return { lines: ambient.length > 0 ? [ambient[c.day % ambient.length]] : [], said: null };
 }

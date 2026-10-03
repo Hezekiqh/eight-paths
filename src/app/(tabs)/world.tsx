@@ -55,7 +55,7 @@ import {
   type Requirement,
   type XpTotals,
 } from '@/world/progress';
-import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { PORTAL_HOME, SEASON_END, leftFlag, partySplit, seasonFinale, winScene, type Outcome } from '@/world/scenes';
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
@@ -66,6 +66,8 @@ import { keeperQuestions } from '@/world/keeper-advice';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { walkersFor, worldHero, type HeroId } from '@/world/hero';
+import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
+import { WALKER_ROWS } from '@/world/walkers';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import { ATTACKS, attackFor, damageFor, drowsyRate, levelHearts, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
@@ -228,10 +230,20 @@ function useParty(): HeroId[] {
   const classDimension = useGameStore((s) => s.player?.classDimension ?? 'physical');
   const owned = useGameStore((s) => s.owned);
   const origin = useGameStore((s) => s.player?.origin);
+  const gone = useLeft();
   return useMemo(
-    () => [worldHero(picked, party, classDimension, owned, origin)],
-    [picked, party, classDimension, owned, origin],
+    () => [worldHero(picked, party, classDimension, owned, origin, gone)],
+    [picked, party, classDimension, owned, origin, gone],
   );
+}
+
+/**
+ * The `left:<id>` flags of anyone who went home when the party split, so they
+ * no longer walk. Read as one string, so other flags don't re-pick who walks.
+ */
+function useLeft(): string[] {
+  const left = useWorldStore((s) => s.flags.filter((f) => f.startsWith('left:')).join(','));
+  return useMemo(() => (left ? left.split(',') : []), [left]);
 }
 
 /**
@@ -532,7 +544,8 @@ function World({
     });
   }, [travel, map, hero, heroLevel]);
   const setHero = useWorldStore((s) => s.setHero);
-  const walkers = useMemo(() => walkersFor(gameParty, owned), [gameParty, owned]);
+  const gone = useLeft();
+  const walkers = useMemo(() => walkersFor(gameParty, owned, gone), [gameParty, owned, gone]);
   const onPlates = useCallback(() => {
     if (!map.platesFlag) return;
     setFlag(map.platesFlag);
@@ -718,6 +731,27 @@ function useAct(
   const busy = useRef(false);
   const act = useCallback(() => {
     if (busy.current) return;
+    // A job someone else does, like a field move: the walker steps aside and they walk out
+    // (step-aside.ts), then the job's lines play. They step back in when the lines close.
+    const fieldMove = (doer: HeroId, said: Dialogue) => {
+      if (doer === hero) return setDialogue(said);
+      busy.current = true;
+      sim.frozen.set(true);
+      sim.cameo.set(newCameo(WALKER_ROWS[doer], sim.x.get(), sim.y.get(), sim.facing.get()));
+      playSound('select');
+      haptics.select();
+      setTimeout(() => {
+        busy.current = false;
+        const after = said.then;
+        setDialogue({
+          ...said,
+          then: () => {
+            sim.cameo.set([]);
+            after?.();
+          },
+        });
+      }, STEP_ASIDE_SECONDS * 1000 + 200);
+    };
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
     // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
@@ -742,7 +776,7 @@ function useAct(
           y: Math.floor((sim.y.get() - 1) / TILE),
           facing: FACINGS[facing],
         };
-        setDialogue({
+        fieldMove(doer, {
           speaker: thing.name,
           lines: [...stepAside(hero, doer), ...job.done.map((l) => l.replace('{name}', who.name))],
           then: opens ? () => onTravel(here) : undefined,
@@ -911,13 +945,23 @@ function useAct(
           setFlag(keepsakeFlag('first-memory'));
           haptics.celebrate();
           playSound('levelUp');
+          // The party splits here: the four who aren't starters say goodbye, and are gone once it closes.
+          const split = partySplit(flags);
+          const parted = () => split.leaving.forEach((id) => setFlag(leftFlag(id)));
           setDialogue({
             lines: [
               ...seasonFinale(memory, flags),
               `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
+              ...split.lines,
               ...PORTAL_HOME.lines,
             ],
-            choices: home,
+            choices: home.map((c) => ({
+              ...c,
+              then: () => {
+                parted();
+                c.then();
+              },
+            })),
           });
         }
       } else
@@ -953,7 +997,7 @@ function useAct(
           facing: FACINGS[facing],
         };
         const who = COMPANIONS[doer];
-        setDialogue({
+        fieldMove(doer, {
           lines: [...stepAside(hero, doer), ...job.done.map((l) => l.replace('{name}', who.name))],
           then: () => onTravel(here),
         });
@@ -1019,7 +1063,9 @@ function needsFlag(needs: Requirement, flag: string): boolean {
  */
 function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
   const { party, owned } = useGameStore.getState();
-  return walkersFor(party, owned).find((h) => h !== hero && COMPANIONS[h].dimension === path);
+  return walkersFor(party, owned, useWorldStore.getState().flags).find(
+    (h) => h !== hero && COMPANIONS[h].dimension === path,
+  );
 }
 
 /** "Ysolde steps aside. Brannoc steps up!": said first when someone else does the job. */
