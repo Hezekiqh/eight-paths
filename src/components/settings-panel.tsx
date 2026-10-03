@@ -73,11 +73,17 @@ export function SettingsPanel() {
     haptics.tap();
     Alert.alert(
       'Start over?',
-      "Every quest, level, hero and place in the Other World on this phone is erased, and you begin again from the very start. Your account and Premium stay. This can't be undone.",
+      profile
+        ? "Every quest, level, hero and place in the Other World is erased, on this phone and on the leaderboard, and you begin again from the very start. Your account, friends and Premium stay. This can't be undone."
+        : "Every quest, level, hero and place in the Other World on this phone is erased, and you begin again from the very start. Your account and Premium stay. This can't be undone.",
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Back up first', onPress: shareBackup },
-        { text: 'Start over', style: 'destructive', onPress: startOver },
+        {
+          text: 'Start over',
+          style: 'destructive',
+          onPress: () => startOver().catch((e: Error) => Alert.alert("Couldn't start over", e.message)),
+        },
       ],
     );
   };

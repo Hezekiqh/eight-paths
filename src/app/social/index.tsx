@@ -204,7 +204,7 @@ function ChooseUsername({ color }: { color: string }) {
         autoCorrect={false}
         style={styles.input}
       />
-      <Text style={styles.hint}>Joining with a friend&apos;s code wakes a hero for them.</Text>
+      <Text style={styles.hint}>Joining with a friend&apos;s code wakes a guaranteed 5★ hero for them.</Text>
       <Button title={busy ? 'Checking…' : 'Claim name'} onPress={claim} color={color} disabled={busy || !name.trim()} />
     </View>
   );

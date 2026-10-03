@@ -152,6 +152,8 @@ type Actions = {
   markRevealed: (ids: CharacterId[]) => void;
   /** Unlocks characters as a gift (a friend joined): gives each a full set of shards. */
   giftCharacters: (ids: CharacterId[]) => void;
+  /** An extra copy of heroes already owned, each with its hatch (an invite reward once every 5★ is awake). */
+  giftCopies: (ids: CharacterId[]) => void;
   /**
    * The Keeper's question: who the player wakes as (one of STARTERS, once). They
    * take their Path's party slot, and wake now if a habit is already done.
@@ -498,6 +500,14 @@ export const useGameStore = create<GameState>()(
           const shards = { ...s.shards };
           for (const id of ids) shards[id] = Math.max(shards[id] ?? 0, SHARDS_TO_UNLOCK);
           return { shards };
+        }),
+
+      giftCopies: (ids) =>
+        set((s) => {
+          if (!s.owned || ids.length === 0) return s;
+          const owned = { ...s.owned };
+          for (const id of ids) owned[id] = (owned[id] ?? 0) + 1;
+          return { owned, drops: [...s.drops, ...ids] };
         }),
 
       chooseOrigin: (id) => {

@@ -41,10 +41,12 @@ export function useSocialSync() {
   useTradeSync(status === 'ready' ? userId : null);
   useTradeMoments();
 
-  // A different account starts from nothing reported.
+  // A different account, or Start over, starts from nothing reported.
+  const resets = useSocial((s) => s.resets);
   useEffect(() => {
     reported.current = {};
-  }, [userId]);
+    lastSnapshot.current = '';
+  }, [userId, resets]);
 
   useEffect(() => {
     if (socialEnabled) startSocial();

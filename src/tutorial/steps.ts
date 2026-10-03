@@ -38,7 +38,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     route: '/social-tab',
     target: 'social',
-    line: 'No one walks alone for long. Share your friend code and see how others are doing.',
+    line: 'No one walks alone for long. Find friends by name, or share your code: each friend who joins wakes a 5★ hero for you.',
   },
   {
     route: '/journey',

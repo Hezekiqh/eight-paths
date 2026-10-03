@@ -410,6 +410,42 @@ export async function addFriend(code: string): Promise<string> {
   return data as string;
 }
 
+/** Someone found by username (search_players): never yourself or anyone blocked. */
+export type FoundPlayer = { id: string; username: string; founderNumber: number | null; isFriend: boolean };
+
+/** Players whose username starts with `query` (2+ letters), up to 10, an exact match first. */
+export async function searchPlayers(query: string): Promise<FoundPlayer[]> {
+  if (query.trim().length < 2) return [];
+  const { data, error } = await supabase().rpc('search_players', { query: query.trim() });
+  if (error) fail(OFFLINE);
+  return (data as { id: string; username: string; founder_number: number | null; is_friend: boolean }[]).map((r) => ({
+    id: r.id,
+    username: r.username,
+    founderNumber: r.founder_number,
+    isFriend: r.is_friend,
+  }));
+}
+
+/** Adds someone found by username as a friend (both become friends at once). */
+export async function addFriendById(id: string) {
+  const { error } = await supabase().rpc('add_friend_by_id', { friend: id });
+  if (error) fail(error.message.includes('unknown_code') ? 'That player is no longer around.' : OFFLINE);
+  await refreshFriends();
+}
+
+/**
+ * Start over, on the server: erases this player's heroes, traded copies and
+ * open trades (reset_game_data), so the leaderboard and friends see a fresh
+ * start. The account itself stays. Does nothing when not signed in.
+ */
+export async function resetGameData() {
+  if (useSocial.getState().status !== 'ready') return;
+  const { error } = await supabase().rpc('reset_game_data');
+  if (error) fail("Couldn't erase your heroes on the server. Check your connection and try again.");
+  useSocial.setState((s) => ({ resets: s.resets + 1, stats: {} }));
+  await refreshStats().catch(() => {});
+}
+
 export async function removeFriend(id: string) {
   const { error } = await supabase().rpc('remove_friend', { friend: id });
   if (error) fail(OFFLINE);
@@ -478,7 +514,7 @@ export async function deleteAccount(): Promise<'deleted' | 'canceled'> {
 /** Opens the share sheet with a friend code and its invite link. */
 export function shareFriendCode(code: string) {
   return Share.share({
-    message: `Walk the Eight Paths with me. Join with my friend code ${code} and we both wake a hero.\neightpaths://friend/${code}`,
+    message: `Walk the Eight Paths with me. Join with my friend code ${code} and I wake a guaranteed 5★ hero.\neightpaths://friend/${code}`,
   }).catch(() => {});
 }
 

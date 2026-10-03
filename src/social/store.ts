@@ -35,6 +35,8 @@ type SocialState = {
   pendingFriendCode: string | null;
   /** Open trade offers this player sent or received, newest first. */
   offers: TradeOffer[];
+  /** Bumped by Start over (resetGameData), so sync forgets what it already sent. */
+  resets: number;
 };
 
 /** Social state for this launch. The session itself lives in Supabase's storage. */
@@ -46,4 +48,5 @@ export const useSocial = create<SocialState>(() => ({
   shareConsistency: true,
   pendingFriendCode: null,
   offers: [],
+  resets: 0,
 }));
