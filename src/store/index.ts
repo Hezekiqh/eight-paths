@@ -4,6 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import {
   DAILY,
+  DEFAULT_QUEST_SORT,
+  type QuestSort,
   STARTING_REST_TOKENS,
   daysShownUp,
   milestoneCrossed,
@@ -82,6 +84,8 @@ export type GameData = {
    * Today then follows the order they usually do their quests in.
    */
   questOrder: string[] | null;
+  /** How Today's list is ordered: usual (auto), dragged (mine) or as finished today; optionally unfinished on top. */
+  questSort: QuestSort;
   /**
    * Net copies of each hero moved in (+) or out (-) by trade, and the ids of
    * the server's trade moves already applied (see trades.ts).
@@ -136,7 +140,9 @@ type Actions = {
   setSmartReminders: (on: boolean) => void;
   setHapticsEnabled: (on: boolean) => void;
   /** Today's quests in the player's own order, or null to go back to their usual order. */
+  /** Saves a dragged order (and switches to it), or null to go back to auto ordering. */
   setQuestOrder: (ids: string[] | null) => void;
+  setQuestSort: (sort: Partial<QuestSort>) => void;
   setObjectivesLandscape: (on: boolean) => void;
   changeClass: (dimension: Dimension) => void;
   /** Puts an unlocked character in their Path's party slot. False if they're still locked. */
@@ -196,6 +202,7 @@ export const initialData: GameData = {
   drops: [],
   redrawn: [],
   questOrder: null,
+  questSort: DEFAULT_QUEST_SORT,
   traded: {},
   tradeMoves: [],
 };
@@ -220,6 +227,7 @@ export function pickData(s: GameData): GameData {
     drops,
     redrawn,
     questOrder,
+    questSort,
     traded,
     tradeMoves,
   } = s;
@@ -241,6 +249,7 @@ export function pickData(s: GameData): GameData {
     drops,
     redrawn,
     questOrder,
+    questSort,
     traded,
     tradeMoves,
   };
@@ -338,6 +347,7 @@ export const useGameStore = create<GameState>()(
           drops: [],
           redrawn: [],
           questOrder: null,
+          questSort: DEFAULT_QUEST_SORT,
         });
       },
 
@@ -421,7 +431,9 @@ export const useGameStore = create<GameState>()(
       setSmartReminders: (smartReminders) =>
         set((s) => (s.player ? { player: { ...s.player, smartReminders } } : s)),
 
-      setQuestOrder: (questOrder) => set({ questOrder }),
+      setQuestOrder: (questOrder) =>
+        set((s) => ({ questOrder, questSort: { ...s.questSort, by: questOrder ? 'mine' : 'auto' } })),
+      setQuestSort: (sort) => set((s) => ({ questSort: { ...s.questSort, ...sort } })),
       setHapticsEnabled: (hapticsEnabled) => set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
 
       setObjectivesLandscape: (objectivesLandscape) =>

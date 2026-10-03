@@ -98,6 +98,31 @@ describe('game store', () => {
     expect(titles()).toEqual(['Move 30 min', 'Read 20 min', 'Call a friend']);
     useGameStore.getState().setQuestOrder(null);
     expect(titles()[0]).toBe('Read 20 min');
+    expect(useGameStore.getState().questSort.by).toBe('auto');
+  });
+
+  it('can put unfinished quests on top, or order by when they were finished today', () => {
+    start();
+    const [, read] = useGameStore.getState().quests;
+    useGameStore.getState().addQuest({ title: 'Call a friend', dimension: 'social', repeatDays: [0, 1, 2, 3, 4, 5, 6] });
+    const call = useGameStore.getState().quests.at(-1)!;
+    const titles = () => selectTodayQuests(useGameStore.getState(), today).map((v) => v.quest.title);
+    expect(titles()).toEqual(['Read 20 min', 'Move 30 min', 'Call a friend']);
+    useGameStore.setState({
+      completions: [
+        { id: 'a', questId: call.id, dimension: 'social', date: today, xp: 10, at: 9 * 60 },
+        { id: 'b', questId: read.id, dimension: 'intellectual', date: today, xp: 10, at: 8 * 60 },
+      ],
+    });
+    // Unfinished on top: Move rises above the two already done, which keep their order.
+    useGameStore.getState().setQuestSort({ unfinishedFirst: true });
+    expect(titles()).toEqual(['Move 30 min', 'Read 20 min', 'Call a friend']);
+    // As finished today: Read (8:00), then Call (9:00), then the rest.
+    useGameStore.getState().setQuestSort({ by: 'done', unfinishedFirst: false });
+    expect(titles()).toEqual(['Read 20 min', 'Call a friend', 'Move 30 min']);
+    // Both: what's left first, then what's done in the order it was done.
+    useGameStore.getState().setQuestSort({ unfinishedFirst: true });
+    expect(titles()).toEqual(['Move 30 min', 'Read 20 min', 'Call a friend']);
   });
 
   it('completes the tutorial for class XP, then retires it', () => {

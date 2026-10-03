@@ -51,6 +51,7 @@ const valid = {
   drops: ['ottilie'],
   redrawn: [],
   questOrder: null,
+  questSort: { by: 'auto', unfinishedFirst: false },
   traded: {},
   tradeMoves: [],
 };
@@ -113,6 +114,7 @@ describe('sanitizeSave', () => {
         drops: [],
         redrawn: [],
         questOrder: null,
+        questSort: { by: 'auto', unfinishedFirst: false },
         traded: {},
         tradeMoves: [],
       });
@@ -191,5 +193,26 @@ describe('migrateSave', () => {
   it('keeps what it understands from a newer save', () => {
     const fromFuture = migrateSave({ ...valid, somethingNew: true }, 7, {}, 1);
     expect(fromFuture).toEqual(valid);
+  });
+});
+
+describe('v12: a choice of how Today is ordered', () => {
+  it('keeps a dragged order as the player\'s own, and starts everyone else on auto', () => {
+    expect(migrateSave({ ...valid, questOrder: ['q1'], questSort: undefined }, 11).questSort).toEqual({
+      by: 'mine',
+      unfinishedFirst: false,
+    });
+    expect(migrateSave({ ...valid, questSort: undefined }, 11).questSort).toEqual({ by: 'auto', unfinishedFirst: false });
+  });
+
+  it('repairs a damaged setting', () => {
+    expect(sanitizeSave({ ...valid, questSort: { by: 'sideways', unfinishedFirst: 'yes' } }).questSort).toEqual({
+      by: 'auto',
+      unfinishedFirst: false,
+    });
+    expect(sanitizeSave({ ...valid, questSort: { by: 'done', unfinishedFirst: true } }).questSort).toEqual({
+      by: 'done',
+      unfinishedFirst: true,
+    });
   });
 });

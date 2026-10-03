@@ -46,3 +46,30 @@ export function sortByHabitOrder<T>(items: T[], positionOf: (item: T) => number 
   const rank = (item: T) => positionOf(item) ?? Infinity;
   return [...items].sort((a, b) => rank(a) - rank(b) || 0);
 }
+
+/**
+ * How Today's list is ordered, picked on the Reorder screen:
+ * - `auto`: the order the player usually does their quests in (habitOrder), re-learned day by day.
+ * - `mine`: the order they dragged them into (questOrder).
+ * - `done`: today's finished quests first, in the order they were finished; the rest after, as `auto`.
+ * `unfinishedFirst` lifts everything not yet done today above what's done, keeping each part in order.
+ */
+export type QuestSort = { by: 'auto' | 'mine' | 'done'; unfinishedFirst: boolean };
+
+export const DEFAULT_QUEST_SORT: QuestSort = { by: 'auto', unfinishedFirst: false };
+
+/** When each quest was finished today, as a rank (earlier is smaller). Untimed completions keep the order they were saved in. */
+export function doneOrder(completions: Completion[], today: string): Map<string, number> {
+  const todays = completions
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => c.date === today)
+    .sort((a, b) => (a.c.at ?? 0) - (b.c.at ?? 0) || a.i - b.i);
+  const rank = new Map<string, number>();
+  for (const { c } of todays) if (!rank.has(c.questId)) rank.set(c.questId, rank.size);
+  return rank;
+}
+
+/** Not-done items first, done ones after; each part keeps its order. */
+export function unfinishedFirst<T>(items: T[], isDone: (item: T) => boolean): T[] {
+  return [...items.filter((i) => !isDone(i)), ...items.filter(isDone)];
+}

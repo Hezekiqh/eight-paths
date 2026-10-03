@@ -20,7 +20,10 @@ import {
   describeSchedule,
   dimOpacityByDimension,
   dimensionStreak,
+  DEFAULT_QUEST_SORT,
+  doneOrder,
   habitOrder,
+  unfinishedFirst,
   habitStreak,
   levelFromXp,
   overallLevelFromXp,
@@ -268,20 +271,29 @@ function groupByDimension(views: QuestView[]) {
 export type QuestGroup = ReturnType<typeof groupByDimension>[number];
 
 /**
- * Today's quests as one list. Once the player has dragged them into their own
- * order, that order; until then, the order they usually do them in (learned
- * from past days only, so it shifts day to day, not mid-session). Either way,
- * quests with no place yet follow, oldest first, so new ones land at the bottom.
+ * Today's quests as one list, ordered as the player picked (questSort): the
+ * order they usually do them in (learned from past days only, so it shifts
+ * day to day, not mid-session), their own dragged order, or today's finished
+ * ones first in the order they were finished. Quests with no place yet
+ * follow, oldest first, so new ones land at the bottom. With unfinishedFirst,
+ * whatever's still to do today moves above what's done.
  */
 export function selectTodayQuests(data: GameData, today: string): QuestView[] {
   const byAge = questsForDay(data.quests, today).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const views = byAge.map((q) => toQuestView(data, q, today));
-  if (data.questOrder) {
+  const sort = data.questSort ?? DEFAULT_QUEST_SORT;
+  const usual = habitOrder(data.completions, today);
+  let ordered: QuestView[];
+  if (sort.by === 'mine' && data.questOrder) {
     const index = new Map(data.questOrder.map((id, i) => [id, i]));
-    return sortByHabitOrder(views, (v) => index.get(v.quest.id));
+    ordered = sortByHabitOrder(views, (v) => index.get(v.quest.id));
+  } else if (sort.by === 'done') {
+    const finished = doneOrder(data.completions, today);
+    ordered = sortByHabitOrder(sortByHabitOrder(views, (v) => usual.get(v.quest.id)), (v) => finished.get(v.quest.id));
+  } else {
+    ordered = sortByHabitOrder(views, (v) => usual.get(v.quest.id));
   }
-  const order = habitOrder(data.completions, today);
-  return sortByHabitOrder(views, (v) => order.get(v.quest.id));
+  return sort.unfinishedFirst ? unfinishedFirst(ordered, (v) => v.done) : ordered;
 }
 
 export function selectAllQuestGroups(data: GameData, today: string): QuestGroup[] {
