@@ -10,11 +10,17 @@ Everything App Store Connect asks for, in the order it appears on **Distribution
 
 Use the **6.9" Display** slot (open **View All Sizes in Media Manager**). It covers 6.5", 6.7" and 6.9" iPhones, so the 6.5" slot can stay empty. Upload the files in `store/screenshots/` in this order (only the first 3 show on the install sheet):
 
-1. `01-intro.png`
-2. `02-today.png`
-3. `03-world.png` (landscape; the 6.9" slot takes portrait and landscape together)
-4. `04-journey.png`
-5. `05-quests.png`
+1. `01-intro.png` (the intro: your cocoon, "I'm glad you're finally awake.")
+2. `02-world-keeper.png` (landscape: the Other World, the Keeper talking)
+3. `03-today.png` (Today: consistency, the eight Paths)
+4. `04-hatch.png` (a hatch: Felix ★★, laughing)
+5. `05-world-cocoon.png` (landscape: a cocoon on the Courier Road, "Break it open.")
+6. `06-collection.png` (the collection, with stars)
+7. `07-kings.png` (the intro: "Or at least that's what they say.")
+8. `08-world-archive.png` (landscape: the Archive)
+9. `09-journey.png` (Journey: days shown up, the calendar)
+
+The 6.9" slot takes portrait and landscape together.
 
 No app previews (videos) needed.
 
