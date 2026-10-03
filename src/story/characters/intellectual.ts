@@ -83,8 +83,8 @@ export const INTELLECTUAL = {
     dimension: 'intellectual',
     kind: 'recruit',
     unlockLevel: 18,
-    bio: 'A chess master in a checkered waistcoat who plays against himself when nobody else will. He loses to himself gracefully and always shakes his own hand afterward.',
-    quote: 'Check. Hm. That was me.',
+    bio: 'A chess master in a checkered waistcoat and a silk cravat who plays against himself when nobody else will. He loses to himself with great panache and always kisses his own hand afterward.',
+    quote: 'Check. Ah, that was me. Bravo, Felix.',
   },
   hana: {
     number: 90,

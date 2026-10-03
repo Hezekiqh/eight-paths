@@ -58,6 +58,8 @@ export type NpcObject = {
   lines: string[];
   /** Questions you can ask them afterwards, from a menu (plus Goodbye). */
   questions?: Question[];
+  /** What they say back when you say Goodbye (Felix's adieu), before the talk closes. */
+  farewell?: string[];
   /** A character from the collection: they get the standard three questions (see talk.ts). */
   character?: CharacterId;
   /** What they say instead once a story flag is set. */

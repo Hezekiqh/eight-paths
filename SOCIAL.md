@@ -12,7 +12,7 @@ Sep 28, 2026 · status: built behind a switch, not shipped
 | --- | --- |
 | Accounts | Sign in with Apple (identifier only: no name, no email), then choose a username |
 | The Second 100 | The first 100 accounts get a permanent founder number: "SECOND 100 · #037" |
-| Friends | Share a friend code or link (`8P-XXXX-XXXX`); adding is instant and mutual. See each other's level, party leader, streak (if shared) and woken heroes |
+| Friends | Search by username, or share a friend code or link (`8P-XXXX-XXXX`); adding is instant and mutual. See each other's level, party leader, streak (if shared) and woken heroes |
 | Rarity | On every character's sheet: "Woken by 3% of players · first: @username" |
 | Safety | Unique usernames, a blocked-words list, remove, block and report; delete account in the app |
 
@@ -35,7 +35,7 @@ Not in this update: leaderboards (the server can't verify habits, so they'd rewa
 | `blocks`, `reports` | who blocked or reported whom, and why | Own blocks; reports are write-only |
 | `blocked_words` | words no username may contain | Server only; seeded with reserved names. **Add a standard offensive-words list in the Table Editor** |
 
-Functions: `username_available`, `add_friend(code)`, `remove_friend`, `block_player` (also unfriends), `character_stats()` (aggregate counts and the first waker only; no one's collection leaks).
+Functions: `username_available`, `add_friend(code)`, `search_players(query)` and `add_friend_by_id` (`20261003000000_friend_search.sql`; blocked players never show in a search), `remove_friend`, `block_player` (also unfriends), `character_stats()` (aggregate counts and the first waker only; no one's collection leaks).
 
 Details that matter:
 - Founder numbers come from a sequence capped at 100, handed out by a trigger that runs **after** the username check, so rejected names never burn a number. Deleted accounts don't return their number.

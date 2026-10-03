@@ -16,6 +16,15 @@ export function usernameProblem(name: string): string | null {
   return null;
 }
 
+/**
+ * What to search usernames for, from what was typed ("@Moss " → "moss"), or
+ * null when it's too short or can't be part of a username.
+ */
+export function searchTerm(text: string): string | null {
+  const term = text.trim().replace(/^@/, '').toLowerCase();
+  return term.length >= 2 && /^[a-z0-9_]{2,16}$/.test(term) ? term : null;
+}
+
 /** Formats a founder number for display: 7 → "#007". */
 export const founderLabel = (n: number) => `#${String(n).padStart(3, '0')}`;
 

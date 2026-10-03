@@ -23,7 +23,7 @@ export type Scene = {
   choices?: { label: string; lines: string[]; outcome: Outcome }[];
 };
 
-/** The scene for winning the fight on `map`. `brannoc`: he's in your party. */
+/** The scene for winning the fight on `map`. `brannoc`: he's with you (in your party and met, see partyWithYou). */
 export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | null {
   switch (map) {
     case 'sleeping-keep':
@@ -102,7 +102,9 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
                     "Brannoc takes his father's throne. The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.",
                   ]
                 : ['The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid.']),
-              "Brannoc lays Aurek the Tall to rest, and puts his name back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
+              brannoc
+                ? "Brannoc lays Aurek the Tall to rest, and puts his name back on the champions' wall. Later, somehow, he wakes, properly, as himself."
+                : "You lay Aurek the Tall to rest, and put his name back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
               'Widow Aldane brings the old portrait out from under her floor and hangs it in the war hall.',
               'Captain Ingrid, Aurek and Widow Aldane join your collection.',
               'Word runs down the south road ahead of you. For the first time in three years, Grub steps aside.',

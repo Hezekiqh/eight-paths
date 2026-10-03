@@ -1,6 +1,7 @@
 import { DEFAULT_PARTY, ROSTER, type CharacterId } from '@/story/companions';
 
 import { BANTER, banterFor } from '../banter';
+import { partyWithYou } from '../hero';
 import { MAPS, type MapId } from '../maps';
 import { splitSpeaker } from '../portraits';
 
@@ -25,10 +26,12 @@ describe('party banter', () => {
       }
   });
 
-  it('lets the first listed party member speak, and nobody when none of them came', () => {
+  it('lets every listed party member speak, in order, and nobody when none of them came', () => {
     const party = Object.values(DEFAULT_PARTY);
     expect(banterFor('march-road', 'bo', party)[0]).toMatch(/^PIP: /);
-    expect(banterFor('march-road', 'bo', [...party, 'plush' as CharacterId])[0]).toMatch(/^PLUSH: /);
+    const both = banterFor('march-road', 'bo', [...party, 'plush' as CharacterId]);
+    expect(both[0]).toMatch(/^PLUSH: /);
+    expect(both.some((l) => l.startsWith('PIP: '))).toBe(true);
     expect(banterFor('march-road', 'grask', ['brannoc' as CharacterId])).toEqual([]);
     expect(banterFor('millbrook', 'nowhere', party)).toEqual([]);
   });
@@ -37,5 +40,19 @@ describe('party banter', () => {
     expect(banterFor('deserters-camp', 'fen', ['brannoc', 'oren'] as CharacterId[])).toContain('OREN: Slower.');
     expect(banterFor('deserters-camp', 'fen', ['brannoc'] as CharacterId[])).not.toContain('OREN: Slower.');
     expect(banterFor('deserters-camp', 'fen', ['brannoc'] as CharacterId[])[0]).toMatch(/^BRANNOC: /);
+  });
+
+  it("doesn't repeat someone who already spoke in a pair, but lets the rest pile in", () => {
+    const lines = banterFor('deserters-camp', 'fen', ['brannoc', 'oren', 'wren'] as CharacterId[]);
+    expect(lines.filter((l) => l.startsWith('BRANNOC: Haunted?'))).toHaveLength(1);
+    expect(lines.at(-1)).toMatch(/^WREN: /);
+  });
+
+  it("stays quiet for party members you haven't met yet", () => {
+    // A new save: all eight in the party, only the hero you woke as with you.
+    const party = partyWithYou(DEFAULT_PARTY, { quill: 1 });
+    expect(party).toEqual(['quill']);
+    expect(banterFor('millbrook', 'hoot', party)).toEqual([]);
+    expect(banterFor('courier-road', 'nib', partyWithYou(DEFAULT_PARTY, { brannoc: 1 })).join()).not.toContain('OREN');
   });
 });

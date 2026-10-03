@@ -44,6 +44,7 @@ import {
   withoutCharacter,
   withoutGone,
   type MapId,
+  type NpcObject,
   type WorldMap,
 } from '@/world/maps';
 import {
@@ -66,7 +67,7 @@ import { characterQuestions } from '@/world/talk';
 import { keeperQuestions } from '@/world/keeper-advice';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
-import { walkersFor, worldHero, type HeroId } from '@/world/hero';
+import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import { ATTACKS, attackFor, damageFor, drowsyRate, levelHearts, type EnemyKind } from '@/world/combat';
 import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
@@ -471,7 +472,17 @@ function World({
     },
     [save, onTravel],
   );
-  const act = useAct(map, sim, setDialogue, save, xpRef, travel, hero);
+  const { act, talk } = useAct(map, sim, setDialogue, save, xpRef, travel, hero);
+  // Back from a cocoon's hatch: whoever came out of it talks to you straight away.
+  useFocusEffect(
+    useCallback(() => {
+      const id = useSession.getState().talkAfterHatch;
+      const npc = id ? map.npcs.find((n) => n.id === id) : undefined;
+      if (!npc) return;
+      useSession.setState({ talkAfterHatch: null });
+      talk(npc, sim.facing.get());
+    }, [map, sim, talk]),
+  );
   const setFlag = useWorldStore((s) => s.setFlag);
   // How the walking character fights: their Path's attack, harder the more real habits they have.
   const heroPath = COMPANIONS[hero].dimension;
@@ -511,7 +522,7 @@ function World({
   );
   const onWin = useCallback(() => {
     if (!map.boss) return;
-    const scene = winScene(map.id as MapId, map.boss.flag, Object.values(gameParty).includes('brannoc'));
+    const scene = winScene(map.id as MapId, map.boss.flag, partyWithYou(gameParty, owned).includes('brannoc'));
     if (!scene) return;
     setDialogue({
       lines: scene.lines,
@@ -521,7 +532,7 @@ function World({
         then: () => setDialogue({ lines: c.lines, then: () => finish(c.outcome) }),
       })),
     });
-  }, [map, gameParty, finish]);
+  }, [map, gameParty, owned, finish]);
   const onDefeat = useCallback(() => {
     if (map.boss) useWorldStore.getState().notice(fightNotice(map.id as MapId));
     useWorldStore.getState().setFlag('fallen');
@@ -727,7 +738,10 @@ function World({
 
 const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
 
-/** What A (or a tap) does: talk to whoever's in front, open the quest board, or examine the tile. */
+/**
+ * What A (or a tap) does: talk to whoever's in front, open the quest board, or examine the tile.
+ * Also hands back `talk`, to start a conversation with someone without pressing A (a fresh hatch).
+ */
 function useAct(
   map: WorldMap,
   sim: WorldSim,
@@ -738,6 +752,50 @@ function useAct(
   hero: HeroId,
 ) {
   const busy = useRef(false);
+  /** Talking to someone in the room: they turn to face you, say their piece, and the party chimes in. */
+  const talk = useCallback(
+    (thing: NpcObject, facing: number) => {
+      const game = useGameStore.getState();
+      const banter = banterFor(map.id, thing.id, partyWithYou(game.party, game.owned));
+      // they turn to face you
+      sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
+      const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
+      // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
+      const keeper =
+        thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
+      const own = thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
+      const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
+      if (thing.id === 'keeper' && map.id === 'archive') {
+        const w = useWorldStore.getState();
+        if (w.flags.includes('keeper:hello')) {
+          const news = keeperTalk({
+            flags: w.flags,
+            discovered: w.discovered,
+            candlesAway: w.candles.filter((c) => c.map !== 'archive').length,
+            heartPieces: heartPieces(w.flags),
+            memory: habitMemory(useGameStore.getState(), toDateKey(new Date())),
+            day: Math.floor(Date.now() / 86400000),
+          });
+          if (news.said) w.setFlag(news.said);
+          setDialogue({
+            speaker: thing.name,
+            lines: news.lines.length ? news.lines : thing.lines,
+            questions,
+          });
+          return;
+        }
+        w.setFlag('keeper:hello');
+      }
+      setDialogue({
+        speaker: thing.name,
+        lines: after ? thing.after!.lines : [...thing.lines, ...banter],
+        questions,
+        farewell: thing.farewell,
+      });
+    },
+    [map, sim, setDialogue],
+  );
   const act = useCallback(() => {
     if (busy.current) return;
     const facing = sim.facing.get();
@@ -746,8 +804,9 @@ function useAct(
     const thing =
       whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
       map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
-    // a party member may chime in (see banter.ts)
-    const banter = thing ? banterFor(map.id, thing.id, Object.values(useGameStore.getState().party)) : [];
+    // party members you have may chime in, after the person's own lines (see banter.ts)
+    const game = useGameStore.getState();
+    const banter = thing ? banterFor(map.id, thing.id, partyWithYou(game.party, game.owned)) : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const job = thing.job;
       // Like a field move: if you can't, a party member of the right Path steps in.
@@ -798,41 +857,7 @@ function useAct(
       }
     }
     if (thing?.type === 'npc') {
-      // they turn to face you
-      sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
-      const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
-      // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
-      const keeper =
-        thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
-      const own = thing.questions ?? (thing.character ? characterQuestions(COMPANIONS[thing.character]) : undefined);
-      const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
-      // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
-      if (thing.id === 'keeper' && map.id === 'archive') {
-        const w = useWorldStore.getState();
-        if (w.flags.includes('keeper:hello')) {
-          const talk = keeperTalk({
-            flags: w.flags,
-            discovered: w.discovered,
-            candlesAway: w.candles.filter((c) => c.map !== 'archive').length,
-            heartPieces: heartPieces(w.flags),
-            memory: habitMemory(useGameStore.getState(), toDateKey(new Date())),
-            day: Math.floor(Date.now() / 86400000),
-          });
-          if (talk.said) w.setFlag(talk.said);
-          setDialogue({
-            speaker: thing.name,
-            lines: talk.lines.length ? talk.lines : thing.lines,
-            questions,
-          });
-          return;
-        }
-        w.setFlag('keeper:hello');
-      }
-      setDialogue({
-        speaker: thing.name,
-        lines: after ? thing.after!.lines : [...thing.lines, ...banter],
-        questions,
-      });
+      talk(thing, facing);
       return;
     }
     if (thing?.type === 'sign') {
@@ -939,15 +964,19 @@ function useAct(
             then: () => {
               setFlag(cocoon.hatched);
               save();
-              // The hatch plays over the World and comes back to it, still sideways.
+              // The hatch plays at once, sideways over the World, and comes back to it still sideways.
               keepSideways = true;
               const game = useGameStore.getState();
-              // Someone new joins your collection, and the reveal queue hatches them; someone you
-              // already have hatches here anyway (a preview: nothing is counted twice).
-              if ((game.owned?.[cocoon.character] ?? 0) > 0)
-                router.push({ pathname: '/reveal/[id]', params: { id: cocoon.character, preview: '1' } });
-              else game.giftCharacters([cocoon.character]);
-              // Re-entered, so they're standing by the silk when the hatch ends.
+              // Someone new joins your collection right here (no wait in the reveal queue); someone you
+              // already have hatches anyway (nothing is counted twice). Either way it's this hatch, now.
+              if ((game.owned?.[cocoon.character] ?? 0) === 0) {
+                game.meetCharacters([cocoon.character]);
+                game.markRevealed([cocoon.character]);
+              }
+              // When the hatch closes, whoever came out talks to you.
+              useSession.setState({ talkAfterHatch: cocoon.character });
+              router.push({ pathname: '/reveal/[id]', params: { id: cocoon.character, preview: '1' } });
+              // Re-entered behind the hatch, so they're standing by the silk when it ends.
               onTravel(here);
             },
           },
@@ -1055,9 +1084,9 @@ function useAct(
     }
     const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero]);
+  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
-  return useCallback(() => {
+  const safeAct = useCallback(() => {
     try {
       act();
     } catch (e) {
@@ -1065,6 +1094,7 @@ function useAct(
       setDialogue({ lines: ['Nothing happens.'] });
     }
   }, [act, setDialogue]);
+  return { act: safeAct, talk };
 }
 
 /** True if a way out needs this story flag (on its own, or as one of several). */

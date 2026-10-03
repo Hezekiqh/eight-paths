@@ -24,22 +24,25 @@ import { haptics } from '@/haptics';
 import {
   SocialError,
   addFriend,
+  addFriendById,
   checkUsername,
   claimUsername,
   deleteAccount,
   refreshFriends,
+  searchPlayers,
   signInWithApple,
   signInWithEmail,
   shareFriendCode,
   signInWithGoogle,
   signOut,
   startSocial,
+  type FoundPlayer,
 } from '@/social/api';
 import { premiumEnabled } from '@/premium/config';
 import { usePremium } from '@/premium/store';
 import { FOUNDER_COUNT } from '@/social/config';
 import { useSocial, type Profile } from '@/social/store';
-import { USERNAME_RULES, extractFriendCode, founderLabel } from '@/social/username';
+import { USERNAME_RULES, extractFriendCode, founderLabel, searchTerm } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
@@ -231,6 +234,98 @@ function FriendRow({ friend }: { friend: Profile }) {
   );
 }
 
+/** How long typing pauses before a username search goes out. */
+const SEARCH_DELAY_MS = 300;
+
+/** Find someone by username, then add them with a tap. */
+function FindByUsername({ color }: { color: string }) {
+  const [text, setText] = useState('');
+  // Each answer is kept with the search it answers, so a slow answer to an older search never shows.
+  const [found, setFound] = useState<{ term: string; players: FoundPlayer[] } | null>(null);
+  const [failed, setFailed] = useState<{ term: string; message: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
+  const term = searchTerm(text);
+  const results = term && found?.term === term ? found.players : null;
+  const searchError = term && failed?.term === term ? failed.message : null;
+  const searching = !!term && !results && !searchError;
+
+  useEffect(() => {
+    if (!term) return;
+    const timer = setTimeout(() => {
+      searchPlayers(term)
+        .then((players) => setFound({ term, players }))
+        .catch((e) => setFailed({ term, message: message(e) }));
+    }, SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [term]);
+
+  const add = async (player: FoundPlayer) => {
+    setAdding(player.id);
+    setError(null);
+    try {
+      await addFriendById(player.id);
+      haptics.success();
+      setFound((f) => f && { ...f, players: f.players.map((p) => (p.id === player.id ? { ...p, isFriend: true } : p)) });
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setAdding(null);
+    }
+  };
+
+  return (
+    <>
+      <TextInput
+        value={text}
+        onChangeText={(t) => {
+          setText(t);
+          setError(null);
+        }}
+        placeholder="Search by username"
+        placeholderTextColor={colors.textFaint}
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="search"
+        clearButtonMode="while-editing"
+        accessibilityLabel="Search players by username"
+        style={styles.input}
+      />
+      {searching && <ActivityIndicator color={color} />}
+      {(error ?? searchError) && <Text style={[styles.hint, styles.error]}>{error ?? searchError}</Text>}
+      {results?.length === 0 && <Text style={styles.hint}>No one goes by that name.</Text>}
+      {results && results.length > 0 && (
+        <View style={styles.list}>
+          {results.map((p) => (
+            <View key={p.id} style={styles.friend}>
+              <View style={styles.friendSprite}>
+                <Leader id={p.leader} scale={1} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.friendName}>{p.username}</Text>
+                <Text style={styles.friendMeta}>
+                  Lv {p.level}
+                  {p.founderNumber !== null ? ` · ${founderLabel(p.founderNumber)}` : ''}
+                </Text>
+              </View>
+              {p.isFriend ? (
+                <Text style={styles.friendMeta}>Friends</Text>
+              ) : (
+                <Button
+                  title={adding === p.id ? 'Adding…' : 'Add'}
+                  onPress={() => add(p)}
+                  color={color}
+                  disabled={adding !== null}
+                />
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
 /** Signed in: your card, your code, adding friends, the list and account settings. */
 function Account({ profile, color }: { profile: Profile; color: string }) {
   const friends = useSocial((s) => s.friends);
@@ -298,6 +393,8 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
       </View>
 
       <Text style={styles.section}>ADD A FRIEND</Text>
+      <FindByUsername color={color} />
+      <Text style={styles.label}>OR ENTER THEIR FRIEND CODE</Text>
       <View style={styles.addRow}>
         <TextInput
           value={code}
@@ -320,7 +417,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
 
       <Text style={styles.section}>FRIENDS · {friends.length}</Text>
       {friends.length === 0 ? (
-        <Text style={styles.body}>No friends yet. Share your code, or add theirs above.</Text>
+        <Text style={styles.body}>No friends yet. Search for them above, or share your code.</Text>
       ) : (
         <View style={styles.list}>
           {friends.map((f) => (

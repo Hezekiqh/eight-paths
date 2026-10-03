@@ -18,6 +18,8 @@ export type Dialogue = {
   sprite?: WalkerId;
   lines: string[];
   questions?: Question[];
+  /** Said back when the player picks Goodbye, before the conversation closes. */
+  farewell?: string[];
   /** Runs once the conversation closes (e.g. stepping through a door). */
   then?: () => void;
   /** A decision at the end of the lines: each option runs its own `then`, instead of the usual goodbye. */
@@ -35,7 +37,8 @@ type Props = {
  * An RPG dialogue window along the bottom of the World. Tap anywhere to finish
  * the line being typed, then again for the next; the last tap closes it. If
  * the speaker can be asked things, their lines end in a menu of questions:
- * each answer plays, then the menu comes back until you say Goodbye.
+ * each answer plays, then the menu comes back until you say Goodbye (and they
+ * say their `farewell`, if they have one).
  */
 export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const insets = useSafeAreaInsets();
@@ -46,6 +49,8 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const [typed, setTyped] = useState(false);
   const [skip, setSkip] = useState(false);
   const [asking, setAsking] = useState(false);
+  /** Goodbye was said and they're answering it: the last tap closes, no menu. */
+  const [parting, setParting] = useState(false);
   // A line can hand the box to someone else: "VARGA: …" shows Varga, in her voice.
   const said = splitSpeaker(lines[index] ?? '');
   const line = said.text;
@@ -93,8 +98,8 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     setTyped(true);
   }, [rumbles, feelRumbles]);
   const last = index === lines.length - 1;
-  const questions = dialogue.questions ?? [];
-  const choices = dialogue.choices ?? [];
+  const questions = parting ? [] : (dialogue.questions ?? []);
+  const choices = parting ? [] : (dialogue.choices ?? []);
 
   const advance = () => {
     if (!typed) {
@@ -112,17 +117,22 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     setSkip(false);
   };
 
-  // Picking an option clicks (a question, a choice or Goodbye); moving on to the next line doesn't.
-  const ask = (question: Question) => {
-    playSound('select');
-    haptics.select();
-    onAsk?.(question);
-    setLines(question.answer);
+  /** Plays `next` from its first line, in place of the menu. */
+  const say = (next: string[]) => {
+    setLines(next);
     setRound((r) => r + 1);
     setIndex(0);
     setTyped(false);
     setSkip(false);
     setAsking(false);
+  };
+
+  // Picking an option clicks (a question, a choice or Goodbye); moving on to the next line doesn't.
+  const ask = (question: Question) => {
+    playSound('select');
+    haptics.select();
+    onAsk?.(question);
+    say(question.answer);
   };
 
   const place = {
@@ -158,7 +168,9 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
               onPress={() => {
                 playSound('select');
                 haptics.select();
-                onClose();
+                if (!dialogue.farewell?.length) return onClose();
+                setParting(true);
+                say(dialogue.farewell);
               }}
             />
           )}

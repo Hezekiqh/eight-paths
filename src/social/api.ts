@@ -7,7 +7,7 @@ import { supabase } from './client';
 import { socialEnabled } from './config';
 import { useSocial, type CharacterStat, type Profile } from './store';
 import { isExpired, tradeProblem, type Copies, type TradeOffer } from './trade';
-import { extractFriendCode, usernameProblem } from './username';
+import { extractFriendCode, searchTerm, usernameProblem } from './username';
 
 const PROFILE_COLUMNS =
   'id, username, founder_number, friend_code, leader, party, level, days_shown_up, streak, created_at';
@@ -408,6 +408,53 @@ export async function addFriend(code: string): Promise<string> {
   }
   await refreshFriends();
   return data as string;
+}
+
+/** Someone found by searching usernames. */
+export type FoundPlayer = {
+  id: string;
+  username: string;
+  founderNumber: number | null;
+  leader: string | null;
+  level: number;
+  /** Already friends: shown as such, nothing to add. */
+  isFriend: boolean;
+};
+
+/** Players whose username contains what was typed (exact and starting matches first). Blocked players never show. */
+export async function searchPlayers(text: string): Promise<FoundPlayer[]> {
+  const query = searchTerm(text);
+  if (!query) return [];
+  const { data, error } = await supabase().rpc('search_players', { query });
+  if (error) fail(OFFLINE);
+  return (
+    (data ?? []) as {
+      id: string;
+      username: string;
+      founder_number: number | null;
+      leader: string | null;
+      level: number;
+      is_friend: boolean;
+    }[]
+  ).map((r) => ({
+    id: r.id,
+    username: r.username,
+    founderNumber: r.founder_number,
+    leader: r.leader,
+    level: r.level,
+    isFriend: r.is_friend,
+  }));
+}
+
+/** Adds someone found by username search (both become friends at once). */
+export async function addFriendById(id: string) {
+  const { error } = await supabase().rpc('add_friend_by_id', { friend: id });
+  if (error) {
+    if (error.message.includes('own_code')) fail("That's you.");
+    if (error.message.includes('unknown_player')) fail("Couldn't find that player any more.");
+    fail(OFFLINE);
+  }
+  await refreshFriends();
 }
 
 export async function removeFriend(id: string) {

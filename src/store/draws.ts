@@ -44,7 +44,7 @@ export type DrawState = {
 
 /**
  * The core eight are met, not drawn (author, Oct 2, 2026): the hero you chose
- * to wake as (Player.origin) wakes with your first habit, and the rest are
+ * to wake as (Player.origin) wakes with your first habit (no hatch), and the rest are
  * found in the Other World (see meetCharacters). Until then no cocoon hands one out.
  */
 const CORE = Object.values(DEFAULT_PARTY);
@@ -100,11 +100,11 @@ export function reconcileDraws(
     owned = { ...state.owned };
   }
 
-  // The first habit (any XP at all) wakes the hero you chose to be, with their hatch.
+  // The first habit (any XP at all) wakes the hero you chose to be. No hatch: the Keeper's
+  // flash (hero select) is their moment, so they're simply there.
   const first = state.player?.origin;
   if (first && !owned[first] && DIMENSIONS.some((d) => pathXp[d] > 0)) {
     owned[first] = 1;
-    drops.push(first);
     changed = true;
   }
 

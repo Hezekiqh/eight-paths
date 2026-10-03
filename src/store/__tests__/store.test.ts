@@ -269,9 +269,10 @@ describe('loading a saved game', () => {
     });
     // Levelling the Mage Path brings random arrivals from it; pretend Ottilie was one.
     useGameStore.getState().reconcileDraws();
-    // Brannoc woke with the first habit; everyone else came from the Mage Path.
-    const arrivals = useGameStore.getState().drops.filter((id) => id !== 'brannoc');
-    expect(useGameStore.getState().drops).toContain('brannoc');
+    // Brannoc woke with the first habit (no hatch); everyone else came from the Mage Path.
+    const arrivals = useGameStore.getState().drops;
+    expect(arrivals).not.toContain('brannoc');
+    expect(useGameStore.getState().owned?.brannoc).toBe(1);
     expect(arrivals.length).toBeGreaterThan(0);
     expect(
       arrivals.every((id) =>
@@ -421,7 +422,8 @@ describe('loading a saved game', () => {
     // Answering it wakes them at once (a habit is done), and they take their Path's slot. Not Brannoc.
     useGameStore.getState().chooseOrigin('wren');
     expect(useGameStore.getState().owned).toEqual({ wren: 1 });
-    expect(useGameStore.getState().drops).toEqual(['wren']);
+    // No hatch for them: the Keeper's flash is enough.
+    expect(useGameStore.getState().drops).toEqual([]);
     expect(useGameStore.getState().party.spiritual).toBe('wren');
     const party = selectCollection(useGameStore.getState()).party;
     expect(Object.values(party).filter((e) => e.unlocked).map((e) => e.companion.id)).toEqual(['wren']);
@@ -433,7 +435,7 @@ describe('loading a saved game', () => {
     // Found in the Other World: they join at once, with no hatch.
     useGameStore.getState().meetCharacters(['brannoc']);
     expect(useGameStore.getState().owned?.brannoc).toBe(1);
-    expect(useGameStore.getState().drops).toEqual(['wren']);
+    expect(useGameStore.getState().drops).toEqual([]);
   });
 
   it('only lets one of the four starters be chosen', () => {

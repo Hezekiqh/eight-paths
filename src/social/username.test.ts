@@ -1,4 +1,18 @@
-import { extractFriendCode, founderLabel, usernameProblem } from './username';
+import { extractFriendCode, founderLabel, searchTerm, usernameProblem } from './username';
+
+describe('searchTerm', () => {
+  it('cleans up what was typed into a search', () => {
+    expect(searchTerm(' @Moss_Fan ')).toBe('moss_fan');
+    expect(searchTerm('pi')).toBe('pi');
+  });
+
+  it('waits for two characters, and ignores what no username could contain', () => {
+    expect(searchTerm('p')).toBeNull();
+    expect(searchTerm('@')).toBeNull();
+    expect(searchTerm('pip larkspur')).toBeNull();
+    expect(searchTerm('8P-7KQ2-XM4D')).toBeNull();
+  });
+});
 
 describe('usernameProblem', () => {
   it('accepts ordinary names', () => {

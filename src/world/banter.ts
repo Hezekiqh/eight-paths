@@ -1,9 +1,13 @@
 import type { CharacterId } from '@/story/companions';
 
-// Party banter: when you talk to someone or read a sign, a party member chimes
-// in. Each spot lists who might speak, in order; the first one in your party
-// has their say, so swapping a recruit in (Plush, Bo) changes who talks. An
-// entry `with` a second member only plays when both came (two of them bickering).
+// Party banter: when you talk to someone or read a sign, they say their own
+// piece first (that always plays, party or not), then party members can chime
+// in. Only members you actually have speak (see partyWithYou): someone still
+// waiting down the road (Oren, before the Candle Inn) stays quiet. Each spot
+// lists who might speak, in order; everyone listed who's with you has their
+// say, once each, so a full party can pile in. An entry `with` a second member
+// only plays when both came (two of them bickering), and then stands in for
+// either one's solo line.
 // Lines are "NAME: text" so the dialogue box shows their face and voice.
 // Drafts until the author approves them. Spoiler rule (LORE.md): Brannoc can
 // brush against his past (the prince, the old law), never name it.
@@ -198,9 +202,19 @@ export const BANTER: Record<string, Banter[]> = {
   'field-of-banners:hoot-field': [{ who: 'pip', lines: ["PIP: He's right, you know. Go on. I'll hum while you drink."] }],
 };
 
-/** What a party member adds on this map at this object: the first listed one who's in the party (with their partner, if they need one), or nothing. */
+/**
+ * What the party adds on this map at this object: every listed entry whose
+ * speakers are all with you (`party`: members you have, see partyWithYou),
+ * in order, each member speaking at most once. Nothing if none of them came.
+ */
 export function banterFor(mapId: string, objectId: string, party: readonly CharacterId[]): string[] {
-  return (
-    BANTER[`${mapId}:${objectId}`]?.find((b) => party.includes(b.who) && (!b.with || party.includes(b.with)))?.lines ?? []
-  );
+  const spoken = new Set<CharacterId>();
+  const lines: string[] = [];
+  for (const b of BANTER[`${mapId}:${objectId}`] ?? []) {
+    const speakers = b.with ? [b.who, b.with] : [b.who];
+    if (!speakers.every((id) => party.includes(id) && !spoken.has(id))) continue;
+    for (const id of speakers) spoken.add(id);
+    lines.push(...b.lines);
+  }
+  return lines;
 }

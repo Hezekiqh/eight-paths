@@ -118,12 +118,12 @@ describe('reconcileDraws', () => {
 describe('the core eight are met, not drawn', () => {
   const core = Object.values(DEFAULT_PARTY);
 
-  it('wakes the hero you chose to be with the first XP, with their hatch', () => {
+  it('wakes the hero you chose to be with the first XP, with no hatch', () => {
     const chose = { player: { origin: 'quill' as const } };
     expect(reconcileDraws(fresh({ owned: {}, ...chose }), zeroXp, seeded())!.owned?.quill).toBeUndefined();
     const out = reconcileDraws(fresh({ owned: {}, nextDraw: { physical: 99 }, ...chose }), { ...zeroXp, financial: 10 }, seeded())!;
     expect(out.owned).toEqual({ quill: 1 });
-    expect(out.drops).toEqual(['quill']);
+    expect(out.drops).toEqual([]);
   });
 
   it("wakes nobody before the Keeper's question is answered", () => {
