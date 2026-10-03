@@ -54,7 +54,7 @@ export const ADVISED = {
     { kind: 'raider', x: 7, y: 3 },
     { kind: 'raider', x: 11, y: 3 },
   ],
-  lines: ["FELIX: I told him you'd come. I also told him to bring friends."],
+  lines: ["FELIX: Ah, voilà, you came! I told him you would. I also told him to bring friends. Many friends."],
 } as const;
 
 export function advisedBy(map: string, flags: string[]) {

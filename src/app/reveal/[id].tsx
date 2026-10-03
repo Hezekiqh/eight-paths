@@ -1,6 +1,5 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -15,6 +14,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COCOON_ART, COCOON_STAGES, REALM_ART, REALM_BACKGROUNDS, REALM_LIGHTS } from '@/art/realms';
 import { CHARACTER_ART } from '@/art/sprites';
@@ -45,6 +45,13 @@ import { CONFETTI, Confetto, Rays } from '@/components/level-up';
 const IMPACT = 0.13; // the camera slams in on the cocoon
 const WIGGLE_FIRST = 0.3;
 const WIGGLE_EVERY = 2.1; // while waiting for the tap
+
+/**
+ * Sideways (a cocoon broken in the World), the scene can't cover the screen:
+ * the realm is a tall picture. Instead it shows this band of it, top to
+ * bottom, around the cocoon, off to the left, with the words beside it.
+ */
+const WIDE_CROP = { top: 130, height: 262 };
 
 /**
  * How grand each hatch is: a 1★ Common is barely an event, and a 5★ Legendary
@@ -256,12 +263,10 @@ export default function RevealScreen() {
   const legendSpin = useSharedValue(0);
   const copies = useGameStore((s) => (isCharacterId(id) ? (s.owned?.[id] ?? 0) : 0));
   const reduceMotion = useReducedMotion();
-  // A hatch is always upright, even over the sideways World (a cocoon broken there); the World turns
-  // the phone back when it's in front again.
-  useEffect(() => {
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-  }, []);
+  // Over the sideways World (a cocoon broken there) the hatch stays sideways, laid out for it.
   const { width: W, height: H } = useWindowDimensions();
+  const wide = W > H;
+  const insets = useSafeAreaInsets();
   const [phase, setPhase] = useState<Phase>('waking');
   const [crack, setCrack] = useState(0);
   const [hintShown, setHintShown] = useState(false);
@@ -284,18 +289,24 @@ export default function RevealScreen() {
 
   const valid = isCharacterId(id);
 
-  // The realm art covers the screen; everything else is placed in its pixels.
-  const px = Math.max(W / REALM_ART.width, H / REALM_ART.height);
-  const sceneLeft = (W - REALM_ART.width * px) / 2;
-  const sceneTop = (H - REALM_ART.height * px) / 2;
+  // Upright, the realm art covers the screen; sideways, a band of it fills the height on the left
+  // (WIDE_CROP). Everything else is placed in its pixels.
+  const px = wide ? H / WIDE_CROP.height : Math.max(W / REALM_ART.width, H / REALM_ART.height);
+  const sceneLeft = wide
+    ? Math.max(insets.left, Math.min(W * 0.32 - (REALM_ART.width / 2) * px, W / 2 - REALM_ART.width * px))
+    : (W - REALM_ART.width * px) / 2;
+  const sceneTop = wide ? -WIDE_CROP.top * px : (H - REALM_ART.height * px) / 2;
   const at = (x: number, y: number) => [sceneLeft + x * px, sceneTop + y * px] as const;
   const standY = REALM_ART.ground + 2;
   const cocoonMid = at(135, standY - 50);
   const eyeAt = at(135 - COCOON_ART.width / 2 + COCOON_ART.eye.x, standY - 102 + COCOON_ART.eye.y);
   const revealFocus = at(135, standY - 70);
-  const anchor = at(135, REALM_ART.height * 0.6);
-  // The camera aims at the layout as it is now: a hatch opened over the sideways World turns upright
-  // after it mounts, and aiming at the sideways layout pushed the cocoon off to one side.
+  const anchor = at(135, wide ? WIDE_CROP.top + WIDE_CROP.height * 0.55 : REALM_ART.height * 0.6);
+  // Sideways, the words sit to the right of the scene.
+  const panel = wide
+    ? { left: sceneLeft + REALM_ART.width * px + spacing.lg, right: Math.max(insets.right, spacing.lg) }
+    : null;
+  // The camera aims at the layout as it is now, so if the phone turns mid-hatch the cocoon stays centred.
   const layout = useRef({ cocoonMid, eyeAt, revealFocus, anchor, px });
   useEffect(() => {
     layout.current = { cocoonMid, eyeAt, revealFocus, anchor, px };
@@ -481,6 +492,15 @@ export default function RevealScreen() {
         revealed ? `${companion.name} joined your collection. Tap to continue.` : 'Someone is waking up. Tap to hatch.'
       }>
       <StatusBar style="light" />
+      {/* Sideways, the realm fills the rest of the screen, dimmed, behind its band. */}
+      {hatched && wide && (
+        <Image
+          source={REALM_BACKGROUNDS[companion.dimension]}
+          contentFit="cover"
+          style={[StyleSheet.absoluteFill, styles.backdrop]}
+          accessible={false}
+        />
+      )}
       <Animated.View style={[styles.scene, { width: W, height: H }, sceneStyle]}>
         {/* the build-up is the cocoon alone in the dark; the realm appears with the burst */}
         {hatched && (
@@ -558,14 +578,16 @@ export default function RevealScreen() {
         {!reduceMotion && (
           <View pointerEvents="none" style={[styles.shardOrigin, { left: cocoonMid[0], top: cocoonMid[1] }]}>
             {SHARDS.map((shard, i) => (
-              <Shard key={i} shard={shard} burst={burst} reach={W * 0.6} />
+              <Shard key={i} shard={shard} burst={burst} reach={Math.min(W, H) * 0.6} />
             ))}
           </View>
         )}
       </Animated.View>
 
       {!hatched && (
-        <View style={[styles.top, { top: sceneTop + 70 * px }]} pointerEvents="none">
+        <View
+          style={[styles.top, panel ? [panel, styles.panelMiddle] : { top: sceneTop + 70 * px }]}
+          pointerEvents="none">
           <Text
             style={[
               styles.headline,
@@ -594,9 +616,11 @@ export default function RevealScreen() {
 
       {revealed && (
         <>
-          <Animated.View entering={FadeIn.duration(400)} style={[styles.top, { top: sceneTop + 60 * px }]}>
+          <Animated.View
+            entering={FadeIn.duration(400)}
+            style={[styles.top, panel ? [panel, { top: H * 0.08 }] : { top: sceneTop + 60 * px }]}>
             <Text
-              style={[styles.name, { color: info.color, fontSize: 44 * px }]}
+              style={[styles.name, { color: info.color, fontSize: wide ? Math.min(44 * px, 56) : 44 * px }]}
               numberOfLines={1}
               adjustsFontSizeToFit>
               {companion.name.toUpperCase()}
@@ -609,7 +633,9 @@ export default function RevealScreen() {
             </Text>
             <Text style={[styles.number, { color: '#D8D2E6' }]}>{formatNumber(companion.number)}</Text>
           </Animated.View>
-          <Animated.View entering={FadeIn.delay(600).duration(400)} style={[styles.band, { top: groundY + 14 * px }]}>
+          <Animated.View
+            entering={FadeIn.delay(600).duration(400)}
+            style={[styles.band, panel ? [panel, { top: H * 0.56 }] : { top: groundY + 14 * px }]}>
             <TypewriterText
               letterMs={CAPTION_MS}
               text={
@@ -641,51 +667,64 @@ export default function RevealScreen() {
       )}
 
       {phase === 'entry' && (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.entryStage}>
-          <View style={styles.entry}>
-            <View style={[styles.entryHeader, { borderColor: info.color }]}>
-              <Text style={styles.entryLabel}>COLLECTION ENTRY</Text>
-              <Text style={[styles.entryNumber, { color: info.color }]}>{formatNumber(companion.number)}</Text>
-            </View>
-            <View style={styles.entryTop}>
-              <View style={[styles.entrySprite, { borderColor: info.color }]}>
-                {art && <PixelSprite sheet={art.idle} scale={3} />}
+        <Animated.View
+          entering={FadeIn.duration(400)}
+          style={[
+            styles.entryStage,
+            wide && {
+              paddingVertical: spacing.md,
+              paddingLeft: Math.max(insets.left, spacing.xl),
+              paddingRight: Math.max(insets.right, spacing.xl),
+            },
+          ]}>
+          <View style={[styles.entry, wide && styles.entryWide]}>
+            <View style={wide ? styles.entryColumn : styles.entryStack}>
+              <View style={[styles.entryHeader, { borderColor: info.color }]}>
+                <Text style={styles.entryLabel}>COLLECTION ENTRY</Text>
+                <Text style={[styles.entryNumber, { color: info.color }]}>{formatNumber(companion.number)}</Text>
               </View>
-              <View style={styles.entryStats}>
-                <Text style={styles.entryName}>{companion.name}</Text>
-                {companion.fullName && <Text style={styles.entryFullName}>{companion.fullName}</Text>}
-                {[
-                  ['TYPE', KIND_LABEL[companion.kind]],
-                  ['CLASS', `${info.className} · ${info.dimensionLabel}`],
-                  ['REALM', REALMS[companion.dimension]],
-                  ['ALIGN', companion.alignment],
-                  ['RARITY', rarityLabel(companion.rarity)],
-                ].map(([label, value]) => (
-                  <View key={label} style={styles.entryRow}>
-                    <Text style={styles.entryRowLabel}>{label}</Text>
-                    <Text style={styles.entryRowValue}>{value}</Text>
-                  </View>
-                ))}
+              <View style={styles.entryTop}>
+                <View style={[styles.entrySprite, { borderColor: info.color }]}>
+                  {art && <PixelSprite sheet={art.idle} scale={3} />}
+                </View>
+                <View style={styles.entryStats}>
+                  <Text style={styles.entryName}>{companion.name}</Text>
+                  {companion.fullName && <Text style={styles.entryFullName}>{companion.fullName}</Text>}
+                  {[
+                    ['TYPE', KIND_LABEL[companion.kind]],
+                    ['CLASS', `${info.className} · ${info.dimensionLabel}`],
+                    ['REALM', REALMS[companion.dimension]],
+                    ['ALIGN', companion.alignment],
+                    ['RARITY', rarityLabel(companion.rarity)],
+                  ].map(([label, value]) => (
+                    <View key={label} style={styles.entryRow}>
+                      <Text style={styles.entryRowLabel}>{label}</Text>
+                      <Text style={styles.entryRowValue}>{value}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             </View>
-            <View style={[styles.entryLore, { borderColor: info.color }]}>
-              <TypewriterText
-                letterMs={CAPTION_MS}
-                text={companion.bio}
-                style={styles.entryBio}
-                instant={skipped}
-                onDone={() => setBioDone(true)}
-              />
-              <TypewriterText
-                letterMs={CAPTION_MS}
-                text={`“${companion.quote}”`}
-                style={styles.entryQuote}
-                start={bioDone}
-                instant={skipped}
-                onDone={() => setEntryDone(true)}
-              />
+            <View style={wide ? styles.entryColumn : styles.entryStack}>
+              <View style={[styles.entryLore, { borderColor: info.color }, wide && styles.entryLoreWide]}>
+                <TypewriterText
+                  letterMs={CAPTION_MS}
+                  text={companion.bio}
+                  style={styles.entryBio}
+                  instant={skipped}
+                  onDone={() => setBioDone(true)}
+                />
+                <TypewriterText
+                  letterMs={CAPTION_MS}
+                  text={`“${companion.quote}”`}
+                  style={styles.entryQuote}
+                  start={bioDone}
+                  instant={skipped}
+                  onDone={() => setEntryDone(true)}
+                />
+              </View>
+              <Text style={styles.hint}>{entryDone ? 'Tap to close' : 'Tap to show all'}</Text>
             </View>
-            <Text style={styles.hint}>{entryDone ? 'Tap to close' : 'Tap to show all'}</Text>
           </View>
         </Animated.View>
       )}
@@ -745,6 +784,13 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   entry: { width: '100%', maxWidth: 440, gap: spacing.md },
+  // Sideways: the card and stats on the left, the lore on the right.
+  entryWide: { maxWidth: 820, flexDirection: 'row', gap: spacing.xl, alignItems: 'center' },
+  entryStack: { gap: spacing.md },
+  entryColumn: { flex: 1, gap: spacing.md },
+  entryLoreWide: { borderTopWidth: 0, borderLeftWidth: 2, paddingTop: 0, paddingLeft: spacing.lg },
+  backdrop: { opacity: 0.35 },
+  panelMiddle: { top: 0, bottom: 0, justifyContent: 'center' },
   entryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

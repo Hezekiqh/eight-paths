@@ -118,7 +118,7 @@ describe('reconcileDraws', () => {
 describe('the core eight are met, not drawn', () => {
   const core = Object.values(DEFAULT_PARTY);
 
-  it('wakes the hero you chose to be with the first XP, with their hatch', () => {
+  it('wakes the hero you chose to be with the first XP, with no hatch', () => {
     const chose = { player: { origin: 'quill' as const } };
     expect(reconcileDraws(fresh({ owned: {}, ...chose }), zeroXp, seeded())!.owned?.quill).toBeUndefined();
     const out = reconcileDraws(
@@ -127,7 +127,7 @@ describe('the core eight are met, not drawn', () => {
       seeded(),
     )!;
     expect(out.owned).toEqual({ quill: 1 });
-    expect(out.drops).toEqual(['quill']);
+    expect(out.drops).toEqual([]);
   });
 
   it("wakes the class's hero with the first habit, before any hero is chosen (Quill for a Mage)", () => {
@@ -139,6 +139,7 @@ describe('the core eight are met, not drawn', () => {
       seeded(),
     )!;
     expect(out.owned).toEqual({ quill: 1 });
+    // Their hatch plays: they're the first hero you get.
     expect(out.drops).toEqual(['quill']);
   });
 

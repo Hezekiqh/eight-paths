@@ -435,8 +435,14 @@ export function selectKeeperFacts(data: GameData, today: string): KeeperFacts | 
     streak: summary.showUp.current,
     best: summary.showUp.best,
     week: summary.week,
-    party: DIMENSIONS.map((d) => hero(collection.party[d])),
+    // Only party members you have: someone still waiting down the road isn't talked about yet.
+    party: DIMENSIONS.map((d) => collection.party[d])
+      .filter((e) => e.unlocked)
+      .map(hero),
     bench: collection.entries.filter((e) => e.unlocked && !e.inParty).map(hero),
-    dusty: dusty ? { path: dusty.info.className, hero: collection.party[dusty.dimension].companion.name } : null,
+    dusty:
+      dusty && collection.party[dusty.dimension].unlocked
+        ? { path: dusty.info.className, hero: collection.party[dusty.dimension].companion.name }
+        : null,
   };
 }

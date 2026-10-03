@@ -73,21 +73,29 @@
       "sprite": "felix",
       "facing": "right",
       "name": "Felix",
-      "lines": ["...Ah. Awake.", "Five hundred years, by the look of the grass. Hm. I'd have bet four."],
+      "lines": [
+        "...Ah. Awake. And a visitor! How delicious.",
+        "Five hundred years, by the look of the grass. Hm. I'd have wagered four. One does so hate to lose a wager."
+      ],
       "questions": [
         {
           "ask": "Who are you?",
-          "answer": ["Felix Rook. I advised the last war.", "Both sides, actually. It lasted much longer that way. Much more interesting."]
+          "answer": [
+            "Felix Rook. Enchanté. I advised the last war.",
+            "Both sides, naturally. It lasted so much longer that way. Such drama. Such style."
+          ]
         },
         {
           "ask": "What now?",
           "answer": [
-            "Hmmmm. Good question.", "Whatever will cause the most fun, I guess.",
-            "Thank you for the door. I'll remember it. Probably."
+            "Hmmmm. Now there is a question with a certain… je ne sais quoi.",
+            "Whatever causes the most fun, I think. A little rendezvous with someone important, perhaps.",
+            "Thank you for the door, my friend. I shall remember it. Probably."
           ],
           "leaves": "felix-left"
         }
       ],
+      "farewell": ["Then I bid you adieu, my little door-opener.", "Until we meet again. And we shall. I insist."],
       "comesAfter": "felix-hatched",
       "goneAfter": "felix-left"
     },
