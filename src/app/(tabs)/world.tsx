@@ -61,6 +61,7 @@ import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
+import { MEMORIES, SEEN_LINES, memoryAt, notYetLines } from '@/world/memories';
 import { TALKED, loreId, talkedId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
 import { characterQuestions } from '@/world/talk';
@@ -1236,18 +1237,30 @@ function World({
         : [],
     [map, newsFor],
   );
+  // A hidden memory you've earned and not yet seen shimmers where it waits (memories.ts).
+  const remembered = useWorldStore((s) => s.memories);
+  const memorySpots = useMemo(
+    () =>
+      MEMORIES.filter((m) => m.map === map.id && !remembered.includes(m.id) && standing(m.needs, xp).met).map(
+        (m) => ({ x: m.x, y: m.y }),
+      ),
+    [map, remembered, xp],
+  );
   const twinkles = useMemo(
     () =>
-      tilesOf(map, [
+      [
+        ...memorySpots,
+        ...tilesOf(map, [
         ...(passageSeen ? [PASSAGE_TILE] : []),
         ...holesSeen,
         ...newRooms,
         ...(map.id === 'archive' && greenLit(liveFlags) ? [GREEN_CANDLE] : []),
-      ]).map((t) => ({
-        x: t % map.width,
-        y: Math.floor(t / map.width),
-      })),
-    [map, passageSeen, holesSeen, newRooms, liveFlags],
+        ]).map((t) => ({
+          x: t % map.width,
+          y: Math.floor(t / map.width),
+        })),
+      ],
+    [map, passageSeen, holesSeen, newRooms, liveFlags, memorySpots],
   );
   // On arrival: past the maze with Felix waiting, the guard scene; at its road end, a Mage who's never
   // been through the passage wonders about the twinkle; thrown in the cell, you come to.
@@ -1799,6 +1812,22 @@ function useAct(
     };
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
+    // A hidden memory (memories.ts): once your habits have earned it, it plays, and goes in the scroll.
+    const memory = memoryAt(map.id, tx, ty);
+    if (memory) {
+      const w = useWorldStore.getState();
+      if (w.memories.includes(memory.id)) {
+        setDialogue({ lines: SEEN_LINES });
+      } else if (!standing(memory.needs, xp.current).met) {
+        setDialogue({ lines: notYetLines(describeRequirement(memory.needs)) });
+      } else {
+        w.remember(memory.id);
+        playSound('quest');
+        haptics.celebrate();
+        setDialogue({ lines: memory.lines });
+      }
+      return;
+    }
     // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
     const thing =
       whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??

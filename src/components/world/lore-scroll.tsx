@@ -54,7 +54,7 @@ export function LoreScroll({ heard }: { heard: LoreEntry[] }) {
 }
 
 /** A rolled end of the scroll: a parchment band between two wooden rods. */
-function Roll({ children, small, style }: { children?: ReactNode; small?: boolean; style?: object | false }) {
+export function Roll({ children, small, style }: { children?: ReactNode; small?: boolean; style?: object | false }) {
   return (
     <View style={[styles.roll, style]}>
       <View style={[styles.rod, small && styles.rodSmall]} />

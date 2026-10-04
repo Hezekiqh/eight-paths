@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Segmented } from '@/components/segmented';
 import { SettingsPanel } from '@/components/settings-panel';
 import { LoreScroll } from '@/components/world/lore-scroll';
+import { MemoryScroll } from '@/components/world/memory-scroll';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
@@ -29,6 +30,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   const position = useWorldStore((s) => s.position);
   const discovered = useWorldStore((s) => s.discovered);
   const heard = useWorldStore((s) => s.heard);
+  const memories = useWorldStore((s) => s.memories);
   // First the Keeper asks who you look like (stepping outside asks it); then no Other World
   // until the first habit wakes that hero (an old save, with no `owned`, has everyone already).
   const origin = useGameStore((s) => s.player?.origin);
@@ -66,6 +68,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
             </View>
 
             <LoreScroll heard={heard} />
+            <MemoryScroll seen={memories} />
             <Restart started={position !== null || discovered.length > 0} />
           </>
         )}
