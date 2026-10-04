@@ -1,6 +1,6 @@
 {
   "id": "the-pit",
-  "name": "The Kaldorium",
+  "name": "The Colosseum",
   "style": "dungeon",
   "walkable": [
     ".",
@@ -30,7 +30,7 @@
       "The champions' wall: three hundred years of names, each crossed out when they fell. The newest line is blank."
     ],
     "1": [
-      "The way out to the street."
+      "The way out, into Warrior City."
     ],
     "3": [
       "A ladder down through a trapdoor. The guards call it 'the quick way to the cells.'"

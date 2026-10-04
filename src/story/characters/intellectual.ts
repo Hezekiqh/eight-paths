@@ -11,7 +11,7 @@ export const INTELLECTUAL = {
     dimension: 'intellectual',
     kind: 'core',
     unlockLevel: 0,
-    bio: 'Small, ink-stained to the elbows and peering through oversized spectacles, with a hat stuffed with bookmarks and a floating book that bites. Brilliant, fast-talking and endlessly curious, she footnotes her own sentences out loud.',
+    bio: 'Small, ink-stained to the elbows and peering through oversized spectacles, with a hat stuffed with bookmarks and a floating book that bites. Brilliant, fast-talking and endlessly curious, he footnotes his own sentences out loud.',
     quote: "Technically, and I say this with love, you're wrong.",
   },
   ottilie: {
@@ -59,7 +59,7 @@ export const INTELLECTUAL = {
     dimension: 'intellectual',
     kind: 'recruit',
     unlockLevel: 7,
-    bio: 'A schoolkid with ink on the nose and a satchel stuffed with questions, most of which begin with why. Nib follows Quill around like a duckling and writes down everything she says.',
+    bio: 'A schoolkid with ink on the nose and a satchel stuffed with questions, most of which begin with why. Nib follows Quill around like a duckling and writes down everything he says.',
     quote: 'Why? No, but WHY?',
   },
   astra: {

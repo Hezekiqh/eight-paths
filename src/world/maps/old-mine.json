@@ -1,0 +1,100 @@
+{
+  "id": "old-mine",
+  "name": "The Old Mine",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "##########################",
+    "#WWWWWWWWWvWWWWWWWWWvWWWW#",
+    "#WWWWWvWWWWWWWWvWWWWWWWWW#",
+    "#,....c.....,......c.....#",
+    "#..j.......WWWW......j...#",
+    "#..........WvvW..........#",
+    "#,....WWW..WWWW...WWW...,#",
+    "#.....WvW.........WvW....#",
+    "#.....WWW...J.....WWW....#",
+    "#,......................,#",
+    "#WWWWWWWWWWW11WWWWWWWWWWW#",
+    "##########################"
+  ],
+  "spawn": {
+    "x": 12,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Rock, chipped by a thousand picks."
+    ],
+    "v": [
+      "A seam of ore, glinting copper and silver in the lantern light."
+    ],
+    "j": [
+      "A mine cart, heaped with rock. Somebody's been busy."
+    ],
+    "J": [
+      "A cocoon, split open and slumped against the rock. Whoever was in it came out early, and went straight to work."
+    ],
+    "c": [
+      "A lantern on a hook."
+    ],
+    ",": [
+      "Rubble and chips of stone."
+    ],
+    "1": [
+      "The way out, up to the South Road."
+    ]
+  },
+  "objects": [
+    {
+      "id": "tamsin-found",
+      "type": "npc",
+      "x": 13,
+      "y": 8,
+      "sprite": "tamsin",
+      "facing": "up",
+      "name": "Tamsin",
+      "lines": [
+        "*clang* *clang* *clang*",
+        "...What. I'm working."
+      ],
+      "character": "tamsin",
+      "meets": true,
+      "goneAfter": "met:tamsin",
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Tamsin. Tamsin Brasse.",
+            "*She grips your hand in a stern handshake.*",
+            "...You have very soft hands."
+          ]
+        },
+        {
+          "ask": "What are you doing?",
+          "answer": [
+            "Mining. Copper, iron, the odd seam of silver if I'm lucky.",
+            "Enough to afford a hot meal and a bed that isn't a rock.",
+            "Do you eat and sleep?"
+          ],
+          "then": [
+            "(...Do I?)"
+          ]
+        },
+        {
+          "ask": "Why?",
+          "answer": [
+            "Work gives you purpose. Swing, haul, sweat, sleep. Repeat.",
+            "And it's good to put something back. Somebody built the walls you lean on."
+          ]
+        }
+      ]
+    }
+  ]
+}

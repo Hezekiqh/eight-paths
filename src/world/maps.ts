@@ -38,6 +38,16 @@ import iceHouseData from './maps/ice-house.json';
 import felixMazeData from './maps/felix-maze.json';
 import kingdomDungeonData from './maps/kingdom-dungeon.json';
 import dungeonMazesData from './maps/dungeon-mazes.json';
+import warriorCityData from './maps/warrior-city.json';
+import southRoadData from './maps/south-road.json';
+import oldMineData from './maps/old-mine.json';
+import wcChapelData from './maps/wc-chapel.json';
+import wcLibraryData from './maps/wc-library.json';
+import wcGuildData from './maps/wc-guild.json';
+import wcHospitalData from './maps/wc-hospital.json';
+import wcTavernData from './maps/wc-tavern.json';
+import wcStoreData from './maps/wc-store.json';
+import wcBarnData from './maps/wc-barn.json';
 import roomBrannocData from './maps/room-brannoc.json';
 import roomYsoldeData from './maps/room-ysolde.json';
 import roomQuillData from './maps/room-quill.json';
@@ -346,6 +356,16 @@ export const MAPS = {
   'felix-maze': build(felixMazeData as MapData, require('@/assets/world/felix-maze.png')),
   'kingdom-dungeon': build(kingdomDungeonData as MapData, require('@/assets/world/kingdom-dungeon.png')),
   'dungeon-mazes': build(dungeonMazesData as MapData, require('@/assets/world/dungeon-mazes.png')),
+  'warrior-city': build(warriorCityData as MapData, require('@/assets/world/warrior-city.png')),
+  'south-road': build(southRoadData as MapData, require('@/assets/world/south-road.png')),
+  'old-mine': build(oldMineData as MapData, require('@/assets/world/old-mine.png')),
+  'wc-chapel': build(wcChapelData as MapData, require('@/assets/world/wc-chapel.png')),
+  'wc-library': build(wcLibraryData as MapData, require('@/assets/world/wc-library.png')),
+  'wc-guild': build(wcGuildData as MapData, require('@/assets/world/wc-guild.png')),
+  'wc-hospital': build(wcHospitalData as MapData, require('@/assets/world/wc-hospital.png')),
+  'wc-tavern': build(wcTavernData as MapData, require('@/assets/world/wc-tavern.png')),
+  'wc-store': build(wcStoreData as MapData, require('@/assets/world/wc-store.png')),
+  'wc-barn': build(wcBarnData as MapData, require('@/assets/world/wc-barn.png')),
   'room-brannoc': build(roomBrannocData as MapData, require('@/assets/world/room-brannoc.png')),
   'room-ysolde': build(roomYsoldeData as MapData, require('@/assets/world/room-ysolde.png')),
   'room-quill': build(roomQuillData as MapData, require('@/assets/world/room-quill.png')),

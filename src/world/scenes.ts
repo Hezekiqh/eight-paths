@@ -59,7 +59,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
       return {
         lines: [
           'The warden sways, and sits down in the sand with a thump that rattles the banners.',
-          'For a heartbeat the Kaldorium is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
+          'For a heartbeat the Colosseum is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
           ...(brannoc ? ["BRANNOC: I… I didn't run. Did you see? I didn't run!"] : []),
           'GUARD: Strength is valued more than anything here. You\'re free to explore the prison.',
           'GUARD: We don\'t get paid enough for this.',

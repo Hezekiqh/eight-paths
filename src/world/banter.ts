@@ -166,7 +166,7 @@ export const BANTER: Record<string, Banter[]> = {
       lines: ["PIP: Bread that tastes of nothing? That's the saddest thing I've ever heard. I'm writing a song about it.", "TESSA: Please don't. It's illegal."],
     },
   ],
-  'kingdom-town:barnaby': [{ who: 'pip', lines: ['PIP: The same victory for three hundred years? Have you tried a key change?'] }],
+  'warrior-city:barnaby': [{ who: 'pip', lines: ['PIP: The same victory for three hundred years? Have you tried a key change?'] }],
   'kingdom-town:pim': [{ who: 'ysolde', lines: ['YSOLDE: A penny a rumour. And a false one?', 'PIM: Two pennies!'] }],
   'kingdom-town:guard': [
     {

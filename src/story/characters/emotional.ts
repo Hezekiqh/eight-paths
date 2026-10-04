@@ -11,7 +11,7 @@ export const EMOTIONAL = {
     dimension: 'emotional',
     kind: 'core',
     unlockLevel: 0,
-    bio: 'Tall, barefoot and shaven-headed, with calm eyes and a string of prayer beads that is missing one. He speaks rarely, and when he does, it is usually deadpan.',
+    bio: 'Tall, barefoot and shaven-headed, with calm eyes and a string of prayer beads that is missing one. She speaks rarely, and when she does, it is usually deadpan.',
     quote: 'Breathe first. Then we decide who to punch.',
   },
   juniper: {

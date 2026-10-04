@@ -92,23 +92,6 @@
         "A little door behind the tables, chalked: POTATOES.",
         "It's warm behind it, and it smells of people. Not of potatoes."
       ]
-    },
-    {
-      "id": "oren-found",
-      "type": "npc",
-      "x": 4,
-      "y": 2,
-      "sprite": "oren",
-      "facing": "down",
-      "name": "Oren",
-      "lines": [
-        "...",
-        "You're awake. Good.",
-        "Oren. I've been sitting here a while. The inn is quiet. Quiet is good. Sit, if you like."
-      ],
-      "character": "oren",
-      "meets": true,
-      "goneAfter": "met:oren"
     }
   ],
   "art": {

@@ -1,0 +1,88 @@
+{
+  "id": "wc-hospital",
+  "name": "The Hospital",
+  "wall": "white",
+  "tiles": [
+    "##################",
+    "#VVVYVVVYVVVYVVVV#",
+    "#VVVYVVVYVVVYVVVV#",
+    "#HH...........HHH#",
+    "#................#",
+    "#b..b..b...b..b..#",
+    "#................#",
+    "#b..b..b...b..b..#",
+    "#................#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Scrubbed white walls."
+    ],
+    "Y": [
+      "A window, open a crack for the air."
+    ],
+    "H": [
+      "The apothecary's shelves: willow bark, mint, and something labelled DO NOT."
+    ],
+    "b": [
+      "A bed, made very tightly."
+    ],
+    "_": [
+      "The hospital wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "oren-found",
+      "type": "npc",
+      "x": 8,
+      "y": 3,
+      "sprite": "oren",
+      "facing": "down",
+      "name": "Oren",
+      "lines": [
+        "...",
+        "You're awake. Good.",
+        "Oren. I've been sitting here a while. The inn is quiet. Quiet is good. Sit, if you like."
+      ],
+      "character": "oren",
+      "meets": true,
+      "goneAfter": "met:oren"
+    },
+    {
+      "id": "wc-healer",
+      "type": "npc",
+      "x": 3,
+      "y": 7,
+      "sprite": "tessa",
+      "facing": "down",
+      "name": "Healer Maud",
+      "lines": [
+        "Sit if you're hurt. Stand if you're not. Go away if you're both."
+      ],
+      "questions": [
+        {
+          "ask": "Anyone strange come in?",
+          "answer": [
+            "Three sleepers this month. Wandered in out of cocoons, they say, not knowing the year.",
+            "We feed them soup and tell them gently. The soup helps more than the telling."
+          ]
+        }
+      ]
+    }
+  ],
+  "floor": "tile"
+}

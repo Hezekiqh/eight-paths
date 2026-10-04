@@ -1,0 +1,91 @@
+{
+  "id": "wc-chapel",
+  "name": "The Chapel",
+  "wall": "stone",
+  "tiles": [
+    "##################",
+    "#VVyVVVyVVyVVVyVV#",
+    "#VVyVVVyVVyVVVyVV#",
+    "#c......cAc.....c#",
+    "#.......rr.......#",
+    "#PPPPPP.rr.PPPPPP#",
+    "#.......rr.......#",
+    "#PPPPPP.rr.PPPPPP#",
+    "#.......rr.......#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Cold stone, and the smell of old candles."
+    ],
+    "y": [
+      "Stained glass: eight figures holding hands in a ring. One of the faces has been scratched out."
+    ],
+    "A": [
+      "The altar. A white cloth, two candles, and a small bell."
+    ],
+    "P": [
+      "A pew, polished by a great many knees."
+    ],
+    "c": [
+      "A candle, burning low."
+    ],
+    "_": [
+      "The chapel wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "wren-found",
+      "type": "npc",
+      "x": 8,
+      "y": 4,
+      "sprite": "wren",
+      "facing": "down",
+      "name": "Wren",
+      "lines": [
+        "Welcome. Take it slowly. The first steps are always the strangest.",
+        "Wren. I keep the old lights. There's something under this chapel. I can feel it, like a draught from a door nobody's opened."
+      ],
+      "character": "wren",
+      "meets": true,
+      "goneAfter": "met:wren"
+    },
+    {
+      "id": "wc-sexton",
+      "type": "npc",
+      "x": 3,
+      "y": 9,
+      "sprite": "fen",
+      "facing": "down",
+      "name": "Old Bell-Ringer",
+      "lines": [
+        "I ring the bell at dawn and dusk. Nobody wakes up for it any more.",
+        "Well. You did."
+      ],
+      "questions": [
+        {
+          "ask": "Who's in the window?",
+          "answer": [
+            "The Eight. The kingdoms that held hands. Somebody scratched out one face, long before my time.",
+            "I polish around it."
+          ]
+        }
+      ]
+    }
+  ],
+  "floor": "stone"
+}

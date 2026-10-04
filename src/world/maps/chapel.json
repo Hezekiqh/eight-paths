@@ -71,22 +71,6 @@
           ]
         }
       ]
-    },
-    {
-      "id": "wren-found",
-      "type": "npc",
-      "x": 5,
-      "y": 2,
-      "sprite": "wren",
-      "facing": "down",
-      "name": "Wren",
-      "lines": [
-        "Welcome. Take it slowly. The first steps are always the strangest.",
-        "Wren. I keep the old lights. There's something under this chapel. I can feel it, like a draught from a door nobody's opened."
-      ],
-      "character": "wren",
-      "meets": true,
-      "goneAfter": "met:wren"
     }
   ],
   "art": {

@@ -1,0 +1,92 @@
+{
+  "id": "wc-library",
+  "name": "The Library",
+  "wall": null,
+  "tiles": [
+    "##################",
+    "#WWWWWWWWWWWWWWWW#",
+    "#WWWWWWWWWWWWWWWW#",
+    "#TT............TT#",
+    "#BB..t....t....BB#",
+    "#................#",
+    "#TT....L.......TT#",
+    "#BB..t....t....BB#",
+    "#................#",
+    "#p..............p#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "W": [
+      "Shelves to the ceiling. Somebody has catalogued them by smell."
+    ],
+    "T": [
+      "A bookcase. HISTORY OF THE EIGHT KINGDOMS, volumes one to forty. Volume nine is missing."
+    ],
+    "B": [
+      "A bookcase of maps, folded wrong."
+    ],
+    "t": [
+      "A reading table. A book lies open: 'On the Bridges Between the Kingdoms.'"
+    ],
+    "L": [
+      "A lectern, and on it a heavy book: THE BUBBLE. Someone has written in the margin: 'and what's outside it?'"
+    ],
+    "p": [
+      "A fern that has read more than most people."
+    ],
+    "_": [
+      "The library wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "quill-found",
+      "type": "npc",
+      "x": 9,
+      "y": 4,
+      "sprite": "quill",
+      "facing": "down",
+      "name": "Quill",
+      "lines": [
+        "Oh! Oh, you're real! I've read about you. Well, not you. People like you. Travellers.",
+        "Quill. Mage. I came in for one book five hundred years ago and I'm still on the index."
+      ],
+      "character": "quill",
+      "meets": true,
+      "goneAfter": "met:quill"
+    },
+    {
+      "id": "wc-librarian",
+      "type": "npc",
+      "x": 3,
+      "y": 8,
+      "sprite": "hoot",
+      "facing": "down",
+      "name": "Librarian Pell",
+      "lines": [
+        "Shh. No, you can talk. I just like saying it."
+      ],
+      "questions": [
+        {
+          "ask": "What's in the missing volume?",
+          "answer": [
+            "Volume nine. The years the old king went mad. Borrowed, five hundred years ago, by the palace.",
+            "Never returned. I've sent a great many letters."
+          ]
+        }
+      ]
+    }
+  ]
+}

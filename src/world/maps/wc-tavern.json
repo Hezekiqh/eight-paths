@@ -1,0 +1,92 @@
+{
+  "id": "wc-tavern",
+  "name": "The Tavern",
+  "wall": "wood",
+  "tiles": [
+    "##################",
+    "#VVVVVYVVVVFVVYVV#",
+    "#VVVVVYVVVVFVVYVV#",
+    "#xx............xx#",
+    "#...uuuuuuu......#",
+    "#..t....t....t...#",
+    "#................#",
+    "#..t....t....t...#",
+    "#................#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Smoky timber, carved with a hundred initials."
+    ],
+    "Y": [
+      "A window, fogged from the inside."
+    ],
+    "F": [
+      "A roaring fire. Someone's socks are drying on the guard."
+    ],
+    "u": [
+      "The bar. Polished by elbows."
+    ],
+    "x": [
+      "Barrels. One is labelled 'THE GOOD STUFF', the rest are labelled 'THE STUFF'."
+    ],
+    "t": [
+      "A table, and a game of dice nobody's winning."
+    ],
+    "_": [
+      "The tavern wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "pip-found",
+      "type": "npc",
+      "x": 12,
+      "y": 6,
+      "sprite": "pip",
+      "facing": "down",
+      "name": "Pip",
+      "lines": [
+        "A new face! I've played the same song to Grask four hundred times. He hasn't smiled once.",
+        "Pip, Bard. You look like you need a song. Or a way past that checkpoint. I can do both."
+      ],
+      "character": "pip",
+      "meets": true,
+      "goneAfter": "met:pip"
+    },
+    {
+      "id": "wc-barkeep",
+      "type": "npc",
+      "x": 6,
+      "y": 3,
+      "sprite": "brunna",
+      "facing": "down",
+      "name": "Barkeep Rolla",
+      "lines": [
+        "What'll it be? We've got stew, stew, and yesterday's stew."
+      ],
+      "questions": [
+        {
+          "ask": "Heard anything?",
+          "answer": [
+            "They say the old king up north hasn't aged a day. They say he's building an army.",
+            "They say a lot of things in here after the third mug."
+          ]
+        }
+      ]
+    }
+  ]
+}

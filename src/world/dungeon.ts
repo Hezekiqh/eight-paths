@@ -178,7 +178,7 @@ export const SNOT_SWING_HIT = [
   'He lifts his sword.',
   'BRANNOC: Zzz... five more minutes, mother...',
   'BRANNOC SUPER SUPER SWING!',
-  'The warden goes up, up, over the banners, and out of the Kaldorium. Somewhere in town, a roof gives way.',
+  'The warden goes up, up, over the banners, and out of the Colosseum. Somewhere in town, a roof gives way.',
   'Silence.',
   "GUARD: Whoa. Whoa, whoa, whoa. Okay. You're good. You're good to go.",
   "GUARD: We won't bother you any more. Strength is valued more than anything here.",

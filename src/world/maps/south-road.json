@@ -1,0 +1,169 @@
+{
+  "id": "south-road",
+  "name": "The South Road",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "f"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTT^^TTTTTTTTTTTTTTTTTTT",
+    "T..................,,..................T",
+    "T..................,,..................T",
+    "T..................,,.......MMMMMMMMMMMT",
+    "T..................,,.......MMMMMMMMMMMT",
+    "TTTTTTTTTTTTTTTTTT.,,.......MMMMMMMMMMMT",
+    "TT...............T.,,.......MMMMMMMMMMMT",
+    "TT.........v.....T.,,.......MMMMMMMMMMMT",
+    "TT..fvf.....fff..T.,,.......MMMMMMMMMMMT",
+    "TT..fff.....fvf..T.,,.......MMMMMMMMMMMT",
+    "TT......,,,......T.,,.......MMMMMMMMMMMT",
+    "TT.b.............T.,,.......MMMMEEMMMMMT",
+    "TT................,,,,,,,,,,MOM,,,,MMMMT",
+    "TT.......Z........,,,,,,,,,,,,,,,,,O...T",
+    "TT.v.............T..........g......g...T",
+    "TT......,,,......T.........g......g....T",
+    "TT...............T........g......g..T..T",
+    "TT..fff.....ffv..T.......g......g......T",
+    "TT..vff.....fff..T......T......g......gT",
+    "TT...............T.....g......g......g.T",
+    "TT.....v.w.......T....g......gT.....g..T",
+    "TT...............T..........g......g...T",
+    "TT...............T.........g......g....T",
+    "TTTTTTTTTTTTTTTTTT........T......g.....T",
+    "T........................g......g......T",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 19,
+    "y": 2,
+    "facing": "down"
+  },
+  "examine": {
+    "T": [
+      "Old trees. In the garden, they were hedges once."
+    ],
+    "M": [
+      "The hillside, honeycombed with old mine workings."
+    ],
+    "E": [
+      "The mine. The beams are newer than you'd think. Somebody's been working down there."
+    ],
+    "Z": [
+      "A statue of a woman in a gardener's apron, her face worn smooth, as if someone wanted it forgotten.",
+      "(...I've been here before. Haven't I?)"
+    ],
+    "v": [
+      "Roses, gone wild."
+    ],
+    "f": [
+      "An old flowerbed, all weeds now."
+    ],
+    "w": [
+      "A dry fountain, full of leaves."
+    ],
+    "b": [
+      "A stone bench, cold."
+    ],
+    "O": [
+      "Rocks, dug out and dumped."
+    ],
+    "^": [
+      "North: back up to Warrior City."
+    ]
+  },
+  "objects": [
+    {
+      "id": "garden-stone-1",
+      "type": "sign",
+      "x": 5,
+      "y": 11,
+      "lines": [
+        "THE ROYAL GARDEN.",
+        "Planted by the old king, who loved quiet things more than loud ones."
+      ]
+    },
+    {
+      "id": "garden-stone-2",
+      "type": "sign",
+      "x": 13,
+      "y": 11,
+      "lines": [
+        "The king trained his army hard, but only so his people would be safe.",
+        "His advisors began to whisper that his heart had turned to war. Some say a shadow had crept into theirs."
+      ]
+    },
+    {
+      "id": "garden-stone-3",
+      "type": "sign",
+      "x": 5,
+      "y": 15,
+      "lines": [
+        "The whispers spread. The king was mad, they said. He dreamed of battles in his sleep.",
+        "His own people began to fear him."
+      ]
+    },
+    {
+      "id": "garden-stone-4",
+      "type": "sign",
+      "x": 13,
+      "y": 15,
+      "lines": [
+        "One morning, walking here alone, the king met a woman tending the roses.",
+        "There was something about her. His friends warned him that she wanted more than roses."
+      ]
+    },
+    {
+      "id": "garden-stone-5",
+      "type": "sign",
+      "x": 6,
+      "y": 20,
+      "lines": [
+        "But his people had turned from him, and his friends doubted him, and she knew exactly what to say to his doubts.",
+        "They were married here, under the old arch. They had a son."
+      ]
+    },
+    {
+      "id": "garden-stone-6",
+      "type": "sign",
+      "x": 12,
+      "y": 20,
+      "lines": [
+        "Five years on, the royal army was the strongest force in all the land. The king listened to no one but his queen.",
+        "And the queen said: strike first. And so the kingdom readied itself for war.",
+        "The rest of the stone has broken away."
+      ]
+    },
+    {
+      "id": "garden-gardener",
+      "type": "npc",
+      "x": 10,
+      "y": 21,
+      "sprite": "hugo",
+      "facing": "up",
+      "name": "Old Gardener",
+      "lines": [
+        "Nobody tends this garden any more. I come and pull a weed now and then. For the old king.",
+        "He was kind, whatever they say."
+      ],
+      "questions": [
+        {
+          "ask": "Who was the queen?",
+          "answer": [
+            "Nobody knows her name. It was taken off everything after.",
+            "She just... wasn't, one day. And the king was gone too, not long after."
+          ]
+        },
+        {
+          "ask": "What happened to their son?",
+          "answer": [
+            "The prince? Lost, they wrote. Not dead. Lost.",
+            "I'd like to think he's out there somewhere, sleeping it off."
+          ]
+        }
+      ]
+    }
+  ]
+}

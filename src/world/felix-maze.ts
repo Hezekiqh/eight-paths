@@ -126,11 +126,11 @@ export const SCENE_OPEN = [
 /** Who the guards are after, for "Seize him!": they only want you. ('them' for anyone not listed.) */
 export const PRONOUN: Record<string, 'him' | 'her' | 'them'> = {
   brannoc: 'him',
-  quill: 'him',
-  oren: 'him',
   pip: 'him',
   moss: 'him',
   ysolde: 'her',
+  quill: 'him',
+  oren: 'her',
   wren: 'her',
   tamsin: 'her',
 };

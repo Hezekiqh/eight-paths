@@ -1,0 +1,79 @@
+{
+  "id": "wc-barn",
+  "name": "The Horse Barn",
+  "wall": "plank",
+  "tiles": [
+    "##################",
+    "#VVVVVVVVVVVVVVVV#",
+    "#VVVVVVVVVVVVVVVV#",
+    "#XXXX..XXXX..XXXX#",
+    "#................#",
+    "#h..............h#",
+    "#................#",
+    "#hh............hh#",
+    "#................#",
+    "#x..............x#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Red planks, and a horseshoe nailed up for luck, upside down."
+    ],
+    "X": [
+      "A stall, and a horse looking at you with deep suspicion."
+    ],
+    "h": [
+      "Hay. Sweet-smelling, and itchy."
+    ],
+    "x": [
+      "A water barrel."
+    ],
+    "_": [
+      "The barn wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "moss-found",
+      "type": "npc",
+      "x": 8,
+      "y": 5,
+      "sprite": "moss",
+      "facing": "down",
+      "name": "Moss",
+      "lines": [
+        "Shh. Tuft's watching a beetle.",
+        "...Oh. It's you. Tuft noticed you before I did. He notices everything.",
+        "I'm Moss. I've been sleeping in this hedge since the door shut. Tuft says it's time to stop."
+      ],
+      "character": "moss",
+      "meets": true,
+      "goneAfter": "met:moss"
+    },
+    {
+      "id": "wc-stablehand",
+      "type": "npc",
+      "x": 3,
+      "y": 4,
+      "sprite": "pell",
+      "facing": "down",
+      "name": "Stablehand Tibb",
+      "lines": [
+        "Mind the grey. She bites. The brown one bites too. Actually, mind all of them."
+      ]
+    }
+  ],
+  "floor": "hay"
+}

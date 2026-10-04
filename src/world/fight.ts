@@ -483,7 +483,7 @@ export function stepFight(
     }
   }
 
-  // ---- a blow still to come: Oren's palm after his breath, Pip's second shockwave.
+  // ---- a blow still to come: Oren's palm after her breath, Pip's second shockwave.
   if (f.delayed[0] > 0) {
     f.delayed = [f.delayed[0] - dt, f.delayed[1], f.delayed[2]];
     if (f.delayed[0] <= 0) {

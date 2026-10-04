@@ -131,22 +131,6 @@
           "Bo taught me to cartwheel the last bit. Don't tell Hesper. She'll charge for the well."
         ]
       }
-    },
-    {
-      "id": "quill-found",
-      "type": "npc",
-      "x": 9,
-      "y": 4,
-      "sprite": "quill",
-      "facing": "down",
-      "name": "Quill",
-      "lines": [
-        "Oh! Oh, you're real! I've read about you. Well, not you. People like you. Travellers.",
-        "Quill. Mage. I came in for one book five hundred years ago and I'm still on the index."
-      ],
-      "character": "quill",
-      "meets": true,
-      "goneAfter": "met:quill"
     }
   ]
 }

@@ -1,0 +1,218 @@
+{
+  "id": "warrior-city",
+  "name": "Warrior City",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "s",
+    "g",
+    "z"
+  ],
+  "art": {
+    "1": ".",
+    "2": ".",
+    "3": ".",
+    "4": ".",
+    "5": ".",
+    "6": ".",
+    "7": ".",
+    "8": ".",
+    "h": "."
+  },
+  "tiles": [
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM^^MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "MT.............................ss.............................TM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBB3BBB..........ss...........NNNN4NNNN.VVVV5VVVTM",
+    "MT.PPPP2PPPP.....s............cssc..............s.........s...TM",
+    "MT.....s.........s...ssssssssssssssssssssss.....s.........s...TM",
+    "MT.....s.........s...ssCCCCCCCCCCCCCCCCCCss.....s.........s...TM",
+    "MT.uuuusuuuu.uuuus...ssCCCCCCCCCCCCCCCCCCss...uuuu.uuuu.uuuu..TM",
+    "MT.uuuusuuuu.uuuus...ssCCCCCCCCCCCCCCCCCCss...uuuu.uuuu.uuuu..TM",
+    "MT.uhuusuhuu.uhuus...ssCCCCCCCCCCCCCCCCCCss...uhuu.uhuu.uhuu..TM",
+    "MT..s..s.s....s..s...ssCCCCCCCCCCCCCCCCCCss....ss...s....ss...TM",
+    "MT..s..s.s....s..s...ssCCCCCCCCCCCCCCCCCCss....ss...s....ss...TM",
+    "MT..s..s.s....s..s...ssCCCCCCCCCCCCCCCCCCss....ss...s....ss...TM",
+    "MT..s..s.s....s..s..cssCCCCCCCCCCCCCCCCCCssc...ss...s....ss...TM",
+    "<ssssssssssssssssssssssCCCCCCCCCCCCCCCCCCssssssssssssssssssssss>",
+    "<ssssssssssssssssssssssCCCCCCCCCCCCCCCCCCssssssssssssssssssssss>",
+    "MT.....s........s...cssCCCCCCCCCCCCCCCCCCssc....ss........s...TM",
+    "MT.....s........s....ssCCCCCCCC11CCCCCCCCss.....ss.....rrrrrrrTM",
+    "MT.WWWWWWWWW.aaaaaaa.ssssssssssssssssssssss.....ss.....rrrrrrrTM",
+    "MT.WWWWWWWWW.aaaaaaa.ssssssssssKKssssssssss.FFFFssFFFF.rrrrrrrTM",
+    "MT.WWWWWWWWW.aaaaaaa.ssssssssssKKssssssssss.FzzzzzzzzF.rrrrrrrTM",
+    "MT.WWWWWWWWW.aaaaaaa.ssssssssssssssssssssss.FzezezezkF.rrrrrrrTM",
+    "MT.WWWWWWWWW.aaa7aaa.sbssssssssssssssssssbs.FzzzzzzzzF.rrr8rrrTM",
+    "MT.WWWW6WWWW....s....ssssssssssssssssssssss.FzzzzzzzzF....s...TM",
+    "MT.....s........s..............ss...........FzezezezkF....s...TM",
+    "MT.....s........s..............ss...........FzzzzzzzzF.FFFFFFFTM",
+    "MT.....s.......................ss...........FzzzzzzzzF.FgggggFTM",
+    "MT.uuuu.uuuu.uuuu..............ss.uuuu..uuuuFFFFFFFFFF.FgggggFTM",
+    "MT.uuuu.uuuu.uuuu..............ss.uuuu..uuuu...........FgggggFTM",
+    "MT.uhuu.uhuu.uhuu..............ss.uhuu..uhuu...........FFFFFFFTM",
+    "MT..s....s....s................ss..s.....s....................TM",
+    "MT.............................ss.............................TM",
+    "MT.............................ss.............................TM",
+    "MT.............................ss.............................TM",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM__MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+  ],
+  "spawn": {
+    "x": 2,
+    "y": 19,
+    "facing": "right"
+  },
+  "examine": {
+    "M": [
+      "The city wall. Somebody has carved STRENGTH into every fifth stone."
+    ],
+    "I": [
+      "Stone, thick and square. Nothing in this city was built to look pretty. Everything was built to last."
+    ],
+    "H": [
+      "A cottage. The garden is mostly practice dummies."
+    ],
+    "1": [
+      "The Colosseum's great gate. Carved over the arch: HERE WE TEST OURSELVES."
+    ],
+    "2": [
+      "The chapel. A lantern burns in the window."
+    ],
+    "3": [
+      "The library. A sign: QUIET. (Somebody has added: PLEASE.)"
+    ],
+    "4": [
+      "The Adventurers' Guild. A notice board, crowded with jobs."
+    ],
+    "5": [
+      "The hospital. It smells of herbs and soap."
+    ],
+    "6": [
+      "The tavern. Singing, slightly off-key."
+    ],
+    "7": [
+      "The store. EVERYTHING YOU NEED, MOSTLY."
+    ],
+    "8": [
+      "The horse barn. Something inside is chewing very loudly."
+    ],
+    "h": [
+      "A front door. Nobody's answering."
+    ],
+    "F": [
+      "A fence."
+    ],
+    "b": [
+      "A bench, worn smooth."
+    ],
+    "c": [
+      "A lantern on a post."
+    ],
+    "T": [
+      "Trees."
+    ],
+    "<": [
+      "Back west, toward Felix's maze."
+    ],
+    ">": [
+      "East: a bridge, and beyond it the Mage kingdom."
+    ],
+    "^": [
+      "North: the road to the castle."
+    ],
+    "_": [
+      "South: down toward the old mines, and an overgrown garden."
+    ],
+    "C": [
+      "The Colosseum. Thousands of seats, and every one of them has seen a fight."
+    ],
+    "K": [
+      "The statue of Kaldor, colossal, one boot on a broken crown.",
+      "The plaque: KALDOR THE KINGBREAKER. Undying."
+    ],
+    "P": [
+      "The chapel. A bell hangs in the tower, and the window glows in every colour."
+    ],
+    "B": [
+      "The library. Columns, and a great book over the door."
+    ],
+    "N": [
+      "The Adventurers' Guild. The notice board is crowded with jobs."
+    ],
+    "V": [
+      "The hospital. Clean white walls, and a sign with a green leaf."
+    ],
+    "W": [
+      "The tavern. Singing, slightly off-key, and the smell of stew."
+    ],
+    "a": [
+      "The store. EVERYTHING YOU NEED, MOSTLY."
+    ],
+    "r": [
+      "The horse barn. Something inside is chewing very loudly."
+    ],
+    "z": [
+      "The training ground's sand, raked flat and stamped flat again."
+    ],
+    "e": [
+      "A straw dummy. It has been hit so often it has started to look smug."
+    ],
+    "k": [
+      "A rack of practice weapons, all wood, all chipped."
+    ],
+    "g": [
+      "The paddock. The grass is shorter than it should be."
+    ],
+    "u": [
+      "A cottage. Window boxes, and a practice dummy in nearly every garden."
+    ]
+  },
+  "objects": [
+    {
+      "id": "barnaby",
+      "type": "npc",
+      "x": 28,
+      "y": 24,
+      "sprite": "barnaby",
+      "facing": "down",
+      "name": "Barnaby Loudmouth",
+      "lines": [
+        "HEAR YE! Welcome to Warrior City, home of the COLOSSEUM!",
+        "Fights every night. Glory every fight. Seats... mostly every seat."
+      ],
+      "questions": [
+        {
+          "ask": "Can you put me on the bill?",
+          "answer": [
+            "At the Colosseum? Nobody new's fought there in years. They'd need a very good reason."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The Trial closed after the challenger called Aurek. Aurek the Tall. Almost won. Scarred the king's face.",
+            "The king… kept him. You'll see."
+          ]
+        }
+      ],
+      "job": {
+        "flag": "on-the-bill",
+        "path": "social",
+        "done": [
+          "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
+          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE KALDORIUM!",
+          "You're on the bill."
+        ],
+        "cant": [
+          "BARNABY: A new champion? On what grounds? Give me a story, stranger, a story!",
+          "(Someone with a way with words might talk him into it.)"
+        ]
+      }
+    }
+  ]
+}

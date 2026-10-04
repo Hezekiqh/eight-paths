@@ -186,22 +186,6 @@
         "Beneath the smallest cairn stone, wrapped in a regiment scarf: a Heart Piece.",
         "Somebody meant it for whoever came home. You'll do."
       ]
-    },
-    {
-      "id": "pip-found",
-      "type": "npc",
-      "x": 24,
-      "y": 5,
-      "sprite": "pip",
-      "facing": "down",
-      "name": "Pip",
-      "lines": [
-        "A new face! I've played the same song to Grask four hundred times. He hasn't smiled once.",
-        "Pip, Bard. You look like you need a song. Or a way past that checkpoint. I can do both."
-      ],
-      "character": "pip",
-      "meets": true,
-      "goneAfter": "met:pip"
     }
   ],
   "art": {

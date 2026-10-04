@@ -58,7 +58,7 @@
       "The chapel, dark and quiet."
     ],
     "3": [
-      "The Kaldorium. Once an arena. Carved over the door: HERE WE TEST OURSELVES, NEVER EACH OTHER. Painted beside it: HERE WE TEST EACH OTHER."
+      "The old Kaldorium, boarded up. A painted sign: THE FIGHTS HAVE MOVED TO WARRIOR CITY. Under it: (THE BIG ONE, WITH THE STATUE)."
     ],
     "d": [
       "You knock. A woman's voice, very close to the door: \"Go away. Unless you're the prince. Are you the prince?\""
@@ -128,7 +128,7 @@
         {
           "ask": "How do I reach the king?",
           "answer": [
-            "Get yourself billed at the Kaldorium: Barnaby does the bills, he likes a talker. Win three fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
+            "Get yourself billed at the Colosseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
             "Or buy a lamp. Lamps are nice."
           ]
         },
@@ -198,47 +198,6 @@
         }
       ],
       "look": true
-    },
-    {
-      "id": "barnaby",
-      "type": "npc",
-      "x": 17,
-      "y": 7,
-      "sprite": "barnaby",
-      "facing": "down",
-      "name": "Barnaby Loudmouth",
-      "lines": [
-        "HEAR YE! The king has won a great victory!",
-        "…The same one. From three hundred years ago. I've been announcing it since. I'd like a new one."
-      ],
-      "questions": [
-        {
-          "ask": "Can you put me on the bill?",
-          "answer": [
-            "At the Kaldorium? Nobody new's fought there in years. They'd need a very good reason."
-          ]
-        },
-        {
-          "ask": "Heard any gossip?",
-          "answer": [
-            "The Trial closed after the challenger called Aurek. Aurek the Tall. Almost won. Scarred the king's face.",
-            "The king… kept him. You'll see."
-          ]
-        }
-      ],
-      "job": {
-        "flag": "on-the-bill",
-        "path": "social",
-        "done": [
-          "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
-          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE KALDORIUM!",
-          "You're on the bill."
-        ],
-        "cant": [
-          "BARNABY: A new champion? On what grounds? Give me a story, stranger, a story!",
-          "(Someone with a way with words might talk him into it.)"
-        ]
-      }
     },
     {
       "id": "pim",

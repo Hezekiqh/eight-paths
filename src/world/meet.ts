@@ -8,6 +8,44 @@ import { MAPS, type MapId, type NpcObject } from './maps';
 // the rest wait along the road, each before the first job only their Path can
 // do, and once met they go home to the Archive.
 
+/**
+ * To recruit one of the core eight you need Lv 6 in their own Path (author, Oct 3, 2026): everyone
+ * starts at Lv 5, so one real habit of that kind. Until then they turn you away, kindly, in their
+ * own voice, and tell you to come back once you've done one.
+ */
+export const RECRUIT_LEVEL = 6;
+export const recruitNeeds = (id: CharacterId) => ({ kind: 'path' as const, dimension: COMPANIONS[id].dimension, level: RECRUIT_LEVEL });
+
+/** What each says when that part of your wellness hasn't had a habit yet. Drafts for the author. */
+export const NOT_YET: Partial<Record<CharacterId, string[]>> = {
+  brannoc: [
+    'Forgive me, stranger. You do not look as though you have trained a single day.',
+    'Come back once you have done a Physical habit, and my sword is yours.',
+  ],
+  ysolde: [
+    'Your ledger tells me money is not much of a priority for you yet.',
+    'Come back once you have done a Financial habit. I do not partner with spendthrifts.',
+  ],
+  quill: [
+    "Hmm. It doesn't look like learning is very important to you right now.",
+    "Come back once you've done an Intellectual habit. Then we'll have something to talk about. Footnote: I'll wait.",
+  ],
+  wren: [
+    "Your spirit seems quiet, as if it isn't something you've made room for yet.",
+    "Come back once you've done a Spiritual habit. I'll keep a candle lit.",
+  ],
+  oren: ["...Breathe.", "It doesn't seem your heart has been looked after yet. Come back once you've done an Emotional habit."],
+  pip: [
+    "Oh! You haven't done a single Social thing yet, have you?",
+    "Come back once you've done a Social habit and I'll write you a song. A good one. Probably.",
+  ],
+  tamsin: [
+    "Work doesn't look like it matters much to you yet.",
+    "Come back once you've done an Occupational habit. Then we'll talk. Then we'll work.",
+  ],
+  moss: ["...You don't spend much time outside, do you.", "Come back once you've done an Environmental habit."],
+};
+
 /** The story flag set when you meet one of the core eight in the Other World. */
 export const metFlag = (id: CharacterId) => `met:${id}`;
 

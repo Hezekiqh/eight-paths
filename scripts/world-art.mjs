@@ -8,6 +8,9 @@
 // Maps are laid out in src/world/maps/<map>.json, which the app also reads
 // for walls, so the picture and the collisions always agree.
 
+import { cityArt } from './city-art.mjs';
+import { FLOORS, interiorArt } from './interior-art.mjs';
+import { mineArt } from './mine-art.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
 
@@ -361,6 +364,8 @@ function drawMap(map) {
       let c = hex(P.plank[Math.floor(hash(seg, row, 9) * 3)]);
       if (y % 4 === 3 || (x + joint) % 24 === 0) c = hex(P.seam);
       else if (hash(x, y, 3) < 0.04) c = mix(c, hex(P.seam), 0.5);
+      // a room can lay another floor: stone flags, white tile, straw (interior-art.mjs)
+      if (map.floor && FLOORS[map.floor]) c = hex(FLOORS[map.floor](x, y, hash));
       g[y][x] = c;
     }
 
@@ -408,7 +413,7 @@ function drawMap(map) {
       const look = (c) => map.art?.[c] ?? c;
       const draw = TILE_ART[look(at(tx, ty))];
       if (!draw) throw new Error(`No art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => look(at(tx + dx, ty + dy)) });
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => look(at(tx + dx, ty + dy)), wall: map.wall });
     }
 
   // Moonlight from the high window falls onto the cocoon.
@@ -954,6 +959,21 @@ function cottageWall(g, x, y, m) {
   box(g, x, y + 14, TILE, 2, O.stoneDark);
 }
 
+// Warrior City's interiors: walls, furniture (interior-art.mjs). Only letters the Archive doesn't use.
+for (const [k, v] of Object.entries(interiorArt({ box, put, ellipse, hash }))) if (!TILE_ART[k]) TILE_ART[k] = v;
+
+// Warrior City's buildings, each its own look, and every older town's cottages and stone houses
+// redrawn the same way (city-art.mjs). A building draws its own door, so a door tile set into one
+// (D, d, or a letter drawn as them) is left alone.
+Object.assign(OUTDOOR_ART, cityArt({ box, put, ellipse, hash }));
+for (const k of ['D', 'd']) {
+  const plain = OUTDOOR_ART[k];
+  OUTDOOR_ART[k] = (g, x, y, m) => {
+    if ('HIu'.includes(m.at(0, -1))) return;
+    plain(g, x, y, m);
+  };
+}
+
 function drawOutdoor(map) {
   const rows = map.tiles;
   const H = rows.length;
@@ -1293,6 +1313,9 @@ const DUNGEON_ART = {
     put(g, x + 8, y + 1, P.flame2);
   },
 };
+
+// The old mine's tiles (mine-art.mjs).
+Object.assign(DUNGEON_ART, mineArt({ box, put, ellipse, hash, wall: (g, x, y, m) => DUNGEON_ART.W(g, x, y, m) }));
 
 function drawDungeon(map) {
   const rows = map.tiles;
@@ -1916,6 +1939,16 @@ const MAPS = [
   'felix-maze',
   'kingdom-dungeon',
   'dungeon-mazes',
+  'warrior-city',
+  'south-road',
+  'old-mine',
+  'wc-chapel',
+  'wc-library',
+  'wc-guild',
+  'wc-hospital',
+  'wc-tavern',
+  'wc-store',
+  'wc-barn',
   'room-brannoc',
   'room-ysolde',
   'room-quill',

@@ -1197,7 +1197,7 @@ const SIG_SCENES = {
     });
   },
 
-  // Quill paces the Archive with her biting book, talking; then five footnotes, in fire.
+  // Quill paces the Archive with his biting book, talking; then five footnotes, in fire.
   quill: () => {
     const F = F0;
     const foes = [
@@ -1299,7 +1299,7 @@ const SIG_SCENES = {
     });
   },
 
-  // Oren doesn't move. They run rings round him. He breathes in. Then they leave, quickly, through the air.
+  // Oren doesn't move. They run rings round her. She breathes in. Then they leave, quickly, through the air.
   oren: () => {
     const F = F0 + 0.4;
     const H = [128, 96];

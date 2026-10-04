@@ -1,0 +1,92 @@
+{
+  "id": "wc-guild",
+  "name": "The Adventurers' Guild",
+  "wall": "wood",
+  "tiles": [
+    "##################",
+    "#VVNVVNVVVVFVVNVV#",
+    "#VVNVVNVVVVFVVNVV#",
+    "#x..............x#",
+    "#...nnnnnn.......#",
+    "#...nnnnnn.......#",
+    "#................#",
+    "#t.....t......t..#",
+    "#................#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Timber walls, hung with old shields."
+    ],
+    "N": [
+      "The notice board: GOATS RECOVERED. RAT IN CELLAR (BIG). ESCORT WANTED TO THE BRIDGE (WELL PAID)."
+    ],
+    "F": [
+      "A fire, and a cat asleep exactly as close to it as is safe."
+    ],
+    "n": [
+      "A great map of the eight kingdoms in a ring, joined by bridges. Beyond the ring, the map is blank."
+    ],
+    "t": [
+      "A table, sticky with someone's victory."
+    ],
+    "x": [
+      "A barrel of something the guild calls 'courage'."
+    ],
+    "_": [
+      "The guild wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "ysolde-found",
+      "type": "npc",
+      "x": 6,
+      "y": 6,
+      "sprite": "ysolde",
+      "facing": "down",
+      "name": "Ysolde",
+      "lines": [
+        "A paying customer, at last. The deserters here owe me five centuries of rent.",
+        "Ysolde. Noble, banker, collector of debts. You look like you'd be good for it. I'm joking. Mostly."
+      ],
+      "character": "ysolde",
+      "meets": true,
+      "goneAfter": "met:ysolde"
+    },
+    {
+      "id": "wc-guildmaster",
+      "type": "npc",
+      "x": 12,
+      "y": 4,
+      "sprite": "holt",
+      "facing": "down",
+      "name": "Guildmaster Garrow",
+      "lines": [
+        "Adventurers' Guild. Jobs on the board, pay at the desk, bleeding outside, please."
+      ],
+      "questions": [
+        {
+          "ask": "Any work?",
+          "answer": [
+            "Always. Read the board. The good jobs go to the strong, and the strong are the ones who did a little every day.",
+            "Funny how that works."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "wc-store",
+  "name": "The Store",
+  "wall": "plaster",
+  "tiles": [
+    "##################",
+    "#VVVVVVVVVVVVVVVV#",
+    "#VVVVVVVVVVVVVVVV#",
+    "#SSSS..SSSS..SSSS#",
+    "#................#",
+    "#.....uuuuu......#",
+    "#................#",
+    "#kk..........kk..#",
+    "#k...............#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Plaster walls, hung with ladles."
+    ],
+    "S": [
+      "Shelves of everything: rope, rations, a hat with a feather, one boot."
+    ],
+    "u": [
+      "The counter. A bell on it says RING FOR SERVICE. It has been rung a great deal."
+    ],
+    "k": [
+      "A crate stamped WARRIOR CITY: HANDLE WITH STRENGTH."
+    ],
+    "_": [
+      "The store wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "wc-shopkeep",
+      "type": "npc",
+      "x": 8,
+      "y": 4,
+      "sprite": "jory",
+      "facing": "down",
+      "name": "Shopkeeper Dunstan",
+      "lines": [
+        "Welcome! Everything you need, mostly. Everything you don't need, definitely."
+      ],
+      "questions": [
+        {
+          "ask": "What's for sale?",
+          "answer": [
+            "Rope. Lanterns. A bridge-crossing permit, though the bridge is shut.",
+            "And hats. Always hats."
+          ]
+        }
+      ]
+    }
+  ]
+}
