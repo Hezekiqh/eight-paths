@@ -52,6 +52,15 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
         ],
         outcome: { flags: [flag], joins: ['plush'] },
       };
+    case 'dungeon-might':
+      // The Test of Strength (author, Oct 4, 2026): five shadows, and the gate to the Hall of Champions.
+      return {
+        lines: [
+          'The fifth shadow comes apart like smoke in a draught.',
+          'Somewhere in the wall, a chain rattles. The gate grinds open.',
+        ],
+        outcome: { flags: [flag] },
+      };
     case 'the-pit':
       // The Kaldorium (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
       if (flag === 'pit-guards')

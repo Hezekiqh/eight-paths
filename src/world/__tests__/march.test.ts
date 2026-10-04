@@ -61,7 +61,7 @@ describe('the Maze Ward holes', () => {
   const { MAZE_HOLES } = jest.requireActual('../dungeon') as typeof import('../dungeon');
   const ward = MAPS['dungeon-mazes'];
   it('sit in the wall, each beside floor you can stand on, and land you on floor further along', () => {
-    for (const h of MAZE_HOLES) {
+    for (const h of MAZE_HOLES.filter((m) => m.map === 'dungeon-mazes')) {
       const spots: [number, number][] = [];
       ward.tiles.forEach((row, y) => [...row].forEach((c, x) => c === h.tile && spots.push([x, y])));
       expect(spots).toHaveLength(1);
@@ -78,6 +78,13 @@ describe('the Maze Ward holes', () => {
     }
   });
   it('need more Mage the further they skip: Lv 6, 8, 10', () => {
-    expect(MAZE_HOLES.map((h) => (h.needs.kind === 'path' ? h.needs.level : 0))).toEqual([6, 8, 10]);
+    const ward = MAZE_HOLES.filter((h) => h.map === 'dungeon-mazes');
+    expect(ward.map((h) => (h.needs.kind === 'path' ? h.needs.level : 0))).toEqual([6, 8, 10]);
+  });
+  it("include the Test of the Mind's shortcut, a Mage's way past the plates to the Hall of Champions", () => {
+    const mind = MAZE_HOLES.find((h) => h.map === 'dungeon-mind');
+    expect(mind?.to.map).toBe('dungeon-lore');
+    expect(MAPS['dungeon-mind'].tiles.some((row) => row.includes(mind!.tile))).toBe(true);
+    expect(MAPS['dungeon-lore'].walkable).toContain(MAPS['dungeon-lore'].tiles[mind!.to.y][mind!.to.x]);
   });
 });

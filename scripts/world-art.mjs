@@ -1102,6 +1102,11 @@ const DUNGEON_ART = {
     box(g, x, y, TILE, TILE, DG.earth);
   },
   '.'() {},
+  v(g, x, y) {
+    // A trap pit (author, Oct 4, 2026): floor like any other, bar a hairline crack, if you look.
+    for (const [i, j] of [[4, 6], [5, 7], [6, 7], [7, 8], [8, 9], [9, 9], [10, 10], [11, 10]])
+      put(g, x + i, y + j, DG.floorLine);
+  },
   ','(g, x, y) {
     for (let i = 0; i < 6; i++)
       put(g, x + 2 + Math.floor(hash(x, y, i) * 12), y + 2 + Math.floor(hash(y, x, i) * 12), DG.rubble);
@@ -1441,7 +1446,7 @@ function drawDungeon(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const c = at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      if ((c === '.' || c === ',' || c === 'P' || c === 'v') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;
@@ -1684,6 +1689,37 @@ const WALKERS = {
     boots: '#2A2020',
     hair: ['spiky', '#FFC940'],
     patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'],
+  },
+  // the Kingdom Dungeon's three worst prisoners (author, Oct 4, 2026: each their own look, not the guards')
+  // Nails, who served the king one ice cube: ginger and spiky, in his serving apron
+  nails: {
+    top: '#3A2E3A',
+    shade: '#2A2230',
+    legs: '#2A2A30',
+    boots: '#1A1418',
+    skin: '#E8B48C',
+    hair: ['spiky', '#C8662A'],
+    apron: '#E8E0D0',
+  },
+  // Old Mott, twenty life sentences: bald, a great white beard, a patched old tunic
+  oldmott: {
+    top: '#7A6A4A',
+    shade: '#5A4E36',
+    legs: '#4A3E2E',
+    boots: '#2E241A',
+    belt: '#3A2E20',
+    skin: '#E0B898',
+    hair: ['bald', '#E8E8E0'],
+    beard: '#E8E8E0',
+  },
+  // Silas Seen, who left the king on read: pale, quiet, in a deep blue hood
+  silas: {
+    top: '#2E3E52',
+    shade: '#22303F',
+    legs: '#22303F',
+    boots: '#161C24',
+    skin: '#EAD8C8',
+    hair: ['hood', '#2E3E52'],
   },
   raider: {
     top: '#6A4A3A',
@@ -2732,6 +2768,10 @@ const MAPS = [
   'felix-maze',
   'kingdom-dungeon',
   'dungeon-mazes',
+  'dungeon-fork',
+  'dungeon-mind',
+  'dungeon-might',
+  'dungeon-lore',
   'warrior-city',
   'south-road',
   'old-mine',

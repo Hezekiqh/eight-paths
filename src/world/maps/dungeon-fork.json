@@ -1,0 +1,75 @@
+{
+  "id": "dungeon-fork",
+  "name": "The Two Tunnels",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "art": {
+    "a": "E",
+    "b": "E",
+    "2": "H"
+  },
+  "tiles": [
+    "##################",
+    "#WWWWaWWcWWWbWWWW#",
+    "#W..............W#",
+    "#W..............W#",
+    "#W,.............W#",
+    "#W............,.W#",
+    "#W.......2......W#",
+    "#WWWWWWWWWWWWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 9,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Damp stone."
+    ],
+    "c": [
+      "A torch, burning low."
+    ],
+    "a": [
+      "A low tunnel. Cold air, and a smell of old books."
+    ],
+    "b": [
+      "A wide tunnel. Something in there is breathing.",
+      "Five somethings."
+    ],
+    "2": [
+      "The ladder back down, to the Maze Ward."
+    ],
+    ",": [
+      "Rubble."
+    ]
+  },
+  "objects": [
+    {
+      "id": "sign-mind",
+      "type": "sign",
+      "x": 4,
+      "y": 2,
+      "lines": [
+        "THE TEST OF THE MIND.",
+        "For those who read, and plan, and puzzle. (The Mage's Path: your Intellectual habits.)",
+        "Scratched underneath: Clever people only. Not you, Gary."
+      ]
+    },
+    {
+      "id": "sign-might",
+      "type": "sign",
+      "x": 13,
+      "y": 2,
+      "lines": [
+        "THE TEST OF STRENGTH.",
+        "For those who lift, and run, and train. (The Warrior's Path: your Physical habits.)",
+        "Scratched underneath, smaller: There are five of them. Good luck."
+      ]
+    }
+  ]
+}

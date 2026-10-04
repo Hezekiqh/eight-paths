@@ -25,30 +25,14 @@
     "facing": "up"
   },
   "examine": {
-    "1": [
-      "The door back out to Warrior City."
-    ],
-    "V": [
-      "Smoky timber, carved with a hundred initials."
-    ],
-    "Y": [
-      "A window, fogged from the inside."
-    ],
-    "F": [
-      "A roaring fire. Someone's socks are drying on the guard."
-    ],
-    "u": [
-      "The bar. Polished by elbows."
-    ],
-    "x": [
-      "Barrels. One is labelled 'THE GOOD STUFF', the rest are labelled 'THE STUFF'."
-    ],
-    "t": [
-      "A table, and a game of dice nobody's winning."
-    ],
-    "_": [
-      "The tavern wall."
-    ]
+    "1": ["The door back out to Warrior City."],
+    "V": ["Smoky timber, carved with a hundred initials."],
+    "Y": ["A window, fogged from the inside."],
+    "F": ["A roaring fire. Someone's socks are drying on the guard."],
+    "u": ["The bar. Polished by elbows."],
+    "x": ["Barrels. One is labelled 'THE GOOD STUFF', the rest are labelled 'THE STUFF'."],
+    "t": ["A table, and a game of dice nobody's winning."],
+    "_": ["The tavern wall."]
   },
   "objects": [
     {
@@ -75,9 +59,7 @@
       "sprite": "brunna",
       "facing": "down",
       "name": "Barkeep Rolla",
-      "lines": [
-        "What'll it be? We've got stew, stew, and yesterday's stew."
-      ],
+      "lines": ["What'll it be? We've got stew, stew, and yesterday's stew."],
       "questions": [
         {
           "ask": "Heard anything?",
@@ -95,6 +77,67 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "tavern-nails",
+      "type": "npc",
+      "x": 3,
+      "y": 8,
+      "sprite": "nails",
+      "facing": "right",
+      "name": "Nails",
+      "comesAfter": "prisoners-pardoned",
+      "lines": [
+        "Free man! First thing I did? Ordered a glass of water.",
+        "...Three ice cubes. Showing off, if you ask me."
+      ],
+      "questions": [
+        {
+          "ask": "Staying out of trouble?",
+          "answer": ["The barkeep asked if I'd wait tables for her.", "I said no. Life sentence. You learn."]
+        },
+        {
+          "ask": "Back in a cell by Tuesday, I'd say.",
+          "answer": ["Only if somebody orders a water."],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "tavern-mott",
+      "type": "npc",
+      "x": 5,
+      "y": 8,
+      "sprite": "oldmott",
+      "facing": "left",
+      "name": "Old Mott",
+      "comesAfter": "prisoners-pardoned",
+      "lines": ["Somebody sneezed in here earlier.", "I said bless you SO fast. I've never been so fast."],
+      "questions": [
+        {
+          "ask": "What will you do now?",
+          "answer": [
+            "Sit here. Have a pint. Tell everyone I fought the Warden.",
+            "I did fight him. I lay in front of him very bravely."
+          ]
+        },
+        {
+          "ask": "Achoo.",
+          "answer": ["BLESS YOU!", "...", "Don't do that to me."],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "tavern-silas",
+      "type": "npc",
+      "x": 4,
+      "y": 9,
+      "sprite": "silas",
+      "facing": "up",
+      "name": "Silas Seen",
+      "comesAfter": "prisoners-pardoned",
+      "lines": ["Yeah, made plans with the king to golf at four tomorrow.", "Really don't want to be executed."]
     }
   ]
 }

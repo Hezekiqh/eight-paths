@@ -4,7 +4,9 @@
   "style": "dungeon",
   "walkable": [
     ".",
-    ","
+    ",",
+    "v",
+    "o"
   ],
   "art": {
     "1": "H",
@@ -17,12 +19,12 @@
     "#############################################",
     "#W6WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
     "#1.....W.......W.W...........W...W...W...W.2#",
-    "#WWWWW.W.WWWWW.W.W.WWWWWWWWW.WWW.W.W.W.W.W.W#",
+    "#WoWWW.W.WWWWW.W.W.WWWWWWWWW.WWW.W.W.W.W.W.W#",
     "#W...W.W.W.....W.W.W...W...W.W...W.W...W.W.W#",
-    "#W.W.W.W.W.WWWWW.W.W.W.W.W.W.W.W.W.WWWWW.W.R#",
-    "#W.W...W.W...W...8.....W.W...W...W.....W.W.W#",
-    "#W.WWWWW.WW..W.W.WWWWW.W.WWWWWWW.WWWWW.W.W.W#",
-    "#W.......W.....W.......W...............W...W#",
+    "#W.W.W.W.W.WWWWWvW.W.WvW.W.W.W.W.W.WWWWW.W.R#",
+    "#W.o...o.o...o...8.....W.W...W...W.....W.W.W#",
+    "#W.WWWWW.WW..W.W.WWWWW.W.WWWWWWWvWWWWW.W.W.W#",
+    "#W.......Wv....W.......W...............W...W#",
     "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWW0WWWWWWWWWWWWW#",
     "#############################################"
   ],
@@ -32,6 +34,8 @@
     "facing": "right"
   },
   "examine": {
+    "o": ["A hole in the wall. It is exactly Brannoc-shaped.", "So is the next one. And the one after that."],
+    "v": ["Damp stone. There's a hairline crack in it."],
     "W": [
       "Damp stone. Someone has drawn an arrow on it, pointing at another arrow."
     ],

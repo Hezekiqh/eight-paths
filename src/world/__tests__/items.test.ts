@@ -72,14 +72,19 @@ describe('what stands in the rooms', () => {
         queue.push(n);
       }
     }
+    // next to them, or across the bars of their cell ('p': the prisoners are talked to through them)
     const stuck = map.objects.filter(
       (o) =>
         ![
-          [o.x + 1, o.y],
-          [o.x - 1, o.y],
-          [o.x, o.y + 1],
-          [o.x, o.y - 1],
-        ].some(([x, y]) => seen.has(y * map.width + x)),
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ].some(
+          ([dx, dy]) =>
+            seen.has((o.y + dy) * map.width + o.x + dx) ||
+            (map.tiles[o.y + dy]?.[o.x + dx] === 'p' && seen.has((o.y + 2 * dy) * map.width + o.x + 2 * dx)),
+        ),
     );
     expect(stuck.map((o) => o.id)).toEqual([]);
   });

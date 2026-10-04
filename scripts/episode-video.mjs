@@ -731,6 +731,10 @@ const SCENE_GAP = 1.0;
 /** Pushing a boulder: leaning on it (engine.ts PUSH_DELAY), then the slide. */
 const PUSH_LEAN = 0.35;
 const PUSH_TIME = 0.3;
+/** How long a puff of shadow smoke lasts (seconds), the spark the first part of it. */
+const PUFF = 0.55;
+const SPARK = 0.14;
+
 function compile(ep) {
   const segs = [];
   let t = ep.titleDur;
@@ -888,12 +892,21 @@ function compile(ep) {
       // the app's hatch, full screen (scripts/hatch-video.mjs beats), then back to the World
       segs.push({ kind: 'hatch', t0: t, t1: t + HATCH_END, ...step.hatch });
       t += HATCH_END;
+    } else if (step.puff) {
+      // a burst of black smoke that takes `hide` away and leaves `show` (a guard swallowed by his shadow),
+      // with a white spark first if it's a blow (`spark`): the fights, told without the game's combat
+      const p = step.puff;
+      segs.push({ kind: 'puff', t0: t, t1: t + PUFF, hide: p.hide ?? [], show: p.show ?? [], spark: !!p.spark });
+      t += p.wait ?? PUFF;
     } else if (step.show) {
       segs.push({ kind: 'show', t0: t, t1: t, id: step.show });
     } else if (step.open) {
       segs.push({ kind: 'open', t0: t, t1: t, at: step.open });
     } else if (step.gap) {
       segs.push({ kind: 'gap', t0: t, t1: t, at: step.gap });
+    } else if (step.caption) {
+      // a big caption across the top (the clips' hook, author's test, Oct 4, 2026): until the next one
+      segs.push({ kind: 'caption', t0: t, t1: t, lines: step.caption });
     } else if (step.wait) t += step.wait;
   }
   return { segs, end: t };
@@ -927,6 +940,10 @@ function stateAt(ep, compiled, t) {
   let opened = [];
   /** Tiles broken open (bars bent wide), drawn as the game's dark gap. */
   let gaps = [...(ep.gaps ?? [])];
+  /** Taken by the smoke, and the smoke itself as it goes: { ids, since, spark }. */
+  let vanished = [];
+  const puffs = [];
+  let caption = null;
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -949,6 +966,7 @@ function stateAt(ep, compiled, t) {
       npcAt = {};
       laughing = {};
       shown = [...(s.show ?? [])];
+      vanished = [];
       opened = [];
       line = null;
       menu = null;
@@ -1001,7 +1019,16 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'cards' && t < s.t1 + 0.4) cards = { t: t - s.t0, dur: s.t1 - s.t0 };
     else if (s.kind === 'hatch' && t < s.t1) hatch = { ...s, t: t - s.t0 };
     else if (s.kind === 'show') shown.push(s.id);
-    else if (s.kind === 'open') opened.push(s.at);
+    else if (s.kind === 'caption') caption = s.lines;
+    else if (s.kind === 'puff') {
+      // the smoke hides who it takes (once the spark's done) and brings in who it leaves
+      const since = t - s.t0;
+      if (since >= (s.spark ? SPARK : 0)) {
+        vanished.push(...s.hide);
+        shown.push(...s.show);
+      }
+      if (since < PUFF) puffs.push({ ids: [...s.hide, ...s.show], since, spark: s.spark });
+    } else if (s.kind === 'open') opened.push(s.at);
     else if (s.kind === 'gap') gaps.push(s.at);
   }
   return {
@@ -1019,6 +1046,9 @@ function stateAt(ep, compiled, t) {
     cards,
     hatch,
     shown,
+    vanished,
+    puffs,
+    caption,
     opened,
     gaps,
     map,
@@ -1150,6 +1180,7 @@ function drawWorld(canvas, ep, st, t) {
       (n) =>
         ((!(st.hide ?? ep.hide)?.includes(n.id) && !n.comesAfter) || st.shown.includes(n.id)) &&
         !sitting.includes(n.id) &&
+        !st.vanished.includes(n.id) &&
         !st.npcAt[n.id]?.gone,
     )
     .map((n) => {
@@ -1193,6 +1224,30 @@ function drawWorld(canvas, ep, st, t) {
       if (age < 0 || age > 0.9) continue;
       const side = k % 2 ? 6 : -10;
       tinyText(canvas, 'HA', x + side, y - 30 - age * 10, paint('#FFF4C0', 1 - age / 0.9));
+    }
+  }
+  // a blow's white spark, then black smoke billowing out and fading where someone was taken
+  for (const p of st.puffs) {
+    for (const id of p.ids) {
+      const n = map.npcs[id];
+      if (!n) continue;
+      const [x, y] = center(n.x, n.y);
+      if (p.spark && p.since < SPARK) {
+        const k = p.since / SPARK;
+        const white = paint('#FFFFFF', 1 - k * 0.5);
+        for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]])
+          for (let r = 2; r < 4 + k * 8; r += 2)
+            canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 12 + dy * r - 1, 2, 2), white);
+        continue;
+      }
+      const k = Math.min(1, (p.since - (p.spark ? SPARK : 0)) / (PUFF - (p.spark ? SPARK : 0)));
+      for (let i = 0; i < 14; i++) {
+        const a = i * 2.39996;
+        const r = 3 + k * (8 + (i % 4) * 3);
+        const size = Math.max(1, Math.round(5 - k * 3 - (i % 3)));
+        const dark = paint(i % 3 === 0 ? '#3A2A4A' : '#120C18', (1 - k) * 0.9);
+        canvas.drawRect(CK.XYWHRect(x + Math.cos(a) * r - size / 2, y - 12 + Math.sin(a) * r * 0.8 - k * 6, size, size), dark);
+      }
     }
   }
   // a dash: a puff of dust where they set off, and speed streaks behind them
@@ -1378,6 +1433,27 @@ function drawTitle(canvas, ep, t) {
   });
 }
 const CARD_LOGO = fontOf(JERSEY, 170);
+/**
+ * A clip's hook (author's test, Oct 4, 2026): big words across the top, on a dark band, readable in a
+ * second with the sound off. Kept clear of the apps' buttons on the right (out of the right 160px).
+ */
+const CAPTION_FONT = fontOf(JERSEY, 92);
+function drawCaption(canvas, st) {
+  if (!st.caption) return;
+  const lines = st.caption;
+  const lh = 96;
+  const top = 120;
+  const left = 40;
+  const right = W - 170;
+  canvas.drawRect(CK.XYWHRect(left, top, right - left, lines.length * lh + 40), paint('#05030A', 0.82));
+  lines.forEach((line, i) => {
+    const x = left + (right - left - widthOf(CAPTION_FONT, line)) / 2;
+    const y = top + 20 + (i + 1) * lh - 18;
+    // a hard shadow, then the words: the last line in the game's gold
+    canvas.drawText(line, x + 5, y + 5, paint('#000000'), CAPTION_FONT);
+    canvas.drawText(line, x, y, paint(i === lines.length - 1 ? '#FFC940' : '#FFFFFF'), CAPTION_FONT);
+  });
+}
 /**
  * The close: what's next, then the brand as the ads end on it ("8 PATHS / THE HABIT
  * POWERED RPG"), then where to follow. Kept above the apps' captions and clear of their buttons.
@@ -1908,6 +1984,265 @@ const EPISODES = {
       ],
     };
   },
+  // A test clip (author, Oct 4, 2026): the three crimes on their own, for people who've never seen an
+  // episode. A big caption hook from the first frame, the game's music under it, no menus: just the jokes.
+  //   node scripts/episode-video.mjs clip-prisoners marketing/clip-prisoners.mp4
+  'clip-prisoners': () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?').answer;
+    return {
+      number: 'CLIP',
+      title: 'THE WORST PRISONERS',
+      music: 'assets/audio/world-1.m4a',
+      hold: 0.45,
+      map: cells,
+      hero: { sprite: 'quill', at: [14, 6], facing: 'up' },
+      hide: ['brannoc-cell', 'brannoc-sulk'],
+      gaps: [[5, 5]],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the best joke, as words you can read with the sound off
+        { caption: ['20 LIFE SENTENCES', 'FOR NOT SAYING', '"BLESS YOU"'] },
+        { say: 'prisoner-2', lines: crime('prisoner-2') },
+        { walk: [[10, 6]], face: 'up', speed: 140 },
+        { caption: ['LIFE SENTENCE', 'FOR ONE', 'ICE CUBE'] },
+        { say: 'prisoner-1', lines: crime('prisoner-1') },
+        { walk: [[18, 6]], face: 'up', speed: 140 },
+        { caption: ['HE LEFT', 'THE KING', 'ON READ'] },
+        { say: 'prisoner-3', lines: ['...', ...crime('prisoner-3')] },
+        { wait: 0.4 },
+      ],
+    };
+  },
+  // 9–13 (the author's direction, Oct 4, 2026): Gary's interview; the prisoners (their menus show the mean
+  // options, but the episode only asks what they're in for); up the ladder through Brannoc's holes; the Test
+  // of Strength; and the king's letter to the Warden, with a candle to rest at before the Colosseum.
+  9: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const gary = cells.npcs.jailer;
+    const answer = (ask) => gary.questions.find((q) => q.ask === ask).answer;
+    const asks = ['Who are you?', "Isn't this place watched 24/7?", 'How much do they pay you?'];
+    return {
+      number: 9,
+      title: 'GARY',
+      next: 'THE WORST PRISONERS',
+      hold: 0.7,
+      map: cells,
+      hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
+      hide: ['brannoc-cell', 'brannoc-sulk'],
+      gaps: [[5, 5]],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: Gary, wide awake, and not paid enough to care
+        { say: 'jailer', lines: gary.lines },
+        { menu: { speaker: 'Gary', options: menuOf(gary.questions, []), pick: 0, hold: 0.5 } },
+        { say: 'jailer', lines: answer(asks[0]) },
+        { menu: { speaker: 'Gary', options: menuOf(gary.questions, asks.slice(0, 1)), pick: 0, hold: 0.5 } },
+        { say: 'jailer', lines: answer(asks[1]) },
+        {
+          menu: {
+            speaker: 'Gary',
+            options: menuOf(gary.questions, asks.slice(0, 2)),
+            pick: menuOf(gary.questions, asks.slice(0, 2)).indexOf(asks[2]),
+            hold: 0.5,
+          },
+        },
+        { say: 'jailer', lines: answer(asks[2]) },
+        { wait: 0.3 },
+      ],
+    };
+  },
+  10: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?').answer;
+    const ask = (id, name) => ({
+      menu: { speaker: name, options: menuOf(cells.npcs[id].questions, []), pick: 0, hold: 0.45 },
+    });
+    return {
+      number: 10,
+      title: 'THE WORST PRISONERS',
+      next: 'A CHILL GUY',
+      hold: 0.4,
+      map: cells,
+      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
+      hide: ['brannoc-cell', 'brannoc-sulk'],
+      gaps: [[5, 5]],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the first word with Nails, through the bars (author: start at the first interaction)
+        { say: 'prisoner-1', lines: cells.npcs['prisoner-1'].lines },
+        ask('prisoner-1', 'Nails'),
+        { say: 'prisoner-1', lines: crime('prisoner-1') },
+        { walk: [[14, 6]], face: 'up' },
+        ask('prisoner-2', 'Old Mott'),
+        { say: 'prisoner-2', lines: crime('prisoner-2') },
+        { walk: [[18, 6]], face: 'up' },
+        ask('prisoner-3', 'Silas Seen'),
+        { say: 'prisoner-3', lines: crime('prisoner-3') },
+        { wait: 0.3 },
+      ],
+    };
+  },
+  11: () => {
+    // back to Gary for the cell keys (dungeon.ts KEYS_ASK, CHILL, UNLOCK: the game's lines)
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const keys = { ask: 'Can I have the cell keys?' };
+    const asked = ['Who are you?', "Isn't this place watched 24/7?", 'How much do they pay you?'];
+    const bolt = (id, x) => ({
+      npcWalk: id,
+      to: [
+        [x, 6],
+        [20, 6],
+        [20, 8],
+      ],
+      speed: 85,
+      hide: true,
+      together: true,
+    });
+    return {
+      number: 11,
+      title: 'A CHILL GUY',
+      next: 'BRANNOC-SHAPED',
+      hold: 0.5,
+      map: cells,
+      hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
+      hide: ['brannoc-cell', 'brannoc-sulk'],
+      gaps: [[5, 5]],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: back at Gary's desk, asking for the keys (author: start there)
+        { menu: { speaker: 'Gary', options: menuOf([keys, ...cells.npcs.jailer.questions], asked), pick: 0, hold: 0.6 } },
+        { say: 'jailer', lines: ['...', 'Sure.'] },
+        { narrate: true, lines: ['Gary unhooks the ring of keys from his belt, drops it in your hand, and wanders off toward the ladder.'] },
+        {
+          npcWalk: 'jailer',
+          to: [
+            [3, 8],
+            [20, 8],
+          ],
+          speed: 70,
+          hide: true,
+          together: true,
+        },
+        { you: ['(What a chill guy.)'] },
+        { walk: [[12, 7], [12, 6]], face: 'up', speed: 110 },
+        { menu: { options: ['Unlock the cells', 'Not yet', 'You can all rot.'], pick: 0, hold: 0.5 } },
+        { narrate: true, lines: ['Click. Click. Click.'] },
+        // the bars in front of each cell swing open
+        { gap: [10, 5] },
+        { gap: [14, 5] },
+        { gap: [18, 5] },
+        // they run while it's said
+        bolt('prisoner-1', 10),
+        bolt('prisoner-2', 14),
+        bolt('prisoner-3', 18),
+        { narrate: true, lines: ['The three of them bolt for the ladder.'] },
+        { wait: 1.2 },
+      ],
+    };
+  },
+  12: () => {
+    const ward = loadMap('dungeon-mazes', 'dungeon');
+    const fork = loadMap('dungeon-fork', 'dungeon');
+    return {
+      number: 12,
+      title: 'BRANNOC-SHAPED',
+      next: 'THE TEST OF STRENGTH',
+      hold: 0.75,
+      map: ward,
+      hero: { sprite: 'quill', at: [2, 2], facing: 'down' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: up the ladder, and a hole in the wall in front of you
+        { narrate: true, lines: ward.examine.o },
+        // straight through, the way he went
+        {
+          walk: [
+            [2, 6],
+            [15, 6],
+          ],
+        },
+        { you: ['(That coward, who swore he was heroically defending a corner...)', '(Could he really be that strong?)'] },
+        // the rest of the way, and into the tunnels
+        { scene: { map: fork, at: [9, 5], facing: 'up' } },
+        { walk: [[9, 3]], face: 'up' },
+        { wait: 0.6 },
+      ],
+    };
+  },
+  13: () => {
+    const fork = loadMap('dungeon-fork', 'dungeon');
+    const might = loadMap('dungeon-might', 'dungeon');
+    // the five, as the king's guards, then as what their shadows make of them (the game's boss bearers)
+    const spots = might.boss.bearers;
+    spots.forEach(([x, y], i) => {
+      might.npcs[`guard-${i}`] = { id: `guard-${i}`, type: 'npc', x, y, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
+      might.npcs[`shade-${i}`] = { id: `shade-${i}`, type: 'npc', x, y, sprite: 'shadow', facing: 'down', name: 'Shadow', lines: [] };
+    });
+    const guards = spots.map((_, i) => `guard-${i}`);
+    const shades = spots.map((_, i) => `shade-${i}`);
+    const strength = fork.signs.find((g) => g.id === 'sign-might');
+    // up to each one and strike: next to it, facing it
+    const strike = (i, at, face) => [{ walk: [at], face, speed: 150 }, { puff: { hide: [`shade-${i}`], spark: true, wait: 0.35 } }];
+    return {
+      number: 13,
+      title: 'THE TEST OF STRENGTH',
+      next: 'A LETTER FOR THE WARDEN',
+      hold: 0.6,
+      map: fork,
+      hero: { sprite: 'quill', at: [12, 2], facing: 'up' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the sign by the right-hand tunnel
+        { narrate: true, lines: [strength.lines[0], strength.lines[2]] },
+        { scene: { map: might, at: [7, 8], facing: 'up', show: guards } },
+        { narrate: true, lines: might.boss.intro.lines.slice(0, 2) },
+        { puff: { hide: guards, show: shades } },
+        { wait: 0.3 },
+        // five blows
+        ...strike(4, [7, 5], 'up'),
+        ...strike(2, [4, 5], 'left'),
+        ...strike(0, [4, 4], 'up'),
+        ...strike(1, [10, 4], 'up'),
+        ...strike(3, [10, 5], 'right'),
+        { narrate: true, lines: ['The fifth shadow comes apart like smoke in a draught.'] },
+        { gap: [7, 1] },
+        { narrate: true, lines: ['The gate grinds open.'] },
+        { wait: 0.5 },
+      ],
+    };
+  },
+  14: () => {
+    const hall = loadMap('dungeon-lore', 'dungeon');
+    const letter = hall.examine['9'];
+    return {
+      number: 14,
+      title: 'A LETTER FOR THE WARDEN',
+      next: 'THE FINAL BOUT',
+      hold: 0.6,
+      map: hall,
+      hero: { sprite: 'quill', at: [10, 2], facing: 'up' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the king's letter, pinned to the wall with a dagger
+        { narrate: true, lines: [...letter.slice(1, 4), letter[5]] },
+        { you: ['(...Eat?)'] },
+        // the candle: rest, before whatever's up the ladder
+        { walk: [[11, 3]], face: 'right' },
+        { menu: { options: ['Rest here', 'Travel to another candle'], pick: 0, hold: 0.5 } },
+        { narrate: true, lines: ['You rest a while. Your hearts fill back up.', 'Above you, the crowd begins to chant.'] },
+        { walk: [[8, 3]], face: 'up' },
+        { wait: 0.4 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -1927,7 +2262,10 @@ const out =
   join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`));
 const compiled = compile(ep);
 const FADE = 0.5;
-const total = compiled.end + ep.endDur;
+// No end card (author, Oct 4, 2026: viewers leave the moment the story stops, and the card dragged
+// completion down): an episode ends when its story does, on the fade. Set END_CARD to bring it back.
+const END_CARD = false;
+const total = compiled.end + (END_CARD ? ep.endDur : 0);
 const frames = Math.ceil(total * FPS);
 
 // STILLS='3.5,9' writes those moments as PNGs next to `out` instead of a video, for checking the look.
@@ -1947,6 +2285,7 @@ if (process.env.STILLS) {
     else if (st) {
       drawWorld(canvas, ep, st, s);
       drawOverlays(canvas, st);
+      drawCaption(canvas, st);
       if (st.blackout > 0)
         canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint(st.white ? '#FFFFFF' : '#000000', Math.min(1, st.blackout)));
     } else drawEnd(canvas, ep, s - compiled.end);
@@ -2077,6 +2416,7 @@ async function renderPicture() {
       }
       drawWorld(canvas, ep, st, t);
       drawOverlays(canvas, st);
+      drawCaption(canvas, st);
       if (st.white) {
         if (st.blackout > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', Math.min(1, st.blackout)));
       } else black(st.blackout);
@@ -2169,12 +2509,22 @@ const r = spawnSync(
     // the game's blips are soft under a phone's own volume; a feed needs them up front
     // Instagram and YouTube reject uploads part-way through without 44.1/48 kHz audio and the index
     // up front (faststart): 48 kHz stereo, BT.709 tags, moov first.
-    '-map',
-    '0:v',
-    '-map',
-    '1:a',
-    '-af',
-    'volume=14dB,alimiter=limit=0.9',
+    // `music` (the clips, author's test): the game's own track under the voices, looped, fading out at the end
+    ...(ep.music
+      ? [
+          '-stream_loop',
+          '-1',
+          '-i',
+          join(ROOT, ep.music),
+          '-filter_complex',
+          `[1:a]volume=14dB[v];[2:a]volume=-9dB,afade=t=out:st=${Math.max(0, total - 1.5).toFixed(2)}:d=1.5[m];` +
+            '[v][m]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.9[a]',
+          '-map',
+          '0:v',
+          '-map',
+          '[a]',
+        ]
+      : ['-map', '0:v', '-map', '1:a', '-af', 'volume=14dB,alimiter=limit=0.9']),
     '-c:v',
     'copy',
     '-bsf:v',

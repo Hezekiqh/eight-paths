@@ -1,0 +1,56 @@
+{
+  "id": "dungeon-might",
+  "name": "The Test of Strength",
+  "style": "dungeon",
+  "walkable": [".", ","],
+  "art": {
+    "1": "E"
+  },
+  "tiles": [
+    "##############",
+    "#WWcWWWGWWWcW#",
+    "#W..........W#",
+    "#W..........W#",
+    "#W..........W#",
+    "#W,.........W#",
+    "#W..........W#",
+    "#W.........,W#",
+    "#W..........W#",
+    "#WWWWWW1WWWWW#",
+    "##############"
+  ],
+  "spawn": {
+    "x": 7,
+    "y": 8,
+    "facing": "up"
+  },
+  "boss": {
+    "flag": "might-shadows",
+    "x": 7,
+    "y": 3,
+    "kind": "shadow",
+    "bearers": [
+      [4, 3],
+      [10, 3],
+      [3, 5],
+      [11, 5],
+      [7, 4]
+    ],
+    "intro": {
+      "speaker": null,
+      "lines": [
+        "Five of the king's guards stand waiting in the dark. Royal tabards. Polished helms.",
+        "Then their shadows climb up their legs, and over their faces, and swallow them whole.",
+        "Five shadow soldiers. They don't say anything. Shadows never do."
+      ]
+    }
+  },
+  "examine": {
+    "W": ["Damp stone."],
+    "c": ["A torch, burning low."],
+    "G": ["A gate. It won't open while anything in here is still standing."],
+    "1": ["The tunnel back to the fork."],
+    ",": ["Rubble."]
+  },
+  "objects": []
+}
