@@ -130,7 +130,35 @@ export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 export const BRANNOC_FAINTED: [number, number] = [4, 9];
 const UNDER_WARDEN: [number, number] = [10, 6];
 
-export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
+/**
+ * What's said as you come up into the Colosseum, and as the Warden comes out (author, Oct 4, 2026). An
+ * intro can end on a menu: `questions` (asked, then back to the menu) and `choices` (said, then the fight).
+ * `{his}` is whoever you're walking as (felix-maze.ts forHero).
+ */
+export type PrisonIntro = {
+  speaker?: string;
+  lines: string[];
+  questions?: { ask: string; answer: string[] }[];
+  choices?: { label: string; lines: string[]; deed?: 'good' | 'bad' }[];
+};
+const LAST_FIGHT = [
+  'BARNABY: Enough idle chat.',
+  'BARNABY: Guards! Last fight before we go to the tavern! Free drinks for whoever brings me {his} head!',
+  'The guards roar.',
+];
+const BARNABY_MENU = [
+  {
+    label: 'Who are you?',
+    lines: [
+      'BARNABY: I am the assistant warden and part-time announcer for the Colosseum!',
+      "BARNABY: Sponsored by Bettor. There's no better way to bet than Bettor.",
+      ...LAST_FIGHT,
+    ],
+  },
+  { label: "You're too loud.", deed: 'bad' as const, lines: ['BARNABY: ...', ...LAST_FIGHT] },
+];
+const REALLY = "BARNABY: Really? You haven't been here twenty minutes, and you're causing this much trouble?";
+export const PRISON_INTROS: Record<string, PrisonIntro> = {
   'pit-guards': {
     lines: [
       'GUARD: STOP RIGHT THERE!',
@@ -139,42 +167,46 @@ export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
   },
+  // the Warden, back early (the prison route: freed prisoners or not)
   'pit-warden': {
+    speaker: 'Warden',
     lines: [
-      'The floor shakes. Then it shakes again.',
-      'BARNABY: Oh, you have done it now. Everybody, please welcome... THE WARDEN!',
-      "BARNABY: Nobody's ever hurt him. Nobody's ever hurt his feelings either. Mostly because he hasn't got any. FIGHT!",
+      'WARDEN: Having trouble, Barnaby?',
+      "BARNABY: Wa... Warden! I didn't think you'd be back from your vacation so soon.",
+    ],
+    questions: [
+      {
+        ask: 'Who are you?',
+        answer: [
+          'WARDEN: I have never lost a match.',
+          'WARDEN: The king trusts me to maintain order among the troublemakers.',
+        ],
+      },
+    ],
+    choices: [
+      {
+        label: 'Any chance you could let me go?',
+        lines: [
+          'WARDEN: Of course.',
+          'WARDEN: I will let you go... to the other side of existence.',
+          "WARDEN: You've already broken out of prison. There's no point in putting you back.",
+        ],
+      },
+      {
+        label: 'Your poor mother.',
+        deed: 'bad',
+        lines: ['WARDEN: My mother is fine. We have tea every Wednesday.', 'WARDEN: You will pay for that comment.'],
+      },
     ],
   },
-  // the prisoners went up ahead of you (author, Oct 4, 2026): they didn't get far
+  // the prisoners went up ahead of you (author, Oct 4, 2026): they didn't get far, and neither did Brannoc
   'pit-guards-freed': {
-    lines: [
-      'The crowd is ROARING.',
-      'Three familiar shapes lie face down in the sand: Nails, Old Mott and Silas. Beaten flat.',
-      'Brannoc, halfway across the sand, sees them. He goes white. Then grey. Then he faints, right on top of Old Mott.',
-      'Guards close in around you.',
-      'BARNABY: WELL, WELL! It appears our show is coming to an end...',
-      'BARNABY: But we have time for ONE MORE CHALLENGER! What is your name?',
-      'You shout back: "Doesn\'t matter!"',
-      "BARNABY: Doesn't Matter! The crowd LOVES a mystery!",
-      "BARNABY: Now, Doesn't Matter. We see you've freed some of our HIGHEST OFFENDERS.",
-      'BARNABY: A man who served the king ONE ICE CUBE! A man who would not say BLESS YOU to the KING! And a man who left the KING on READ!',
-      "BARNABY: For that, we're going to BEAT YOU A LESSON! FIVE OF THE KING'S OWN! FIGHT!",
-    ],
+    lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.', REALLY],
+    choices: BARNABY_MENU,
   },
   'pit-guards-freed-alone': {
-    lines: [
-      'The crowd is ROARING.',
-      'Three familiar shapes lie face down in the sand: Nails, Old Mott and Silas. Beaten flat.',
-      'Guards close in around you.',
-      'BARNABY: WELL, WELL! It appears our show is coming to an end...',
-      'BARNABY: But we have time for ONE MORE CHALLENGER! What is your name?',
-      'You shout back: "Doesn\'t matter!"',
-      "BARNABY: Doesn't Matter! The crowd LOVES a mystery!",
-      "BARNABY: Now, Doesn't Matter. We see you've freed some of our HIGHEST OFFENDERS.",
-      'BARNABY: A man who served the king ONE ICE CUBE! A man who would not say BLESS YOU to the KING! And a man who left the KING on READ!',
-      "BARNABY: For that, we're going to BEAT YOU A LESSON! FIVE OF THE KING'S OWN! FIGHT!",
-    ],
+    lines: ['Nails, Old Mott and Silas lie in the sand, beaten.', REALLY],
+    choices: BARNABY_MENU,
   },
   // walking as Brannoc: nobody on the sand but you
   'pit-guards-alone': {
@@ -195,29 +227,22 @@ export const PRISON_GUARDS_DOWN = [
 
 /** Twenty strikes in: the warden yawns, raises his club, and Brannoc gets up. */
 export const SNOT_SWING = [
-  "Twenty strikes. The warden hasn't noticed a single one.",
-  'He yawns. He raises his club.',
-  'Behind you: a snore. A big one.',
+  'Twenty strikes.',
+  'WARDEN: That is enough. It is time I put an end to this.',
+  "Behind you, Brannoc stands up. He's still asleep.",
 ];
 /** Brannoc walks to the warden, asleep, then swings. */
 export const brannocSleepwalks = (brannoc: number): Actor[] => [
   { row: brannoc, path: [BRANNOC_FAINTED, [10, 9], UNDER_WARDEN], face: 1 },
 ];
 export const SNOT_SWING_HIT = [
-  'Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
-  'He lifts his sword.',
-  'BRANNOC: Zzz... five more minutes, mother...',
   'BRANNOC SUPER SUPER SWING!',
-  'The warden goes up, up, over the banners, and out of the Colosseum. Somewhere in town, a roof gives way.',
-  'Silence.',
-  "GUARD: Whoa. Whoa, whoa, whoa. Okay. You're good. You're good to go.",
-  "GUARD: We won't bother you any more. Strength is valued more than anything here.",
-  "GUARD: We don't get paid enough for this.",
+  'The Warden goes straight through the side of the Colosseum.',
 ];
 
 /**
- * The comical end of the warden fight (author, Oct 4, 2026), if you freed the prisoners: they come to,
- * the guards let them go too, and they limp off into town (they're at the Warrior City tavern after).
+ * The end of the warden fight (author, Oct 4, 2026), if you freed the prisoners: they get up, yell
+ * FREEDOM, and run out through the hole Brannoc's swing made (they're at the Warrior City tavern after).
  */
 export const PARDONED = 'prisoners-pardoned';
 
@@ -234,21 +259,18 @@ export const SILAS_RAVEN = [
 export const withRaven = (map: string, lines: string[], flags: string[]) =>
   map === 'war-hall' && flags.includes(FREED_FLAG) ? [...lines.slice(0, -1), ...SILAS_RAVEN] : lines;
 export const FREED_ENDING = [
-  'Three heads lift out of the sand.',
-  'NAILS: ...Is it over? Did we win?',
-  'OLD MOTT: "We"? You were face down the whole time.',
-  'NAILS: So were you.',
-  "GUARD: And, uh. Them too. Take them. They're free. Everybody's free. Please go.",
-  'SILAS: ...',
-  'SILAS: Best day of my life.',
-  'The three of them limp off toward town, arguing about who got beaten the hardest.',
+  'The prisoners get up.',
+  'NAILS: FREEDOM!',
+  'OLD MOTT: FREEDOM!',
+  'SILAS: FREEDOM!',
+  'They run out through the hole in the wall.',
 ];
 
 /** Brannoc wakes: will you pair up? */
 export const BRANNOC_OFFER = [
-  'The snot bubble pops. Brannoc blinks.',
-  'BRANNOC: Wha... where am I? Is it morning? Did I miss the battle?',
-  'He looks at the crowd. At the hole in the banners. At you.',
+  'Brannoc wakes up.',
+  'BRANNOC: Where am I!? What happened?',
+  'He looks at the crowd. At the hole in the wall. At you.',
   'BRANNOC: Did YOU do that? By the saints, you are mighty.',
   'BRANNOC: I know not what is happening in this strange land. But if I kept to your side, I might yet live through it.',
   'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
@@ -311,6 +333,11 @@ export const MAZE_HOLES: MazeHole[] = [
   // the Test of the Mind's shortcut (author, Oct 4, 2026): Brannoc went through the wall, not the puzzle
   { map: 'dungeon-mind', tile: '7', needs: MAGE(8), to: { map: 'dungeon-lore', x: 3, y: 5, facing: 'up' } },
 ];
+
+// ---- The statue at the Two Tunnels (author, Oct 4, 2026): it explains the two ways, and doubts you.
+export const STRENGTH_TUNNEL = 'b';
+export const STATUE_SURE = ["STATUE: Are you sure? You don't look very strong."];
+export const FUNERAL = ["STATUE: ...Well. It's your funeral."];
 
 // ---- Gary's keys and the jailbreak (author, Oct 4, 2026): once you've talked to all three prisoners,
 // Gary will hand over the cell keys if you ask, and wander off. Unlock the cells and the three of them

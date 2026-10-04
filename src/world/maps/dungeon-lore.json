@@ -24,7 +24,6 @@
     "y": 5,
     "facing": "up"
   },
-  "firstVisit": ["A roar comes down the ladder: a crowd, very close now, chanting a name."],
   "examine": {
     "W": ["Damp stone."],
     "c": ["A torch, burning low."],
@@ -34,20 +33,16 @@
       "KALDOR. Then, in fresher stone: KALDOR. KALDOR. KALDOR. Five hundred years of KALDOR."
     ],
     "9": [
-      "A letter, pinned to the wall with a dagger. The seal is the king's.",
-      "WARDEN. Make sure you put on a show tonight.",
-      "The last few weeks have been very one-sided. A bored crowd starts thinking, and I don't pay you to make them think.",
-      "Maybe take a vacation. Give the prisoners a chance. A small one.",
-      "K.",
-      "P.S. Do NOT eat the challenger again."
+      "A letter, pinned to the wall. The seal is the king's.",
+      "WARDEN. Make sure you put on a show.",
+      "The last few weeks have been very one-sided.",
+      "Maybe take a vacation, so the prisoners stand a chance.",
+      "This guy could be a problem. You should probably rest by the candle."
     ],
     "2": ["A ladder up. The crowd is right above you."],
     "1": ["Back to the Test of the Mind."],
     "3": ["Back to the Test of Strength."],
-    "k": [
-      "A candle, burning steady. Somebody left it here on purpose.",
-      "Whatever's up that ladder, you'll want your hearts full first."
-    ]
+    "k": ["A candle, burning steady."]
   },
   "objects": []
 }

@@ -38,11 +38,7 @@
     ],
     "intro": {
       "speaker": null,
-      "lines": [
-        "Five of the king's guards stand waiting in the dark. Royal tabards. Polished helms.",
-        "Then their shadows climb up their legs, and over their faces, and swallow them whole.",
-        "Five shadow soldiers. They don't say anything. Shadows never do."
-      ]
+      "lines": ["The shadow soldiers roar."]
     }
   },
   "examine": {
@@ -52,5 +48,16 @@
     "1": ["The tunnel back to the fork."],
     ",": ["Rubble."]
   },
-  "objects": []
+  "objects": [
+    {
+      "id": "statue",
+      "type": "npc",
+      "x": 11,
+      "y": 2,
+      "sprite": "statue",
+      "facing": "down",
+      "name": "Statue",
+      "lines": ["..."]
+    }
+  ]
 }

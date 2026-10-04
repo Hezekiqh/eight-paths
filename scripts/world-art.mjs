@@ -1690,6 +1690,16 @@ const WALKERS = {
     hair: ['spiky', '#FFC940'],
     patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'],
   },
+  // the statue at the Two Tunnels (author, Oct 4, 2026): grey stone, robed and bearded, and it talks
+  statue: {
+    robe: true,
+    top: '#8A8A92',
+    shade: '#6E6E78',
+    boots: '#5E5E66',
+    skin: '#A2A2AA',
+    hair: ['bald', '#A2A2AA'],
+    beard: '#7E7E88',
+  },
   // the Kingdom Dungeon's three worst prisoners (author, Oct 4, 2026: each their own look, not the guards')
   // Nails, who served the king one ice cube: ginger and spiky, in his serving apron
   nails: {

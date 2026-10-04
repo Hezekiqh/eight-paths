@@ -30,7 +30,7 @@ import { fonts } from '@/theme';
 import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
-import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet } from '@/world/meet';
+import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet, wokeFlag } from '@/world/meet';
 import type { Owned } from '@/store/draws';
 import { COMPANIONS, DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 import {
@@ -137,6 +137,9 @@ import {
 import { LEAVE_IT_TO, MORE, NEVER_MIND, heroOrder, heroPage } from '@/world/hero-pick';
 import {
   MAZE_HOLES,
+  FUNERAL,
+  STATUE_SURE,
+  STRENGTH_TUNNEL,
   CHILL,
   withRaven,
   FREED_ENDING,
@@ -269,9 +272,14 @@ export default function WorldScreen() {
   const origin = useGameStore((s) => s.player?.origin);
   // The hero you woke as is always met in the story, after a restart of the Other World too:
   // their room off the Archive is open, and they walk with you.
-  const originMet = useWorldStore((s) => !origin || s.flags.includes(metFlag(origin)));
+  const originMet = useWorldStore(
+    (s) => !origin || (s.flags.includes(metFlag(origin)) && s.flags.includes(wokeFlag(origin))),
+  );
   useEffect(() => {
-    if (hydrated && origin && !originMet) useWorldStore.getState().setFlag(metFlag(origin));
+    if (!hydrated || !origin || originMet) return;
+    useWorldStore.getState().setFlag(metFlag(origin));
+    // and the Keeper takes their place in Warrior City (meet.ts wokeFlag)
+    useWorldStore.getState().setFlag(wokeFlag(origin));
   }, [hydrated, origin, originMet]);
   const flash = useSharedValue(0);
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
@@ -288,6 +296,7 @@ export default function WorldScreen() {
         useGameStore.getState().chooseOrigin(id);
         useWorldStore.getState().setHero(id);
         useWorldStore.getState().setFlag(metFlag(id));
+        useWorldStore.getState().setFlag(wokeFlag(id));
         useSession.setState({ heroIntro: id });
         // No habit done yet: they sleep until the first one, so it's back to the World menu.
         if (!heroAwake(useGameStore.getState())) setPlaying(false);
@@ -635,7 +644,10 @@ function World({
               }
             : null))
         : prisonIntro
-          ? { lines: prisonIntro.lines }
+          ? // one with a menu (Barnaby's, the Warden's) is put up just after, below, so its choices can say more
+            prisonIntro.choices
+            ? null
+            : { speaker: prisonIntro.speaker, lines: prisonIntro.lines.map((l) => forHero(l, hero)) }
           : start.map.boss?.intro
             ? {
                 speaker: start.map.boss.intro.speaker ?? undefined,
@@ -658,6 +670,23 @@ function World({
               ? { speaker: bossNpc.name, lines: bossNpc.lines }
               : null,
   );
+  // Barnaby's or the Warden's menu as you come into the Colosseum (dungeon.ts PRISON_INTROS): ask, and
+  // it's back to the menu; choose, and that's said, then the fight
+  const introMenuShown = useRef(false);
+  useEffect(() => {
+    if (introMenuShown.current || resume || !prisonIntro?.choices) return;
+    introMenuShown.current = true;
+    setDialogue({
+      speaker: prisonIntro.speaker,
+      lines: prisonIntro.lines.map((l) => forHero(l, hero)),
+      questions: prisonIntro.questions,
+      choices: prisonIntro.choices.map((c) => ({
+        label: c.label,
+        deed: c.deed,
+        then: () => setDialogue({ lines: c.lines.map((l) => forHero(l, hero)) }),
+      })),
+    });
+  }, [prisonIntro, resume, hero]);
   const dialogueRef = useRef(dialogue);
   useEffect(() => {
     dialogueRef.current = dialogue;
@@ -1321,6 +1350,25 @@ function World({
         const { flags } = useWorldStore.getState();
         if (!flags.includes(MAZE_SOLVED)) setFlag(MAZE_SOLVED);
         if (scenePending(flags) && dialogueRef.current === null) guardScene();
+        return;
+      }
+      // The Test of Strength: the statue asks if you're sure, the first time (dungeon.ts)
+      if (
+        map.id === 'dungeon-fork' &&
+        letter === STRENGTH_TUNNEL &&
+        !useWorldStore.getState().flags.includes('might-shadows')
+      ) {
+        const to = ways.find((e) => e.tile === letter)?.to;
+        if (!to) return;
+        const go = () => setDialogue({ lines: FUNERAL, then: () => travel(to) });
+        setDialogue({
+          lines: STATUE_SURE,
+          choices: [
+            { label: 'Yes', then: go },
+            { label: 'No', then: () => {} },
+            { label: 'Mind your own business.', deed: 'bad', then: go },
+          ],
+        });
         return;
       }
       // A trap pit in the Maze Ward (dungeon.ts): down you go, back to the cells, and they've seen it all.

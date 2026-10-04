@@ -812,7 +812,8 @@ function compile(ep) {
     } else if (step.laugh) {
       // someone laughs: shoulders shaking, a burst of HA over their head (`quiet`: just the shaking, a cower)
       segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh, quiet: step.quiet });
-      t += step.dur;
+      // `together`: alongside what comes next (five shadows roaring at once)
+      if (!step.together) t += step.dur;
     } else if (step.scene) {
       // somewhere else: fade to black, and up again there (a new map, you standing at `at`)
       const sc = step.scene;
@@ -892,11 +893,15 @@ function compile(ep) {
       // the app's hatch, full screen (scripts/hatch-video.mjs beats), then back to the World
       segs.push({ kind: 'hatch', t0: t, t1: t + HATCH_END, ...step.hatch });
       t += HATCH_END;
+    } else if (step.vanish) {
+      // gone at once, no smoke (someone getting up: the lying one swapped for the standing one)
+      for (const id of [step.vanish].flat()) segs.push({ kind: 'puff', t0: t, t1: t, hide: [id], show: [], spark: false, quiet: true });
     } else if (step.puff) {
       // a burst of black smoke that takes `hide` away and leaves `show` (a guard swallowed by his shadow),
       // with a white spark first if it's a blow (`spark`): the fights, told without the game's combat
       const p = step.puff;
-      segs.push({ kind: 'puff', t0: t, t1: t + PUFF, hide: p.hide ?? [], show: p.show ?? [], spark: !!p.spark });
+      // `on`: a blow that lands on someone who stays standing (the Warden): just the spark, no smoke
+      segs.push({ kind: 'puff', t0: t, t1: t + PUFF, hide: p.hide ?? [], show: p.show ?? [], on: p.on ?? [], spark: !!p.spark });
       t += p.wait ?? PUFF;
     } else if (step.show) {
       segs.push({ kind: 'show', t0: t, t1: t, id: step.show });
@@ -1027,7 +1032,7 @@ function stateAt(ep, compiled, t) {
         vanished.push(...s.hide);
         shown.push(...s.show);
       }
-      if (since < PUFF) puffs.push({ ids: [...s.hide, ...s.show], since, spark: s.spark });
+      if (since < PUFF && !s.quiet) puffs.push({ ids: [...s.hide, ...s.show], on: s.on ?? [], since, spark: s.spark });
     } else if (s.kind === 'open') opened.push(s.at);
     else if (s.kind === 'gap') gaps.push(s.at);
   }
@@ -1199,12 +1204,28 @@ function drawWorld(canvas, ep, st, t) {
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y];
+      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y, n.lying];
     });
   if (!st.cards)
     ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
   ents.sort((a, b) => a[4] - b[4]);
-  for (const [row, dir, frame, x, y] of ents) {
+  for (const [row, dir, frame, x, y, lying] of ents) {
+    // `lying`: knocked flat on the floor, head to the left (the beaten prisoners, the fainted prince)
+    if (lying) {
+      canvas.save();
+      canvas.translate(Math.round(x), Math.round(y - 6));
+      canvas.rotate(-90, 0, 0);
+      canvas.drawImageRectOptions(
+        WALKERS,
+        CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH),
+        CK.XYWHRect(-FH / 2, -FW / 2, FW, FH),
+        NEAREST.filter,
+        NEAREST.mipmap,
+        null,
+      );
+      canvas.restore();
+      continue;
+    }
     canvas.drawImageRectOptions(
       WALKERS,
       CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH),
@@ -1228,6 +1249,15 @@ function drawWorld(canvas, ep, st, t) {
   }
   // a blow's white spark, then black smoke billowing out and fading where someone was taken
   for (const p of st.puffs) {
+    for (const id of p.on) {
+      const n = map.npcs[id];
+      if (!n || p.since >= SPARK * 1.6) continue;
+      const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(n.x, n.y);
+      const k = p.since / (SPARK * 1.6);
+      const white = paint('#FFFFFF', 1 - k * 0.6);
+      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]])
+        for (let r = 2; r < 4 + k * 10; r += 2) canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 14 + dy * r - 1, 2, 2), white);
+    }
     for (const id of p.ids) {
       const n = map.npcs[id];
       if (!n) continue;
@@ -1492,6 +1522,10 @@ const menuOf = (questions, asked) => {
   const order = [...rest.filter((q) => !asked.includes(q.ask)), ...rest.filter((q) => asked.includes(q.ask))];
   return [...order.slice(0, mean ? 2 : 3), ...(mean ? [mean] : [])].map((q) => q.ask).concat('Goodbye.');
 };
+
+/** The statue at the Two Tunnels, as the game has it (dungeon.ts STATUE_SURE, FUNERAL). */
+const STATUE_SURE = ["STATUE: Are you sure? You don't look very strong."];
+const FUNERAL = ["STATUE: ...Well. It's your funeral."];
 
 const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id) => `hall-${id}`);
 
@@ -2176,73 +2210,216 @@ const EPISODES = {
     };
   },
   13: () => {
+    // (author, Oct 4, 2026) the statue between the tunnels explains them; it doubts you; it's your funeral;
+    // and the five shadow soldiers roar at you as you come in
     const fork = loadMap('dungeon-fork', 'dungeon');
     const might = loadMap('dungeon-might', 'dungeon');
-    // the five, as the king's guards, then as what their shadows make of them (the game's boss bearers)
+    const statue = fork.npcs.statue;
     const spots = might.boss.bearers;
     spots.forEach(([x, y], i) => {
-      might.npcs[`guard-${i}`] = { id: `guard-${i}`, type: 'npc', x, y, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
       might.npcs[`shade-${i}`] = { id: `shade-${i}`, type: 'npc', x, y, sprite: 'shadow', facing: 'down', name: 'Shadow', lines: [] };
     });
-    const guards = spots.map((_, i) => `guard-${i}`);
     const shades = spots.map((_, i) => `shade-${i}`);
-    const strength = fork.signs.find((g) => g.id === 'sign-might');
-    // up to each one and strike: next to it, facing it
-    const strike = (i, at, face) => [{ walk: [at], face, speed: 150 }, { puff: { hide: [`shade-${i}`], spark: true, wait: 0.35 } }];
+    const said = (l) => l.replace(/^STATUE: /, '');
     return {
       number: 13,
       title: 'THE TEST OF STRENGTH',
-      next: 'A LETTER FOR THE WARDEN',
+      next: 'THE NOTE',
       hold: 0.6,
       map: fork,
-      hero: { sprite: 'quill', at: [12, 2], facing: 'up' },
+      hero: { sprite: 'quill', at: [8, 4], facing: 'up' },
       titleDur: 0,
       endDur: 4.5,
       script: [
-        // frame one: the sign by the right-hand tunnel
-        { narrate: true, lines: [strength.lines[0], strength.lines[2]] },
-        { scene: { map: might, at: [7, 8], facing: 'up', show: guards } },
-        { narrate: true, lines: might.boss.intro.lines.slice(0, 2) },
-        { puff: { hide: guards, show: shades } },
-        { wait: 0.3 },
-        // five blows
-        ...strike(4, [7, 5], 'up'),
-        ...strike(2, [4, 5], 'left'),
-        ...strike(0, [4, 4], 'up'),
-        ...strike(1, [10, 4], 'up'),
-        ...strike(3, [10, 5], 'right'),
-        { narrate: true, lines: ['The fifth shadow comes apart like smoke in a draught.'] },
-        { gap: [7, 1] },
-        { narrate: true, lines: ['The gate grinds open.'] },
-        { wait: 0.5 },
-      ],
-    };
-  },
-  14: () => {
-    const hall = loadMap('dungeon-lore', 'dungeon');
-    const letter = hall.examine['9'];
-    return {
-      number: 14,
-      title: 'A LETTER FOR THE WARDEN',
-      next: 'THE FINAL BOUT',
-      hold: 0.6,
-      map: hall,
-      hero: { sprite: 'quill', at: [10, 2], facing: 'up' },
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: the king's letter, pinned to the wall with a dagger
-        { narrate: true, lines: [...letter.slice(1, 4), letter[5]] },
-        { you: ['(...Eat?)'] },
-        // the candle: rest, before whatever's up the ladder
-        { walk: [[11, 3]], face: 'right' },
-        { menu: { options: ['Rest here', 'Travel to another candle'], pick: 0, hold: 0.5 } },
-        { narrate: true, lines: ['You rest a while. Your hearts fill back up.', 'Above you, the crowd begins to chant.'] },
-        { walk: [[8, 3]], face: 'up' },
+        // frame one: the statue explains the two ways
+        { say: 'statue', lines: statue.lines },
+        { walk: [[12, 4], [12, 2]], face: 'up', speed: 110 },
+        { say: 'statue', lines: STATUE_SURE.map(said) },
+        { menu: { speaker: 'Statue', options: ['Yes', 'No', 'Mind your own business.'], pick: 0, hold: 0.5 } },
+        { say: 'statue', lines: FUNERAL.map(said) },
+        { walk: [[12, 1]], face: 'up', speed: 80 },
+        { scene: { map: might, at: [7, 8], facing: 'up', show: shades } },
+        ...shades.map((id) => ({ laugh: id, dur: 2.2, quiet: true, together: true })),
+        { narrate: true, lines: might.boss.intro.lines },
         { wait: 0.4 },
       ],
     };
   },
+  14: () => {
+    // (author, Oct 4, 2026) the last shadow, the statue lost its bet, and the king's note to the Warden
+    const might = loadMap('dungeon-might', 'dungeon');
+    const hall = loadMap('dungeon-lore', 'dungeon');
+    might.npcs['shade-3'] = { id: 'shade-3', type: 'npc', x: 11, y: 5, sprite: 'shadow', facing: 'left', name: 'Shadow', lines: [] };
+    const letter = hall.examine['9'];
+    return {
+      number: 14,
+      title: 'THE NOTE',
+      next: 'TWENTY MINUTES',
+      hold: 0.6,
+      map: might,
+      hero: { sprite: 'quill', at: [10, 5], facing: 'right' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: finishing off the last of them
+        { puff: { hide: ['shade-3'], spark: true, wait: 0.5 } },
+        { face: 'up' },
+        { say: 'statue', lines: ["Wow. I can't believe you actually survived.", 'I really need to stop gambling.'] },
+        { gap: [7, 1] },
+        { narrate: true, lines: ['The gate opens.'] },
+        { walk: [[7, 5], [7, 1]], face: 'up', speed: 120 },
+        { scene: { map: hall, at: [12, 5], facing: 'up' } },
+        { walk: [[10, 5], [10, 2]], face: 'up', speed: 120 },
+        { narrate: true, lines: letter },
+        { wait: 0.3 },
+      ],
+    };
+  },
+  // 15–17: the Colosseum, the prison route with the prisoners freed (dungeon.ts PRISON_INTROS, SNOT_SWING…)
+  15: () => {
+    const pit = loadMap('the-pit', 'dungeon');
+    const add = (id, x, y, sprite, facing, name, extra = {}) =>
+      (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
+    add('barnaby', 10, 3, 'barnaby', 'down', 'Barnaby');
+    add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
+    add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
+    add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
+    add('down-silas', 11, 8, 'silas', 'down', 'Silas Seen', { lying: true });
+    const guards = [[6, 4], [14, 4], [8, 5], [12, 5], [10, 4]].map(([x, y], i) => add(`pit-guard-${i}`, x, y, 'raider', 'down', 'Guard').id);
+    const crowd = Object.keys(pit.npcs).filter((id) => id.startsWith('crowd-'));
+    const B = (l) => l.replace(/^BARNABY: /, '');
+    return {
+      number: 15,
+      title: 'TWENTY MINUTES',
+      next: 'HAVING TROUBLE, BARNABY?',
+      hold: 0.6,
+      map: pit,
+      hero: { sprite: 'quill', at: [3, 9], facing: 'right' },
+      hide: ['brannoc-pit', 'brannoc-awake', 'maelis', ...guards],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: up the ladder, onto the sand
+        { narrate: true, lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.'] },
+        { say: 'barnaby', lines: ["Really? You haven't been here twenty minutes, and you're causing this much trouble?"] },
+        { menu: { speaker: 'Barnaby', options: ['Who are you?', "You're too loud."], pick: 0, hold: 0.6 } },
+        {
+          say: 'barnaby',
+          lines: [
+            'I am the assistant warden and part-time announcer for the Colosseum!',
+            "Sponsored by Bettor. There's no better way to bet than Bettor.",
+            'Enough idle chat.',
+            'Guards! Last fight before we go to the tavern! Free drinks for whoever brings me his head!',
+          ],
+        },
+        ...guards.map((id) => ({ show: id })),
+        ...[...guards, ...crowd].map((id) => ({ laugh: id, dur: 2.2, quiet: true, together: true })),
+        { narrate: true, lines: ['The guards roar.'] },
+        { wait: 0.4 },
+      ],
+    };
+  },
+  16: () => {
+    const pit = loadMap('the-pit', 'dungeon');
+    const add = (id, x, y, sprite, facing, name, extra = {}) =>
+      (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
+    add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
+    add('warden', 10, 2, 'warden', 'down', 'Warden');
+    add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
+    add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
+    add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
+    add('down-silas', 11, 8, 'silas', 'down', 'Silas Seen', { lying: true });
+    return {
+      number: 16,
+      title: 'HAVING TROUBLE, BARNABY?',
+      next: 'FREEDOM',
+      hold: 0.6,
+      map: pit,
+      hero: { sprite: 'quill', at: [10, 7], facing: 'up' },
+      hide: ['brannoc-pit', 'brannoc-awake', 'maelis'],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the guards are down, and the Warden walks out
+        { npcWalk: 'warden', to: [[10, 2], [10, 5]], speed: 30 },
+        { say: 'warden', lines: ['Having trouble, Barnaby?'] },
+        { say: 'barnaby', lines: ["Wa... Warden! I didn't think you'd be back from your vacation so soon."] },
+        {
+          menu: {
+            speaker: 'Warden',
+            options: ['Who are you?', 'Any chance you could let me go?', 'Your poor mother.'],
+            pick: 2,
+            hold: 0.8,
+          },
+        },
+        { say: 'warden', lines: ['My mother is fine. We have tea every Wednesday.', 'You will pay for that comment.'] },
+        { wait: 0.4 },
+      ],
+    };
+  },
+  17: () => {
+    const pit = loadMap('the-pit', 'dungeon');
+    const add = (id, x, y, sprite, facing, name, extra = {}) =>
+      (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
+    add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
+    add('warden', 10, 5, 'warden', 'down', 'Warden');
+    add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
+    add('brannoc', 4, 8, 'brannoc', 'right', 'Brannoc');
+    const freed = [
+      ['nails', 7, 'Nails'],
+      ['mott', 9, 'Old Mott'],
+      ['silas', 11, 'Silas Seen'],
+    ];
+    for (const [id, x, name] of freed) {
+      const sprite = id === 'mott' ? 'oldmott' : id;
+      add(`down-${id}`, x, 8, sprite, 'down', name, { lying: true });
+      add(`up-${id}`, x, 8, sprite, 'right', name);
+    }
+    const hits = (n) => Array.from({ length: n }, () => ({ puff: { on: ['warden'], spark: true, wait: 0.22 } }));
+    const run = (id, x) => ({ npcWalk: `up-${id}`, to: [[x, 7], [19, 6], [21, 6]], speed: 110, hide: true, together: true });
+    return {
+      number: 17,
+      title: 'FREEDOM',
+      next: 'MY SWORD IS YOURS',
+      hold: 0.6,
+      map: pit,
+      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
+      hide: ['brannoc-pit', 'brannoc-awake', 'maelis', 'brannoc', 'up-nails', 'up-mott', 'up-silas'],
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: the last of twenty strikes
+        ...hits(3),
+        { say: 'warden', lines: ['That is enough. It is time I put an end to this.'] },
+        // Brannoc gets up, still asleep
+        { vanish: 'down-brannoc' },
+        { show: 'brannoc' },
+        { narrate: true, lines: ["Behind you, Brannoc stands up. He's still asleep."] },
+        { npcWalk: 'brannoc', to: [[4, 5], [9, 5]], speed: 70 },
+        { say: 'brannoc', lines: ['BRANNOC SUPER SUPER SWING!'] },
+        // the Warden, straight through the side of the Colosseum
+        { npcWalk: 'warden', to: [[10, 5], [21, 5]], speed: 260, hide: true },
+        { gap: [20, 5] },
+        { gap: [20, 6] },
+        { narrate: true, lines: ['The Warden goes straight through the side of the Colosseum.'] },
+        // the prisoners get up, and run for it
+        { vanish: ['down-nails', 'down-mott', 'down-silas'] },
+        { show: 'up-nails' },
+        { show: 'up-mott' },
+        { show: 'up-silas' },
+        { say: 'up-nails', lines: ['FREEDOM!'] },
+        { say: 'up-mott', lines: ['FREEDOM!'] },
+        { say: 'up-silas', lines: ['FREEDOM!'] },
+        run('nails', 7),
+        run('mott', 9),
+        run('silas', 11),
+        { wait: 1.4 },
+        { say: 'brannoc', lines: ['Where am I!? What happened?'] },
+        { wait: 0.3 },
+      ],
+    };
+  },
+
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);

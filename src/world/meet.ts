@@ -14,7 +14,11 @@ import { MAPS, type MapId, type NpcObject } from './maps';
  * own voice, and tell you to come back once you've done one.
  */
 export const RECRUIT_LEVEL = 6;
-export const recruitNeeds = (id: CharacterId) => ({ kind: 'path' as const, dimension: COMPANIONS[id].dimension, level: RECRUIT_LEVEL });
+export const recruitNeeds = (id: CharacterId) => ({
+  kind: 'path' as const,
+  dimension: COMPANIONS[id].dimension,
+  level: RECRUIT_LEVEL,
+});
 
 /** What each says when that part of your wellness hasn't had a habit yet. Drafts for the author. */
 export const NOT_YET: Partial<Record<CharacterId, string[]>> = {
@@ -34,7 +38,10 @@ export const NOT_YET: Partial<Record<CharacterId, string[]>> = {
     "Your spirit seems quiet, as if it isn't something you've made room for yet.",
     "Come back once you've done a Spiritual habit. I'll keep a candle lit.",
   ],
-  oren: ["...Breathe.", "It doesn't seem your heart has been looked after yet. Come back once you've done an Emotional habit."],
+  oren: [
+    '...Breathe.',
+    "It doesn't seem your heart has been looked after yet. Come back once you've done an Emotional habit.",
+  ],
   pip: [
     "Oh! You haven't done a single Social thing yet, have you?",
     "Come back once you've done a Social habit and I'll write you a song. A good one. Probably.",
@@ -48,6 +55,11 @@ export const NOT_YET: Partial<Record<CharacterId, string[]>> = {
 
 /** The story flag set when you meet one of the core eight in the Other World. */
 export const metFlag = (id: CharacterId) => `met:${id}`;
+/**
+ * Who you woke as (Player.origin), as a story flag (author, Oct 4, 2026): in Warrior City the Keeper
+ * stands where that hero would have been ("What? You thought I couldn't leave that place?").
+ */
+export const wokeFlag = (id: CharacterId) => `woke-as:${id}`;
 
 /** Where each of the core eight is found, by Path: the place, and who stands there. */
 export const MEETINGS: Partial<Record<Dimension, { map: MapId; npc: NpcObject }>> = Object.fromEntries(

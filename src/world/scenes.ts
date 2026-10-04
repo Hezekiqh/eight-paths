@@ -56,8 +56,9 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
       // The Test of Strength (author, Oct 4, 2026): five shadows, and the gate to the Hall of Champions.
       return {
         lines: [
-          'The fifth shadow comes apart like smoke in a draught.',
-          'Somewhere in the wall, a chain rattles. The gate grinds open.',
+          "STATUE: Wow. I can't believe you actually survived.",
+          'STATUE: I really need to stop gambling.',
+          'The gate opens.',
         ],
         outcome: { flags: [flag] },
       };

@@ -2,12 +2,7 @@
   "id": "dungeon-mazes",
   "name": "The Maze Ward",
   "style": "dungeon",
-  "walkable": [
-    ".",
-    ",",
-    "v",
-    "o"
-  ],
+  "walkable": [".", ",", "v", "o"],
   "art": {
     "1": "H",
     "2": "H",
@@ -34,26 +29,14 @@
     "facing": "right"
   },
   "examine": {
-    "o": ["A hole in the wall. It is exactly Brannoc-shaped.", "So is the next one. And the one after that."],
+    "o": ["A hole in the wall. It is exactly Brannoc-shaped."],
     "v": ["Damp stone. There's a hairline crack in it."],
-    "W": [
-      "Damp stone. Someone has drawn an arrow on it, pointing at another arrow."
-    ],
-    "6": [
-      "Damp stone."
-    ],
-    "8": [
-      "Damp stone."
-    ],
-    "0": [
-      "Damp stone."
-    ],
-    "1": [
-      "The ladder back down, to the cells."
-    ],
-    "2": [
-      "A ladder up. Light, and voices, from above."
-    ],
+    "W": ["Damp stone. Someone has drawn an arrow on it, pointing at another arrow."],
+    "6": ["Damp stone."],
+    "8": ["Damp stone."],
+    "0": ["Damp stone."],
+    "1": ["The ladder back down, to the cells."],
+    "2": ["A ladder up. Light, and voices, from above."],
     "R": [
       "Names, scratched into the stone. Hundreds of them. Most are crossed out.",
       "Near the bottom, deeper than the rest: THE KING HAS NOT AGED A DAY. WE HAVE.",

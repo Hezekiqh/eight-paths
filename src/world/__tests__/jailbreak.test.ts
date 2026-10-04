@@ -23,13 +23,22 @@ describe("Gary's keys and the jailbreak", () => {
     }
   });
 
-  it('has the Colosseum waiting for them, with or without Brannoc', () => {
+  it('has the Colosseum waiting for them, with or without Brannoc: Barnaby, his menu, and the guards', () => {
     for (const key of ['pit-guards-freed', 'pit-guards-freed-alone']) {
-      const lines = PRISON_INTROS[key].lines.join(' ');
-      expect(lines).toContain('What is your name?');
-      expect(lines).toContain('BEAT YOU A LESSON');
+      const intro = PRISON_INTROS[key];
+      expect(intro.lines.join(' ')).toContain("You haven't been here twenty minutes");
+      expect(intro.choices?.map((c) => c.label)).toEqual(['Who are you?', "You're too loud."]);
+      for (const c of intro.choices!) expect(c.lines.join(' ')).toContain('brings me {his} head');
+      expect(intro.choices!.filter((c) => c.deed === 'bad')).toHaveLength(1);
     }
     expect(PRISON_INTROS['pit-guards-freed-alone'].lines.join(' ')).not.toContain('Brannoc');
+  });
+
+  it("has the Warden's menu: one to ask, two that start the fight, one of them mean", () => {
+    const warden = PRISON_INTROS['pit-warden'];
+    expect(warden.questions?.map((q) => q.ask)).toEqual(['Who are you?']);
+    expect(warden.choices?.map((c) => c.label)).toEqual(['Any chance you could let me go?', 'Your poor mother.']);
+    expect(warden.choices!.filter((c) => c.deed === 'bad')).toHaveLength(1);
   });
 });
 
