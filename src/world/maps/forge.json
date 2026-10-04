@@ -75,6 +75,14 @@
           "answer": [
             "A body's the first tool you're given, and the only one you can't replace. Look after it, and when the day comes you have to stand your ground, it'll stand with you."
           ]
+        },
+        {
+          "ask": "Even your bellows gave up on you.",
+          "answer": [
+            "Aye. Wheezed their last on a Tuesday. I know how they felt.",
+            "Mind the anvil on your way out. It's still hot, even if I'm not."
+          ],
+          "deed": "bad"
         }
       ],
       "after": {

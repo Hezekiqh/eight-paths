@@ -61,12 +61,47 @@ function soFar(id: CharacterId, a: Adventure): string[] {
   return out;
 }
 
-/** What they say back: how it's going, and the guide's next step in their words. */
+/** Something mean to say to each of them (honor.ts: every menu has one), and how they take it. */
+const MEAN: Record<string, { ask: string; answer: string[] }> = {
+  brannoc: {
+    ask: 'Must you cower in here all day?',
+    answer: ['Not all day. I take breaks. To cower elsewhere.', '...That was a jest. I think. I am working on them.'],
+  },
+  ysolde: {
+    ask: 'Do you ever stop counting?',
+    answer: ['No. I counted that. It goes in the ledger, under "unkind".', 'The column is getting long.'],
+  },
+  quill: {
+    ask: 'Nobody reads your notes, Quill.',
+    answer: ['Footnote: I do.', "Footnote to the footnote: that hurt. I'm writing that down too."],
+  },
+  wren: {
+    ask: 'Your candles stink up the whole Archive.',
+    answer: ["They're beeswax. They smell of honey.", "I'll light one for you anyway. You seem like you need it."],
+  },
+  oren: {
+    ask: 'Breathe? Is that all you ever say?',
+    answer: ['...Breathe.', 'There. You said something unkind, and I said something useful. Drink some water.'],
+  },
+  pip: {
+    ask: 'Your songs are terrible, Pip.',
+    answer: ["Terrible's a start! Terrible's a genre!", "...I'll write a sad one. About you. It'll be terrible."],
+  },
+  tamsin: {
+    ask: 'Must you clank about all day?',
+    answer: ['Yes.', "Half the shelves in this place stay up because I clank. Want me to stop? Didn't think so."],
+  },
+  moss: { ask: 'Say something for once, Moss.', answer: ['No.', '...Rude.'] },
+};
+
+/** What they say back: how it's going, the guide's next step in their words, and the mean one. */
 export function roomQuestions(id: CharacterId, a: Adventure, next: string): Question[] {
   const voice = VOICE[id];
+  const mean = MEAN[id];
   return [
     { ask: ADVENTURE_ASK, answer: soFar(id, a) },
     { ask: NEXT_ASK, answer: [`${voice?.next ?? 'Next:'} ${next.charAt(0).toLowerCase()}${next.slice(1)}`] },
+    ...(mean ? [{ ...mean, deed: 'bad' as const }] : []),
   ];
 }
 

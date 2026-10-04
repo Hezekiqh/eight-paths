@@ -93,6 +93,14 @@
             "Because one day you'll have to stand your ground, and it'll be too late to start training then.",
             "Ask me how I know."
           ]
+        },
+        {
+          "ask": "Relocated? You ran, you old coward.",
+          "answer": [
+            "We ran with purpose.",
+            "...The purpose was not being there. But it was a purpose."
+          ],
+          "deed": "bad"
         }
       ],
       "after": {
@@ -136,6 +144,14 @@
             "Because I'm small, and the horde isn't.",
             "You don't have to be the biggest. You have to practise every day until you're the steadiest."
           ]
+        },
+        {
+          "ask": "You? Take on the horde? You're tiny.",
+          "answer": [
+            "I've heard that before. From the horde.",
+            "They stopped laughing once I'd practised. You'll stop too."
+          ],
+          "deed": "bad"
         }
       ],
       "after": {
@@ -180,6 +196,14 @@
             "Terrified. Always have been.",
             "Doesn't stop me walking. Just stops me walking fast."
           ]
+        },
+        {
+          "ask": "You smell worse than the haunted mess.",
+          "answer": [
+            "That's not me. That's the mess.",
+            "...Mostly not me."
+          ],
+          "deed": "bad"
         }
       ],
       "look": true

@@ -21,7 +21,7 @@ export type Scene = {
   /** Done when the scene ends, unless it ends in a choice. */
   outcome?: Outcome;
   /** A decision at the end: each option has its own words and its own outcome. */
-  choices?: { label: string; lines: string[]; outcome: Outcome }[];
+  choices?: { label: string; lines: string[]; outcome: Outcome; deed?: 'good' | 'bad' }[];
   /** A special moment (moments.ts): this party member steps out and stands beside you for it. */
   stepOut?: CharacterId;
 };
@@ -107,6 +107,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
             ? [
                 {
                   label: asBrannoc ? "Take back your father's throne." : 'Brannoc takes the throne.',
+                  deed: 'good' as const,
                   lines: [
                     asBrannoc
                       ? 'By the old law, the warrior who beat the king takes the crown. Everyone turns to you.'
@@ -173,6 +174,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
               ]),
           {
             label: 'Let him keep it. On your terms.',
+            deed: 'good' as const,
             lines: [
               'You lower your weapon. The court murmurs.',
               'KALDOR: ...Terms.',
@@ -186,6 +188,26 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
               'KALDOR: The Tithe Road is yours. Tell Grub at the Broken Watch I said so. He likes to hear it from me.',
             ],
             outcome: { flags: ['kaldor-beaten', 'kaldor-allowed', 'your-terms', 'warrior-blessing'] },
+          },
+          {
+            // the mean one (honor.ts): every menu has one
+            label: 'Throw him in his own cells.',
+            deed: 'bad' as const,
+            lines: [
+              'You point at Kaldor. Then at the floor. Then, for clarity, down.',
+              'KALDOR: ...The cells? Under my own Colosseum?',
+              'Two of his own guards march him out. Neither of them is getting paid for it.',
+              ...(brannoc && !asBrannoc ? ['BRANNOC: That was... very cold, friend. Effective. But cold.'] : []),
+              'You sit. The throne is cold, and far too big, and it suits you a little too well.',
+              'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+              'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+              'Far below, a cell door clangs.',
+              'GARY: ...I did not see that.',
+            ],
+            outcome: {
+              flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king', 'kaldor-jailed'],
+              joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+            },
           },
         ],
       };

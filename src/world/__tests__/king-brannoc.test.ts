@@ -34,3 +34,13 @@ describe('King Brannoc, working remotely', () => {
     );
   });
 });
+
+describe("Captain Orsk's gate", () => {
+  it('fits four rows: "Leave it to...", the polite one and the mean one, and a way past for each Path', () => {
+    const { GATE_ANSWERS } = jest.requireActual('../castle') as typeof import('../castle');
+    const anyone = GATE_ANSWERS.filter((a) => !a.path);
+    expect(1 + anyone.length).toBeLessThanOrEqual(4);
+    expect(anyone.filter((a) => a.deed === 'bad')).toHaveLength(1);
+    expect(new Set(GATE_ANSWERS.flatMap((a) => (a.path ? [a.path] : []))).size).toBe(8);
+  });
+});

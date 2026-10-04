@@ -93,6 +93,11 @@
             "Thank you for the door, my friend. I shall remember it. Probably."
           ],
           "leaves": "felix-left"
+        },
+        {
+          "ask": "You sound like a cheap stage villain.",
+          "answer": ["Cheap? Mon ami, I have never once in my life been cheap.", "But a villain… magnifique. You do say the sweetest things."],
+          "deed": "bad"
         }
       ],
       "farewell": ["Then I bid you adieu, my little door-opener.", "Until we meet again. And we shall. I insist."],
@@ -120,7 +125,8 @@
           "ask": "Beat it, kid.",
           "answer": ["...", "I'm telling my MUM!"],
           "sets": "nib-ran-off",
-          "then": ["Nib bursts into tears and runs off down the road."]
+          "then": ["Nib bursts into tears and runs off down the road."],
+          "deed": "bad"
         }
       ],
       "goneAfter": "nib-ran-off",

@@ -78,6 +78,14 @@
             "The Maximus has a new ladder. Five champions. Hroth's been top for forty years.",
             "He's sick of it, between you and me. Drinks here every night. Wants somebody to beat him so he can retire."
           ]
+        },
+        {
+          "ask": "This ale tastes like Snorri's socks.",
+          "answer": [
+            "Snorri's socks are clean, love. I wash them Sundays, after I dust him.",
+            "Your tab's just gone up. Arm or coin?"
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -94,7 +102,31 @@
         "…'Axe.'",
         "Thank you. Thank you. It's called Tuesday."
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "What's a skald for?",
+          "answer": [
+            "I remember things. Battles. Kings. Who owes Tova.",
+            "Kaldor asked for an epic about himself. I've been on the first line nine years. It's 'Kaldor.'"
+          ]
+        },
+        {
+          "ask": "Got a poem about Hekla?",
+          "answer": [
+            "'Hekla.' 'Arm.' 'Snap.' 'Ninety-one.'",
+            "She cried. Hekla cried. Then she arm-wrestled me for crying at her."
+          ]
+        },
+        {
+          "ask": "My horse writes better poems.",
+          "answer": [
+            "Then bring your horse. I'll sing him to sleep. 'Horse.' 'Horse.' 'Glue.'",
+            "…That one's called Wednesday."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "hekla",
@@ -107,6 +139,31 @@
       "lines": [
         "Arm-wrestle? Sit. I'm ninety-one. I haven't lost since I was ninety.",
         "The year I was ninety I lost once. To Tova. We don't talk about it."
+      ],
+      "questions": [
+        {
+          "ask": "What's the secret to winning?",
+          "answer": [
+            "Porridge. Spite. And I grip the table with my other hand. Nobody checks.",
+            "Don't tell Tova. She checks."
+          ]
+        },
+        {
+          "ask": "What was this city before Kaldor?",
+          "answer": [
+            "A city. Nicer roofs. Fewer statues of one man.",
+            "He built his right on top of it. My old house is under the Gut. I drink above my own kitchen."
+          ]
+        },
+        {
+          "ask": "Shouldn't you be in bed, gran?",
+          "answer": [
+            "Sit. Elbow on the table.",
+            "* She wins before you've finished sitting.",
+            "Bed's for people who lose. Off you go, then."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -121,7 +178,24 @@
         "Zzz… charge… zzz…",
         "(He's been asleep since the last war. Tova says it's the best guard she's ever had.)"
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "Snorri? Are you awake?",
+          "answer": [
+            "Zzz… charge… zzz… left flank… zzz…",
+            "Zzz… stop pressing on me… whoever's holding the screen… zzz…"
+          ]
+        },
+        {
+          "ask": "Is he dead? Can I have his stool?",
+          "answer": [
+            "Zzz… mine… zzz…",
+            "TOVA: Touch his stool and you'll be sleeping next to him, love."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "durn-bar",
@@ -135,7 +209,24 @@
         "Eleven days. Over bread. Don't tell anybody.",
         "HASKEL: Everybody knows, Durn. Bett told everybody."
       ],
-      "comesAfter": "brawl-over"
+      "comesAfter": "brawl-over",
+      "questions": [
+        {
+          "ask": "What was the fight about?",
+          "answer": [
+            "The last heel of the loaf. He said it was his. It was mine.",
+            "We ate it on day nine. Split it. Both cried. It was very good bread."
+          ]
+        },
+        {
+          "ask": "Eleven days and nobody won?",
+          "answer": [
+            "Bread won. Bread always wins.",
+            "Say that again and it'll be twelve days. With you."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "haskel-bar",
@@ -148,7 +239,24 @@
       "lines": [
         "Best friends now. We fought for eleven days. That's basically a wedding here."
       ],
-      "comesAfter": "brawl-over"
+      "comesAfter": "brawl-over",
+      "questions": [
+        {
+          "ask": "Who's Bett, then?",
+          "answer": [
+            "Even Bett. Runs the odds in the Ring Ward. She had us at four to one by day three.",
+            "Made a fortune off us. Bought us a round. Fair's fair."
+          ]
+        },
+        {
+          "ask": "Your best friend smells of bread.",
+          "answer": [
+            "He does. It's lovely. You'd know if you had a best friend.",
+            "Durn! They're being mean about your smell!"
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "sorrel-bar",
@@ -162,7 +270,25 @@
         "You beat me fair. Rattle and all. I'm proud of you.",
         "Now sit up straight and eat something. You look peaky."
       ],
-      "comesAfter": "maximus-2"
+      "comesAfter": "maximus-2",
+      "questions": [
+        {
+          "ask": "What's the rattle for?",
+          "answer": [
+            "Every fighter's got a gimmick. Mine's being somebody's gran.",
+            "Shake it at a raider and he thinks of his nan. Then he drops his axe. Works every time. Nearly."
+          ]
+        },
+        {
+          "ask": "You fight like a knitting basket.",
+          "answer": [
+            "Do I? Come here.",
+            "* She licks her thumb and wipes something off your face. Hard.",
+            "There. Now you look less silly. Eat your stew."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "fennick-bar",
@@ -176,7 +302,24 @@
         "You caught me. Nobody catches me. I've been running for nine years.",
         "My legs are very tired. Tova lets me sit here. I'm sitting. It's lovely."
       ],
-      "comesAfter": "maximus-3"
+      "comesAfter": "maximus-3",
+      "questions": [
+        {
+          "ask": "Why'd you start running?",
+          "answer": [
+            "First fight. Big man. I ran. Crowd loved it.",
+            "Nine years of running in a circle. I've never been hit. I've never been anywhere, either."
+          ]
+        },
+        {
+          "ask": "You're a coward with good shoes.",
+          "answer": [
+            "The shoes are good, thank you. Snik sharpened the laces.",
+            "Little Bram in the Ring Ward wants to be me. Don't tell him what you just said."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "hroth-bar",
@@ -191,7 +334,31 @@
         "I'm retiring. A little house. A garden. I'm going to grow one turnip and look at it.",
         "Thank you. Truly. Buy you a drink? Tova says I can't. She says it's on the house."
       ],
-      "comesAfter": "maximus-5"
+      "comesAfter": "maximus-5",
+      "questions": [
+        {
+          "ask": "Why'd you stay champion so long?",
+          "answer": [
+            "Nobody beat me. You can't retire from a ladder. You can only fall off it.",
+            "The king likes his champions where he put them. Forty years, I waited for a pair of hands."
+          ]
+        },
+        {
+          "ask": "Tell me about this turnip.",
+          "answer": [
+            "Only one. Big one. I'll water it. Talk to it. Name it.",
+            "Tova says I'm allowed visitors. You can see the turnip. Not touch it."
+          ]
+        },
+        {
+          "ask": "The turnip's going to beat you too.",
+          "answer": [
+            "It might. I'll let it.",
+            "Forty years of hitting things. Losing to a turnip sounds peaceful."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "tova-heart",

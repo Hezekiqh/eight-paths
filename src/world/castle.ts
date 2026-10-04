@@ -27,6 +27,8 @@ export type GateAnswer = {
   by?: Partial<Record<CharacterId, string[]>>;
   /** Anyone's answer that sometimes works anyway: the chance, and what's said when it does. */
   luck?: { chance: number; lines: string[] };
+  /** Kind or mean (honor.ts). */
+  deed?: 'good' | 'bad';
 };
 
 /** The captain, before you've said anything. */
@@ -36,7 +38,11 @@ export const GATE_OPEN = [
   'CAPTAIN ORSK: So. What makes you special?',
 ];
 
-/** Four ways past the gate guards (each Lv 8 on its Path, greyed out with its icon until then), and backing off. */
+/**
+ * A way past the gate guards for each of the core eight's Paths (Lv 8, greyed out with its icon until
+ * then), picked from the "Leave it to..." list (hero-pick.ts, author Oct 4, 2026), and two anyone can
+ * say: the polite one and the mean one.
+ */
 export const GATE_ANSWERS: GateAnswer[] = [
   {
     label: '"Captain. Has anyone told you that you have a hero\'s jaw?"',
@@ -81,6 +87,7 @@ export const GATE_ANSWERS: GateAnswer[] = [
   {
     label: '"How much does the king pay you?"',
     path: 'financial',
+    deed: 'good',
     lines: [
       'CAPTAIN ORSK: Pay us?',
       'The guards look at one another.',
@@ -117,9 +124,84 @@ export const GATE_ANSWERS: GateAnswer[] = [
     },
   },
   {
+    label: '"Captain. When did you last sleep?"',
+    path: 'spiritual',
+    lines: [
+      'You ask the captain how he is. Really ask. He opens his mouth to say "fine," and seven years of night shifts come out instead.',
+      'CAPTAIN ORSK: ...Nobody asks. Nobody ever asks.',
+      'CAPTAIN ORSK: Lower the bridge. I need a minute.',
+    ],
+    by: {
+      wren: [
+        'SISTER WREN: Captain. When did you last sleep?',
+        'Her lantern brightens. Orsk opens his mouth to say "fine," and seven years of night shifts come out instead. Wren listens to all of it.',
+        'CAPTAIN ORSK: ...Nobody asks. Nobody ever asks.',
+        'CAPTAIN ORSK: Lower the bridge. I need a minute.',
+      ],
+    },
+  },
+  {
+    label: '(Sit down and wait.)',
+    path: 'emotional',
+    lines: [
+      'You sit down in front of the gate and wait. You do not blink. An hour passes. Then another.',
+      'CAPTAIN ORSK: ...Are you going to do that all day?',
+      "CAPTAIN ORSK: Fine. FINE. Lower the bridge. It's unsettling.",
+    ],
+    by: {
+      oren: [
+        'Oren sits down cross-legged in front of the gate, closes her eyes, and does not move.',
+        'An hour passes. A bird lands on her head. She does not move.',
+        'CAPTAIN ORSK: ...Is she going to do that all day?',
+        'OREN: Yes.',
+        "CAPTAIN ORSK: Lower the bridge. LOWER IT. It's unsettling.",
+      ],
+    },
+  },
+  {
+    label: '"That winch is about to snap."',
+    path: 'occupational',
+    lines: [
+      'You point out the winch: three cracked teeth, one rusted pin, and a chain held on with string.',
+      'CAPTAIN ORSK: ...It does make a noise.',
+      'You fix it. It stops making the noise.',
+      "CAPTAIN ORSK: Now it'll actually come down. Go on, then.",
+    ],
+    by: {
+      tamsin: [
+        'TAMSIN: That winch is about to snap. Three teeth cracked, and is that... string?',
+        'CAPTAIN ORSK: ...It does make a noise.',
+        "TAMSIN: Hold this. Don't touch that. Don't touch anything.",
+        "Tamsin's arm whirs. Sparks. A clank. The winch purrs like it's new.",
+        "CAPTAIN ORSK: It's never sounded like that. Lower the bridge. Let's see it go.",
+      ],
+    },
+  },
+  {
+    label: '(Whistle to the moat.)',
+    path: 'environmental',
+    lines: [
+      'You whistle low over the moat. Something large and green surfaces, looks at you, and swims over to the chain.',
+      'It bites the chain. The drawbridge shudders.',
+      "CAPTAIN ORSK: Is that Gerald? Nobody's seen Gerald in years.",
+      'CAPTAIN ORSK: ...Lower it before he eats the gate.',
+    ],
+    by: {
+      moss: [
+        'Moss crouches at the edge of the moat and whistles, low and friendly.',
+        'MOSS: Hello, old thing. Long winter? Mm. Mm. I know.',
+        'Something large and green surfaces and rests its chin on the bank. Moss scratches it.',
+        "CAPTAIN ORSK: Is that Gerald? Nobody's seen Gerald in years.",
+        "MOSS: He says your chain's been keeping him awake.",
+        'CAPTAIN ORSK: ...Lower the bridge. For Gerald.',
+      ],
+    },
+  },
+  {
     // the default: anyone can say it; mostly it's a no, but now and then Orsk is in a good mood
     label: '"Please let me in?"',
     path: null,
+    deed: 'good',
     lines: ['CAPTAIN ORSK: No.', 'CAPTAIN ORSK: Lovely manners, though. Still no.'],
     luck: {
       chance: 0.15,
@@ -133,9 +215,15 @@ export const GATE_ANSWERS: GateAnswer[] = [
     },
   },
   {
-    label: '(Back away slowly.)',
+    // the mean one (honor.ts): every menu has one
+    label: '"Out of my way, you overgrown doorstop."',
     path: null,
-    lines: ["CAPTAIN ORSK: That's what I thought."],
+    deed: 'bad',
+    lines: [
+      'CAPTAIN ORSK: ...Doorstop.',
+      "GUARD: He's sensitive about the doorstop thing. His mum used to prop the kitchen door open with him.",
+      'CAPTAIN ORSK: The bridge stays up. For the doorstop.',
+    ],
   },
 ];
 
@@ -175,7 +263,7 @@ export const needsSomeone = (className: string) => `a ${className} with you`;
 export const GATE_AFTER = ['CAPTAIN ORSK: Go on, then. Before I change my mind. I will not change my mind.'];
 
 /** The captain turning you away, kindly-ish, when none of your answers will work yet. */
-export const GATE_NOT_YET = `(Lv ${GATE_LEVEL} in one of these, and someone of that class with you, and the gate is yours. Every habit counts.)`;
+export const GATE_NOT_YET = `(Lv ${GATE_LEVEL} on a companion's Path, with them in your party, and the gate is yours. Every habit counts.)`;
 
 /** The king's wives, in their parlour upstairs: talk to any of them and they all pile in. */
 export const WIVES_GOSSIP = [

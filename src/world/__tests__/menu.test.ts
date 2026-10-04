@@ -19,10 +19,24 @@ describe('shownQuestions', () => {
   });
 });
 
+describe('the mean one', () => {
+  it('always keeps its row, last, however many questions there are', () => {
+    const many = [...qs, { ask: 'rude', deed: 'bad' }];
+    expect(asks(shownQuestions(many, []))).toEqual(['a', 'b', 'rude']);
+    expect(asks(shownQuestions(many, ['a', 'b']))).toEqual(['c', 'd', 'rude']);
+    expect(asks(shownQuestions([{ ask: 'x' }, { ask: 'rude', deed: 'bad' }], []))).toEqual(['x', 'rude']);
+  });
+});
+
 describe("Sir Himothy's answers", () => {
   it('fit one menu: two clever ones, two anyone can say', () => {
     expect(ANSWERS.length).toBeLessThanOrEqual(MENU_ROWS);
     expect(ANSWERS.filter((a) => a.path)).toHaveLength(2);
     expect(ANSWERS.filter((a) => !a.path)).toHaveLength(2);
+  });
+  it('has one mean answer, and it knocks you out', () => {
+    const mean = ANSWERS.filter((a) => a.deed === 'bad');
+    expect(mean).toHaveLength(1);
+    expect(mean[0].knockout && mean[0].jailed).toBe(true);
   });
 });

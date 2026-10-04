@@ -100,6 +100,15 @@
             "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
             "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
           ]
+        },
+        {
+          "ask": "First queen, and you got the worst room?",
+          "answer": [
+            "QUEEN BRUNHILT: It is NOT the worst room. It is the second-worst room.",
+            "QUEEN SIGNY: Mine's the worst. It faces the moat.",
+            "QUEEN BRUNHILT: Out. Biscuits are for guests, and you've stopped being one."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -137,6 +146,15 @@
             "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
             "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
           ]
+        },
+        {
+          "ask": "Maybe the walls are better company.",
+          "answer": [
+            "QUEEN SIGNY: …",
+            "QUEEN SIGNY: That's what he says. The walls don't interrupt.",
+            "QUEEN ASTRA: Don't cry on the tapestry, Signy. It's the good tapestry."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -174,6 +192,15 @@
             "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
             "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
           ]
+        },
+        {
+          "ask": "The chandelier's got more sense than you.",
+          "answer": [
+            "QUEEN ASTRA: It has more candles. That is not the same thing.",
+            "QUEEN HELKA: It does get asked more questions.",
+            "QUEEN ASTRA: Thank you, Helka. Our guest was just leaving."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -211,6 +238,15 @@
             "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
             "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
           ]
+        },
+        {
+          "ask": "No wonder Maren's the favourite.",
+          "answer": [
+            "QUEEN HELKA: WHAT did you say?",
+            "QUEEN MAREN: I am not the favourite.",
+            "QUEEN HELKA: Not now, Maren. You have the good room."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -248,6 +284,15 @@
             "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
             "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
           ]
+        },
+        {
+          "ask": "Loving husband? He has four other wives.",
+          "answer": [
+            "QUEEN MAREN: He loves us all very much. In order.",
+            "QUEEN HELKA: And she's first in the order.",
+            "QUEEN MAREN: Mind the stairs on the way out, dear. They're ever so steep."
+          ],
+          "deed": "bad"
         }
       ]
     }

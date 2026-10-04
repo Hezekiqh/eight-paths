@@ -31,7 +31,8 @@ describe('the Archive', () => {
   it('has the Keeper with his own questions, and the core eight only once met (out exploring, some days)', () => {
     for (const n of MAPS.archive.npcs.filter((n) => n.character))
       expect([n.id, n.comesAfter]).toEqual([`hall-${n.character}`, `met:${n.character}`]);
-    expect(MAPS.archive.npcs.find((n) => n.id === 'keeper')?.questions).toHaveLength(4);
+    // his four, and the mean one every menu has (honor.ts)
+    expect(MAPS.archive.npcs.find((n) => n.id === 'keeper')?.questions).toHaveLength(5);
   });
 
   it('gives each of the core eight a room, behind a door that opens once you have met them', () => {

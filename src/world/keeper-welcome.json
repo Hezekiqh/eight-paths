@@ -46,5 +46,19 @@
     "(He's immortal.)",
     "(And someone else is watching me?)",
     "(What did he mean by privacy?)"
-  ]
+  ],
+  "meanCards": {
+    "ask": "\"Cards? Is that all you do in here?\"",
+    "answer": [
+      "Mostly. Cards, and waiting for you.",
+      "Forgive me. I shan't take it personally. I have had a very long time to practise not taking things personally."
+    ]
+  },
+  "meanAsk": {
+    "ask": "\"Do you ever just answer a question?\"",
+    "answer": [
+      "Now and then. It rarely helps.",
+      "But I shall try harder. For you."
+    ]
+  }
 }

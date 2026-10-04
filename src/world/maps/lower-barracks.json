@@ -107,6 +107,14 @@
             "The prince's. Borrowed it for porridge. Five hundred years ago. Never signed it back.",
             "I've not forgotten. I've had a great deal of time not to forget."
           ]
+        },
+        {
+          "ask": "Nobody cares about your silly forms.",
+          "answer": [
+            "HALT. Insults are to be submitted in triplicate.",
+            "* The Quartermaster writes your name in a ledger marked TROUBLE."
+          ],
+          "deed": "bad"
         }
       ]
     },

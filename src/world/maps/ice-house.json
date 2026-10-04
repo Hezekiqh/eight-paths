@@ -45,6 +45,23 @@
       "lines": [
         "I come every day. I put my hand on it. Very cold.",
         "My grandad put his hand on it. His grandad put his hand on it. It's a family thing. Our hands are freezing."
+      ],
+      "questions": [
+        {
+          "ask": "Why does nobody let it melt?",
+          "answer": [
+            "Then it's water. Then it's Fliss selling it in tiny bottles.",
+            "As long as the ice is cold, the Kaldari remember the wastes. That's what my grandad said. His hand was blue."
+          ]
+        },
+        {
+          "ask": "Your family just licks a big ice cube.",
+          "answer": [
+            "Touches. TOUCHES. My uncle licked it once.",
+            "He was stuck there a week. The family doesn't talk about Uncle Bo."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {

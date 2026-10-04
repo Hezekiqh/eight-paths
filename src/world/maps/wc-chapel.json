@@ -83,6 +83,14 @@
             "The Eight. The kingdoms that held hands. Somebody scratched out one face, long before my time.",
             "I polish around it."
           ]
+        },
+        {
+          "ask": "Ring it quieter. Some of us were asleep.",
+          "answer": [
+            "Five hundred years, some of you.",
+            "I'll ring it twice tomorrow. Just for you."
+          ],
+          "deed": "bad"
         }
       ]
     }

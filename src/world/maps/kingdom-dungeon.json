@@ -76,30 +76,27 @@
       "character": "brannoc",
       "lines": [
         "AH! Stay back! I am armed!",
-        "...I am not armed. They took my sword. Who are you? What do you want of me?"
+        "...Very well. I am not armed. But I am still dangerous!"
       ],
       "questions": [
         {
           "ask": "Who are you?",
           "answer": [
-            "I am Brannoc. Before I slept, I was a prince.",
-            "In my dream I still was. Banners, feasts, a people who loved me.",
-            "I knew that dream was too good to be true."
+            "I am Brannoc. Once, I was a prince.",
+            "I fell asleep and woke in a cocoon. Someone freed me, then vanished before I could thank him."
           ]
         },
         {
           "ask": "Why are you cowering in the corner?",
           "answer": [
-            "Cowering? I am not cowering. I am guarding the corner.",
-            "From the inside. It is a very dangerous corner."
+            "Cowering? I am heroically defending this corner. There is a difference!"
           ]
         },
         {
           "ask": "What are you in for?",
           "answer": [
-            "So there I was, wandering through town. Nothing looked as I remembered it.",
-            "A cat startled me, and I leapt backward, straight into an apple cart.",
-            "And now I serve three life sentences."
+            "I wandered from my cocoon into a kingdom I no longer knew. A cat startled me, and I stumbled into an apple cart.",
+            "Now I serve three life sentences."
           ]
         },
         {
@@ -115,6 +112,15 @@
             "And these bars... forged by giants, surely. Not even a battering ram could—"
           ],
           "sets": "brannoc-bolts"
+        },
+        {
+          "ask": "Some prince. Beaten by an apple cart.",
+          "answer": [
+            "...By the saints. That is unkind, good sir.",
+            "True, I grant you. It was a very large cart. But unkind.",
+            "* Brannoc turns back to his corner, and guards it a little harder."
+          ],
+          "deed": "bad"
         }
       ],
       "farewell": [
@@ -142,6 +148,14 @@
             "Soup.",
             "You wouldn't understand. You've never had the king's soup."
           ]
+        },
+        {
+          "ask": "Spoons? What a pathetic little crime.",
+          "answer": [
+            "Two spoons. Get it right.",
+            "Next time I'm going for the ladle. Then we'll see who's pathetic."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -164,6 +178,14 @@
             "Said the statue in the square looked like a potato.",
             "It does, though. Look at it. Potato."
           ]
+        },
+        {
+          "ask": "You look a bit like a potato yourself.",
+          "answer": [
+            "I know.",
+            "Why do you think the statue bothered me so much?"
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -187,6 +209,15 @@
             "Yes.",
             "I return library books late. On purpose."
           ]
+        },
+        {
+          "ask": "Shh. You're the Quiet One. Act like it.",
+          "answer": [
+            "...",
+            "...",
+            "Rude."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -246,6 +277,14 @@
             "It says that on the sign.",
             "I'm the 24/7."
           ]
+        },
+        {
+          "ask": "Wake up, you useless lump.",
+          "answer": [
+            "Useless Lump. Of the cells.",
+            "It's a promotion, really. I don't get paid for that either."
+          ],
+          "deed": "bad"
         }
       ],
       "farewell": [
@@ -284,6 +323,15 @@
             "It is the only place in this world I know.",
             "And the guards wave at me now. Most unsettling."
           ]
+        },
+        {
+          "ask": "Stay in your corner. You'd only slow me down.",
+          "answer": [
+            "...Yes. Yes, I expect I would.",
+            "I shall stay, then. In case you change your mind.",
+            "I am very good at waiting. It is the one thing I am good at."
+          ],
+          "deed": "bad"
         }
       ],
       "farewell": [

@@ -85,6 +85,14 @@
             "Volume nine. The years the old king went mad. Borrowed, five hundred years ago, by the palace.",
             "Never returned. I've sent a great many letters."
           ]
+        },
+        {
+          "ask": "Nobody reads your letters, you know.",
+          "answer": [
+            "Shh.",
+            "...That one I meant."
+          ],
+          "deed": "bad"
         }
       ]
     }

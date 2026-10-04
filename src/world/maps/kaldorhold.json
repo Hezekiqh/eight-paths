@@ -93,7 +93,24 @@
         "Kaldor's Sweat! Genuine sweat of the king! Tiny bottles! Makes you strong!",
         "…It's water. It's water from the well. But it's Kaldor's Well, so technically."
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "Does anyone actually buy this?",
+          "answer": [
+            "Raiders before a fight. Sorrel buys six. She says it's for her knees.",
+            "Mott tried to tax it. I gave him a bottle. He's stronger now. Technically."
+          ]
+        },
+        {
+          "ask": "I can see the bucket you're filling it from.",
+          "answer": [
+            "That's a different bucket. A royal bucket.",
+            "…Two for one. Please. Don't tell Mott."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "brakka",
@@ -106,6 +123,23 @@
       "lines": [
         "Furs. Best furs in Kaldorhold. Twenty push-ups and we'll talk.",
         "No push-ups, no furs. I don't make the rules. Well. I made this one. I like it."
+      ],
+      "questions": [
+        {
+          "ask": "Where do the furs come from?",
+          "answer": [
+            "North. Up past the Frost Ward. My cousins trap. I sell. I make you do push-ups.",
+            "Elder Skadi says the old Kaldari wore wolves. I say wolves wore them first."
+          ]
+        },
+        {
+          "ask": "Twenty push-ups? I'll pass on fleas.",
+          "answer": [
+            "Fleas! These furs are clean! I washed them in Fliss's well. Kaldor's Well.",
+            "Sixty push-ups now. Price went up. For you."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -120,7 +154,25 @@
         "Sharpening! Axes, swords, spoons, bread, a cat's patience. I sharpen anything.",
         "Brought me a pillow once. Took a week. Very pointy pillow now."
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who's your best customer?",
+          "answer": [
+            "Hroth. Brings the same axe every week. It's sharp. He just likes the chat.",
+            "Ansel Chisk brings his chisels. Says Kaldor's nose keeps breaking them. Very hard nose."
+          ]
+        },
+        {
+          "ask": "Sharpen your wits next, Snik.",
+          "answer": [
+            "Ooh. I'll try. Leave them overnight.",
+            "* He holds out his hand for your wits. He's waiting.",
+            "…No? Pointy pillow, then. Half price."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "chisk",
@@ -134,7 +186,31 @@
         "The king wants another statue. I've done Kaldor standing. Kaldor striding. Kaldor looking at Kaldor.",
         "Kaldor… sitting? Kaldor… thinking? Does he think? I can't ask. You can't ask."
       ],
-      "wander": 1
+      "wander": 1,
+      "questions": [
+        {
+          "ask": "How many statues are there?",
+          "answer": [
+            "Two hundred and twelve. All Kaldor. Some are the same statue facing the other way.",
+            "There's a pigeon on the big one I've grown fond of. It's the only thing in this city not owned by the king."
+          ]
+        },
+        {
+          "ask": "What happened to the old statues?",
+          "answer": [
+            "Under us. He built Kaldorhold on top of the old city. Old kings, old gods. Buried, standing up.",
+            "Dig a well and you hit somebody's marble foot. Fliss's well has a whole marble toe at the bottom."
+          ]
+        },
+        {
+          "ask": "Your Kaldors all have the same face.",
+          "answer": [
+            "He only has the one face!",
+            "…Shh. If he hears 'same face' I'll be doing Kaldor-hitting-a-sculptor next. From life."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "mott",
@@ -148,7 +224,31 @@
         "Tax collector. Not coin. Fights. Everybody here owes the king fights.",
         "You, for example. Visitor. You owe nothing yet. I've opened a page for you, though. Just in case."
       ],
-      "wander": 3
+      "wander": 3,
+      "questions": [
+        {
+          "ask": "What happens if you don't pay?",
+          "answer": [
+            "The Kaldorium Maximus. Or the fighters' cells first. Then the Maximus.",
+            "Joss's whole camp owed a tithe. They sent Joss. He writes about clouds. I felt bad. I wrote it down anyway."
+          ]
+        },
+        {
+          "ask": "Do you get paid?",
+          "answer": [
+            "Paid? Nobody gets paid. The king pays in honour.",
+            "I've got a page for honour. It's empty. Don't tell anyone."
+          ]
+        },
+        {
+          "ask": "Tax collector? Did your mum know?",
+          "answer": [
+            "She did. She owes three fights. I've got her page right here.",
+            "* He writes something on your page. Underlines it twice."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "tib",
@@ -162,7 +262,24 @@
         "Fight club. Behind the houses. Rule one: tell everyone about fight club.",
         "Rule two: no crying. Rule three: Brunna's not allowed. She bites."
       ],
-      "wander": 2
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Who's winning fight club?",
+          "answer": [
+            "Brunna. She bites. Brunna's not allowed. Brunna keeps coming.",
+            "Next week we're doing teams. It's me and a dog against Brunna. I think it's even."
+          ]
+        },
+        {
+          "ask": "Fight club's just you hitting a fence.",
+          "answer": [
+            "The fence hit me first.",
+            "Rule four: no being mean. I just made it. You're out."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "bazaar-sign",

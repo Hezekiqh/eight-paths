@@ -86,6 +86,14 @@
           "answer": [
             "The portcullis? The winch is in the armoury, through the hole east. Mind the armour in there. It's not always empty."
           ]
+        },
+        {
+          "ask": "You're no better than the prince.",
+          "answer": [
+            "Oi. The prince skips drill.",
+            "I skip lunch. Completely different. Much sadder."
+          ],
+          "deed": "bad"
         }
       ]
     }

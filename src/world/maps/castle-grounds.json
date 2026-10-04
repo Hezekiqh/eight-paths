@@ -90,7 +90,24 @@
       "sprite": "raider",
       "facing": "right",
       "name": "Gate Guard",
-      "lines": ["We don't get paid. In case you were wondering.", "Nobody ever wonders."]
+      "lines": ["We don't get paid. In case you were wondering.", "Nobody ever wonders."],
+      "questions": [
+        {
+          "ask": "What do you get instead of pay?",
+          "answer": [
+            "Bread. Kaldorbread. Tessa bakes it in town. It's the only bread allowed and it tastes of being told off.",
+            "Some weeks Captain Orsk gives us a nod. Those are good weeks."
+          ]
+        },
+        {
+          "ask": "Unpaid and still this bad at it?",
+          "answer": [
+            "Bad? I let you in, didn't I? That's the job done. Unpaid. Perfectly.",
+            "* He stares straight ahead, as if you were a draught."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "drill-sergeant",
@@ -100,7 +117,31 @@
       "sprite": "drummer",
       "facing": "down",
       "name": "Drill Sergeant",
-      "lines": ["ONE! TWO! ONE! TWO!", "...Somebody pick Harl up. ONE! TWO!"]
+      "lines": ["ONE! TWO! ONE! TWO!", "...Somebody pick Harl up. ONE! TWO!"],
+      "questions": [
+        {
+          "ask": "What are you drilling them for?",
+          "answer": [
+            "THE WAR! Which war? THE WAR! When? TOMORROW! It's always tomorrow! ONE! TWO!",
+            "Between you and me, the dummy's my best recruit. Never misses a day. Knocked out Harl."
+          ]
+        },
+        {
+          "ask": "What happened to Harl?",
+          "answer": [
+            "Harl swung, the dummy swung back. It doesn't. That's the worrying part.",
+            "The medic's on it. The medic is always on it. ONE! TWO!"
+          ]
+        },
+        {
+          "ask": "Can you count past two?",
+          "answer": [
+            "I CAN COUNT TO THREE. I CHOOSE NOT TO. THREE IS FOR OFFICERS.",
+            "* He goes back to ONE, TWO, a little louder, a little more personally."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "drill-1",
@@ -110,7 +151,24 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["Can't talk. Drilling."]
+      "lines": ["Can't talk. Drilling."],
+      "questions": [
+        {
+          "ask": "What are you drilling?",
+          "answer": [
+            "Thrust. Parry. Thrust. Parry. Wonder about lunch. Thrust.",
+            "That third one isn't official. Everyone does it."
+          ]
+        },
+        {
+          "ask": "You're doing it wrong.",
+          "answer": [
+            "…Am I? Nobody's ever said. Four hundred years and nobody's ever said.",
+            "* He keeps drilling, slightly differently, and much worse."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "drill-2",
@@ -120,7 +178,21 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["Sixteen hours a day. The king says strength is everything."]
+      "lines": ["Sixteen hours a day. The king says strength is everything."],
+      "questions": [
+        {
+          "ask": "Sixteen hours? Who said?",
+          "answer": [
+            "The king. He says it at the window. Loudly. Sometimes to the window.",
+            "The queens say he's been off lately. Asks the chandelier about the war. The chandelier's very quiet on it."
+          ]
+        },
+        {
+          "ask": "Sixteen hours and arms like string?",
+          "answer": ["Wiry. The word is wiry.", "* He flexes. Nothing visible happens. He seems satisfied anyway."],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "drill-3",
@@ -130,7 +202,24 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["My arms stopped hurting in the third century."]
+      "lines": ["My arms stopped hurting in the third century."],
+      "questions": [
+        {
+          "ask": "The third century? How old are you?",
+          "answer": [
+            "Old enough. Nobody ages much in Kaldor's kingdom. Nobody gets out much either. Funny, that.",
+            "Gudrun in town's older than me. Does chin-ups on the cage bars. Makes me feel lazy."
+          ]
+        },
+        {
+          "ask": "Three centuries and still a private?",
+          "answer": [
+            "Promotions need paperwork. Paperwork needs pay. Nobody gets paid.",
+            "So, yes. Three centuries. Still a private. Thank you for counting."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "drill-4",
@@ -140,7 +229,24 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for four hundred years."]
+      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for four hundred years."],
+      "questions": [
+        {
+          "ask": "Why haven't you marched yet?",
+          "answer": [
+            "The king wakes up, says 'tomorrow', and goes back to talking to the walls.",
+            "The walls never argue. Good for morale, I suppose. Theirs."
+          ]
+        },
+        {
+          "ask": "Marching tomorrow? You'd lose today.",
+          "answer": [
+            "We'd lose tomorrow too. That's why we keep it there.",
+            "* He marches on the spot, very defiantly, nowhere."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "drill-5",
@@ -150,7 +256,24 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["Don't look at Harl. Harl's fine."]
+      "lines": ["Don't look at Harl. Harl's fine."],
+      "questions": [
+        {
+          "ask": "Is Harl really fine?",
+          "answer": [
+            "He's breathing. The medic counts that as fine. The dummy counts it as a draw.",
+            "Harl's my mate. Owes me a Kaldorbread. If he doesn't wake up I'm not getting it."
+          ]
+        },
+        {
+          "ask": "Harl looks better than you, honestly.",
+          "answer": [
+            "He's lying down. Everyone looks better lying down.",
+            "…I'll tell him you said that. When he's up. He'll be chuffed."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "medic",
@@ -163,6 +286,23 @@
       "lines": [
         "He took a dummy to the head. The dummy won.",
         "Harl? Harl. How many fingers am I holding up? ...Wrong. It was a trick question. I'm not holding any up."
+      ],
+      "questions": [
+        {
+          "ask": "How's your patient?",
+          "answer": [
+            "Concussed, cold, and dreaming about soup. He keeps saying 'soup'. I've no soup.",
+            "Sister Hild in town has a bucket and a stool for the brawlers. She's better stocked than me. She's got yarn."
+          ]
+        },
+        {
+          "ask": "Are you even a real medic?",
+          "answer": [
+            "I'm a chaplain. I was told 'close enough' by a man with a very big axe.",
+            "* He holds up three fingers at you. You are not sure it was a question."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -176,6 +316,23 @@
       "lines": [
         "The shadows do the night watch now.",
         "They don't eat, they don't sleep, they don't talk. Rubbish company."
+      ],
+      "questions": [
+        {
+          "ask": "What are the shadows?",
+          "answer": [
+            "Came with the French adviser. Or the tall one. Nobody saw them arrive. Nobody saw anything. That's sort of the point of them.",
+            "Tallow keeps the braziers lit so they know where to stand. They stand there. All night."
+          ]
+        },
+        {
+          "ask": "Replaced by shadows. Ouch.",
+          "answer": [
+            "Not replaced. Relieved. There's a difference.",
+            "…There isn't, is there. I'm going to sit nearer the fire."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -186,7 +343,24 @@
       "sprite": "raider",
       "facing": "left",
       "name": "Soldier",
-      "lines": ["The king's new adviser, the French one, gave me this cheese.", "I don't trust the cheese."]
+      "lines": ["The king's new adviser, the French one, gave me this cheese.", "I don't trust the cheese."],
+      "questions": [
+        {
+          "ask": "What's wrong with the cheese?",
+          "answer": [
+            "It's blue. Bread isn't blue. Swords aren't blue. Why is the cheese blue?",
+            "And he smiled when he gave it. I've lived here four hundred years. Nobody smiles when they give you anything."
+          ]
+        },
+        {
+          "ask": "Scared of cheese? Some soldier.",
+          "answer": [
+            "You go and eat it, then. Go on. I'll watch.",
+            "* He holds the cheese out at arm's length. You both stare at it. It wins."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "tallow",
@@ -221,6 +395,14 @@
             "The shadows break quick on anybody strong. On anybody else, they don't break at all.",
             "Come back strong. You didn't hear that from Tallow."
           ]
+        },
+        {
+          "ask": "Named after candle grease, were you?",
+          "answer": [
+            "Named after my dad. He was named after candle grease. It's a family trade.",
+            "…On you go, then. Tallow'll leave the one by the door unlit. Just for you."
+          ],
+          "deed": "bad"
         }
       ]
     }

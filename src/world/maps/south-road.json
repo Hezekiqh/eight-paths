@@ -162,6 +162,14 @@
             "The prince? Lost, they wrote. Not dead. Lost.",
             "I'd like to think he's out there somewhere, sleeping it off."
           ]
+        },
+        {
+          "ask": "Pulling weeds for a gone king? Sad.",
+          "answer": [
+            "Aye. It is, a bit.",
+            "* He pulls another weed anyway."
+          ],
+          "deed": "bad"
         }
       ]
     }

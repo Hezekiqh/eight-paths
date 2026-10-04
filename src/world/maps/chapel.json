@@ -69,6 +69,14 @@
             "The horde says it's a waste of a good roof. So it's quiet.",
             "Quiet's a kind of prayer, if you let it be one."
           ]
+        },
+        {
+          "ask": "You say good morning to soot? That's sad.",
+          "answer": [
+            "The soot doesn't interrupt, dear. Or say things like that.",
+            "Good morning, by the way. I say it to everyone. Even you."
+          ],
+          "deed": "bad"
         }
       ]
     }

@@ -73,6 +73,14 @@
             "Oh, now you've done it.",
             "The north drain runs under the wall toward the maze. Hugo found something in it once. He won't say what. Gardeners."
           ]
+        },
+        {
+          "ask": "Some guard. You rake sand for a living.",
+          "answer": [
+            "I do. In very straight lines. Nobody ever notices the lines.",
+            "I'll notice you, though. Long memory. Short rake."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -104,7 +112,24 @@
           "Hey. We're not gonna mess with you.",
           "Your big friend's down on level three, if you want to talk to him. Crying about an apple cart."
         ]
-      }
+      },
+      "questions": [
+        {
+          "ask": "Who are you cheering for?",
+          "answer": [
+            "Whoever's winning. I'm a guard, not a fool.",
+            "Barnaby says loyalty's for dogs and ticket holders. I've no ticket."
+          ]
+        },
+        {
+          "ask": "Brave words from the back row.",
+          "answer": [
+            "The back row's where the brave ones sit. The front row gets sand in its teeth.",
+            "Go on, then. You hit him."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "crowd-2",
@@ -116,6 +141,23 @@
       "name": "Guard",
       "lines": [
         "I've got two coppers on the big one. No offence."
+      ],
+      "questions": [
+        {
+          "ask": "Who's the big one?",
+          "answer": [
+            "The Warden. Takes thirty strikes before he so much as blinks.",
+            "Gary from the cells says he blinked once. Nobody believes Gary. Gary doesn't care."
+          ]
+        },
+        {
+          "ask": "Two coppers? Big spender.",
+          "answer": [
+            "It's all I've got. We don't get paid. I bet the same two coppers every week.",
+            "Lost them every week, too. Still mine, in spirit."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -128,6 +170,23 @@
       "name": "Guard",
       "lines": [
         "We don't get paid enough for this."
+      ],
+      "questions": [
+        {
+          "ask": "How much do you get paid?",
+          "answer": [
+            "Nothing. We get a seat, a spear and the smell.",
+            "Sergeant Maelis says the honour's the pay. Maelis also rakes sand in straight lines for fun."
+          ]
+        },
+        {
+          "ask": "Then quit. Nobody'd notice.",
+          "answer": [
+            "That's the trouble. I tried quitting last spring.",
+            "Nobody noticed. So I came back. Nobody noticed that either."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -140,6 +199,23 @@
       "name": "Guard",
       "lines": [
         "Strength is valued more than anything here. Also snacks."
+      ],
+      "questions": [
+        {
+          "ask": "What snacks?",
+          "answer": [
+            "Roast nuts from the cart by Kaldor's statue. The one that looks like a potato.",
+            "The statue, not the cart. Though the cart's not much better."
+          ]
+        },
+        {
+          "ask": "You look like you've had enough snacks.",
+          "answer": [
+            "Strength is valued here. I am storing strength. In my middle.",
+            "You'll thank me in a famine."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -152,6 +228,23 @@
       "name": "Guard",
       "lines": [
         "Is it starting? It's starting."
+      ],
+      "questions": [
+        {
+          "ask": "Is what starting?",
+          "answer": [
+            "The fight! Barnaby's about to do his voice. The big voice.",
+            "He practises it in the tavern. Barkeep Rolla's banned him twice. He does it quieter now. Not much."
+          ]
+        },
+        {
+          "ask": "It's not starting. Calm down.",
+          "answer": [
+            "It's always about to start. That's the best bit.",
+            "...You've ruined it. It's not starting any more. Thanks."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -164,6 +257,23 @@
       "name": "Guard",
       "lines": [
         "Shh. Shh. It's starting."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you shushing?",
+          "answer": [
+            "Him. Me. Everyone. Barnaby can't be heard over a sneeze.",
+            "If you miss the first line you miss the joke. There's always a joke. It's always about Kaldor's chin."
+          ]
+        },
+        {
+          "ask": "Shush yourself, you human kettle.",
+          "answer": [
+            "Shh.",
+            "...A kettle? A kettle! Shh."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -176,6 +286,23 @@
       "name": "Guard",
       "lines": [
         "I came for the warden. Everyone comes for the warden."
+      ],
+      "questions": [
+        {
+          "ask": "What's so great about the Warden?",
+          "answer": [
+            "Thirty strikes and he doesn't move. Not a step. Not a sigh.",
+            "My wife says I should be more like him. I think she meant the not-sighing."
+          ]
+        },
+        {
+          "ask": "Everyone comes for the Warden. Not you.",
+          "answer": [
+            "Harsh. True, but harsh.",
+            "I come for the Warden. People come for him. I come with them. That's friendship."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -188,6 +315,23 @@
       "name": "Guard",
       "lines": [
         "Mind the sand. It gets everywhere. Everywhere."
+      ],
+      "questions": [
+        {
+          "ask": "Where does the sand get?",
+          "answer": [
+            "Boots. Hair. Teeth. Last week I found some in a letter I hadn't opened yet.",
+            "Somewhere, someone's reading this and checking their pockets. Go on. Check."
+          ]
+        },
+        {
+          "ask": "You're mostly sand by now, aren't you?",
+          "answer": [
+            "Forty per cent, the healer reckons. Healer Maud says it's the most interesting thing about me.",
+            "She's not wrong. That's the worst part."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {

@@ -54,6 +54,15 @@
             "Course it does. Look at my waiting room. Everybody's walking.",
             "…Round in a circle. Mostly. Some of them have been walking since spring."
           ]
+        },
+        {
+          "ask": "You're not a doctor, you're a shrug.",
+          "answer": [
+            "A shrug that's never lost a patient.",
+            "…They walked off. Different thing.",
+            "Rudeness, is it? Nasty case. Walk it off."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -69,7 +78,24 @@
         "Broke my leg. Doctor said walk it off.",
         "I'm walking it off. Very slowly. This is day ninety."
       ],
-      "wander": 1
+      "wander": 1,
+      "questions": [
+        {
+          "ask": "Where do the dead go in here?",
+          "answer": [
+            "Back room. Doctor Mog doesn't go in. Says that's the king's business.",
+            "Somebody stitches them. Then they walk out. Walking it off, I suppose. Better than me."
+          ]
+        },
+        {
+          "ask": "You're barely walking at all.",
+          "answer": [
+            "Day ninety. Ninety! That's commitment!",
+            "* He takes one step. It's very slow. He looks at you, proud."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "patient2",
@@ -83,7 +109,24 @@
         "Arrow in the shoulder. Walk it off, he said.",
         "I've walked to the bazaar and back eleven times. Still there. Very fit now, though."
       ],
-      "wander": 1
+      "wander": 1,
+      "questions": [
+        {
+          "ask": "Seen anything odd here?",
+          "answer": [
+            "The back door opens at night. Feet go out. Not living feet. Stitchy feet.",
+            "Don't ask Mog. Mog says walk it off. Walk what off? He won't say."
+          ]
+        },
+        {
+          "ask": "Just pull the arrow out yourself.",
+          "answer": [
+            "Pull it out? Then what've I got? A hole.",
+            "Arrow's part of me now. I hang my hat on it."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

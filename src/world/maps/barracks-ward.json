@@ -92,6 +92,14 @@
             "THREE. THREE. ONE TWO THREE FOUR.",
             "Forty years. FORTY YEARS. You there! Recruit! You've done more for this yard than any of 'em."
           ]
+        },
+        {
+          "ask": "My boot can count higher than you.",
+          "answer": [
+            "YOUR BOOT. ISN'T IN. MY ARMY.",
+            "RECRUIT! DROP AND GIVE ME… ONE. TWO. …LOTS."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 2,
@@ -109,7 +117,24 @@
         "I joined up to impress a girl.",
         "She joined up too. She's my sergeant now. I've never been less impressive."
       ],
-      "wander": 1
+      "wander": 1,
+      "questions": [
+        {
+          "ask": "How do you impress a sergeant?",
+          "answer": [
+            "Hold it the right way up. Kaya says that's step one.",
+            "I'm still on step one. It's a big step."
+          ]
+        },
+        {
+          "ask": "She'll never fancy you, Rolf.",
+          "answer": [
+            "She might. She said 'well done' on Tuesday.",
+            "KAYA: I said 'well, done'. As in finished. You'd fallen over."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "kaya",
@@ -123,7 +148,31 @@
         "Rolf. Rolf, you're holding it upside down.",
         "…He joined to impress me. It's working, a bit. Don't tell him."
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why'd you join the horde?",
+          "answer": [
+            "Three meals and a roof. That was the promise. We get the roof.",
+            "Nobody gets paid. You get an axe and a drill master who can't count to three."
+          ]
+        },
+        {
+          "ask": "Does Ox know what comes after two?",
+          "answer": [
+            "No. And I'm not telling him. He'd make us run four laps instead of two.",
+            "Gorm tried once. Apologised halfway through. Ox thought he was saying sorry for three."
+          ]
+        },
+        {
+          "ask": "Bit soft for a sergeant, aren't you?",
+          "answer": [
+            "RECRUIT. Twenty laps of the yard.",
+            "…You're not a recruit. Fine. Twenty laps anyway. Ox'll count. He'll get lost at three."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "gorm",
@@ -137,7 +186,24 @@
         "Sorry. Sorry, I'm going to headbutt you now. Sorry.",
         "…Sorry, I've changed my mind. You look nice. Sorry."
       ],
-      "wander": 2
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Why are you so polite?",
+          "answer": [
+            "My mum was a raider. Very polite raider. 'Sorry for your village.'",
+            "The horde says it's bad for morale. I've apologised to the horde. Several times."
+          ]
+        },
+        {
+          "ask": "You've never headbutted anyone.",
+          "answer": [
+            "I have! Once! A door. It wasn't expecting it.",
+            "I sent the door a letter. Sorry, door. I think we're fine now."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "bruni",
@@ -151,7 +217,24 @@
         "This is my pet rock. His name's Kaldor.",
         "Not after the king. It's a coincidence. He was called Kaldor before the king was."
       ],
-      "wander": 2
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "What does Kaldor the rock do?",
+          "answer": [
+            "He sits. He watches. He judges.",
+            "Like the other one. But he's never sent anyone to the Maximus. Better king, really. Don't say I said."
+          ]
+        },
+        {
+          "ask": "That's not a pet. That's a rock.",
+          "answer": [
+            "Shh! He can hear you!",
+            "* The rock does nothing. Bruni looks wounded on its behalf."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "dummy-sign",

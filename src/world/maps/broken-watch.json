@@ -77,6 +77,14 @@
             "The Field of Banners. Where the last battle was meant to be. Every army in the world, meant to meet there.",
             "They never did. Something stopped it. My family wrote it down: 'Day of the Field. Nobody came. Strange quiet. Ate lunch.'"
           ]
+        },
+        {
+          "ask": "Nobody's coming. Never was. Go home.",
+          "answer": [
+            "This is home. Nineteen generations of home.",
+            "…I'll write that down, though. 'Visitor. Rude. Ate lunch.'"
+          ],
+          "deed": "bad"
         }
       ],
       "after": {
@@ -109,7 +117,31 @@
           "Go on, then. South. I'll stand here anyway. I'm good at it."
         ]
       },
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "Do you and Orrin talk?",
+          "answer": [
+            "Orrin's waiting to be relieved. I'm waiting to be told I can go. We wait together. Bit of company.",
+            "He says the old king will send someone. I say the new king won't. We've both been right for three years."
+          ]
+        },
+        {
+          "ask": "Aren't you curious what's south?",
+          "answer": [
+            "Curious gets you sent to the Pit. Not curious gets you stood here. I picked here.",
+            "…Sometimes there's music, though. From south. Very faint. Don't tell the king I listen."
+          ]
+        },
+        {
+          "ask": "Three years to master standing?",
+          "answer": [
+            "Some people never master it. You, for instance. You're fidgeting.",
+            "* He stands, very well, at you."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "waystone",

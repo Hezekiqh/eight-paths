@@ -7,6 +7,7 @@ import { isCharacterId, type CharacterId } from '@/story/companions';
 
 import { addLore, cleanLore, type LoreEntry } from './lore';
 import { FACINGS, isMapId, type Facing, type MapId } from './maps';
+import type { Deed } from './honor';
 
 export type ControlScheme = 'joystick' | 'touchpad';
 
@@ -47,6 +48,9 @@ type WorldState = {
   /** Special moves used today, by the whole party (specials.ts): the day (YYYY-MM-DD) and how many. */
   specials: { day: string; used: number } | null;
   useSpecial: (day: string) => void;
+  /** Kind and mean choices, each once (honor.ts). Part of this run of the story: a restart clears it. */
+  deeds: Deed[];
+  doDeed: (deed: Deed) => void;
   /** Hidden memories seen (memories.ts ids), oldest first. Yours for good: a restart of the story keeps them. */
   memories: string[];
   remember: (id: string) => void;
@@ -64,11 +68,12 @@ export const FRESH_WORLD = {
   candles: [],
   lastCandle: null,
   barrageDay: null,
+  deeds: [],
 } satisfies Partial<WorldState>;
 
 /**
  * v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`;
- * v6 `barrageDay`; v7 `specials`; v9 `memories` (8 is taken by another branch's `deeds`). All start empty.
+ * v6 `barrageDay`; v7 `specials`; v8 `deeds`; v9 `memories`. All start empty.
  */
 const SAVE_VERSION = 9;
 
@@ -98,6 +103,11 @@ function sanitize(persisted: unknown): Partial<WorldState> {
     out.specials = { day: sp.day, used: Math.max(0, sp.used as number) };
   if (Array.isArray(data.memories))
     out.memories = [...new Set(data.memories.filter((m): m is string => typeof m === 'string'))];
+  if (Array.isArray(data.deeds))
+    out.deeds = data.deeds.filter(
+      (d): d is Deed =>
+        !!d && typeof (d as Deed).id === 'string' && ((d as Deed).kind === 'good' || (d as Deed).kind === 'bad'),
+    );
   const p = data.position as Record<string, unknown> | null | undefined;
   if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
@@ -135,6 +145,8 @@ export const useWorldStore = create<WorldState>()(
       // kept through a restart of the story (not in FRESH_WORLD): today's are today's
       specials: null,
       useSpecial: (day) => set((s) => ({ specials: { day, used: s.specials?.day === day ? s.specials.used + 1 : 1 } })),
+      deeds: [],
+      doDeed: (deed) => set((s) => (s.deeds.some((d) => d.id === deed.id) ? s : { deeds: [...s.deeds, deed] })),
       // kept through a restart too: what you remember stays remembered
       memories: [],
       remember: (id) => set((s) => (s.memories.includes(id) ? s : { memories: [...s.memories, id] })),
@@ -157,6 +169,7 @@ export const useWorldStore = create<WorldState>()(
         barrageDay: s.barrageDay,
         specials: s.specials,
         memories: s.memories,
+        deeds: s.deeds,
       }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),

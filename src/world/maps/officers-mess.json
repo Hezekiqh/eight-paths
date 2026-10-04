@@ -73,6 +73,14 @@
           "answer": [
             "The eve of something. Everyone's polishing. Nobody's saying what for."
           ]
+        },
+        {
+          "ask": "Your letter's soppy. Bin it.",
+          "answer": [
+            "...Perhaps it is.",
+            "Soppy is only honest with the curtains open. I'll keep it, thank you."
+          ],
+          "deed": "bad"
         }
       ]
     }

@@ -30,7 +30,7 @@ export type Dialogue = {
    * see what their habits would unlock. `icon`: the Path's symbol, which stands in for the cursor on a
    * locked one. Four at most (MENU_ROWS in world/menu.ts).
    */
-  choices?: { label: string; then: () => void; locked?: string; icon?: SFSymbol }[];
+  choices?: { label: string; then: () => void; locked?: string; icon?: SFSymbol; deed?: 'good' | 'bad' }[];
 };
 
 type Props = {
@@ -38,6 +38,8 @@ type Props = {
   onClose: () => void;
   /** Each question the player asks, as its answer starts (for the lore journal). */
   onAsk?: (question: Question) => void;
+  /** A decision taken (honor.ts counts the kind and the mean ones). */
+  onChoice?: (choice: { label: string; deed?: 'good' | 'bad' }) => void;
 };
 
 /**
@@ -47,7 +49,7 @@ type Props = {
  * each answer plays, then the menu comes back until you say Goodbye (and they
  * say their `farewell`, if they have one).
  */
-export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
+export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   const insets = useSafeAreaInsets();
   const [lines, setLines] = useState(dialogue.lines);
   /** Bumped per answer, so the typewriter starts fresh even at line 0. */
@@ -170,6 +172,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
               onPress={() => {
                 playSound('select');
                 haptics.select();
+                onChoice?.(c);
                 onClose();
                 c.then();
               }}

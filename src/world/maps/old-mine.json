@@ -93,6 +93,15 @@
             "Work gives you purpose. Swing, haul, sweat, sleep. Repeat.",
             "And it's good to put something back. Somebody built the walls you lean on."
           ]
+        },
+        {
+          "ask": "Bet you can't even read, rock-whacker.",
+          "answer": [
+            "* She pulls a grubby napkin from her pocket, covered edge to edge in sums and a drawing of a pump.",
+            "Go on. Read it back to me.",
+            "...Thought not."
+          ],
+          "deed": "bad"
         }
       ]
     }

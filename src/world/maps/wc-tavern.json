@@ -85,6 +85,14 @@
             "They say the old king up north hasn't aged a day. They say he's building an army.",
             "They say a lot of things in here after the third mug."
           ]
+        },
+        {
+          "ask": "Yesterday's stew? Smells like last week's.",
+          "answer": [
+            "Last week's is the good one. You've not earned it.",
+            "* She slops you a bowl of yesterday's anyway. It is, somehow, worse."
+          ],
+          "deed": "bad"
         }
       ]
     }

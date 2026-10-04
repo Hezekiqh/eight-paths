@@ -59,6 +59,23 @@
       "lines": [
         "…",
         "(The empty armour tilts its helm at you. It seems friendly. It seems to be waiting for something.)"
+      ],
+      "questions": [
+        {
+          "ask": "Is anyone in there?",
+          "answer": [
+            "* The helm tilts, then shakes, slowly. No.",
+            "* Then it nods. Then it shrugs, which takes a lot of clanking. It seems as unsure as you are."
+          ]
+        },
+        {
+          "ask": "You're just an empty tin can.",
+          "answer": [
+            "* The armour looks down at itself. It raps its own chest. Bong.",
+            "* It sounds hollow. It looks hurt. It slumps against the rack, very quietly, so you'll notice."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {

@@ -79,6 +79,14 @@
             "He's a poet. He writes about clouds.",
             "He's going to headbutt somebody, very sadly, and then he's going to write about it."
           ]
+        },
+        {
+          "ask": "Wool armour? Might as well send a sheep.",
+          "answer": [
+            "A sheep would come home, at least. Sheep always come home.",
+            "* She knits faster, and a good deal harder."
+          ],
+          "deed": "bad"
         }
       ],
       "look": true
@@ -96,7 +104,24 @@
         "…It's a spoon. It's iron, though. Mostly. The handle's iron.",
         "If the king wants a fighter out of my house he can have the goat. The goat's meaner than all of us."
       ],
-      "wander": 2
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Why not send the goat?",
+          "answer": [
+            "I offered. Sergeant Bellow whispered that goats aren't fighters. Then the goat ate his sash.",
+            "He's thinking it over. Quietly. He does everything quietly."
+          ]
+        },
+        {
+          "ask": "A spoon? The king'll laugh you out.",
+          "answer": [
+            "Good. Nobody's heard the king laugh in four hundred years. I'd be a hero.",
+            "* He polishes the spoon on his sleeve, with enormous dignity."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "bellow",
@@ -118,6 +143,14 @@
             "(whispering) Born like it. My mum says I came out, looked around, and said 'oh no' very quietly.",
             "(whispering) The horde made me a sergeant to toughen me up. Now everybody whispers back. It's quite nice."
           ]
+        },
+        {
+          "ask": "SPEAK UP, SERGEANT!",
+          "answer": [
+            "(whispering) …There was no need for that.",
+            "(whispering) The whole squad heard. They're leaning away from you now. That's the worst thing we do."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 2,

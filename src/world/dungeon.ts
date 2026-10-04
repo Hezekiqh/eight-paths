@@ -103,7 +103,7 @@ export const GARY_STARTLED = [
   'GARY: ...',
   'GARY: I did not see that.',
   'GARY: ... I do not get paid enough to have seen that.',
-]
+];
 
 // ---- Up the ladder, into the Kaldorium (author, Oct 3, 2026). Brannoc got there first, and the guards
 // have him. He faints. Five guards, then the warden, who can't be hurt: twenty strikes and he hasn't
@@ -203,6 +203,13 @@ export const CHAMPION_IN_CELL = [
 export const BRANNOC_YES = [
   'BRANNOC: Truly? Then I am your sworn sword! I shall not fail you. Probably.',
   'Brannoc joins you.',
+];
+/** The mean answer (honor.ts): it hurts him, and he goes back to his cell all the same, to wait. */
+export const BRANNOC_MEAN_ASK = '"A knight who faints? Hard pass."';
+export const BRANNOC_MEAN = [
+  'BRANNOC: ...',
+  'BRANNOC: No. No, that is fair. I have heard worse. From myself, mostly.',
+  'He shuffles off, very slowly, the way you came. He does not look back. He looks back once.',
 ];
 export const BRANNOC_NO = [
   'BRANNOC: Oh.',

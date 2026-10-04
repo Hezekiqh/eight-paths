@@ -59,6 +59,15 @@
             "But I wrote a poem about it, and the poem's less scared than me, so I read it before I go out.",
             "It's called 'Cloud, Heading Into a Storm, Being Brave About It'. It's quite long."
           ]
+        },
+        {
+          "ask": "Wool armour? You'll lose to a moth.",
+          "answer": [
+            "…Mum said that about the moths too.",
+            "I'm going to write a poem about you. It's going to be about a very small, very grey cloud.",
+            "Nobody's going to like it. That's the point."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -74,7 +83,31 @@
         "Tithe fighter. Never held an axe. I held a goose once. It went badly.",
         "They say you do the ladder. Beat Hroth and the tithe might change. That's what people whisper."
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "What happened with the goose?",
+          "answer": [
+            "It went for my ankles. I went for the hills. The goose won the hills.",
+            "My village said, 'Edda's brave, she fought a goose.' Next thing I'm the tithe."
+          ]
+        },
+        {
+          "ask": "Who whispers about the ladder?",
+          "answer": [
+            "Joss heard it from a guard. The guard heard it from Tova. Tova hears everything.",
+            "If somebody beats Hroth, the ladder changes. Maybe the tithe too. Maybe it's just a nice thing people say in cells."
+          ]
+        },
+        {
+          "ask": "Bet the goose would win this too.",
+          "answer": [
+            "…It would. Geese don't fear anyone.",
+            "I'll tell it you said hello. It'll find you."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

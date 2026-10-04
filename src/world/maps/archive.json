@@ -126,6 +126,14 @@
             "In time, higher levels will return abilities you once had.",
             "Level up once, any way you like, and the great door will open. Once you are out there, you may do as you wish."
           ]
+        },
+        {
+          "ask": "Five hundred years? Get a hobby.",
+          "answer": [
+            "I had one. It was keeping you safe.",
+            "Never mind. You were always a little sharp when you first woke."
+          ],
+          "deed": "bad"
         }
       ]
     },

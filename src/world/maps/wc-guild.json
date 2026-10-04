@@ -85,6 +85,14 @@
             "Always. Read the board. The good jobs go to the strong, and the strong are the ones who did a little every day.",
             "Funny how that works."
           ]
+        },
+        {
+          "ask": "A desk job? Too soft for the board?",
+          "answer": [
+            "Thirty years on that board. Left half a knee on it.",
+            "Go and read it, then. The soft jobs are at the bottom. You'll want those."
+          ],
+          "deed": "bad"
         }
       ]
     }

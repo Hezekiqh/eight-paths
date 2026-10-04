@@ -79,7 +79,6 @@ import {
   CUT_OFF,
   forHero,
   MISTER,
-  SEIZED,
   FRAMED,
   GREEN_CANDLE,
   INTO_THE_ARCHIVE,
@@ -102,6 +101,9 @@ import {
   PASSAGE_LINES,
   PASSAGE_TILE,
   JAILED,
+  KNOCKED_IN,
+  KNOCKED_OUT,
+  KNOCKED_WAKE,
   JAIL_WOKE,
   PAST_THE_MAZE,
   SCENE_OPEN,
@@ -114,6 +116,8 @@ import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
 import { newMarch, type Actor } from '@/world/march';
 import { BOSS_CUE, bossMoment } from '@/world/moments';
 import { noneLeft, practiceWarning, specialsLeft } from '@/world/specials';
+import { deedId } from '@/world/honor';
+import keeperWelcome from '@/world/keeper-welcome.json';
 import { TEST_TOOLS } from '@/world/test-tools';
 import { usePremium } from '@/premium/store';
 import {
@@ -130,6 +134,7 @@ import {
   brannocAway,
   needsSomeone,
 } from '@/world/castle';
+import { LEAVE_IT_TO, MORE, NEVER_MIND, heroOrder, heroPage } from '@/world/hero-pick';
 import {
   MAZE_HOLES,
   holeLines,
@@ -137,6 +142,8 @@ import {
   BRANNOC_DECLINED,
   BRANNOC_JOINED,
   BRANNOC_NO,
+  BRANNOC_MEAN,
+  BRANNOC_MEAN_ASK,
   BRANNOC_OFFER,
   BRANNOC_WOKE,
   BRANNOC_YES,
@@ -913,7 +920,7 @@ function World({
     },
     [hero, sim],
   );
-  // The gate captain: four ways past (each Lv 8 on its Path, greyed out until then), or back off.
+  // The gate captain: leave it to one of the core eight, ask nicely, or be rude about it.
   const gateScene = useCallback(() => {
     const lowerBridge = () => {
       // the bridge comes down, BOOM, and then it's a way in (this visit's doorways are fixed, so come back in)
@@ -927,28 +934,55 @@ function World({
         setDialogue({ lines: BRIDGE_LOWERS, then: () => travel(hereNow()) });
       }, 2300);
     };
-    const choices = GATE_ANSWERS.map((a) => {
-      const can = a.path ? canSay(a.path, GATE_LEVEL) : { locked: undefined, who: hero };
-      return { a, ...can };
-    });
-    const none = choices.every((c) => !c.a.path || c.locked);
-    setDialogue({
-      lines: GATE_OPEN,
-      choices: choices.map(({ a, locked, who }) => ({
-        label: a.label,
-        icon: a.path ? CLASSES[a.path].symbol : undefined,
-        locked,
-        then: () => {
-          if (!a.path) {
-            // anyone's answer: mostly a no, now and then Orsk is in a good mood
-            if (a.luck && Math.random() < a.luck.chance) return setDialogue({ lines: a.luck.lines, then: lowerBridge });
-            return setDialogue({ lines: none ? [...a.lines, GATE_NOT_YET] : a.lines });
-          }
-          sayAs(who!, a.lines, a.by, lowerBridge);
-        },
-      })),
-    });
-  }, [setFlag, travel, hereNow, bridgeDown, canSay, sayAs, hero]);
+    // "Leave it to..." (author, Oct 4, 2026): one row opens the core eight, each with their own way past
+    // (Lv 8 on their Path, and walking with you); the other two rows are the polite one and the mean one.
+    const heroes = heroOrder(
+      Object.values(DEFAULT_PARTY).flatMap((id) => {
+        const a = GATE_ANSWERS.find((g) => g.path === COMPANIONS[id].dimension);
+        if (!a?.path) return [];
+        const locked = !standing({ kind: 'path', dimension: a.path, level: GATE_LEVEL }, xpRef.current).met
+          ? `${CLASSES[a.path].className} Lv ${GATE_LEVEL}`
+          : withYou(id, hero)
+            ? undefined
+            : `${COMPANIONS[id].name} with you`;
+        return [{ id: id as HeroId, a, path: a.path, locked }];
+      }),
+    );
+    const none = heroes.every((h) => h.locked);
+    const page = (n: number) => {
+      const { shown, last } = heroPage(heroes, n);
+      setDialogue({
+        lines: ['Who steps up?'],
+        choices: [
+          ...shown.map(({ id, a, path, locked }) => ({
+            label: COMPANIONS[id].name,
+            icon: CLASSES[path].symbol,
+            locked,
+            deed: a.deed,
+            then: () => sayAs(id, a.lines, a.by, lowerBridge),
+          })),
+          last ? { label: NEVER_MIND, then: () => ask(['CAPTAIN ORSK: Well?']) } : { label: MORE, then: () => page(n + 1) },
+        ],
+      });
+    };
+    const ask = (lines: string[]) =>
+      setDialogue({
+        lines,
+        choices: [
+          { label: LEAVE_IT_TO, then: () => page(0) },
+          ...GATE_ANSWERS.filter((a) => !a.path).map((a) => ({
+            label: a.label,
+            deed: a.deed,
+            then: () => {
+              // anyone's answer: mostly a no, now and then Orsk is in a good mood
+              if (a.luck && Math.random() < a.luck.chance) return setDialogue({ lines: a.luck.lines, then: lowerBridge });
+              setDialogue({ lines: none ? [...a.lines, GATE_NOT_YET] : a.lines });
+            },
+          })),
+        ],
+      });
+    ask(GATE_OPEN);
+  }, [setFlag, travel, hereNow, bridgeDown, sayAs, hero]);
   useEffect(() => {
     specialTalk.current = (thing) => {
       if (
@@ -1012,6 +1046,7 @@ function World({
       then: scene.outcome ? () => done(scene.outcome!) : undefined,
       choices: scene.choices?.map((c) => ({
         label: c.label,
+        deed: c.deed,
         then: () => setDialogue({ lines: c.lines, then: () => done(c.outcome) }),
       })),
     };
@@ -1025,6 +1060,7 @@ function World({
       choices: [
         {
           label: 'Yes.',
+          deed: 'good',
           then: () => {
             // not until you've done a Physical habit: he'll wait in his cell
             if (!standing(recruitNeeds('brannoc'), xpRef.current).met) {
@@ -1056,6 +1092,20 @@ function World({
           then: () =>
             setDialogue({
               lines: BRANNOC_NO,
+              then: () => {
+                setFlag(BRANNOC_WOKE);
+                setFlag(BRANNOC_DECLINED);
+                march(brannocShuffles(WALKER_ROWS.brannoc), () => {}, 1.2);
+              },
+            }),
+        },
+        {
+          // the mean one (honor.ts): it hurts him, and he waits in his cell all the same
+          label: BRANNOC_MEAN_ASK,
+          deed: 'bad',
+          then: () =>
+            setDialogue({
+              lines: BRANNOC_MEAN,
               then: () => {
                 setFlag(BRANNOC_WOKE);
                 setFlag(BRANNOC_DECLINED);
@@ -1120,9 +1170,22 @@ function World({
             label: a.label,
             icon: a.path ? CLASSES[a.path].symbol : undefined,
             locked: can.locked,
+            deed: a.deed,
             then: () => {
               setFlag(MAZE_SOLVED);
               for (const f of a.sets ?? []) setFlag(f);
+              if (a.knockout) {
+                // "Timmy": no escort, he knocks you out cold, and it's black until the cell (author, Oct 4, 2026)
+                setDialogue({
+                  lines: a.lines,
+                  then: () => {
+                    setFlag(FRAMED);
+                    playSound('laugh');
+                    travel(KNOCKED_IN);
+                  },
+                });
+                return;
+              }
               if (a.jailed) {
                 // "Seize him!" (or her): they only want you
                 const seize = a.lines.map((l) => forHero(l, hero));
@@ -1130,7 +1193,7 @@ function World({
                   lines: seize,
                   then: () => {
                     // the guards close in on you from either side while Felix laughs (march.ts stands in
-                    // for the three of them), then the sack
+                    // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
                     setFlag(FRAMED);
                     const hx = Math.floor(sim.x.get() / TILE);
                     const hy = Math.floor((sim.y.get() - 1) / TILE);
@@ -1157,7 +1220,7 @@ function World({
                         },
                         { row: -1, path: [[hx, hy]], face: 3 },
                       ],
-                      () => setDialogue({ lines: SEIZED, then: () => travel(INTO_THE_CELL) }),
+                      () => travel(INTO_THE_CELL),
                       2.5,
                       true,
                     );
@@ -1297,13 +1360,27 @@ function World({
             });
             return;
           }
+          // ...and, like every menu, something mean to say (honor.ts), until you've said it
+          const mean = keeperWelcome.meanAsk;
           setDialogue({
             ...keeper,
             lines: asked.length > 0 ? ['Is there anything else?'] : cards ? ['Your move.'] : ['Ask whatever you like.'],
-            choices: left.map((q) => ({
-              label: q.ask,
-              then: () => setDialogue({ ...keeper, lines: q.answer, then: () => ask([...asked, q.ask], cards) }),
-            })),
+            choices: [
+              ...left.map((q) => ({
+                label: q.ask,
+                then: () => setDialogue({ ...keeper, lines: q.answer, then: () => ask([...asked, q.ask], cards) }),
+              })),
+              ...(asked.includes(mean.ask)
+                ? []
+                : [
+                    {
+                      label: mean.ask,
+                      deed: 'bad' as const,
+                      then: () =>
+                        setDialogue({ ...keeper, lines: mean.answer, then: () => ask([...asked, mean.ask], cards) }),
+                    },
+                  ]),
+            ],
           });
         };
         setDialogue({
@@ -1312,6 +1389,11 @@ function World({
           choices: [
             { label: 'Yes', then: () => setDialogue({ lines: KEEPER_CARDS, then: () => ask([], true) }) },
             { label: 'No', then: () => setDialogue({ lines: KEEPER_NO_CARDS, then: () => ask([], false) }) },
+            {
+              label: keeperWelcome.meanCards.ask,
+              deed: 'bad',
+              then: () => setDialogue({ ...keeper, lines: keeperWelcome.meanCards.answer, then: () => ask([], false) }),
+            },
           ],
         });
       } else if (map.id === 'the-pit' && w.flags.includes('brannoc-swung') && !w.flags.includes(BRANNOC_WOKE))
@@ -1340,6 +1422,13 @@ function World({
         });
       else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
         w.setFlag(JAIL_WOKE);
+        // Knocked out by Himothy: you come to already in the cell, no guards, no march.
+        if (w.flags.includes(KNOCKED_OUT)) {
+          setDialogue({
+            lines: [...KNOCKED_WAKE, ...(hero === 'brannoc' ? [] : ESCORT_LINES.cell.slice(2))],
+          });
+          return;
+        }
         // Marched down from the guards' stair, shoved in, and the door slams (dungeon.ts).
         // Walking as Brannoc, there's nobody in the corner but you.
         const guard = WALKER_ROWS.raider;
@@ -1470,6 +1559,13 @@ function World({
         <DialogueBox
           key={dialogue.lines.join('|')}
           dialogue={dialogue}
+          onChoice={(c) => {
+            // kind and mean choices count once each (honor.ts)
+            if (c.deed)
+              useWorldStore
+                .getState()
+                .doDeed({ id: deedId(map.id, dialogue.speaker ?? 'scene', c.label), kind: c.deed });
+          }}
           onClose={() => {
             setDialogue(null);
             dialogue.then?.();
@@ -1488,6 +1584,7 @@ function World({
                 choices: [
                   {
                     label: 'Yes.',
+                    deed: 'good',
                     then: () => {
                       if (!standing(recruitNeeds('brannoc'), xpRef.current).met) {
                         for (const f of [BARS_BENT, BRANNOC_WOKE, BRANNOC_DECLINED]) w.setFlag(f);
@@ -1508,6 +1605,20 @@ function World({
                       for (const f of [BARS_BENT, BRANNOC_WOKE, BRANNOC_DECLINED]) w.setFlag(f);
                       setDialogue({
                         lines: ['BRANNOC: Oh.', 'BRANNOC: No, that is fair. I shall... hold the corner.'],
+                      });
+                    },
+                  },
+                  {
+                    label: BRANNOC_MEAN_ASK,
+                    deed: 'bad',
+                    then: () => {
+                      for (const f of [BARS_BENT, BRANNOC_WOKE, BRANNOC_DECLINED]) w.setFlag(f);
+                      setDialogue({
+                        lines: [
+                          'BRANNOC: ...',
+                          'BRANNOC: No. No, that is fair. I have heard worse. From myself, mostly.',
+                          'BRANNOC: I shall... hold the corner.',
+                        ],
                       });
                     },
                   },
@@ -1565,6 +1676,11 @@ function World({
               haptics.celebrate();
             }
             if (q.then) afterTalk.current = q.then;
+            // a kind or mean thing to say counts once (honor.ts)
+            if (q.deed)
+              useWorldStore
+                .getState()
+                .doDeed({ id: deedId(map.id, dialogue.speaker ?? 'someone', q.ask), kind: q.deed });
             const who = q.leaves ? map.npcs.find((n) => n.questions?.includes(q)) : undefined;
             if (who && q.leaves) leaving.current = { id: who.id, flag: q.leaves };
             // Everything a character tells you goes in the World menu's lore journal.
@@ -2250,6 +2366,14 @@ function needsFlag(needs: Requirement, flag: string): boolean {
  * Who steps in for a job only `path` can do, like a field move: a party
  * member of that Path you've met who can walk the World. Undefined if none.
  */
+/** Whether one of the core eight is you, or walking with you right now. */
+function withYou(id: CharacterId, hero: HeroId): boolean {
+  if (id === hero) return true;
+  const { party, owned } = useGameStore.getState();
+  const flags = useWorldStore.getState().flags;
+  return walkersFor(party, owned, flags, flags).includes(id as HeroId);
+}
+
 function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
   const { party, owned } = useGameStore.getState();
   const flags = useWorldStore.getState().flags;

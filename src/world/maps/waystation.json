@@ -85,6 +85,14 @@
             "They turn up in every town, I hear. Same words. Nobody's ever seen who brings them.",
             "Soup?"
           ]
+        },
+        {
+          "ask": "Two coppers? It smells like feet.",
+          "answer": [
+            "Three. You sniffed it.",
+            "And it's feet-adjacent. There's a difference."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -122,6 +130,14 @@
             "Because one day someone's going to need a message carried, and it's going to matter, and I'm going to be fast enough.",
             "You have to be ready before the day comes. That's the whole trick."
           ]
+        },
+        {
+          "ask": "Couriers are extinct, kid. Give it up.",
+          "answer": [
+            "...Not extinct. Just waiting.",
+            "* Pell runs to the well and back anyway. Eleven seconds. Slower than usual."
+          ],
+          "deed": "bad"
         }
       ],
       "after": {

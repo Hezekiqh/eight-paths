@@ -4,7 +4,7 @@
 // a voice blip every other letter. Same Skia (CanvasKit), same art files.
 // No music: just the voices.
 //
-//   node scripts/episode-video.mjs 8            → ~/Movies/Eight Paths Episodes/Episode 08 - The One in the Corner.mp4
+//   node scripts/episode-video.mjs 7            → ~/Movies/Eight Paths Episodes/Episode 07 - The One in the Corner.mp4
 //   node scripts/episode-video.mjs 2 out.mp4    (or anywhere you like)
 //
 // Needs ffmpeg. Lines come straight from the map JSONs, so they match the game.
@@ -297,6 +297,8 @@ function drawTongue(canvas, x, y, cell) {
 
 // ---- the question menu (dialogue-box.tsx, asking): the speaker, then each choice with the heart cursor
 function drawMenu(canvas, { speaker, options, pick, pressed }) {
+  // four rows at most, as in the game (author, Oct 4, 2026; src/world/menu.ts)
+  if (options.length > 4) throw new Error(`A menu has ${options.length} options; four at most`);
   const boxW = W / U - PT.left - PT.right;
   const x = PT.left * U;
   const rowH = PT.lineHeight + 8;
@@ -316,17 +318,19 @@ function drawMenu(canvas, { speaker, options, pick, pressed }) {
   // a choice too long for one line is set smaller to fit, as the phone's text shrinks to fit its row
   const room = (boxW - PT.frame * 2 - PT.padX * 2 - 24) * U;
   options.forEach((option, i) => {
-    // a locked choice (`{ label, locked }`): greyed out with a lock and what it needs, as in the game
+    // a locked choice (`{ label, locked, icon }`): greyed out, with just its Path's icon where the heart
+    // would be, as in the game (author, Oct 4, 2026: no padlock, no "(Mage Lv 10)")
     const locked = typeof option === 'object' ? option.locked : null;
     const icon = typeof option === 'object' ? option.icon : null;
-    const label = typeof option === 'object' ? (locked ? `${option.label} (${locked})` : option.label) : option;
+    const label = typeof option === 'object' ? option.label : option;
     const on = pressed && i === pick;
     const base = ty + i * rowH * U + (rowH * 0.5 + PT.text * 0.36) * U;
-    if (locked) padlock(canvas, tx + 1 * U, base - 12 * U, 2 * U, C.faint);
+    if (locked && icon) pathIcon(canvas, icon, tx + 1 * U, base - 12 * U, 2 * U, C.faint);
+    else if (locked) padlock(canvas, tx + 1 * U, base - 12 * U, 2 * U, C.faint);
     else heart(canvas, tx + 1 * U, base - 11 * U, 2 * U, on ? C.accent : C.faint);
-    // the Path's icon, as the game shows it beside the choice
-    const indent = icon ? 44 : 24;
-    if (icon) pathIcon(canvas, icon, tx + 22 * U, base - 12 * U, 2 * U, locked ? C.faint : C.accent);
+    // an open choice that belongs to a Path keeps its icon beside the heart
+    const indent = icon && !locked ? 44 : 24;
+    if (icon && !locked) pathIcon(canvas, icon, tx + 22 * U, base - 12 * U, 2 * U, C.accent);
     const fits = room - (indent - 24) * U;
     const wide = widthOf(TEXT_FONT, label);
     const font = wide <= fits ? TEXT_FONT : fitted(Math.floor((PT.text * U * fits) / wide));
@@ -1402,6 +1406,17 @@ function drawEnd(canvas, ep, t) {
 
 // ---- episodes
 /** The heroes who can be out exploring the Archive hall: kept out of the episodes' Archive. */
+/**
+ * A question menu as the game shows it (src/world/menu.ts, author, Oct 4, 2026): four rows at most, the
+ * questions you haven't asked yet first, the mean one (`deed: 'bad'`) always keeping its row, then Goodbye.
+ */
+const menuOf = (questions, asked) => {
+  const mean = questions.find((q) => q.deed === 'bad');
+  const rest = questions.filter((q) => q !== mean);
+  const order = [...rest.filter((q) => !asked.includes(q.ask)), ...rest.filter((q) => asked.includes(q.ask))];
+  return [...order.slice(0, mean ? 2 : 3), ...(mean ? [mean] : [])].map((q) => q.ask).concat('Goodbye.');
+};
+
 const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id) => `hall-${id}`);
 
 const EPISODES = {
@@ -1691,98 +1706,78 @@ const EPISODES = {
       ],
     };
   },
-  // 30 seconds each (author, Oct 3, 2026). 6: the lore (this place, his privacy, he's immortal:
-  // you're left wondering who's watching), 7: leaving by the green candle, into Felix and the king's
-  // guards, 8: "What king?". The Keeper is soft-spoken and polite, like a noble; your thoughts are in
-  // brackets; the lines are the game's (src/world/keeper-welcome.json, felix-maze.ts).
+  // 5–6 (author, Oct 4, 2026): consolidated. 5: the cards, then straight to the green candle (its one line
+  // of lore), the Keeper's warning, and out in front of Felix: "There he is, officers!" 6: Sir Himothy
+  // gives his name, you try "Mr. Himothy", he cuts you off, and it's straight to the answers (four at most,
+  // as in the game: two clever ones greyed with their Path's icon, two anyone can say). The lines are the
+  // game's (keeper-welcome.json, felix-maze.ts). The Keeper's Q&A ("Another Long Story") is left for players.
   5: () => {
-    const archive = loadMap('archive', 'rooms');
-    const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
-    const asks = keeper.asks;
-    return {
-      number: 5,
-      title: 'ANOTHER LONG STORY',
-      next: 'THE GREEN CANDLE',
-      hold: 0.75,
-      map: archive,
-      hero: { sprite: 'quill', at: [20, 6], facing: 'up' },
-      hide: HALL,
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        { cards: 1, under: true },
-        { say: 'keeper', lines: ['Stop peeking.'] },
-        { menu: { speaker: 'The Keeper', options: asks.map((q) => q.ask), pick: 1, hold: 0.6 } },
-        { say: 'keeper', lines: asks[1].answer },
-        { menu: { speaker: 'The Keeper', options: [asks[2].ask], pick: 0, hold: 0.2 } },
-        { say: 'keeper', lines: asks[2].answer },
-        // and you're left wondering
-        { you: keeper.afterThoughts },
-      ],
-    };
-  },
-  6: () => {
     const archive = loadMap('archive', 'rooms');
     const maze = loadMap('felix-maze', 'outdoor');
     const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
     return {
-      number: 6,
+      number: 5,
       title: 'THE GREEN CANDLE',
       next: 'SIR HIMOTHY THE THIRD',
-      // a touch quicker, to fit Himothy's correction in under 30 seconds
-      hold: 0.72,
+      hold: 0.75,
       map: archive,
-      hero: { sprite: 'quill', at: [25, 4], facing: 'up' },
+      hero: { sprite: 'quill', at: [20, 6], facing: 'up' },
       hide: HALL,
       twinkles: [[25, 3]],
       titleDur: 0,
       endDur: 4.5,
       script: [
-        // frame one: at the green candle, the Keeper calling over
-        { say: 'keeper', lines: keeper.candle },
+        // frame one: mid-hand
+        { cards: 1, under: true },
+        { say: 'keeper', lines: ['Stop peeking.'] },
+        { cardsEnd: true },
+        // you get up and wander off (author, Oct 4, 2026), and choose to leave again
+        { walk: [[20, 4]], face: 'right' },
+        { say: 'keeper', lines: ['Leaving so soon?'] },
+        { menu: { speaker: 'The Keeper', options: ['Leave.', 'Keep playing cards.'], pick: 0, hold: 0.6 } },
+        { walk: [[25, 4]], face: 'up' },
+        // its one line of lore
+        { say: 'keeper', lines: [keeper.candle[1].replace(/^It /, 'That candle ')] },
         { menu: { options: ['Touch the green flame', 'Go back the way I came'], pick: 0, hold: 0.6 } },
         { say: 'keeper', lines: [keeper.confronted] },
         // the flash, and out past the maze, in front of Felix and the king's guards
         { scene: { map: maze, at: [22, 4], facing: 'right', show: ['felix-maze', 'guard-1', 'guard-2'], flash: true } },
-        { say: 'felix-maze', lines: ['That one, sir! That is the one plotting to take the throne!'] },
-        // he insists on all of it (author, Oct 4, 2026)
-        { say: 'guard-2', lines: ['SIR Himothy the THIRD. You have to say the whole thing.'] },
+        { say: 'felix-maze', lines: ['There he is, officers! That one, plotting to take the throne!'] },
         { wait: 0.4 },
       ],
     };
   },
-  7: () => {
+  6: () => {
     const maze = loadMap('felix-maze', 'outdoor');
     const lock = (path, cls) => ({ locked: `${cls} Lv 10`, icon: path });
     const answers = [
-      { label: 'Warrior: "Say that again. Slower."', ...lock('physical', 'Warrior') },
-      { label: 'Mage: "Plots take weeks. I woke up today."', ...lock('intellectual', 'Mage') },
-      { label: 'Bard: "Let me buy you both a drink."', ...lock('social', 'Bard') },
+      { label: '"Plots take weeks. I woke up today."', ...lock('intellectual', 'Mage') },
+      { label: '"Let me buy you both a drink."', ...lock('social', 'Bard') },
+      '"Your name is stupid, Timmy."',
       '"I\'m innocent!"',
-      '"How did you know!?"',
-      '"What king?"',
     ];
+    const HIMOTHY = 'Sir Himothy the Third';
     return {
-      number: 7,
+      number: 6,
       title: 'SIR HIMOTHY THE THIRD',
       next: 'THE ONE IN THE CORNER',
+      hold: 0.8,
       map: maze,
       hero: { sprite: 'quill', at: [22, 4], facing: 'right' },
       shown: ['felix-maze', 'guard-1', 'guard-2'],
       titleDur: 0,
       endDur: 4.5,
       script: [
-        // frame one: the captain, in your face
-        { say: 'guard-2', lines: ["Is this true? Here, it's guilty until proven innocent! Explain yourself."] },
-        // the clever answers are there, greyed out until Lv 10; the wizard isn't there yet
-        { menu: { speaker: 'Sir Himothy the Third', options: answers, pick: 4, hold: 2.4 } },
+        // frame one: the captain, in your face, and very proud of his name
         {
           say: 'guard-2',
-          lines: [
-            'How did I know? See this badge? Sir Himothy the Third. The whole thing. I always know.',
-            'Seize him!',
-          ],
+          lines: ['The name is Sir Himothy the Third. And you have to say the whole thing.'],
         },
+        { menu: { speaker: HIMOTHY, options: ['"Mr. Himothy, I..."'], pick: 0, hold: 0.5 } },
+        { say: 'guard-2', lines: ['SAY. THE WHOLE. THING.'] },
+        // the clever answers are there, greyed out until Lv 10; the wizard isn't there yet
+        { menu: { speaker: HIMOTHY, options: answers, pick: 3, hold: 1.6 } },
+        { say: 'guard-2', lines: ['Innocent, huh? Sounds like something a guilty person would say.', 'Seize him!'] },
         // they close in
         {
           npcWalk: 'guard-1',
@@ -1803,105 +1798,79 @@ const EPISODES = {
           speed: 70,
           together: true,
         },
-        { wait: 0.4 },
-        { laugh: 'felix-maze', dur: 1.4 },
-        { narrate: true, lines: ['Rough hands. A sack over your head. A long, bumpy walk.'] },
-        { wait: 0.3 },
+        // they close in together (about a second), and it goes black as they reach you
+        // (author, Oct 4, 2026: no sack, no narration)
+        { wait: 1.1 },
       ],
     };
   },
-  // 9–10 (the author's direction, Oct 3, 2026): the Kingdom Dungeon, as the game plays it
-  // (kingdom-dungeon.json, dungeon.ts). The menus show all of Brannoc's questions, but the episodes
-  // only pick what the story needs: the rest are there for players to try for themselves.
-  // 9: marched to the cells; the one in the corner was a prince, once.
-  8: () => {
-    const cells = loadMap('kingdom-dungeon', 'dungeon');
-    // the two guards who march you down from the stair (in the game, a march: dungeon.ts escortIn)
-    cells.npcs['escort-1'] = {
-      id: 'escort-1',
-      type: 'npc',
-      x: 21,
-      y: 4,
-      sprite: 'raider',
-      facing: 'down',
-      name: 'Guard',
-      lines: [],
-    };
-    cells.npcs['escort-2'] = {
-      id: 'escort-2',
-      type: 'npc',
-      x: 21,
-      y: 2,
-      sprite: 'raider',
-      facing: 'down',
-      name: 'Guard',
-      lines: [],
-    };
-    const brannoc = cells.npcs['brannoc-cell'];
-    const asks = brannoc.questions.map((q) => q.ask);
-    const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
+  // Taken out of the series (author, Oct 4, 2026): the Keeper's Q&A, left for players to find.
+  'another-long-story': () => {
+    const archive = loadMap('archive', 'rooms');
+    const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
+    const asks = keeper.asks;
     return {
-      number: 8,
-      title: 'THE ONE IN THE CORNER',
-      next: 'FOR THE APPLES',
+      number: 'BONUS',
+      title: 'ANOTHER LONG STORY',
+      next: 'THE GREEN CANDLE',
       hold: 0.75,
-      map: cells,
-      hero: { sprite: 'quill', at: [21, 3], facing: 'down' },
+      map: archive,
+      hero: { sprite: 'quill', at: [20, 6], facing: 'up' },
+      hide: HALL,
       titleDur: 0,
       endDur: 4.5,
       script: [
-        // frame one: marched down from the guards' stair
-        { say: 'escort-1', lines: ['Walk. And no plotting.'] },
-        {
-          npcWalk: 'escort-1',
-          to: [
-            [21, 6],
-            [5, 6],
-          ],
-          speed: 150,
-          together: true,
-        },
-        {
-          npcWalk: 'escort-2',
-          to: [
-            [21, 6],
-            [7, 6],
-          ],
-          speed: 150,
-          together: true,
-        },
-        {
-          walk: [
-            [21, 6],
-            [6, 6],
-          ],
-          face: 'up',
-          speed: 150,
-        },
-        { say: 'escort-1', lines: ['In you go.'] },
-        // shoved in; the door slams
-        { scene: { map: cells, at: [6, 4], facing: 'down', hide: ['escort-1', 'escort-2'] } },
-        { narrate: true, lines: ['CLANG.'] },
-        { face: 'left' },
-        // (visibly unarmed)
-        { say: 'brannoc-cell', lines: brannoc.lines.slice(0, 1) },
-        { menu: { speaker: 'Brannoc', options: asks, pick: 0, hold: 0.9 } },
-        { say: 'brannoc-cell', lines: [answer('Who are you?')[0], answer('Who are you?')[2]] },
-        // and he begins to explain how he got here; it cuts there
-        { menu: { speaker: 'Brannoc', options: asks.slice(1), pick: 1, hold: 0.6 } },
-        { say: 'brannoc-cell', lines: answer('What are you in for?').slice(0, 1) },
+        { cards: 1, under: true },
+        { say: 'keeper', lines: ['Stop peeking.'] },
+        { menu: { speaker: 'The Keeper', options: asks.map((q) => q.ask), pick: 1, hold: 0.6 } },
+        { say: 'keeper', lines: asks[1].answer },
+        { menu: { speaker: 'The Keeper', options: [asks[2].ask], pick: 0, hold: 0.2 } },
+        { say: 'keeper', lines: asks[2].answer },
+        // and you're left wondering
+        { you: keeper.afterThoughts },
       ],
     };
   },
-  // 10: the apple cart, "We need to escape", the bars, and Gary saw nothing.
-  9: () => {
+  // 7–8 (the author's direction, Oct 3, 2026): the Kingdom Dungeon, as the game plays it
+  // (kingdom-dungeon.json, dungeon.ts). The menus show all of Brannoc's questions, but the episodes
+  // only pick what the story needs: the rest are there for players to try for themselves.
+  // 7: in the cell (author, Oct 4, 2026: no march, open on "I am armed!"); the one in the corner was a
+  // prince, once, and ended up here over an apple cart.
+  7: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
     const brannoc = cells.npcs['brannoc-cell'];
-    const asks = brannoc.questions.map((q) => q.ask);
+    const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
+    return {
+      number: 7,
+      title: 'THE ONE IN THE CORNER',
+      next: 'FOR THE APPLES',
+      hold: 0.45,
+      map: cells,
+      hero: { sprite: 'quill', at: [6, 4], facing: 'left' },
+      titleDur: 0,
+      endDur: 4.5,
+      script: [
+        // frame one: shoved in with him
+        // (visibly unarmed, and still dangerous)
+        { say: 'brannoc-cell', lines: brannoc.lines },
+        // three questions, picked quickly (author, Oct 4, 2026); it ends on the apple cart
+        { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, []), pick: 0, hold: 0.3 } },
+        { say: 'brannoc-cell', lines: answer('Who are you?') },
+        { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, ['Who are you?']), pick: 0, hold: 0.3 } },
+        { say: 'brannoc-cell', lines: answer('Why are you cowering in the corner?') },
+        { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?']), pick: 0, hold: 0.3 } },
+        { say: 'brannoc-cell', lines: answer('What are you in for?') },
+      ],
+    };
+  },
+  // 8: the apple cart, "We need to escape", the bars, and Gary saw nothing.
+  8: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const brannoc = cells.npcs['brannoc-cell'];
     const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
     const garySaw = ['...', 'I did not see that.', '... I do not get paid enough to have seen that.'];
     return {
-      number: 9,
+      number: 8,
       title: 'FOR THE APPLES',
       next: 'GARY',
       hold: 0.6,
@@ -1910,9 +1879,8 @@ const EPISODES = {
       titleDur: 0,
       endDur: 4.5,
       script: [
-        // frame one: mid-story
-        { say: 'brannoc-cell', lines: answer('What are you in for?').slice(1) },
-        { menu: { speaker: 'Brannoc', options: asks.filter((a) => a !== 'What are you in for?'), pick: 3, hold: 0.5 } },
+        // frame one: the menu, and "We need to escape." (author, Oct 4, 2026)
+        { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?', 'What are you in for?']), pick: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?', 'What are you in for?']).indexOf('We need to escape.'), hold: 0.8 } },
         { say: 'brannoc-cell', lines: answer('We need to escape.') },
         { narrate: true, lines: ['*squeak*'] },
         { say: 'brannoc-cell', lines: ['AAAAAAH!'] },

@@ -63,6 +63,14 @@
             "Rope. Lanterns. A bridge-crossing permit, though the bridge is shut.",
             "And hats. Always hats."
           ]
+        },
+        {
+          "ask": "Nobody wants your hats, Dunstan.",
+          "answer": [
+            "Everybody wants a hat. They just don't know it yet.",
+            "You'd suit a big one. Covers more of the face."
+          ],
+          "deed": "bad"
         }
       ]
     }

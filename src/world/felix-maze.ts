@@ -24,6 +24,8 @@ export const OWES_GUARDS = 'owes-guards-a-drink';
 export const JAILED = 'jailed-with-brannoc';
 /** You've come to in the cell (said once). */
 export const JAIL_WOKE = 'jail-woke';
+/** Called him Timmy: knocked out at the maze, so no escort down; you wake already in the cell. */
+export const KNOCKED_OUT = 'himothy-knockout';
 
 /** The tree that hides the passage, and the tile you step onto past the maze (where the scene starts). */
 export const PASSAGE_TILE = 'Z';
@@ -48,6 +50,13 @@ export const INTO_THE_ARCHIVE: Arrival = { map: 'archive', x: 20, y: 6, facing: 
 export const PAST_THE_MAZE: Arrival = { map: 'felix-maze', x: 22, y: 4, facing: 'right' };
 /** Under the guards' stair: the guards march you down to the cell from here (dungeon.ts). */
 export const INTO_THE_CELL: Arrival = { map: 'kingdom-dungeon', x: 21, y: 3, facing: 'down' };
+/** Knocked out: you come to on the straw, inside the cell (where shovedIn leaves you). */
+export const KNOCKED_IN: Arrival = { map: 'kingdom-dungeon', x: 6, y: 4, facing: 'down' };
+/** Coming to in the cell after Himothy's whole name. */
+export const KNOCKED_WAKE = [
+  'You wake up on straw. Your head is ringing. Somewhere far above, someone is still saying "the Third."',
+  'Stone walls. Iron bars. Straw that smells of other people.',
+];
 
 /**
  * Ways between places that aren't doors: the hidden passage (a Mage of Lv 6),
@@ -154,6 +163,10 @@ export type Answer = {
   sets?: string[];
   /** Thrown in the dungeon instead of let go. */
   jailed?: boolean;
+  /** Knocked out instead of marched off: you wake in the cell (KNOCKED_IN). */
+  knockout?: boolean;
+  /** Kind or mean (honor.ts). */
+  deed?: 'good' | 'bad';
   /** Said when a party member of that Path steps out and says it for you, in their own voice (author, Oct 4, 2026). */
   by?: Partial<Record<CharacterId, string[]>>;
 };
@@ -165,14 +178,11 @@ export const forHero = (line: string, hero: string) => {
   return line.replace('{them}', p).replace('{he is}', SUBJECT[p]);
 };
 
-/** Said as you're taken, whichever wrong answer it was. */
-export const SEIZED = ['Rough hands. A sack over your head. A long, bumpy walk.'];
-
 /**
  * The guards' question, four answers at most like every menu (author, Oct 4, 2026): two clever ones
  * (Lv 10 in their Path, greyed out with just the Path's icon until then) that talk you free, and two
- * anyone can say that land you in the cells: the one that moves things along, and the one you say
- * because you've nothing better.
+ * anyone can say that land you in the cells: the plea he's heard a thousand times, and the mean one,
+ * which gets you knocked out.
  */
 export const ANSWERS: Answer[] = [
   {
@@ -209,14 +219,20 @@ export const ANSWERS: Answer[] = [
     sets: [OWES_GUARDS],
   },
   {
-    label: '"How did you know!?"',
+    // the mean one (honor.ts; author, Oct 4, 2026): no escort for this, he knocks you out cold
+    label: '"Your name is stupid, Timmy."',
     path: null,
+    deed: 'bad',
     lines: [
-      `${HIMOTHY}: How did I know? See this badge? Sir Himothy the Third. The whole thing. I always know.`,
-      `${HIMOTHY}: Seize {them}!`,
+      `${HIMOTHY}: ...Timmy.`,
+      `${HIMOTHY}: Nobody has called me Timmy since the academy.`,
+      "GUARD: Oh no. Sir, remember what the healer said about your temper—",
+      `${HIMOTHY}: SIR. HIMOTHY. THE. THIRD.`,
+      'He hits you with the whole name. Every syllable lands.',
     ],
-    sets: [JAILED],
+    sets: [JAILED, KNOCKED_OUT],
     jailed: true,
+    knockout: true,
   },
   {
     label: '"I\'m innocent!"',

@@ -78,6 +78,14 @@
             "The boy's. They carved his name and waited for a body that never came.",
             "So I stopped waiting for a body, and started waiting for a boy. It's a much nicer thing to wait for."
           ]
+        },
+        {
+          "ask": "Keeping a candle for a mad king? Sad.",
+          "answer": [
+            "Sad, yes. Most kind things are, a little.",
+            "* The candle gutters, then steadies. So does he."
+          ],
+          "deed": "bad"
         }
       ]
     }

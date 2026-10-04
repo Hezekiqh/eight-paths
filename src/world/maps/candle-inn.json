@@ -80,6 +80,14 @@
             "Turnip. Millbrook sends them. The horde won't touch a turnip, so nobody asks where they go.",
             "Half this town's lived on Millbrook turnips for years. So will you. Eat."
           ]
+        },
+        {
+          "ask": "Your cooking's why everyone's too thin.",
+          "answer": [
+            "…Is it, now.",
+            "Then there's no pudding for you. Eat your turnip and think about what you've said."
+          ],
+          "deed": "bad"
         }
       ]
     },

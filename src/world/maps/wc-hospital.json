@@ -80,6 +80,14 @@
             "Three sleepers this month. Wandered in out of cocoons, they say, not knowing the year.",
             "We feed them soup and tell them gently. The soup helps more than the telling."
           ]
+        },
+        {
+          "ask": "Bit grumpy for a healer, aren't you?",
+          "answer": [
+            "I've a bedside manner. It's for people in beds.",
+            "You're standing. Go away."
+          ],
+          "deed": "bad"
         }
       ]
     }

@@ -67,6 +67,15 @@
             "The fortieth painter ran out of ways to flatter him. So he painted the sun and called it 'Kaldor, Roughly'.",
             "The king loved it. It's his favourite. Don't tell him it's the sun."
           ]
+        },
+        {
+          "ask": "His nose needs a hall of its own.",
+          "answer": [
+            "* Sim Fawnley goes very white.",
+            "SHH! The portraits have ears! Thirty-nine of them, anyway. The fortieth is the sun.",
+            "I didn't hear that. I'm writing down that I didn't hear that."
+          ],
+          "deed": "bad"
         }
       ]
     },

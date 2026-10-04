@@ -73,6 +73,14 @@
           "answer": [
             "Because moving is how you know you're awake. Try it. Every day. Just a bit."
           ]
+        },
+        {
+          "ask": "Stop flailing about. You look daft.",
+          "answer": [
+            "Daft and awake!",
+            "Cartwheel four thousand and ten. That one was at you."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 3,
@@ -103,6 +111,15 @@
           "answer": [
             "Never. Wim says standing up, like a horse. Wim's an idiot."
           ]
+        },
+        {
+          "ask": "Heard a goose made you cry.",
+          "answer": [
+            "I didn't cry.",
+            "WIM! What have you been telling people?",
+            "WIM: Nothing! ...Everything."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {
@@ -150,6 +167,14 @@
             "A goose came through last week. Collar said DUCHESS. Took Grask's helmet.",
             "Grask cried. Grask says he didn't cry. Grask cried."
           ]
+        },
+        {
+          "ask": "No wonder nobody tells you stories.",
+          "answer": [
+            "...Oh.",
+            "That's a sad story. I didn't like that one."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {

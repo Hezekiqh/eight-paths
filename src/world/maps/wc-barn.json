@@ -72,6 +72,30 @@
       "name": "Stablehand Tibb",
       "lines": [
         "Mind the grey. She bites. The brown one bites too. Actually, mind all of them."
+      ],
+      "questions": [
+        {
+          "ask": "Why do they all bite?",
+          "answer": [
+            "Colosseum horses. Raised on crowd noise and Barnaby's voice. You'd bite too.",
+            "The grey bit the Warden once. He didn't notice. She's been sulking ever since."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "Felix came in last week to \"borrow\" a pony. Left a note saying sorry and a turnip.",
+            "The pony came back on its own. Wearing a hat. I've kept the hat. Nobody asks about the hat."
+          ]
+        },
+        {
+          "ask": "Smells like you sleep in here.",
+          "answer": [
+            "I do. It's warm and nobody talks back. Except the grey.",
+            "* The grey puts her ears back at you. You feel judged by a horse."
+          ],
+          "deed": "bad"
+        }
       ]
     }
   ],

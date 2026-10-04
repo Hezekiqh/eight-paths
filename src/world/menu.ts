@@ -5,9 +5,15 @@
  */
 export const MENU_ROWS = 4;
 
-/** The questions a menu shows: unasked ones first, in order, then asked ones, leaving a row for Goodbye. */
-export function shownQuestions<Q extends { ask: string }>(questions: Q[], asked: string[]): Q[] {
-  const fresh = questions.filter((q) => !asked.includes(q.ask));
-  const again = questions.filter((q) => asked.includes(q.ask));
-  return [...fresh, ...again].slice(0, MENU_ROWS - 1);
+/**
+ * The questions a menu shows: unasked ones first, in order, then asked ones, leaving a row for Goodbye.
+ * The mean one (honor.ts: every menu has one, author Oct 4, 2026) always keeps its row, last.
+ */
+export function shownQuestions<Q extends { ask: string; deed?: string }>(questions: Q[], asked: string[]): Q[] {
+  const mean = questions.find((q) => q.deed === 'bad');
+  const rest = questions.filter((q) => q !== mean);
+  const fresh = rest.filter((q) => !asked.includes(q.ask));
+  const again = rest.filter((q) => asked.includes(q.ask));
+  const room = MENU_ROWS - 1 - (mean ? 1 : 0);
+  return [...[...fresh, ...again].slice(0, room), ...(mean ? [mean] : [])];
 }

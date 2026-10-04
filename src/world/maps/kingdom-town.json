@@ -147,6 +147,14 @@
             "At dusk they play the jingle, then a lady says nothing further is required of you. Nicest voice in the kingdom.",
             "Nobody knows who she is. Five hundred years, same words. You get used to it."
           ]
+        },
+        {
+          "ask": "Who'd buy a lamp from a man named Gert?",
+          "answer": [
+            "Everybody. Eventually. It gets dark, you see. Every single night.",
+            "You'll be back at dusk. They always come back at dusk."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {
@@ -195,6 +203,14 @@
             "Last loaf of Kaldorbread on my cart. They both reached for it. Then they both remembered nobody likes it.",
             "Neither of them would let go first. Fierce, see. Somebody ought to remind them."
           ]
+        },
+        {
+          "ask": "Your bread tastes like a wet boot.",
+          "answer": [
+            "That's not me, that's the recipe. By royal decree.",
+            "…Mind you, I know exactly whose loaf my opinion's going in tomorrow."
+          ],
+          "deed": "bad"
         }
       ],
       "look": true
@@ -230,6 +246,14 @@
             "The prince will come back up out of the ground, with a giant's beard.",
             "…I made that one up. It costs the most because it's the least true."
           ]
+        },
+        {
+          "ask": "Your rumours aren't worth a penny, Pim.",
+          "answer": [
+            "That's a rumour too. You owe me a penny.",
+            "Two, for the cheek."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 2
@@ -259,6 +283,14 @@
           "answer": [
             "The cage guard takes bribes. Fat ones. Don't tell him I told you."
           ]
+        },
+        {
+          "ask": "Fierce? You're the colour of porridge.",
+          "answer": [
+            "It's PALE fury. The rarest kind of fury.",
+            "* Kett goes a shade paler. Fiercely."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 1
@@ -282,6 +314,14 @@
           "answer": [
             "People who wouldn't cheer at the Maximus. They'll cheer next time."
           ]
+        },
+        {
+          "ask": "You score cheers? I'd score you a zero.",
+          "answer": [
+            "There is no zero. I asked for a zero. The king said no.",
+            "You're still a one. Back off."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {
@@ -335,6 +375,14 @@
           "answer": [
             "Any day. The king says we're finally strong enough. I can't wait."
           ]
+        },
+        {
+          "ask": "Second of the horde? So, first loser.",
+          "answer": [
+            "Second is a rank. Not a result.",
+            "And you're the first in a long while to say that to my face. I'll remember both."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {
@@ -373,6 +421,14 @@
           "answer": [
             "RAAAH."
           ]
+        },
+        {
+          "ask": "Shouldn't you be having a nap?",
+          "answer": [
+            "RAAAH.",
+            "* Brunna headbutts your other shin. Now they match."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {
@@ -471,6 +527,15 @@
           "then": [
             "Durn and Haskel let go of each other, stare at their fists for a while, and wander off east toward the city, arm in arm, for a drink."
           ]
+        },
+        {
+          "ask": "You two fight like a pair of wet socks.",
+          "answer": [
+            "DURN: Wet socks.",
+            "HASKEL: My socks are bone dry, thank you very much.",
+            "DURN: …Mine aren't. Don't tell anyone."
+          ],
+          "deed": "bad"
         }
       ],
       "goneAfter": "brawl-over"
@@ -488,7 +553,32 @@
         "The point is he started it.",
         "DURN: YOU started it!"
       ],
-      "goneAfter": "brawl-over"
+      "goneAfter": "brawl-over",
+      "questions": [
+        {
+          "ask": "Why not just stop?",
+          "answer": [
+            "Because then he'd have stopped second. And I'd have stopped first. Do you see?",
+            "DURN: HE SEES. EVERYONE SEES."
+          ]
+        },
+        {
+          "ask": "Who's winning?",
+          "answer": [
+            "Odd Bett says nobody, every day, at the same odds. Sister Hild says the scarf.",
+            "Little Brunna says she is. She headbutted us both on day four. She might be right."
+          ]
+        },
+        {
+          "ask": "You'd lose to Brunna.",
+          "answer": [
+            "I did lose to Brunna. Day four. We don't talk about day four.",
+            "DURN: HE CRIED.",
+            "HASKEL: I HAD SOMETHING IN MY EYE. IT WAS BRUNNA."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "bett",
@@ -509,7 +599,31 @@
           "Worst day of my life. Don't talk to me."
         ]
       },
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who bets on a fight that never ends?",
+          "answer": [
+            "Everybody. That's the beauty. Nobody wins, nobody loses, the coins just go round and round, through me.",
+            "Pim sells the rumours, I sell the odds. Between us we're the whole economy of Kaldor Street. Both of them."
+          ]
+        },
+        {
+          "ask": "Any good tips?",
+          "answer": [
+            "Durn's been eating Tessa's Kaldorbread. Haskel hasn't. Make of that what you will.",
+            "Tessa says it tastes of nothing. I say nothing is very filling if you eat enough of it."
+          ]
+        },
+        {
+          "ask": "Your odds are rubbish.",
+          "answer": [
+            "My odds are the same every day. That's called reliable, love.",
+            "For being rude, odds on you: long. Very long. You'd need a ladder."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "hild",
@@ -530,7 +644,31 @@
           "I'll finish the scarf anyway. It's a very long scarf now."
         ]
       },
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "What are you knitting?",
+          "answer": [
+            "Day one was a scarf. Day five, mittens. Day nine, a jumper for Hamm's boulder. Pebble gets cold.",
+            "If the brawl goes on to day thirty, I'll have done the whole street."
+          ]
+        },
+        {
+          "ask": "Do you patch up anyone else?",
+          "answer": [
+            "Gudrun's hands, when the cage bars give her blisters. Rumm's belly, when he drums it raw.",
+            "The medic up at the castle sends folk down to me. He's lovely. He isn't a medic."
+          ]
+        },
+        {
+          "ask": "Bucket's for you, is it?",
+          "answer": [
+            "The bucket is for whoever needs it. Today, perhaps, that's whoever's been rude to a nun.",
+            "* She keeps knitting. The needles click in a way that feels pointed."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "tuk",
@@ -545,7 +683,24 @@
         "We march in step. Tok is out of step. Tok has always been out of step."
       ],
       "wander": 3,
-      "along": "x"
+      "along": "x",
+      "questions": [
+        {
+          "ask": "What does the patrol actually do?",
+          "answer": [
+            "Curfew. We walk. We BOOM. People go inside.",
+            "Nobody's been out after curfew in sixty years. The BOOM is very effective."
+          ]
+        },
+        {
+          "ask": "You're the one out of step.",
+          "answer": [
+            "…No.",
+            "* BOOM. He checks his feet. BOOM. He checks Tok's feet. BOOM. He looks worried."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "tok",
@@ -558,6 +713,23 @@
       "lines": [
         "BOOM. …BOOM.",
         "I'm in step. Tuk's out of step. Rumm hasn't got a drum. Some patrol."
+      ],
+      "questions": [
+        {
+          "ask": "Why only one boom at a time?",
+          "answer": [
+            "Saving the second one. You never know when you'll need a second boom.",
+            "Tuk wastes his. Booms everywhere. Show-off."
+          ]
+        },
+        {
+          "ask": "Is that a drum or a bucket?",
+          "answer": [
+            "It is a drum.",
+            "…It was a bucket. Sister Hild lent it. Don't tell Tuk."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -572,6 +744,23 @@
         "*slap* *slap*",
         "Lost my drum. Belly works fine. Don't tell the captain.",
         "*slap*"
+      ],
+      "questions": [
+        {
+          "ask": "What happened to your drum?",
+          "answer": [
+            "Bet it on Durn. Day two. Odd Bett has it now. She uses it as a stool.",
+            "*slap* Belly's lighter to carry anyway."
+          ]
+        },
+        {
+          "ask": "That's not a drum, mate.",
+          "answer": [
+            "*slap*",
+            "It's an instrument. Everything's an instrument if you're brave enough. *slap* *slap*"
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -587,7 +776,31 @@
         "Chin-ups on the cage bars. The bars are the only thing in this town that don't wobble.",
         "Ninety-three. When I was a girl I did these on the old king's gate. Ninety-four."
       ],
-      "look": true
+      "look": true,
+      "questions": [
+        {
+          "ask": "How did you get so strong?",
+          "answer": [
+            "Every day. Little bit. Never skipped. That's all it is, and nobody believes me.",
+            "Strength's not a gift, dear. It's a habit you didn't put down. Ninety-five."
+          ]
+        },
+        {
+          "ask": "What was the old king like?",
+          "answer": [
+            "Hale. Kind man. Open hand. Let children swing on his gate. I was one of them.",
+            "Kaldor took the gate down. I took up the cage bars. Ninety-six."
+          ]
+        },
+        {
+          "ask": "Bet you can't do a hundred.",
+          "answer": [
+            "Ninety-seven. Ninety-eight. Ninety-nine. One hundred.",
+            "One hundred and one. Now you do one, dear. Go on. I'll wait."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "hamm",
@@ -601,7 +814,24 @@
         "Training. Carrying the boulder. Six years now.",
         "Same boulder. I named him Pebble. Pebble isn't a pebble. That's the joke. I don't get many visitors."
       ],
-      "wander": 2
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Why carry a boulder?",
+          "answer": [
+            "The horde said, 'carry something heavy till you're strong.' Didn't say when to stop. So I haven't.",
+            "Pebble and I have seen the whole street. Both Kaldor Streets. He likes the bakery best. Tessa waves."
+          ]
+        },
+        {
+          "ask": "Pebble's your only friend, isn't he?",
+          "answer": [
+            "…Pebble's a very good friend. Never interrupts. Never leaves.",
+            "* Hamm hugs the boulder a little tighter. The boulder, being a boulder, says nothing kind back."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ],
   "art": {

@@ -77,6 +77,15 @@
             "…I found it in the pit's drain, thirty years back. Seemed wrong to leave a king looking at a drain.",
             "Don't tell the horde."
           ]
+        },
+        {
+          "ask": "Some gardener. This place is a mess.",
+          "answer": [
+            "Shh. Not in front of the hedges.",
+            "* Somewhere to your left, a hedge rustles in a hurt sort of way.",
+            "That was Philippa. She's sensitive. Now look what you've done."
+          ],
+          "deed": "bad"
         }
       ]
     },

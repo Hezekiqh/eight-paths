@@ -93,6 +93,14 @@
             "Then one winter, the king said he cast no shadow, and we added a fourth.",
             "Kings don't usually need new lines, child. I've thought about that a long time."
           ]
+        },
+        {
+          "ask": "Spare me your gran's stories, old woman.",
+          "answer": [
+            "Nobody wanted them when she told them, either. Then she was gone, and everybody did.",
+            "Sit or go, child. The ice keeps them either way."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -115,6 +123,15 @@
             "Duchess has fought in eleven wars. Nobody's sure which side. Nobody asked her.",
             "She bit a king once. Not this one. Not yet. She's waiting, I think."
           ]
+        },
+        {
+          "ask": "Duchess looks like dinner to me.",
+          "answer": [
+            "* Somewhere in the pen, a duck stops quacking.",
+            "…Oh, you've done it now. She heard that.",
+            "Sleep with one eye open, friend. She sleeps with none."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 2,
@@ -132,7 +149,24 @@
         "Pilgrim. I've come to see the ice. The last ice from the wastes, kept five hundred years.",
         "It's very cold. That's how you know it's real."
       ],
-      "wander": 2
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "What do the pilgrims pray for?",
+          "answer": [
+            "Cold. Winters long enough to remember who we were before the city.",
+            "Elder Skadi says the wastes were hard but honest. Nobody had a king. Only weather."
+          ]
+        },
+        {
+          "ask": "Came all this way for an ice cube?",
+          "answer": [
+            "An ice cube that walked out of the wastes with our grandmothers. Five hundred years.",
+            "You came all this way to be rude to a pilgrim. Which of us made the better trip?"
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "duck-sign",

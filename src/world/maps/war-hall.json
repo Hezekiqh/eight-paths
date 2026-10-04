@@ -170,6 +170,15 @@
             "No war. No problems. Some disagreement about the moat.",
             "His Majesty replies to ravens within three to five business days. Nobody knows what a business day is. We are afraid to ask."
           ]
+        },
+        {
+          "ask": "A remote king and a pointless advisor.",
+          "answer": [
+            "Careful. That is very nearly a problem. Rule two.",
+            "I shall raven His Majesty about you. Expect a reply in three to five business days.",
+            "* He writes something down. He underlines it twice."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -185,7 +194,31 @@
         "Your Majesty. The throne is warm, the kingdom is confused, and there's a queue.",
         "You'll be working remotely, I take it? Everyone's doing it. Two rules while you're out: no wars, no problems. I'll hold the fort. Literally."
       ],
-      "comesAfter": "you-king"
+      "comesAfter": "you-king",
+      "questions": [
+        {
+          "ask": "Who's in the queue?",
+          "answer": [
+            "A man whose moat has a goose in it. Five ex-queens asking who gets the good bedroom. Somebody from Warrior City called Barnaby, who will not stop talking.",
+            "And Captain Varga, who would like to know whom she now salutes. I said 'the throne'. She saluted it. It seemed to help."
+          ]
+        },
+        {
+          "ask": "How do you run a kingdom?",
+          "answer": [
+            "Mostly you write down what everyone wants, then you put the list somewhere safe. Rule one: no wars. Rule two: no problems.",
+            "Then you go round renaming things. We've three hundred Kaldor Streets. I've got to Kaldor Street Forty. It's now 'Street'."
+          ]
+        },
+        {
+          "ask": "You're a butler with a hat.",
+          "answer": [
+            "A steward, Your Majesty. A butler with a hat and a ledger.",
+            "* He writes your remark in the ledger, under 'problems'. It is the first entry."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

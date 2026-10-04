@@ -55,6 +55,15 @@
             "The Fury. Drum till your blood's louder than your fear. Then fight.",
             "My gran said in the wastes it kept you warm. Here it keeps you… loud."
           ]
+        },
+        {
+          "ask": "Going red? Looks like a tantrum to me.",
+          "answer": [
+            "A TANTRUM? A TANTRUM?",
+            "* Hagga goes red. Redder than anybody has ever gone.",
+            "…See? That's the Fury. Now get out of my hall before I drum on you."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -77,6 +86,14 @@
             "The drums are nice. And everybody's so cross. Somebody ought to bring biscuits.",
             "Between us, I don't think the old kingdom went red. My nan has a cup with an open hand on it. She hides it."
           ]
+        },
+        {
+          "ask": "Pink? You'd lose a fight to a biscuit.",
+          "answer": [
+            "Probably. Biscuits are very determined.",
+            "…That was unkind, you know. I'm only pink. I'm not deaf."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -91,6 +108,23 @@
       "lines": [
         "BOOM. BOOM. BOOM-BOOM.",
         "Again! From the top! There's no top. It's just BOOM."
+      ],
+      "questions": [
+        {
+          "ask": "Do you ever play anything else?",
+          "answer": [
+            "BOOM.",
+            "…Once I played a quiet one. Hagga cried. Then she threw the drum at me. BOOM."
+          ]
+        },
+        {
+          "ask": "A goat could play that.",
+          "answer": [
+            "Brug's goat DID. Last spring.",
+            "It was very good. Lost my job for a week. BOOM."
+          ],
+          "deed": "bad"
+        }
       ]
     },
     {
@@ -103,6 +137,23 @@
       "name": "Drummer",
       "lines": [
         "BOOM. …Is Tolly pink again? He's pink again."
+      ],
+      "questions": [
+        {
+          "ask": "Why does Tolly keep coming?",
+          "answer": [
+            "He likes the drums. He's the only one who listens to them. Everyone else is screaming.",
+            "Pink's a start. I went pink once. Then red. Then I fell asleep."
+          ]
+        },
+        {
+          "ask": "You've been playing the same beat for years.",
+          "answer": [
+            "It's a classic.",
+            "BOOM. …That one was for you. A rude one."
+          ],
+          "deed": "bad"
+        }
       ]
     }
   ]

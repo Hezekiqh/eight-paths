@@ -95,6 +95,14 @@
             "Turnips don't care who's king. You plant them, you tend them, they come up. Every year.",
             "There's a lesson in that, my mum said. She never said what it was."
           ]
+        },
+        {
+          "ask": "You smell like a turnip, Jory.",
+          "answer": [
+            "Thank you. Took me years.",
+            "...Oh, you meant it rude. Well. The turnips heard that."
+          ],
+          "deed": "bad"
         }
       ],
       "wander": 2
@@ -131,6 +139,14 @@
           "answer": [
             "Keeps the arms young. At my age you do one thing a day that's hard, or the days start doing it to you."
           ]
+        },
+        {
+          "ask": "Arm-wrestle you? You'd snap, granny.",
+          "answer": [
+            "Ninety-one years and nothing's snapped yet. Sit down.",
+            "* She cracks her knuckles, one at a time. You decide you're not that lost."
+          ],
+          "deed": "bad"
         }
       ],
       "after": {
@@ -174,6 +190,14 @@
           "answer": [
             "Once a year, exactly. I just never know which time it is."
           ]
+        },
+        {
+          "ask": "Some seer. You can't even guess my name.",
+          "answer": [
+            "I can, dear. I'm being polite.",
+            "You're a Gerald on the inside. It's the face that's wrong."
+          ],
+          "deed": "bad"
         }
       ],
       "after": {

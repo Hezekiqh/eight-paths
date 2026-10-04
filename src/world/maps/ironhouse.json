@@ -61,6 +61,14 @@
             "Form 12: request for an axe. Form 12b: request for a sharper axe. Form 40: grudge, formal.",
             "Form 1: request to stop shouting. Nobody's ever filed one. I keep it on top, just in case."
           ]
+        },
+        {
+          "ask": "Is there a form for being this dull?",
+          "answer": [
+            "Form 9. 'Complaint, Tedious.' Very popular. Mostly filed about me.",
+            "* He stamps something. He files it. He does not look up again."
+          ],
+          "deed": "bad"
         }
       ]
     },
@@ -83,6 +91,15 @@
             "Nobody, I think. We put them in the ice house, by the old block.",
             "Elder Skadi says the wastes hear them. I think she just likes reading them."
           ]
+        },
+        {
+          "ask": "Writing letters to ice? Bit soft, Leif.",
+          "answer": [
+            "It's tradition.",
+            "…It's a bit soft. I know it's a bit soft.",
+            "Don't tell the lads. Please. I'll fill in your Form 12."
+          ],
+          "deed": "bad"
         }
       ]
     }

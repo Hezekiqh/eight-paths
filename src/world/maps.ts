@@ -136,6 +136,8 @@ export type Question = {
   then?: string[];
   /** The one answering leaves with a flourish once the talk ends (a laugh, then a dash), and then this flag is set. */
   leaves?: string;
+  /** A kind or a mean thing to say (honor.ts): every menu has a mean one (author, Oct 4, 2026). */
+  deed?: 'good' | 'bad';
 };
 
 /** The Archive's quest board: opens the objectives. */

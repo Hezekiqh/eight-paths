@@ -198,6 +198,14 @@
             "The Trial closed after the challenger called Aurek. Aurek the Tall. Almost won. Scarred the king's face.",
             "The king… kept him. You'll see."
           ]
+        },
+        {
+          "ask": "Loudmouth? Bit on the nose, isn't it?",
+          "answer": [
+            "IT'S A FAMILY NAME AND WE ARE VERY PROUD OF IT!",
+            "My nan cracked the chapel window once. Twice, counting the echo."
+          ],
+          "deed": "bad"
         }
       ],
       "job": {

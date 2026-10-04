@@ -183,7 +183,31 @@
           "You've climbed the whole ladder. Your name's at the top of the board.",
           "I've announced forty years of Hroth. I've got to learn to say a new name. Give me a minute."
         ]
-      }
+      },
+      "questions": [
+        {
+          "ask": "What's wrong with Barnaby?",
+          "answer": [
+            "He announces with a TINY VOICE. He says 'ladies and gentlemen' like he's apologising.",
+            "I say 'LADIES. GENTLEMEN. AND WHATEVER BRUG BROUGHT.' That's craft."
+          ]
+        },
+        {
+          "ask": "Does the king watch?",
+          "answer": [
+            "From the high seat. Every bout. He never claps.",
+            "Once, he nodded. Hroth's first fight. Forty years ago. People still talk about the nod."
+          ]
+        },
+        {
+          "ask": "Do you ever use your indoor voice?",
+          "answer": [
+            "THIS IS. MY INDOOR VOICE.",
+            "MY OUTDOOR VOICE. IS ILLEGAL. IN THREE WARDS."
+          ],
+          "deed": "bad"
+        }
+      ]
     },
     {
       "id": "ogg",
@@ -202,7 +226,24 @@
         "lines": [
           "You beat Ugg! My advice was wrong. It always is. It's a family tradition."
         ]
-      }
+      },
+      "questions": [
+        {
+          "ask": "Is today a Thursday?",
+          "answer": [
+            "Depends. Do I have a black eye? Then it's Thursday.",
+            "Ugg says shouting is harder than fighting. Ugg's never been hit by a crowd."
+          ]
+        },
+        {
+          "ask": "You're the useless twin, then?",
+          "answer": [
+            "I'm the LOUD twin! Different!",
+            "…Ugg says I'm the useless twin too. On Thursdays. Then I say it back on Fridays."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

@@ -49,6 +49,30 @@
       "lines": [
         "YOU. MAGGOT. You found my pit.",
         "Nobody finds my pit. Come back when you can hold a sword, and we'll see what you're made of."
+      ],
+      "questions": [
+        {
+          "ask": "What is this place?",
+          "answer": [
+            "THE PIT BELOW THE PIT, MAGGOT. Where fighters come to learn the bits the crowd never sees.",
+            "Footwork. Breathing. Getting up. Mostly getting up."
+          ]
+        },
+        {
+          "ask": "What do you think of the Warden?",
+          "answer": [
+            "Thirty strikes and stands there like a wall. Good wall. Bad soldier.",
+            "A wall doesn't win. A wall waits. I trained him to stand. Nobody trained him to move. My mistake."
+          ]
+        },
+        {
+          "ask": "Do you ever talk at a normal volume?",
+          "answer": [
+            "THIS IS MY NORMAL VOLUME.",
+            "* He leans in, very close, and whispers. \"This is my angry volume.\" You preferred the shouting."
+          ],
+          "deed": "bad"
+        }
       ]
     }
   ],

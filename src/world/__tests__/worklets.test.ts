@@ -4,11 +4,7 @@ const { readFileSync, existsSync } = jest.requireActual('fs') as {
   readFileSync: (file: string, encoding: 'utf8') => string;
   existsSync: (file: string) => boolean;
 };
-const join = (...parts: string[]) =>
-  parts
-    .join('/')
-    .replace(/\/+/g, '/')
-    .replace(/\/[^/]+\/\.\.(?=\/|$)/g, '');
+const { join } = jest.requireActual('path') as { join: (...parts: string[]) => string };
 
 // The World's frame loop runs on the UI thread: everything it calls must be a worklet, or it throws
 // ("Tried to synchronously call a Remote Function") and the frame stops short. That stalled every
