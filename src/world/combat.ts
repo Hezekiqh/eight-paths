@@ -49,15 +49,15 @@ export const ATTACKS: Record<Dimension, Attack> = {
     look: 'fire',
   }, // fire bolt
   spiritual: {
-    kind: 'burst',
-    range: 30,
-    damage: 1,
-    cooldown: 0.6,
-    knock: 12,
-    stun: 0.3,
+    kind: 'bolt',
+    range: 110,
+    damage: 2,
+    cooldown: 0.55,
+    knock: 6,
+    stun: 0.25,
     color: '#FFE9A0',
     look: 'light',
-  }, // light burst
+  }, // a thrown ball of light, like Baldur's Gate's Guiding Bolt (author, Oct 4, 2026: not a beam)
   financial: {
     kind: 'bolt',
     range: 90,
@@ -107,10 +107,16 @@ export function damageFor(attack: Attack, level: number): number {
   return attack.damage + Math.floor(Math.max(0, level) / 10);
 }
 
-/** Longer reach from real habits: 1% more for every level past 1, up to half again at Lv 51. */
+/**
+ * Reach from real habits (author, Oct 4, 2026: the lower the level, the shorter the reach): three
+ * quarters of the blow's full reach at Lv 5, where everyone starts, the full reach by Lv 20, then
+ * 1% more a level, up to 30% more at Lv 50.
+ */
 export function rangeFor(attack: Attack, level: number): number {
   'worklet';
-  return attack.range * (1 + Math.min(50, Math.max(0, level - 1)) / 100);
+  const l = Math.max(5, level);
+  const k = l < 20 ? 0.75 + (0.25 * (l - 5)) / 15 : 1 + Math.min(30, l - 20) / 100;
+  return attack.range * k;
 }
 
 /** A Path's attack at a character's real level: same blow, a little more reach. */
@@ -149,8 +155,27 @@ export const ENEMIES: Record<EnemyKind, EnemyStats> = {
   aurek: { hp: 12, speed: 24, sight: 300, behaviour: 'slam', size: 2 }, // Aurek the Tall, raised and bound
   kaldor: { hp: 20, speed: 32, sight: 400, behaviour: 'king' }, // the Kingbreaker himself
   // The Kaldorium's warden (author, Oct 3, 2026): 30 strikes to bring down, whatever your level (see fixedHits).
-  warden: { hp: 30, speed: 22, sight: 300, behaviour: 'slam', size: 2, fixedHits: true },
+  warden: { hp: 30, speed: 15, sight: 300, behaviour: 'slam', size: 2, fixedHits: true },
 };
+
+/**
+ * How many hits it takes to bring one down, by your walker's real level (author, Oct 4, 2026: like
+ * Minecraft, stronger means fewer hits; every fight). At Lv 20 it's about a third of its hp in
+ * hits; under Lv 10, twice that. Null for one with its own rule (the warden: fixed strikes).
+ */
+export function hitsToBeat(kind: EnemyKind, level: number): number | null {
+  const e = ENEMIES[kind];
+  if (e.fixedHits) return null;
+  const base = Math.max(1, Math.ceil(e.hp / 3));
+  const k = level >= 20 ? 1 : level >= 15 ? 1.25 : level >= 10 ? 1.5 : 2;
+  return Math.max(1, Math.ceil(base * k));
+}
+
+/** Its hp in this fight: its hits to beat times your blow (so a plain blow takes exactly that many). */
+export function hpFor(kind: EnemyKind, level: number, blow: number): number {
+  const hits = hitsToBeat(kind, level);
+  return hits === null ? ENEMIES[kind].hp : hits * blow;
+}
 
 /**
  * Drowsiness (Baron Plush's fight): fills while you stand still, drains while
@@ -195,8 +220,9 @@ export const DASH = 2;
 export const RECOVER = 3;
 export const EXPOSED = 4;
 
-export function spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
-  return [ENEMY_KINDS.indexOf(kind), x, y, ENEMIES[kind].hp, 0, 0, 0, 1, CHASE, 0, 0, 0, 0, 0, 0, 0];
+/** `hp`: tougher or weaker than its kind usually is (the castle's shadows, castle.ts). */
+export function spawnEnemy(kind: EnemyKind, x: number, y: number, hp = ENEMIES[kind].hp): Enemy {
+  return [ENEMY_KINDS.indexOf(kind), x, y, hp, 0, 0, 0, 1, CHASE, 0, 0, 0, 0, 0, 0, 0];
 }
 
 export function sizeOf(e: Enemy): number {
@@ -226,6 +252,9 @@ const TOUCH_PER_SIZE = 4;
  * Each pattern's timings, in seconds and art pixels per second. The windup is
  * the tell: the enemy stops, flashes red, and commits to a direction.
  */
+/** The warden's rest between slams: a long fight (thirty strikes), so a slow one. */
+const WARDEN_REST = 2.4;
+
 export const PATTERNS = {
   lunge: { range: 80, rest: 0.6, windup: 0.38, dash: 0.4, speed: 140, recover: 0.45 },
   slam: { range: 44, rest: 0.8, windup: 0.8, windupHurt: 0.55, recover: 1.6, recoverHurt: 1.2 },
@@ -351,7 +380,8 @@ export function stepEnemies(
       const P = PATTERNS.slam;
       if (e[E_MODE] === CHASE) {
         chase();
-        if (dist < P.range && e[E_MT] >= slamRest) to(WINDUP);
+        // the Colosseum's warden takes thirty strikes whatever your level, so he slams less often
+        if (dist < P.range && e[E_MT] >= (stats.fixedHits ? WARDEN_REST : slamRest)) to(WINDUP);
       } else if (e[E_MODE] === WINDUP && e[E_MT] >= (hurtLow ? P.windupHurt : P.windup)) {
         slams.push(e[E_X], e[E_Y]);
         to(RECOVER);

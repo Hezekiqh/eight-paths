@@ -53,10 +53,8 @@ export function whoCan(
 /** How to beat what's in a room: each boss's tell, and what to do about it. */
 const TELLS: Partial<Record<MapId, string>> = {
   'the-pit': 'The pit fighters crouch and flash red before they lunge. Roll aside, then strike while they get up.',
-  'war-doors':
-    'Aurek flashes red before he slams the ground. Roll away from the ring, then hit him while he rises. Blades glance off his hide; bolts and arrows find the stitches.',
   'war-hall':
-    'Your blows glance off Kaldor while he casts no shadow. Roll aside when he charges: when a torch gutters and his shadow comes back, strike.',
+    'The shadows chase; Aurek flashes red before he slams the ground. Roll away from the ring, then hit him while he rises. The stronger you are, the faster the shadows break: every habit counts.',
 };
 
 /**

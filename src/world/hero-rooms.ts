@@ -1,5 +1,6 @@
 import type { CharacterId } from '@/story/companions';
 
+import { brannocAway } from './castle';
 import { withoutNpcs, type Question, type WorldMap } from './maps';
 
 // Each of the core eight has a room off the Archive (author, Oct 3, 2026), behind a door hidden
@@ -80,8 +81,16 @@ export function outToday(id: string, day: number): boolean {
   return h % 3 === 0;
 }
 
-/** The Archive or a hero's room, with each hero in one place today: the hall or their room. */
-export function withRoster(map: WorldMap, day: number): WorldMap {
+/**
+ * The Archive or a hero's room, with each hero in one place today: the hall or their room. King
+ * Brannoc, ruling until he catches you up (castle.ts), is in neither.
+ */
+export function withRoster(map: WorldMap, day: number, flags: string[] = []): WorldMap {
+  if (brannocAway(flags))
+    map = withoutNpcs(
+      map,
+      map.npcs.filter((n) => n.character === 'brannoc').map((n) => n.id),
+    );
   if (map.id === 'archive')
     return withoutNpcs(
       map,
@@ -129,6 +138,16 @@ export const HERO_NEWS: Partial<Record<CharacterId, News[]>> = {
       id: 'brannoc-lv20',
       when: { level: 20 },
       lines: ['I tried the swing. Awake, this time.', 'I felled a bookshelf. Quill is furious. I am overjoyed.'],
+    },
+    {
+      // back from his throne (castle.ts): ruling by raven
+      id: 'brannoc-remote',
+      when: { flag: 'brannoc-rejoined' },
+      lines: [
+        'Three ravens this morning. The advisor asks whether building a moat counts as causing a problem.',
+        'I replied: it depends on the moat. Then I put a candle in the window so they know I am "in the office".',
+        'I do not know what an office is. But I am in it.',
+      ],
     },
     {
       id: 'brannoc-king',

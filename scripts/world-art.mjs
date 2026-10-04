@@ -11,6 +11,7 @@
 import { cityArt } from './city-art.mjs';
 import { FLOORS, interiorArt } from './interior-art.mjs';
 import { mineArt } from './mine-art.mjs';
+import { ASH, castleArt } from './castle-art.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
 
@@ -286,7 +287,12 @@ const TILE_ART = {
     // The Mirror Room's great mirror, a 2×2 block of wall: drawn once, from its top-left tile.
     if (m.at(-1, 0) === 'm' || m.at(0, -1) === 'm') return;
     // the wall behind all four tiles first, so the tiles after this one don't paint over the glass
-    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+    for (const [dx, dy] of [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ]) {
       const at = (a, b) => (m.at(a + dx, b + dy) === 'm' ? 'W' : m.at(a + dx, b + dy));
       TILE_ART.W(g, x + dx * TILE, y + dy * TILE, { at });
     }
@@ -294,8 +300,7 @@ const TILE_ART = {
     box(g, x + 4, y + 2, 24, 28, '#B8C0D0');
     box(g, x + 5, y + 3, 22, 26, '#5A6A88');
     for (let j = 0; j < 26; j++)
-      for (let i = 0; i < 22; i++)
-        if (hash(i, j, 77) < 0.08) put(g, x + 5 + i, y + 3 + j, '#7A8AB0');
+      for (let i = 0; i < 22; i++) if (hash(i, j, 77) < 0.08) put(g, x + 5 + i, y + 3 + j, '#7A8AB0');
     // a pale sheen across the glass
     for (let i = 0; i < 12; i++) put(g, x + 8 + i, y + 22 - i, '#C8D4F0');
     for (let i = 0; i < 8; i++) put(g, x + 9 + i, y + 25 - i, '#A8B4D8');
@@ -390,7 +395,7 @@ function drawMap(map) {
             (j === 14 && !onRug(tx, ty + 1));
           let c = P.rug;
           if (edge) c = rim ? P.rugDark : P.rugGold;
-          else if ((Math.abs((px % 8) - 4) + Math.abs((py % 8) - 4)) === 3) c = P.rugDark;
+          else if (Math.abs((px % 8) - 4) + Math.abs((py % 8) - 4) === 3) c = P.rugDark;
           g[py][px] = hex(c);
         }
     }
@@ -553,7 +558,8 @@ function tree(g, x, y) {
   ellipse(g, x + 8, y + 7, 8, 7, O.leafDark);
   ellipse(g, x + 8, y + 6, 7, 6, O.leaf);
   ellipse(g, x + 6, y + 4, 3, 2, O.leafLight);
-  for (let i = 0; i < 6; i++) put(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 3 + Math.floor(hash(y, x, i) * 7), O.leafLight);
+  for (let i = 0; i < 6; i++)
+    put(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 3 + Math.floor(hash(y, x, i) * 7), O.leafLight);
 }
 
 const OUTDOOR_ART = {
@@ -786,7 +792,16 @@ const OUTDOOR_ART = {
     put(g, x + 8, y + 26, KS.d);
     put(g, x + 8, y + 27, KS.d);
     // Moss at the foot.
-    for (const [i, j] of [[2, 29], [3, 29], [4, 29], [2, 27], [3, 27], [27, 29], [24, 29]]) put(g, x + i, y + j, KS.w);
+    for (const [i, j] of [
+      [2, 29],
+      [3, 29],
+      [4, 29],
+      [2, 27],
+      [3, 27],
+      [27, 29],
+      [24, 29],
+    ])
+      put(g, x + i, y + j, KS.w);
     // Kaldor himself.
     KALDOR_STATUE.forEach((row, j) =>
       [...row].forEach((ch, i) => {
@@ -821,7 +836,13 @@ const OUTDOOR_ART = {
     box(g, x + 1, y + 14, 14, 1, KS.o);
     // Where the plaque was: a pale patch, four nail holes, a pry mark.
     box(g, x + 5, y + 12, 6, 2, KS.l);
-    for (const [i, j] of [[5, 12], [10, 12], [5, 13], [10, 13]]) put(g, x + i, y + j, KS.o);
+    for (const [i, j] of [
+      [5, 12],
+      [10, 12],
+      [5, 13],
+      [10, 13],
+    ])
+      put(g, x + i, y + j, KS.o);
     put(g, x + 8, y + 13, KS.d);
     put(g, x + 4, y + 13, KS.w);
     // Chips of the head, never swept up.
@@ -869,7 +890,8 @@ const OUTDOOR_ART = {
   v(g, x, y) {
     // Overgrowth, grown right across the path.
     tree(g, x, y);
-    for (let i = 0; i < 10; i++) put(g, x + 1 + Math.floor(hash(x, y, i + 40) * 14), y + 8 + Math.floor(hash(y, x, i + 41) * 7), O.leafDark);
+    for (let i = 0; i < 10; i++)
+      put(g, x + 1 + Math.floor(hash(x, y, i + 40) * 14), y + 8 + Math.floor(hash(y, x, i + 41) * 7), O.leafDark);
   },
   l(g, x, y) {
     // The law stone.
@@ -889,7 +911,8 @@ const OUTDOOR_ART = {
     const left = m.at(-1, 0) !== 'Q';
     box(g, x, y + 2, TILE, 14, O.stoneDark);
     box(g, x + (left ? 3 : 0), y + 5, 13, 11, '#1A1030');
-    for (let i = 0; i < 6; i++) put(g, x + 4 + Math.floor(hash(x, y, i) * 9), y + 7 + Math.floor(hash(y, x, i) * 8), '#6A4AB0');
+    for (let i = 0; i < 6; i++)
+      put(g, x + 4 + Math.floor(hash(x, y, i) * 9), y + 7 + Math.floor(hash(y, x, i) * 8), '#6A4AB0');
     box(g, x, y + 2, TILE, 2, O.stoneLight);
   },
   m(g, x, y) {
@@ -900,7 +923,15 @@ const OUTDOOR_ART = {
     box(g, x + 1, y + 8, 1, 8, O.beam);
     box(g, x + 14, y + 8, 1, 8, O.beam);
     box(g, x + 1, y + 11, 14, 3, O.trunk);
-    for (let i = 0; i < 4; i++) box(g, x + 2 + i * 3, y + 9, 2, 2, ['#E8D26A', '#C86A8A', '#E8E0D0', '#8A6A44'][(i + Math.floor(hash(x, y, 1) * 4)) % 4]);
+    for (let i = 0; i < 4; i++)
+      box(
+        g,
+        x + 2 + i * 3,
+        y + 9,
+        2,
+        2,
+        ['#E8D26A', '#C86A8A', '#E8E0D0', '#8A6A44'][(i + Math.floor(hash(x, y, 1) * 4)) % 4],
+      );
   },
   y(g, x, y) {
     // A training dummy: straw on a post, with a crossbar for arms.
@@ -982,7 +1013,7 @@ function drawOutdoor(map) {
   const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
   const isPath = (tx, ty) => ',><^_s'.includes(at(tx, ty));
   // The Frost Ward keeps its snow: the horde brought winter with them, a little of it.
-  const ground = map.ground === 'snow' ? SNOW : O;
+  const ground = map.ground === 'snow' ? SNOW : map.ground === 'ash' ? ASH : O;
 
   // Grass everywhere, in soft patches.
   for (let y = 0; y < g.h; y++)
@@ -1015,7 +1046,7 @@ function drawOutdoor(map) {
           if (nearEdge && hash(px, py, 8) < 0.5) continue;
           const cobble = at(tx, ty) === 's';
           let c = cobble
-            ? hex((px % 6 === 0 || py % 5 === 0) ? O.stoneDark : O.stone)
+            ? hex(px % 6 === 0 || py % 5 === 0 ? O.stoneDark : O.stone)
             : hex(O.dirt[Math.floor(hash(Math.floor(px / 3), Math.floor(py / 2), 9) * 3)]);
           if (hash(px, py, 10) < 0.03) c = hex(O.pebble);
           else if (hash(px, py, 11) < 0.04) c = hex(O.dirtDark);
@@ -1072,7 +1103,8 @@ const DUNGEON_ART = {
   },
   '.'() {},
   ','(g, x, y) {
-    for (let i = 0; i < 6; i++) put(g, x + 2 + Math.floor(hash(x, y, i) * 12), y + 2 + Math.floor(hash(y, x, i) * 12), DG.rubble);
+    for (let i = 0; i < 6; i++)
+      put(g, x + 2 + Math.floor(hash(x, y, i) * 12), y + 2 + Math.floor(hash(y, x, i) * 12), DG.rubble);
   },
   W(g, x, y, m) {
     // Stone wall: a face where the floor meets it, a top view elsewhere.
@@ -1110,7 +1142,15 @@ const DUNGEON_ART = {
   C(g, x, y, m) {
     // A cracked wall: something strong could break through.
     DUNGEON_ART.W(g, x, y, m);
-    const crack = [[8, 1], [7, 3], [9, 5], [8, 7], [6, 9], [9, 11], [8, 13]];
+    const crack = [
+      [8, 1],
+      [7, 3],
+      [9, 5],
+      [8, 7],
+      [6, 9],
+      [9, 11],
+      [8, 13],
+    ];
     for (const [cx, cy] of crack) box(g, x + cx, y + cy, 2, 2, DG.earth);
     box(g, x + 4, y + 8, 3, 1, DG.earth);
     box(g, x + 10, y + 4, 3, 1, DG.earth);
@@ -1128,10 +1168,25 @@ const DUNGEON_ART = {
         box(g, x + i, y + bottom, 1, TILE - bottom, DG.wallDark);
         put(g, x + i, y + top - 1, DG.mortar);
         for (let j = 0; j < 3; j++)
-          g[y + top + j][x + i] = mix(g[y + top + j][x + i], hex('#000000'), dither(0.5 - j * 0.15, x + i, y + top + j));
+          g[y + top + j][x + i] = mix(
+            g[y + top + j][x + i],
+            hex('#000000'),
+            dither(0.5 - j * 0.15, x + i, y + top + j),
+          );
       }
-      for (const [dx, dy] of [[1, 12], [3, 11], [12, 12], [14, 11], [2, 4], [13, 4]]) put(g, x + dx, y + dy, DG.rubble);
-      for (const [dx, from] of [[-1, 0], [1, 8]])
+      for (const [dx, dy] of [
+        [1, 12],
+        [3, 11],
+        [12, 12],
+        [14, 11],
+        [2, 4],
+        [13, 4],
+      ])
+        put(g, x + dx, y + dy, DG.rubble);
+      for (const [dx, from] of [
+        [-1, 0],
+        [1, 8],
+      ])
         if (m.at(dx, 0) === '#') box(g, x + from, y + 5, 8, 6, DG.earth);
       return;
     }
@@ -1197,7 +1252,15 @@ const DUNGEON_ART = {
   },
   x(g, x, y) {
     ellipse(g, x + 8, y + 10, 7, 5, DG.wallDark);
-    for (let i = 0; i < 8; i++) ellipse(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 6 + Math.floor(hash(y, x, i) * 7), 2, 2, i % 2 ? DG.rubble : DG.wall);
+    for (let i = 0; i < 8; i++)
+      ellipse(
+        g,
+        x + 3 + Math.floor(hash(x, y, i) * 10),
+        y + 6 + Math.floor(hash(y, x, i) * 7),
+        2,
+        2,
+        i % 2 ? DG.rubble : DG.wall,
+      );
   },
   L(g, x, y) {
     // A crate with a note pinned to it.
@@ -1317,15 +1380,49 @@ const DUNGEON_ART = {
 // The old mine's tiles (mine-art.mjs).
 Object.assign(DUNGEON_ART, mineArt({ box, put, ellipse, hash, wall: (g, x, y, m) => DUNGEON_ART.W(g, x, y, m) }));
 
+// Kaldor's castle (castle-art.mjs): the castle, moat, pikes and guard post outside; pillars, carpet,
+// half-stairs, galleries, the winding stair and the king's floor's furniture inside. New letters only.
+{
+  const castle = castleArt({ box, put, ellipse, hash, wall: (g, x, y, m) => DUNGEON_ART.W(g, x, y, m) });
+  for (const [set, into] of [
+    [castle.outdoor, OUTDOOR_ART],
+    [castle.inside, DUNGEON_ART],
+  ])
+    for (const [k, v] of Object.entries(set)) {
+      if (into[k]) throw new Error(`castle-art: "${k}" is already drawn`);
+      into[k] = v;
+    }
+}
+
+/** Kaldor's floors: big squares of black and dark grey marble, veined, with a soft sheen. */
+function marbleAt(x, y) {
+  const sq = (Math.floor(x / 16) + Math.floor(y / 16)) % 2;
+  if (x % 16 === 0 || y % 16 === 0) return '#120E16';
+  let c = sq ? '#24202A' : '#36323E';
+  // veins: thin wandering lines, a different path in every square
+  const vx = Math.floor(x / 16);
+  const vy = Math.floor(y / 16);
+  const along = (x % 16) + Math.round(Math.sin((y % 16) * 0.5 + hash(vx, vy, 5) * 6) * 2 + hash(vx, vy, 6) * 8);
+  if (along % 16 === 0 && hash(vx, vy, 7) < 0.7) c = sq ? '#3A3644' : '#4A4654';
+  // the sheen of torchlight, top-left of each square
+  if ((x % 16) + (y % 16) < 6 && x % 16 > 0 && y % 16 > 0) c = sq ? '#2C2834' : '#423E4A';
+  return c;
+}
+
 function drawDungeon(map) {
   const rows = map.tiles;
   const H = rows.length;
   const W = rows[0].length;
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? '#';
-  // Worn flagstones everywhere first.
+  // Worn flagstones everywhere first (or, in Kaldor's castle, polished black marble).
+  const marble = map.floor === 'marble';
   for (let y = 0; y < g.h; y++)
     for (let x = 0; x < g.w; x++) {
+      if (marble) {
+        g[y][x] = hex(marbleAt(x, y));
+        continue;
+      }
       const stone = Math.floor(x / 8) + Math.floor(y / 8) * 7;
       let c = hex(DG.floor[Math.floor(hash(stone, 1, 3) * 3)]);
       if (x % 8 === 0 || y % 8 === 0) c = hex(DG.floorLine);
@@ -1360,7 +1457,8 @@ function drawDungeon(map) {
       const R = 52;
       for (let y = ly - R; y < ly + R; y++)
         for (let x = lx - R; x < lx + R; x++) {
-          if (y < 0 || x < 0 || y >= g.h || x >= g.w || at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#') continue;
+          if (y < 0 || x < 0 || y >= g.h || x >= g.w || at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#')
+            continue;
           const d = Math.hypot(x - lx, (y - ly) * 1.1) / R;
           if (d < 1) g[y][x] = mix(g[y][x], hex('#FFA040'), dither(0.28 * (1 - d) ** 2, x, y));
         }
@@ -1384,104 +1482,796 @@ const SKIN = '#E8B48C';
  * `hair` picks a style; `extra` draws anything particular to them.
  */
 const WALKERS = {
-  brannoc: { top: '#9AA0B4', shade: '#6A7088', legs: '#6A7088', boots: '#5C3A28', belt: '#5C3A28', hair: ['short', '#C4442A'], sword: true, beard: '#C4442A' },
-  ysolde: { robe: true, top: '#9A6A9E', shade: '#76507C', boots: '#2A2030', belt: '#FFC940', hair: ['bun', '#3A2A2E'], monocle: true },
-  quill: { robe: true, top: '#3A3470', shade: '#2A2458', boots: '#2A2030', belt: '#6A4028', hair: ['short', '#6A4028'], hat: 'wizard', glasses: true },
-  wren: { robe: true, top: '#8A8898', shade: '#6A687A', boots: '#2A2030', hair: ['veil', '#5A586A'], collar: '#F0E6C8', lantern: true },
-  oren: { robe: true, top: '#2DD4BF', shade: '#1E9C8C', boots: SKIN, belt: '#1E9C8C', hair: ['bald', '#F4CCA8'], beads: '#8A5A34' },
-  pip: { top: '#FF4FD8', shade: '#8B5CF6', legs: '#3E7A4A', boots: '#6A4028', hair: ['spiky', '#D86A2A'], back: 'lute', patchwork: ['#FF4FD8', '#2DD4BF', '#FFC940', '#8B5CF6'] },
-  tamsin: { top: '#FF8A3D', shade: '#FF8A3D', legs: '#3A3848', boots: '#1E1A24', hair: ['short', '#2A2030'], apron: '#7A4A2A', goggles: '#FF8A3D' },
-  moss: { top: '#3E6A3A', shade: '#4E3622', legs: '#4A3A2A', boots: '#2A2020', hair: ['short', '#4E3A22'], cloak: '#6A4A30', leaves: '#4ADE80' },
-  pell: { top: '#C8A040', shade: '#8A6A28', legs: '#5A4A3A', boots: '#6A4028', belt: '#6A4028', hair: ['spiky', '#8A4A2A'] },
-  hesper: { top: '#8A5A7A', shade: '#6A4460', legs: '#4A3A40', boots: '#3A2A20', hair: ['bun', '#B8B0A8'], apron: '#E8E0D0' },
-  jory: { top: '#6A8A4A', shade: '#4E6A36', legs: '#6A5A40', boots: '#4A3020', belt: '#4A3020', hair: ['short', '#C8A060'], apron: '#8A6A40' },
-  wenna: { robe: true, top: '#7A6A9A', shade: '#5A4A7A', boots: '#3A2A30', hair: ['bun', '#E8E4E0'], collar: '#E8E0D0' },
-  oriel: { robe: true, top: '#3A2A6A', shade: '#2A1E50', boots: '#2A2030', belt: '#FFC940', hair: ['veil', '#8A3A8A'], beads: '#FFC940' },
-  hoot: { robe: true, top: '#8A6A44', shade: '#6A4E30', boots: '#C8A040', belt: '#B3261E', hair: ['bald', '#9A7A54'], glasses: true },
-  holt: { top: '#7A6A4A', shade: '#5A4E36', legs: '#4A4038', boots: '#3A2A20', belt: '#3A2A20', hair: ['short', '#6A6A6A'], beard: '#8A8A8A' },
-  mira: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#4A3A2A', boots: '#3A2A20', belt: '#6A4028', hair: ['short', '#2A1A12'], sword: true, cloak: '#3A4A2A' },
+  brannoc: {
+    top: '#9AA0B4',
+    shade: '#6A7088',
+    legs: '#6A7088',
+    boots: '#5C3A28',
+    belt: '#5C3A28',
+    hair: ['short', '#C4442A'],
+    sword: true,
+    beard: '#C4442A',
+  },
+  ysolde: {
+    robe: true,
+    top: '#9A6A9E',
+    shade: '#76507C',
+    boots: '#2A2030',
+    belt: '#FFC940',
+    hair: ['bun', '#3A2A2E'],
+    monocle: true,
+  },
+  quill: {
+    robe: true,
+    top: '#3A3470',
+    shade: '#2A2458',
+    boots: '#2A2030',
+    belt: '#6A4028',
+    hair: ['short', '#6A4028'],
+    hat: 'wizard',
+    glasses: true,
+  },
+  wren: {
+    robe: true,
+    top: '#8A8898',
+    shade: '#6A687A',
+    boots: '#2A2030',
+    hair: ['veil', '#5A586A'],
+    collar: '#F0E6C8',
+    lantern: true,
+  },
+  oren: {
+    robe: true,
+    top: '#2DD4BF',
+    shade: '#1E9C8C',
+    boots: SKIN,
+    belt: '#1E9C8C',
+    hair: ['bald', '#F4CCA8'],
+    beads: '#8A5A34',
+  },
+  pip: {
+    top: '#FF4FD8',
+    shade: '#8B5CF6',
+    legs: '#3E7A4A',
+    boots: '#6A4028',
+    hair: ['spiky', '#D86A2A'],
+    back: 'lute',
+    patchwork: ['#FF4FD8', '#2DD4BF', '#FFC940', '#8B5CF6'],
+  },
+  tamsin: {
+    top: '#FF8A3D',
+    shade: '#FF8A3D',
+    legs: '#3A3848',
+    boots: '#1E1A24',
+    hair: ['short', '#2A2030'],
+    apron: '#7A4A2A',
+    goggles: '#FF8A3D',
+  },
+  moss: {
+    top: '#3E6A3A',
+    shade: '#4E3622',
+    legs: '#4A3A2A',
+    boots: '#2A2020',
+    hair: ['short', '#4E3A22'],
+    cloak: '#6A4A30',
+    leaves: '#4ADE80',
+  },
+  pell: {
+    top: '#C8A040',
+    shade: '#8A6A28',
+    legs: '#5A4A3A',
+    boots: '#6A4028',
+    belt: '#6A4028',
+    hair: ['spiky', '#8A4A2A'],
+  },
+  hesper: {
+    top: '#8A5A7A',
+    shade: '#6A4460',
+    legs: '#4A3A40',
+    boots: '#3A2A20',
+    hair: ['bun', '#B8B0A8'],
+    apron: '#E8E0D0',
+  },
+  jory: {
+    top: '#6A8A4A',
+    shade: '#4E6A36',
+    legs: '#6A5A40',
+    boots: '#4A3020',
+    belt: '#4A3020',
+    hair: ['short', '#C8A060'],
+    apron: '#8A6A40',
+  },
+  wenna: {
+    robe: true,
+    top: '#7A6A9A',
+    shade: '#5A4A7A',
+    boots: '#3A2A30',
+    hair: ['bun', '#E8E4E0'],
+    collar: '#E8E0D0',
+  },
+  oriel: {
+    robe: true,
+    top: '#3A2A6A',
+    shade: '#2A1E50',
+    boots: '#2A2030',
+    belt: '#FFC940',
+    hair: ['veil', '#8A3A8A'],
+    beads: '#FFC940',
+  },
+  hoot: {
+    robe: true,
+    top: '#8A6A44',
+    shade: '#6A4E30',
+    boots: '#C8A040',
+    belt: '#B3261E',
+    hair: ['bald', '#9A7A54'],
+    glasses: true,
+  },
+  holt: {
+    top: '#7A6A4A',
+    shade: '#5A4E36',
+    legs: '#4A4038',
+    boots: '#3A2A20',
+    belt: '#3A2A20',
+    hair: ['short', '#6A6A6A'],
+    beard: '#8A8A8A',
+  },
+  mira: {
+    top: '#4E6A3A',
+    shade: '#3A5A2A',
+    legs: '#4A3A2A',
+    boots: '#3A2A20',
+    belt: '#6A4028',
+    hair: ['short', '#2A1A12'],
+    sword: true,
+    cloak: '#3A4A2A',
+  },
   fen: { robe: true, top: '#6A5A4A', shade: '#4E4236', boots: '#3A2A20', hair: ['bald', '#C8B8A0'], beard: '#D8D0C0' },
-  dunn: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#1A1A24', skin: '#8A8AA0', hair: ['short', '#2A2A3A'] },
-  bellwether: { top: '#6A6A78', shade: '#4A4A58', legs: '#4A4A58', boots: '#3A3A42', belt: '#8A4A2A', skin: '#6A6A78', hair: ['hood', '#6A6A78'] },
-  quartermaster: { robe: true, top: '#B8C0C8', shade: '#8A94A0', boots: '#8A94A0', skin: '#D8E0E8', hair: ['bald', '#C8D0D8'], glasses: true },
+  dunn: {
+    top: '#3A3A4E',
+    shade: '#2A2A3A',
+    legs: '#2A2A3A',
+    boots: '#1A1A24',
+    belt: '#1A1A24',
+    skin: '#8A8AA0',
+    hair: ['short', '#2A2A3A'],
+  },
+  bellwether: {
+    top: '#6A6A78',
+    shade: '#4A4A58',
+    legs: '#4A4A58',
+    boots: '#3A3A42',
+    belt: '#8A4A2A',
+    skin: '#6A6A78',
+    hair: ['hood', '#6A6A78'],
+  },
+  quartermaster: {
+    robe: true,
+    top: '#B8C0C8',
+    shade: '#8A94A0',
+    boots: '#8A94A0',
+    skin: '#D8E0E8',
+    hair: ['bald', '#C8D0D8'],
+    glasses: true,
+  },
   // matches his collectible: striped sky-blue pajamas, medals, a crown, a white mustache, half-shut eyes
-  plush: { top: '#7AB0E0', shade: '#7AB0E0', legs: '#7AB0E0', boots: '#F0E6C8', skin: '#F2CDA8', hair: ['short', '#E8E4DC'], stripes: '#F0E6C8', medals: true, mustache: '#E8E4DC', sleepy: true, crown: '#F2C14E' },
-  sleeper: { top: '#C8B8E0', shade: '#A898C0', legs: '#A898C0', boots: '#E8C0D0', belt: '#8A5AA0', hair: ['short', '#6A4A30'], collar: '#E8E0F0' },
-  bo: { top: '#E84A4A', shade: '#FFC940', legs: '#3A3A8A', boots: '#2A2020', hair: ['spiky', '#FFC940'], patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'] },
-  raider: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#3A2418'], beard: '#3A2418', sword: true },
+  plush: {
+    top: '#7AB0E0',
+    shade: '#7AB0E0',
+    legs: '#7AB0E0',
+    boots: '#F0E6C8',
+    skin: '#F2CDA8',
+    hair: ['short', '#E8E4DC'],
+    stripes: '#F0E6C8',
+    medals: true,
+    mustache: '#E8E4DC',
+    sleepy: true,
+    crown: '#F2C14E',
+  },
+  sleeper: {
+    top: '#C8B8E0',
+    shade: '#A898C0',
+    legs: '#A898C0',
+    boots: '#E8C0D0',
+    belt: '#8A5AA0',
+    hair: ['short', '#6A4A30'],
+    collar: '#E8E0F0',
+  },
+  bo: {
+    top: '#E84A4A',
+    shade: '#FFC940',
+    legs: '#3A3A8A',
+    boots: '#2A2020',
+    hair: ['spiky', '#FFC940'],
+    patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'],
+  },
+  raider: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#3A2418'],
+    beard: '#3A2418',
+    sword: true,
+  },
   gert: { robe: true, top: '#6A6A5A', shade: '#4E4E42', boots: '#3A3A30', hair: ['short', '#8A8A7A'], lantern: true },
-  tessa: { top: '#E8E0D0', shade: '#C8B8A0', legs: '#6A5A4A', boots: '#4A3A2A', hair: ['bun', '#8A4A2A'], apron: '#F4F0EA' },
-  barnaby: { top: '#8A2A2A', shade: '#6A1E1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#FFC940', hair: ['short', '#4A3A2A'], hat: 'wizard' },
+  tessa: {
+    top: '#E8E0D0',
+    shade: '#C8B8A0',
+    legs: '#6A5A4A',
+    boots: '#4A3A2A',
+    hair: ['bun', '#8A4A2A'],
+    apron: '#F4F0EA',
+  },
+  barnaby: {
+    top: '#8A2A2A',
+    shade: '#6A1E1E',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#FFC940',
+    hair: ['short', '#4A3A2A'],
+    hat: 'wizard',
+  },
   pim: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
-  varga: { top: '#5A3A3A', shade: '#3E2828', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#1A1210'], sword: true, cloak: '#6A1216' },
+  varga: {
+    top: '#5A3A3A',
+    shade: '#3E2828',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#1A1210'],
+    sword: true,
+    cloak: '#6A1216',
+  },
   brunna: { top: '#8A6A4A', shade: '#6A4E36', legs: '#6A4E36', boots: '#4A3A2A', hair: ['short', '#C8A060'] },
   nana: { robe: true, top: '#6A8AA0', shade: '#4E6A80', boots: '#3A2A20', hair: ['bun', '#E8E4E0'], apron: '#F4F0EA' },
-  harrow: { top: '#5A4A3A', shade: '#3E3228', legs: '#3A2A20', boots: '#2A1A12', hair: ['bald', '#E8B48C'], beard: '#B8B0A8', apron: '#3A2A1A' },
-  hugo: { top: '#4E6A3A', shade: '#3A5A2A', legs: '#5A4A3A', boots: '#3A2A20', hair: ['short', '#8A7A6A'], beard: '#8A7A6A', leaves: '#4ADE80' },
+  harrow: {
+    top: '#5A4A3A',
+    shade: '#3E3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    hair: ['bald', '#E8B48C'],
+    beard: '#B8B0A8',
+    apron: '#3A2A1A',
+  },
+  hugo: {
+    top: '#4E6A3A',
+    shade: '#3A5A2A',
+    legs: '#5A4A3A',
+    boots: '#3A2A20',
+    hair: ['short', '#8A7A6A'],
+    beard: '#8A7A6A',
+    leaves: '#4ADE80',
+  },
   // Aurek is drawn twice as big in the World: a stitched giant, raised and bound.
-  aurek: { top: '#7A8A7A', shade: '#5A6A5A', legs: '#5A6A5A', boots: '#3A4A3A', skin: '#A8B8A8', hair: ['short', '#5A6A5A'], sword: true, stitches: '#2A1A1A' },
+  aurek: {
+    top: '#7A8A7A',
+    shade: '#5A6A5A',
+    legs: '#5A6A5A',
+    boots: '#3A4A3A',
+    skin: '#A8B8A8',
+    hair: ['short', '#5A6A5A'],
+    sword: true,
+    stitches: '#2A1A1A',
+  },
   // Kaldor casts no shadow (his torches and mirrors see to it): the game draws one only when a torch gutters.
-  kaldor: { top: '#3A2A2A', shade: '#6A1216', legs: '#2A1A1A', boots: '#1A1010', belt: '#FFC940', skin: '#D8A880', hair: ['hood', '#8A8A9A'], beard: '#C4442A', sword: true, cloak: '#6A1216', crown: '#FFC940', noShadow: true },
-  shadow: { top: '#1E1A2E', shade: '#141024', legs: '#141024', boots: '#0A0812', belt: '#2E2A40', skin: '#3A3450', hair: ['short', '#141024'], sword: true },
-  rusted: { top: '#8A5A3A', shade: '#6A4028', legs: '#6A4028', boots: '#4A2A18', belt: '#3A2A20', skin: '#8A5A3A', hair: ['hood', '#8A5A3A'] },
-  echo: { top: '#5A5A8A', shade: '#3A3A6A', legs: '#3A3A6A', boots: '#2A2A4A', belt: '#8A8AC0', skin: '#8A8AB8', hair: ['short', '#3A3A6A'], beard: '#6A6A9A' },
+  kaldor: {
+    top: '#3A2A2A',
+    shade: '#6A1216',
+    legs: '#2A1A1A',
+    boots: '#1A1010',
+    belt: '#FFC940',
+    skin: '#D8A880',
+    hair: ['hood', '#8A8A9A'],
+    beard: '#C4442A',
+    sword: true,
+    cloak: '#6A1216',
+    crown: '#FFC940',
+    noShadow: true,
+  },
+  shadow: {
+    top: '#1E1A2E',
+    shade: '#141024',
+    legs: '#141024',
+    boots: '#0A0812',
+    belt: '#2E2A40',
+    skin: '#3A3450',
+    hair: ['short', '#141024'],
+    sword: true,
+  },
+  rusted: {
+    top: '#8A5A3A',
+    shade: '#6A4028',
+    legs: '#6A4028',
+    boots: '#4A2A18',
+    belt: '#3A2A20',
+    skin: '#8A5A3A',
+    hair: ['hood', '#8A5A3A'],
+  },
+  echo: {
+    top: '#5A5A8A',
+    shade: '#3A3A6A',
+    legs: '#3A3A6A',
+    boots: '#2A2A4A',
+    belt: '#8A8AC0',
+    skin: '#8A8AB8',
+    hair: ['short', '#3A3A6A'],
+    beard: '#6A6A9A',
+  },
   // Season 1's quieter rooms: the chapel's sexton, a shadow officer, the crypt's chaplain, the Broken Guard, a lamplighter.
-  sexton: { robe: true, top: '#5A5A62', shade: '#42424A', boots: '#2A2030', belt: '#8A6A3A', hair: ['bun', '#9A9490'], collar: '#E8E0D0', apron: '#8A8478' },
-  officer: { top: '#3A3A4E', shade: '#2A2A3A', legs: '#2A2A3A', boots: '#1A1A24', belt: '#C8B070', skin: '#8A8AA0', hair: ['short', '#2A2A3A'], cloak: '#4A2A3A', collar: '#C8B070', back: 'sword' },
-  chaplain: { robe: true, top: '#8A94B8', shade: '#6A7498', boots: '#6A7498', skin: '#C8D0E8', hair: ['bald', '#B8C0D8'], collar: '#E8ECF8', lantern: true },
-  maelis: { top: '#7A7A8A', shade: '#5A5A6A', legs: '#4A4A58', boots: '#3A2A20', belt: '#8A6A3A', hair: ['bun', '#4A3A2A'], cloak: '#4A4A5A' },
-  lamplighter: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['hood', '#4A3228'], lantern: true },
+  sexton: {
+    robe: true,
+    top: '#5A5A62',
+    shade: '#42424A',
+    boots: '#2A2030',
+    belt: '#8A6A3A',
+    hair: ['bun', '#9A9490'],
+    collar: '#E8E0D0',
+    apron: '#8A8478',
+  },
+  officer: {
+    top: '#3A3A4E',
+    shade: '#2A2A3A',
+    legs: '#2A2A3A',
+    boots: '#1A1A24',
+    belt: '#C8B070',
+    skin: '#8A8AA0',
+    hair: ['short', '#2A2A3A'],
+    cloak: '#4A2A3A',
+    collar: '#C8B070',
+    back: 'sword',
+  },
+  chaplain: {
+    robe: true,
+    top: '#8A94B8',
+    shade: '#6A7498',
+    boots: '#6A7498',
+    skin: '#C8D0E8',
+    hair: ['bald', '#B8C0D8'],
+    collar: '#E8ECF8',
+    lantern: true,
+  },
+  maelis: {
+    top: '#7A7A8A',
+    shade: '#5A5A6A',
+    legs: '#4A4A58',
+    boots: '#3A2A20',
+    belt: '#8A6A3A',
+    hair: ['bun', '#4A3A2A'],
+    cloak: '#4A4A5A',
+  },
+  lamplighter: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['hood', '#4A3228'],
+    lantern: true,
+  },
   // Old Town street life (KINGDOM-EXPANSION.md): the brawlers, their bookie and medic, a patrol, a grandmother, a boulder.
-  durn: { top: '#7A3A2A', shade: '#5A2A1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#C4442A'], beard: '#C4442A' },
-  haskel: { top: '#4A5A3A', shade: '#36442A', legs: '#3A2A20', boots: '#2A1A12', belt: '#2A1A12', skin: '#C89870', hair: ['short', '#2A1A12'], beard: '#2A1A12' },
-  bett: { top: '#8A6A9A', shade: '#6A4E7A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
-  hild: { robe: true, top: '#E8E0D0', shade: '#C8B8A0', boots: '#4A3A2A', belt: '#B3261E', hair: ['veil', '#6A5A4A'], collar: '#B3261E' },
-  drummer: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#C8B070', skin: '#D8A880', hair: ['hood', '#6A1216'], beads: '#E8E0D0' },
-  gudrun: { robe: true, top: '#5A4A3A', shade: '#42362A', boots: '#2A1A12', belt: '#8A3A2A', skin: '#E0B898', hair: ['bun', '#E8E4E0'], beads: '#E8E0D0' },
-  hamm: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['bald', '#D8A880'], boulder: true },
+  durn: {
+    top: '#7A3A2A',
+    shade: '#5A2A1E',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['spiky', '#C4442A'],
+    beard: '#C4442A',
+  },
+  haskel: {
+    top: '#4A5A3A',
+    shade: '#36442A',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#2A1A12',
+    skin: '#C89870',
+    hair: ['short', '#2A1A12'],
+    beard: '#2A1A12',
+  },
+  bett: {
+    top: '#8A6A9A',
+    shade: '#6A4E7A',
+    legs: '#4A3A40',
+    boots: '#3A2A20',
+    belt: '#FFC940',
+    hair: ['bun', '#3A2418'],
+    apron: '#C8B890',
+  },
+  hild: {
+    robe: true,
+    top: '#E8E0D0',
+    shade: '#C8B8A0',
+    boots: '#4A3A2A',
+    belt: '#B3261E',
+    hair: ['veil', '#6A5A4A'],
+    collar: '#B3261E',
+  },
+  drummer: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#C8B070',
+    skin: '#D8A880',
+    hair: ['hood', '#6A1216'],
+    beads: '#E8E0D0',
+  },
+  gudrun: {
+    robe: true,
+    top: '#5A4A3A',
+    shade: '#42362A',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#E0B898',
+    hair: ['bun', '#E8E4E0'],
+    beads: '#E8E0D0',
+  },
+  hamm: {
+    top: '#8A7A5A',
+    shade: '#6A5A40',
+    legs: '#4A3A2A',
+    boots: '#3A2A1A',
+    belt: '#4A3020',
+    skin: '#D8A880',
+    hair: ['bald', '#D8A880'],
+    boulder: true,
+  },
   // The south road: a knitting mother, a farmer with a spoon, a whispering sergeant, the watchman, a road-block raider.
   marta: { robe: true, top: '#8A5A3A', shade: '#6A4428', boots: '#3A2A20', hair: ['bun', '#6A4028'], apron: '#C8B890' },
-  dobb: { top: '#7A8A5A', shade: '#5A6A40', legs: '#5A4A3A', boots: '#3A2A1A', belt: '#4A3020', hair: ['short', '#B8B0A8'], beard: '#B8B0A8', apron: '#8A6A40' },
-  bellow: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#D8A880', hair: ['short', '#1A1210'], cloak: '#4A1E20', sword: true },
-  orrin: { top: '#5A6A8A', shade: '#42506A', legs: '#3A4050', boots: '#2A2A30', belt: '#C8B070', hair: ['short', '#9A9490'], beard: '#9A9490', cloak: '#2A3450', back: 'sword' },
-  grub: { top: '#5A3A2A', shade: '#42281E', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], sword: true },
+  dobb: {
+    top: '#7A8A5A',
+    shade: '#5A6A40',
+    legs: '#5A4A3A',
+    boots: '#3A2A1A',
+    belt: '#4A3020',
+    hair: ['short', '#B8B0A8'],
+    beard: '#B8B0A8',
+    apron: '#8A6A40',
+  },
+  bellow: {
+    top: '#4A3A3A',
+    shade: '#36282A',
+    legs: '#2A2020',
+    boots: '#1A1212',
+    belt: '#C8B070',
+    skin: '#D8A880',
+    hair: ['short', '#1A1210'],
+    cloak: '#4A1E20',
+    sword: true,
+  },
+  orrin: {
+    top: '#5A6A8A',
+    shade: '#42506A',
+    legs: '#3A4050',
+    boots: '#2A2A30',
+    belt: '#C8B070',
+    hair: ['short', '#9A9490'],
+    beard: '#9A9490',
+    cloak: '#2A3450',
+    back: 'sword',
+  },
+  grub: {
+    top: '#5A3A2A',
+    shade: '#42281E',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#C89870',
+    hair: ['short', '#1A1210'],
+    sword: true,
+  },
   // Kaldorhold (KINGDOM-EXPANSION.md): the Market Ward, the Ring Ward, Big Tova's bar and the Hall of Kaldor.
-  tova: { top: '#8A3A2A', shade: '#6A2A1E', legs: '#3A2A20', boots: '#2A1A12', belt: '#C8B070', skin: '#E0B898', hair: ['bun', '#E8D26A'], apron: '#E8E0D0', beads: '#C8B070' },
-  ulfa: { robe: true, top: '#5A6A8A', shade: '#42506A', boots: '#2A2030', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#E8E4E0'], beads: '#E8E0D0' },
-  hekla: { robe: true, top: '#6A4A5A', shade: '#4E3642', boots: '#2A1A12', skin: '#E0B898', hair: ['bun', '#F4F0EA'], collar: '#E8E0D0' },
-  snorri: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['short', '#8A6A4A'], beard: '#8A6A4A', sleepy: true, sword: true },
-  fawnley: { top: '#3A4A6A', shade: '#2A3650', legs: '#2A2A3A', boots: '#1A1A24', belt: '#C8B070', hair: ['short', '#C8A060'], glasses: true, collar: '#E8E0D0' },
-  fliss: { top: '#3E8A7A', shade: '#2E6A5E', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['bun', '#C4442A'], apron: '#C8B890' },
-  brakka: { top: '#6A5A4A', shade: '#4E4236', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#C89870', hair: ['short', '#1A1210'], beard: '#1A1210', cloak: '#8A7A64' },
-  snik: { top: '#5A5A6A', shade: '#42424E', legs: '#3A3A42', boots: '#2A2A30', belt: '#8A6A3A', hair: ['spiky', '#9A9490'], apron: '#3A2A1A', goggles: '#8A8A9A' },
-  chisk: { top: '#C8C0B0', shade: '#A8A090', legs: '#6A6A6A', boots: '#4A4A4A', hair: ['spiky', '#E8E4E0'], apron: '#E8E0D0' },
-  mott: { robe: true, top: '#3A3A2A', shade: '#2A2A1E', boots: '#1A1A12', belt: '#C8B070', hair: ['short', '#4A3A2A'], glasses: true },
+  tova: {
+    top: '#8A3A2A',
+    shade: '#6A2A1E',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#C8B070',
+    skin: '#E0B898',
+    hair: ['bun', '#E8D26A'],
+    apron: '#E8E0D0',
+    beads: '#C8B070',
+  },
+  ulfa: {
+    robe: true,
+    top: '#5A6A8A',
+    shade: '#42506A',
+    boots: '#2A2030',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['spiky', '#E8E4E0'],
+    beads: '#E8E0D0',
+  },
+  hekla: {
+    robe: true,
+    top: '#6A4A5A',
+    shade: '#4E3642',
+    boots: '#2A1A12',
+    skin: '#E0B898',
+    hair: ['bun', '#F4F0EA'],
+    collar: '#E8E0D0',
+  },
+  snorri: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#8A6A4A'],
+    beard: '#8A6A4A',
+    sleepy: true,
+    sword: true,
+  },
+  fawnley: {
+    top: '#3A4A6A',
+    shade: '#2A3650',
+    legs: '#2A2A3A',
+    boots: '#1A1A24',
+    belt: '#C8B070',
+    hair: ['short', '#C8A060'],
+    glasses: true,
+    collar: '#E8E0D0',
+  },
+  fliss: {
+    top: '#3E8A7A',
+    shade: '#2E6A5E',
+    legs: '#4A3A2A',
+    boots: '#3A2A1A',
+    hair: ['bun', '#C4442A'],
+    apron: '#C8B890',
+  },
+  brakka: {
+    top: '#6A5A4A',
+    shade: '#4E4236',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#C89870',
+    hair: ['short', '#1A1210'],
+    beard: '#1A1210',
+    cloak: '#8A7A64',
+  },
+  snik: {
+    top: '#5A5A6A',
+    shade: '#42424E',
+    legs: '#3A3A42',
+    boots: '#2A2A30',
+    belt: '#8A6A3A',
+    hair: ['spiky', '#9A9490'],
+    apron: '#3A2A1A',
+    goggles: '#8A8A9A',
+  },
+  chisk: {
+    top: '#C8C0B0',
+    shade: '#A8A090',
+    legs: '#6A6A6A',
+    boots: '#4A4A4A',
+    hair: ['spiky', '#E8E4E0'],
+    apron: '#E8E0D0',
+  },
+  mott: {
+    robe: true,
+    top: '#3A3A2A',
+    shade: '#2A2A1E',
+    boots: '#1A1A12',
+    belt: '#C8B070',
+    hair: ['short', '#4A3A2A'],
+    glasses: true,
+  },
   tib: { top: '#B8913A', shade: '#8A6A28', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
-  holler: { top: '#8A2A6A', shade: '#6A1E50', legs: '#3A2A30', boots: '#2A1A20', belt: '#FFC940', hair: ['bun', '#1A1210'], cloak: '#6A1216', hat: 'wizard' },
-  ogg: { top: '#6A7A3A', shade: '#4E5A2A', legs: '#3A2A20', boots: '#2A1A12', belt: '#2A1A12', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#4A3A2A' },
-  hroth: { top: '#4A3A2A', shade: '#36281E', legs: '#2A2020', boots: '#1A1212', belt: '#FFC940', skin: '#C89870', hair: ['short', '#B8B0A8'], beard: '#B8B0A8', cloak: '#6A1216', sleepy: true },
-  evenbett: { top: '#6A9A8A', shade: '#4E7A6A', legs: '#4A3A40', boots: '#3A2A20', belt: '#FFC940', hair: ['bun', '#3A2418'], apron: '#C8B890' },
-  joss: { top: '#C8B8E0', shade: '#A898C0', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['short', '#6A4028'], collar: '#E8E0D0' },
+  holler: {
+    top: '#8A2A6A',
+    shade: '#6A1E50',
+    legs: '#3A2A30',
+    boots: '#2A1A20',
+    belt: '#FFC940',
+    hair: ['bun', '#1A1210'],
+    cloak: '#6A1216',
+    hat: 'wizard',
+  },
+  ogg: {
+    top: '#6A7A3A',
+    shade: '#4E5A2A',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#2A1A12',
+    skin: '#C89870',
+    hair: ['bald', '#C89870'],
+    beard: '#4A3A2A',
+  },
+  hroth: {
+    top: '#4A3A2A',
+    shade: '#36281E',
+    legs: '#2A2020',
+    boots: '#1A1212',
+    belt: '#FFC940',
+    skin: '#C89870',
+    hair: ['short', '#B8B0A8'],
+    beard: '#B8B0A8',
+    cloak: '#6A1216',
+    sleepy: true,
+  },
+  evenbett: {
+    top: '#6A9A8A',
+    shade: '#4E7A6A',
+    legs: '#4A3A40',
+    boots: '#3A2A20',
+    belt: '#FFC940',
+    hair: ['bun', '#3A2418'],
+    apron: '#C8B890',
+  },
+  joss: {
+    top: '#C8B8E0',
+    shade: '#A898C0',
+    legs: '#5A4A3A',
+    boots: '#3A2A1A',
+    hair: ['short', '#6A4028'],
+    collar: '#E8E0D0',
+  },
   kids: { top: '#C86A8A', shade: '#A84A6A', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['short', '#E8D26A'] },
   // Kaldorhold's Barracks and Frost Wards.
-  ox: { top: '#6A3A2A', shade: '#4A2A1E', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#2A1A12', cloak: '#6A1216' },
-  tolly: { top: '#7A8A9A', shade: '#5A6A7A', legs: '#3A3A42', boots: '#2A2A30', belt: '#8A6A3A', skin: '#E0B898', hair: ['short', '#C8A060'] },
-  hagga: { top: '#6A1216', shade: '#4A0E10', legs: '#2A1A1A', boots: '#1A1010', belt: '#E8E0D0', skin: '#D8A880', hair: ['spiky', '#C4442A'], beads: '#E8E0D0' },
-  mog: { robe: true, top: '#E8E4D8', shade: '#C8C4B8', boots: '#4A3A2A', belt: '#8A3A2A', skin: '#C89870', hair: ['bald', '#C89870'], beard: '#8A8A7A', apron: '#B3261E' },
-  abbot: { robe: true, top: '#4A4A3A', shade: '#36362A', boots: '#1A1A12', belt: '#C8B070', hair: ['short', '#6A6A5A'], glasses: true, collar: '#E8E0D0' },
-  leif: { top: '#6A4A3A', shade: '#4A3228', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#E0B898', hair: ['short', '#E8D26A'] },
-  gorm: { top: '#5A4A3A', shade: '#42362A', legs: '#3A2A20', boots: '#2A1A12', belt: '#8A3A2A', skin: '#D8A880', hair: ['spiky', '#3A2418'], beard: '#3A2418', sword: true },
-  kaya: { top: '#4A3A3A', shade: '#36282A', legs: '#2A2020', boots: '#1A1212', belt: '#C8B070', skin: '#C89870', hair: ['bun', '#1A1210'], cloak: '#4A1E20', sword: true },
-  skadi: { robe: true, top: '#E8ECF0', shade: '#C8D0D8', boots: '#6A6A78', belt: '#6A1216', skin: '#E0B898', hair: ['veil', '#F4F0EA'], beads: '#6A8AB0' },
-  brug: { top: '#8A7A64', shade: '#6A5A48', legs: '#4A3A2A', boots: '#3A2A1A', belt: '#4A3020', skin: '#D8A880', hair: ['short', '#6A4028'], beard: '#6A4028', cloak: '#C8B8A0' },
-  ylva: { robe: true, top: '#C8D6E6', shade: '#A8B6C6', boots: '#4A4A58', belt: '#6A1216', skin: '#E0B898', hair: ['bun', '#E8D26A'], collar: '#F4F0EA' },
-  keeper: { robe: true, top: '#4A3A5A', shade: '#342842', boots: '#342842', skin: '#E8E0CC', hair: ['hood', '#3A2C48'], skull: true, lantern: true },
+  ox: {
+    top: '#6A3A2A',
+    shade: '#4A2A1E',
+    legs: '#2A2020',
+    boots: '#1A1212',
+    belt: '#C8B070',
+    skin: '#C89870',
+    hair: ['bald', '#C89870'],
+    beard: '#2A1A12',
+    cloak: '#6A1216',
+  },
+  tolly: {
+    top: '#7A8A9A',
+    shade: '#5A6A7A',
+    legs: '#3A3A42',
+    boots: '#2A2A30',
+    belt: '#8A6A3A',
+    skin: '#E0B898',
+    hair: ['short', '#C8A060'],
+  },
+  hagga: {
+    top: '#6A1216',
+    shade: '#4A0E10',
+    legs: '#2A1A1A',
+    boots: '#1A1010',
+    belt: '#E8E0D0',
+    skin: '#D8A880',
+    hair: ['spiky', '#C4442A'],
+    beads: '#E8E0D0',
+  },
+  mog: {
+    robe: true,
+    top: '#E8E4D8',
+    shade: '#C8C4B8',
+    boots: '#4A3A2A',
+    belt: '#8A3A2A',
+    skin: '#C89870',
+    hair: ['bald', '#C89870'],
+    beard: '#8A8A7A',
+    apron: '#B3261E',
+  },
+  abbot: {
+    robe: true,
+    top: '#4A4A3A',
+    shade: '#36362A',
+    boots: '#1A1A12',
+    belt: '#C8B070',
+    hair: ['short', '#6A6A5A'],
+    glasses: true,
+    collar: '#E8E0D0',
+  },
+  leif: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#E0B898',
+    hair: ['short', '#E8D26A'],
+  },
+  gorm: {
+    top: '#5A4A3A',
+    shade: '#42362A',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['spiky', '#3A2418'],
+    beard: '#3A2418',
+    sword: true,
+  },
+  kaya: {
+    top: '#4A3A3A',
+    shade: '#36282A',
+    legs: '#2A2020',
+    boots: '#1A1212',
+    belt: '#C8B070',
+    skin: '#C89870',
+    hair: ['bun', '#1A1210'],
+    cloak: '#4A1E20',
+    sword: true,
+  },
+  skadi: {
+    robe: true,
+    top: '#E8ECF0',
+    shade: '#C8D0D8',
+    boots: '#6A6A78',
+    belt: '#6A1216',
+    skin: '#E0B898',
+    hair: ['veil', '#F4F0EA'],
+    beads: '#6A8AB0',
+  },
+  brug: {
+    top: '#8A7A64',
+    shade: '#6A5A48',
+    legs: '#4A3A2A',
+    boots: '#3A2A1A',
+    belt: '#4A3020',
+    skin: '#D8A880',
+    hair: ['short', '#6A4028'],
+    beard: '#6A4028',
+    cloak: '#C8B8A0',
+  },
+  ylva: {
+    robe: true,
+    top: '#C8D6E6',
+    shade: '#A8B6C6',
+    boots: '#4A4A58',
+    belt: '#6A1216',
+    skin: '#E0B898',
+    hair: ['bun', '#E8D26A'],
+    collar: '#F4F0EA',
+  },
+  keeper: {
+    robe: true,
+    top: '#4A3A5A',
+    shade: '#342842',
+    boots: '#342842',
+    skin: '#E8E0CC',
+    hair: ['hood', '#3A2C48'],
+    skull: true,
+    lantern: true,
+  },
   // Felix Rook, the Academy's grand strategist: a checkered waistcoat under a dark plum coat
-  felix: { top: '#3A2A40', shade: '#2A1E30', legs: '#2A2030', boots: '#5C3A28', hair: ['slick', '#1A1416'], villain: '#1A1416', checks: ['#F0E6D0', '#4A3A30'] },
+  felix: {
+    top: '#3A2A40',
+    shade: '#2A1E30',
+    legs: '#2A2030',
+    boots: '#5C3A28',
+    hair: ['slick', '#1A1416'],
+    villain: '#1A1416',
+    checks: ['#F0E6D0', '#4A3A30'],
+  },
   // The Kaldorium's warden: the biggest guard in the kingdom, drawn twice as big. Same colours as his guards, more of him.
-  warden: { top: '#5A3A2E', shade: '#3E2820', legs: '#3A2A20', boots: '#2A1A12', belt: '#FFC940', skin: '#C8956C', hair: ['bald', '#C8956C'], beard: '#2A1810', sword: true },
+  warden: {
+    top: '#5A3A2E',
+    shade: '#3E2820',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#FFC940',
+    skin: '#C8956C',
+    hair: ['bald', '#C8956C'],
+    beard: '#2A1810',
+    sword: true,
+  },
   // Brannoc with no sword: the cell (author, Oct 3, 2026: they took it; he picks one up in the Kaldorium).
-  brannocbare: { top: '#9AA0B4', shade: '#6A7088', legs: '#6A7088', boots: '#5C3A28', belt: '#5C3A28', hair: ['short', '#C4442A'], beard: '#C4442A' },
+  brannocbare: {
+    top: '#9AA0B4',
+    shade: '#6A7088',
+    legs: '#6A7088',
+    boots: '#5C3A28',
+    belt: '#5C3A28',
+    hair: ['short', '#C4442A'],
+    beard: '#C4442A',
+  },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -1565,7 +2355,8 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     b(5, 14, 6, 3, w.patchwork[2]);
   }
   // a fine check, pixel by pixel (Felix's waistcoat): front only, with the coat showing at the sides
-  if (w.checks && !back) for (let y = 11; y < 17; y++) for (let x = side ? 6 : 5; x < (side ? 10 : 11); x++) p(x, y, w.checks[(x + y) % 2]);
+  if (w.checks && !back)
+    for (let y = 11; y < 17; y++) for (let x = side ? 6 : 5; x < (side ? 10 : 11); x++) p(x, y, w.checks[(x + y) % 2]);
   if (w.stripes) for (const y of [12, 14, 16]) b(side ? 5 : 4, y, side ? 6 : 8, 1, w.stripes);
   if (w.medals && !back) {
     const medal = ['#F2C14E', '#C4442A', '#C8CCD8'];
@@ -1919,7 +2710,9 @@ const MAPS = [
   'old-kings-crypt',
   'hedge-maze',
   'the-pit',
-  'war-doors',
+  'castle-grounds',
+  'castle-hall',
+  'castle-upper',
   'war-hall',
   'field-of-banners',
   'tithe-road',

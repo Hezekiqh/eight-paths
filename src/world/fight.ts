@@ -195,8 +195,19 @@ export type FightRules = {
   special: Special;
   /** SPECIAL_LEVEL for a Path's special; a signature comes at SIGNATURE_LEVEL. */
   specialLevel?: number;
-  /** Moss can loose his Arrow Barrage: a real habit done today, and not yet used today. */
+  /** Moss can loose his Arrow Barrage: a real habit done today, and a special move left today. */
   barrageReady?: boolean;
+  /**
+   * A special move left today (author, Oct 4, 2026: one a day, three with Premium, shared by the
+   * whole party; specials.ts). Without one, the charged blow is just a charged blow.
+   */
+  specialReady?: boolean;
+  /**
+   * Nothing to fight here: you're practising. A special won't go off until you've said yes to
+   * spending one on practice (`practiceArmed`); asking is an event (askSpecial).
+   */
+  practice?: boolean;
+  practiceArmed?: boolean;
   /** A boss fight: won once every enemy is down. Plush throws pillows from (bossX, bossY). */
   boss: boolean;
   bossX: number;
@@ -249,6 +260,10 @@ export type FightEvents = {
   signature: boolean;
   /** The Arrow Barrage went up (its one use of the day). */
   barrage: boolean;
+  /** A special move went off: one of today's is spent. */
+  special: boolean;
+  /** Practising, a special would have gone off: ask before spending one. */
+  askSpecial: boolean;
   /** Enemies (by index) that paid a heart of debt this frame. */
   ticked: number[];
   slam: boolean;
@@ -333,6 +348,8 @@ export function stepFight(
     mended: false,
     signature: false,
     barrage: false,
+    special: false,
+    askSpecial: false,
     ticked: [],
     slam: false,
     guttered: false,
@@ -374,7 +391,7 @@ export function stepFight(
   // ---- your attack: a tap strikes at once; from Lv 10, holding charges it and letting go unleashes it.
   let enemies = f.enemies;
   const canCharge = rules.level >= CHARGE_LEVEL;
-  const special = rules.level >= (rules.specialLevel ?? SPECIAL_LEVEL);
+  const special = rules.level >= (rules.specialLevel ?? SPECIAL_LEVEL) && rules.specialReady !== false;
   let strike = 0; // 0 none, 1 normal, 2 charged
   if (input.press && f.cooldown === 0 && f.roll === 0) strike = 1;
   if (canCharge) {
@@ -396,6 +413,11 @@ export function stepFight(
     ev.swing = true;
     ev.charged = strike === 2;
     let kind: Special | null = strike === 2 && special ? rules.special : null;
+    // Practising: ask first, before one of today's specials goes on thin air.
+    if (kind !== null && rules.practice && !rules.practiceArmed) {
+      kind = null;
+      ev.askSpecial = true;
+    }
     // The barrage goes up once a day, and only after a real habit: otherwise Moss's charged arrow is just that.
     if (kind === 'barrage') {
       if (rules.barrageReady && !f.rained) {
@@ -410,6 +432,7 @@ export function stepFight(
       } else kind = null;
     }
     ev.signature = kind !== null && !PATH_SPECIALS.includes(kind);
+    ev.special = kind !== null;
     if ((kind === 'mend' || kind === 'vigil') && !f.mended) {
       f.mended = true;
       f.hp = Math.min(rules.maxHp, f.hp + 1);
@@ -466,8 +489,16 @@ export function stepFight(
       if (kind === 'encore') f.delayed = [ENCORE, 2, fc];
     } else {
       const [dx, dy] = aim(enemies, px, py, fc, input.stickX, input.stickY, attack.range);
-      const shots = kind === 'footnotes' ? [-0.5, -0.25, 0, 0.25, 0.5] : kind === 'spread' ? [-0.3, 0, 0.3] : [0];
-      const fan = kind === 'footnotes' || kind === 'spread';
+      // Wren's vigil throws light all round her: eight balls of it, every way at once
+      const shots =
+        kind === 'footnotes'
+          ? [-0.5, -0.25, 0, 0.25, 0.5]
+          : kind === 'spread'
+            ? [-0.3, 0, 0.3]
+            : kind === 'vigil'
+              ? [0, 1, 2, 3, 4, 5, 6, 7].map((k) => (k * Math.PI) / 4)
+              : [0];
+      const fan = kind === 'footnotes' || kind === 'spread' || kind === 'vigil';
       const turns = kind === 'holdthis' ? 3 : kind === 'return' ? 1 : 0;
       const size = kind === 'holdthis' ? 3 : 1;
       const bolts = f.bolts.slice();

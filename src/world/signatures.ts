@@ -38,7 +38,7 @@ export const SIGNATURES: Partial<Record<CharacterId, Signature>> = {
   wren: {
     kind: 'vigil',
     name: 'Lantern Vigil',
-    does: 'a heart back, once a fight, and the light freezes everyone close',
+    does: 'a heart back, once a fight; her lantern flares, freezing everyone close, and throws light all round',
   },
   oren: {
     kind: 'breath',

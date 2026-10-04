@@ -167,6 +167,20 @@ function Bolt({ index, bolts, attack }: { index: number; bolts: SharedValue<numb
       </Group>
     );
   }
+  if (attack.look === 'light') {
+    // Cleric: a ball of radiant light, a soft halo round it, sparks trailing behind
+    return (
+      <Group transform={at}>
+        <Circle cx={-10} cy={0} r={1} color="#FFFFFF" opacity={0.5} />
+        <Circle cx={-6} cy={0} r={1.5} color={attack.color} opacity={0.6} />
+        <Circle cx={0} cy={0} r={7} color={attack.color} opacity={0.25} />
+        <Circle cx={0} cy={0} r={4.5} color={attack.color} opacity={flicker} />
+        <Circle cx={0} cy={0} r={2.5} color="#FFFDF0" />
+        <Rect x={-0.5} y={-7} width={1} height={14} color="#FFFFFF" opacity={0.5} />
+        <Rect x={-7} y={-0.5} width={14} height={1} color="#FFFFFF" opacity={0.5} />
+      </Group>
+    );
+  }
   if (attack.look === 'coin') {
     return (
       <Group transform={at}>

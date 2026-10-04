@@ -18,7 +18,9 @@ import chapelData from './maps/chapel.json';
 import oldKingsCryptData from './maps/old-kings-crypt.json';
 import hedgeMazeData from './maps/hedge-maze.json';
 import thePitData from './maps/the-pit.json';
-import warDoorsData from './maps/war-doors.json';
+import castleGroundsData from './maps/castle-grounds.json';
+import castleHallData from './maps/castle-hall.json';
+import castleUpperData from './maps/castle-upper.json';
 import warHallData from './maps/war-hall.json';
 import fieldOfBannersData from './maps/field-of-banners.json';
 import titheRoadData from './maps/tithe-road.json';
@@ -114,6 +116,8 @@ export type Boss = {
   y: number;
   bearers: number[][];
   kind?: string;
+  /** Others in the fight, of another kind (the castle's throne room: Aurek, at the head of the shadows). */
+  with?: { kind: string; x: number; y: number }[];
   intro?: { speaker: string | null; lines: string[] };
 };
 
@@ -167,6 +171,8 @@ type MapData = {
   spawn: { x: number; y: number; facing: string };
   examine: Record<string, string[]>;
   objects: { type: string }[];
+  /** Said the first time you walk in (the castle's empty hall). */
+  firstVisit?: string[];
 };
 
 export type WorldMap = {
@@ -186,7 +192,8 @@ export type WorldMap = {
   plates: number[];
   platesFlag?: string;
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
-  enemies: { kind: EnemyKind; x: number; y: number }[];
+  /** `hp`: tougher (or weaker) than the kind usually is, for this fight (the castle's shadows, castle.ts). */
+  enemies: { kind: EnemyKind; x: number; y: number; hp?: number }[];
   boss?: Boss;
   /** Fights one after another, a visit each; see withLadder. */
   ladder?: Boss[];
@@ -198,6 +205,8 @@ export type WorldMap = {
   examine: Record<string, string[]>;
   objects: MapObject[];
   npcs: NpcObject[];
+  /** Said the first time you walk in. */
+  firstVisit?: string[];
 };
 
 /** Floor you can walk on unless a map says otherwise; every other tile letter is solid. */
@@ -250,6 +259,7 @@ function build(data: MapData, image: number): WorldMap {
     examine: data.examine,
     objects,
     npcs,
+    firstVisit: data.firstVisit,
   };
 }
 
@@ -336,7 +346,9 @@ export const MAPS = {
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
   'the-pit': build(thePitData as MapData, require('@/assets/world/the-pit.png')),
-  'war-doors': build(warDoorsData as MapData, require('@/assets/world/war-doors.png')),
+  'castle-grounds': build(castleGroundsData as MapData, require('@/assets/world/castle-grounds.png')),
+  'castle-hall': build(castleHallData as MapData, require('@/assets/world/castle-hall.png')),
+  'castle-upper': build(castleUpperData as MapData, require('@/assets/world/castle-upper.png')),
   'war-hall': build(warHallData as MapData, require('@/assets/world/war-hall.png')),
   'field-of-banners': build(fieldOfBannersData as MapData, require('@/assets/world/field-of-banners.png')),
   'tithe-road': build(titheRoadData as MapData, require('@/assets/world/tithe-road.png')),
@@ -349,8 +361,8 @@ export const MAPS = {
   'fighters-cells': build(fightersCellsData as MapData, require('@/assets/world/fighters-cells.png')),
   'barracks-ward': build(barracksWardData as MapData, require('@/assets/world/barracks-ward.png')),
   'fury-hall': build(furyHallData as MapData, require('@/assets/world/fury-hall.png')),
-  'stitchery': build(stitcheryData as MapData, require('@/assets/world/stitchery.png')),
-  'ironhouse': build(ironhouseData as MapData, require('@/assets/world/ironhouse.png')),
+  stitchery: build(stitcheryData as MapData, require('@/assets/world/stitchery.png')),
+  ironhouse: build(ironhouseData as MapData, require('@/assets/world/ironhouse.png')),
   'frost-ward': build(frostWardData as MapData, require('@/assets/world/frost-ward.png')),
   'ice-house': build(iceHouseData as MapData, require('@/assets/world/ice-house.png')),
   'felix-maze': build(felixMazeData as MapData, require('@/assets/world/felix-maze.png')),

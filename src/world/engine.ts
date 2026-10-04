@@ -72,9 +72,7 @@ function flushX(grid: Grid, x: number, y: number, dx: number): number {
 function flushY(grid: Grid, x: number, y: number, dy: number): number {
   'worklet';
   const to =
-    dy > 0
-      ? Math.floor((y + dy - 0.001) / TILE) * TILE
-      : (Math.floor((y + dy - DEPTH) / TILE) + 1) * TILE + DEPTH;
+    dy > 0 ? Math.floor((y + dy - 0.001) / TILE) * TILE : (Math.floor((y + dy - DEPTH) / TILE) + 1) * TILE + DEPTH;
   return (to - y) * dy > 0 && Math.abs(to - y) < Math.abs(dy) && !blocked(grid, x, to) ? to : y;
 }
 
@@ -153,6 +151,8 @@ export const TRAIL_POINTS = FOLLOW_GAP * 3 + 4;
 
 /** A fresh trail with everyone standing on the lead. */
 export function startTrail(x: number, y: number): number[] {
+  // runs on the UI thread too, when a march ends (world-view's frame): without this it can't be called there
+  'worklet';
   const trail: number[] = [];
   for (let i = 0; i < TRAIL_POINTS; i++) trail.push(x, y);
   return trail;

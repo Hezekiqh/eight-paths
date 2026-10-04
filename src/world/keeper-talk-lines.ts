@@ -41,7 +41,7 @@ export const KEEPER_TALK: {
       id: 'kaldor-allowed',
       when: 'kaldor-allowed',
       lines: [
-        'So Kaldor keeps his chair. You spared him.',
+        'So Kaldor keeps his chair, and you keep the leash. I did not think anyone could put one on him.',
         'A wall keeps the worst days out. It keeps everyone else in, too. Both are true. They usually are.',
         "I won't tell you it was right or wrong. I'll write it down, in the good ink, and we'll see what it grows into.",
       ],
@@ -71,6 +71,15 @@ export const KEEPER_TALK: {
         "The horde's scattered, I hear, and the pit's an arena again. Children will be climbing the walls by spring.",
         "You gave them back the right to get things wrong. It's a heavy gift. It's the only kind worth giving.",
         "Tell Brannoc the crown suits him. He won't believe you. Tell him anyway.",
+      ],
+    },
+    {
+      id: 'you-crowned',
+      when: 'you-crowned',
+      lines: [
+        'You took the throne yourself. I shall need a fresh page for that. Perhaps a fresh book.',
+        'Brannoc tells me you sit on it as if it might bite. Good. It might.',
+        'A crown is mostly a promise to keep turning up. You know a little about that already.',
       ],
     },
     {
@@ -202,6 +211,7 @@ export const FINALE: {
   record: string[];
   allowed: string[];
   dethroned: string[];
+  crowned: string[];
   memory: string[];
   keepsake: { name: string; text: string[] };
   end: string[];
@@ -219,14 +229,20 @@ export const FINALE: {
     "And in {month}, after {gap} days away, you came back. That may be the strongest thing you've done yet.",
   ],
   allowed: [
-    "Far behind you, Kaldor's horde stands on the border, facing outward. The streets are quiet. The cages are open.",
+    'Far behind you, Kaldor sits his throne, on your terms. His horde stands on the border, facing outward, and goes no further. The cages are open.',
     'You put a wall between that kingdom and its worst days. Somewhere, someone would call that wisdom.',
     "It's a fearsome peace. But it's a peace, and you chose it.",
   ],
   dethroned: [
-    "Far behind you, King Brannoc sits on his father's throne, looking like he'd rather be anywhere else. He stays anyway.",
+    "Far behind you, a royal advisor sits beside Brannoc's empty throne, under a sign in his own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
+    'Beside you, King Brannoc checks the sky for ravens. He is working remotely.',
     "The horde is gone. Nobody guards the streets, and nobody asks permission. It's frightening. It's theirs.",
     'You chose to let them choose. Somewhere, someone would call that reckless.',
+  ],
+  crowned: [
+    'Far behind you, there is an empty throne with your name on it, and a captain who faints keeping it warm.',
+    "The horde is gone. The cages are open. Nobody is quite sure what a kingdom does next, and they're asking you.",
+    'You chose to carry it yourself. Somewhere, someone would call that brave.',
   ],
   memory: [
     'The hum of the seal fills your head, and the field changes around you.',

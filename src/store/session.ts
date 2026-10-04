@@ -20,6 +20,15 @@ type Session = {
   talkAfterHatch: string | null;
   /** Dev only: the fight bot plays the World's fights (autopilot.ts), for recording footage. */
   autopilot: boolean;
+  /**
+   * A fight carried across a change of character (author, Oct 4, 2026): switching mid-fight doesn't
+   * restart it. The room, your hearts (shared by the whole party), and each enemy as it stood, with
+   * how much of it is left (`left`, 0 to 1), since the new character takes a different number of hits.
+   */
+  carry: { map: string; hp: number; enemies: number[][]; left: number[]; mended: boolean; rained: boolean } | null;
+  /** Test builds only (world/test-tools.ts): every Path at Lv 20, and the hero walking to the guide's mark. */
+  testLevels: boolean;
+  testWalk: boolean;
 };
 
 export const useSession = create<Session>((set) => ({
@@ -34,4 +43,8 @@ export const useSession = create<Session>((set) => ({
   talkAfterHatch: null,
   // Dev only; EXPO_PUBLIC_AUTOPILOT=1 starts it on, for recording.
   autopilot: __DEV__ && process.env.EXPO_PUBLIC_AUTOPILOT === '1',
+  carry: null,
+  // on from the start in a test build, so a fresh test account can walk straight in (test-tools.ts)
+  testLevels: process.env.EXPO_PUBLIC_TEST_TOOLS === '1',
+  testWalk: false,
 }));

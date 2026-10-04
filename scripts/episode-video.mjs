@@ -4,7 +4,7 @@
 // a voice blip every other letter. Same Skia (CanvasKit), same art files.
 // No music: just the voices.
 //
-//   node scripts/episode-video.mjs 9            → ~/Movies/Eight Paths Episodes/Episode 09 - The One in the Corner.mp4
+//   node scripts/episode-video.mjs 8            → ~/Movies/Eight Paths Episodes/Episode 08 - The One in the Corner.mp4
 //   node scripts/episode-video.mjs 2 out.mp4    (or anywhere you like)
 //
 // Needs ffmpeg. Lines come straight from the map JSONs, so they match the game.
@@ -26,7 +26,7 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const [episode = '2', outArg] = process.argv.slice(2);
 /**
  * Where finished episodes go unless a path is given (author, Oct 3, 2026): one folder on the Mac,
- * each named by number and title, "Episode 05 - Welcome Back.mp4".
+ * each named by number and title, "Episode 04 - Welcome Back.mp4".
  */
 export const EPISODE_FOLDER = join(homedir(), 'Movies', 'Eight Paths Episodes');
 
@@ -289,7 +289,9 @@ const TONGUE_FACE = ['..YYYY..', '.YYYYYY.', 'YYKYYKYY', 'YYYYYYYY', 'YKYYYYKY',
 function drawTongue(canvas, x, y, cell) {
   const inks = { Y: paint('#FFC940'), K: paint('#2E1F14'), R: paint('#E0454F') };
   TONGUE_FACE.forEach((row, r) =>
-    [...row].forEach((c, k) => inks[c] && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), inks[c])),
+    [...row].forEach(
+      (c, k) => inks[c] && canvas.drawRect(CK.XYWHRect(x + k * cell, y + r * cell, cell, cell), inks[c]),
+    ),
   );
 }
 
@@ -482,7 +484,8 @@ const realmOf = (dimension) => {
 };
 const spriteSheets = new Map();
 function drawBigSprite(g, id, frame, sc, cx, by) {
-  if (!spriteSheets.has(id)) spriteSheets.set(id, PNG.sync.read(readFileSync(join(ROOT, `assets/sprites/${id}/idle.png`))));
+  if (!spriteSheets.has(id))
+    spriteSheets.set(id, PNG.sync.read(readFileSync(join(ROOT, `assets/sprites/${id}/idle.png`))));
   const sheet = spriteSheets.get(id);
   const frames = Math.max(1, Math.round(sheet.width / (32 * 12)));
   for (let y = 0; y < 48 * sc; y++)
@@ -492,7 +495,8 @@ function drawBigSprite(g, id, frame, sc, cx, by) {
       put(g, cx - 16 * sc + x, by - 48 * sc + y, [sheet.data[i], sheet.data[i + 1], sheet.data[i + 2]]);
     }
 }
-const wiggleAt = (t, at) => (t >= at && t < at + 0.35 ? Math.round(Math.sin((t - at) * 40) * 5 * (1 - (t - at) / 0.35)) : 0);
+const wiggleAt = (t, at) =>
+  t >= at && t < at + 0.35 ? Math.round(Math.sin((t - at) * 40) * 5 * (1 - (t - at) / 0.35)) : 0;
 function hatchCamera(t) {
   const mid = [HCX, HBY - COCOON_H / 2];
   let z = 1.5;
@@ -534,12 +538,18 @@ const hrnd = () => (hseed = (hseed * 1103515245 + 12345) % 2147483648) / 2147483
 const HATCH_PX = new Uint8Array(W * H * 4);
 const HNAME = fontOf(JERSEY, 150);
 /** A 3×5 pixel font, just enough for a laugh. */
-const TINY = { H: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'], A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], '!': ['X', 'X', 'X', '.', 'X'] };
+const TINY = {
+  H: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'],
+  A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'],
+  '!': ['X', 'X', 'X', '.', 'X'],
+};
 function tinyText(canvas, text, x, y, p) {
   let cx = Math.round(x);
   for (const ch of text) {
     const g = TINY[ch];
-    g.forEach((row, r) => [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(cx + k, Math.round(y) + r, 1, 1), p)));
+    g.forEach((row, r) =>
+      [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(cx + k, Math.round(y) + r, 1, 1), p)),
+    );
     cx += g[0].length + 1;
   }
 }
@@ -551,13 +561,20 @@ function hatchFrame(canvas, h) {
   const realm = realmOf(h.dimension);
   // the build-up is the cocoon alone in the dark (as in the game); the realm appears with the burst
   const scene = t < HATCH_AT ? realm.base.map((r) => r.map(() => [5, 3, 10])) : realm.base.map((r) => r.slice());
-  if (t >= HATCH_AT) realm.lights.forEach(([x, y, c], n) => {
-    if (Math.sin(t * 3 + n * 1.7) > 0.2) {
-      const col = hex(c);
-      put(scene, x, y, mixRgb(col, [255, 255, 255], 0.6));
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) put(scene, x + dx, y + dy, col);
-    }
-  });
+  if (t >= HATCH_AT)
+    realm.lights.forEach(([x, y, c], n) => {
+      if (Math.sin(t * 3 + n * 1.7) > 0.2) {
+        const col = hex(c);
+        put(scene, x, y, mixRgb(col, [255, 255, 255], 0.6));
+        for (const [dx, dy] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ])
+          put(scene, x + dx, y + dy, col);
+      }
+    });
   if (t < HATCH_AT) {
     let shear = 0;
     let lift = 0;
@@ -613,9 +630,11 @@ function hatchFrame(canvas, h) {
   const sx0 = cam.shake ? (hrnd() - 0.5) * 2 * cam.shake : 0;
   const sy0 = cam.shake ? (hrnd() - 0.5) * 2 * cam.shake : 0;
   const colX = new Int32Array(W);
-  for (let X = 0; X < W; X++) colX[X] = Math.min(GW - 1, Math.max(0, Math.floor(cam.focus[0] + (X / HK - cam.anchor[0]) / cam.z + sx0)));
+  for (let X = 0; X < W; X++)
+    colX[X] = Math.min(GW - 1, Math.max(0, Math.floor(cam.focus[0] + (X / HK - cam.anchor[0]) / cam.z + sx0)));
   for (let Y = 0; Y < H; Y++) {
-    const srow = scene[Math.min(GH - 1, Math.max(0, Math.floor(cam.focus[1] + (Y / HK - cam.anchor[1]) / cam.z + sy0)))];
+    const srow =
+      scene[Math.min(GH - 1, Math.max(0, Math.floor(cam.focus[1] + (Y / HK - cam.anchor[1]) / cam.z + sy0)))];
     for (let X = 0; X < W; X++) {
       const c = srow[colX[X]];
       const i = (Y * W + X) * 4;
@@ -666,12 +685,24 @@ function hatchFrame(canvas, h) {
 }
 
 /** Rarity stars as the hatch draws them: a 9×9 pixel star each, 8px a pixel, centred. */
-const STAR = ['....X....', '....X....', '...XXX...', 'XXXXXXXXX', '.XXXXXXX.', '..XXXXX..', '..XX.XX..', '.XX...XX.', '.X.....X.'];
+const STAR = [
+  '....X....',
+  '....X....',
+  '...XXX...',
+  'XXXXXXXXX',
+  '.XXXXXXX.',
+  '..XXXXX..',
+  '..XX.XX..',
+  '.XX...XX.',
+  '.X.....X.',
+];
 function pixelStars(canvas, n, y) {
   const p = paint('#FFFFFF');
   for (let s = 0; s < n; s++) {
     const x0 = Math.round(W / 2 + (s - (n - 1) / 2) * 104 - 36);
-    STAR.forEach((row, r) => [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x0 + k * 8, y + r * 8, 8, 8), p)));
+    STAR.forEach((row, r) =>
+      [...row].forEach((c, k) => c === 'X' && canvas.drawRect(CK.XYWHRect(x0 + k * 8, y + r * 8, 8, 8), p)),
+    );
   }
 }
 
@@ -713,7 +744,8 @@ function compile(ep) {
         const len = Math.hypot(bx - ax, by - ay);
         if (len === 0) continue;
         // `look`: keep facing one way while moving (pushed back, say)
-        const dir = step.look ?? (Math.abs(bx - ax) > Math.abs(by - ay) ? (bx > ax ? 'right' : 'left') : by > ay ? 'down' : 'up');
+        const dir =
+          step.look ?? (Math.abs(bx - ax) > Math.abs(by - ay) ? (bx > ax ? 'right' : 'left') : by > ay ? 'down' : 'up');
         legs.push({ a: [ax, ay], b: [bx, by], d0: dist, len, dir });
         dist += len;
       }
@@ -790,7 +822,11 @@ function compile(ep) {
       segs.push({ kind: 'face', t0: t, t1: t, dir: step.push });
       t += PUSH_LEAN;
       segs.push({
-        kind: 'walk', t0: t, t1: t + PUSH_TIME, speed: TILE / PUSH_TIME, dist: TILE,
+        kind: 'walk',
+        t0: t,
+        t1: t + PUSH_TIME,
+        speed: TILE / PUSH_TIME,
+        dist: TILE,
         legs: [{ a: pos, b: next, d0: 0, len: TILE, dir: step.push }],
       });
       segs.push({ kind: 'push', t0: t, t1: t + PUSH_TIME, from: [tx + dx, ty + dy], dx, dy });
@@ -965,8 +1001,28 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'gap') gaps.push(s.at);
   }
   return {
-    hx, hy, facing, walked, moving, npcFacing, npcAt, laughing, quiet, line, menu, cards, hatch, shown, opened, gaps,
-    map, hide, twinkles, boulders, blackout, white,
+    hx,
+    hy,
+    facing,
+    walked,
+    moving,
+    npcFacing,
+    npcAt,
+    laughing,
+    quiet,
+    line,
+    menu,
+    cards,
+    hatch,
+    shown,
+    opened,
+    gaps,
+    map,
+    hide,
+    twinkles,
+    boulders,
+    blackout,
+    white,
   };
 }
 
@@ -1024,7 +1080,10 @@ function drawWorld(canvas, ep, st, t) {
     canvas.drawRect(CK.XYWHRect(gx * TILE + 10, gy * TILE + TILE - 3, 4, 3), paint('#5A524C'));
   }
   // a cocoon broken open: the grass from the tile beside it laid over, and the split silk on top
-  for (const { at: [cx, cy], grass: [gx, gy] } of st.opened) {
+  for (const {
+    at: [cx, cy],
+    grass: [gx, gy],
+  } of st.opened) {
     // (the cocoon stands a few pixels taller than its tile, so the grass reaches up into the one above)
     canvas.drawImageRectOptions(
       map.image,
@@ -1097,7 +1156,13 @@ function drawWorld(canvas, ep, st, t) {
       // laughing: a quick shake and a hop, head thrown back on every other beat
       if (lt !== undefined) {
         const beat = Math.floor(lt * 12);
-        return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x + (beat % 2 ? 1 : -1), y - (beat % 3 === 0 ? 2 : 0)];
+        return [
+          WALKER_ROWS[n.sprite],
+          DIRS[st.npcFacing[n.id]],
+          0,
+          x + (beat % 2 ? 1 : -1),
+          y - (beat % 3 === 0 ? 2 : 0),
+        ];
       }
       return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y];
     });
@@ -1132,13 +1197,23 @@ function drawWorld(canvas, ep, st, t) {
     const { from, since, dir } = at.dash;
     if (since < 0.35) {
       const puff = paint('#D8D0C0', 1 - since / 0.35);
-      for (const [dx, dy] of [[-4, -2], [3, -3], [-1, -6], [5, 0], [-6, 1]])
+      for (const [dx, dy] of [
+        [-4, -2],
+        [3, -3],
+        [-1, -6],
+        [5, 0],
+        [-6, 1],
+      ])
         canvas.drawRect(CK.XYWHRect(from[0] + dx * (1 + since * 4), from[1] + dy * (1 + since * 2) - 2, 2, 2), puff);
     }
     const back = dir === 'right' ? -1 : dir === 'left' ? 1 : 0;
     const up = dir === 'down' ? -1 : dir === 'up' ? 1 : 0;
     const streak = paint('#FFFFFF', 0.7);
-    for (const [len, oy] of [[18, -14], [26, -9], [14, -4]]) {
+    for (const [len, oy] of [
+      [18, -14],
+      [26, -9],
+      [14, -4],
+    ]) {
       if (back) canvas.drawRect(CK.XYWHRect(back < 0 ? at.x - 6 - len : at.x + 6, at.y + oy, len, 1), streak);
       else canvas.drawRect(CK.XYWHRect(at.x + oy / 2 + 4, up < 0 ? at.y - 24 - len : at.y + 2, 1, len), streak);
     }
@@ -1464,13 +1539,23 @@ const EPISODES = {
   },
   // You (the wizard, as in every episode) break open the roadside cocoon: out comes Felix Rook, the Academy's
   // strategist, who chats, then strolls off toward Kaldor's towers. Written for this episode.
-  4: () => {
+  // Taken out of the series (author, Oct 4, 2026): players only see it by playing, so it has no number
+  // and the episodes after it moved down one. `node scripts/episode-video.mjs both-sides` still draws it.
+  'both-sides': () => {
     const map = loadMap('courier-road', 'outdoor');
-    map.npcs.felix = { id: 'felix', type: 'npc', x: 8,
-      y: 6, sprite: 'felix', facing: 'right', name: 'Felix', lines: [] };
+    map.npcs.felix = {
+      id: 'felix',
+      type: 'npc',
+      x: 8,
+      y: 6,
+      sprite: 'felix',
+      facing: 'right',
+      name: 'Felix',
+      lines: [],
+    };
     const QUESTIONS = ['Who are you?', 'What now?'];
     return {
-      number: 4,
+      number: 'BONUS',
       title: 'BOTH SIDES',
       map,
       hero: { sprite: 'quill', at: [9, 6], facing: 'left' },
@@ -1503,30 +1588,41 @@ const EPISODES = {
         { menu: { speaker: 'Felix', options: QUESTIONS, pick: 0 } },
         {
           say: 'felix',
-          lines: ['Felix Rook. I advised the last war.', 'Both sides, actually. It lasted much longer that way. Much more interesting.'],
+          lines: [
+            'Felix Rook. I advised the last war.',
+            'Both sides, actually. It lasted much longer that way. Much more interesting.',
+          ],
         },
         { menu: { speaker: 'Felix', options: QUESTIONS, pick: 1 } },
         {
           say: 'felix',
           lines: [
-            'Hmmmm. Good question.', 'Whatever will cause the most fun, I guess.',
+            'Hmmmm. Good question.',
+            'Whatever will cause the most fun, I guess.',
             "Thank you for the door. I'll remember it. Probably.",
           ],
         },
         // he laughs, then he's gone, lightning fast, east toward the towers
         { laugh: 'felix', dur: 1.4 },
-        { npcWalk: 'felix',
+        {
+          npcWalk: 'felix',
           to: [
             [8, 7],
             [42, 7],
-          ], speed: 520, hide: true, dash: true },
+          ],
+          speed: 520,
+          hide: true,
+          dash: true,
+        },
         { wait: 0.5 },
         // and you set off after him, toward the next place the story goes
-        { walk: [
+        {
+          walk: [
             [10, 7],
             [42, 7],
           ],
-          cut: 2.4 },
+          cut: 2.4,
+        },
       ],
     };
   },
@@ -1534,14 +1630,23 @@ const EPISODES = {
   // dashing off down the road, leaving his sign. You spot the shiny thing only a Mage sees, take the
   // hidden passage, and come out in the Archive, where the Keeper's waiting. The lines are the game's
   // (felix-maze.json, felix-maze.ts).
-  5: () => {
+  4: () => {
     const maze = loadMap('felix-maze', 'outdoor');
     const archive = loadMap('archive', 'rooms');
-    maze.npcs.felix = { id: 'felix', type: 'npc', x: 4, y: 5, sprite: 'felix', facing: 'left', name: 'Felix', lines: [] };
+    maze.npcs.felix = {
+      id: 'felix',
+      type: 'npc',
+      x: 4,
+      y: 5,
+      sprite: 'felix',
+      facing: 'left',
+      name: 'Felix',
+      lines: [],
+    };
     const sign = maze.examine.S.slice(-1);
     const twinkle = [[2, 1]];
     return {
-      number: 5,
+      number: 4,
       title: 'WELCOME BACK',
       map: maze,
       hero: { sprite: 'quill', at: [1, 5], facing: 'right' },
@@ -1552,9 +1657,24 @@ const EPISODES = {
       script: [
         // frame one: Felix, laughing, then gone down the road east
         { laugh: 'felix', dur: 1.4 },
-        { npcWalk: 'felix', to: [[4, 5], [31, 5]], speed: 520, hide: true, dash: true },
+        {
+          npcWalk: 'felix',
+          to: [
+            [4, 5],
+            [31, 5],
+          ],
+          speed: 520,
+          hide: true,
+          dash: true,
+        },
         // what he left behind
-        { walk: [[2, 5], [2, 4]], face: 'up' },
+        {
+          walk: [
+            [2, 5],
+            [2, 4],
+          ],
+          face: 'up',
+        },
         { narrate: true, lines: sign },
         // the shiny thing: only a Mage of Lv 6 sees it
         { you: ['(What is that shiny thing?)'] },
@@ -1575,12 +1695,12 @@ const EPISODES = {
   // you're left wondering who's watching), 7: leaving by the green candle, into Felix and the king's
   // guards, 8: "What king?". The Keeper is soft-spoken and polite, like a noble; your thoughts are in
   // brackets; the lines are the game's (src/world/keeper-welcome.json, felix-maze.ts).
-  6: () => {
+  5: () => {
     const archive = loadMap('archive', 'rooms');
     const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
     const asks = keeper.asks;
     return {
-      number: 6,
+      number: 5,
       title: 'ANOTHER LONG STORY',
       next: 'THE GREEN CANDLE',
       hold: 0.75,
@@ -1601,14 +1721,16 @@ const EPISODES = {
       ],
     };
   },
-  7: () => {
+  6: () => {
     const archive = loadMap('archive', 'rooms');
     const maze = loadMap('felix-maze', 'outdoor');
     const keeper = JSON.parse(readFileSync(join(ROOT, 'src/world/keeper-welcome.json'), 'utf8'));
     return {
-      number: 7,
+      number: 6,
       title: 'THE GREEN CANDLE',
       next: 'SIR HIMOTHY THE THIRD',
+      // a touch quicker, to fit Himothy's correction in under 30 seconds
+      hold: 0.72,
       map: archive,
       hero: { sprite: 'quill', at: [25, 4], facing: 'up' },
       hide: HALL,
@@ -1623,11 +1745,13 @@ const EPISODES = {
         // the flash, and out past the maze, in front of Felix and the king's guards
         { scene: { map: maze, at: [22, 4], facing: 'right', show: ['felix-maze', 'guard-1', 'guard-2'], flash: true } },
         { say: 'felix-maze', lines: ['That one, sir! That is the one plotting to take the throne!'] },
+        // he insists on all of it (author, Oct 4, 2026)
+        { say: 'guard-2', lines: ['SIR Himothy the THIRD. You have to say the whole thing.'] },
         { wait: 0.4 },
       ],
     };
   },
-  8: () => {
+  7: () => {
     const maze = loadMap('felix-maze', 'outdoor');
     const lock = (path, cls) => ({ locked: `${cls} Lv 10`, icon: path });
     const answers = [
@@ -1639,7 +1763,7 @@ const EPISODES = {
       '"What king?"',
     ];
     return {
-      number: 8,
+      number: 7,
       title: 'SIR HIMOTHY THE THIRD',
       next: 'THE ONE IN THE CORNER',
       map: maze,
@@ -1652,10 +1776,33 @@ const EPISODES = {
         { say: 'guard-2', lines: ["Is this true? Here, it's guilty until proven innocent! Explain yourself."] },
         // the clever answers are there, greyed out until Lv 10; the wizard isn't there yet
         { menu: { speaker: 'Sir Himothy the Third', options: answers, pick: 4, hold: 2.4 } },
-        { say: 'guard-2', lines: ['How did I know? See this badge? Sir Himothy the Third. I always know.', 'Seize him!'] },
+        {
+          say: 'guard-2',
+          lines: [
+            'How did I know? See this badge? Sir Himothy the Third. The whole thing. I always know.',
+            'Seize him!',
+          ],
+        },
         // they close in
-        { npcWalk: 'guard-1', to: [[23, 3], [22, 3]], speed: 70, together: true },
-        { npcWalk: 'guard-2', to: [[25, 5], [23, 5], [22, 5]], speed: 70, together: true },
+        {
+          npcWalk: 'guard-1',
+          to: [
+            [23, 3],
+            [22, 3],
+          ],
+          speed: 70,
+          together: true,
+        },
+        {
+          npcWalk: 'guard-2',
+          to: [
+            [25, 5],
+            [23, 5],
+            [22, 5],
+          ],
+          speed: 70,
+          together: true,
+        },
         { wait: 0.4 },
         { laugh: 'felix-maze', dur: 1.4 },
         { narrate: true, lines: ['Rough hands. A sack over your head. A long, bumpy walk.'] },
@@ -1667,16 +1814,34 @@ const EPISODES = {
   // (kingdom-dungeon.json, dungeon.ts). The menus show all of Brannoc's questions, but the episodes
   // only pick what the story needs: the rest are there for players to try for themselves.
   // 9: marched to the cells; the one in the corner was a prince, once.
-  9: () => {
+  8: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
     // the two guards who march you down from the stair (in the game, a march: dungeon.ts escortIn)
-    cells.npcs['escort-1'] = { id: 'escort-1', type: 'npc', x: 21, y: 4, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
-    cells.npcs['escort-2'] = { id: 'escort-2', type: 'npc', x: 21, y: 2, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
+    cells.npcs['escort-1'] = {
+      id: 'escort-1',
+      type: 'npc',
+      x: 21,
+      y: 4,
+      sprite: 'raider',
+      facing: 'down',
+      name: 'Guard',
+      lines: [],
+    };
+    cells.npcs['escort-2'] = {
+      id: 'escort-2',
+      type: 'npc',
+      x: 21,
+      y: 2,
+      sprite: 'raider',
+      facing: 'down',
+      name: 'Guard',
+      lines: [],
+    };
     const brannoc = cells.npcs['brannoc-cell'];
     const asks = brannoc.questions.map((q) => q.ask);
     const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
     return {
-      number: 9,
+      number: 8,
       title: 'THE ONE IN THE CORNER',
       next: 'FOR THE APPLES',
       hold: 0.75,
@@ -1687,9 +1852,32 @@ const EPISODES = {
       script: [
         // frame one: marched down from the guards' stair
         { say: 'escort-1', lines: ['Walk. And no plotting.'] },
-        { npcWalk: 'escort-1', to: [[21, 6], [5, 6]], speed: 150, together: true },
-        { npcWalk: 'escort-2', to: [[21, 6], [7, 6]], speed: 150, together: true },
-        { walk: [[21, 6], [6, 6]], face: 'up', speed: 150 },
+        {
+          npcWalk: 'escort-1',
+          to: [
+            [21, 6],
+            [5, 6],
+          ],
+          speed: 150,
+          together: true,
+        },
+        {
+          npcWalk: 'escort-2',
+          to: [
+            [21, 6],
+            [7, 6],
+          ],
+          speed: 150,
+          together: true,
+        },
+        {
+          walk: [
+            [21, 6],
+            [6, 6],
+          ],
+          face: 'up',
+          speed: 150,
+        },
         { say: 'escort-1', lines: ['In you go.'] },
         // shoved in; the door slams
         { scene: { map: cells, at: [6, 4], facing: 'down', hide: ['escort-1', 'escort-2'] } },
@@ -1706,14 +1894,14 @@ const EPISODES = {
     };
   },
   // 10: the apple cart, "We need to escape", the bars, and Gary saw nothing.
-  10: () => {
+  9: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
     const brannoc = cells.npcs['brannoc-cell'];
     const asks = brannoc.questions.map((q) => q.ask);
     const answer = (ask) => brannoc.questions.find((q) => q.ask === ask).answer;
     const garySaw = ['...', 'I did not see that.', '... I do not get paid enough to have seen that.'];
     return {
-      number: 10,
+      number: 9,
       title: 'FOR THE APPLES',
       next: 'GARY',
       hold: 0.6,
@@ -1729,7 +1917,19 @@ const EPISODES = {
         { narrate: true, lines: ['*squeak*'] },
         { say: 'brannoc-cell', lines: ['AAAAAAH!'] },
         // straight past you, through the bars, along the corridor and up the ladder
-        { npcWalk: 'brannoc-cell', to: [[5, 4], [5, 5], [5, 6], [20, 6], [20, 8]], speed: 260, hide: true, together: true },
+        {
+          npcWalk: 'brannoc-cell',
+          to: [
+            [5, 4],
+            [5, 5],
+            [5, 6],
+            [20, 6],
+            [20, 8],
+          ],
+          speed: 260,
+          hide: true,
+          together: true,
+        },
         // the bars bend as he goes through them
         { wait: 0.3 },
         { gap: [5, 5] },
@@ -1826,9 +2026,13 @@ if (process.env.AUDIO_ONLY) {
     list.push(`file '${part}'`);
   }
   writeFileSync(join(work, 'parts.txt'), list.join('\n'));
-  const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', join(work, 'parts.txt'), '-c', 'copy', silent], {
-    stdio: 'inherit',
-  });
+  const r = spawnSync(
+    'ffmpeg',
+    ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', join(work, 'parts.txt'), '-c', 'copy', silent],
+    {
+      stdio: 'inherit',
+    },
+  );
   if (r.status !== 0) throw new Error('joining the parts failed');
 } else await renderPicture();
 

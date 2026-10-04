@@ -9,6 +9,7 @@ import { Portrait } from '@/components/world/portrait';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import type { Question } from '@/world/maps';
+import { shownQuestions } from '@/world/menu';
 import { portraitFor, splitSpeaker, voiceFor } from '@/world/portraits';
 import { isShouted, rumblesIn } from '@/world/rumbles';
 import type { WalkerId } from '@/world/walkers';
@@ -25,8 +26,9 @@ export type Dialogue = {
   then?: () => void;
   /**
    * A decision at the end of the lines: each option runs its own `then`, instead of the usual goodbye.
-   * A `locked` option is shown greyed out with what it needs (e.g. "Warrior Lv 10") and can't be picked,
-   * so players see what their habits would unlock. `icon`: the Path's symbol, beside the choice.
+   * A `locked` option (what it needs, e.g. "Warrior Lv 10") is greyed out and can't be picked, so players
+   * see what their habits would unlock. `icon`: the Path's symbol, which stands in for the cursor on a
+   * locked one. Four at most (MENU_ROWS in world/menu.ts).
    */
   choices?: { label: string; then: () => void; locked?: string; icon?: SFSymbol }[];
 };
@@ -56,11 +58,13 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
   const [asking, setAsking] = useState(false);
   /** Goodbye was said and they're answering it: the last tap closes, no menu. */
   const [parting, setParting] = useState(false);
+  /** What's been asked this conversation: the menu brings the unasked forward. */
+  const [asked, setAsked] = useState<string[]>([]);
   // A line can hand the box to someone else: "VARGA: …" shows Varga, in her voice.
   const said = splitSpeaker(lines[index] ?? '');
   const line = said.text;
-  const speaker = said.speaker ?? dialogue.speaker;
-  const sprite = said.sprite ?? dialogue.sprite ?? portraitFor(dialogue.speaker);
+  const speaker = said.narration ? undefined : (said.speaker ?? dialogue.speaker);
+  const sprite = said.narration ? undefined : (said.sprite ?? dialogue.sprite ?? portraitFor(dialogue.speaker));
   const voice = voiceFor(speaker, sprite);
   const [lift, setLift] = useState(false);
   const shouted = useMemo(() => isShouted(line), [line]);
@@ -103,7 +107,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     setTyped(true);
   }, [rumbles, feelRumbles]);
   const last = index === lines.length - 1;
-  const questions = parting ? [] : (dialogue.questions ?? []);
+  const questions = parting ? [] : shownQuestions(dialogue.questions ?? [], asked);
   const choices = parting ? [] : (dialogue.choices ?? []);
 
   const advance = () => {
@@ -137,6 +141,7 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     playSound('select');
     haptics.select();
     onAsk?.(question);
+    setAsked((a) => (a.includes(question.ask) ? a : [...a, question.ask]));
     say(question.answer);
   };
 
@@ -151,7 +156,8 @@ export function DialogueBox({ dialogue, onClose, onAsk }: Props) {
     return (
       <View style={StyleSheet.absoluteFill} onStartShouldSetResponder={() => true}>
         <View style={[styles.window, place]} accessibilityViewIsModal>
-          {speaker && <Text style={styles.speaker}>{speaker}</Text>}
+          {/* the menu is the person you're talking to's, not whoever chimed in last (a party member) */}
+          {(dialogue.speaker ?? speaker) && <Text style={styles.speaker}>{dialogue.speaker ?? speaker}</Text>}
           {questions.map((q) => (
             <Choice key={q.ask} label={q.ask} onPress={() => ask(q)} />
           ))}
@@ -238,11 +244,9 @@ function Choice({
         accessibilityState={{ disabled: true }}
         accessibilityLabel={`${label}. Locked: needs ${locked}`}
         style={styles.choice}>
-        <Text style={[styles.cursor, styles.cursorIdle]}>🔒</Text>
-        {mark}
-        <Text style={[styles.text, styles.choiceLocked]}>
-          {label} <Text style={styles.lockNeed}>({locked})</Text>
-        </Text>
+        {/* just the Path's icon, greyed, where the heart would be (a padlock if it has none) */}
+        {mark ?? <Text style={[styles.cursor, styles.cursorIdle]}>🔒</Text>}
+        <Text style={[styles.text, styles.choiceLocked]}>{label}</Text>
       </View>
     );
   return (
@@ -275,8 +279,7 @@ const styles = StyleSheet.create({
   cursor: { color: colors.accent, fontSize: 14, width: 16 },
   cursorIdle: { color: colors.textFaint },
   choicePressed: { color: colors.accent },
-  icon: { width: 14, height: 14 },
+  icon: { width: 16, height: 14 },
   choiceLocked: { color: colors.textFaint, flexShrink: 1 },
-  lockNeed: { color: colors.textFaint, fontSize: 13 },
   more: { position: 'absolute', right: spacing.md, bottom: spacing.sm, color: colors.accent, fontSize: 12 },
 });

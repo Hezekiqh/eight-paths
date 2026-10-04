@@ -46,6 +46,8 @@ type Props = {
   onRead: (id: string) => void;
   /** Dev only: whether the fight bot plays, and switching it. */
   autopilot?: { on: boolean; toggle: () => void };
+  /** Test builds only (world/test-tools.ts). */
+  testTools?: { levels: boolean; walk: boolean; toggleLevels: () => void; toggleWalk: () => void };
 };
 
 type Tab = 'goals' | 'party' | 'controls';
@@ -79,6 +81,7 @@ export function PauseMenu({
   items,
   onRead,
   autopilot,
+  testTools,
 }: Props) {
   const [tab, setTab] = useState<Tab>('goals');
   return (
@@ -174,6 +177,18 @@ export function PauseMenu({
               <>
                 <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
                 <Text style={styles.hint}>{HINTS[controls]}</Text>
+                {testTools && (
+                  <MenuItem
+                    label={`Test levels (Lv 20): ${testTools.levels ? 'on' : 'off'}`}
+                    onPress={testTools.toggleLevels}
+                  />
+                )}
+                {testTools && (
+                  <MenuItem
+                    label={`Test: walk to goal: ${testTools.walk ? 'on' : 'off'}`}
+                    onPress={testTools.toggleWalk}
+                  />
+                )}
                 {autopilot && (
                   <MenuItem label={`Autopilot (dev): ${autopilot.on ? 'on' : 'off'}`} onPress={autopilot.toggle} />
                 )}
@@ -219,7 +234,9 @@ function MenuItem({
         quiet && styles.itemQuiet,
         pressed && { opacity: 0.7 },
       ]}>
-      <Text style={[styles.itemLabel, primary && styles.itemLabelPrimary, quiet && styles.itemLabelQuiet]}>{label.toUpperCase()}</Text>
+      <Text style={[styles.itemLabel, primary && styles.itemLabelPrimary, quiet && styles.itemLabelQuiet]}>
+        {label.toUpperCase()}
+      </Text>
     </Pressable>
   );
 }
@@ -245,7 +262,13 @@ const styles = StyleSheet.create({
   title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 24, letterSpacing: 1 },
   place: { color: colors.textMuted, fontFamily: fonts.dialogue, fontSize: 15, flexShrink: 1 },
   tabs: { flexDirection: 'row', gap: spacing.xs, borderBottomWidth: 2, borderBottomColor: colors.border },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, marginBottom: -2, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tab: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: -2,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
   tabOn: { borderBottomColor: colors.accent },
   tabLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 1 },
   tabLabelOn: { color: colors.accent },

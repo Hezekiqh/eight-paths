@@ -1,5 +1,6 @@
 import { CLASSES, type Dimension } from '@/game';
 
+import { GATE_FLAG, GATE_GUARD } from './castle';
 import { JOBS } from './jobs';
 import { MAPS, type MapId, type WorldMap } from './maps';
 import {
@@ -86,6 +87,22 @@ export function settersOf(flag: string): Setter[] {
         path: isPath(npc.job.path) ? npc.job.path : undefined,
         talk: true,
       });
+    }
+    // the castle's gate captain: talk (or push, or pay) your way past him (castle.ts)
+    if (flag === GATE_FLAG)
+      for (const npc of map.npcs)
+        if (npc.id === GATE_GUARD) out.push({ map: id, box: ONE(npc.x, npc.y), tag: npc.name, talk: true });
+    // one of the core eight, who joins you when you talk to them (meet.ts; Brannoc in his cell)
+    for (const npc of map.npcs) {
+      const id = npc.character;
+      if (!id || `met:${id}` !== flag) continue;
+      if (id === 'brannoc' && npc.id === 'brannoc-cell') {
+        // in his cell, behind the bars: the mark takes in the bars too (anyone can bend them, jobs.ts)
+        out.push({ map: map.id as MapId, box: { x: npc.x, y: npc.y, w: 4, h: 2 }, tag: npc.name, talk: true });
+        continue;
+      }
+      if (!npc.meets) continue;
+      out.push({ map: map.id as MapId, box: ONE(npc.x, npc.y), tag: npc.name, talk: true });
     }
     // a boss, or any rung of a ladder of fights (the Kaldorium: the guards, then the warden)
     for (const b of [map.boss, ...(map.ladder ?? [])])

@@ -19,6 +19,7 @@ export type Trigger =
   | 'plush-won'
   | 'kaldor-allowed'
   | 'kaldor-dethroned'
+  | 'you-crowned'
   | 'first-fall'
   | 'first-heart-piece'
   | 'whole-heart'
@@ -42,7 +43,9 @@ export type KeeperContext = {
 const PRIORITY: { when: Trigger; happened: (c: KeeperContext) => boolean }[] = [
   { when: 'season-done', happened: (c) => c.flags.includes('season-1') },
   { when: 'kaldor-allowed', happened: (c) => c.flags.includes('kaldor-allowed') },
-  { when: 'kaldor-dethroned', happened: (c) => c.flags.includes('kaldor-dethroned') },
+  // the throne went to you, not Brannoc (author, Oct 4, 2026)
+  { when: 'you-crowned', happened: (c) => c.flags.includes('you-king') },
+  { when: 'kaldor-dethroned', happened: (c) => c.flags.includes('kaldor-dethroned') && !c.flags.includes('you-king') },
   { when: 'plush-won', happened: (c) => c.flags.includes('plush-won') },
   { when: 'dessa-letter', happened: (c) => c.flags.includes(chestFlag(DESSA_CHEST)) },
   { when: 'whole-heart', happened: (c) => c.heartPieces >= 4 },
@@ -53,7 +56,14 @@ const PRIORITY: { when: Trigger; happened: (c: KeeperContext) => boolean }[] = [
 ];
 
 /** The story, in order: only the latest step that's happened gets his reaction (no "welcome back from the road" after Kaldor). */
-const STORY: Trigger[] = ['first-back-from-road', 'plush-won', 'kaldor-allowed', 'kaldor-dethroned', 'season-done'];
+const STORY: Trigger[] = [
+  'first-back-from-road',
+  'plush-won',
+  'kaldor-allowed',
+  'kaldor-dethroned',
+  'you-crowned',
+  'season-done',
+];
 
 /** The chest Dessa's letter is in. */
 const DESSA_CHEST = CHESTS.find((ch) => ch.item === 'dessa-letter')?.id ?? '';
@@ -75,7 +85,8 @@ function habitLine(m: HabitMemory, flags: string[], day: number): { id: string; 
     });
   const mark = [...STREAK_MARKS].reverse().find((n) => m.streak >= n);
   if (mark) candidates.push({ id: `streak-${mark}`, key: 'streak', values: { n: m.streak } });
-  if (m.streak >= 5 && m.streak === m.best) candidates.push({ id: `best-${m.best}`, key: 'best', values: { n: m.best } });
+  if (m.streak >= 5 && m.streak === m.best)
+    candidates.push({ id: `best-${m.best}`, key: 'best', values: { n: m.best } });
   const shown = [...SHOW_UP_MILESTONES].reverse().find((n) => n >= 30 && m.days >= n);
   if (shown) candidates.push({ id: `shown-${shown}`, key: 'shownUp', values: { days: shown } });
   if (m.strongest && m.strongest.level >= 10)

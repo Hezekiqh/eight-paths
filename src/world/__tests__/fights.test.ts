@@ -1,7 +1,7 @@
 import { DIMENSIONS, type Dimension } from '@/game';
 
 import {
-  ATTACKS,
+  attackFor,
   E_ALIVE,
   E_KIND,
   E_MODE,
@@ -9,7 +9,9 @@ import {
   E_Y,
   ENEMY_KINDS,
   HEARTS,
+  levelHearts,
   damageFor,
+  hpFor,
   drowsyRate,
   spawnEnemy,
   type EnemyKind,
@@ -18,7 +20,7 @@ import { SPEED, move, type Grid } from '../engine';
 import { SPECIALS, startFight, stepFight, type FightInput } from '../fight';
 import { autopilot, newPilot } from '../autopilot';
 import { EXITS } from '../progress';
-import { MAPS, TILE, type MapId } from '../maps';
+import { MAPS, TILE, withLadder, type MapId } from '../maps';
 
 // Every fight in Season 1, played headless by a sensible bot with the real
 // rules (stepFight, the same code the World runs). Ranged Paths keep their
@@ -35,12 +37,14 @@ const feet = (x: number, y: number): [number, number] => [x * TILE + TILE / 2, y
 /** won, or lost by dying, falling asleep (Plush), or running out of time. */
 type Result = { won: boolean; hearts: number; seconds: number; lost?: 'died' | 'slept' | 'time' };
 
-export function fight(id: MapId, path: Dimension, level: number): Result {
-  const map = MAPS[id];
+export function fight(id: MapId, path: Dimension, level: number, won: string[] = []): Result {
+  // a ladder of fights (the Colosseum, the Maximus) puts up its next rung each visit: `won` so far
+  const map = withLadder(MAPS[id], won);
   const grid: Grid = { solid: map.solid, width: map.width, height: map.height };
   const arrival = EXITS.find((e) => e.to?.map === id)?.to ?? map.spawn;
   let [px, py] = feet(arrival.x, arrival.y);
-  const attack = ATTACKS[path];
+  // the blow at this level: shorter reach the lower it is (combat.ts)
+  const attack = attackFor(path, level);
   const plush = !!map.boss && !map.boss.kind;
   const [bx, by] = map.boss ? feet(map.boss.x, map.boss.y) : [0, 0];
   const rules = {
@@ -54,12 +58,25 @@ export function fight(id: MapId, path: Dimension, level: number): Result {
     bossY: by,
     throws: plush,
     drowsy: plush ? drowsyRate(level) : 0,
-    maxHp: HEARTS,
+    // the party's hearts: five, and one more from Lv 5 (everyone's overall level starts there), more later
+    maxHp: HEARTS + levelHearts(level),
+    // FIGHT_NO_SPECIAL=1: today's special move already spent (one a day, specials.ts)
+    specialReady: !process.env.FIGHT_NO_SPECIAL,
   };
-  let f = startFight([
-    ...map.enemies.map((e) => spawnEnemy(e.kind, ...feet(e.x, e.y))),
-    ...(map.boss?.bearers.map(([x, y]) => spawnEnemy((map.boss!.kind ?? 'sleeper') as EnemyKind, ...feet(x, y))) ?? []),
-  ]);
+  const hp = (kind: EnemyKind) => hpFor(kind, level, rules.damage);
+  let f = startFight(
+    [
+      // as in the game: each takes a set number of hits at this level (combat.ts hitsToBeat)
+      ...map.enemies.map((e) => spawnEnemy(e.kind, ...feet(e.x, e.y), hp(e.kind))),
+      ...(map.boss?.bearers.map(([x, y]) => {
+        const kind = (map.boss!.kind ?? 'sleeper') as EnemyKind;
+        return spawnEnemy(kind, ...feet(x, y), hp(kind));
+      }) ?? []),
+      ...(map.boss?.with?.map((e) => spawnEnemy(e.kind as EnemyKind, ...feet(e.x, e.y), hp(e.kind as EnemyKind))) ??
+        []),
+    ],
+    rules.maxHp,
+  );
   let pilot = newPilot();
 
   for (let t = 0; t < LIMIT; t += DT) {
@@ -125,15 +142,27 @@ const FIGHTS: MapId[] = [
   'lower-barracks',
   'sleeping-keep',
   'the-pit',
-  'war-doors',
+  'kaldorium-maximus',
   'war-hall',
 ];
 
 describe('fights', () => {
-  it.each(['the-pit', 'war-doors', 'war-hall'] as MapId[])('every Path can win %s at a low hero level', (id) => {
-    const losers = DIMENSIONS.filter((d) => !fight(id, d, 5).won);
-    expect(losers).toEqual([]);
+  // The author's rule (Oct 4, 2026): every Path can win every fight, every rung of a ladder, at any
+  // level; being lower only means more hits to bring each one down (combat.ts hitsToBeat).
+  const RUNGS = FIGHTS.flatMap((id) => {
+    const flags = MAPS[id].ladder?.map((r) => r.flag) ?? [null];
+    return flags.map((flag, i) => ({
+      id,
+      name: flag ?? id,
+      won: MAPS[id].ladder ? (flags.slice(0, i) as string[]) : [],
+    }));
   });
+  it.each(RUNGS.flatMap((r) => [5, 10, 15, 20].map((level) => ({ ...r, level }))))(
+    'every Path can win $name at Lv $level',
+    ({ id, won, level }) => {
+      expect(DIMENSIONS.filter((d) => !fight(id, d, level, won).won)).toEqual([]);
+    },
+  );
 
   // The full table: FIGHT_REPORT=1 npx jest fights (add FIGHT_NO_DODGE=1 for a player who never rolls,
   // FIGHT_TIME=1 for how many seconds each fight took). W# = won with # hearts left,

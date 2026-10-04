@@ -44,6 +44,9 @@ type WorldState = {
   /** The day (YYYY-MM-DD) Moss last loosed his Arrow Barrage: once a day. */
   barrageDay: string | null;
   useBarrage: (day: string) => void;
+  /** Special moves used today, by the whole party (specials.ts): the day (YYYY-MM-DD) and how many. */
+  specials: { day: string; used: number } | null;
+  useSpecial: (day: string) => void;
   /** Starts the Other World over from the Archive floor. Keeps the controls and who walks; never touches habits. */
   restart: () => void;
 };
@@ -60,8 +63,11 @@ export const FRESH_WORLD = {
   barrageDay: null,
 } satisfies Partial<WorldState>;
 
-/** v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`; v6 `barrageDay`. All start empty. */
-const SAVE_VERSION = 6;
+/**
+ * v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`;
+ * v6 `barrageDay`; v7 `specials`. All start empty.
+ */
+const SAVE_VERSION = 7;
 
 function isSpot(value: unknown): value is CandleSpot {
   const v = value as Record<string, unknown> | null;
@@ -82,7 +88,11 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   if (Array.isArray(data.noticed)) out.noticed = data.noticed.filter((n): n is string => typeof n === 'string');
   if (Array.isArray(data.candles)) out.candles = data.candles.filter(isSpot);
   if (isMapId(data.lastCandle) && out.candles?.some((c) => c.map === data.lastCandle)) out.lastCandle = data.lastCandle;
-  if (typeof data.barrageDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.barrageDay)) out.barrageDay = data.barrageDay;
+  if (typeof data.barrageDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.barrageDay))
+    out.barrageDay = data.barrageDay;
+  const sp = data.specials as { day?: unknown; used?: unknown } | null | undefined;
+  if (sp && typeof sp.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(sp.day) && Number.isInteger(sp.used))
+    out.specials = { day: sp.day, used: Math.max(0, sp.used as number) };
   const p = data.position as Record<string, unknown> | null | undefined;
   if (p && isMapId(p.map) && Number.isFinite(p.x) && Number.isFinite(p.y) && FACINGS.includes(p.facing as Facing)) {
     out.position = { map: p.map, x: p.x as number, y: p.y as number, facing: p.facing as Facing };
@@ -117,6 +127,9 @@ export const useWorldStore = create<WorldState>()(
         set((s) => ({ candles: [...s.candles.filter((c) => c.map !== spot.map), spot], lastCandle: spot.map })),
       barrageDay: null,
       useBarrage: (day) => set({ barrageDay: day }),
+      // kept through a restart of the story (not in FRESH_WORLD): today's are today's
+      specials: null,
+      useSpecial: (day) => set((s) => ({ specials: { day, used: s.specials?.day === day ? s.specials.used + 1 : 1 } })),
       restart: () => set(FRESH_WORLD),
     }),
     {
@@ -134,6 +147,7 @@ export const useWorldStore = create<WorldState>()(
         candles: s.candles,
         lastCandle: s.lastCandle,
         barrageDay: s.barrageDay,
+        specials: s.specials,
       }),
       migrate: (persisted) => sanitize(persisted) as WorldState,
       merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),

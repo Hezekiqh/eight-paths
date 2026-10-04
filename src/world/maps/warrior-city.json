@@ -205,12 +205,19 @@
         "path": "social",
         "done": [
           "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
-          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE KALDORIUM!",
+          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE COLOSSEUM!",
           "You're on the bill."
         ],
         "cant": [
           "BARNABY: A new champion? On what grounds? Give me a story, stranger, a story!",
           "(Someone with a way with words might talk him into it.)"
+        ]
+      },
+      "after": {
+        "flag": "pit-champion",
+        "lines": [
+          "THE CHAMPION! In MY city! The one who sent the Warden over the banners!",
+          "Your name's on the wall. In chalk, but on the wall."
         ]
       }
     }

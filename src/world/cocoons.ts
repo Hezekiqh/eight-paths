@@ -44,17 +44,17 @@ export const brokenCocoons = (map: string, flags: string[]) =>
   COCOONS.filter((c) => c.map === map && flags.includes(c.hatched)).map(({ x, y }) => ({ x, y }));
 
 /**
- * Felix in Kaldor's war hall: once he's left to advise the king, two of the
- * king's guards stand with him for the fight, and Felix says why.
+ * Felix in Kaldor's war hall: once he's left to advise the king, two more of the
+ * king's shadows stand with him for the fight, and Felix says why.
  */
 export const ADVISED = {
   map: 'war-hall',
   flag: 'felix-left',
   guards: [
-    { kind: 'raider', x: 7, y: 3 },
-    { kind: 'raider', x: 11, y: 3 },
+    { kind: 'shadow', x: 8, y: 3 },
+    { kind: 'shadow', x: 14, y: 3 },
   ],
-  lines: ["FELIX: Ah, voilà, you came! I told him you would. I also told him to bring friends. Many friends."],
+  lines: ['FELIX: Ah, voilà, you came! I told him you would. I also told him to bring friends. Many friends.'],
 } as const;
 
 export function advisedBy(map: string, flags: string[]) {

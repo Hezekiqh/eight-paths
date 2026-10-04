@@ -1,0 +1,228 @@
+{
+  "id": "castle-grounds",
+  "name": "The Castle Grounds",
+  "style": "outdoor",
+  "ground": "ash",
+  "walkable": [".", ",", "s", "z"],
+  "art": {
+    "3": ".",
+    "2": "~"
+  },
+  "spawn": {
+    "x": 19,
+    "y": 28,
+    "facing": "up"
+  },
+  "tiles": [
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&&&",
+    "&&&&@@@@@@@@@@@@@@@33@@@@@@@@@@@@@@@&&&&",
+    "&~~~~~~~~~~~~~~~~~~22~~~~~~~~~~~~~~~~~~&",
+    "&~~~~~~~~~~~~~~~~~~22~~~~~~~~~~~~~~~~~~&",
+    "&.o..o..o..o..o..n.ss.n..o..o..o..o..o.&",
+    "&..................ss.iii..............&",
+    "&..FFFFFFFFFFFFFF..ss.iii...........&..&",
+    "&..FzezzzezzzezkF..ss.iii..............&",
+    "&..FzzzzzzzzzzzzF..ss.......X.X.X......&",
+    "&..FzzzzzzzzzzzzF..ss..................&",
+    "&..FzzzzzzzzzzzzF..ss..............&...&",
+    "&..Fzzzzzzzzzzzzz..ss..................&",
+    "&..Fzzzzzzzzzzzzz..ss......&...........&",
+    "&..FzzzzzzzzzzzzF..ss..................&",
+    "&..FzzzzzzztzzzzF..ss...........x......&",
+    "&..FzzzzzzzzzzzzF..ss..................&",
+    "&..FkzzzzzzzzzzzFo.ss.o.....qq.........&",
+    "&..FFFFFFFFFFFFFF..ss..................&",
+    "&................o.ss.o...&.......&....&",
+    "&.......&....&....css..................&",
+    "&...&..............ss..................&",
+    "&&&&&&&&&&&&&&&&&&&__&&&&&&&&&&&&&&&&&&&"
+  ],
+  "examine": {
+    "@": [
+      "Kaldor's castle. Black stone, red windows, and spikes on every edge that could hold a spike.",
+      "It does not look like a place anyone has ever been invited to."
+    ],
+    "3": ["The gate, behind the moat. You'd need the bridge down to get anywhere near it."],
+    "~": ["The moat. Black, still, and deeper than it looks. Something under the surface is keeping very still too."],
+    "2": ["The drawbridge chains run up into the gatehouse. Somebody has to let it down."],
+    "o": ["A skull on a pike. A small sign underneath: HE CHALLENGED THE KING. HE LOST."],
+    "&": ["A dead tree. Nothing grows near the castle for long."],
+    "i": ["The guard post. A brazier burns on its roof day and night, so the castle can always see who's coming."],
+    "t": [
+      "A soldier, flat on his back on the training sand. Out cold. A small bird has landed on his breastplate.",
+      "Nobody has the heart to move it."
+    ],
+    "z": ["Training sand, churned to mud and stamped flat again."],
+    "e": ["A straw dummy, beaten almost bald."],
+    "k": ["A rack of practice weapons. These ones are not wooden."],
+    "F": ["The training yard's fence."],
+    "n": ["The fist crushing a crown, on a black pole."],
+    "x": ["A cook fire. Something on the spit was a rabbit once. Possibly twice."],
+    "X": ["An iron cage, door open. Empty, for now."],
+    "q": ["A barrel of salt pork. The army marches on its stomach. This army mostly stands about on it."],
+    "c": ["A lantern on a post, the one warm light on the grounds."],
+    "_": ["Back south, to the town."]
+  },
+  "objects": [
+    {
+      "id": "gate-captain",
+      "type": "npc",
+      "x": 21,
+      "y": 13,
+      "sprite": "officer",
+      "facing": "left",
+      "name": "Captain Orsk",
+      "lines": ["Go on, then. Before I change my mind. I will not change my mind."]
+    },
+    {
+      "id": "gate-guard",
+      "type": "npc",
+      "x": 18,
+      "y": 13,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Gate Guard",
+      "lines": ["We don't get paid. In case you were wondering.", "Nobody ever wonders."]
+    },
+    {
+      "id": "drill-sergeant",
+      "type": "npc",
+      "x": 9,
+      "y": 17,
+      "sprite": "drummer",
+      "facing": "down",
+      "name": "Drill Sergeant",
+      "lines": ["ONE! TWO! ONE! TWO!", "...Somebody pick Harl up. ONE! TWO!"]
+    },
+    {
+      "id": "drill-1",
+      "type": "npc",
+      "x": 6,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Soldier",
+      "lines": ["Can't talk. Drilling."]
+    },
+    {
+      "id": "drill-2",
+      "type": "npc",
+      "x": 8,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Soldier",
+      "lines": ["Sixteen hours a day. The king says strength is everything."]
+    },
+    {
+      "id": "drill-3",
+      "type": "npc",
+      "x": 10,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Soldier",
+      "lines": ["My arms stopped hurting in the third century."]
+    },
+    {
+      "id": "drill-4",
+      "type": "npc",
+      "x": 12,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Soldier",
+      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for four hundred years."]
+    },
+    {
+      "id": "drill-5",
+      "type": "npc",
+      "x": 7,
+      "y": 21,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Soldier",
+      "lines": ["Don't look at Harl. Harl's fine."]
+    },
+    {
+      "id": "medic",
+      "type": "npc",
+      "x": 12,
+      "y": 22,
+      "sprite": "chaplain",
+      "facing": "left",
+      "name": "Field Medic",
+      "lines": [
+        "He took a dummy to the head. The dummy won.",
+        "Harl? Harl. How many fingers am I holding up? ...Wrong. It was a trick question. I'm not holding any up."
+      ]
+    },
+    {
+      "id": "fire-1",
+      "type": "npc",
+      "x": 31,
+      "y": 21,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Soldier",
+      "lines": [
+        "The shadows do the night watch now.",
+        "They don't eat, they don't sleep, they don't talk. Rubbish company."
+      ]
+    },
+    {
+      "id": "fire-2",
+      "type": "npc",
+      "x": 33,
+      "y": 21,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Soldier",
+      "lines": ["The king's new adviser, the French one, gave me this cheese.", "I don't trust the cheese."]
+    },
+    {
+      "id": "tallow",
+      "type": "npc",
+      "x": 17,
+      "y": 28,
+      "sprite": "lamplighter",
+      "facing": "left",
+      "name": "Tallow",
+      "lines": [
+        "Don't mind me. Braziers. Every one lit, every hour, or it's the cage for Tallow.",
+        "The king likes it bright out here. So he can see who's coming."
+      ],
+      "questions": [
+        {
+          "ask": "Why so many braziers?",
+          "answer": [
+            "Orders. Light all round, so the king can see who's coming a mile off.",
+            "And so the shadows know where to stand. Don't ask me what that means. I don't ask."
+          ]
+        },
+        {
+          "ask": "What's in the throne room?",
+          "answer": [
+            "The king. The French fellow. And the tall one. Don't. He doesn't talk. Used to, they say. Nearly won, they say.",
+            "I light a brazier for him too. Nobody told me to. Nobody told me not to."
+          ]
+        },
+        {
+          "ask": "Any advice?",
+          "answer": [
+            "The shadows break quick on anybody strong. On anybody else, they don't break at all.",
+            "Come back strong. You didn't hear that from Tallow."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -61,7 +61,7 @@ import {
   type Attack,
 } from '@/world/combat';
 import { CHARGE_TIME, startFight, stepFight, type Fight, type Special } from '@/world/fight';
-import { autopilot as autoplay, newPilot, type Pilot } from '@/world/autopilot';
+import { autopilot as autoplay, newPilot, walkToward, type Pilot } from '@/world/autopilot';
 import { AttackEffects } from '@/components/world/attack-effects';
 import { MAX_GUTTERED, type Ambience } from '@/world/ambience';
 import { playSound, type Effect } from '@/audio';
@@ -159,6 +159,8 @@ export type WorldSim = {
   cameo: SharedValue<number[]>;
   /** A scripted walk playing out (march.ts): guards marching you to a cell, say. Empty: none. */
   march: SharedValue<number[]>;
+  /** Test builds only: the tile [x, y] to walk to by itself (the guide's mark); empty: off. */
+  walkTo: SharedValue<number[]>;
 };
 
 export function useWorldSim(start: { x: number; y: number; facing: Facing }, npcs: NpcObject[]): WorldSim {
@@ -171,7 +173,16 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     moving: useSharedValue(false),
     trail: useSharedValue(startTrail(start.x, start.y)),
     npcWalk: useSharedValue(
-      newWanderers(npcs.map((n) => ({ x: n.x, y: n.y, facing: FACINGS.indexOf(n.facing), wander: n.wander, along: n.along, look: n.look }))),
+      newWanderers(
+        npcs.map((n) => ({
+          x: n.x,
+          y: n.y,
+          facing: FACINGS.indexOf(n.facing),
+          wander: n.wander,
+          along: n.along,
+          look: n.look,
+        })),
+      ),
     ),
     npcIds: useState(() => npcs.map((n) => n.id))[0],
     inputX: useSharedValue(0),
@@ -185,6 +196,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     sleepy: useSharedValue(0),
     cameo: useSharedValue<number[]>([]),
     march: useSharedValue<number[]>([]),
+    walkTo: useSharedValue<number[]>([]),
   };
 }
 
@@ -229,6 +241,14 @@ type Props = {
   barrageReady?: boolean;
   /** A signature went off: show the shout (and spend the barrage's day). */
   onSignature?: () => void;
+  /** A special move left today (specials.ts); without one the charged blow is plain. */
+  specialReady?: boolean;
+  /** Practising (nothing to fight here): you've said yes to spending a special on it. */
+  practiceArmed?: boolean;
+  /** A special went off: spend one of today's. */
+  onSpecial?: () => void;
+  /** Practising, a special would have gone off: ask first. */
+  onAskSpecial?: () => void;
   /** Out of hearts. */
   onDefeat?: () => void;
   /** Doorways shut for a boss fight: drawn barred. */
@@ -259,6 +279,15 @@ type Props = {
   onExited?: () => void;
   /** A march (sim.march) has finished. */
   onMarched?: () => void;
+  /**
+   * A drawbridge (the castle, castle.ts) over the moat tiles x, y, w wide and h long (tiles), and the
+   * gate over it: `down` runs 0 (raised against the gate) to 1 (lowered across the moat, gate open).
+   */
+  drawbridge?: { x: number; y: number; w: number; h: number; down: SharedValue<number> } | null;
+  /** A fight picked back up after a change of character, instead of a fresh one (session.ts carry). */
+  resume?: Fight | null;
+  /** Where the fight lives, so a change of character can carry it over. */
+  fightRef?: { current: SharedValue<Fight> | null };
 };
 
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
@@ -267,7 +296,9 @@ const EXIT_SPEED = 520;
 /** "HA" in a 3×5 pixel font, as [x, y] cells. */
 const HA = [
   ...['X.X', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : []))),
-  ...['.X.', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x + 4, y]] : []))),
+  ...['.X.', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) =>
+    [...row].flatMap((c, x) => (c === 'X' ? [[x + 4, y]] : [])),
+  ),
 ];
 /** Dust kicked up where a dash starts. */
 const PUFF = [
@@ -305,6 +336,10 @@ export function WorldView({
   specialLevel,
   barrageReady = false,
   onSignature,
+  specialReady = true,
+  practiceArmed = false,
+  onSpecial,
+  onAskSpecial,
   hearts = HEARTS,
   autopilot = false,
   onDefeat,
@@ -323,6 +358,9 @@ export function WorldView({
   ambience = { darkness: 0, motes: null },
   flames = [],
   snuffable = false,
+  drawbridge = null,
+  resume = null,
+  fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
   const walkers = useImage(WALKERS_IMAGE);
@@ -344,15 +382,27 @@ export function WorldView({
 
   // ---- combat: the whole fight in one value, stepped by stepFight (fight.ts) each frame.
   const fight = useSharedValue<Fight>(
-    startFight(
-      map.enemies.map((e) => spawnEnemy(e.kind, ...npcFeet(e))),
-      hearts,
-    ),
+    resume ??
+      startFight(
+        map.enemies.map((e) => spawnEnemy(e.kind, ...npcFeet(e), e.hp)),
+        hearts,
+      ),
   );
+  useEffect(() => {
+    if (fightRef) fightRef.current = fight;
+  }, [fight, fightRef]);
+  // The hearts on screen start full (or as carried over), not at the default five, before the first frame.
+  useEffect(() => {
+    sim.hp.set(fight.get().hp);
+  }, [sim, fight]);
   const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
+  const spentSpecial = useMemo(() => (onSpecial ? onSpecial : () => {}), [onSpecial]);
+  const askSpecial = useMemo(() => (onAskSpecial ? onAskSpecial : () => {}), [onAskSpecial]);
+  // Nothing to fight in here: your attack still works, for practice (author, Oct 4, 2026).
+  const practice = map.enemies.length === 0;
   const exited = useMemo(() => (onExited ? onExited : () => {}), [onExited]);
   const marched = useMemo(() => (onMarched ? onMarched : () => {}), [onMarched]);
   const bossX = boss ? boss.x : -1;
@@ -447,6 +497,19 @@ export function WorldView({
       if (auto) pilot.set(auto.pilot);
       let ix = auto ? auto.stickX : sim.inputX.get();
       let iy = auto ? auto.stickY : sim.inputY.get();
+      // test builds: with nobody on the stick, walk to the guide's mark (test-tools.ts)
+      const goTo = sim.walkTo.get();
+      if (!auto && goTo.length === 2 && ix === 0 && iy === 0) {
+        const w = walkToward(
+          { solid: solid.get(), width: mapWidth, height: mapHeight },
+          sim.x.get(),
+          sim.y.get(),
+          goTo[0],
+          goTo[1],
+        );
+        ix = w[0];
+        iy = w[1];
+      }
       const frozen = sim.frozen.get();
       // Dazed by a shout, mid-roll, or down: the stick does nothing for a moment.
       const fighting = fight.get();
@@ -519,7 +582,13 @@ export function WorldView({
       sim.dodgePressed.set(false);
       const release = auto ? auto.release : wasHeld.get() && !held;
       wasHeld.set(held);
-      if (!frozen && attack && fight.get().enemies.length > 0 && !fight.get().fallen && !fight.get().won) {
+      if (
+        !frozen &&
+        attack &&
+        (practice || fight.get().enemies.length > 0) &&
+        !fight.get().fallen &&
+        !fight.get().won
+      ) {
         const grid: Grid = { solid: solid.get(), width: mapWidth, height: mapHeight };
         const r = stepFight(
           fight.get(),
@@ -543,6 +612,9 @@ export function WorldView({
             special,
             specialLevel,
             barrageReady,
+            specialReady,
+            practice,
+            practiceArmed,
             boss: bossX >= 0,
             bossX,
             bossY,
@@ -570,6 +642,8 @@ export function WorldView({
         if (ev.rolled) scheduleOnRN(feel, 'roll');
         if (ev.mended) scheduleOnRN(feel, 'mend');
         if (ev.signature) scheduleOnRN(signed);
+        if (ev.special) scheduleOnRN(spentSpecial);
+        if (ev.askSpecial) scheduleOnRN(askSpecial);
         // Debt paid: the debtor flashes, a light tap, and a puff if that was the last of them.
         if (ev.ticked.length > 0 && ev.hits === 0) {
           const white = whiteFor.get().slice();
@@ -1050,6 +1124,7 @@ export function WorldView({
             <Rect x={p.x * TILE + 10} y={p.y * TILE + TILE - 3} width={4} height={3} color="#5A524C" />
           </Group>
         ))}
+        {drawbridge && <Drawbridge {...drawbridge} />}
         {boulders.map((_, i) => (
           <Boulder key={i} index={i} positions={rockPos} />
         ))}
@@ -1074,11 +1149,10 @@ export function WorldView({
         )}
         {map.enemies.length > 0 && <Path path={shadowPath} color="#0A0608" opacity={0.6} />}
         {map.enemies.length > 0 && <Path path={wavePath} color="#E8D8B8" style="stroke" strokeWidth={2} />}
-        {map.enemies.length > 0 && attack && (
-          <Circle cx={glowX} cy={glowY} r={glowR} color={attack.color} opacity={glowO} />
-        )}
+        {attack && <Circle cx={glowX} cy={glowY} r={glowR} color={attack.color} opacity={glowO} />}
         {walkers && <Atlas image={walkers} sprites={sprites} transforms={transforms} sampling={NEAREST} />}
-        {map.enemies.length > 0 && (
+        {/* the fight's effects, and your practice swings when there's nothing to fight */}
+        {(map.enemies.length > 0 || attack) && (
           <>
             {walkers && (
               <Group
@@ -1195,6 +1269,63 @@ function Boulder({ index, positions }: { index: number; positions: SharedValue<n
       <Oval x={3} y={4} width={5} height={3} color="#625A54" />
     </Group>
   );
+}
+
+/**
+ * The castle's drawbridge: raised, it stands up against the gate, planks and iron bands; lowering,
+ * it tips forward over the moat until it lies across it, and the dark of the open gate shows above.
+ */
+function Drawbridge({ x, y, w, h, down }: { x: number; y: number; w: number; h: number; down: SharedValue<number> }) {
+  const px = x * TILE;
+  const base = y * TILE;
+  const width = w * TILE;
+  const length = h * TILE;
+  // how far it reaches out over the moat, and how much of it still stands against the gate
+  const reach = useDerivedValue(() => length * down.get());
+  const stand = useDerivedValue(() => length * (1 - down.get()));
+  const standY = useDerivedValue(() => base - length * (1 - down.get()));
+  // the cross-planks showing so far, one every 5 pixels
+  const planks = useDerivedValue(() => Math.floor((length * down.get()) / 5));
+  // the chains, from the gatehouse to the bridge's far end
+  const chain = useDerivedValue(() => length + length * down.get());
+  return (
+    <Group>
+      {/* the gate's dark, uncovered as the bridge comes down */}
+      <Rect x={px} y={base - length} width={width} height={length} color="#0C0A0E" />
+      {/* lowered: planks across the moat */}
+      <Rect x={px} y={base} width={width} height={reach} color="#5A3E28" />
+      <Rect x={px} y={base} width={2} height={reach} color="#3A2818" />
+      <Rect x={px + width - 2} y={base} width={2} height={reach} color="#3A2818" />
+      {Array.from({ length: Math.ceil(length / 5) }, (_, i) => (
+        <Plank key={i} index={i} px={px} base={base} width={width} count={planks} />
+      ))}
+      {/* raised: it stands against the gate, iron-banded */}
+      <Rect x={px} y={standY} width={width} height={stand} color="#4A3020" />
+      <Rect x={px} y={standY} width={width} height={2} color="#2A1C12" />
+      <Rect x={px + 3} y={standY} width={2} height={stand} color="#4A4A54" />
+      <Rect x={px + width - 5} y={standY} width={2} height={stand} color="#4A4A54" />
+      <Rect x={px + width / 2 - 1} y={standY} width={2} height={stand} color="#2A1C12" />
+      <Rect x={px + 1} y={base - length} width={1} height={chain} color="#6A6A76" />
+      <Rect x={px + width - 2} y={base - length} width={1} height={chain} color="#6A6A76" />
+    </Group>
+  );
+}
+
+function Plank({
+  index,
+  px,
+  base,
+  width,
+  count,
+}: {
+  index: number;
+  px: number;
+  base: number;
+  width: number;
+  count: SharedValue<number>;
+}) {
+  const opacity = useDerivedValue(() => (index < count.get() ? 1 : 0));
+  return <Rect x={px} y={base + 4 + index * 5} width={width} height={1} color="#3A2818" opacity={opacity} />;
 }
 
 /** The ring of a drill sergeant's shout. */

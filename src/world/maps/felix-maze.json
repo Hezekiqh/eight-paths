@@ -87,7 +87,8 @@
       "facing": "left",
       "name": "Sir Himothy the Third",
       "lines": [
-        "Don't move."
+        "Don't move.",
+        "And it's Sir Himothy the Third. The whole thing. Every time."
       ],
       "comesAfter": "felix-hatched",
       "goneAfter": "felix-framed"

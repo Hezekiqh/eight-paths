@@ -1,5 +1,6 @@
 import type { CharacterId } from '@/story/companions';
 
+import { BRANNOC_REJOINED } from './castle';
 import { FINALE } from './keeper-talk-lines';
 import type { MapId } from './maps';
 import { fill, type HabitMemory } from './memory';
@@ -21,10 +22,16 @@ export type Scene = {
   outcome?: Outcome;
   /** A decision at the end: each option has its own words and its own outcome. */
   choices?: { label: string; lines: string[]; outcome: Outcome }[];
+  /** A special moment (moments.ts): this party member steps out and stands beside you for it. */
+  stepOut?: CharacterId;
 };
 
-/** The scene for winning the fight on `map`. `brannoc`: he's with you (in your party and met, see partyWithYou). */
-export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | null {
+/**
+ * The scene for winning the fight on `map`. `brannoc`: he's with you (in your party and met, see
+ * partyWithYou). `felix`: Felix was in the room (he's out of his cocoon and left the Courier Road).
+ * `asBrannoc`: you're walking as Brannoc himself.
+ */
+export function winScene(map: MapId, flag: string, brannoc: boolean, felix = false, asBrannoc = false): Scene | null {
   switch (map) {
     case 'sleeping-keep':
       return {
@@ -61,74 +68,128 @@ export function winScene(map: MapId, flag: string, brannoc: boolean): Scene | nu
           'The warden sways, and sits down in the sand with a thump that rattles the banners.',
           'For a heartbeat the Colosseum is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
           ...(brannoc ? ["BRANNOC: I… I didn't run. Did you see? I didn't run!"] : []),
-          'GUARD: Strength is valued more than anything here. You\'re free to explore the prison.',
-          'GUARD: We don\'t get paid enough for this.',
-          'THE WARDEN: (grunts) We don\'t get paid at all.',
+          "GUARD: Strength is valued more than anything here. You're free to explore the prison.",
+          "GUARD: We don't get paid enough for this.",
+          "THE WARDEN: (grunts) We don't get paid at all.",
           "Barnaby chalks a new name on the champions' wall. The first one in three hundred years that isn't crossed out.",
         ],
         outcome: { flags: [flag] },
       };
-    case 'war-doors':
+    case 'war-hall': {
+      // The castle's throne room (author, Oct 4, 2026): Kaldor and Felix watch you beat his shadows,
+      // then the throne is yours to settle, three ways. Brannoc is always with you by now (the
+      // castle road needs the whole party), and steps out beside you for it (moments.ts).
+      const prince = asBrannoc ? 'you' : 'Brannoc';
       return {
+        // Brannoc's father's throne: he steps out beside you for it
+        stepOut: brannoc && !asBrannoc ? 'brannoc' : undefined,
         lines: [
-          'The stitched giant sways, and kneels. The sword slips out of its grey hands.',
-          ...(brannoc
-            ? [
-                'Brannoc kneels beside him and closes the empty eyes.',
-                "BRANNOC: Rest now. You almost did it. We'll do the rest.",
-              ]
+          'The last shadow comes apart like smoke in a draught.',
+          'Aurek the Tall sways, and kneels, and stays kneeling. The sword slips out of his grey hands.',
+          ...(brannoc && !asBrannoc
+            ? ['Brannoc closes the empty eyes.', 'BRANNOC: Rest now. You almost did it. We shall do the rest.']
             : ['You close the empty eyes. Whatever held him lets go.']),
-          'The doors of the war hall stand open.',
-        ],
-        outcome: { flags: [flag] },
-      };
-    case 'war-hall':
-      return {
-        lines: [
-          "A torch gutters. For one moment, Kaldor casts a shadow, huge and ordinary, like any man's.",
-          'He goes down on one knee on his own dais, breathing hard.',
-          "KALDOR: So. The Mad King's son. Five hundred years I held this. Strong enough to conquer the world, and you beat me.",
-          'KALDOR: Well? The law is the law. The court is watching. Do I rule, and finish what your father started, properly this time? Or do you take my throne?',
+          'Kaldor has not moved from his throne. He claps. Slowly.',
+          brannoc
+            ? `KALDOR: So. The Mad King's son, and ${asBrannoc ? 'not one friend in the world, and yet here you are' : 'whoever this is'}. My best, and you went through them like a door.`
+            : 'KALDOR: So. My best, and you went through them like a door.',
+          "KALDOR: The law is the law, and the court is watching. Beat the king's champions, and the throne is yours to settle. So. Settle it.",
+          // Felix, gone the moment the fight turned (author): only a note where he stood
+          ...(felix
+            ? [
+                'Where Felix stood, there is only a chess piece, and a note pinned under it:',
+                '"Wish I could have stayed, but I need to prepare the next surprise. F :b"',
+              ]
+            : []),
         ],
         choices: [
+          ...(brannoc
+            ? [
+                {
+                  label: asBrannoc ? "Take back your father's throne." : 'Brannoc takes the throne.',
+                  lines: [
+                    asBrannoc
+                      ? 'By the old law, the warrior who beat the king takes the crown. Everyone turns to you.'
+                      : 'By the old law, the warrior who beat the king may name who takes the crown. You turn to Brannoc.',
+                    'BRANNOC: Me? I ran. I ran from all of it.',
+                    'BRANNOC: ...And I came back. That has to count for something.',
+                    `Kaldor gets up off the throne. He looks at ${prince} for a long moment, and hands over the crown himself.`,
+                    'KALDOR: It never did fit me.',
+                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.`,
+                    "Aurek the Tall is laid to rest, and his name goes back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
+                    'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
+                    'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+                    'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
+                    // he stays to rule (author, Oct 4, 2026), and catches you up later, working remotely (castle.ts)
+                    ...(asBrannoc
+                      ? [
+                          'You appoint a royal advisor on the spot. Two rules, and only two: do not go to war. Do not cause problems.',
+                          "Then you pick up your sword and head for the door. You'll be working remotely.",
+                        ]
+                      : [
+                          'BRANNOC: Go on without me, friend. A king must see to his kingdom.',
+                          'BRANNOC: ...For a little while.',
+                          "Brannoc stays behind, on his father's throne.",
+                        ]),
+                  ],
+                  outcome: {
+                    flags: [
+                      'kaldor-beaten',
+                      'kaldor-dethroned',
+                      'brannoc-king',
+                      // walking as him, there's nobody to catch you up: you're already gone
+                      ...(asBrannoc ? [BRANNOC_REJOINED] : []),
+                    ],
+                    joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+                  },
+                },
+              ]
+            : []),
+          ...(asBrannoc
+            ? []
+            : [
+                {
+                  label: 'Take the throne yourself.',
+                  lines: [
+                    'By the old law, the warrior who beat the king takes the crown. You walk up the steps.',
+                    'You sit. The throne is cold, and far too big, and a hundred tagged weapons dig into your back.',
+                    ...(brannoc
+                      ? [
+                          'BRANNOC: It suits you. Truly.',
+                          'BRANNOC: I shall be your captain. A captain may faint, now and then. I have checked.',
+                        ]
+                      : []),
+                    'KALDOR: Hm. Five hundred years. I thought I would mind more.',
+                    'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+                    'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
+                    'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+                    'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
+                  ],
+                  outcome: {
+                    flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king'],
+                    joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+                  },
+                },
+              ]),
           {
-            label: 'Let him rule.',
+            label: 'Let him keep it. On your terms.',
             lines: [
               'You lower your weapon. The court murmurs.',
-              "KALDOR: …Mercy. From a stranger. I didn't think I'd see that again.",
-              'KALDOR: The cages stay open. The horde guards the border, not the streets. For now. For you.',
-              "You receive the Warrior's Blessing. Kaldor keeps his throne, and his army. The march is only waiting.",
-              'KALDOR: The south road is yours. Tell Grub I said so. He likes to hear it from me.',
+              'KALDOR: ...Terms.',
+              'You lay them out. The army stays home. The cages stay open. Nobody marches on the wizard kingdom, tomorrow or ever. And from now on, he answers to you.',
+              'KALDOR: And if I refuse?',
+              ...(brannoc && !asBrannoc
+                ? ['BRANNOC: Then we do that again. And I did not even faint.']
+                : ['You look at what is left of his shadows. He looks too.']),
+              'KALDOR: ...Done.',
+              "Kaldor keeps his crown. You keep the leash. You receive the Warrior's Blessing.",
+              'KALDOR: The Tithe Road is yours. Tell Grub at the Broken Watch I said so. He likes to hear it from me.',
             ],
-            outcome: { flags: ['kaldor-beaten', 'kaldor-allowed', 'warrior-blessing'] },
-          },
-          {
-            label: 'Take his throne.',
-            lines: [
-              brannoc
-                ? 'By the old law, the warrior who beat the king takes the crown. Everyone turns to Brannoc.'
-                : 'By the old law, the warrior who beat the king takes the crown. Your Warrior steps up.',
-              ...(brannoc
-                ? [
-                    'BRANNOC: Me? I ran. I ran from all of it.',
-                    'BRANNOC: …And I came back. That has to count for something.',
-                    "Brannoc takes his father's throne. The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.",
-                  ]
-                : ['The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid.']),
-              brannoc
-                ? "Brannoc lays Aurek the Tall to rest, and puts his name back on the champions' wall. Later, somehow, he wakes, properly, as himself."
-                : "You lay Aurek the Tall to rest, and put his name back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
-              'Widow Aldane brings the old portrait out from under her floor and hangs it in the war hall.',
-              'Captain Ingrid, Aurek and Widow Aldane join your collection.',
-              'Word runs down the south road ahead of you. For the first time in three years, Grub steps aside.',
-            ],
-            outcome: {
-              flags: ['kaldor-beaten', 'kaldor-dethroned'],
-              joins: ['ingrid', 'aurek', 'aldane'],
-            },
+            outcome: { flags: ['kaldor-beaten', 'kaldor-allowed', 'your-terms', 'warrior-blessing'] },
           },
         ],
       };
+    }
     case 'kaldorium-maximus':
       return ladderScene(flag);
     default:
@@ -161,7 +222,7 @@ function ladderScene(flag: string): Scene | null {
     'maximus-5': [
       'Grand Champion Hroth sits down in the sand, and laughs, and laughs.',
       'HROTH: Forty years. Forty YEARS. Thank you. Thank you. I can retire.',
-      "Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.",
+      'Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.',
       "HROTH: Find me at Tova's. I'll be the one smiling.",
     ],
   };
@@ -187,7 +248,13 @@ export function seasonFinale(memory: HabitMemory | null, flags: string[]): strin
         )
         .filter((l): l is string => l !== null)
     : [];
-  const king = flags.includes('kaldor-allowed') ? FINALE.allowed : flags.includes('kaldor-dethroned') ? FINALE.dethroned : [];
+  const king = flags.includes('kaldor-allowed')
+    ? FINALE.allowed
+    : flags.includes('you-king')
+      ? FINALE.crowned
+      : flags.includes('kaldor-dethroned')
+        ? FINALE.dethroned
+        : [];
   return [...FINALE.seal, ...record, ...king, ...FINALE.memory, ...FINALE.end];
 }
 
@@ -204,8 +271,7 @@ export const PORTAL_HOME = {
 };
 
 /**
- * The party splits at the end of Season 1 (author, Oct 2, 2026): at the last
- * seal, the four of the Original 8 who aren't starters say goodbye and go home,
+ * The party splits at the start of Season 2 (author, Oct 4, 2026; it was the end of Season 1): the four of the Original 8 who aren't starters say goodbye and go home,
  * each to the kingdom of a later season. Only those you met. Draft lines, cut
  * down from WORLDS.md "the other four leave", for the author to edit.
  */

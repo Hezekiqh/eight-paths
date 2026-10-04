@@ -13,3 +13,13 @@ describe("the Keeper's telephone", () => {
     for (const c of KEEPER_CALLS) expect(c.lines.join(' ')).not.toMatch(/\b(thee|thou|thy|thine)\b/i);
   });
 });
+
+describe('the first call, once everyone is found', () => {
+  it('leaves out the lines about the ones still out there', () => {
+    const { KEEPER_CALLS, callLines } = jest.requireActual('../keeper-calls') as typeof import('../keeper-calls');
+    const lines = callLines(KEEPER_CALLS[0], 0);
+    expect(lines.join(' ')).toMatch(/all accounted for/);
+    expect(lines.join(' ')).not.toMatch(/rather lost|set them free/);
+    expect(callLines(KEEPER_CALLS[0], 3).join(' ')).toMatch(/set them free/);
+  });
+});

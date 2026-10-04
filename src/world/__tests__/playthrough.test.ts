@@ -1,3 +1,4 @@
+import { GATE_FLAG, GATE_GUARD } from '../castle';
 import { COMPANIONS, STARTERS, type CharacterId } from '@/story/companions';
 
 import { BRANNOC_SCENES } from '../dungeon';
@@ -114,6 +115,8 @@ function play(start: CharacterId) {
       for (const npc of map.npcs) {
         if (npc.job && canDo(npc.job.path) && near(map, seen, npc.x, npc.y)) add(npc.job.flag);
       }
+      // the castle's gate captain: four ways past him, each on a level (levels count as met here)
+      for (const npc of map.npcs) if (npc.id === GATE_GUARD && near(map, seen, npc.x, npc.y)) add(GATE_FLAG);
       if (map.platesFlag) add(map.platesFlag);
       // A ladder is a fight a visit, one after another; climbing it here means winning every rung.
       for (const boss of map.ladder ?? (map.boss ? [map.boss] : [])) {

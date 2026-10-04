@@ -1,12 +1,12 @@
 import { COMPANIONS, type CharacterId } from '@/story/companions';
 
-import { ATTACKS, levelHearts, rangeFor } from './combat';
+import { ATTACKS, rangeFor } from './combat';
 import { movesFor } from './fight';
 import { SIGNATURE_LEVEL, signatureOf } from './signatures';
 
 // What a character gains in the World from levelling up, for the level-up
-// screen: a little more reach every level, a heart now and then, and their
-// moves at Lv 10 and 20 (or their signature).
+// screen: a little more reach every level, and their moves at Lv 10 and 20 (or their signature).
+// Hearts aren't theirs: the whole party shares them (your overall level, and heart pieces).
 
 /** What changed going from Lv `from` to Lv `to`, biggest news first. */
 export function levelPerks(id: CharacterId, from: number, to: number): string[] {
@@ -16,7 +16,6 @@ export function levelPerks(id: CharacterId, from: number, to: number): string[] 
     .filter((m) => m.level > from && m.level <= to)
     .map((m) => `New move learned: ${m.name}!`);
   const perks = [...moves];
-  if (levelHearts(to) > levelHearts(from)) perks.push('Hearts increased!');
   const attack = ATTACKS[dimension];
   if (rangeFor(attack, to) > rangeFor(attack, from)) perks.push('Attack range increased!');
   return perks;

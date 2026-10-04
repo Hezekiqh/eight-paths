@@ -34,7 +34,14 @@ export function portraitFor(name: string | undefined): WalkerId | undefined {
  * says it, and the text without the name. Only names that match a person
  * count, so signs ("BY ORDER OF THE KING: …") stay as they are.
  */
-export function splitSpeaker(line: string): { speaker?: string; sprite?: WalkerId; text: string } {
+export function splitSpeaker(line: string): {
+  speaker?: string;
+  sprite?: WalkerId;
+  text: string;
+  narration?: boolean;
+} {
+  // "* text": narration, even in a box someone's speaking in (a boss's intro: what you see, not what he says)
+  if (line.startsWith('* ')) return { text: line.slice(2), narration: true };
   const m = line.match(/^([A-Z][A-Z' ]{1,30}): (.+)$/s);
   if (!m) return { text: line };
   const sprite = portraitFor(m[1]);

@@ -1,6 +1,7 @@
 import { BASE_XP, emptyDimensionRecord, overallLevelFromXp } from '@/game';
 
 import { nextGoal } from '../guide';
+import { GATE_FLAG, GATE_GUARD } from '../castle';
 import { JOBS } from '../jobs';
 import { MAPS, withBouldersMoved, withLadder, withOpenTiles, type MapId, type WorldMap } from '../maps';
 import { EXITS, standing, type XpTotals } from '../progress';
@@ -114,9 +115,28 @@ function guidedRun(): { steps: Step[]; flags: string[]; stuck?: string } {
     const inBox = (x: number, y: number) => x >= box.x && x < box.x + box.w && y >= box.y && y < box.y + box.h;
     const npc = base.npcs.find((p) => p.job && !flags.includes(p.job.flag) && inBox(p.x, p.y));
     const job = JOBS.find(
-      (j) => j.map === here && !flags.includes(j.flag) && base.tiles.some((row, y) => [...row].some((c, x) => c === j.tile && inBox(x, y))),
+      (j) =>
+        j.map === here &&
+        !flags.includes(j.flag) &&
+        base.tiles.some((row, y) => [...row].some((c, x) => c === j.tile && inBox(x, y))),
     );
-    const flag = npc?.job?.flag ?? job?.flag ?? (base.platesFlag && !flags.includes(base.platesFlag) ? base.platesFlag : null);
+    // one of the core eight, met by talking to them (Brannoc in his cell: the mark takes in the bars), or the castle's gate captain
+    const hero = base.npcs.find((p) => p.character && inBox(p.x, p.y) && !flags.includes(`met:${p.character}`));
+    if (hero && (hero.meets || hero.character === 'brannoc')) {
+      flags.push(
+        `met:${hero.character}`,
+        ...(hero.character === 'brannoc' ? ['cell-bars-bent', 'brannoc-joined'] : []),
+      );
+      steps.push({ map: here, did: `met ${hero.name}` });
+      continue;
+    }
+    if (base.npcs.some((p) => p.id === GATE_GUARD && inBox(p.x, p.y)) && !flags.includes(GATE_FLAG)) {
+      flags.push(GATE_FLAG);
+      steps.push({ map: here, did: 'talked past the gate guards' });
+      continue;
+    }
+    const flag =
+      npc?.job?.flag ?? job?.flag ?? (base.platesFlag && !flags.includes(base.platesFlag) ? base.platesFlag : null);
     if (!flag) return { steps, flags, stuck: `${here}: marked ${goal.mark.tag}, but there's nothing to do there` };
     flags.push(flag);
     steps.push({ map: here, did: `${goal.mark.tag} (${flag})` });
@@ -126,14 +146,14 @@ function guidedRun(): { steps: Step[]; flags: string[]; stuck?: string } {
 
 describe('Season 1, following only the guide', () => {
   const run = guidedRun();
-  if (process.env.SHOW) console.log(run.steps.map((s) => `${s.map}: ${s.did}`).join("\n"));
+  if (process.env.SHOW) console.log(run.steps.map((s) => `${s.map}: ${s.did}`).join('\n'));
 
   it('never points somewhere you cannot get to', () => {
     expect(run.stuck).toBeUndefined();
   });
 
   it('beats Kaldor and reaches the end', () => {
-    expect(run.flags).toEqual(expect.arrayContaining(['pit-champion', 'aurek-down', 'kaldor-beaten', 'season-1']));
+    expect(run.flags).toEqual(expect.arrayContaining(['pit-champion', GATE_FLAG, 'kaldor-beaten', 'season-1']));
   });
 
   it('walks the whole Berserker kingdom in order', () => {

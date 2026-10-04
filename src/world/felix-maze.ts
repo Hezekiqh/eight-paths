@@ -1,4 +1,5 @@
 import type { Dimension } from '@/game';
+import type { CharacterId } from '@/story/companions';
 
 import keeperWelcome from './keeper-welcome.json';
 
@@ -19,7 +20,7 @@ export const MAZE_SOLVED = 'felix-maze-solved';
 export const FRAMED = 'felix-framed';
 /** You promised the guards a drink. They'll remember. */
 export const OWES_GUARDS = 'owes-guards-a-drink';
-/** "What king?": you were thrown in the dungeon, next to Brannoc. */
+/** A wrong answer to Sir Himothy: you were thrown in the dungeon, next to Brannoc. */
 export const JAILED = 'jailed-with-brannoc';
 /** You've come to in the cell (said once). */
 export const JAIL_WOKE = 'jail-woke';
@@ -50,7 +51,7 @@ export const INTO_THE_CELL: Arrival = { map: 'kingdom-dungeon', x: 21, y: 3, fac
 
 /**
  * Ways between places that aren't doors: the hidden passage (a Mage of Lv 6),
- * the green candle, and the guards' "What king?" (any answer can be the wrong one).
+ * the green candle, and a wrong answer to the guards (straight to the cells).
  */
 export const SIDE_WAYS: { from: MapId; tile: string; to: Arrival }[] = [
   { from: 'felix-maze', tile: PASSAGE_TILE, to: INTO_THE_ARCHIVE },
@@ -101,7 +102,10 @@ export const KEEPER_CARDS_END = keeperWelcome.cardsEnd;
 /** The green candle, unlit or lit. */
 export const GREEN_CANDLE_LINES = {
   unlit: ['A candle with a green wick, unlit.', 'The Keeper says it burns only when it has somewhere to carry you.'],
-  lit: ['A candle burning green, not orange like the others.', "The flame leans east, as if it already knows where it's going."],
+  lit: [
+    'A candle burning green, not orange like the others.',
+    "The flame leans east, as if it already knows where it's going.",
+  ],
 };
 
 /** The Keeper, as you touch the green flame. */
@@ -112,16 +116,21 @@ export const KEEPER_PARTING = [
   'THE KEEPER: And people will remember what you have done...',
   `THE KEEPER: ${keeperWelcome.confronted}`,
   'The green flame flashes, and the room is gone.',
-]
+];
 
 /** The guard who does the talking: a captain, and very proud of it (author, Oct 3, 2026). */
 export const HIMOTHY = 'SIR HIMOTHY THE THIRD';
 
+// He insists on all of it (author, Oct 4, 2026): he gives his name, you try to shorten it, he cuts you
+// off, and it's straight to the answers. `{he is}` is whoever you're walking as (forHero).
 export const SCENE_OPEN = [
-  'FELIX: That one, sir! That is the one plotting to take the throne!',
-  "You have no idea what's happening.",
-  `${HIMOTHY}: Is this true? Here, it's guilty until proven innocent! Explain yourself.`,
+  'FELIX: There {he is}, officers! That one, plotting to take the throne!',
+  `${HIMOTHY}: Plotting against the king? Here, it's guilty until proven innocent.`,
+  `${HIMOTHY}: The name is Sir Himothy the Third. And you have to say the whole thing.`,
 ];
+/** What you try to call him (the only thing you can say, and the wrong one). */
+export const MISTER = '"Mr. Himothy, I..."';
+export const CUT_OFF = [`${HIMOTHY}: SAY. THE WHOLE. THING.`];
 
 /** Who the guards are after, for "Seize him!": they only want you. ('them' for anyone not listed.) */
 export const PRONOUN: Record<string, 'him' | 'her' | 'them'> = {
@@ -145,63 +154,74 @@ export type Answer = {
   sets?: string[];
   /** Thrown in the dungeon instead of let go. */
   jailed?: boolean;
+  /** Said when a party member of that Path steps out and says it for you, in their own voice (author, Oct 4, 2026). */
+  by?: Partial<Record<CharacterId, string[]>>;
+};
+
+const SUBJECT = { him: 'he is', her: 'she is', them: 'they are' } as const;
+/** A guard-scene line for whoever you're walking as: `{them}` (him/her) and `{he is}` (he is/she is). */
+export const forHero = (line: string, hero: string) => {
+  const p = PRONOUN[hero] ?? 'them';
+  return line.replace('{them}', p).replace('{he is}', SUBJECT[p]);
 };
 
 /** Said as you're taken, whichever wrong answer it was. */
 export const SEIZED = ['Rough hands. A sack over your head. A long, bumpy walk.'];
 
 /**
- * The guards' question: three clever answers (Lv 10 in their Path, greyed out with the Path's icon
- * until then) that talk you free, and three anyone can say that land you in the cells.
+ * The guards' question, four answers at most like every menu (author, Oct 4, 2026): two clever ones
+ * (Lv 10 in their Path, greyed out with just the Path's icon until then) that talk you free, and two
+ * anyone can say that land you in the cells: the one that moves things along, and the one you say
+ * because you've nothing better.
  */
 export const ANSWERS: Answer[] = [
   {
-    label: 'Warrior: "Say that again. Slower."',
-    path: 'physical',
-    lines: [
-      'You crack your knuckles. Then your neck. Then, somehow, a nearby log.',
-      `${HIMOTHY}: ...Right. Well. Nobody's accusing anybody of anything. Carry on, citizen.`,
-    ],
-  },
-  {
-    label: 'Mage: "Plots take weeks. I woke up today."',
+    label: '"Plots take weeks. I woke up today."',
     path: 'intellectual',
     lines: [
       "You explain: you've been awake a matter of days, you don't know where the throne is, and you'd need a map, a plan, and allies, which you also don't have.",
       `${HIMOTHY}: ...That is a very good point.`,
     ],
+    by: {
+      quill: [
+        "QUILL: Plots take weeks. Months, if they're any good. I've been awake for about four days.",
+        "QUILL: I don't know where the throne is. I'd need a map, a plan and allies, and I have, let me check... a pencil.",
+        `${HIMOTHY}: ...That is a very good point.`,
+      ],
+    },
   },
   {
-    label: 'Bard: "Let me buy you both a drink."',
+    label: '"Let me buy you both a drink."',
     path: 'social',
     lines: [
       `${HIMOTHY}: ...A drink?`,
       `${HIMOTHY}: Now you're talking. The Candle Inn, when you're in town. Don't forget.`,
       `${HIMOTHY}: You owe us.`,
     ],
+    by: {
+      pip: [
+        'PIP: Gentlemen! You look thirsty. Arresting people is thirsty work. Let me buy you both a drink!',
+        `${HIMOTHY}: ...A drink?`,
+        `${HIMOTHY}: Now you're talking. The Candle Inn, when you're in town. Don't forget.`,
+        `${HIMOTHY}: You owe us.`,
+      ],
+    },
     sets: [OWES_GUARDS],
-  },
-  {
-    label: '"I\'m innocent!"',
-    path: null,
-    lines: [`${HIMOTHY}: Innocent, huh? Sounds like something a guilty person would say.`, `${HIMOTHY}: Seize {them}!`],
-    sets: [JAILED],
-    jailed: true,
   },
   {
     label: '"How did you know!?"',
     path: null,
     lines: [
-      `${HIMOTHY}: How did I know? See this badge? Sir Himothy the Third. I always know.`,
+      `${HIMOTHY}: How did I know? See this badge? Sir Himothy the Third. The whole thing. I always know.`,
       `${HIMOTHY}: Seize {them}!`,
     ],
     sets: [JAILED],
     jailed: true,
   },
   {
-    label: '"What king?"',
+    label: '"I\'m innocent!"',
     path: null,
-    lines: [`${HIMOTHY}: Playing dumb? Not very smart. Seize {them}!`],
+    lines: [`${HIMOTHY}: Innocent, huh? Sounds like something a guilty person would say.`, `${HIMOTHY}: Seize {them}!`],
     sets: [JAILED],
     jailed: true,
   },
@@ -213,4 +233,3 @@ export const FELIX_FOILED = [
   'FELIX: Hmph. Fine. FINE. This round is yours, mon ami.',
   'FELIX: But my next trap? Magnifique. Truly. You will see. Au revoir!',
 ];
-

@@ -47,14 +47,14 @@ describe('notices', () => {
   });
 
   it('says what a locked door needs, in habits', () => {
-    const n = describeNotice(exitNotice('camp-barracks'), ctx())!;
-    expect(n.hint).toMatch(/Needs Overall Lv 9; you're Lv 5\. Finish about \d+ more habits\. Any habit counts\./);
+    const n = describeNotice(exitNotice('city-north'), ctx())!;
+    expect(n.hint).toMatch(/Needs Overall Lv 10; you're Lv 5\. Finish about \d+ more habits\. Any habit counts\./);
   });
 
   it("explains a lost boss fight by its tell and the walking character's level", () => {
     const n = describeNotice(fightNotice('war-hall'), ctx())!;
     expect(n.hint).toBe(
-      'Your blows glance off Kaldor while he casts no shadow. Roll aside when he charges: when a torch gutters and his shadow comes back, strike. Quill is Lv 12 and hits for 3. At Lv 20 they hit harder: finish Mage habits, or walk as a stronger party member.',
+      'The shadows chase; Aurek flashes red before he slams the ground. Roll away from the ring, then hit him while he rises. The stronger you are, the faster the shadows break: every habit counts. Quill is Lv 12 and hits for 3. At Lv 20 they hit harder: finish Mage habits, or walk as a stronger party member.',
     );
     expect(describeNotice(fightNotice('war-hall'), ctx(['kaldor-beaten']))).toBeNull();
   });

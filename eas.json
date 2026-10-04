@@ -12,6 +12,10 @@
     },
     "simulator": {
       "distribution": "internal",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_TEST_TOOLS": "1"
+      },
       "ios": {
         "simulator": true
       }

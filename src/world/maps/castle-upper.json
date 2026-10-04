@@ -1,0 +1,256 @@
+{
+  "id": "castle-upper",
+  "name": "The King's Floor",
+  "style": "dungeon",
+  "walkable": [".", ",", "=", "h"],
+  "art": {
+    "6": "D",
+    "7": "A",
+    "8": "Z",
+    "%": "."
+  },
+  "spawn": {
+    "x": 27,
+    "y": 11,
+    "facing": "left"
+  },
+  "tiles": [
+    "###############################",
+    "#WWfWFWWfWWWWWfWWWWWWWWWWWWWWW#",
+    "#Ww......yW.D.Q.wW.Q..6Wh7hhhW#",
+    "#W.hhhhh..WhhhhhhWhhhhhWhhhKhW#",
+    "#W.hhnhh..WhhhhhhWhhhzhWhhhhhW#",
+    "#W.hhhhh..WhhhhhhWhhhhhW....8W#",
+    "#W........W......W.....W.....W#",
+    "#WWWW.WWWWWWW.WWWWWW.WWWW.WWWW#",
+    "#W........................UUUW#",
+    "#W========================UUUW#",
+    "#W........................U%UW#",
+    "#W...........................W#",
+    "#WWWBWWWcWWWBWWWcWWBWWWcWWWWWW#",
+    "###############################"
+  ],
+  "examine": {
+    "%": ["The top of the winding stair. Down to the hall."],
+    "=": ["A long runner, threadbare in a line down the middle. Someone paces here. A lot."],
+    "W": ["Black stone. Somebody has hung a little embroidered sampler on it: HOME SWEET HOME. It is not convincing."],
+    "B": ["The fist crushing a crown, again. He really likes that one."],
+    "c": ["A torch, and beside it, a bucket of sand. Someone in this house worries about fires."],
+    "F": ["A hearth, burning low. Five chairs drawn up to it, and a footstool nobody admits is theirs."],
+    "w": ["A wardrobe, carved with fists and crowns. Inside: fur, more fur, and a crown that's slightly too small."],
+    "y": ["A vanity, with five sets of combs. They are labelled."],
+    "n": [
+      "Tea for five. Everyone's cup is half full. Nobody has touched the biscuits. Nobody wants to look like they want the biscuits."
+    ],
+    "f": [
+      "A portrait of Kaldor, with a different queen in each corner. Somebody has drawn a little crown over one of them in ink."
+    ],
+    "Q": ["A great bed with red curtains. It's been made so tightly a coin would bounce off it."],
+    "D": [
+      "His journal, open. The last pages, in a big square hand:",
+      "'No word from my master. Five hundred years. I take it as trust.'",
+      "'The French one says the wizards are weak. The French one says many things.'",
+      "'Asked the chandelier about the war. It agrees with me.'"
+    ],
+    "6": [
+      "A note on the desk in looping handwriting: 'Room 3. The bed is too soft, the view too grey, the king too loud. Five stars. — F'"
+    ],
+    "z": ["A chessboard, mid-game. The white king is surrounded. One black piece is missing."],
+    "K": [
+      "A child's cot, under a dust sheet. A wooden sword lies in it, carved with one letter: B.",
+      "Nobody has slept here in five hundred years. Nobody has cleared it out, either."
+    ],
+    "7": ["A tiny suit of armour on a stand. A prince's. It has been polished recently, and not by a servant."],
+    "8": ["A small carved horse on rockers, the paint long gone. Its name is burned into the saddle: SIR GALLOP."],
+    "U": ["The winding stair, turning down into the hall."],
+    "h": ["A thick rug from somewhere far away. Kaldor's army brought back a great many rugs."]
+  },
+  "objects": [
+    {
+      "id": "queen-brunhilt",
+      "type": "npc",
+      "x": 4,
+      "y": 4,
+      "sprite": "hekla",
+      "facing": "right",
+      "name": "Queen Brunhilt",
+      "lines": ["Oh! A visitor. Sit, sit. You've come about him, haven't you. Everyone comes about him."],
+      "questions": [
+        {
+          "ask": "What's the king like?",
+          "answer": [
+            "QUEEN BRUNHILT: Oh, where to start.",
+            "QUEEN SIGNY: He's been off lately. Talking to the walls. Answering them.",
+            "QUEEN ASTRA: He asked the chandelier for its opinion on the war. Then he agreed with it.",
+            "QUEEN HELKA: Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than I have heard my own name.",
+            "QUEEN MAREN: That is my loving husband you are talking about.",
+            "QUEEN HELKA: She only says that because she's the favourite.",
+            "QUEEN MAREN: I am not the favourite.",
+            "QUEEN BRUNHILT: You have the good room.",
+            "QUEEN MAREN: ...I have the good room.",
+            "QUEEN SIGNY: He thinks he can't die, you know. He keeps saying so. At dinner. Loudly.",
+            "QUEEN ASTRA: Between us? If somebody were to knock him down a peg, we would not be heartbroken.",
+            "QUEEN MAREN: I would be a little heartbroken.",
+            "QUEEN HELKA: The favourite."
+          ]
+        },
+        {
+          "ask": "Has anyone else been up here?",
+          "answer": [
+            "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
+            "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "queen-signy",
+      "type": "npc",
+      "x": 6,
+      "y": 3,
+      "sprite": "skadi",
+      "facing": "down",
+      "name": "Queen Signy",
+      "lines": ["He's been off lately. Talking to the walls. Answering them."],
+      "questions": [
+        {
+          "ask": "What's the king like?",
+          "answer": [
+            "QUEEN BRUNHILT: Oh, where to start.",
+            "QUEEN SIGNY: He's been off lately. Talking to the walls. Answering them.",
+            "QUEEN ASTRA: He asked the chandelier for its opinion on the war. Then he agreed with it.",
+            "QUEEN HELKA: Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than I have heard my own name.",
+            "QUEEN MAREN: That is my loving husband you are talking about.",
+            "QUEEN HELKA: She only says that because she's the favourite.",
+            "QUEEN MAREN: I am not the favourite.",
+            "QUEEN BRUNHILT: You have the good room.",
+            "QUEEN MAREN: ...I have the good room.",
+            "QUEEN SIGNY: He thinks he can't die, you know. He keeps saying so. At dinner. Loudly.",
+            "QUEEN ASTRA: Between us? If somebody were to knock him down a peg, we would not be heartbroken.",
+            "QUEEN MAREN: I would be a little heartbroken.",
+            "QUEEN HELKA: The favourite."
+          ]
+        },
+        {
+          "ask": "Has anyone else been up here?",
+          "answer": [
+            "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
+            "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "queen-astra",
+      "type": "npc",
+      "x": 7,
+      "y": 5,
+      "sprite": "ylva",
+      "facing": "left",
+      "name": "Queen Astra",
+      "lines": ["He asked the chandelier what it thought of the war. Then he agreed with it."],
+      "questions": [
+        {
+          "ask": "What's the king like?",
+          "answer": [
+            "QUEEN BRUNHILT: Oh, where to start.",
+            "QUEEN SIGNY: He's been off lately. Talking to the walls. Answering them.",
+            "QUEEN ASTRA: He asked the chandelier for its opinion on the war. Then he agreed with it.",
+            "QUEEN HELKA: Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than I have heard my own name.",
+            "QUEEN MAREN: That is my loving husband you are talking about.",
+            "QUEEN HELKA: She only says that because she's the favourite.",
+            "QUEEN MAREN: I am not the favourite.",
+            "QUEEN BRUNHILT: You have the good room.",
+            "QUEEN MAREN: ...I have the good room.",
+            "QUEEN SIGNY: He thinks he can't die, you know. He keeps saying so. At dinner. Loudly.",
+            "QUEEN ASTRA: Between us? If somebody were to knock him down a peg, we would not be heartbroken.",
+            "QUEEN MAREN: I would be a little heartbroken.",
+            "QUEEN HELKA: The favourite."
+          ]
+        },
+        {
+          "ask": "Has anyone else been up here?",
+          "answer": [
+            "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
+            "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "queen-helka",
+      "type": "npc",
+      "x": 3,
+      "y": 5,
+      "sprite": "ulfa",
+      "facing": "up",
+      "name": "Queen Helka",
+      "lines": ["Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than my own name."],
+      "questions": [
+        {
+          "ask": "What's the king like?",
+          "answer": [
+            "QUEEN BRUNHILT: Oh, where to start.",
+            "QUEEN SIGNY: He's been off lately. Talking to the walls. Answering them.",
+            "QUEEN ASTRA: He asked the chandelier for its opinion on the war. Then he agreed with it.",
+            "QUEEN HELKA: Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than I have heard my own name.",
+            "QUEEN MAREN: That is my loving husband you are talking about.",
+            "QUEEN HELKA: She only says that because she's the favourite.",
+            "QUEEN MAREN: I am not the favourite.",
+            "QUEEN BRUNHILT: You have the good room.",
+            "QUEEN MAREN: ...I have the good room.",
+            "QUEEN SIGNY: He thinks he can't die, you know. He keeps saying so. At dinner. Loudly.",
+            "QUEEN ASTRA: Between us? If somebody were to knock him down a peg, we would not be heartbroken.",
+            "QUEEN MAREN: I would be a little heartbroken.",
+            "QUEEN HELKA: The favourite."
+          ]
+        },
+        {
+          "ask": "Has anyone else been up here?",
+          "answer": [
+            "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
+            "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "queen-maren",
+      "type": "npc",
+      "x": 6,
+      "y": 5,
+      "sprite": "tova",
+      "facing": "up",
+      "name": "Queen Maren",
+      "lines": ["That is my loving husband you are talking about."],
+      "questions": [
+        {
+          "ask": "What's the king like?",
+          "answer": [
+            "QUEEN BRUNHILT: Oh, where to start.",
+            "QUEEN SIGNY: He's been off lately. Talking to the walls. Answering them.",
+            "QUEEN ASTRA: He asked the chandelier for its opinion on the war. Then he agreed with it.",
+            "QUEEN HELKA: Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than I have heard my own name.",
+            "QUEEN MAREN: That is my loving husband you are talking about.",
+            "QUEEN HELKA: She only says that because she's the favourite.",
+            "QUEEN MAREN: I am not the favourite.",
+            "QUEEN BRUNHILT: You have the good room.",
+            "QUEEN MAREN: ...I have the good room.",
+            "QUEEN SIGNY: He thinks he can't die, you know. He keeps saying so. At dinner. Loudly.",
+            "QUEEN ASTRA: Between us? If somebody were to knock him down a peg, we would not be heartbroken.",
+            "QUEEN MAREN: I would be a little heartbroken.",
+            "QUEEN HELKA: The favourite."
+          ]
+        },
+        {
+          "ask": "Has anyone else been up here?",
+          "answer": [
+            "QUEEN BRUNHILT: The French one. Room three. Charming. Ate all the biscuits.",
+            "QUEEN SIGNY: He told the king somebody was coming. He seemed very pleased about it."
+          ]
+        }
+      ]
+    }
+  ],
+  "floor": "marble"
+}

@@ -91,40 +91,40 @@
       "facing": "left",
       "name": "The Keeper",
       "lines": [
-        "Ah, you're on your feet. I'm so glad to finally see you again.",
-        "...You don't remember, do you.",
-        "Oh dear. Where do I begin?"
+        "Ah, you are on your feet. I am so very glad to see you again.",
+        "...You do not remember, do you.",
+        "Oh dear. Where shall I begin?"
       ],
       "questions": [
         {
           "ask": "Where am I?",
           "answer": [
-            "You're in a pocket dimension. I've been keeping you company for the past five hundred years.",
-            "It's a long story."
+            "A pocket of the world, set apart from it. I made it five hundred years ago, and it took a tremendous amount of power.",
+            "I have kept you company here ever since. But that is a long story."
           ]
         },
         {
           "ask": "Who are you?",
           "answer": [
-            "Let's just say I'm an old friend."
+            "Let us simply say I am an old friend."
           ]
         },
         {
           "ask": "How do you know me?",
           "answer": [
-            "I know more than I'm saying. I won't pretend I don't.",
-            "But who you were is yours to find. I think you'd rather remember it than be told."
+            "I know more than I am saying. I shall not pretend otherwise.",
+            "But who you were is yours to find. I think you would rather remember it than be told."
           ]
         },
         {
           "ask": "What am I supposed to do now?",
           "answer": [
-            "Well, you could stay here, if you'd like.",
-            "Outside of this Archive is the Other World.",
-            "You don't have the same power you once had. You'll have to grow stronger, a little each day.",
-            "Your actions in the real world affect your strength in this one.",
-            "In time, higher levels will grant you abilities you once had.",
-            "Level up once, any way you like, and the great door will open. Once you're out there, you can do whatever you'd like."
+            "Well, you may stay here, if you like.",
+            "Beyond this Archive lies the Other World.",
+            "You do not have the strength you once had. You will have to grow stronger, a little each day.",
+            "What you do in the real world shapes your strength in this one.",
+            "In time, higher levels will return abilities you once had.",
+            "Level up once, any way you like, and the great door will open. Once you are out there, you may do as you wish."
           ]
         }
       ]

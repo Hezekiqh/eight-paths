@@ -1,27 +1,86 @@
 {
   "id": "war-hall",
-  "name": "The War Hall",
+  "name": "The Throne Room",
   "style": "dungeon",
   "walkable": [
     ".",
-    ","
+    ",",
+    "="
   ],
-  "tiles": [
-    "##################",
-    "#WWWBWWWYYYWWWBWW#",
-    "#W.k..........k.W#",
-    "#W..............W#",
-    "#W.k..........k.W#",
-    "#W..............W#",
-    "#W.k..........k.W#",
-    "#WWWWWWWW11WWWWWW#",
-    "##################"
-  ],
+  "art": {
+    "1": "E"
+  },
   "spawn": {
-    "x": 9,
-    "y": 6,
+    "x": 11,
+    "y": 10,
     "facing": "up"
   },
+  "boss": {
+    "flag": "kaldor-beaten",
+    "x": 11,
+    "y": 5,
+    "kind": "shadow",
+    "bearers": [
+      [
+        7,
+        4
+      ],
+      [
+        15,
+        4
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        16,
+        7
+      ],
+      [
+        9,
+        8
+      ],
+      [
+        13,
+        8
+      ]
+    ],
+    "intro": {
+      "speaker": "Kaldor the Kingbreaker",
+      "lines": [
+        "FELIX: Your Majesty, as I promised. Here they are.",
+        "So. You're the one Felix keeps talking about.",
+        "Look at me. I don't age a day. I was chosen, you see. That's why.",
+        "My master put me on this throne five hundred years ago. And then... nothing. Not a word. Not in a very long time.",
+        "I've come to think that means I'm trusted. To do what's best for the kingdom. And what's best for the kingdom is war.",
+        "Five hundred years I've spent building the most vicious army in all the lands. We start with the wizard kingdom.",
+        "But it appears I'll have to deal with you first."
+      ]
+    },
+    "with": [
+      {
+        "kind": "aurek",
+        "x": 11,
+        "y": 5
+      }
+    ]
+  },
+  "tiles": [
+    "######################",
+    "#WWWfWBWWWYYYWWWBWfWW#",
+    "#W........===.......W#",
+    "#Wk.I.....===....I.kW#",
+    "#W........===.......W#",
+    "#W........===.......W#",
+    "#Wk.I.....===....I.kW#",
+    "#W........===.......W#",
+    "#W........===.......W#",
+    "#Wk.I.....===....I.kW#",
+    "#W........===.......W#",
+    "#WWWWWWWWW111WWWWWWWW#",
+    "######################"
+  ],
   "examine": {
     "B": [
       "The fist-and-crown banner, over everything."
@@ -34,47 +93,99 @@
       "Some of the mirrors are old-world glass. They don't fog. They don't scratch. They show the room a moment late."
     ],
     "1": [
-      "The way back to the doors."
+      "The doors, back to the hall."
+    ],
+    "=": [
+      "The carpet ends at the foot of the throne, worn through where people have knelt."
+    ],
+    "I": [
+      "A black pillar. In its shadow, the shadow is slightly too dark."
+    ],
+    "f": [
+      "A portrait of Kaldor, twice life size. The painter has given him a halo. Then thought better of it, and made it a crown."
     ]
   },
   "objects": [
     {
+      "id": "kaldor",
+      "type": "npc",
+      "x": 11,
+      "y": 2,
+      "sprite": "kaldor",
+      "facing": "down",
+      "name": "Kaldor",
+      "lines": [
+        "Your terms. I remember them.",
+        "I do not like them. I keep them."
+      ],
+      "goneAfter": "kaldor-dethroned"
+    },
+    {
       "id": "felix",
       "type": "npc",
-      "x": 12,
+      "x": 13,
       "y": 2,
       "sprite": "felix",
       "facing": "down",
       "name": "Felix",
-      "lines": ["Check.", "Hm. That was me."],
+      "lines": [
+        "Check.",
+        "Hm. That was me."
+      ],
       "comesAfter": "felix-left",
       "goneAfter": "kaldor-beaten"
-    }
-  ],
-  "art": {
-    "1": "E"
-  },
-  "boss": {
-    "flag": "kaldor-beaten",
-    "x": 9,
-    "y": 2,
-    "kind": "kaldor",
-    "bearers": [
-      [
-        9,
-        3
-      ]
-    ],
-    "intro": {
-      "speaker": "Kaldor the Kingbreaker",
+    },
+    {
+      "id": "king-brannoc",
+      "type": "npc",
+      "x": 10,
+      "y": 2,
+      "sprite": "brannoc",
+      "facing": "down",
+      "name": "King Brannoc",
       "lines": [
-        "You've heard the stories. The Mad King. He was going to march on the Mage Kingdom and set the whole world burning. I stopped him. The one who casts no shadow and I, together.",
-        "Then my patron put me in control. Build the army, it said. The Mad King was too hasty. He'd have lost. So I waited. Five hundred years.",
-        "And now we're strong enough. Strong enough to conquer the world. To end every war by being the only army left. Isn't that peace?",
-        "A hundred years ago, my patron fell silent. I stopped waiting for it to speak. Look at me: I don't age. I don't fall. I cast no shadow.",
-        "I am the one who casts no shadow now.",
-        "…Oh. And that big one behind you. I know that beard. I killed the man who wore it first. Your father, boy. The Mad King. Come and finish what he started, properly this time."
+        "A king. Me. I keep reaching for my sword and finding a sceptre.",
+        "Go on ahead, friend. I shall catch you up. Somehow. Kings can do that, I am told."
+      ],
+      "comesAfter": "brannoc-king",
+      "goneAfter": "brannoc-rejoined"
+    },
+    {
+      "id": "royal-advisor",
+      "type": "npc",
+      "x": 12,
+      "y": 3,
+      "sprite": "quartermaster",
+      "facing": "down",
+      "name": "Royal Advisor",
+      "lines": [
+        "His Majesty is working remotely. He has left two rules: don't go to war, and don't cause problems.",
+        "I've had them framed. Then I had the frame framed. One can't be too careful."
+      ],
+      "comesAfter": "brannoc-rejoined",
+      "questions": [
+        {
+          "ask": "How is the kingdom?",
+          "answer": [
+            "No war. No problems. Some disagreement about the moat.",
+            "His Majesty replies to ravens within three to five business days. Nobody knows what a business day is. We are afraid to ask."
+          ]
+        }
       ]
+    },
+    {
+      "id": "steward",
+      "type": "npc",
+      "x": 12,
+      "y": 3,
+      "sprite": "quartermaster",
+      "facing": "down",
+      "name": "Royal Steward",
+      "lines": [
+        "Your Majesty. The throne is warm, the kingdom is confused, and there's a queue.",
+        "You'll be working remotely, I take it? Everyone's doing it. Two rules while you're out: no wars, no problems. I'll hold the fort. Literally."
+      ],
+      "comesAfter": "you-king"
     }
-  }
+  ]
 }

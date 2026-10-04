@@ -46,7 +46,7 @@
       "Behind one shutter, a music box is playing the curfew jingle. A little too slowly."
     ],
     "E": [
-      "The keep gate, guarded by raiders. Beyond it, the war hall."
+      "The castle road, through the town wall. At the far end, black against the sky: Kaldor's castle."
     ],
     "5": [
       "The Candle Inn. A sign of a candle and the words WARM. FED. NOT ASKED."
@@ -58,7 +58,7 @@
       "The chapel, dark and quiet."
     ],
     "3": [
-      "The old Kaldorium, boarded up. A painted sign: THE FIGHTS HAVE MOVED TO WARRIOR CITY. Under it: (THE BIG ONE, WITH THE STATUE)."
+      "The old Kaldorium, boarded up. A painted sign: THE PIT IS CLOSED. FOR FIGHTS: THE COLOSSEUM, IN WARRIOR CITY, OR THE MAXIMUS, BY THE EAST GATE. Under it: (BOTH HAVE STATUES. OF COURSE BOTH HAVE STATUES.)"
     ],
     "d": [
       "You knock. A woman's voice, very close to the door: \"Go away. Unless you're the prince. Are you the prince?\""
@@ -273,14 +273,14 @@
       "name": "The Cage Guard",
       "lines": [
         "Back off. King's cages, king's prisoners.",
-        "I score their cheering at the pit. That one's a three. That one's a two.",
+        "I score their cheering at the Maximus. That one's a three. That one's a two.",
         "You? You look like a one."
       ],
       "questions": [
         {
           "ask": "Who's in the cages?",
           "answer": [
-            "People who wouldn't cheer at the pit. They'll cheer next time."
+            "People who wouldn't cheer at the Maximus. They'll cheer next time."
           ]
         }
       ],
@@ -320,7 +320,7 @@
       "facing": "down",
       "name": "Captain Varga",
       "lines": [
-        "Stop. You. Nobody walks up to the keep.",
+        "Stop. You. Nobody walks up to the castle.",
         "Unless they've got a reason. And a spine."
       ],
       "questions": [

@@ -25,7 +25,7 @@ import { pickData, useGameStore } from '@/store';
 import { selectKeeperFacts } from '@/store/selectors';
 import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
-import { CLASSES, levelFromXp, toDateKey, type Dimension } from '@/game';
+import { CLASSES, levelFromXp, overallLevelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
@@ -57,7 +57,7 @@ import {
   type Requirement,
   type XpTotals,
 } from '@/world/progress';
-import { PORTAL_HOME, SEASON_END, leftFlag, partySplit, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
@@ -65,7 +65,7 @@ import { TALKED, loreId, talkedId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
 import { characterQuestions } from '@/world/talk';
 import { PhoneCall } from '@/components/world/phone-call';
-import { callDue, callFlag, type KeeperCall } from '@/world/keeper-calls';
+import { callDue, callFlag, callLines, type KeeperCall } from '@/world/keeper-calls';
 import { dayNumber, pendingNews, roomOwner, roomQuestions, saidFlag, withRoster } from '@/world/hero-rooms';
 import { keeperQuestions } from '@/world/keeper-advice';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
@@ -75,7 +75,9 @@ import {
   CLEARED_BOULDERS,
   CLEARING_TILE,
   FELIX_FOILED,
-  PRONOUN,
+  CUT_OFF,
+  forHero,
+  MISTER,
   SEIZED,
   FRAMED,
   GREEN_CANDLE,
@@ -109,6 +111,24 @@ import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/sto
 import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
 import { newMarch, type Actor } from '@/world/march';
+import { BOSS_CUE, bossMoment } from '@/world/moments';
+import { noneLeft, practiceWarning, specialsLeft } from '@/world/specials';
+import { TEST_TOOLS } from '@/world/test-tools';
+import { usePremium } from '@/premium/store';
+import {
+  BRIDGE_LOWERS,
+  GATE_ANSWERS,
+  GATE_FLAG,
+  GATE_GUARD,
+  GATE_LEVEL,
+  GATE_NOT_YET,
+  GATE_OPEN,
+  BRANNOC_REJOINED,
+  BRANNOC_REJOINS,
+  REJOIN_MAP,
+  brannocAway,
+  needsSomeone,
+} from '@/world/castle';
 import {
   MAZE_HOLES,
   holeLines,
@@ -141,8 +161,21 @@ import {
 } from '@/world/dungeon';
 import { WALKER_ROWS } from '@/world/walkers';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
-import { ATTACKS, attackFor, damageFor, drowsyRate, levelHearts, type EnemyKind } from '@/world/combat';
-import { CHARGE_LEVEL, SPECIALS } from '@/world/fight';
+import {
+  ATTACKS,
+  E_ALIVE,
+  E_HP,
+  E_KIND,
+  ENEMIES,
+  ENEMY_KINDS,
+  attackFor,
+  damageFor,
+  drowsyRate,
+  hpFor,
+  levelHearts,
+  type EnemyKind,
+} from '@/world/combat';
+import { CHARGE_LEVEL, SPECIALS, startFight, type Fight } from '@/world/fight';
 import { SIGNATURE_LEVEL, signatureOf } from '@/world/signatures';
 import { ambienceOf, flamesOn } from '@/world/ambience';
 import {
@@ -333,6 +366,8 @@ function useLeft(): string[] {
  * and woken by a first habit. An old save (owned null) has everyone already.
  */
 function heroAwake(s: { player: { origin?: CharacterId } | null; owned: Owned | null }): boolean {
+  // test builds: awake without a real habit (test-tools.ts)
+  if (TEST_TOOLS && useSession.getState().testLevels) return true;
   const origin = s.player?.origin;
   return !!origin && (s.owned === null || (s.owned[origin] ?? 0) > 0);
 }
@@ -408,11 +443,27 @@ function World({
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
   const [arrivalFlags] = useState(() => xpNow.flags ?? []);
+  // Felix is in this room (he's out of his cocoon and gone from the road): lines about him need him here.
+  const felixHere = start.map.npcs.some(
+    (n) =>
+      n.id === 'felix' &&
+      (!n.comesAfter || arrivalFlags.includes(n.comesAfter)) &&
+      !(n.goneAfter && arrivalFlags.includes(n.goneAfter)),
+  );
+  const aboutFelix = useCallback((l: string) => felixHere || !/\bFelix\b|^FELIX:/.test(l), [felixHere]);
+  // A fight carried over from the character you just switched from (session.ts): it goes on, not again.
+  const [resume] = useState(() => {
+    const c = useSession.getState().carry;
+    return c && c.map === start.map.id ? c : null;
+  });
+  useEffect(() => {
+    if (resume) useSession.setState({ carry: null });
+  }, [resume]);
   const roomMap = useMemo(
     () =>
       withOpenTiles(
         // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
-        withRoster(start.map, dayNumber()),
+        withRoster(start.map, dayNumber(), arrivalFlags),
         [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
       ),
     [start, ways, arrivalFlags],
@@ -428,22 +479,32 @@ function World({
   /** Doors standing open for a moment in a cutscene (the cell door, as you're shoved in). */
   const [ajar, setAjar] = useState<{ x: number; y: number }[]>([]);
   const patches = useMemo(() => [...openPatches(map, arrivalFlags), ...ajar], [map, arrivalFlags, ajar]);
+  // The walking character's real level (from their habits): how hard they hit, and in the castle how hard the shadows are.
+  const collection = useCollection();
+  const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
   // The boss's bearers join the room's enemies while the fight is on.
-  const fightMap = useMemo(
-    () =>
-      bossOn && map.boss
-        ? {
-            ...map,
-            enemies: [
-              ...map.enemies,
-              ...map.boss.bearers.map(([x, y]) => ({ kind: (map.boss?.kind ?? 'sleeper') as EnemyKind, x, y })),
-              // Felix, if you let him out, has told the king you're coming: two guards stand with him
-              ...(advisedBy(map.id, arrivalFlags)?.guards ?? []),
-            ],
-          }
-        : map,
-    [map, bossOn, arrivalFlags],
-  );
+  const fightMap = useMemo(() => {
+    // every enemy takes a set number of hits, fewer the stronger you are (combat.ts hitsToBeat)
+    const blow = damageFor(ATTACKS[COMPANIONS[hero].dimension], heroLevel);
+    const foe = (kind: string, x: number, y: number) => ({
+      kind: kind as EnemyKind,
+      x,
+      y,
+      hp: hpFor(kind as EnemyKind, heroLevel, blow),
+    });
+    const enemies = map.enemies.map((e) => foe(e.kind, e.x, e.y));
+    if (!bossOn || !map.boss) return enemies.length > 0 ? { ...map, enemies } : map;
+    return {
+      ...map,
+      enemies: [
+        ...enemies,
+        ...map.boss.bearers.map(([x, y]) => foe(map.boss?.kind ?? 'sleeper', x, y)),
+        ...(map.boss.with ?? []).map((e) => foe(e.kind, e.x, e.y)),
+        // Felix, if you let him out, has told the king you're coming: more shadows stand with him
+        ...(advisedBy(map.id, arrivalFlags)?.guards ?? []).map((e) => foe(e.kind, e.x, e.y)),
+      ],
+    };
+  }, [map, bossOn, arrivalFlags, heroLevel, hero]);
   // A solved plate puzzle stays solved: its boulders start on the plates.
   const boulders = useMemo(() => {
     // Felix's maze, once you're past it: the boulders stay rolled aside, so the road is open both ways.
@@ -505,9 +566,21 @@ function World({
 
   // The one next thing to do: shown on the World map only, never over the game itself.
   const goal = useMemo(() => nextGoal(map.id as MapId, discovered, xp), [map, discovered, xp]);
+  // test builds: walk to it by yourself (test-tools.ts)
+  const testLevels = useSession((s) => s.testLevels);
+  const testWalk = useSession((s) => TEST_TOOLS && s.testWalk);
+  useEffect(() => {
+    const b = goal.mark?.box;
+    sim.walkTo.set(testWalk && b ? [b.x + Math.floor((b.w - 1) / 2), b.y + Math.floor((b.h - 1) / 2)] : []);
+  }, [testWalk, goal, sim]);
   // Setting foot somewhere puts it on the World map.
   useEffect(() => {
     discover(map.id as MapId);
+    // Felix, hatched and never asked "What now?": once you've left the Courier Road, so has he
+    // (else he'd be by his cocoon and in his maze at once, and missing from the throne room)
+    const w = useWorldStore.getState();
+    if (map.id !== 'courier-road' && w.flags.includes('felix-hatched') && !w.flags.includes('felix-left'))
+      w.setFlag('felix-left');
   }, [map, discover]);
   const prisonIntro =
     bossOn && prison && start.map.boss
@@ -516,18 +589,39 @@ function World({
         ]
       : undefined;
   const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
-    !bossOn
-      ? heroIntroFor(hero)
-      : prisonIntro
-        ? { lines: prisonIntro.lines }
-        : start.map.boss?.intro
-          ? {
-              speaker: start.map.boss.intro.speaker ?? undefined,
-              lines: [...start.map.boss.intro.lines, ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? [])],
-            }
-          : bossNpc
-            ? { speaker: bossNpc.name, lines: bossNpc.lines }
-            : null,
+    resume
+      ? null
+      : !bossOn
+        ? (heroIntroFor(hero) ??
+          // the first time you walk in somewhere that has something to say about it (the castle's empty hall)
+          (start.map.firstVisit && !arrivalFlags.includes(`seen:${start.map.id}`)
+            ? {
+                lines: start.map.firstVisit,
+                then: () => useWorldStore.getState().setFlag(`seen:${start.map.id}`),
+              }
+            : null))
+        : prisonIntro
+          ? { lines: prisonIntro.lines }
+          : start.map.boss?.intro
+            ? {
+                speaker: start.map.boss.intro.speaker ?? undefined,
+                lines: [
+                  // a line of Felix's only if he's in the room to say it
+                  ...start.map.boss.intro.lines.filter(aboutFelix),
+                  ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
+                  // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
+                  // this, and ends in the fight's cue; already seen, the cue comes straight after
+                  ...(() => {
+                    const m = bossMoment(start.map.id, hero);
+                    const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
+                    if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
+                    return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
+                  })(),
+                ],
+              }
+            : bossNpc
+              ? { speaker: bossNpc.name, lines: bossNpc.lines }
+              : null,
   );
   const dialogueRef = useRef(dialogue);
   useEffect(() => {
@@ -584,6 +678,61 @@ function World({
     setCutscene(false);
     then?.();
   }, []);
+  // King Brannoc catches you up on the road to the end of the season (castle.ts): he runs in from
+  // behind you, says his piece, and falls in.
+  const rejoined = useRef(false);
+  useEffect(() => {
+    if (rejoined.current || map.id !== REJOIN_MAP || hero === 'brannoc' || !brannocAway(arrivalFlags)) return;
+    const hx = Math.floor(sim.x.get() / TILE);
+    const hy = Math.floor((sim.y.get() - 1) / TILE);
+    const f = sim.facing.get();
+    // He runs in from behind you, or, at the edge of the map (you arrive at the Broken Watch's top
+    // edge), from whichever side has open ground for him to run along (play-test, Oct 4, 2026).
+    const step = [
+      [0, 1],
+      [0, -1],
+      [-1, 0],
+      [1, 0],
+    ];
+    const open = (x: number, y: number) =>
+      x >= 0 && y >= 0 && x < map.width && y < map.height && !map.solid[y * map.width + x];
+    const from = [[1, 0, 3, 2][f], f, f < 2 ? 2 : 0, f < 2 ? 3 : 1].find((d) =>
+      [1, 2, 3, 4].every((k) => open(hx + step[d][0] * k, hy + step[d][1] * k)),
+    );
+    const [dx, dy] = step[from ?? [1, 0, 3, 2][f]];
+    const behind = (k: number): [number, number] => [hx + dx * k, hy + dy * k];
+    // he arrives facing you; you turn to face him
+    const turned = from ?? [1, 0, 3, 2][f];
+    const f2 = [1, 0, 3, 2][turned];
+    const row = WALKER_ROWS.brannoc;
+    // (marked once it starts, not before: a cancelled timer, as in a re-run effect, mustn't use it up)
+    const timer = setTimeout(() => {
+      rejoined.current = true;
+      march(
+        [
+          { row, path: [behind(5), behind(1)], face: f2 },
+          { row: -1, path: [[hx, hy]], face: turned },
+        ],
+        () =>
+          setDialogue({
+            lines: BRANNOC_REJOINS,
+            then: () => {
+              useWorldStore.getState().setFlag(BRANNOC_REJOINED);
+              march(
+                [
+                  { row, path: [behind(1), [hx, hy]] },
+                  { row: -1, path: [[hx, hy]], face: f },
+                ],
+                () => {},
+              );
+            },
+          }),
+        4,
+        true,
+      );
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [map, hero, arrivalFlags, sim, march]);
   // The Keeper's telephone (keeper-calls.ts): it rings once a call is due and you're free to answer.
   const [ringing, setRinging] = useState<KeeperCall | null>(null);
   const frozen = paused || dialogue !== null || cutscene || ringing !== null;
@@ -605,7 +754,10 @@ function World({
     },
     [save, onTravel],
   );
-  const { act, talk } = useAct(map, sim, setDialogue, save, xpRef, travel, hero);
+  // Someone with a scene of their own instead of a plain talk (the castle's gate captain); set below, once it can be.
+  const specialTalk = useRef<(thing: NpcObject) => boolean>(() => false);
+  const special = useCallback((thing: NpcObject) => specialTalk.current(thing), []);
+  const { act, talk } = useAct(map, sim, setDialogue, save, xpRef, travel, hero, special);
   // Back from a cocoon's hatch: whoever came out of it talks to you straight away.
   useFocusEffect(
     useCallback(() => {
@@ -619,18 +771,80 @@ function World({
   const setFlag = useWorldStore((s) => s.setFlag);
   // How the walking character fights: their Path's attack, harder the more real habits they have.
   const heroPath = COMPANIONS[hero].dimension;
-  const collection = useCollection();
-  const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
-  const hearts = pieceHearts + levelHearts(heroLevel);
+  // Hearts belong to the whole party, not whoever's walking (author, Oct 4, 2026): heart pieces, and
+  // your overall level from every habit.
+  const partyLevel = overallLevelFromXp(xp.total).level;
+  const hearts = pieceHearts + levelHearts(partyLevel);
+  // Picking the fight back up after a switch: your hearts as they were, each enemy with the same share
+  // of it left, in the new character's hits.
+  const resumeFight = useMemo(() => {
+    if (!resume) return null;
+    const enemies = resume.enemies.map((e, i) => {
+      const n = e.slice();
+      const full = fightMap.enemies[i]?.hp ?? ENEMIES[ENEMY_KINDS[e[E_KIND]]].hp;
+      if (n[E_ALIVE] === 1) n[E_HP] = Math.max(1, Math.ceil(resume.left[i] * full));
+      return n;
+    });
+    return {
+      ...startFight(enemies, hearts),
+      hp: Math.min(hearts, resume.hp),
+      mended: resume.mended,
+      rained: resume.rained,
+    };
+    // once, on arrival
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resume]);
+  const fightRef = useRef<SharedValue<Fight> | null>(null);
   // Their reach grows a little with every level, too.
   const heroAttack = useMemo(() => attackFor(heroPath, heroLevel), [heroPath, heroLevel]);
   const gameParty = useGameStore((s) => s.party);
   const owned = useGameStore((s) => s.owned);
+  // The moment before this boss fight (moments.ts), once the intro closes: once only, not on every retry.
+  const introOver = bossOn && dialogue === null;
+  useEffect(() => {
+    if (!introOver) return;
+    const m = bossMoment(map.id, hero);
+    const flag = `moment:${map.id}`;
+    const w = useWorldStore.getState();
+    if (!m || w.flags.includes(flag)) return;
+    // walking as them, their lines are part of the intro instead (above)
+    if (!m.stepsOut || !partyWithYou(gameParty, owned, w.flags).includes(m.moment.who)) return;
+    w.setFlag(flag);
+    // (a line about Felix only if he's here: the room's arrival flags decide it, as for the intro)
+    stepOut(sim, m.moment.who as HeroId, { lines: m.moment.lines.filter(aboutFelix) }, setDialogue);
+  }, [introOver, map, hero, gameParty, owned, sim, aboutFelix]);
   // Their own move, if they have one (signatures.ts); else their Path's special at Lv 20.
   const signature = signatureOf(hero);
   const habitToday = useGameStore((s) => s.completions.some((c) => c.date === today));
-  const barrageDay = useWorldStore((s) => s.barrageDay);
   const [shouting, setShouting] = useState<{ name: string; line: string; at: number } | null>(null);
+  // Special moves: one a day, three with Premium, shared by the party (specials.ts). Practising,
+  // you're asked before one is spent on nothing.
+  const premium = usePremium((s) => s.premium);
+  const tier = premium ? 'premium' : 'free';
+  const specialsUsed = useWorldStore((s) => s.specials);
+  const specialsToday = specialsLeft(specialsUsed, today, tier);
+  const [practiceArmed, setPracticeArmed] = useState(false);
+  const onSpecial = useCallback(() => {
+    useWorldStore.getState().useSpecial(today);
+    setPracticeArmed(false);
+  }, [today]);
+  const onAskSpecial = useCallback(() => {
+    const now = specialsLeft(useWorldStore.getState().specials, today, tier);
+    if (now === 0) return setDialogue({ lines: noneLeft(tier) });
+    setDialogue({
+      lines: practiceWarning(now, tier),
+      choices: [
+        {
+          label: 'Spend one.',
+          then: () => {
+            setPracticeArmed(true);
+            setDialogue({ lines: ['(Charge it up, and let go.)'] });
+          },
+        },
+        { label: 'Save it.', then: () => {} },
+      ],
+    });
+  }, [today, tier]);
   const onSignature = useCallback(() => {
     if (!signature) return;
     if (signature.shout) setShouting({ name: COMPANIONS[hero].name, line: signature.shout, at: Date.now() });
@@ -663,6 +877,90 @@ function World({
     }),
     [map, sim],
   );
+  // The castle's drawbridge (castle.ts): down for good once the gate guards let you through.
+  const bridgeDown = useSharedValue(arrivalFlags.includes(GATE_FLAG) ? 1 : 0);
+  const drawbridge = useMemo(() => {
+    const tiles = tilesOf(map, ['2']).map((t) => [t % map.width, Math.floor(t / map.width)]);
+    if (map.id !== 'castle-grounds' || tiles.length === 0) return null;
+    const xs = tiles.map(([x]) => x);
+    const ys = tiles.map(([, y]) => y);
+    const x = Math.min(...xs);
+    const y = Math.min(...ys);
+    return { x, y, w: Math.max(...xs) - x + 1, h: Math.max(...ys) - y + 1, down: bridgeDown };
+  }, [map, bridgeDown]);
+  /**
+   * Who can say a Path's clever answer (author, Oct 4, 2026): it takes Lv `level` on that Path, and
+   * someone of that Path to say it: you, walking as them, or a party member who steps out and does
+   * the talking for you. `locked` says what's missing.
+   */
+  const canSay = useCallback(
+    (path: Dimension, level: number): { locked?: string; who?: HeroId } => {
+      const { className } = CLASSES[path];
+      if (!standing({ kind: 'path', dimension: path, level }, xpRef.current).met)
+        return { locked: `${className} Lv ${level}` };
+      const who = COMPANIONS[hero].dimension === path ? hero : stepsIn(path, hero);
+      return who ? { who } : { locked: needsSomeone(className) };
+    },
+    [hero],
+  );
+  /** Said by `who`: yourself (the plain lines), or a party member stepping out to say it their way. */
+  const sayAs = useCallback(
+    (who: HeroId, lines: string[], by: Partial<Record<string, string[]>> | undefined, then?: () => void) => {
+      if (who === hero) return setDialogue({ lines, then });
+      const said = by?.[who] ?? [`${COMPANIONS[who].name} steps up to do the talking.`, ...lines];
+      stepOut(sim, who, { lines: said, then }, setDialogue);
+    },
+    [hero, sim],
+  );
+  // The gate captain: four ways past (each Lv 8 on its Path, greyed out until then), or back off.
+  const gateScene = useCallback(() => {
+    const lowerBridge = () => {
+      // the bridge comes down, BOOM, and then it's a way in (this visit's doorways are fixed, so come back in)
+      setFlag(GATE_FLAG);
+      setCutscene(true);
+      bridgeDown.set(withTiming(1, { duration: 2200 }));
+      setTimeout(() => {
+        playSound('slam');
+        haptics.celebrate();
+        setCutscene(false);
+        setDialogue({ lines: BRIDGE_LOWERS, then: () => travel(hereNow()) });
+      }, 2300);
+    };
+    const choices = GATE_ANSWERS.map((a) => {
+      const can = a.path ? canSay(a.path, GATE_LEVEL) : { locked: undefined, who: hero };
+      return { a, ...can };
+    });
+    const none = choices.every((c) => !c.a.path || c.locked);
+    setDialogue({
+      lines: GATE_OPEN,
+      choices: choices.map(({ a, locked, who }) => ({
+        label: a.label,
+        icon: a.path ? CLASSES[a.path].symbol : undefined,
+        locked,
+        then: () => {
+          if (!a.path) {
+            // anyone's answer: mostly a no, now and then Orsk is in a good mood
+            if (a.luck && Math.random() < a.luck.chance) return setDialogue({ lines: a.luck.lines, then: lowerBridge });
+            return setDialogue({ lines: none ? [...a.lines, GATE_NOT_YET] : a.lines });
+          }
+          sayAs(who!, a.lines, a.by, lowerBridge);
+        },
+      })),
+    });
+  }, [setFlag, travel, hereNow, bridgeDown, canSay, sayAs, hero]);
+  useEffect(() => {
+    specialTalk.current = (thing) => {
+      if (
+        map.id === 'castle-grounds' &&
+        thing.id === GATE_GUARD &&
+        !useWorldStore.getState().flags.includes(GATE_FLAG)
+      ) {
+        gateScene();
+        return true;
+      }
+      return false;
+    };
+  }, [map, gateScene]);
   const onWin = useCallback(() => {
     if (!map.boss) return;
     // The prison route (dungeon.ts): Brannoc is out cold on the sand while you fight.
@@ -676,6 +974,8 @@ function World({
         lines: SNOT_SWING,
         then: () => {
           setFlag('pit-champion');
+          // the champion's name goes on Barnaby's bill too
+          setFlag('on-the-bill');
           march(
             brannocSleepwalks(WALKER_ROWS.brannoc),
             () =>
@@ -697,17 +997,26 @@ function World({
       map.id as MapId,
       map.boss.flag,
       partyWithYou(gameParty, owned, useWorldStore.getState().flags).includes('brannoc'),
+      map.npcs.some((n) => n.id === 'felix'),
+      hero === 'brannoc',
     );
     if (!scene) return;
-    setDialogue({
+    // whoever stepped out for it steps back in as the scene ends, however it ends
+    const done = (o: Outcome) => {
+      sim.cameo.set([]);
+      finish(o);
+    };
+    const said: Dialogue = {
       lines: scene.lines,
-      then: scene.outcome ? () => finish(scene.outcome!) : undefined,
+      then: scene.outcome ? () => done(scene.outcome!) : undefined,
       choices: scene.choices?.map((c) => ({
         label: c.label,
-        then: () => setDialogue({ lines: c.lines, then: () => finish(c.outcome) }),
+        then: () => setDialogue({ lines: c.lines, then: () => done(c.outcome) }),
       })),
-    });
-  }, [map, gameParty, owned, finish, prison, hero, setFlag, march, travel, hereNow]);
+    };
+    if (scene.stepOut && scene.stepOut !== hero) stepOut(sim, scene.stepOut as HeroId, said, setDialogue);
+    else setDialogue(said);
+  }, [map, gameParty, owned, finish, prison, hero, setFlag, march, travel, hereNow, sim]);
   // Brannoc wakes after his swing: will you pair up? (Asked again each time you come in, until you answer.)
   const brannocOffer = useCallback(() => {
     setDialogue({
@@ -796,57 +1105,85 @@ function World({
     });
   }, [map, setFlag, sim, travel]);
   // Felix frames you to the king's guards (felix-maze.ts): you answer, and either walk free while he
-  // laughs and dashes off, or ("What king?") wake in the dungeon next to Brannoc.
+  // laughs and dashes off, or (a wrong answer) wake in the dungeon next to Brannoc. First he gives his
+  // name, you try "Mr. Himothy", and he cuts you off.
   const guardScene = useCallback(() => {
     const ask = (lines: string[]): void =>
       setDialogue({
         lines,
-        choices: ANSWERS.map((a) => ({
-          label: a.label,
-          icon: a.path ? CLASSES[a.path].symbol : undefined,
-          // Too low a level: the answer shows, greyed out, so you can see what your habits would unlock.
-          locked:
-            a.path && !standing({ kind: 'path', dimension: a.path, level: ANSWER_LEVEL }, xpRef.current).met
-              ? `${CLASSES[a.path].className} Lv ${ANSWER_LEVEL}`
-              : undefined,
-          then: () => {
-            setFlag(MAZE_SOLVED);
-            for (const f of a.sets ?? []) setFlag(f);
-            if (a.jailed) {
-              // "Seize him!" (or her): they only want you
-              const seize = a.lines.map((l) => l.replace('{them}', PRONOUN[hero] ?? 'them'));
-              setDialogue({
-                lines: seize,
-                then: () => {
-                  // the guards close in on you from either side while Felix laughs (march.ts stands in
-                  // for the three of them), then the sack
-                  setFlag(FRAMED);
-                  const hx = Math.floor(sim.x.get() / TILE);
-                  const hy = Math.floor((sim.y.get() - 1) / TILE);
-                  playSound('laugh');
-                  march(
-                    [
-                      { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
-                      { row: WALKER_ROWS.raider, path: [[25, 3], [hx, hy - 1]], face: 0 },
-                      { row: WALKER_ROWS.raider, path: [[26, 4], [26, hy + 1], [hx, hy + 1]], face: 1 },
-                      { row: -1, path: [[hx, hy]], face: 3 },
-                    ],
-                    () => setDialogue({ lines: SEIZED, then: () => travel(INTO_THE_CELL) }),
-                    2.5,
-                    true,
-                  );
-                },
+        choices: ANSWERS.map((a) => {
+          // Too low a level, or nobody of that Path to say it: the answer shows, greyed out, so you can
+          // see what your habits would unlock. A party member of that Path says it for you, their way.
+          const can = a.path ? canSay(a.path, ANSWER_LEVEL) : { who: hero };
+          return {
+            label: a.label,
+            icon: a.path ? CLASSES[a.path].symbol : undefined,
+            locked: can.locked,
+            then: () => {
+              setFlag(MAZE_SOLVED);
+              for (const f of a.sets ?? []) setFlag(f);
+              if (a.jailed) {
+                // "Seize him!" (or her): they only want you
+                const seize = a.lines.map((l) => forHero(l, hero));
+                setDialogue({
+                  lines: seize,
+                  then: () => {
+                    // the guards close in on you from either side while Felix laughs (march.ts stands in
+                    // for the three of them), then the sack
+                    setFlag(FRAMED);
+                    const hx = Math.floor(sim.x.get() / TILE);
+                    const hy = Math.floor((sim.y.get() - 1) / TILE);
+                    playSound('laugh');
+                    march(
+                      [
+                        { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
+                        {
+                          row: WALKER_ROWS.raider,
+                          path: [
+                            [25, 3],
+                            [hx, hy - 1],
+                          ],
+                          face: 0,
+                        },
+                        {
+                          row: WALKER_ROWS.raider,
+                          path: [
+                            [26, 4],
+                            [26, hy + 1],
+                            [hx, hy + 1],
+                          ],
+                          face: 1,
+                        },
+                        { row: -1, path: [[hx, hy]], face: 3 },
+                      ],
+                      () => setDialogue({ lines: SEIZED, then: () => travel(INTO_THE_CELL) }),
+                      2.5,
+                      true,
+                    );
+                  },
+                });
+                return;
+              }
+              // Let go: once the talk closes, Felix laughs and dashes off, and the guards go with him.
+              if (can.who === hero) {
+                leaving.current = { id: 'felix-maze', flag: FRAMED };
+                setDialogue({ lines: [...a.lines, ...FELIX_FOILED] });
+                return;
+              }
+              // a party member said it: they step back in, then Felix has his say and goes
+              sayAs(can.who!, a.lines, a.by, () => {
+                leaving.current = { id: 'felix-maze', flag: FRAMED };
+                setDialogue({ lines: FELIX_FOILED });
               });
-              return;
-            }
-            // Let go: once the talk closes, Felix laughs and dashes off, and the guards go with him.
-            leaving.current = { id: 'felix-maze', flag: FRAMED };
-            setDialogue({ lines: [...a.lines, ...FELIX_FOILED] });
-          },
-        })),
+            },
+          };
+        }),
       });
-    ask(SCENE_OPEN);
-  }, [setFlag, travel, hero, sim, march]);
+    setDialogue({
+      lines: SCENE_OPEN.map((l) => forHero(l, hero)),
+      choices: [{ label: MISTER, then: () => ask(CUT_OFF) }],
+    });
+  }, [setFlag, travel, hero, sim, march, canSay, sayAs]);
   const onStep = useCallback(
     (tile: number) => {
       const letter = map.tiles[Math.floor(tile / map.width)][tile % map.width];
@@ -971,6 +1308,7 @@ function World({
           lines: ALONE_WARDEN,
           then: () => {
             w.setFlag('pit-champion');
+            w.setFlag('on-the-bill');
             // confused, you walk out into the town
             march(
               [
@@ -1056,7 +1394,11 @@ function World({
         level={heroLevel}
         special={signature?.kind ?? SPECIALS[heroPath].kind}
         specialLevel={signature ? SIGNATURE_LEVEL : undefined}
-        barrageReady={habitToday && barrageDay !== today}
+        barrageReady={habitToday && specialsToday > 0}
+        specialReady={fightMap.enemies.length === 0 || specialsToday > 0}
+        practiceArmed={practiceArmed}
+        onSpecial={onSpecial}
+        onAskSpecial={onAskSpecial}
         onSignature={onSignature}
         hearts={hearts}
         chests={chests}
@@ -1078,7 +1420,9 @@ function World({
         signs={signs}
         ambience={ambience}
         flames={flames}
-        snuffable={map.id === 'war-hall'}
+        drawbridge={drawbridge}
+        resume={resumeFight}
+        fightRef={fightRef}
         sealed={sealed}
         autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}
@@ -1094,15 +1438,12 @@ function World({
           scheme={controls}
           sim={sim}
           onAct={act}
-          fight={
-            fightMap.enemies.length > 0
-              ? {
-                  color: CLASSES[heroPath].color,
-                  label: `Attack: ${ATTACK_NAMES[heroPath]}`,
-                  charges: heroLevel >= CHARGE_LEVEL,
-                }
-              : null
-          }
+          fight={{
+            // always there: with nothing to fight, it's practice (author, Oct 4, 2026)
+            color: CLASSES[heroPath].color,
+            label: `${fightMap.enemies.length > 0 ? 'Attack' : 'Practise'}: ${ATTACK_NAMES[heroPath]}`,
+            charges: heroLevel >= CHARGE_LEVEL,
+          }}
           onPause={() => {
             save();
             setPaused(true);
@@ -1121,12 +1462,13 @@ function World({
             dialogue.then?.();
             // "We need to break out": a squeak in the straw, and Brannoc goes straight through the bars.
             const w = useWorldStore.getState();
-            // Already the Kaldorium's champion (you came down from the top): no mouse, he just asks to come along.
+            // Already the Kaldorium's champion (you came down from the top, and maybe bent the bars yourself
+            // to get in): no mouse, he just asks to come along.
             if (
               map.id === 'kingdom-dungeon' &&
               w.flags.includes(BRANNOC_BOLTS) &&
-              !w.flags.includes(BARS_BENT) &&
-              w.flags.includes('pit-champion')
+              w.flags.includes('pit-champion') &&
+              !w.flags.includes(BRANNOC_JOINED)
             ) {
               setDialogue({
                 lines: CHAMPION_IN_CELL,
@@ -1225,10 +1567,15 @@ function World({
             const call = ringing;
             useWorldStore.getState().setFlag(callFlag(call));
             setRinging(null);
+            // "six others like him": however many of the core eight you've still to meet (Brannoc aside)
+            const met = useWorldStore.getState().flags;
+            const stillOut = Object.values(DEFAULT_PARTY).filter(
+              (id) => id !== 'brannoc' && !met.includes(metFlag(id)),
+            ).length;
             setDialogue({
               speaker: 'The Keeper',
               sprite: 'keeper',
-              lines: call.lines,
+              lines: callLines(call, stillOut),
               then: () => setDialogue({ lines: call.end }),
             });
           }}
@@ -1258,8 +1605,18 @@ function World({
           party={walkers}
           hero={hero}
           pieces={heartPieces(liveFlags) % PIECES_PER_HEART}
-          hearts={maxHearts(liveFlags) + levelHearts(heroLevel)}
+          hearts={maxHearts(liveFlags) + levelHearts(partyLevel)}
           items={satchel(liveFlags).map((id) => ({ id, name: ITEMS[id]?.name ?? id }))}
+          testTools={
+            TEST_TOOLS
+              ? {
+                  levels: testLevels,
+                  walk: testWalk,
+                  toggleLevels: () => useSession.setState((s) => ({ testLevels: !s.testLevels })),
+                  toggleWalk: () => useSession.setState((s) => ({ testWalk: !s.testWalk })),
+                }
+              : undefined
+          }
           autopilot={
             __DEV__
               ? { on: autopilotOn, toggle: () => useSession.setState((s) => ({ autopilot: !s.autopilot })) }
@@ -1273,7 +1630,23 @@ function World({
             });
           }}
           onSwap={(id) => {
-            // Save where you stand; the World restarts right here with them.
+            // Save where you stand; the World restarts right here with them, and a fight goes on where
+            // it was: same hearts, same enemies, nothing healed (session.ts carry).
+            const f = fightRef.current?.get();
+            if (f && f.enemies.length > 0 && !f.won && !f.fallen)
+              useSession.setState({
+                carry: {
+                  map: map.id,
+                  hp: f.hp,
+                  enemies: f.enemies.map((e) => e.slice()),
+                  left: f.enemies.map((e, i) => {
+                    const full = fightMap.enemies[i]?.hp ?? ENEMIES[ENEMY_KINDS[e[E_KIND]]].hp;
+                    return Math.max(0, Math.min(1, e[E_HP] / full));
+                  }),
+                  mended: f.mended,
+                  rained: f.rained,
+                },
+              });
             save();
             setPaused(false);
             setHero(id);
@@ -1301,6 +1674,31 @@ const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
  * What A (or a tap) does: talk to whoever's in front, open the quest board, or examine the tile.
  * Also hands back `talk`, to start a conversation with someone without pressing A (a fresh hatch).
  */
+/**
+ * A party member steps out beside you (step-aside.ts), like a helper for a field move or a hero in
+ * one of their own big moments (moments.ts); `said` plays with them standing there, and they step
+ * back in when it closes (or when the caller clears sim.cameo, for a scene that ends in a choice).
+ */
+function stepOut(sim: WorldSim, doer: HeroId, said: Dialogue, show: (d: Dialogue) => void) {
+  sim.frozen.set(true);
+  sim.cameo.set(newCameo(WALKER_ROWS[doer], sim.x.get(), sim.y.get(), sim.facing.get()));
+  playSound('select');
+  haptics.select();
+  setTimeout(
+    () => {
+      const after = said.then;
+      show({
+        ...said,
+        then: () => {
+          sim.cameo.set([]);
+          after?.();
+        },
+      });
+    },
+    STEP_ASIDE_SECONDS * 1000 + 200,
+  );
+}
+
 function useAct(
   map: WorldMap,
   sim: WorldSim,
@@ -1309,6 +1707,8 @@ function useAct(
   xp: { current: XpTotals },
   onTravel: (to: Arrival, how?: 'flash') => void,
   hero: HeroId,
+  /** Someone with a scene of their own: true if it took over the talk. */
+  special: (thing: NpcObject) => boolean = () => false,
 ) {
   const busy = useRef(false);
   /** Talking to someone in the room: they turn to face you, say their piece, and the party chimes in. */
@@ -1392,24 +1792,10 @@ function useAct(
     const fieldMove = (doer: HeroId, said: Dialogue) => {
       if (doer === hero) return setDialogue(said);
       busy.current = true;
-      sim.frozen.set(true);
-      sim.cameo.set(newCameo(WALKER_ROWS[doer], sim.x.get(), sim.y.get(), sim.facing.get()));
-      playSound('select');
-      haptics.select();
-      setTimeout(
-        () => {
-          busy.current = false;
-          const after = said.then;
-          setDialogue({
-            ...said,
-            then: () => {
-              sim.cameo.set([]);
-              after?.();
-            },
-          });
-        },
-        STEP_ASIDE_SECONDS * 1000 + 200,
-      );
+      stepOut(sim, doer, said, (d) => {
+        busy.current = false;
+        setDialogue(d);
+      });
     };
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
@@ -1417,6 +1803,7 @@ function useAct(
     const thing =
       whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
       map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
+    if (thing?.type === 'npc' && special(thing)) return;
     // party members you have may chime in, after the person's own lines (see banter.ts)
     const game = useGameStore.getState();
     const banter = thing
@@ -1474,7 +1861,9 @@ function useAct(
         setDialogue({
           speaker: thing.name,
           sprite: thing.sprite,
-          lines: NOT_YET[id] ?? [`Come back once you've done a ${CLASSES[COMPANIONS[id].dimension].dimensionLabel} habit.`],
+          lines: NOT_YET[id] ?? [
+            `Come back once you've done a ${CLASSES[COMPANIONS[id].dimension].dimensionLabel} habit.`,
+          ],
         });
         return;
       }
@@ -1641,23 +2030,15 @@ function useAct(
           setFlag(keepsakeFlag('first-memory'));
           haptics.celebrate();
           playSound('levelUp');
-          // The party splits here: the four who aren't starters say goodbye, and are gone once it closes.
-          const split = partySplit(flags);
-          const parted = () => split.leaving.forEach((id) => setFlag(leftFlag(id)));
+          // All eight stay with you through the first story; the party splits at the start of Season 2
+          // (author, Oct 4, 2026: partySplit in scenes.ts, kept for then).
           setDialogue({
             lines: [
               ...seasonFinale(memory, flags),
               `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
-              ...split.lines,
               ...PORTAL_HOME.lines,
             ],
-            choices: home.map((c) => ({
-              ...c,
-              then: () => {
-                parted();
-                c.then();
-              },
-            })),
+            choices: home,
           });
         }
       } else
@@ -1816,7 +2197,7 @@ function useAct(
     }
     const lines = map.examine[tile];
     if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk]);
+  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
   const safeAct = useCallback(() => {
     try {

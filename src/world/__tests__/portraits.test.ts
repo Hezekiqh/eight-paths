@@ -14,7 +14,11 @@ describe('portraits', () => {
   });
 
   it('hands a line to whoever is named at its start', () => {
-    expect(splitSpeaker('VARGA: Move.')).toEqual({ speaker: 'Varga', sprite: portraitFor('Captain Varga'), text: 'Move.' });
+    expect(splitSpeaker('VARGA: Move.')).toEqual({
+      speaker: 'Varga',
+      sprite: portraitFor('Captain Varga'),
+      text: 'Move.',
+    });
     expect(splitSpeaker('LITTLE BRUNNA: Grr.').speaker).toBe('Little Brunna');
   });
 
@@ -39,5 +43,13 @@ describe("the Keeper's voice", () => {
   it('is deeper than anyone else, his alone', () => {
     expect(voiceFor('The Keeper', 'keeper')).toBe(0);
     expect(voiceFor('Kaldor the Kingbreaker', 'kaldor')).toBeGreaterThan(0);
+  });
+});
+
+describe("narration in a speaker's box", () => {
+  it('a line starting "* " is narration: no name, no face', () => {
+    const { splitSpeaker } = jest.requireActual('../portraits') as typeof import('../portraits');
+    expect(splitSpeaker('* He snaps his fingers.')).toEqual({ text: 'He snaps his fingers.', narration: true });
+    expect(splitSpeaker('*squeak*').narration).toBeUndefined();
   });
 });

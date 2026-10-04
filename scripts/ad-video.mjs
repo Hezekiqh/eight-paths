@@ -73,8 +73,7 @@ const textL = (g, s, sc, x, y, c, { count = s.length, outline = true } = {}) => 
 };
 const text = (g, s, sc, y, c, opts = {}) => textL(g, s, sc, Math.round((opts.cx ?? UX) - textW(s, sc) / 2), y, c, opts);
 /** The big lines at the top of the frame. */
-const headline = (ui, lines, y = 46) =>
-  lines.forEach(([s, c], i) => text(ui, s, 3, y + i * 28, c ?? WHITE));
+const headline = (ui, lines, y = 46) => lines.forEach(([s, c], i) => text(ui, s, 3, y + i * 28, c ?? WHITE));
 
 // ---- sprites (assets/sprites/<id>/idle.png: 32×48 frames drawn at 12×)
 const SHEETS = {};
@@ -94,7 +93,17 @@ function sprite(g, id, frame, sc, cx, by, { white = 0, tint = null, amt = 0, fad
       put(g, cx - 16 * sc + x, by - 48 * sc + y, c);
     }
 }
-const STAR = ['....X....', '....X....', '...XXX...', 'XXXXXXXXX', '.XXXXXXX.', '..XXXXX..', '..XX.XX..', '.XX...XX.', '.X.....X.'];
+const STAR = [
+  '....X....',
+  '....X....',
+  '...XXX...',
+  'XXXXXXXXX',
+  '.XXXXXXX.',
+  '..XXXXX..',
+  '..XX.XX..',
+  '.XX...XX.',
+  '.X.....X.',
+];
 const stars = (g, n, y, c = WHITE) => {
   for (let s = 0; s < n; s++) {
     const x0 = Math.round(UX + (s - (n - 1) / 2) * 13 - 4);
@@ -118,7 +127,13 @@ function backdrop(path, t, { dark = 0, shade = INK } = {}) {
     if (Math.sin(t * 3 + n * 1.7) > 0.2) {
       const col = mix(hex(c), shade, dark * 0.5);
       put(g, x, y, mix(col, WHITE, 0.6));
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) put(g, x + dx, y + dy, col);
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ])
+        put(g, x + dx, y + dy, col);
     }
   });
   return g;
@@ -149,7 +164,6 @@ function opening(t, cam, impact) {
   return cam;
 }
 
-
 /** A quest card like the app's: parchment, the Path in its ink colour, a checkbox; `since` ≥ 0 once checked. */
 function questCard(ui, x, y, path, quest, since = -1, CW = 200) {
   const P = PATHS[path];
@@ -159,7 +173,17 @@ function questCard(ui, x, y, path, quest, since = -1, CW = 200) {
   box(ui, x, y + 33, CW, 3, hex('#E6CB8E'));
   box(ui, x + 7, y + 10, 16, 16, hex('#4A3423'));
   box(ui, x + 9, y + 12, 12, 12, checked ? (since < 0.06 ? WHITE : hex(P.ink)) : hex('#F8EACB'));
-  if (checked) [[0, 5], [1, 6], [2, 7], [3, 6], [4, 5], [5, 4], [6, 3], [7, 2]].forEach(([i, j]) => box(ui, x + 11 + i, y + 12 + j, 2, 2, WHITE));
+  if (checked)
+    [
+      [0, 5],
+      [1, 6],
+      [2, 7],
+      [3, 6],
+      [4, 5],
+      [5, 4],
+      [6, 3],
+      [7, 2],
+    ].forEach(([i, j]) => box(ui, x + 11 + i, y + 12 + j, 2, 2, WHITE));
   textL(ui, P.cls, 1, x + 30, y + 6, hex(P.ink), { outline: false });
   textL(ui, quest, 2, x + 30, y + 16, hex('#2E1F14'), { outline: false });
   if (checked) {
@@ -172,7 +196,20 @@ function questCard(ui, x, y, path, quest, since = -1, CW = 200) {
  * A habit lands: the quest card slams in, gets checked, XP flies into the
  * hero and they level up. `fast` is the montage version.
  */
-function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false, step = 0, who = null, move = null, evolve = 0 }) {
+function habit({
+  path,
+  hero,
+  quest,
+  lines,
+  lv,
+  dur,
+  fast = false,
+  impact = false,
+  step = 0,
+  who = null,
+  move = null,
+  evolve = 0,
+}) {
   const P = PATHS[path];
   // `evolve`: the swift version for the signature cuts, the XP bar filling for `evolve` seconds, audibly, then the level
   const tCheck = fast ? 0.1 : evolve ? 0.3 : 0.62;
@@ -187,7 +224,11 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
   const CXL = UX - CW / 2;
   const CY = 126;
   const CHECK = [CXL + 15, CY + 18];
-  const orbs = Array.from({ length: 9 }, (_, i) => ({ d: i * 0.025, bend: (rnd() - 0.5) * 140, s: 2 + Math.round(rnd() * 2) }));
+  const orbs = Array.from({ length: 9 }, (_, i) => ({
+    d: i * 0.025,
+    bend: (rnd() - 0.5) * 140,
+    s: 2 + Math.round(rnd() * 2),
+  }));
   const bursts = Array.from({ length: 14 }, () => ({ a: rnd() * Math.PI * 2, v: 20 + rnd() * 40 }));
   return {
     dur,
@@ -206,7 +247,14 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
         white: hits ? 0.75 : lt >= 0 && lt < 0.08 ? 1 : 0,
       });
       if (lt > 0)
-        [[-62, -110, 0], [58, -96, 0.5], [-54, -40, 1], [66, -30, 0.3], [-80, -76, 0.7], [76, -132, 0.2]].forEach(([dx, dy, o]) => {
+        [
+          [-62, -110, 0],
+          [58, -96, 0.5],
+          [-54, -40, 1],
+          [66, -30, 0.3],
+          [-80, -76, 0.7],
+          [76, -132, 0.2],
+        ].forEach(([dx, dy, o]) => {
           const a = Math.sin((lt + o) * 6);
           if (a > -0.2) sparkle(scene, HX + dx, HB + dy, a > 0.6 ? 3 : 2, hex('#FDE68A'));
         });
@@ -226,8 +274,12 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
         box(ui, x, yb + 2, CW, 11, [46, 31, 20]);
         textL(ui, `LV ${lv}`, 1, x + 5, yb + 4, CREAM, { outline: false });
         const filled = evolve
-          ? t < tEvo ? 0.3 : lerp(0.3, 1, clamp01((t - tEvo) / (tLv - tEvo)))
-          : t < tOrbs[1] ? 0.72 : lerp(0.72, 1, ease((t - tOrbs[1]) / 0.15));
+          ? t < tEvo
+            ? 0.3
+            : lerp(0.3, 1, clamp01((t - tEvo) / (tLv - tEvo)))
+          : t < tOrbs[1]
+            ? 0.72
+            : lerp(0.72, 1, ease((t - tOrbs[1]) / 0.15));
         box(ui, x + 44, yb + 5, 150, 5, [92, 70, 50]);
         box(ui, x + 44, yb + 5, Math.round(150 * filled), 5, hex(P.neon));
       }
@@ -235,8 +287,11 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
       const tt = t - tCheck;
       if (tt >= 0 && tt < 0.3 && slide === 0) {
         const r = Math.round(4 + tt * 70);
-        for (let a = 0; a < 40; a++) put(ui, CHECK[0] + Math.cos(a) * r, CHECK[1] + Math.sin(a) * r, [255, 255, 255, 1 - tt / 0.3]);
-        bursts.forEach((b) => box(ui, CHECK[0] + Math.cos(b.a) * b.v * tt * 3, CHECK[1] + Math.sin(b.a) * b.v * tt * 3, 2, 2, hex(P.neon)));
+        for (let a = 0; a < 40; a++)
+          put(ui, CHECK[0] + Math.cos(a) * r, CHECK[1] + Math.sin(a) * r, [255, 255, 255, 1 - tt / 0.3]);
+        bursts.forEach((b) =>
+          box(ui, CHECK[0] + Math.cos(b.a) * b.v * tt * 3, CHECK[1] + Math.sin(b.a) * b.v * tt * 3, 2, 2, hex(P.neon)),
+        );
       }
       // XP orbs fly from the card into the hero
       orbs.forEach((o) => {
@@ -263,7 +318,10 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
         text(ui, label, 2, 170, hex(P.neon), { count: Math.floor((lt - 0.1) / 0.02) });
       }
       if (step) stepTag(ui, step);
-      headline(ui, !who ? lines : lt >= 0 ? [[who], ['LEVELED UP!', Y]] : t >= tCheck ? [['HABIT'], ['DONE!', Y]] : lines);
+      headline(
+        ui,
+        !who ? lines : lt >= 0 ? [[who], ['LEVELED UP!', Y]] : t >= tCheck ? [['HABIT'], ['DONE!', Y]] : lines,
+      );
 
       const cam = camAt(1, [GW / 2, GH / 2]);
       if (lt >= 0) {
@@ -279,7 +337,20 @@ function habit({ path, hero, quest, lines, lv, dur, fast = false, impact = false
 }
 
 /** A cocoon wakes and hatches a new hero. `at` is the hatch moment. */
-function hatch({ path, hero, name, number, rarity, linesA, linesB, dur, at, wiggles = [0.25, 0.8], impact = false, sub = null }) {
+function hatch({
+  path,
+  hero,
+  name,
+  number,
+  rarity,
+  linesA,
+  linesB,
+  dur,
+  at,
+  wiggles = [0.25, 0.8],
+  impact = false,
+  sub = null,
+}) {
   const P = PATHS[path];
   const rnd = rng(42);
   const BY = GROUND + 6;
@@ -309,7 +380,8 @@ function hatch({ path, hero, name, number, rarity, linesA, linesB, dur, at, wigg
         const build = at - 1.15;
         const eyeAt = at - 0.6;
         const violent = at - 0.25;
-        for (const w of W1) if (t >= w && t < w + 0.5) shear += Math.round(Math.sin((t - w) * 26) * 4 * (1 - (t - w) / 0.5));
+        for (const w of W1)
+          if (t >= w && t < w + 0.5) shear += Math.round(Math.sin((t - w) * 26) * 4 * (1 - (t - w) / 0.5));
         cam.z = lerp(1.15, 1.3, clamp01(t / build));
         if (t >= build && t < eyeAt) {
           const k = (t - build) / (eyeAt - build);
@@ -339,8 +411,17 @@ function hatch({ path, hero, name, number, rarity, linesA, linesB, dur, at, wigg
       } else {
         const rt = t - at;
         sprite(scene, hero, Math.floor(rt * 3), 4, CX, BY);
-        shards.forEach((s) => rt < 1.5 && box(scene, s.x + s.vx * rt * 34, s.y + s.vy * rt * 34 + 70 * rt * rt, 2, 2, s.c));
-        [[-70, -100, 0], [74, -88, 0.5], [-62, -30, 1], [80, -38, 0.3], [-88, -64, 0.7], [92, -70, 0.2]].forEach(([dx, dy, o]) => {
+        shards.forEach(
+          (s) => rt < 1.5 && box(scene, s.x + s.vx * rt * 34, s.y + s.vy * rt * 34 + 70 * rt * rt, 2, 2, s.c),
+        );
+        [
+          [-70, -100, 0],
+          [74, -88, 0.5],
+          [-62, -30, 1],
+          [80, -38, 0.3],
+          [-88, -64, 0.7],
+          [92, -70, 0.2],
+        ].forEach(([dx, dy, o]) => {
           const a = Math.sin((rt + o) * 5);
           if (a > -0.2) sparkle(scene, CX + dx, BY + dy, a > 0.6 ? 3 : 2, hex('#FDE68A'));
         });
@@ -370,7 +451,9 @@ function collection({ lines, dur }) {
   return {
     dur,
     frame(t) {
-      const scene = Array.from({ length: GH }, (_, y) => Array.from({ length: GW }, () => mix(hex('#0B0A14'), hex('#1E1733'), y / GH)));
+      const scene = Array.from({ length: GH }, (_, y) =>
+        Array.from({ length: GW }, () => mix(hex('#0B0A14'), hex('#1E1733'), y / GH)),
+      );
       const ui = blankUi();
       picks.forEach((id, i) => {
         const col = i % COLS;
@@ -420,7 +503,11 @@ function battle({ linesA, linesB, dur, swapAt = 2.4 }) {
       const hitNow = HITS.find((h) => t >= h.at && t < h.at + 0.1);
       const fade = t > dead + 0.3 ? clamp01((t - dead - 0.3) / 0.6) : 0;
       const wob = hitNow ? Math.round((rnd() - 0.5) * 6) : 0;
-      if (fade < 1) sprite(scene, 'aurek', Math.floor(t * 2), 4, BOSS[0] + wob, BOSS[1], { white: hitNow || (t > dead && t < dead + 0.3 && Math.floor(t * 20) % 2) ? 1 : 0, fade });
+      if (fade < 1)
+        sprite(scene, 'aurek', Math.floor(t * 2), 4, BOSS[0] + wob, BOSS[1], {
+          white: hitNow || (t > dead && t < dead + 0.3 && Math.floor(t * 20) % 2) ? 1 : 0,
+          fade,
+        });
       // the boss's shot, and the dodge
       const shot = (t - 0.3) / 0.45;
       const dodge = t >= 0.55 && t < 0.95 ? Math.sin(((t - 0.55) / 0.4) * Math.PI) : 0;
@@ -441,26 +528,44 @@ function battle({ linesA, linesB, dur, swapAt = 2.4 }) {
         hx = lerp(HOME[0], BOSS[0] - 50, k);
         hy = lerp(HOME[1], BOSS[1] + 40, k);
       }
-      if (dodge > 0.2) for (let g = 1; g <= 2; g++) sprite(scene, who, 0, 3, hx + g * 14, hy, { tint: hex('#9B74F8'), amt: 0.6, fade: 0.4 + g * 0.2 });
+      if (dodge > 0.2)
+        for (let g = 1; g <= 2; g++)
+          sprite(scene, who, 0, 3, hx + g * 14, hy, { tint: hex('#9B74F8'), amt: 0.6, fade: 0.4 + g * 0.2 });
       const charging = who === 'quill' && t > swapAt + 0.4 && t < HITS[2].at;
-      sprite(scene, who, Math.floor(t * 3), 3, hx, hy, { white: t >= swapAt && t < swapAt + 0.1 ? 1 : charging && Math.floor(t * 16) % 2 ? 0.35 : 0 });
+      sprite(scene, who, Math.floor(t * 3), 3, hx, hy, {
+        white: t >= swapAt && t < swapAt + 0.1 ? 1 : charging && Math.floor(t * 16) % 2 ? 0.35 : 0,
+      });
       // effects: slashes, the swap poof, the charge, the bolt
       HITS.filter((h) => h.who === 'brannoc' && t >= h.at && t < h.at + 0.16).forEach((h) => {
         const k = (t - h.at) / 0.16;
         for (let a = 0; a < 26; a++) {
           const ang = -2.4 + (a / 26) * 2.2 + k * 0.6;
-          for (let w = 0; w < 4; w++) put(scene, BOSS[0] + Math.cos(ang) * (48 + w), BOSS[1] - 90 + Math.sin(ang) * (48 + w), w < 2 ? WHITE : hex('#FF4D5E'));
+          for (let w = 0; w < 4; w++)
+            put(
+              scene,
+              BOSS[0] + Math.cos(ang) * (48 + w),
+              BOSS[1] - 90 + Math.sin(ang) * (48 + w),
+              w < 2 ? WHITE : hex('#FF4D5E'),
+            );
         }
       });
       if (t >= swapAt && t < swapAt + 0.3) {
         const k = (t - swapAt) / 0.3;
-        for (let a = 0; a < 48; a++) box(scene, HOME[0] + Math.cos(a) * (10 + k * 50), HOME[1] - 70 + Math.sin(a) * (10 + k * 50), 3, 3, WHITE);
+        for (let a = 0; a < 48; a++)
+          box(scene, HOME[0] + Math.cos(a) * (10 + k * 50), HOME[1] - 70 + Math.sin(a) * (10 + k * 50), 3, 3, WHITE);
       }
       if (charging) {
         const k = (t - swapAt - 0.4) / (HITS[2].at - swapAt - 0.4);
         motes.forEach((m) => {
           const r = m.r * (1 - k);
-          box(scene, HOME[0] + Math.cos(m.a + t * 4) * r, HOME[1] - 80 + Math.sin(m.a + t * 4) * r, 3, 3, hex('#9B74F8'));
+          box(
+            scene,
+            HOME[0] + Math.cos(m.a + t * 4) * r,
+            HOME[1] - 80 + Math.sin(m.a + t * 4) * r,
+            3,
+            3,
+            hex('#9B74F8'),
+          );
         });
         const s = Math.round(3 + k * 8);
         box(scene, HOME[0] - s, HOME[1] - 80 - s, s * 2, s * 2, hex('#9B74F8'));
@@ -522,7 +627,10 @@ function endCard({ dur, lines = null, powered = false }) {
         const at = 0.05 + i * 0.06;
         const k = clamp01((t - at) / 0.2);
         if (k <= 0) return;
-        const by = (back ? 360 : 378) + Math.round((1 - ease(k)) * 140) - (k < 1 ? 0 : Math.round(Math.abs(Math.sin(t * 3 + i)) * 2));
+        const by =
+          (back ? 360 : 378) +
+          Math.round((1 - ease(k)) * 140) -
+          (k < 1 ? 0 : Math.round(Math.abs(Math.sin(t * 3 + i)) * 2));
         sprite(scene, id, Math.floor(t * 3 + i), 2, 30 + i * 30, by, back ? { tint: INK, amt: 0.25 } : {});
       });
       const logo = t - 0.35;
@@ -538,7 +646,10 @@ function endCard({ dur, lines = null, powered = false }) {
         const big = logo < 0.08 ? 7 : 6;
         text(ui, 'EIGHT', big, top - (big - 6) * 4, WHITE, { cx: GW / 2 });
         text(ui, 'PATHS', big, top + 48 - (big - 6) * 4, WHITE, { cx: GW / 2 });
-        text(ui, 'THE HABIT RPG', 3, top + 104, hex('#FF4D5E'), { cx: GW / 2, count: Math.floor((logo - 0.15) / 0.03) });
+        text(ui, 'THE HABIT RPG', 3, top + 104, hex('#FF4D5E'), {
+          cx: GW / 2,
+          count: Math.floor((logo - 0.15) / 0.03),
+        });
       }
       // The powered card: then where to follow, kept clear of the apps' captions (the bottom 125 art px) and buttons (the right 40).
       if (powered) {
@@ -559,13 +670,13 @@ function endCard({ dur, lines = null, powered = false }) {
   };
 }
 
-
 // ---- the tour: how the app works, in the app's parchment look
 const PARCHMENT = (t) =>
   Array.from({ length: GH }, (_, y) =>
     Array.from({ length: GW }, (_, x) => (((x >> 2) + (y >> 2)) % 7 === 0 ? hex('#E9CF98') : hex('#F0D9A7'))),
   );
-const darkBg = () => Array.from({ length: GH }, (_, y) => Array.from({ length: GW }, () => mix(hex('#0B0A14'), hex('#1E1733'), y / GH)));
+const darkBg = () =>
+  Array.from({ length: GH }, (_, y) => Array.from({ length: GW }, () => mix(hex('#0B0A14'), hex('#1E1733'), y / GH)));
 /** A little step tag above the headline: "HOW IT WORKS · 1/5". */
 const stepTag = (ui, n) => text(ui, `HOW IT WORKS · ${n}/5`, 1, 30, hex('#D8D2E6'));
 
@@ -596,7 +707,16 @@ function questList({ dur, lines, step }) {
 }
 
 /** The eight Paths of life, each with its hero. */
-const LIFE = { physical: 'BODY', financial: 'MONEY', intellectual: 'MIND', spiritual: 'SPIRIT', emotional: 'FEELINGS', social: 'FRIENDS', occupational: 'WORK', environmental: 'OUTDOORS' };
+const LIFE = {
+  physical: 'BODY',
+  financial: 'MONEY',
+  intellectual: 'MIND',
+  spiritual: 'SPIRIT',
+  emotional: 'FEELINGS',
+  social: 'FRIENDS',
+  occupational: 'WORK',
+  environmental: 'OUTDOORS',
+};
 function pathsGrid({ dur, lines, step }) {
   const paths = Object.keys(PATHS);
   return {
@@ -626,7 +746,18 @@ function pathsGrid({ dur, lines, step }) {
 
 /** A month of days filling in, and the streak counting up. */
 function streak({ dur, lines, step }) {
-  const FLAME = ['...X...', '..XX...', '..XXX..', '.XXOXX.', '.XOOOX.', 'XXOYOXX', 'XOYYYOX', 'XOYYYOX', '.XOYOX.', '..XXX..'];
+  const FLAME = [
+    '...X...',
+    '..XX...',
+    '..XXX..',
+    '.XXOXX.',
+    '.XOOOX.',
+    'XXOYOXX',
+    'XOYYYOX',
+    'XOYYYOX',
+    '.XOYOX.',
+    '..XXX..',
+  ];
   return {
     dur,
     frame(t) {
@@ -637,7 +768,9 @@ function streak({ dur, lines, step }) {
       box(ui, x0 - 2, y0 - 2, 204, 186, hex('#4A3423'));
       box(ui, x0, y0, 200, 182, hex('#F8EACB'));
       text(ui, 'SEPTEMBER', 2, y0 + 8, hex('#B3261E'), { outline: false });
-      'SMTWTFS'.split('').forEach((d, i) => textL(ui, d, 1, x0 + 18 + i * 26, y0 + 30, hex('#6B4F33'), { outline: false }));
+      'SMTWTFS'
+        .split('')
+        .forEach((d, i) => textL(ui, d, 1, x0 + 18 + i * 26, y0 + 30, hex('#6B4F33'), { outline: false }));
       const filled = Math.floor(clamp01((t - 0.2) / 1.6) * 30);
       for (let d = 0; d < 30; d++) {
         const c = (d + 2) % 7;
@@ -652,7 +785,18 @@ function streak({ dur, lines, step }) {
       const fx = UX - 91;
       const fy = 316;
       FLAME.forEach((row, r) =>
-        [...row].forEach((ch, c) => ch !== '.' && box(ui, fx + c * 3, fy + r * 3 - Math.round(Math.sin(t * 9) * (r < 3 ? 1 : 0)), 3, 3, ch === 'X' ? hex('#B3261E') : ch === 'O' ? hex('#FF8A3D') : GOLD)),
+        [...row].forEach(
+          (ch, c) =>
+            ch !== '.' &&
+            box(
+              ui,
+              fx + c * 3,
+              fy + r * 3 - Math.round(Math.sin(t * 9) * (r < 3 ? 1 : 0)),
+              3,
+              3,
+              ch === 'X' ? hex('#B3261E') : ch === 'O' ? hex('#FF8A3D') : GOLD,
+            ),
+        ),
       );
       textL(ui, `${filled} DAY STREAK`, 2, fx + 28, fy + 8, WHITE);
       if (step) stepTag(ui, step);
@@ -679,7 +823,8 @@ function radar({ dur, lines, step }) {
       const scene = darkBg();
       const ui = blankUi();
       const grow = 0.15 + 0.85 * ease((t - 0.3) / 1.6);
-      for (const ring of [0.33, 0.66, 1]) for (let i = 0; i < 8; i++) line(scene, pt(i, R * ring), pt(i + 1, R * ring), hex('#3A3058'));
+      for (const ring of [0.33, 0.66, 1])
+        for (let i = 0; i < 8; i++) line(scene, pt(i, R * ring), pt(i + 1, R * ring), hex('#3A3058'));
       for (let i = 0; i < 8; i++) line(scene, C, pt(i, R), hex('#3A3058'));
       // the shape: fill by testing each pixel against the polygon
       const poly = paths.map((_, i) => pt(i, R * vals[i] * grow));
@@ -710,7 +855,9 @@ const MAPS = {};
 const map = (name) => (MAPS[name] ??= PNG.sync.read(readFileSync(`assets/world/${name}.png`)));
 const WALKERS = PNG.sync.read(readFileSync('assets/world/walkers.png'));
 const WALKER_ROW = {
-  ...Object.fromEntries(['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id, i) => [id, i])),
+  ...Object.fromEntries(
+    ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id, i) => [id, i]),
+  ),
   pell: 8,
   jory: 10,
   plush: 20,
@@ -728,7 +875,8 @@ const VH = GH / MZ;
 function mapView(name, cx, cy) {
   const m = map(name);
   const x0 = Math.round(Math.min(Math.max(cx - VW / 2, 0), Math.max(0, m.width - VW)));
-  const y0 = m.height < VH ? Math.round((m.height - VH) / 2) : Math.round(Math.min(Math.max(cy - VH / 2, 0), m.height - VH));
+  const y0 =
+    m.height < VH ? Math.round((m.height - VH) / 2) : Math.round(Math.min(Math.max(cy - VH / 2, 0), m.height - VH));
   const g = Array.from({ length: GH }, (_, y) =>
     Array.from({ length: GW }, (_, x) => {
       const mx = x0 + Math.floor(x / MZ);
@@ -758,7 +906,12 @@ function walker(view, id, mx, my, dir, step, { white = 0, fade = 0, tint = null 
 const stepOf = (t, moving) => (moving ? [1, 0, 2, 0][Math.floor(t * 8) % 4] : 0);
 const HEART = ['.X.X.', 'XXXXX', 'XXXXX', '.XXX.', '..X..'];
 const hearts = (ui, n, of, x, y) => {
-  for (let h = 0; h < of; h++) HEART.forEach((row, r) => [...row].forEach((p, c) => p === 'X' && box(ui, x + h * 14 + c * 2, y + r * 2, 2, 2, h < n ? hex('#FF4D5E') : hex('#3A3058'))));
+  for (let h = 0; h < of; h++)
+    HEART.forEach((row, r) =>
+      [...row].forEach(
+        (p, c) => p === 'X' && box(ui, x + h * 14 + c * 2, y + r * 2, 2, 2, h < n ? hex('#FF4D5E') : hex('#3A3058')),
+      ),
+    );
 };
 
 /** Walking into Millbrook; a villager says hello. */
@@ -822,7 +975,7 @@ function worldFight({ dur, lines, linesB, turn = 3.0 }) {
         let y = lerp(f.y, HERO[1] - 18 + i * 18, near);
         const hit1 = i === 0 && t >= 1.1;
         const hit2 = i === 0 && t >= 2.2;
-        const out = (hit2 && t >= 2.2 + 0.25) || (t >= SPIN + 0.1);
+        const out = (hit2 && t >= 2.2 + 0.25) || t >= SPIN + 0.1;
         if (hit1 && t < 1.3) x += (t - 1.1) * 60;
         if (t >= SPIN + 0.1) {
           const k = t - SPIN - 0.1;
@@ -831,12 +984,17 @@ function worldFight({ dur, lines, linesB, turn = 3.0 }) {
           y += Math.sin(a) * k * 90;
         }
         if (out && t > (i === 0 && hit2 ? 2.45 : SPIN + 0.1) + 0.45) return;
-        const white = (i === 0 && ((t >= 1.1 && t < 1.18) || (t >= 2.2 && t < 2.28))) || (t >= SPIN + 0.1 && t < SPIN + 0.2) ? 1 : 0;
+        const white =
+          (i === 0 && ((t >= 1.1 && t < 1.18) || (t >= 2.2 && t < 2.28))) || (t >= SPIN + 0.1 && t < SPIN + 0.2)
+            ? 1
+            : 0;
         const fade = out ? clamp01((t - (i === 0 && hit2 ? 2.45 : SPIN + 0.1)) / 0.45) : 0;
         if (i === 0 && hit2 && t >= SPIN) return;
         walker(view, 'raider', x, y, 'left', stepOf(t + i, near < 1), { white, fade });
       });
-      if (t >= 1.6 && t < 1.88) for (let g = 1; g <= 2; g++) walker(view, 'brannoc', hx, hy + g * 8, dir, 0, { fade: 0.3 + g * 0.25, tint: hex('#9B74F8') });
+      if (t >= 1.6 && t < 1.88)
+        for (let g = 1; g <= 2; g++)
+          walker(view, 'brannoc', hx, hy + g * 8, dir, 0, { fade: 0.3 + g * 0.25, tint: hex('#9B74F8') });
       walker(view, 'brannoc', hx, hy, dir, 0, { white: charging && Math.floor(t * 14) % 2 ? 0.4 : 0 });
       // effects, in screen space (map → screen is ×2 after the view offset)
       const S = ([mx, my]) => [(mx - view.x0) * MZ, (my - view.y0) * MZ];
@@ -846,7 +1004,8 @@ function worldFight({ dur, lines, linesB, turn = 3.0 }) {
           const k = (t - at + 0.04) / 0.16;
           for (let a = 0; a < 22; a++) {
             const ang = -1.3 + (a / 22) * 2.6 * k;
-            for (let w = 0; w < 4; w++) put(view.g, sx + Math.cos(ang) * (36 + w), sy + Math.sin(ang) * (36 + w), w < 2 ? WHITE : hex('#FF4D5E'));
+            for (let w = 0; w < 4; w++)
+              put(view.g, sx + Math.cos(ang) * (36 + w), sy + Math.sin(ang) * (36 + w), w < 2 ? WHITE : hex('#FF4D5E'));
           }
         }
       if (charging) {
@@ -861,13 +1020,24 @@ function worldFight({ dur, lines, linesB, turn = 3.0 }) {
         const k = (t - SPIN) / 0.55;
         for (let a = 0; a < 90; a++) {
           const ang = (a / 90) * Math.PI * 2 + k * 20;
-          if ((a + Math.floor(k * 30)) % 9 < 5) for (let w = 0; w < 5; w++) put(view.g, sx + Math.cos(ang) * (64 + k * 20 + w), sy + Math.sin(ang) * (50 + k * 14 + w), w < 2 ? WHITE : hex('#FF4D5E'));
+          if ((a + Math.floor(k * 30)) % 9 < 5)
+            for (let w = 0; w < 5; w++)
+              put(
+                view.g,
+                sx + Math.cos(ang) * (64 + k * 20 + w),
+                sy + Math.sin(ang) * (50 + k * 14 + w),
+                w < 2 ? WHITE : hex('#FF4D5E'),
+              );
         }
       }
       // numbers and callouts
       const [hsx, hsy] = S(HERO);
-      for (const at of [1.1, 2.2]) if (t >= at && t < at + 0.6) text(ui, '3', 3, Math.round(hsy - 80 - (t - at) * 30), WHITE, { cx: hsx + 60 });
-      if (t >= SPIN + 0.1 && t < SPIN + 0.9) [-40, 0, 40].forEach((dy, i) => text(ui, '6', 3, Math.round(hsy - 60 + dy - (t - SPIN) * 30), GOLD, { cx: hsx + 64 + i * 6 }));
+      for (const at of [1.1, 2.2])
+        if (t >= at && t < at + 0.6) text(ui, '3', 3, Math.round(hsy - 80 - (t - at) * 30), WHITE, { cx: hsx + 60 });
+      if (t >= SPIN + 0.1 && t < SPIN + 0.9)
+        [-40, 0, 40].forEach((dy, i) =>
+          text(ui, '6', 3, Math.round(hsy - 60 + dy - (t - SPIN) * 30), GOLD, { cx: hsx + 64 + i * 6 }),
+        );
       if (t >= 1.62 && t < 2.0) text(ui, 'DODGE ROLL!', 2, hsy - 130, WHITE, { cx: hsx });
       if (t >= turn && t < SPIN + 1.0) {
         box(ui, UX - 106, 118, 212, 44, INK);
@@ -1002,7 +1172,14 @@ function puffS(g, sx, sy, age) {
   const p = age / 0.35;
   for (let k = 0; k < 8; k++) {
     const a = (k * Math.PI) / 4;
-    box(g, sx + Math.cos(a) * (9 + 33 * p), sy - 24 + Math.sin(a) * (9 + 33 * p) * 0.8, 6 - Math.round(p * 4), 6 - Math.round(p * 4), hex('#E8E0D0'));
+    box(
+      g,
+      sx + Math.cos(a) * (9 + 33 * p),
+      sy - 24 + Math.sin(a) * (9 + 33 * p) * 0.8,
+      6 - Math.round(p * 4),
+      6 - Math.round(p * 4),
+      hex('#E8E0D0'),
+    );
   }
 }
 /** Facing toward (dx, dy). */
@@ -1015,9 +1192,41 @@ const dirTo = (dx, dy) => (Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'rig
  * The move goes off at F. Heroes keep quiet as they do it; only a `shout` (Ysolde's) is said, at F (or `shoutAt`).
  */
 /** The core companion of each Path: whose voice a signature scene's bubbles are in. */
-const PATH_HERO = { physical: 'brannoc', financial: 'ysolde', intellectual: 'quill', spiritual: 'wren', emotional: 'oren', social: 'pip', occupational: 'tamsin', environmental: 'moss' };
-const HERO_NAME = { brannoc: 'Brannoc', ysolde: 'Ysolde', quill: 'Quill', wren: 'Sister Wren', oren: 'Oren', pip: 'Pip', tamsin: 'Tamsin', moss: 'Moss' };
-function signature({ path, map: name, at, F, dur, move, shout, shoutAt = null, sub = null, lines, play, sfx = [], chargeAt = F - 0.75 }) {
+const PATH_HERO = {
+  physical: 'brannoc',
+  financial: 'ysolde',
+  intellectual: 'quill',
+  spiritual: 'wren',
+  emotional: 'oren',
+  social: 'pip',
+  occupational: 'tamsin',
+  environmental: 'moss',
+};
+const HERO_NAME = {
+  brannoc: 'Brannoc',
+  ysolde: 'Ysolde',
+  quill: 'Quill',
+  wren: 'Sister Wren',
+  oren: 'Oren',
+  pip: 'Pip',
+  tamsin: 'Tamsin',
+  moss: 'Moss',
+};
+function signature({
+  path,
+  map: name,
+  at,
+  F,
+  dur,
+  move,
+  shout,
+  shoutAt = null,
+  sub = null,
+  lines,
+  play,
+  sfx = [],
+  chargeAt = F - 0.75,
+}) {
   const P = PATHS[path];
   /** Seconds of the scene skipped: it opens half a second before the move gathers (Oren's breath, everyone else's charge). */
   const skip = Math.max(0, Math.min(F - 0.75, shoutAt ?? F) - 0.5);
@@ -1070,8 +1279,19 @@ const SIG_SCENES = {
     ];
     const inOut = (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
     return signature({
-      path: 'physical', map: 'barracks-hall', at: [142, 106], F, dur: F + 1.25,
-      move: 'SWEETHEART SWING', sfx: [[F, 'fire'], [F + 0.05, 'tkill'], [F + 0.55, 'hop']], shout: null, lines: WORLD_LINES,
+      path: 'physical',
+      map: 'barracks-hall',
+      at: [142, 106],
+      F,
+      dur: F + 1.25,
+      move: 'SWEETHEART SWING',
+      sfx: [
+        [F, 'fire'],
+        [F + 0.05, 'tkill'],
+        [F + 0.55, 'hop'],
+      ],
+      shout: null,
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         let hx = 150;
         let hy = 126;
@@ -1094,7 +1314,10 @@ const SIG_SCENES = {
           let x, y, walking;
           if (f.via) {
             const k = clamp01((t - 1.0) / (F - 0.1 - 1.0));
-            const a = k < 0.6 ? approach(f.from, f.via, t, 1.0, 1.0 + (F - 1.1) * 0.6) : approach(f.via, f.to, t, 1.0 + (F - 1.1) * 0.6, F - 0.1);
+            const a =
+              k < 0.6
+                ? approach(f.from, f.via, t, 1.0, 1.0 + (F - 1.1) * 0.6)
+                : approach(f.via, f.to, t, 1.0 + (F - 1.1) * 0.6, F - 0.1);
             [x, y, walking] = [a[0], a[1], k > 0 && k < 1];
           } else [x, y, walking] = approach(f.from, f.to, t, 1.0, F - 0.1);
           if (t >= F + 0.05) {
@@ -1118,7 +1341,14 @@ const SIG_SCENES = {
           const k = (t - F) / 0.5;
           for (let a = 0; a < 90; a++) {
             const ang = (a / 90) * Math.PI * 2 + k * 20;
-            if ((a + Math.floor(k * 30)) % 9 < 5) for (let w = 0; w < 5; w++) put(view.g, sx + Math.cos(ang) * (64 + k * 20 + w), sy + Math.sin(ang) * (50 + k * 14 + w), w < 2 ? WHITE : hex('#FF4D5E'));
+            if ((a + Math.floor(k * 30)) % 9 < 5)
+              for (let w = 0; w < 5; w++)
+                put(
+                  view.g,
+                  sx + Math.cos(ang) * (64 + k * 20 + w),
+                  sy + Math.sin(ang) * (50 + k * 14 + w),
+                  w < 2 ? WHITE : hex('#FF4D5E'),
+                );
           }
         }
         return {
@@ -1143,8 +1373,20 @@ const SIG_SCENES = {
     ];
     const TICKS = [0.55, 0.95, 1.35];
     return signature({
-      path: 'financial', map: 'kingdom-town', at: [330, 162], F, dur: F + 2.0,
-      move: 'COLLECT THE TAB', sfx: [[F, 'fire'], [F + 0.55, 'thit'], [F + 0.95, 'thit'], [F + 1.35, 'tkill']], shout: 'YOU OWE ME.', lines: WORLD_LINES,
+      path: 'financial',
+      map: 'kingdom-town',
+      at: [330, 162],
+      F,
+      dur: F + 2.0,
+      move: 'COLLECT THE TAB',
+      sfx: [
+        [F, 'fire'],
+        [F + 0.55, 'thit'],
+        [F + 0.95, 'thit'],
+        [F + 1.35, 'tkill'],
+      ],
+      shout: 'YOU OWE ME.',
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         const walking = t < 0.9;
         const hy = walking ? lerp(150, H[1], t / 0.9) : H[1];
@@ -1185,7 +1427,14 @@ const SIG_SCENES = {
           for (let c = 0; c < 16; c++) {
             const a = (c / 16) * Math.PI * 2 + k * 2;
             const r = 20 + k * 100;
-            box(view.g, hsx + Math.cos(a) * r - 3, hsy - 30 + Math.sin(a) * r * 0.75 - 3, 6, 6, k > 0.8 ? hex('#8A5A00') : GOLD);
+            box(
+              view.g,
+              hsx + Math.cos(a) * r - 3,
+              hsy - 30 + Math.sin(a) * r * 0.75 - 3,
+              6,
+              6,
+              k > 0.8 ? hex('#8A5A00') : GOLD,
+            );
           }
         }
         return {
@@ -1208,8 +1457,18 @@ const SIG_SCENES = {
       { from: [208, 230], to: [208, 196] },
     ];
     return signature({
-      path: 'intellectual', map: 'archive', at: [208, 122], F, dur: F + 1.1,
-      move: 'FOOTNOTE BARRAGE', sfx: [[F, 'fire'], [F + 0.25, 'tkill']], shout: null, lines: WORLD_LINES,
+      path: 'intellectual',
+      map: 'archive',
+      at: [208, 122],
+      F,
+      dur: F + 1.1,
+      move: 'FOOTNOTE BARRAGE',
+      sfx: [
+        [F, 'fire'],
+        [F + 0.25, 'tkill'],
+      ],
+      shout: null,
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         const pacing = t < 2.6;
         const hx = pacing ? 208 + Math.sin(t * 2.4) * 22 : 208;
@@ -1220,7 +1479,10 @@ const SIG_SCENES = {
           const hitAt = F + 0.25 + i * 0.03;
           const fade = clamp01((t - hitAt) / 0.35);
           if (fade < 1)
-            walker(view, 'shadow', x, y, dirTo(208 - x, 160 - y), stepOf(t + i, moving), { white: t >= hitAt && t < hitAt + 0.1 ? 1 : 0, fade });
+            walker(view, 'shadow', x, y, dirTo(208 - x, 160 - y), stepOf(t + i, moving), {
+              white: t >= hitAt && t < hitAt + 0.1 ? 1 : 0,
+              fade,
+            });
           const [sx, sy] = S(x, y);
           puffS(view.g, sx, sy, t - hitAt);
           pop(ui, '3', sx, sy, t - hitAt, hex('#FF8A3D'));
@@ -1260,8 +1522,19 @@ const SIG_SCENES = {
       { from: [20, 92], to: [72, 92] },
     ];
     return signature({
-      path: 'spiritual', map: 'chapel', at: [96, 70], F, dur: F + 1.6,
-      move: 'LANTERN VIGIL', sfx: [[F, 'fire'], [F + 0.1, 'mend'], [F + 0.8, 'tkill']], shout: null, lines: WORLD_LINES,
+      path: 'spiritual',
+      map: 'chapel',
+      at: [96, 70],
+      F,
+      dur: F + 1.6,
+      move: 'LANTERN VIGIL',
+      sfx: [
+        [F, 'fire'],
+        [F + 0.1, 'mend'],
+        [F + 0.8, 'tkill'],
+      ],
+      shout: null,
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         const walking = t < 1.5;
         const hx = walking ? lerp(74, H[0], t / 1.5) : H[0];
@@ -1286,8 +1559,18 @@ const SIG_SCENES = {
         });
         walker(view, 'wren', hx, H[1], walking ? 'right' : 'down', stepOf(t * 0.7, walking));
         // the bell: a little shimmer by her hand
-        for (const at of [1.7, 2.2]) if (t >= at && t < at + 0.3) sparkle(view.g, hsx + 18, hsy - 30 - (t - at) * 30, 3, WHITE);
-        if (t >= burst && t < burst + 0.35) ringS(view.g, hsx, hsy - 24, 20 + (t - burst) * 260, hex('#FFE9A0'), 4);
+        for (const at of [1.7, 2.2])
+          if (t >= at && t < at + 0.3) sparkle(view.g, hsx + 18, hsy - 30 - (t - at) * 30, 3, WHITE);
+        // her lantern throws light all round her: eight balls of it, like the game's (fight.ts vigil)
+        if (t >= burst && t < burst + 0.4)
+          for (let k = 0; k < 8; k++) {
+            const a = (k * Math.PI) / 4;
+            const d = 10 + (t - burst) * 300;
+            const ox = hsx + Math.cos(a) * d;
+            const oy = hsy - 24 + Math.sin(a) * d * 0.8;
+            glowS(view.g, ox, oy, 14, hex('#FFE9A0'), 0.55);
+            glowS(view.g, ox, oy, 6, hex('#FFFDF0'), 0.95);
+          }
         if (t >= F + 0.1 && t < F + 0.8) pop(ui, '+1 HEART', hsx, hsy - 20, (t - F - 0.1) * 0.9, hex('#FF4D5E'));
         return {
           hero: [hx, H[1]],
@@ -1304,13 +1587,25 @@ const SIG_SCENES = {
     const F = F0 + 0.4;
     const H = [128, 96];
     return signature({
-      path: 'emotional', map: 'the-pit', at: [128, 78], F, dur: F + 1.1,
-      move: 'ONE BREATH', sfx: [[F, 'boom'], [F + 0.15, 'tkill']], chargeAt: F - 0.6, shout: null, shoutAt: F - 0.6, lines: WORLD_LINES,
+      path: 'emotional',
+      map: 'the-pit',
+      at: [128, 78],
+      F,
+      dur: F + 1.1,
+      move: 'ONE BREATH',
+      sfx: [
+        [F, 'boom'],
+        [F + 0.15, 'tkill'],
+      ],
+      chargeAt: F - 0.6,
+      shout: null,
+      shoutAt: F - 0.6,
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         const [hsx, hsy] = S(...H);
         const breathe = t >= F - 0.6 && t < F;
         if (breathe) ringS(view.g, hsx, hsy - 24, 90 * (1 - (t - F + 0.6) / 0.6) + 14, hex('#2DD4BF'), 3);
-        // their circling slows as he breathes in, then stops
+        // their circling slows as she breathes in, then stops
         const spin = (tt) => tt * 2.4 - Math.max(0, tt - (F - 0.6)) * 2.0;
         for (let i = 0; i < 4; i++) {
           const ang = spin(Math.min(t, F)) + (i * Math.PI) / 2;
@@ -1326,21 +1621,40 @@ const SIG_SCENES = {
           }
           const fade = clamp01((t - F - 0.3) / 0.5);
           if (fade < 1)
-            walker(view, 'shadow', x, y, t >= F ? ['down', 'left', 'up', 'right'][Math.floor(t * 14 + i) % 4] : dirTo(Math.cos(ang + 1.6), Math.sin(ang + 1.6)), t < F ? stepOf(t * 1.5 + i, true) : 0, {
-              white: t >= F && t < F + 0.1 ? 1 : 0,
-              fade,
-            });
+            walker(
+              view,
+              'shadow',
+              x,
+              y,
+              t >= F
+                ? ['down', 'left', 'up', 'right'][Math.floor(t * 14 + i) % 4]
+                : dirTo(Math.cos(ang + 1.6), Math.sin(ang + 1.6)),
+              t < F ? stepOf(t * 1.5 + i, true) : 0,
+              {
+                white: t >= F && t < F + 0.1 ? 1 : 0,
+                fade,
+              },
+            );
           const [sx, sy] = S(x, y);
           pop(ui, '6', sx, sy, t - F, hex('#2DD4BF'));
         }
         // one of them swings; he leans, slightly
         const lean = t >= 1.3 && t < 1.55 ? -4 : 0;
-        walker(view, 'oren', H[0] + lean, H[1], t >= F && t < F + 0.6 ? 'right' : 'down', 0, { white: breathe && Math.floor(t * 10) % 2 ? 0.35 : 0 });
+        walker(view, 'oren', H[0] + lean, H[1], t >= F && t < F + 0.6 ? 'right' : 'down', 0, {
+          white: breathe && Math.floor(t * 10) % 2 ? 0.35 : 0,
+        });
         if (t >= F && t < F + 0.3) {
           const k = (t - F) / 0.3;
           for (let a = 0; a < 6; a++) {
             const ang = (a * Math.PI) / 3;
-            box(view.g, hsx + 30 + Math.cos(ang) * (16 + k * 30), hsy - 30 + Math.sin(ang) * (16 + k * 30), 8, 8, hex('#2DD4BF'));
+            box(
+              view.g,
+              hsx + 30 + Math.cos(ang) * (16 + k * 30),
+              hsy - 30 + Math.sin(ang) * (16 + k * 30),
+              8,
+              8,
+              hex('#2DD4BF'),
+            );
           }
           box(view.g, hsx + 22, hsy - 38, 16, 16, WHITE);
         }
@@ -1360,19 +1674,39 @@ const SIG_SCENES = {
     const H = [264, 176];
     const foes = [0, 1, 2, 3].map((i) => {
       const a = (i * Math.PI) / 2 + 0.6;
-      return { from: [H[0] + Math.cos(a) * 80, H[1] + Math.sin(a) * 60], to: [H[0] + Math.cos(a) * 22, H[1] + Math.sin(a) * 15] };
+      return {
+        from: [H[0] + Math.cos(a) * 80, H[1] + Math.sin(a) * 60],
+        to: [H[0] + Math.cos(a) * 22, H[1] + Math.sin(a) * 15],
+      };
     });
     const R2 = F + 0.4;
     return signature({
-      path: 'social', map: 'millbrook', at: [264, 156], F, dur: F + 1.2,
-      move: 'ENCORE', sfx: [[F, 'fire'], [F + 0.4, 'tkill']], shout: null, shoutAt: F + 0.2, lines: WORLD_LINES,
+      path: 'social',
+      map: 'millbrook',
+      at: [264, 156],
+      F,
+      dur: F + 1.2,
+      move: 'ENCORE',
+      sfx: [
+        [F, 'fire'],
+        [F + 0.4, 'tkill'],
+      ],
+      shout: null,
+      shoutAt: F + 0.2,
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         const busy = t < F - 0.7;
         const hx = busy ? H[0] + Math.sin(t * 3) * 18 : H[0];
         const hop = busy ? Math.round(Math.abs(Math.sin(t * 11)) * 5) : 0;
         const hy = (busy ? H[1] + Math.sin(t * 6) * 7 : H[1]) - hop;
         const wheel = t >= 1.0 && t < 1.6;
-        const dir = wheel ? ['down', 'left', 'up', 'right'][Math.floor(t * 14) % 4] : busy ? (Math.cos(t * 3) > 0 ? 'right' : 'left') : 'down';
+        const dir = wheel
+          ? ['down', 'left', 'up', 'right'][Math.floor(t * 14) % 4]
+          : busy
+            ? Math.cos(t * 3) > 0
+              ? 'right'
+              : 'left'
+            : 'down';
         const [hsx, hsy] = S(H[0], H[1]);
         foes.forEach((f, i) => {
           let [x, y, moving] = approach(f.from, f.to, t, 0.6, F - 0.1);
@@ -1428,8 +1762,21 @@ const SIG_SCENES = {
     const PLUSH = [158, 96];
     const HIT = F + 0.12;
     return signature({
-      path: 'occupational', map: 'sleeping-keep', at: [150, 80], F, dur: F + 1.9,
-      move: 'HOLD THIS', sfx: [[F, 'fire'], [HIT, 'clunk'], [HIT + 0.04, 'boom'], [F + 0.75, 'clunk'], [F + 0.85, 'tkill']], shout: null, lines: WORLD_LINES,
+      path: 'occupational',
+      map: 'sleeping-keep',
+      at: [150, 80],
+      F,
+      dur: F + 1.9,
+      move: 'HOLD THIS',
+      sfx: [
+        [F, 'fire'],
+        [HIT, 'clunk'],
+        [HIT + 0.04, 'boom'],
+        [F + 0.75, 'clunk'],
+        [F + 0.85, 'tkill'],
+      ],
+      shout: null,
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         // the wrench: out through all of them to the far wall, and back to her hand
         const out = t >= F && t < F + 0.9;
@@ -1439,7 +1786,9 @@ const SIG_SCENES = {
         const pa = t >= HIT ? t - HIT : 0;
         const px = PLUSH[0] + pa * 70;
         const py = PLUSH[1] - pa * 90 + pa * pa * 40;
-        walker(view, 'plush', px, py, pa > 0 ? ['down', 'left', 'up', 'right'][Math.floor(t * 12) % 4] : 'left', 0, { white: pa > 0 && pa < 0.1 ? 1 : 0 });
+        walker(view, 'plush', px, py, pa > 0 ? ['down', 'left', 'up', 'right'][Math.floor(t * 12) % 4] : 'left', 0, {
+          white: pa > 0 && pa < 0.1 ? 1 : 0,
+        });
         for (let z = 0; z < 3; z++) {
           const za = pa - z * 0.18;
           if (za <= 0) continue;
@@ -1481,8 +1830,20 @@ const SIG_SCENES = {
     const VOLLEYS = [0.45, 0.75];
     const FALL = 0.3;
     return signature({
-      path: 'environmental', map: 'field-of-banners', at: [190, 64], F, dur: F + 1.4,
-      move: 'ARROW BARRAGE', sfx: [[F, 'fire'], [F + 0.45, 'thit'], [F + 0.75, 'tkill']], shout: null, sub: 'ONCE A DAY · AFTER A REAL HABIT', lines: WORLD_LINES,
+      path: 'environmental',
+      map: 'field-of-banners',
+      at: [190, 64],
+      F,
+      dur: F + 1.4,
+      move: 'ARROW BARRAGE',
+      sfx: [
+        [F, 'fire'],
+        [F + 0.45, 'thit'],
+        [F + 0.75, 'tkill'],
+      ],
+      shout: null,
+      sub: 'ONCE A DAY · AFTER A REAL HABIT',
+      lines: WORLD_LINES,
       play(t, view, ui, S) {
         // Moss: walks in, fades out, turns up a little way off
         let mx = lerp(164, 184, clamp01(t / 0.9));
@@ -1561,7 +1922,13 @@ function portrait(ui, id, x, y, sc, lift) {
     }
 }
 // The Scroll theme (palettes.ts), the game's dialogue box.
-const SCROLL = { background: hex('#F0D9A7'), card: hex('#F8EACB'), frame: hex('#4A3423'), accent: hex('#9A3412'), text: hex('#2E1F14') };
+const SCROLL = {
+  background: hex('#F0D9A7'),
+  card: hex('#F8EACB'),
+  frame: hex('#4A3423'),
+  accent: hex('#9A3412'),
+  text: hex('#2E1F14'),
+};
 
 /**
  * Straight after the move: someone they know walks up, and they talk, in the
@@ -1601,8 +1968,22 @@ function talk({ map: name, at, hero, friend, from, lines }) {
       const typed = said ? said.shown : 0;
       const blip = said && !said.done ? said.lift : 0;
       // the two of them, face to face; whoever's talking bobs with their voice
-      walker(view, friend.id, fx, fy - (speaking === friend.id ? blip : 0), k < 1 ? dirTo(friend.at[0] - from[0], friend.at[1] - from[1]) : dirTo(hero.at[0] - fx, hero.at[1] - fy), stepOf(t, k < 1));
-      walker(view, hero.id, hero.at[0], hero.at[1] - (speaking === hero.id ? blip : 0), t < ARRIVE * 0.5 ? 'down' : dirTo(fx - hero.at[0], fy - hero.at[1]), 0);
+      walker(
+        view,
+        friend.id,
+        fx,
+        fy - (speaking === friend.id ? blip : 0),
+        k < 1 ? dirTo(friend.at[0] - from[0], friend.at[1] - from[1]) : dirTo(hero.at[0] - fx, hero.at[1] - fy),
+        stepOf(t, k < 1),
+      );
+      walker(
+        view,
+        hero.id,
+        hero.at[0],
+        hero.at[1] - (speaking === hero.id ? blip : 0),
+        t < ARRIVE * 0.5 ? 'down' : dirTo(fx - hero.at[0], fy - hero.at[1]),
+        0,
+      );
       if (cur >= 0) {
         const [who, label, txt] = lines[cur];
         const rows = wrap(txt.toUpperCase(), PER);
@@ -1633,15 +2014,73 @@ function talk({ map: name, at, hero, friend, from, lines }) {
 }
 /** Who comes to find each hero after the fight, and what they say. */
 const TALKS = {
-  brannoc: { friend: 'oren', lines: [['brannoc', 'BRANNOC', 'That was so scary.'], ['oren', 'OREN', 'You beat them with one swing.'], ['brannoc', 'BRANNOC', "I didn't see. I had my eyes closed."]] },
-  ysolde: { friend: 'tamsin', lines: [['ysolde', 'YSOLDE', 'They owe me six coppers.'], ['tamsin', 'TAMSIN', "They're gone."], ['ysolde', 'YSOLDE', 'Then I want their next of kin.']] },
-  quill: { friend: 'ysolde', lines: [['quill', 'QUILL', "That's odd... the ladies will go crazy for this new move."], ['ysolde', 'YSOLDE', "No they won't."], ['quill', 'QUILL', 'I know...']] },
-  wren: { friend: 'brannoc', lines: [['wren', 'SISTER WREN', 'Are you hurt?'], ['brannoc', 'BRANNOC', 'Gravely. My pride.'], ['wren', 'SISTER WREN', "I'm sorry. I can't help with that."]] },
-  oren: { friend: 'pip', lines: [['pip', 'PIP', 'That was AMAZING! Again!'], ['oren', 'OREN', 'No.'], ['pip', 'PIP', 'Encore?'], ['oren', 'OREN', '...No.']] },
-  pip: { friend: 'pell', lines: [['pip', 'PIP', 'Pell! Did you like the performance?'], ['pell', 'PELL', 'Eh. It was mid.'], ['pip', 'PIP', '...Why do you talk like that?']] },
+  brannoc: {
+    friend: 'oren',
+    lines: [
+      ['brannoc', 'BRANNOC', 'That was so scary.'],
+      ['oren', 'OREN', 'You beat them with one swing.'],
+      ['brannoc', 'BRANNOC', "I didn't see. I had my eyes closed."],
+    ],
+  },
+  ysolde: {
+    friend: 'tamsin',
+    lines: [
+      ['ysolde', 'YSOLDE', 'They owe me six coppers.'],
+      ['tamsin', 'TAMSIN', "They're gone."],
+      ['ysolde', 'YSOLDE', 'Then I want their next of kin.'],
+    ],
+  },
+  quill: {
+    friend: 'ysolde',
+    lines: [
+      ['quill', 'QUILL', "That's odd... the ladies will go crazy for this new move."],
+      ['ysolde', 'YSOLDE', "No they won't."],
+      ['quill', 'QUILL', 'I know...'],
+    ],
+  },
+  wren: {
+    friend: 'brannoc',
+    lines: [
+      ['wren', 'SISTER WREN', 'Are you hurt?'],
+      ['brannoc', 'BRANNOC', 'Gravely. My pride.'],
+      ['wren', 'SISTER WREN', "I'm sorry. I can't help with that."],
+    ],
+  },
+  oren: {
+    friend: 'pip',
+    lines: [
+      ['pip', 'PIP', 'That was AMAZING! Again!'],
+      ['oren', 'OREN', 'No.'],
+      ['pip', 'PIP', 'Encore?'],
+      ['oren', 'OREN', '...No.'],
+    ],
+  },
+  pip: {
+    friend: 'pell',
+    lines: [
+      ['pip', 'PIP', 'Pell! Did you like the performance?'],
+      ['pell', 'PELL', 'Eh. It was mid.'],
+      ['pip', 'PIP', '...Why do you talk like that?'],
+    ],
+  },
   // Tamsin's talk comes first: she walks up to Plush, and then the wrench answers him.
-  tamsin: { friend: 'tamsin', host: 'plush', first: true, lines: [['tamsin', 'TAMSIN', "There's work to be done."], ['plush', 'BARON PLUSH', 'Can we take a nap first?']] },
-  moss: { friend: 'jory', lines: [['moss', 'MOSS', 'Sorry about the birds.'], ['jory', 'JORY', 'What birds?'], ['moss', 'MOSS', '...Exactly.']] },
+  tamsin: {
+    friend: 'tamsin',
+    host: 'plush',
+    first: true,
+    lines: [
+      ['tamsin', 'TAMSIN', "There's work to be done."],
+      ['plush', 'BARON PLUSH', 'Can we take a nap first?'],
+    ],
+  },
+  moss: {
+    friend: 'jory',
+    lines: [
+      ['moss', 'MOSS', 'Sorry about the birds.'],
+      ['jory', 'JORY', 'What birds?'],
+      ['moss', 'MOSS', '...Exactly.'],
+    ],
+  },
 };
 /** Where each talk happens: the fight's own place, the hero where they ended up, the friend walking in from one side. */
 const TALK_SPOTS = {
@@ -1657,14 +2096,56 @@ const TALK_SPOTS = {
 
 /** The real-life habit that levels each hero, in their Path's words. */
 const SIG_HABITS = {
-  brannoc: { path: 'physical', quest: 'MOVE 30 MIN', name: 'BRANNOC', move: 'SWEETHEART SWING', lines: [['I WENT'], ['FOR A RUN.', Y]] },
-  ysolde: { path: 'financial', quest: 'LOG SPENDING', name: 'YSOLDE', move: 'COLLECT THE TAB', lines: [['I CHECKED'], ['MY BUDGET.', Y]] },
-  quill: { path: 'intellectual', quest: 'READ 20 MIN', name: 'QUILL', move: 'FOOTNOTE BARRAGE', lines: [['I READ'], ['20 PAGES.', Y]] },
-  wren: { path: 'spiritual', quest: 'GRATITUDE', name: 'SISTER WREN', move: 'LANTERN VIGIL', lines: [['I WROTE 3'], ['THANK-YOUS.', Y]] },
-  oren: { path: 'emotional', quest: 'JOURNAL', name: 'OREN', move: 'ONE BREATH', lines: [['I JOURNALED'], ['FOR 5 MIN.', Y]] },
+  brannoc: {
+    path: 'physical',
+    quest: 'MOVE 30 MIN',
+    name: 'BRANNOC',
+    move: 'SWEETHEART SWING',
+    lines: [['I WENT'], ['FOR A RUN.', Y]],
+  },
+  ysolde: {
+    path: 'financial',
+    quest: 'LOG SPENDING',
+    name: 'YSOLDE',
+    move: 'COLLECT THE TAB',
+    lines: [['I CHECKED'], ['MY BUDGET.', Y]],
+  },
+  quill: {
+    path: 'intellectual',
+    quest: 'READ 20 MIN',
+    name: 'QUILL',
+    move: 'FOOTNOTE BARRAGE',
+    lines: [['I READ'], ['20 PAGES.', Y]],
+  },
+  wren: {
+    path: 'spiritual',
+    quest: 'GRATITUDE',
+    name: 'SISTER WREN',
+    move: 'LANTERN VIGIL',
+    lines: [['I WROTE 3'], ['THANK-YOUS.', Y]],
+  },
+  oren: {
+    path: 'emotional',
+    quest: 'JOURNAL',
+    name: 'OREN',
+    move: 'ONE BREATH',
+    lines: [['I JOURNALED'], ['FOR 5 MIN.', Y]],
+  },
   pip: { path: 'social', quest: 'CALL A FRIEND', name: 'PIP', move: 'ENCORE', lines: [['I CALLED'], ['MY MOM.', Y]] },
-  tamsin: { path: 'occupational', quest: 'DEEP WORK', name: 'TAMSIN', move: 'HOLD THIS', lines: [['1 HOUR OF'], ['DEEP WORK.', Y]] },
-  moss: { path: 'environmental', quest: 'WALK OUTSIDE', name: 'MOSS', move: 'ARROW BARRAGE', lines: [['I WENT'], ['OUTSIDE.', Y]] },
+  tamsin: {
+    path: 'occupational',
+    quest: 'DEEP WORK',
+    name: 'TAMSIN',
+    move: 'HOLD THIS',
+    lines: [['1 HOUR OF'], ['DEEP WORK.', Y]],
+  },
+  moss: {
+    path: 'environmental',
+    quest: 'WALK OUTSIDE',
+    name: 'MOSS',
+    move: 'ARROW BARRAGE',
+    lines: [['I WENT'], ['OUTSIDE.', Y]],
+  },
 };
 /** Habit done → hero levels to 10 and learns their move → the move in the Other World → someone they know comes over to talk → 8 PATHS. */
 const signatureCut = (hero) => {
@@ -1679,7 +2160,18 @@ const signatureCut = (hero) => {
     lines: TALKS[hero].lines,
   });
   return [
-    habit({ path: h.path, hero, quest: h.quest, lv: 9, dur: 0.6 + FILL + 1.05, evolve: FILL, impact: true, lines: h.lines, who: h.name, move: h.move }),
+    habit({
+      path: h.path,
+      hero,
+      quest: h.quest,
+      lv: 9,
+      dur: 0.6 + FILL + 1.05,
+      evolve: FILL,
+      impact: true,
+      lines: h.lines,
+      who: h.name,
+      move: h.move,
+    }),
     ...(TALKS[hero].first ? [conversation, SIG_SCENES[hero]()] : [SIG_SCENES[hero](), conversation]),
     endCard({ dur: 4.2, powered: true }),
   ];
@@ -1687,9 +2179,26 @@ const signatureCut = (hero) => {
 
 // ---- the cuts
 const brannoc = (dur, impact = true) =>
-  habit({ path: 'physical', hero: 'brannoc', quest: 'MOVE 30 MIN', lv: 14, dur, impact, lines: [['I WENT'], ['FOR A RUN.', Y]] });
-const quill = (dur) => habit({ path: 'intellectual', hero: 'quill', quest: 'READ 20 MIN', lv: 8, dur, lines: [['I READ'], ['20 PAGES.', Y]] });
-const pip = (dur) => habit({ path: 'social', hero: 'pip', quest: 'CALL A FRIEND', lv: 11, dur, lines: [['I CALLED'], ['MY MOM.', Y]] });
+  habit({
+    path: 'physical',
+    hero: 'brannoc',
+    quest: 'MOVE 30 MIN',
+    lv: 14,
+    dur,
+    impact,
+    lines: [['I WENT'], ['FOR A RUN.', Y]],
+  });
+const quill = (dur) =>
+  habit({
+    path: 'intellectual',
+    hero: 'quill',
+    quest: 'READ 20 MIN',
+    lv: 8,
+    dur,
+    lines: [['I READ'], ['20 PAGES.', Y]],
+  });
+const pip = (dur) =>
+  habit({ path: 'social', hero: 'pip', quest: 'CALL A FRIEND', lv: 11, dur, lines: [['I CALLED'], ['MY MOM.', Y]] });
 const EVERY = [['EVERY HABIT'], ['HAS A HERO.', Y]];
 const montage = (each, picks) =>
   [
@@ -1769,7 +2278,15 @@ const CUTS = {
     }),
     questList({ dur: 3.4, step: 1, lines: [['ADD YOUR'], ['HABITS.', Y]] }),
     pathsGrid({ dur: 3.6, step: 2, lines: [['EACH ONE'], ['FEEDS A PATH', Y]] }),
-    habit({ path: 'physical', hero: 'brannoc', quest: 'MOVE 30 MIN', lv: 14, dur: 3.0, step: 3, lines: [['DO IT IN'], ['REAL LIFE.', Y]] }),
+    habit({
+      path: 'physical',
+      hero: 'brannoc',
+      quest: 'MOVE 30 MIN',
+      lv: 14,
+      dur: 3.0,
+      step: 3,
+      lines: [['DO IT IN'], ['REAL LIFE.', Y]],
+    }),
     streak({ dur: 3.0, step: 4, lines: [['SHOW UP'], ['EVERY DAY.', Y]] }),
     radar({ dur: 3.0, step: 5, lines: [['SEE YOUR'], ['WHOLE LIFE.', Y]] }),
     worldWalk({ dur: 3.6, lines: [['ENTER THE'], ['OTHER WORLD.', Y]] }),
@@ -1779,7 +2296,10 @@ const CUTS = {
 };
 // one per core companion: `node scripts/ad-video.mjs sig-brannoc out.mp4`
 for (const hero of Object.keys(SIG_SCENES)) CUTS[`sig-${hero}`] = () => signatureCut(hero);
-if (!CUTS[cut]) throw new Error(`Unknown cut ${cut}: use 30, 15, 6, tour, prince or sig-<hero> (${Object.keys(SIG_SCENES).join(', ')}).`);
+if (!CUTS[cut])
+  throw new Error(
+    `Unknown cut ${cut}: use 30, 15, 6, tour, prince or sig-<hero> (${Object.keys(SIG_SCENES).join(', ')}).`,
+  );
 const scenes = CUTS[cut]();
 
 // ---- render: sample the scene through the camera, lay the overlay on top
@@ -1789,9 +2309,38 @@ const rowY = new Int32Array(H);
 const shakeRnd = rng(3);
 const ff = spawn(
   'ffmpeg',
-  ['-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
-    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', '17',
-    '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart', `${out}.silent.mp4`],
+  [
+    '-y',
+    '-loglevel',
+    'error',
+    '-f',
+    'rawvideo',
+    '-pix_fmt',
+    'rgba',
+    '-s',
+    `${W}x${H}`,
+    '-r',
+    String(FPS),
+    '-i',
+    '-',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-preset',
+    'slow',
+    '-crf',
+    '17',
+    '-color_primaries',
+    'bt709',
+    '-color_trc',
+    'bt709',
+    '-colorspace',
+    'bt709',
+    '-movflags',
+    '+faststart',
+    `${out}.silent.mp4`,
+  ],
   { stdio: ['pipe', 'ignore', 'inherit'] },
 );
 let total = 0;
@@ -1802,8 +2351,10 @@ for (const sc of scenes) {
     const { scene, ui, cam } = sc.frame(f / FPS);
     const sx0 = cam.shake ? (shakeRnd() - 0.5) * 2 * cam.shake : 0;
     const sy0 = cam.shake ? (shakeRnd() - 0.5) * 2 * cam.shake : 0;
-    for (let X = 0; X < W; X++) colX[X] = Math.min(GW - 1, Math.max(0, Math.floor(cam.focus[0] + (X / K - cam.anchor[0]) / cam.z + sx0)));
-    for (let Yp = 0; Yp < H; Yp++) rowY[Yp] = Math.min(GH - 1, Math.max(0, Math.floor(cam.focus[1] + (Yp / K - cam.anchor[1]) / cam.z + sy0)));
+    for (let X = 0; X < W; X++)
+      colX[X] = Math.min(GW - 1, Math.max(0, Math.floor(cam.focus[0] + (X / K - cam.anchor[0]) / cam.z + sx0)));
+    for (let Yp = 0; Yp < H; Yp++)
+      rowY[Yp] = Math.min(GH - 1, Math.max(0, Math.floor(cam.focus[1] + (Yp / K - cam.anchor[1]) / cam.z + sy0)));
     const ux = Math.round(sx0 * 0.5);
     const uy = Math.round(sy0 * 0.5);
     for (let Yp = 0; Yp < H; Yp++) {
@@ -1840,14 +2391,16 @@ else {
   };
   // The 8-bit bank (chip-sounds.mjs) for everything but the voices, which are the game's own blips.
   const clips = chipSounds(RATE);
-  for (let v = 1; v <= 5; v++) clips[`blip${v}`] = Float32Array.from(pcm(`assets/audio/blip-${v}.wav`), (x) => x / 32768);
+  for (let v = 1; v <= 5; v++)
+    clips[`blip${v}`] = Float32Array.from(pcm(`assets/audio/blip-${v}.wav`), (x) => x / 32768);
   const VOLUME = { blip1: 0.5, blip2: 0.5, blip3: 0.5, blip4: 0.5, blip5: 0.5 };
   const mix = new Float32Array(Math.ceil((total / FPS) * RATE));
   for (const [at, name] of SOUNDS) {
     const start = Math.round(at * RATE);
     const clip = clips[name];
     const gain = VOLUME[name] ?? 1;
-    for (let i = 0; i < clip.length && start + i < mix.length; i++) if (start + i >= 0) mix[start + i] += clip[i] * gain;
+    for (let i = 0; i < clip.length && start + i < mix.length; i++)
+      if (start + i >= 0) mix[start + i] += clip[i] * gain;
   }
   const wav = Buffer.alloc(44 + mix.length * 2);
   wav.write('RIFF', 0);
@@ -1868,9 +2421,35 @@ else {
   // Upload-safe for Instagram, TikTok and YouTube: 48 kHz stereo AAC, BT.709 colour tags, the index up front.
   const mux = spawn(
     'ffmpeg',
-    ['-y', '-loglevel', 'error', '-i', silent, '-i', voices, '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
-      '-bsf:v', 'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
-      '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', '-shortest', out],
+    [
+      '-y',
+      '-loglevel',
+      'error',
+      '-i',
+      silent,
+      '-i',
+      voices,
+      '-map',
+      '0:v',
+      '-map',
+      '1:a',
+      '-c:v',
+      'copy',
+      '-bsf:v',
+      'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '192k',
+      '-ar',
+      '48000',
+      '-ac',
+      '2',
+      '-movflags',
+      '+faststart',
+      '-shortest',
+      out,
+    ],
     { stdio: ['ignore', 'ignore', 'inherit'] },
   );
   const [code] = await once(mux, 'close');

@@ -35,24 +35,29 @@ const TAG_W = 120;
  * stays black. The Archive floats alone: it's outside space and time.
  */
 const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
-  archive: { x: 0.5, y: 0.15 },
-  'courier-road': { x: 0.5, y: 0.45 },
-  waystation: { x: 0.74, y: 0.22 },
-  millbrook: { x: 0.14, y: 0.45 },
-  'felix-maze': { x: 0.66, y: 0.45 },
-  'warrior-city': { x: 0.8, y: 0.58 },
-  'south-road': { x: 0.7, y: 0.7 },
-  'deserters-camp': { x: 0.86, y: 0.45 },
-  'barracks-hall': { x: 0.86, y: 0.72 },
-  'march-road': { x: 0.62, y: 0.9 },
-  'kingdom-town': { x: 0.37, y: 0.9 },
-  kaldorhold: { x: 0.5, y: 0.96 },
-  'ring-ward': { x: 0.5, y: 0.8 },
-  'barracks-ward': { x: 0.66, y: 0.96 },
-  'frost-ward': { x: 0.5, y: 0.99 },
-  'tithe-road': { x: 0.26, y: 0.96 },
-  'broken-watch': { x: 0.16, y: 0.88 },
-  'field-of-banners': { x: 0.12, y: 0.78 },
+  // laid out on a grid (author, Oct 4, 2026), so the roads run the way their signs say: the castle
+  // north of the kingdom town, Kaldorhold to its east (its wards north, east and south), the Tithe
+  // Road south to the Broken Watch and the Field of Banners, and Warrior City's north road up past
+  // the camp to the barracks and on round by the March Road
+  archive: { x: 0.1, y: 0.08 },
+  'castle-grounds': { x: 0.3, y: 0.08 },
+  'ring-ward': { x: 0.5, y: 0.08 },
+  'barracks-ward': { x: 0.7, y: 0.08 },
+  'kingdom-town': { x: 0.3, y: 0.24 },
+  kaldorhold: { x: 0.5, y: 0.24 },
+  'tithe-road': { x: 0.3, y: 0.4 },
+  'frost-ward': { x: 0.5, y: 0.4 },
+  'march-road': { x: 0.7, y: 0.4 },
+  'barracks-hall': { x: 0.88, y: 0.4 },
+  'broken-watch': { x: 0.1, y: 0.56 },
+  'deserters-camp': { x: 0.88, y: 0.56 },
+  'field-of-banners': { x: 0.1, y: 0.72 },
+  'courier-road': { x: 0.3, y: 0.72 },
+  'felix-maze': { x: 0.5, y: 0.72 },
+  'warrior-city': { x: 0.7, y: 0.72 },
+  millbrook: { x: 0.1, y: 0.88 },
+  waystation: { x: 0.3, y: 0.88 },
+  'south-road': { x: 0.7, y: 0.88 },
 };
 
 /** Rooms shown on the World view as the place they belong to (a dungeon is one place). */
@@ -69,8 +74,9 @@ const REGION: Partial<Record<MapId, MapId>> = {
   'old-kings-crypt': 'kingdom-town',
   'hedge-maze': 'kingdom-town',
   'the-pit': 'warrior-city',
-  'war-doors': 'kingdom-town',
-  'war-hall': 'kingdom-town',
+  'castle-hall': 'castle-grounds',
+  'castle-upper': 'castle-grounds',
+  'war-hall': 'castle-grounds',
   'gut-and-gauntlet': 'kaldorhold',
   'hall-of-kaldor': 'kaldorhold',
   'kaldorium-maximus': 'ring-ward',

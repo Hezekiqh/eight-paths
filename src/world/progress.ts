@@ -8,6 +8,10 @@ import {
   type Dimension,
 } from '@/game';
 
+import { COMPANIONS, type CharacterId } from '@/story/companions';
+
+import { GATE_FLAG } from './castle';
+
 import type { Facing, MapId } from './maps';
 
 // The World's only gates are the player's real levels (WORLDS.md): the road
@@ -51,20 +55,40 @@ export type Exit = {
 export const ARCHIVE_DOOR_LEVEL = 6;
 
 /**
- * After the door, the main road opens every 3 overall levels (author, Sep 29,
- * 2026): the Buried Barracks at 9, Plush's keep at 12, the way out to the
- * kingdom at 15, the king at 18, and the end of Season 1 at 20. Overall, so any habit counts.
+ * After the door, three gates and no more (author, Oct 4, 2026: Season 1 beatable in 30 to 50
+ * habits over two or three days; the story's the draw, habits are the fuel): the road north out of
+ * Warrior City at Lv 10, the king at Lv 18, and the end of Season 1 at Lv 20. Overall, so any
+ * habit counts. Recruiting the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
  */
-export const BARRACKS_LEVEL = 9;
-export const KEEP_LEVEL = 12;
-export const KINGDOM_LEVEL = 15;
+export const NORTH_ROAD_LEVEL = 10;
 export const KING_LEVEL = 18;
+
+/**
+ * To face the king you need the whole party (author, Oct 4, 2026): Brannoc above all (it's his
+ * father's throne), and the other seven. Each is the `met:` flag of meet.ts, set when they join.
+ */
+const WHERE: Record<string, string> = {
+  brannoc: 'He is in a cell under the Colosseum, in Warrior City.',
+  ysolde: "She is in Warrior City's adventurers' guild.",
+  quill: "He is in Warrior City's library.",
+  wren: "She is in Warrior City's chapel.",
+  oren: "She is in Warrior City's hospital.",
+  pip: "He is in Warrior City's tavern.",
+  tamsin: 'She is down the old mine, south of Warrior City.',
+  moss: "He is in Warrior City's horse barn.",
+};
+export const WHOLE_PARTY: Requirement[] = (Object.keys(WHERE) as CharacterId[]).map((id) => ({
+  kind: 'flag',
+  flag: `met:${id}`,
+  label: `Bring ${COMPANIONS[id].name} into your party`,
+  hint: WHERE[id],
+}));
 
 /** Never locked. */
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
 /**
- * Season 1 ends at this overall level (author, Sep 29, 2026): about 35 habits
+ * Season 1 ends at this overall level (author, Sep 29, 2026): 35 habits
  * of any kind. Later kingdoms arrive as new seasons, each with its own finish.
  */
 export const FINAL_GOAL = { kind: 'overall', level: 20 } as const satisfies Requirement;
@@ -170,7 +194,7 @@ export const EXITS: Exit[] = [
     tile: 'E',
     label: 'The fort in the hill',
     to: { map: 'barracks-hall', x: 8, y: 8, facing: 'up' },
-    needs: { kind: 'overall', level: BARRACKS_LEVEL },
+    needs: OPEN,
     walk: true,
   },
   {
@@ -294,7 +318,7 @@ export const EXITS: Exit[] = [
     tile: 'K',
     label: 'The great door',
     to: { map: 'sleeping-keep', x: 8, y: 7, facing: 'up' },
-    needs: { kind: 'overall', level: KEEP_LEVEL },
+    needs: OPEN,
     walk: true,
   },
   {
@@ -322,7 +346,6 @@ export const EXITS: Exit[] = [
           label: 'Win over Baron Plush',
           hint: 'The Baron is in the way. Wake him up.',
         },
-        { kind: 'overall', level: KINGDOM_LEVEL },
       ],
     },
     walk: true,
@@ -494,8 +517,8 @@ export const EXITS: Exit[] = [
     id: 'town-keep',
     from: 'kingdom-town',
     tile: 'E',
-    label: 'The keep gate',
-    to: { map: 'war-doors', x: 8, y: 6, facing: 'up' },
+    label: 'The castle road',
+    to: { map: 'castle-grounds', x: 19, y: 28, facing: 'up' },
     needs: {
       kind: 'all',
       of: [
@@ -529,41 +552,89 @@ export const EXITS: Exit[] = [
           label: "Mend Harrow's forge",
           hint: "Brannoc's armour hasn't fitted in five hundred years.",
         },
+        ...WHOLE_PARTY,
         { kind: 'overall', level: KING_LEVEL },
       ],
     },
     walk: true,
   },
+  // Kaldor's castle (author, Oct 4, 2026; castle.ts): the grounds and the gate guards, the empty
+  // hall (straight on to the throne room, or up the winding stair to the king's floor), the throne.
   {
-    id: 'doors-town',
-    from: 'war-doors',
-    tile: '1',
-    label: 'The way out',
+    id: 'grounds-town',
+    from: 'castle-grounds',
+    tile: '_',
+    label: 'The road back to town',
     to: { map: 'kingdom-town', x: 20, y: 2, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,
   },
   {
-    id: 'doors-hall',
-    from: 'war-doors',
-    tile: 'G',
-    label: 'The war hall doors',
-    to: { map: 'war-hall', x: 9, y: 6, facing: 'up' },
+    id: 'grounds-hall',
+    from: 'castle-grounds',
+    tile: '2',
+    label: 'The drawbridge',
+    to: { map: 'castle-hall', x: 12, y: 14, facing: 'up' },
     needs: {
-      kind: 'flag',
-      flag: 'aurek-down',
-      label: 'Get past the guardian',
-      hint: 'Something tall and stitched guards the doors.',
+      // in an "all" so the bridge isn't drawn as a hole once it's open: the game draws it down (castle.ts)
+      kind: 'all',
+      of: [
+        {
+          kind: 'flag',
+          flag: GATE_FLAG,
+          label: 'Get past the gate guards',
+          hint: 'Captain Orsk keeps the bridge up. Talk, push, pay or argue your way past.',
+        },
+      ],
     },
     walk: true,
   },
   {
-    id: 'hall-doors',
+    id: 'hall-grounds',
+    from: 'castle-hall',
+    tile: '1',
+    label: 'The way out',
+    to: { map: 'castle-grounds', x: 19, y: 12, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'hall-upper',
+    from: 'castle-hall',
+    tile: '%',
+    label: 'The winding stair',
+    to: { map: 'castle-upper', x: 27, y: 11, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'upper-hall',
+    from: 'castle-upper',
+    tile: '%',
+    label: 'The winding stair',
+    to: { map: 'castle-hall', x: 3, y: 12, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'hall-throne',
+    from: 'castle-hall',
+    tile: '4',
+    label: 'The throne room',
+    to: { map: 'war-hall', x: 11, y: 10, facing: 'up' },
+    needs: OPEN,
+    walk: true,
+  },
+  {
+    id: 'throne-hall',
     from: 'war-hall',
     tile: '1',
     label: 'The doors',
-    to: { map: 'war-doors', x: 8, y: 2, facing: 'down' },
+    to: { map: 'castle-hall', x: 12, y: 2, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -879,7 +950,7 @@ export const EXITS: Exit[] = [
     tile: '^',
     label: 'The road north',
     to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
-    needs: OPEN,
+    needs: { kind: 'overall', level: NORTH_ROAD_LEVEL },
     walk: true,
   },
   {
@@ -935,7 +1006,7 @@ export const EXITS: Exit[] = [
     id: 'city-chapel',
     from: 'warrior-city',
     tile: '2',
-    label: "The chapel",
+    label: 'The chapel',
     to: { map: 'wc-chapel', x: 8, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -955,7 +1026,7 @@ export const EXITS: Exit[] = [
     id: 'city-library',
     from: 'warrior-city',
     tile: '3',
-    label: "The library",
+    label: 'The library',
     to: { map: 'wc-library', x: 8, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -995,7 +1066,7 @@ export const EXITS: Exit[] = [
     id: 'city-hospital',
     from: 'warrior-city',
     tile: '5',
-    label: "The hospital",
+    label: 'The hospital',
     to: { map: 'wc-hospital', x: 8, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -1015,7 +1086,7 @@ export const EXITS: Exit[] = [
     id: 'city-tavern',
     from: 'warrior-city',
     tile: '6',
-    label: "The tavern",
+    label: 'The tavern',
     to: { map: 'wc-tavern', x: 8, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -1035,7 +1106,7 @@ export const EXITS: Exit[] = [
     id: 'city-store',
     from: 'warrior-city',
     tile: '7',
-    label: "The store",
+    label: 'The store',
     to: { map: 'wc-store', x: 8, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -1055,7 +1126,7 @@ export const EXITS: Exit[] = [
     id: 'city-barn',
     from: 'warrior-city',
     tile: '8',
-    label: "The horse barn",
+    label: 'The horse barn',
     to: { map: 'wc-barn', x: 8, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
