@@ -100,16 +100,12 @@
       "sprite": "nails",
       "facing": "down",
       "name": "Nails",
-      "lines": ["Don't look at me like that."],
+      "lines": [
+        "The king asked for ice water.",
+        "I gave him one ice cube.",
+        "One life sentence."
+      ],
       "questions": [
-        {
-          "ask": "What are you in for?",
-          "answer": [
-            "I brought the king a glass of water with a single ice cube.",
-            "He didn't find it humorous.",
-            "One life sentence."
-          ]
-        },
         {
           "ask": "Why only one ice cube?",
           "answer": ["It was a statement.", "...I'm still not sure what it was saying."]
@@ -130,12 +126,8 @@
       "sprite": "oldmott",
       "facing": "down",
       "name": "Old Mott",
-      "lines": ["Twenty life sentences, I'm serving.", "Done about four years so far. Not bad going."],
+      "lines": ["The king sneezed.", "I didn't say bless you.", "Twenty life sentences."],
       "questions": [
-        {
-          "ask": "What are you in for?",
-          "answer": ["The king sneezed.", "I didn't say bless you.", "Twenty life sentences."]
-        },
         {
           "ask": "Should've said bless you, then.",
           "answer": ["I KNOW.", "Two little words. I think about them every day."],
@@ -152,14 +144,18 @@
       "sprite": "silas",
       "facing": "down",
       "name": "Silas Seen",
-      "lines": ["...", "...", "Gary's pretending he can't see you, isn't he."],
+      "lines": [
+        "I left the king on read for twenty minutes.",
+        "Fifty life sentences.",
+        "...Touchy."
+      ],
       "questions": [
         {
           "ask": "What are you in for?",
           "answer": [
             "The king sent me a raven. We were supposed to make plans.",
             "I forgot to reply.",
-            "After a week, he sent the royal guard to arrest me.",
+            "After twenty minutes, he sent the royal guard to arrest me.",
             "...Touchy."
           ]
         },

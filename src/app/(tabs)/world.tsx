@@ -1635,6 +1635,7 @@ function World({
         hearts={hearts}
         chests={chests}
         husks={husks}
+        talker={dialogue?.speaker}
         onMarched={onMarched}
         exit={exit}
         onExited={() => {

@@ -68,6 +68,7 @@ import { playSound, type Effect } from '@/audio';
 import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
+import { IDLE_SPLIT, idleDip } from '@/world/idle';
 import { cameoAt } from '@/world/step-aside';
 import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
 
@@ -76,6 +77,8 @@ const WALKERS_IMAGE = require('@/assets/world/walkers.png');
 const FW = WALKER_FRAME.width;
 const FH = WALKER_FRAME.height;
 const FEET = WALKER_FRAME.feet;
+/** Numbers per sprite in a draw list (useSpriteBuffers). */
+const STRIDE = 7;
 /**
  * An error in the frame loop. Thrown on the UI thread it would take the whole
  * app down (Expo Go crashed this way, entering the World), so the loop catches
@@ -251,6 +254,8 @@ type Props = {
   onAskSpecial?: () => void;
   /** Out of hearts. */
   onDefeat?: () => void;
+  /** Who's talking (the dialogue's speaker): they breathe a little quicker (idle.ts). */
+  talker?: string;
   /** Doorways shut for a boss fight: drawn barred. */
   sealed?: { x: number; y: number }[];
   /** Chests (open or not) and signs standing on tiles, drawn live so they can change. */
@@ -355,6 +360,7 @@ export function WorldView({
   signs = [],
   husks = [],
   sealed = [],
+  talker,
   ambience = { darkness: 0, motes: null },
   flames = [],
   snuffable = false,
@@ -434,6 +440,12 @@ export function WorldView({
   const guttered = useSharedValue(0);
   /** Seconds since the room opened: flames flicker and motes drift by it. */
   const clock = useSharedValue(0);
+  /** The talker's row in sim.npcWalk (-1: nobody), so they breathe quicker (idle.ts). */
+  const talkerRow = useSharedValue(-1);
+  useEffect(() => {
+    const n = talker ? map.npcs.find((o) => o.name === talker) : undefined;
+    talkerRow.set(n ? sim.npcIds.indexOf(n.id) : -1);
+  }, [talker, map, sim.npcIds, talkerRow]);
   /** The leaver's row in sim.npcWalk, seconds into their exit (-1: nobody leaving), and where they are: [x, y, dashing]. */
   const exitRow = useSharedValue(-1);
   const exitT = useSharedValue(-1);
@@ -451,7 +463,8 @@ export function WorldView({
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
   // One more for a party member stepping in for a job (a cameo).
   // And room for a march's actors.
-  const count = partyRows.length + npcs.length + map.enemies.length + 1 + MARCH_ACTORS;
+  // (each NPC can take two: legs, then head and shoulders a pixel lower as they breathe)
+  const count = partyRows.length + npcs.length * 2 + map.enemies.length + 1 + MARCH_ACTORS;
 
   const camX = useSharedValue(0);
   const camY = useSharedValue(0);
@@ -787,7 +800,9 @@ export function WorldView({
           ents.push([npcs[i][0], 3, walkFrame(d, true), fx + d, fy, 0, 1]);
           continue;
         }
-        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, 1]);
+        // standing about, they breathe (never while strolling)
+        const dip = strolling(w) ? 0 : idleDip(clock.get(), i, npcs[i][1] === talkerRow.get());
+        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, 1, dip]);
       }
       const whites = whiteFor.get();
       const now = fight.get();
@@ -886,11 +901,15 @@ export function WorldView({
       const list: number[] = [];
       const lit: number[] = [];
       const red: number[] = [];
-      for (const [row, facing, f, x, y, tint, size] of ents) {
-        const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size];
-        list.push(...item);
-        if (tint === 1 && lit.length < FLASHES * 5) lit.push(...item);
-        if (tint === 2 && red.length < FLASHES * 5) red.push(...item);
+      for (const [row, facing, f, x, y, tint, size, dip] of ents) {
+        const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size, 0, FH];
+        if (dip) {
+          // breathing: the legs where they are, the head and shoulders a pixel lower over them
+          list.push(item[0], item[1], item[2], item[3] + IDLE_SPLIT * size, size, IDLE_SPLIT, FH - IDLE_SPLIT);
+          list.push(item[0], item[1], item[2], item[3] + dip * size, size, 0, IDLE_SPLIT);
+        } else list.push(...item);
+        if (tint === 1 && lit.length < FLASHES * STRIDE) lit.push(...item);
+        if (tint === 2 && red.length < FLASHES * STRIDE) red.push(...item);
       }
       drawList.set(list);
       flashList.set(lit);
@@ -1239,19 +1258,22 @@ export function WorldView({
   );
 }
 
-/** Rects and placements for an Atlas, from a list of five numbers per sprite: sheet x, y, screen x, y, size. */
+/**
+ * Rects and placements for an Atlas, from a list of seven numbers per sprite: sheet x, y, screen x, y, size,
+ * and the rows of the frame to draw (from, how many: a breathing NPC is drawn in two pieces, idle.ts).
+ */
 function useSpriteBuffers(list: SharedValue<number[]>, count: number) {
   const sprites = useRectBuffer(count, (rect, i) => {
     'worklet';
     const l = list.get();
-    if (l.length < (i + 1) * 5) rect.setXYWH(0, 0, 0, 0);
-    else rect.setXYWH(l[i * 5], l[i * 5 + 1], FW, FH);
+    if (l.length < (i + 1) * STRIDE) rect.setXYWH(0, 0, 0, 0);
+    else rect.setXYWH(l[i * STRIDE], l[i * STRIDE + 1] + l[i * STRIDE + 5], FW, l[i * STRIDE + 6]);
   });
   const transforms = useRSXformBuffer(count, (xf, i) => {
     'worklet';
     const l = list.get();
-    if (l.length < (i + 1) * 5) xf.set(1, 0, -999, -999);
-    else xf.set(l[i * 5 + 4], 0, l[i * 5 + 2], l[i * 5 + 3]);
+    if (l.length < (i + 1) * STRIDE) xf.set(1, 0, -999, -999);
+    else xf.set(l[i * STRIDE + 4], 0, l[i * STRIDE + 2], l[i * STRIDE + 3]);
   });
   return [sprites, transforms] as const;
 }

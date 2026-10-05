@@ -43,6 +43,12 @@ const SPEED = 112;
 const FW = 16;
 const FH = 24;
 const FEET = 22;
+/**
+ * Everyone standing about breathes, as in the game (src/world/idle.ts, author Oct 5, 2026): a one-pixel dip
+ * of the head and shoulders, quicker while they talk. Never the hero.
+ */
+const IDLE_SPLIT = 13;
+const idleDip = (t, who, talking) => ((t / (talking ? 0.6 : 1.8) + who * 0.37) % 1 < 0.45 ? 1 : 0);
 const DIRS = { down: 0, up: 1, left: 2, right: 3 };
 
 // The Scroll theme (palettes.ts), the default.
@@ -138,11 +144,11 @@ function voiceFor(name, sprite) {
 const LETTER_MS = 28;
 const PAUSES = { '.': 260, '!': 260, '?': 260, ',': 120, ':': 160, ';': 160 };
 /** When each letter appears, in seconds from the line's start. */
-function letterTimes(text) {
+function letterTimes(text, pace = 1) {
   const at = [];
   let t = 0;
   for (let i = 0; i < text.length; i++) {
-    if (i > 0) t += (LETTER_MS + (PAUSES[text[i - 1]] ?? 0)) / 1000;
+    if (i > 0) t += ((LETTER_MS + (PAUSES[text[i - 1]] ?? 0)) / 1000) * pace;
     at.push(t);
   }
   return at;
@@ -374,6 +380,10 @@ const easeInOut = (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2)
 /** How far the camera has zoomed in on the card game: 0 → 1 over the first 0.7s, back over the last 0.6s. */
 function zoomIn(t, dur) {
   return easeInOut(Math.min(1, Math.max(0, Math.min(t / 0.7, (dur - t) / 0.6))));
+}
+/** A short's punch-in (author, Oct 5, 2026): in fast (0.25s), held, and back out over the last 0.4s. */
+function punchIn(t, dur) {
+  return easeInOut(Math.min(1, Math.max(0, Math.min(t / 0.25, (dur - t) / 0.4))));
 }
 /** Where you and the Keeper sit: a little apart, the rug between you. */
 function cardsSeats(ep, st) {
@@ -759,6 +769,8 @@ function compile(ep) {
       }
       const speed = step.speed ?? SPEED;
       const dur = dist / speed;
+      // the camera always stays on you (author, Oct 5, 2026): a punch-in lets go before you set off
+      for (const z of segs) if (z.kind === 'zoom' && z.t1 > t) z.t1 = Math.max(z.t0, t);
       segs.push({ kind: 'walk', t0: t, t1: t + dur, legs, dist, speed });
       // `cut`: the episode ends this many seconds into the walk, mid-stride
       t += step.cut ?? dur;
@@ -866,13 +878,15 @@ function compile(ep) {
       }
       const lines = step.you ?? step.lines ?? (npc ? npc.lines : []);
       lines.forEach((text, i) => {
-        const at = letterTimes(text);
+        // `pace`: a short types a touch quicker than the game (author, Oct 5, 2026: 12–15s)
+        const at = letterTimes(text, ep.pace ?? 1);
         const typing = at[at.length - 1] + 0.03;
         const blips = speaker
           ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null)
           : [];
         // `hold`: how long a finished line stays, against the usual (a talky episode reads a touch quicker)
-        const dur = typing + HOLD(text) * (ep.hold ?? 1);
+        // `beat`: a punchline's last line stays up this much longer, so it can land (author, Oct 5, 2026)
+        const dur = typing + HOLD(text) * (ep.hold ?? 1) + (i === lines.length - 1 ? (step.beat ?? 0) : 0);
         segs.push({
           kind: 'line',
           t0: t,
@@ -909,6 +923,9 @@ function compile(ep) {
       segs.push({ kind: 'open', t0: t, t1: t, at: step.open });
     } else if (step.gap) {
       segs.push({ kind: 'gap', t0: t, t1: t, at: step.gap });
+    } else if (step.zoom) {
+      // `zoom`: the camera punches in on someone for `dur` seconds, over whatever comes next (the shorts' hook)
+      segs.push({ kind: 'zoom', t0: t, t1: t + (step.dur ?? 3), id: step.zoom, z: step.z ?? 1 });
     } else if (step.caption) {
       // a big caption across the top (the clips' hook, author's test, Oct 4, 2026): until the next one
       segs.push({ kind: 'caption', t0: t, t1: t, lines: step.caption });
@@ -949,6 +966,7 @@ function stateAt(ep, compiled, t) {
   let vanished = [];
   const puffs = [];
   let caption = null;
+  let zoom = null;
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1025,6 +1043,7 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'hatch' && t < s.t1) hatch = { ...s, t: t - s.t0 };
     else if (s.kind === 'show') shown.push(s.id);
     else if (s.kind === 'caption') caption = s.lines;
+    else if (s.kind === 'zoom' && t < s.t1) zoom = { k: punchIn(t - s.t0, s.t1 - s.t0) * s.z, id: s.id };
     else if (s.kind === 'puff') {
       // the smoke hides who it takes (once the spark's done) and brings in who it leaves
       const since = t - s.t0;
@@ -1054,6 +1073,7 @@ function stateAt(ep, compiled, t) {
     vanished,
     puffs,
     caption,
+    zoom,
     opened,
     gaps,
     map,
@@ -1079,13 +1099,19 @@ function drawWorld(canvas, ep, st, t) {
   const mapW = map.image.width();
   const mapH = map.image.height();
   // the camera follows you; for the card game it eases in close on the two of you, and back out
-  const zk = st.cards ? zoomIn(st.cards.t, st.cards.dur) : 0;
+  const zk = st.cards ? zoomIn(st.cards.t, st.cards.dur) : (st.zoom?.k ?? 0);
   const z = 1 + zk;
   const sk = K * z;
   const vw = W / sk;
   const vh = H / sk;
-  const fx = st.cards ? lerpf(st.hx, cardsMid(ep, st)[0], zk) : st.hx;
-  const fy = st.cards ? lerpf(st.hy - 12, cardsMid(ep, st)[1] - 10, zk) : st.hy - 12;
+  // a punch-in looks at whoever it's on
+  const [zx, zy] = st.zoom
+    ? st.npcAt[st.zoom.id]
+      ? [st.npcAt[st.zoom.id].x, st.npcAt[st.zoom.id].y]
+      : center(map.npcs[st.zoom.id].x, map.npcs[st.zoom.id].y)
+    : [st.hx, st.hy];
+  const fx = st.cards ? lerpf(st.hx, cardsMid(ep, st)[0], zk) : lerpf(st.hx, zx, zk);
+  const fy = st.cards ? lerpf(st.hy - 12, cardsMid(ep, st)[1] - 10, zk) : lerpf(st.hy - 12, zy - 12, zk);
   const camX = mapW <= vw ? (mapW - vw) / 2 : Math.min(Math.max(fx - vw / 2, 0), mapW - vw);
   // the action sits a third of the way down, so the text box (raised clear of app captions) never covers it
   // (it may look past the map's bottom edge: that strip sits behind the box and the apps' captions anyway)
@@ -1204,12 +1230,14 @@ function drawWorld(canvas, ep, st, t) {
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y, n.lying];
+      const who = Object.keys(map.npcs).indexOf(n.id);
+      const dip = n.lying ? 0 : idleDip(t, who, st.line?.speaker === n.name);
+      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y, n.lying, dip];
     });
   if (!st.cards)
     ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
   ents.sort((a, b) => a[4] - b[4]);
-  for (const [row, dir, frame, x, y, lying] of ents) {
+  for (const [row, dir, frame, x, y, lying, dip] of ents) {
     // `lying`: knocked flat on the floor, head to the left (the beaten prisoners, the fainted prince)
     if (lying) {
       canvas.save();
@@ -1226,10 +1254,29 @@ function drawWorld(canvas, ep, st, t) {
       canvas.restore();
       continue;
     }
+    // breathing: the legs where they are, the head and shoulders a pixel lower over them
+    const sx = (dir * 3 + frame) * FW;
+    const dx = Math.round(x - FW / 2);
+    const dy = Math.round(y - FEET);
+    if (dip) {
+      for (const [from, rows, down] of [
+        [IDLE_SPLIT, FH - IDLE_SPLIT, 0],
+        [0, IDLE_SPLIT, dip],
+      ])
+        canvas.drawImageRectOptions(
+          WALKERS,
+          CK.XYWHRect(sx, row * FH + from, FW, rows),
+          CK.XYWHRect(dx, dy + from + down, FW, rows),
+          NEAREST.filter,
+          NEAREST.mipmap,
+          null,
+        );
+      continue;
+    }
     canvas.drawImageRectOptions(
       WALKERS,
-      CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH),
-      CK.XYWHRect(Math.round(x - FW / 2), Math.round(y - FEET), FW, FH),
+      CK.XYWHRect(sx, row * FH, FW, FH),
+      CK.XYWHRect(dx, dy, FW, FH),
       NEAREST.filter,
       NEAREST.mipmap,
       null,
@@ -2023,7 +2070,7 @@ const EPISODES = {
   //   node scripts/episode-video.mjs clip-prisoners marketing/clip-prisoners.mp4
   'clip-prisoners': () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?').answer;
+    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
     return {
       number: 'CLIP',
       title: 'THE WORST PRISONERS',
@@ -2088,9 +2135,51 @@ const EPISODES = {
       ],
     };
   },
+  // The shorts (author, Oct 5, 2026): 12–15s, loopable, a punch-in on frame one, a hard cut at the end.
+  // Short 1 (no Gary: his joke was the last episode): two prisoners tell you their crimes as you walk up (Goodbye), and the
+  // third says she deserves it: you leave and go up the ladder, and it cuts. Silas's crime stays a secret.
+  //   node scripts/episode-video.mjs short-1
+  'short-1': () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    // Old Mott first (author, Oct 5, 2026): he and Nails swap cells for the short, so you still walk left to right
+    [cells.npcs['prisoner-1'].x, cells.npcs['prisoner-2'].x] = [cells.npcs['prisoner-2'].x, cells.npcs['prisoner-1'].x];
+    const goodbye = (id, name) => {
+      const options = menuOf(cells.npcs[id].questions, []);
+      return { menu: { speaker: name, options, pick: options.indexOf('Goodbye.'), hold: 0.15 } };
+    };
+    // how long a punchline stays up once it's typed (fast setups, slow payoffs)
+    const BEAT = 1.2;
+    return {
+      number: 'SHORT',
+      short: 1,
+      title: 'THE WORST PRISONERS',
+      loop: true,
+      pace: 0.9,
+      hold: 0.25,
+      map: cells,
+      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
+      hide: ['brannoc-cell', 'brannoc-sulk'],
+      gaps: [[5, 5]],
+      titleDur: 0,
+      endDur: 0,
+      script: [
+        // frame one: in close on Old Mott, straight into the sneeze (Gary's joke was the last episode)
+        { zoom: 'prisoner-2', dur: 6 },
+        { say: 'prisoner-2', lines: cells.npcs['prisoner-2'].lines, beat: BEAT },
+        goodbye('prisoner-2', 'Old Mott'),
+        { walk: [[14, 6]], face: 'up', speed: 260 },
+        { say: 'prisoner-1', lines: cells.npcs['prisoner-1'].lines, beat: BEAT },
+        goodbye('prisoner-1', 'Nails'),
+        { walk: [[18, 6]], face: 'up', speed: 260 },
+        { say: 'prisoner-3', lines: cells.npcs['prisoner-3'].lines, beat: BEAT },
+        // and you leave, up the ladder: cut
+        { walk: [[21, 6], [21, 8]], face: 'up', speed: 260 },
+      ],
+    };
+  },
   10: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?').answer;
+    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
     const ask = (id, name) => ({
       menu: { speaker: name, options: menuOf(cells.npcs[id].questions, []), pick: 0, hold: 0.45 },
     });
@@ -2436,14 +2525,18 @@ const titleCase = (t) =>
 const out =
   outArg ??
   (mkdirSync(EPISODE_FOLDER, { recursive: true }),
-  join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`));
+  (ep.short
+    ? (mkdirSync(join(EPISODE_FOLDER, 'Shorts'), { recursive: true }),
+      join(EPISODE_FOLDER, 'Shorts', `Short ${String(ep.short).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`))
+    : join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`)));
 const compiled = compile(ep);
 const FADE = 0.5;
 // No end card (author, Oct 4, 2026: viewers leave the moment the story stops, and the card dragged
 // completion down): an episode ends when its story does, on the fade. Set END_CARD to bring it back.
 const END_CARD = false;
 const total = compiled.end + (END_CARD ? ep.endDur : 0);
-const frames = Math.ceil(total * FPS);
+// UNTIL=6 stops after that many seconds (a quick look at something, not a finished cut)
+const frames = Math.ceil(Math.min(total, Number(process.env.UNTIL) || Infinity) * FPS);
 
 // STILLS='3.5,9' writes those moments as PNGs next to `out` instead of a video, for checking the look.
 if (process.env.STILLS) {
@@ -2599,7 +2692,8 @@ async function renderPicture() {
       } else black(st.blackout);
       // no title card: the first frame is already the scene (author: open on the line, not a fade)
       if (ep.titleDur > 0) black(1 - (t - ep.titleDur) / FADE);
-      black((t - (compiled.end - FADE)) / FADE);
+      // a short loops (author, Oct 5, 2026): a hard cut, straight back to the first frame
+      if (!ep.loop) black((t - (compiled.end - FADE)) / FADE);
     } else {
       drawEnd(canvas, ep, t - compiled.end);
     }
@@ -2694,7 +2788,7 @@ const r = spawnSync(
           '-i',
           join(ROOT, ep.music),
           '-filter_complex',
-          `[1:a]volume=14dB[v];[2:a]volume=-9dB,afade=t=out:st=${Math.max(0, total - 1.5).toFixed(2)}:d=1.5[m];` +
+          `[1:a]volume=14dB[v];[2:a]volume=-9dB${ep.loop ? '' : `,afade=t=out:st=${Math.max(0, total - 1.5).toFixed(2)}:d=1.5`}[m];` +
             '[v][m]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.9[a]',
           '-map',
           '0:v',
