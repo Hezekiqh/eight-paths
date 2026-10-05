@@ -16,7 +16,7 @@ import { usePremium } from '@/premium/store';
 import { shareFriendCode } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useGameStore } from '@/store';
-import { NOT_CONFIRMED, deleteEverything } from '@/store/delete-everything';
+import { NOT_CONFIRMED, deleteAccountOnly, deleteEverything } from '@/store/delete-everything';
 import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
@@ -73,16 +73,20 @@ export function SettingsPanel() {
     Alert.alert(
       'Delete your account?',
       profile
-        ? "Your username, founder number, friends and heroes are deleted from the server, and everything in the game on this phone is erased. You begin again from the very start. Premium stays. This can't be undone, and your founder number won't come back."
+        ? "Your username, founder number, friends and heroes are deleted from the server, and you're signed out. Your game on this phone stays. This can't be undone, and your founder number won't come back."
         : "Every quest, level, hero and place in the Other World on this phone is erased, and you begin again from the very start. Premium stays. This can't be undone.",
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
+          // Signed in: only the account goes, and the sign-in screen opens. Otherwise the game is erased.
           onPress: () =>
-            deleteEverything()
-              .then((r) => r === 'canceled' && Alert.alert('Nothing was deleted', NOT_CONFIRMED))
+            (profile ? deleteAccountOnly() : deleteEverything())
+              .then((r) => {
+                if (r === 'canceled') Alert.alert('Nothing was deleted', NOT_CONFIRMED);
+                else if (profile) router.push('/social');
+              })
               .catch((e: Error) => Alert.alert('Not deleted', e.message)),
         },
       ],
@@ -249,7 +253,7 @@ export function SettingsPanel() {
           title="Delete account"
           subtitle={
             profile
-              ? 'Deletes your account and erases the game, on the server and this phone'
+              ? 'Deletes your account from the server; your game stays'
               : 'Erases the game on this phone and begins again'
           }
           onPress={confirmDelete}

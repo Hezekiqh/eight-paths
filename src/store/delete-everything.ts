@@ -9,6 +9,19 @@ import { useGameStore } from './index';
 export const NOT_CONFIRMED = "You didn't confirm with Apple, so your account and your game are untouched.";
 
 /**
+ * Delete account, when signed in: the account and everything the server holds
+ * (username, founder number, friends, heroes, trades) is deleted and the
+ * sign-in forgotten on this phone. The game on this phone stays, so the player
+ * lands back on the Friends sign-in screen rather than the first-launch story.
+ */
+export async function deleteAccountOnly(): Promise<'deleted' | 'canceled'> {
+  if ((await deleteAccount()) === 'canceled') return 'canceled';
+  await forgetAccountHere();
+  useTradeNotices.setState({ moments: [] });
+  return 'deleted';
+}
+
+/**
  * Delete account: everything goes. If this phone holds a sign-in at all (even
  * one social hasn't finished loading), the account and everything the server
  * holds (username, founder number, friends, heroes, trades) is deleted first;

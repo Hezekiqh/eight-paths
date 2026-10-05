@@ -24,6 +24,7 @@ import { haptics } from '@/haptics';
 import {
   SocialError,
   addFriend,
+  changeUsername,
   checkUsername,
   claimUsername,
   refreshFriends,
@@ -40,7 +41,7 @@ import { FOUNDER_COUNT } from '@/social/config';
 import { useSocial, type Profile } from '@/social/store';
 import { USERNAME_RULES, extractFriendCode, founderLabel } from '@/social/username';
 import { isCharacterId } from '@/story/companions';
-import { NOT_CONFIRMED, deleteEverything } from '@/store/delete-everything';
+import { NOT_CONFIRMED, deleteAccountOnly } from '@/store/delete-everything';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 
@@ -231,6 +232,51 @@ function FriendRow({ friend }: { friend: Profile }) {
   );
 }
 
+/** Change username: the same rules as choosing one; founder number and friends stay. */
+function ChangeUsername({ current, color, onDone }: { current: string; color: string; onDone: () => void }) {
+  const [name, setName] = useState(current);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await changeUsername(name);
+      haptics.success();
+      onDone();
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <View style={styles.block}>
+      <TextInput
+        value={name}
+        onChangeText={(t) => {
+          setName(t);
+          setError(null);
+        }}
+        placeholder="username"
+        placeholderTextColor={colors.textFaint}
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoFocus
+        maxLength={16}
+        returnKeyType="done"
+        onSubmitEditing={save}
+        style={styles.input}
+      />
+      <Text style={[styles.hint, error && styles.error]}>{error ?? USERNAME_RULES}</Text>
+      <Button title={busy ? 'Checking…' : 'Save name'} onPress={save} color={color} disabled={busy || !name.trim()} />
+      <Pressable accessibilityRole="button" onPress={onDone}>
+        <Text style={[styles.hint, styles.emailLink]}>Cancel</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 /** Signed in: your card, your code, adding friends, the list and account settings. */
 function Account({ profile, color }: { profile: Profile; color: string }) {
   const friends = useSocial((s) => s.friends);
@@ -238,6 +284,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [renaming, setRenaming] = useState(false);
 
   useEffect(() => {
     refreshFriends().catch(() => {});
@@ -262,7 +309,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
   const confirmDelete = () =>
     Alert.alert(
       'Delete your account?',
-      "Your username, founder number, friends and heroes are deleted from the server, and everything in the game on this phone is erased. You begin again from the very start. This can't be undone, and your founder number won't come back.",
+      "Your username, founder number, friends and heroes are deleted from the server, and you're signed out. Your game on this phone stays. This can't be undone, and your founder number won't come back.",
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -270,7 +317,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              if ((await deleteEverything()) === 'canceled') Alert.alert('Nothing was deleted', NOT_CONFIRMED);
+              if ((await deleteAccountOnly()) === 'canceled') Alert.alert('Nothing was deleted', NOT_CONFIRMED);
             } catch (e) {
               Alert.alert('Not deleted', message(e));
             }
@@ -347,13 +394,25 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           }
         />
         <View style={styles.divider} />
+        {renaming ? (
+          <ChangeUsername current={profile.username} color={color} onDone={() => setRenaming(false)} />
+        ) : (
+          <SettingsRow
+            icon="user"
+            iconColor={color}
+            title="Change username"
+            subtitle={profile.username}
+            onPress={() => setRenaming(true)}
+          />
+        )}
+        <View style={styles.divider} />
         <SettingsRow icon="logout" iconColor={color} title="Sign out" onPress={() => signOut().catch(() => {})} />
         <View style={styles.divider} />
         <SettingsRow
           icon="trash"
           iconColor={colors.danger}
           title="Delete account"
-          subtitle="Deletes your account and erases the game"
+          subtitle="Deletes your account from the server; your game stays"
           onPress={confirmDelete}
         />
       </View>
