@@ -1657,8 +1657,11 @@ const SHORT_10 = { ...SHORT, letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12
 /** An exported array of lines from src/world/dungeon.ts, read from the game so the episodes say the same. */
 const gameLines = (name) => {
   const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
-  const block = src.slice(src.indexOf(`export const ${name} `));
-  return [...block.slice(0, block.indexOf('];')).matchAll(/^\s+(['"])(.*)\1,$/gm)].map((m) => m[2].replace(/\\'/g, "'"));
+  // from its `= [` to the `];` that closes it, one string per line or all on one
+  const block = src.slice(src.indexOf('= [', src.indexOf(`export const ${name} `)));
+  return [...block.slice(0, block.indexOf('];')).matchAll(/(['"])((?:\\.|(?!\1).)*)\1/g)].map((m) =>
+    m[2].replace(/\\(['"])/g, '$1'),
+  );
 };
 /** "WARDEN: Well, well, well." → "Well, well, well." */
 const unnamed = (l) => l.replace(/^[A-Z][A-Z ']+: /, '');
@@ -1667,16 +1670,6 @@ const arenaExcuses = () => {
   const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
   const block = src.slice(src.indexOf('export const ARENA_EXCUSES'));
   return [...block.slice(0, block.indexOf('];')).matchAll(/label: (['"])(.*?)\1/g)].map((m) => m[2].replace(/\\'/g, "'"));
-};
-
-/** Who you are, as Barnaby asks it (dungeon.ts ARENA_WHO): each option's label and his comeback, without his name. */
-const arenaWho = () => {
-  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
-  // (from its `= [`, past the type, whose `string[];` would end it early)
-  const block = src.slice(src.indexOf('= [', src.indexOf('export const ARENA_WHO')));
-  return [...block.slice(0, block.indexOf('\n];')).matchAll(/label: (['"])(.*?)\1,\s*reply: \[(['"])(.*?)\3\]/gs)].map(
-    (m) => ({ label: m[2], reply: unnamed(m[4]) }),
-  );
 };
 
 /**
@@ -2331,25 +2324,20 @@ const EPISODES = {
     const verdict = gameLines('ARENA_VERDICT');
     const after = gameLines('ARENA_FIGHT');
     const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    const [unacceptable, ...rest] = by(verdict, 'WARDEN');
-    const [pause, pathetic, whoAreYou] = by(verdict, 'BARNABY');
-    const [fight] = by(after, 'BARNABY');
-    // who are you? Gary's friend. (author, Oct 6, 2026)
-    const who = arenaWho();
-    const pick = who.findIndex((o) => o.label === "Gary's friend.");
+    const [pause, pathetic] = by(verdict, 'BARNABY');
     const barnaby = { name: 'Barnaby', sprite: 'barnaby' };
     // before they step aside, the three who lost stand in a sorry row in the middle of the sand
     Object.assign(pit.npcs['arena-mott'], { x: 14, y: 8 });
     Object.assign(pit.npcs['arena-nails'], { x: 15, y: 8 });
     Object.assign(pit.npcs['arena-silas'], { x: 16, y: 8 });
-    // across to the side of the sand, then up out of the way
-    const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 8], [x, y]], speed: 150, together: true });
+    // across to the side of the sand, then up out of the way, making their excuses as they go
+    const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 8], [x, y]], speed: 90, together: true });
     return {
       ...SHORT,
       number: 13,
       title: 'UNACCEPTABLE',
       map: pit,
-      // the Warden at the head of the sand, the three who lost in a sorry row in the middle, Brannoc beside you
+      // the Warden at the head of the sand, the three who lost in the middle, Brannoc three tiles from you
       shown: ['warden-watch', 'arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
       // up through the trapdoor, Brannoc three tiles on: room to faint
       hero: { sprite: 'quill', at: [8, 12], facing: 'right' },
@@ -2360,27 +2348,25 @@ const EPISODES = {
         { say: 'warden-watch', lines: welcome, punch: 0.5 },
         { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.3 } },
         { jolt: 0.45 },
-        { say: 'warden-watch', lines: [unacceptable], punch: 0.5 },
-        { say: 'warden-watch', lines: rest, punch: 0.4 },
+        { say: 'warden-watch', lines: by(verdict, 'WARDEN'), punch: 0.6 },
         // Brannoc goes over
         { look: [10, 11] },
         { faint: 'brannoc-pit' },
         { wait: 0.1 },
-        { as: barnaby, lines: [pause], punch: 0.3 },
-        { as: barnaby, lines: [pathetic], punch: 0.5 },
-        { as: barnaby, lines: [whoAreYou], punch: 0.3 },
-        { menu: { speaker: 'Barnaby', options: who.map((o) => o.label), pick, hold: 0.3 } },
-        { as: barnaby, lines: [who[pick].reply], punch: 0.7 },
-        // the three shuffle out of the way
+        { as: barnaby, lines: [pause], punch: 0.4 },
+        { as: barnaby, lines: [pathetic], punch: 0.6 },
+        // the three who lost, backing out of it
         { look: [19, 6] },
         { zoom: 1 },
+        aside('arena-silas', 24, 4),
         aside('arena-mott', 22, 4),
         aside('arena-nails', 23, 4),
-        aside('arena-silas', 24, 4),
         { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
         { look: null },
         { jolt: 0.4 },
-        { as: barnaby, lines: [fight], punch: 0.6 },
+        { as: barnaby, lines: by(after, 'BARNABY'), punch: 0.8 },
       ],
     };
   },

@@ -140,49 +140,32 @@ const TRAPDOOR: [number, number] = [7, 12];
 // (any excuse: it's UNACCEPTABLE), Brannoc faints, Barnaby is not impressed, and the three step aside for you.
 
 /** The Warden's welcome, before you answer. */
-export const ARENA_WELCOME = [
-  "WARDEN: Well, well, well. If it isn't our final contestants.",
-  'WARDEN: Escape is punishable by death, you know.',
-];
+export const ARENA_WELCOME = ["WARDEN: Well, well, well. If it isn't our final contestants."];
 /** Your excuse. It makes no difference. */
 export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
   { label: 'I was just going for a walk.' },
   { label: "It was Gary's idea." },
   { label: 'Death? For a walk? Bit much, big man.', deed: 'bad' },
 ];
-/** His answer, Brannoc's faint, and Barnaby's verdict on him, then Barnaby's question for you. */
+/** His answer, Brannoc's faint, and Barnaby's verdict on him. */
 export const ARENA_VERDICT = [
   'WARDEN: UNACCEPTABLE.',
-  'WARDEN: After we were so lenient with your sentences.',
   'WARDEN: You will pay with your lives!',
   '* Brannoc goes white. Then grey. Then he faints, flat on his back.',
   'BARNABY: ...Did he just faint?',
   'BARNABY: ...pathetic.',
-  'BARNABY: And who are YOU?',
 ];
-/** Who you are, and what Barnaby makes of it (author, Episode 13: "Gary's friend."). */
-export const ARENA_WHO: { label: string; reply: string[]; deed?: 'bad' }[] = [
-  { label: "Gary's friend.", reply: ['BARNABY: ...Gary has friends?'] },
-  { label: 'Just passing through.', reply: ["BARNABY: JUST passing through. Folks, they're JUST passing through."] },
-  { label: 'Nobody important.', reply: ['BARNABY: Nobody important just emptied the whole gaol.'] },
-  {
-    label: 'Your worst nightmare, Loudmouth.',
-    reply: ["BARNABY: My worst nightmare is a quiet crowd. LET'S HEAR IT!"],
-    deed: 'bad',
-  },
-];
-/** Then the three step aside, and it's on. */
+/** Then the three who lost make their excuses on the way to the side of the sand, and it's on (author, Episode 13). */
 export const ARENA_FIGHT = [
+  'SILAS SEEN: I pulled a muscle on the way up here.',
+  'OLD MOTT: I am too old for this.',
+  'NAILS: My ice cubes melted.',
   '* Old Mott, Nails and Silas Seen shuffle to the side of the sand.',
-  'SILAS SEEN: You got this, whatever your name is.',
-  'BARNABY: FIGHT!',
+  'BARNABY: FINISH THEM!',
 ];
 /** If you never let the three out: just you and Brannoc. */
-export const ARENA_WELCOME_ALONE = [
-  "WARDEN: Well, well, well. If it isn't our runaways.",
-  'WARDEN: Escape is punishable by death, you know.',
-];
-export const ARENA_FIGHT_ALONE = ARENA_FIGHT.filter((l) => !/Silas|Old Mott/.test(l));
+export const ARENA_WELCOME_ALONE = ["WARDEN: Well, well, well. If it isn't our runaways."];
+export const ARENA_FIGHT_ALONE = ARENA_FIGHT.filter((l) => !/silas|old mott|nails/i.test(l));
 
 export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
   'pit-guards': {

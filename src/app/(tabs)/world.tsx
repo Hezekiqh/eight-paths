@@ -165,7 +165,6 @@ import {
   ARENA_FIGHT,
   ARENA_FIGHT_ALONE,
   ARENA_VERDICT,
-  ARENA_WHO,
   ARENA_WELCOME,
   ARENA_WELCOME_ALONE,
   CELLS_FREED,
@@ -620,8 +619,7 @@ function World({
           start.map.boss.flag === 'pit-guards' ? (hero === 'brannoc' ? 'pit-guards-alone' : 'pit-guards') : 'pit-warden'
         ]
       : undefined;
-  // The Kaldorium's welcome goes on past your excuse (dungeon.ts): the Warden's answer, then Barnaby's question and
-  // his comeback. Each is set by the menu before it, once something's been picked.
+  // The Kaldorium's welcome goes on past your excuse (dungeon.ts): the Warden's answer, once one's been picked.
   const [verdict, setVerdict] = useState<Dialogue | null>(null);
   const [said, setDialogue] = useState<Dialogue | null>(() =>
     resume
@@ -640,17 +638,12 @@ function World({
               // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE
               const freed = arrivalFlags.includes(CELLS_FREED);
               const fight = freed ? ARENA_FIGHT : ARENA_FIGHT_ALONE;
-              const who: Dialogue = {
-                lines: ARENA_VERDICT,
-                choices: ARENA_WHO.map(({ label, reply, deed }) => ({
-                  label,
-                  deed,
-                  then: () => setVerdict({ lines: [...reply, ...fight] }),
-                })),
-              };
               return {
                 lines: freed ? ARENA_WELCOME : ARENA_WELCOME_ALONE,
-                choices: ARENA_EXCUSES.map((e) => ({ ...e, then: () => setVerdict(who) })),
+                choices: ARENA_EXCUSES.map((e) => ({
+                  ...e,
+                  then: () => setVerdict({ lines: [...ARENA_VERDICT, ...fight] }),
+                })),
               };
             })()
           : prisonIntro
