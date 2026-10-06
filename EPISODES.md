@@ -82,7 +82,8 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   Barnaby is a ringmaster now (top hat, red tailcoat, moustache), and a small guy (`short`: stubby legs), here and in Warrior City.
 - **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×19, two rows of stands over the box), open to the sky: sand, a low stone wall, tiers
-  packed with the crowd (the walkers' own townsfolk, the size of everyone else in the World, author: "regular";
+  packed with the crowd (small pixel people, scenery far off behind the action, author: the regular-sized crowd looked
+  bad and made Barnaby look like a giant;
   nobody overlapping anybody, the wall, a banner, the box or the gate, since each seat is checked clear at full cheering
   height first; faces toward the sand and backs on the near side, on their feet and
   cheering every other beat: a second picture, `the-pit-cheer.png`, `cheer` on the map), the Crown's red banners with the gold fist, the great gate at the bottom (shut: bars and a portcullis, author) and a trapdoor down

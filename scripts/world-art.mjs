@@ -1434,7 +1434,7 @@ function drawArena(map, cheer = false) {
   const rx = ((right - left) / 2) * TILE - 2;
   const ry = ((bottom - top) / 2) * TILE - 2;
   const SAND = hex('#C8A870');
-  const TIER = 19;
+  const TIER = 11;
   for (let y = 0; y < g.h; y++)
     for (let x = 0; x < g.w; x++) {
       const dx = (x + 0.5 - cx) / rx;
@@ -1501,18 +1501,16 @@ function drawArena(map, cheer = false) {
     : null;
   const inside = (x, y, [bx, by, bw, bh]) => x >= bx && x < bx + bw && y >= by && y < by + bh;
 
-  // The crowd (author, Oct 6, 2026: "regular" size): townsfolk from the walkers, the size of everyone else in the
-  // World, sitting on the benches (cut at the bench), the far side facing the sand, the near side with their backs to
-  // us; in the cheering frame they're up, arms in the air. Nobody touches anybody else, or the arena wall, a banner,
-  // the commentator's box, the gate or the edge of the picture: each spot is kept clear at full cheering height, and
-  // anyone who wouldn't fit isn't there.
-  const TOWNSFOLK = ['gert', 'tessa', 'pim', 'nana', 'holt', 'mira', 'fen', 'dunn', 'pell', 'hesper', 'jory',
-    'wenna', 'gudrun', 'hamm', 'marta', 'dobb', 'bellow', 'orrin', 'tova', 'ulfa', 'hekla', 'snorri', 'fawnley',
-    'fliss', 'joss', 'tolly', 'ox', 'leif', 'brug', 'bett', 'hild', 'tib', 'mog', 'abbot'].filter(
-    (k) => WALKERS[k] && !WALKERS[k].sword && !WALKERS[k].big && !WALKERS[k].back && !WALKERS[k].boulder,
-  );
-  const SEATED = 16; // rows of a walker that show above the bench
-  const HOP = 2; // how far up they come when they cheer
+  // The crowd (author, Oct 6, 2026): small pixel people, scenery in the stands, far off behind the action on the
+  // sand; outlined like the walkers, hair, a face with two eyes, shoulders in a shirt (all hair from behind), arms up
+  // when they cheer. Nobody touches anybody else, or the arena wall, a banner, the commentator's box, the gate or the
+  // edge of the picture: each seat is checked clear at full cheering height, and anyone who wouldn't fit isn't there.
+  const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
+  const SKINS = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
+  const HAIR = ['#2A1A12', '#6A4028', '#C8A040', '#1A1416', '#8A8A7A', '#A0482A'].map(hex);
+  const PW = 7; // a spectator's width
+  const SEATED = 8; // and height, sitting
+  const HOP = 1; // how far up they come when they cheer
   const taken = new Uint8Array(g.w * g.h);
   const clear = (x, y, side) => {
     if (x < 0 || y < 0 || x >= g.w || y >= g.h || taken[y * g.w + x]) return false;
@@ -1526,54 +1524,47 @@ function drawArena(map, cheer = false) {
     if (gateBox && inside(x, y, gateBox)) return false;
     return true;
   };
-  const spectator = (px, py, seed, side, facing = side > 0 ? 'up' : 'down') => {
+  const spectator = (px, py, seed, back) => {
     const top = py - SEATED - HOP;
     // (outline to outline is fine; over each other isn't)
-    for (let j = top; j <= py; j++) for (let i = px; i < px + FW; i++) if (!clear(i, j, side)) return;
-    for (let j = top; j <= py; j++) for (let i = px; i < px + FW; i++) taken[j * g.w + i] = 1;
-    const w = WALKERS[TOWNSFOLK[Math.floor(hash(seed, 1, 81) * TOWNSFOLK.length)]];
-    const f = canvas(FW, FH);
-    drawWalker(f, 0, 0, w, facing, 0);
-    const up = cheer && hash(seed, 4, 81) < 0.7;
-    const lift = up ? HOP : 0;
-    const y0 = py - SEATED - lift;
-    for (let j = 0; j < SEATED; j++) for (let i = 0; i < FW; i++) if (f[j][i]) put(g, px + i, y0 + j, f[j][i]);
-    if (up) {
-      // arms up: a sleeve and a hand either side of the head, outlined
-      const sleeve = hex(w.shade ?? w.top ?? '#6A5A48');
-      const skin = hex(w.skin ?? '#E8B48C');
-      for (const ax of [1, 13]) {
-        box(g, px + ax - 1, y0 + 2, 4, 9, OUT);
-        box(g, px + ax, y0 + 5, 2, 5, sleeve);
-        box(g, px + ax, y0 + 3, 2, 2, skin);
-      }
-    }
+    for (let j = top; j <= py; j++) for (let i = px; i < px + PW; i++) if (!clear(i, j, back ? 1 : -1)) return;
+    for (let j = top; j <= py; j++) for (let i = px; i < px + PW; i++) taken[j * g.w + i] = 1;
+    const shirt = PEOPLE[Math.floor(hash(seed, 1, 71) * PEOPLE.length)];
+    const shade = mix(shirt, hex('#000000'), 0.3);
+    const skin = SKINS[Math.floor(hash(seed, 2, 71) * SKINS.length)];
+    const hair = HAIR[Math.floor(hash(seed, 3, 71) * HAIR.length)];
+    const up = cheer && hash(seed, 4, 71) < 0.7;
+    const y = py - SEATED - (up && hash(seed, 5, 71) < 0.5 ? HOP : 0);
+    const rows = up
+      ? ['O.OOO.O', 'KOHHHOK', 'BOSSSOB', 'BOESEOB', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.']
+      : ['..OOO..', '.OHHHO.', '.OSSSO.', '.OESEO.', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.'];
+    const colour = { O: OUT, H: hair, S: back ? hair : skin, E: back ? hair : OUT, B: shirt, D: shade, K: skin };
+    rows.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch !== '.') put(g, px + i, y + j, colour[ch]);
+      }),
+    );
   };
-  // front rows first, so the people nearest the sand are the ones always there
+  // along the benches, front rows first, so the people nearest the sand are the ones always there
   for (const side of [-1, 1])
-    for (let tier = 0; tier < 30; tier++)
-      for (let x0 = -FW; x0 < g.w; x0 += FW) {
-        // the near side's benches sit lower, so heads stay clear of the arena wall
-        const out = 4 + tier * TIER + TIER - 2 + (side > 0 ? SEATED - 4 : 0);
+    for (let tier = 0; tier < 40; tier++)
+      for (let x0 = -PW; x0 < g.w; x0 += PW) {
+        const out = 4 + tier * TIER + TIER - 2 + (side > 0 ? SEATED - 2 : 0);
         const e = 1 + out / ry;
-        const px = x0 + (tier % 2) * 7;
-        const dx = (px + FW / 2 - cx) / rx;
+        const px = x0 + (tier % 2) * 3;
+        const dx = (px + PW / 2 - cx) / rx;
         if (Math.abs(dx) >= e) continue;
         const py = Math.round(cy + side * Math.sqrt(e * e - dx * dx) * ry);
         const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
-        if (hash(seed, 0, 83) < 0.08) continue; // an empty seat
-        spectator(px, py, seed, side);
+        if (hash(seed, 0, 73) < 0.1) continue; // an empty seat
+        spectator(px, py, seed, side > 0);
       }
-  // then anywhere else there's room (the ends of the oval, where the benches run up and down and the picture stops
-  // short): a seat every sprite's width and height, each facing the sand
-  for (let py = SEATED + HOP; py < g.h; py += SEATED + HOP + 1)
-    for (let px = 0; px + FW <= g.w; px += FW) {
-      const dx = (px + FW / 2 - cx) / rx;
-      const dy = (py - SEATED / 2 - cy) / ry;
+  // then anywhere else there's room (the ends of the oval, where the benches run up and down)
+  for (let py = SEATED + HOP; py < g.h; py += SEATED + HOP + 2)
+    for (let px = 0; px + PW <= g.w; px += PW) {
       const seed = py * 137 + px * 11;
-      if (hash(seed, 0, 85) < 0.08) continue;
-      const facing = Math.abs(dx) > 0.8 ? (dx < 0 ? 'right' : 'left') : dy < 0 ? 'down' : 'up';
-      spectator(px, py, seed, dy < 0 ? -1 : 1, facing);
+      if (hash(seed, 0, 85) < 0.1) continue;
+      spectator(px, py, seed, py > cy);
     }
   for (const [bx, by] of banners) {
     box(g, bx, by, 1, 18, '#3A2618');
