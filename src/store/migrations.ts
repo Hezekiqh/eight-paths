@@ -1,10 +1,12 @@
 import {
+  DAY_REMINDERS,
   DIMENSIONS,
   MAX_REST_TOKENS,
   formatTime,
   parseTime,
   DEFAULT_QUEST_SORT,
   type Boost,
+  type DayReminders,
   type Completion,
   type Dimension,
   type Goal,
@@ -23,7 +25,7 @@ import type { GameData } from './index';
  * Bump this whenever the saved shape changes, and add a migration from the
  * previous version below. Never edit a migration once it has shipped.
  */
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
@@ -55,6 +57,8 @@ export const MIGRATIONS: Record<number, Migration> = {
   10: (save) => save,
   // How Today is ordered became a choice (questSort): a dragged order stays the player's own.
   11: (save) => ({ ...save, questSort: { by: Array.isArray(save.questOrder) ? 'mine' : 'auto', unfinishedFirst: false } }),
+  // v13 adds the "habits left" daytime calls to the player; sanitizeSave turns on noon and 9 PM.
+  12: (save) => save,
 };
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -82,6 +86,9 @@ function cleanPlayer(raw: unknown): Player | null {
     // Someone who picked their own time keeps it; the untouched default learns.
     smartReminders:
       typeof raw.smartReminders === 'boolean' ? raw.smartReminders : formatTime(time.hour, time.minute) === '20:00',
+    dayReminders: (DAY_REMINDERS as readonly unknown[]).includes(raw.dayReminders)
+      ? (raw.dayReminders as DayReminders)
+      : 'bookends',
   };
 }
 

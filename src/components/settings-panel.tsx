@@ -8,7 +8,7 @@ import { KeeperStatusRows } from '@/components/keeper-status';
 import { SettingsRow } from '@/components/settings-row';
 import { ThemePicker } from '@/components/theme-picker';
 import { HINTS, SCHEMES } from '@/components/world/pause-menu';
-import { formatTime, parseTime } from '@/game';
+import { formatTime, parseTime, type DayReminders } from '@/game';
 import { haptics } from '@/haptics';
 import { ensureReminderPermission } from '@/notifications';
 import { premiumEnabled } from '@/premium/config';
@@ -29,6 +29,22 @@ function clock(time: string): string {
   date.setHours(hour, minute, 0, 0);
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
+
+const DAY_CALL_OPTIONS: { value: DayReminders; label: string }[] = [
+  { value: 'off', label: 'Off' },
+  { value: 'bookends', label: 'Noon' },
+  { value: '4', label: '4h' },
+  { value: '2', label: '2h' },
+  { value: '1', label: '1h' },
+];
+
+const DAY_CALL_HINTS: Record<DayReminders, string> = {
+  off: 'Only the call at your usual time.',
+  bookends: 'At noon and 9 PM, if any quests are left.',
+  '4': 'At noon, every 4 hours, and 9 PM, if any quests are left.',
+  '2': 'At noon, every 2 hours, and 9 PM, if any quests are left.',
+  '1': 'Every hour from noon to 9 PM, if any quests are left.',
+};
 
 function openSupport() {
   Alert.alert(
@@ -51,6 +67,7 @@ export function SettingsPanel() {
   const classInfo = useClassInfo();
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
   const setSmartReminders = useGameStore((s) => s.setSmartReminders);
+  const setDayReminders = useGameStore((s) => s.setDayReminders);
   const setHapticsEnabled = useGameStore((s) => s.setHapticsEnabled);
   const { music, sounds, setMusic, setSounds } = useAudioSettings();
   const learnedTime = useLearnedReminderTime();
@@ -213,6 +230,20 @@ export function SettingsPanel() {
             />
           }
         />
+        <View style={styles.divider} />
+        <View style={styles.controls}>
+          <Text style={styles.label}>Quests left</Text>
+          <Segmented
+            options={DAY_CALL_OPTIONS}
+            value={player.dayReminders}
+            onChange={(value) => {
+              setDayReminders(value);
+              if (value !== 'off') ensureReminderPermission();
+            }}
+            color={color}
+          />
+          <Text style={styles.hint}>{DAY_CALL_HINTS[player.dayReminders]} Stops once they&apos;re all done.</Text>
+        </View>
         <View style={styles.divider} />
         <KeeperStatusRows color={color} />
       </View>
