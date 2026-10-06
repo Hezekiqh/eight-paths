@@ -127,8 +127,13 @@ export const BRANNOC_JOINED = 'brannoc-joined';
 export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 
 /** Where Brannoc lies, fainted, just off the ladder; and where he walks to swing. */
-export const BRANNOC_FAINTED: [number, number] = [4, 9];
-const UNDER_WARDEN: [number, number] = [10, 6];
+// (the Colosseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
+// and Brannoc is three tiles on, room enough to faint without landing on you)
+export const BRANNOC_FAINTED: [number, number] = [11, 12];
+const UNDER_WARDEN: [number, number] = [15, 8];
+/** The middle of the sand, on the way from the trapdoor to the gate. */
+export const SAND_MIDDLE: [number, number] = [15, 12];
+const TRAPDOOR: [number, number] = [7, 12];
 
 // ---- Up into the Kaldorium after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
 // here first and lost, and the Warden's waiting for whoever let them out. He has his say, you make your excuse
@@ -205,7 +210,7 @@ export const SNOT_SWING = [
 ];
 /** Brannoc walks to the warden, asleep, then swings. */
 export const brannocSleepwalks = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [BRANNOC_FAINTED, [10, 9], UNDER_WARDEN], face: 1 },
+  { row: brannoc, path: [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN], face: 1 },
 ];
 export const SNOT_SWING_HIT = [
   'Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
@@ -252,7 +257,7 @@ export const BRANNOC_NO = [
 ];
 /** Back to the ladder, very slowly. */
 export const brannocShuffles = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [UNDER_WARDEN, [10, 9], [3, 9], [2, 9]] },
+  { row: brannoc, path: [UNDER_WARDEN, SAND_MIDDLE, [8, 12], TRAPDOOR] },
 ];
 
 /** Walking as Brannoc: the warden drops in, and you faint at the sight of him. */

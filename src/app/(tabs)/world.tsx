@@ -167,6 +167,7 @@ import {
   ARENA_WELCOME,
   ARENA_WELCOME_ALONE,
   CELLS_FREED,
+  SAND_MIDDLE,
   FELL_IN,
   POTHOLE,
   POTHOLE_LANDING,
@@ -1448,8 +1449,8 @@ function World({
                 {
                   row: -1,
                   path: [
-                    [Math.floor(start.x / TILE), 9],
-                    [10, 9],
+                    [Math.floor(start.x / TILE), SAND_MIDDLE[1]],
+                    SAND_MIDDLE,
                   ],
                   face: 0,
                 },

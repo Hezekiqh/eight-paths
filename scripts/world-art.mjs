@@ -1409,6 +1409,121 @@ function marbleAt(x, y) {
   return c;
 }
 
+/**
+ * The Colosseum from the inside (author, Oct 6, 2026: "look at the arena outside looking in"): the same great oval
+ * as Warrior City shows from without. Sand in the middle, a low stone wall round it, grey tiers climbing away
+ * packed with the crowd, the Crown's red banners with the gold fist along the top, the great gate at the bottom,
+ * open to the sky. The sand's oval sits just inside the walkable tiles (`.` and `,`); everything else is the stands.
+ */
+function drawArena(map) {
+  const rows = map.tiles;
+  const H = rows.length;
+  const W = rows[0].length;
+  const g = canvas(W * TILE, H * TILE);
+  const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
+  // the oval of sand, in art pixels: as wide and tall as the walkable tiles reach along its middle
+  const mid = rows[Math.floor(H / 2)];
+  const left = [...mid].findIndex((c) => c === '.' || c === ',');
+  const right = mid.length - [...mid].reverse().findIndex((c) => c === '.' || c === ',');
+  const col = rows.map((r) => r[Math.floor(W / 2)]);
+  const top = col.findIndex((c) => c === '.' || c === ',');
+  const bottom = col.length - [...col].reverse().findIndex((c) => c === '.' || c === ',');
+  const cx = ((left + right) / 2) * TILE;
+  const cy = ((top + bottom) / 2) * TILE;
+  const rx = ((right - left) / 2) * TILE - 2;
+  const ry = ((bottom - top) / 2) * TILE - 2;
+  const SAND = hex('#C8A870');
+  const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
+  const SKIN = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) {
+      const dx = (x + 0.5 - cx) / rx;
+      const dy = (y + 0.5 - cy) / ry;
+      const e = Math.sqrt(dx * dx + dy * dy);
+      if (e <= 1) {
+        // sand, raked, with darker and lighter grains
+        let c = SAND;
+        const h = hash(x, y, 51);
+        if (h < 0.08) c = hex('#B8985E');
+        else if (h > 0.94) c = hex('#D8B880');
+        // the wall's shadow falls on the sand along the far (top) side
+        if (dy < -0.2 && e > 0.93) c = mix(c, hex('#5A4A30'), dither(0.4 * Math.min(1, (-dy - 0.2) / 0.5), x, y));
+        g[y][x] = c;
+        continue;
+      }
+      // out from the sand: the arena wall, then the tiers (a pixel's way out, measured up and down)
+      const out = (e - 1) * ry;
+      if (out < 2) {
+        g[y][x] = hex('#9A928E');
+        continue;
+      }
+      // the far side shows the wall's face, the near side only its top
+      if (dy < 0 && out < 9) {
+        const course = Math.floor(out) % 3 === 0;
+        g[y][x] = course ? hex('#5A5250') : (Math.floor(x / 7) + Math.floor(out / 3)) % 2 ? hex('#7A7270') : hex('#726A66');
+        continue;
+      }
+      if (out < 4) {
+        g[y][x] = hex('#5A5250');
+        continue;
+      }
+      // the tiers: a lit step every seven pixels, the seats between, and people on the seats
+      const step = (out - 4) % 7;
+      const tier = Math.floor((out - 4) / 7);
+      let c = step < 1 ? hex('#8A8280') : tier % 2 ? hex('#726A66') : hex('#625A56');
+      if (step >= 2 && step < 6) {
+        // a spectator every three pixels along the tier: a head over a body, some seats empty
+        const seat = Math.floor((x + tier * 2) / 3);
+        const filled = hash(seat, tier, 61) < 0.8;
+        const sx = (x + tier * 2) % 3;
+        if (filled && sx < 2) {
+          if (step < 3) c = sx === 0 ? SKIN[Math.floor(hash(seat, tier, 62) * SKIN.length)] : c;
+          else c = PEOPLE[Math.floor(hash(seat, tier, 63) * PEOPLE.length)];
+        }
+      }
+      g[y][x] = c;
+    }
+  // the Crown's banners along the top of the stands: red, a gold fist, on poles
+  for (let k = 0; k < 7; k++) {
+    const bx = Math.round(cx - rx + ((k + 0.5) / 7) * rx * 2);
+    const ey = Math.sqrt(Math.max(0, 1 - ((bx - cx) / (rx + 60)) ** 2));
+    const by = Math.max(2, Math.round(cy - (ry + 60) * ey));
+    box(g, bx, by, 1, 18, '#3A2618');
+    box(g, bx + 1, by, 8, 11, '#9A2A22');
+    box(g, bx + 1, by + 11, 3, 2, '#9A2A22');
+    box(g, bx + 6, by + 11, 3, 2, '#9A2A22');
+    box(g, bx + 4, by + 3, 2, 3, '#C8963A');
+    box(g, bx + 3, by + 4, 4, 2, '#C8963A');
+  }
+  // the great gate at the bottom, over its tiles: a dark arch, the portcullis raised
+  const gate = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '1' && gate.push([tx, ty])));
+  if (gate.length) {
+    const gx = Math.min(...gate.map(([tx]) => tx)) * TILE - 2;
+    const gw = gate.length * TILE + 4;
+    const gy = gate[0][1] * TILE - 6;
+    box(g, gx - 3, gy - 3, gw + 6, TILE + 9, '#8A8280');
+    box(g, gx, gy, gw, TILE + 6, '#1E1816');
+    ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
+    for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
+  }
+  // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
+      if ('.,T1'.includes(at(tx, ty))) continue;
+      const draw = DUNGEON_ART[letter];
+      if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
+      // the ladder down goes through a trapdoor: a timber frame, open, dark below
+      if (letter === 'H') {
+        box(g, tx * TILE + 1, ty * TILE + 1, TILE - 2, TILE - 2, '#5C3A28');
+        box(g, tx * TILE + 3, ty * TILE + 3, TILE - 6, TILE - 6, '#120C0A');
+      }
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => map.art?.[at(tx + dx, ty + dy)] ?? at(tx + dx, ty + dy) });
+    }
+  return g;
+}
+
 function drawDungeon(map) {
   const rows = map.tiles;
   const H = rows.length;
@@ -2813,7 +2928,15 @@ for (const id of MAPS) {
   if (widths.size !== 1) throw new Error(`${id}: rows have different lengths (${[...widths].join(', ')})`);
   writeFileSync(
     `assets/world/${id}.png`,
-    toPng(map.style === 'outdoor' ? drawOutdoor(map) : map.style === 'dungeon' ? drawDungeon(map) : drawMap(map)),
+    toPng(
+      map.style === 'outdoor'
+        ? drawOutdoor(map)
+        : map.floor === 'sand'
+          ? drawArena(map)
+          : map.style === 'dungeon'
+            ? drawDungeon(map)
+            : drawMap(map),
+    ),
   );
 }
 const { g, ids } = drawWalkers();

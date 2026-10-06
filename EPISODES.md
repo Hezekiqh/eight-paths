@@ -74,6 +74,14 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   the sand until his guards are down, and the three stand at the side of the sand until he's beaten
   (`the-pit.json`; `passable`, so they never get in the way of a fight; `size` for the Warden). If you never let
   the three out, he welcomes "our runaways" and they aren't there.
+- **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
+  inside of the oval Warrior City shows from without, wider (32×17), open to the sky: sand, a low stone wall, tiers
+  packed with the crowd, the Crown's red banners with the gold fist, the great gate at the bottom and a trapdoor down
+  to the cells (`drawArena` in `scripts/world-art.mjs`, `floor: "sand"`). Everyone moved with it (`dungeon.ts`
+  `BRANNOC_FAINTED`, `SAND_MIDDLE`; the exits in `progress.ts`). Spectators on the sand (the crowd, the Warden, the
+  three) are `passable`, so every fight still balances (fights.test).
+- **No overlap** (author): nobody stands or falls into anyone. Brannoc is three tiles from where you come up, and
+  faints away from you.
 - **Next:** Episode 14.
 
 ## In the episode script

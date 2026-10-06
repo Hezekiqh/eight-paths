@@ -7,18 +7,23 @@
     ","
   ],
   "tiles": [
-    "######################",
-    "#WWWcWWWBWWWWBWWWcWWW#",
-    "#W,,,,,,,,,,,,,,,,,,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,,,,,,,,,,,,,,,,,,W#",
-    "#W3...k........r....W#",
-    "#WWWWWWWWW11WWWWWWWWW#",
-    "######################"
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTT,,,,,,,,,,,,TTTTTTTTTT",
+    "TTTTTTT,,,............,,,TTTTTTT",
+    "TTTTT,,..................,,TTTTT",
+    "TTTT,,....................,,TTTT",
+    "TTT,,......................,,TTT",
+    "TTT,........................,TTT",
+    "TT,,........................,,TT",
+    "TTT,........................,TTT",
+    "TTT,,......................,,TTT",
+    "TTTT,r....................k,TTTT",
+    "TTTTT,,3.................,,TTTTT",
+    "TTTTTTT,,,............,,,TTTTTTT",
+    "TTTTTTTTTT,,,,,,,,,,,,TTTTTTTTTT",
+    "TTTTTTTTTTTTTTT11TTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "spawn": {
     "x": 10,
@@ -26,9 +31,6 @@
     "facing": "up"
   },
   "examine": {
-    "B": [
-      "The champions' wall: three hundred years of names, each crossed out when they fell. The newest line is blank."
-    ],
     "1": [
       "The way out, into Warrior City."
     ],
@@ -37,14 +39,17 @@
     ],
     "r": [
       "A rack of clubs. Each one has a name burned into the handle. One just says 'CLUB'."
+    ],
+    "T": [
+      "The stands, packed to the top tier. Somebody's selling roast nuts. Somebody's always selling roast nuts."
     ]
   },
   "objects": [
     {
       "id": "maelis",
       "type": "npc",
-      "x": 17,
-      "y": 9,
+      "x": 21,
+      "y": 12,
       "sprite": "maelis",
       "facing": "left",
       "name": "Sergeant Maelis",
@@ -87,7 +92,7 @@
     {
       "id": "fight-card",
       "type": "sign",
-      "x": 2,
+      "x": 11,
       "y": 2,
       "lines": [
         "The fight card, chalked fresh every day: BRING A FIGHTER OR BRING IRON.",
@@ -98,8 +103,8 @@
     {
       "id": "crowd-1",
       "type": "npc",
-      "x": 5,
-      "y": 2,
+      "x": 9,
+      "y": 3,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -129,12 +134,13 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-2",
       "type": "npc",
-      "x": 8,
+      "x": 13,
       "y": 2,
       "sprite": "raider",
       "facing": "down",
@@ -158,12 +164,13 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-3",
       "type": "npc",
-      "x": 12,
+      "x": 18,
       "y": 2,
       "sprite": "raider",
       "facing": "down",
@@ -187,13 +194,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-4",
       "type": "npc",
-      "x": 16,
-      "y": 2,
+      "x": 22,
+      "y": 3,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -216,13 +224,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-5",
       "type": "npc",
-      "x": 2,
-      "y": 5,
+      "x": 4,
+      "y": 6,
       "sprite": "raider",
       "facing": "right",
       "name": "Guard",
@@ -245,13 +254,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-6",
       "type": "npc",
-      "x": 19,
-      "y": 5,
+      "x": 27,
+      "y": 6,
       "sprite": "raider",
       "facing": "left",
       "name": "Guard",
@@ -274,13 +284,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-7",
       "type": "npc",
-      "x": 19,
-      "y": 7,
+      "x": 27,
+      "y": 10,
       "sprite": "raider",
       "facing": "left",
       "name": "Guard",
@@ -303,13 +314,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-8",
       "type": "npc",
-      "x": 2,
-      "y": 7,
+      "x": 4,
+      "y": 9,
       "sprite": "raider",
       "facing": "right",
       "name": "Guard",
@@ -332,15 +344,16 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "warden-watch",
       "type": "npc",
       "passable": true,
       "size": 2,
-      "x": 10,
-      "y": 3,
+      "x": 15,
+      "y": 4,
       "sprite": "warden",
       "facing": "down",
       "name": "Warden",
@@ -355,8 +368,8 @@
       "id": "arena-mott",
       "type": "npc",
       "passable": true,
-      "x": 17,
-      "y": 2,
+      "x": 22,
+      "y": 4,
       "sprite": "oldmott",
       "facing": "down",
       "name": "Old Mott",
@@ -370,8 +383,8 @@
       "id": "arena-nails",
       "type": "npc",
       "passable": true,
-      "x": 18,
-      "y": 2,
+      "x": 23,
+      "y": 4,
       "sprite": "nails",
       "facing": "down",
       "name": "Nails",
@@ -385,8 +398,8 @@
       "id": "arena-silas",
       "type": "npc",
       "passable": true,
-      "x": 19,
-      "y": 2,
+      "x": 24,
+      "y": 4,
       "sprite": "silasseen",
       "facing": "down",
       "name": "Silas Seen",
@@ -399,8 +412,8 @@
     {
       "id": "brannoc-pit",
       "type": "npc",
-      "x": 4,
-      "y": 9,
+      "x": 11,
+      "y": 12,
       "sprite": "brannoc",
       "facing": "up",
       "name": "Brannoc",
@@ -416,8 +429,8 @@
     {
       "id": "brannoc-awake",
       "type": "npc",
-      "x": 10,
-      "y": 6,
+      "x": 15,
+      "y": 8,
       "sprite": "brannoc",
       "facing": "down",
       "name": "Brannoc",
@@ -437,29 +450,29 @@
   "ladder": [
     {
       "flag": "pit-guards",
-      "x": 10,
-      "y": 3,
+      "x": 15,
+      "y": 5,
       "kind": "raider",
       "bearers": [
         [
-          6,
-          4
+          11,
+          6
         ],
         [
-          14,
-          4
+          19,
+          6
         ],
         [
-          8,
-          5
+          13,
+          7
         ],
         [
-          12,
-          5
+          17,
+          7
         ],
         [
-          10,
-          4
+          15,
+          6
         ]
       ],
       "intro": {
@@ -472,13 +485,13 @@
     },
     {
       "flag": "pit-champion",
-      "x": 10,
-      "y": 3,
+      "x": 15,
+      "y": 5,
       "kind": "warden",
       "bearers": [
         [
-          10,
-          4
+          15,
+          6
         ]
       ],
       "intro": {
@@ -489,5 +502,6 @@
         ]
       }
     }
-  ]
+  ],
+  "floor": "sand"
 }

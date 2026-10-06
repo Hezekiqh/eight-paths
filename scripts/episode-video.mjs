@@ -82,7 +82,8 @@ const WALKER_ROWS = Object.fromEntries(
 const NEAREST = { filter: CK.FilterMode.Nearest, mipmap: CK.MipmapMode.None };
 
 // ---- maps: the baked picture, the people, the candles (ambience.ts)
-const AMBIENCE = { rooms: { darkness: 0.18 }, outdoor: { darkness: 0 }, dungeon: { darkness: 0.32 } };
+// (`arena`: the Colosseum, drawn like a dungeon but open to the sky, ambience.ts)
+const AMBIENCE = { rooms: { darkness: 0.18 }, outdoor: { darkness: 0 }, dungeon: { darkness: 0.32 }, arena: { darkness: 0 } };
 const FLAMES = {
   rooms: {
     c: [
@@ -93,6 +94,7 @@ const FLAMES = {
   },
   outdoor: { c: [{ dx: 7, dy: 2, reach: 40 }] },
   dungeon: { k: [{ dx: 7, dy: 1, reach: 48 }] },
+  arena: { k: [{ dx: 7, dy: 1, reach: 48 }] },
 };
 function loadMap(id, style) {
   const json = JSON.parse(readFileSync(join(ROOT, `src/world/maps/${id}.json`), 'utf8'));
@@ -1363,7 +1365,8 @@ function drawWorld(canvas, ep, st, t) {
     // fainting: tipping over backwards, pivoting on the feet, until flat
     if (fx.lie) {
       canvas.translate(x, y);
-      canvas.rotate(-90 * fx.lie, 0, 0);
+      // over backwards, away from whoever's beside them (head to the right)
+      canvas.rotate(90 * fx.lie, 0, 0);
       canvas.translate(-x, -y);
     }
     if (fx.flipped) {
@@ -2313,7 +2316,7 @@ const EPISODES = {
   // Any excuse is UNACCEPTABLE, Brannoc faints, Barnaby is unimpressed, the three step aside, and: FIGHT!
   // (author, Oct 6, 2026). Lines from the game (dungeon.ts ARENA_WELCOME, ARENA_EXCUSES, ARENA_VERDICT).
   13: () => {
-    const pit = loadMap('the-pit', 'dungeon');
+    const pit = loadMap('the-pit', 'arena');
     const welcome = gameLines('ARENA_WELCOME').map(unnamed);
     const verdict = gameLines('ARENA_VERDICT');
     const by = (name) => verdict.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
@@ -2321,10 +2324,11 @@ const EPISODES = {
     const [pause, pathetic, fight] = by('BARNABY');
     const barnaby = { name: 'Barnaby', sprite: 'barnaby' };
     // before they step aside, the three who lost stand in a sorry row in the middle of the sand
-    Object.assign(pit.npcs['arena-mott'], { x: 9, y: 6 });
-    Object.assign(pit.npcs['arena-nails'], { x: 10, y: 6 });
-    Object.assign(pit.npcs['arena-silas'], { x: 11, y: 6 });
-    const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 6], [x, y]], speed: 120, together: true });
+    Object.assign(pit.npcs['arena-mott'], { x: 14, y: 8 });
+    Object.assign(pit.npcs['arena-nails'], { x: 15, y: 8 });
+    Object.assign(pit.npcs['arena-silas'], { x: 16, y: 8 });
+    // across to the side of the sand, then up out of the way
+    const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 8], [x, y]], speed: 150, together: true });
     return {
       ...SHORT,
       number: 13,
@@ -2332,9 +2336,10 @@ const EPISODES = {
       map: pit,
       // the Warden at the head of the sand, the three who lost in a sorry row in the middle, Brannoc beside you
       shown: ['warden-watch', 'arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
-      hero: { sprite: 'quill', at: [3, 9], facing: 'right' },
+      // up through the trapdoor, Brannoc three tiles on: room to faint
+      hero: { sprite: 'quill', at: [8, 12], facing: 'right' },
       // the hook: in close on the Warden, already talking
-      look: [10, 4],
+      look: [15, 6],
       zoom: 1.5,
       script: [
         { say: 'warden-watch', lines: welcome, punch: 0.6 },
@@ -2343,17 +2348,17 @@ const EPISODES = {
         { say: 'warden-watch', lines: [unacceptable], punch: 0.6 },
         { say: 'warden-watch', lines: rest, punch: 0.5 },
         // Brannoc goes over
-        { look: [4, 8] },
+        { look: [10, 11] },
         { faint: 'brannoc-pit' },
         { wait: 0.1 },
         { as: barnaby, lines: [pause], punch: 0.4 },
         { as: barnaby, lines: [pathetic], punch: 0.7 },
         // the three shuffle out of the way
-        { look: [14, 4] },
+        { look: [19, 6] },
         { zoom: 1 },
-        aside('arena-mott', 17, 2),
-        aside('arena-nails', 18, 2),
-        aside('arena-silas', 19, 2),
+        aside('arena-mott', 22, 4),
+        aside('arena-nails', 23, 4),
+        aside('arena-silas', 24, 4),
         { say: 'arena-silas', lines: by('SILAS SEEN').map(unnamed), punch: 0.6 },
         { look: null },
         { jolt: 0.4 },

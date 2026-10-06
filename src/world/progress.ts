@@ -494,7 +494,7 @@ export const EXITS: Exit[] = [
     from: 'warrior-city',
     tile: '1',
     label: 'The Colosseum',
-    to: { map: 'the-pit', x: 10, y: 9, facing: 'up' },
+    to: { map: 'the-pit', x: 15, y: 13, facing: 'up' },
     needs: {
       kind: 'flag',
       flag: 'on-the-bill',
@@ -1180,7 +1180,7 @@ export const EXITS: Exit[] = [
     from: 'dungeon-mazes',
     tile: '2',
     label: 'The ladder up',
-    to: { map: 'the-pit', x: 3, y: 9, facing: 'right' },
+    to: { map: 'the-pit', x: 8, y: 12, facing: 'right' },
     needs: OPEN,
     back: true,
     walk: true,
