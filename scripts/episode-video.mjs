@@ -934,8 +934,9 @@ function compile(ep) {
       }
       const lines = step.you ?? step.lines ?? (npc ? npc.lines : []);
       lines.forEach((text, i) => {
-        // `letterMs` on the step: this one types slower (or quicker) than the episode
-        const at = letterTimes(text, step.letterMs ?? ep.letterMs, ep.pause);
+        // `letterMs`, `pause`, `read` on the step: this one types slower (or quicker), and stops or holds less, than the
+        // episode
+        const at = letterTimes(text, step.letterMs ?? ep.letterMs, step.pause ?? ep.pause);
         const typing = at[at.length - 1] + 0.03;
         const blips = speaker
           ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null)
@@ -944,7 +945,7 @@ function compile(ep) {
         // `punch`: the last line of a beat (the punchline) stays this long instead, so it lands
         // `ep.read`: every finished line stays this many times longer, so it reads comfortably (author, Episode 13: 1.3)
         const dur =
-          typing + (i === lines.length - 1 && step.punch ? step.punch : HOLD(text) * (ep.hold ?? 1)) * (ep.read ?? 1);
+          typing + (i === lines.length - 1 && step.punch ? step.punch : HOLD(text) * (ep.hold ?? 1)) * (step.read ?? ep.read ?? 1);
         segs.push({
           kind: 'line',
           t0: t,
@@ -2375,7 +2376,6 @@ const EPISODES = {
     const verdict = gameLines('ARENA_VERDICT');
     const after = gameLines('ARENA_FIGHT');
     const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    const [unacceptable, lives] = by(verdict, 'BARNABY');
     // you in the middle of the ring, your three close by on your left, Brannoc a few tiles off on your right
     // (side by side, a sprite's width apart: never stacked, never overlapping)
     Object.assign(pit.npcs['arena-mott'], { x: 11, y: 11, facing: 'up' });
@@ -2402,18 +2402,18 @@ const EPISODES = {
       zoom: 1.6,
       script: [
         // Barnaby talks fast, a showman working the crowd
-        { say: 'barnaby-box', lines: welcome, punch: 0.4, letterMs: 16 },
+        { say: 'barnaby-box', lines: welcome, punch: 0.4, letterMs: 16, pause: 0.3, read: 1.1 },
         ...RING,
-        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.3 } },
+        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.25 } },
         ...BOX,
         { jolt: 0.45 },
-        { say: 'barnaby-box', lines: [unacceptable, lives], punch: 0.4, letterMs: 16 },
+        { say: 'barnaby-box', lines: by(verdict, 'BARNABY'), punch: 0.4, letterMs: 16, pause: 0.3, read: 1.1 },
         // Brannoc heard that
         ...RING,
         { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
         { faint: 'brannoc-pit' },
         // a beat on him, out cold, snot bubble going
-        { wait: 0.3 },
+        { wait: 0.2 },
         // your three make their excuses as they grab Brannoc and carry him off to the side of the sand, out of the way
         // of the fight (author, Oct 6, 2026): one wide shot for all of it
         { look: [19.5, 10] },
@@ -2425,17 +2425,17 @@ const EPISODES = {
         { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 170, turn: 'right', together: true },
         // the heave, then off they shuffle with him, slow, held up between them: Old Mott at his feet, Nails at his
         // head walking backwards, Silas Seen (the pulled muscle) leading the way, empty-handed
-        { npcWalk: 'arena-mott', from: center(17.7, 10), to: [[21.7, 10]], speed: 17, delay: 1.25, turn: 'right', together: true },
-        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 17, delay: 1.25, carried: true, together: true },
-        { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 17, delay: 1.25, facing: 'left', together: true },
-        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 12.5, delay: 1.25, turn: 'left', together: true },
+        { npcWalk: 'arena-mott', from: center(17.7, 10), to: [[21.7, 10]], speed: 21, delay: 1.25, turn: 'right', together: true },
+        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 21, delay: 1.25, carried: true, together: true },
+        { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 21, delay: 1.25, facing: 'left', together: true },
+        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 15.5, delay: 1.25, turn: 'left', together: true },
         // (typed slower than the rest, so each excuse reads: author, Oct 6, 2026)
-        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.4, letterMs: 30 },
-        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.4, letterMs: 30 },
-        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.45, letterMs: 30 },
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.3, letterMs: 26 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.3, letterMs: 26 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.35, letterMs: 26 },
         ...BOX,
         { jolt: 0.4 },
-        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.65, letterMs: 16 },
+        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.55, letterMs: 16, pause: 0.3, read: 1.1 },
       ],
     };
   },

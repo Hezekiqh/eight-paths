@@ -151,9 +151,10 @@ export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
 ];
 /** His answer, and Brannoc's echo of it, and his faint (and his snot bubble). */
 export const ARENA_VERDICT = [
-  'BARNABY: SHUT IT. THIS IS UNACCEPTABLE!',
-  'BARNABY: You will pay with your lives for disrespecting our king!',
-  'BRANNOC: P-P-Pay with our lives!?',
+  'BARNABY: THIS IS UNACCEPTABLE!!!!!',
+  'BARNABY: After we were so lenient with your sentences, this is how you repay me?',
+  'BARNABY: If you thought five life sentences were bad, try 500!',
+  'BRANNOC: O-Our lives!?',
   '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
 ];
 /** Then the three who lost make their excuses on the way to the side of the sand, and it's on (author, Episode 13). */
