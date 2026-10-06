@@ -67,8 +67,10 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   let out got there first and lost; the Warden (drawn twice as big) has been expecting you. Frame one, in close:
   "Well, well, well. If it isn't our final contestants." / "Escape is punishable by death, you know." The menu:
   *I was just going for a walk.* "UNACCEPTABLE." (the screen jolts) / "After we were so lenient with your sentences." /
-  "You will pay with your lives!" Brannoc faints flat beside you. Barnaby: "...Did he just faint?" / "...pathetic."
-  The three shuffle to the side; Silas Seen: "You got this, whatever your name is." Barnaby: "FIGHT!" Cut. In the
+  "You will pay with your lives!" Brannoc faints flat beside you. Barnaby: "...Did he just faint?" / "...pathetic." /
+  "And who are YOU?" The menu: *Gary's friend.* "...Gary has friends?" The three shuffle to the side; Silas Seen:
+  "You got this, whatever your name is." Barnaby: "FIGHT!" Cut. (In the game, also *Just passing through.*,
+  *Nobody important.*, and the mean one; `ARENA_WHO`, `ARENA_FIGHT`.) In the
   game: the same arrival (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT` in `dungeon.ts`; any excuse gets the same
   answer, and there's a mean one), then the five guards and the Warden as before. The Warden watches from the head of
   the sand until his guards are down, and the three stand at the side of the sand until he's beaten

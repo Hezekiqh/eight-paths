@@ -150,7 +150,7 @@ export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
   { label: "It was Gary's idea." },
   { label: 'Death? For a walk? Bit much, big man.', deed: 'bad' },
 ];
-/** His answer, Brannoc's faint, Barnaby's verdict, and the three stepping aside. */
+/** His answer, Brannoc's faint, and Barnaby's verdict on him, then Barnaby's question for you. */
 export const ARENA_VERDICT = [
   'WARDEN: UNACCEPTABLE.',
   'WARDEN: After we were so lenient with your sentences.',
@@ -158,6 +158,21 @@ export const ARENA_VERDICT = [
   '* Brannoc goes white. Then grey. Then he faints, flat on his back.',
   'BARNABY: ...Did he just faint?',
   'BARNABY: ...pathetic.',
+  'BARNABY: And who are YOU?',
+];
+/** Who you are, and what Barnaby makes of it (author, Episode 13: "Gary's friend."). */
+export const ARENA_WHO: { label: string; reply: string[]; deed?: 'bad' }[] = [
+  { label: "Gary's friend.", reply: ['BARNABY: ...Gary has friends?'] },
+  { label: 'Just passing through.', reply: ["BARNABY: JUST passing through. Folks, they're JUST passing through."] },
+  { label: 'Nobody important.', reply: ['BARNABY: Nobody important just emptied the whole gaol.'] },
+  {
+    label: 'Your worst nightmare, Loudmouth.',
+    reply: ["BARNABY: My worst nightmare is a quiet crowd. LET'S HEAR IT!"],
+    deed: 'bad',
+  },
+];
+/** Then the three step aside, and it's on. */
+export const ARENA_FIGHT = [
   '* Old Mott, Nails and Silas Seen shuffle to the side of the sand.',
   'SILAS SEEN: You got this, whatever your name is.',
   'BARNABY: FIGHT!',
@@ -167,7 +182,7 @@ export const ARENA_WELCOME_ALONE = [
   "WARDEN: Well, well, well. If it isn't our runaways.",
   'WARDEN: Escape is punishable by death, you know.',
 ];
-export const ARENA_VERDICT_ALONE = ARENA_VERDICT.filter((l) => !/Silas|Old Mott/.test(l));
+export const ARENA_FIGHT_ALONE = ARENA_FIGHT.filter((l) => !/Silas|Old Mott/.test(l));
 
 export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
   'pit-guards': {
@@ -328,5 +343,19 @@ export const CELLS_FREED = 'cells-freed';
 export const toTheCells = (x: number, y: number): Actor[] => {
   // directly above or below Gary, step aside first rather than walk through him
   const side = x === 3 ? 4 : x;
-  return [{ row: -1, path: [[x, y], [side, y], [side, 6], [10, 6], [14, 6], [18, 6], [18, 7]], face: 1 }];
+  return [
+    {
+      row: -1,
+      path: [
+        [x, y],
+        [side, y],
+        [side, 6],
+        [10, 6],
+        [14, 6],
+        [18, 6],
+        [18, 7],
+      ],
+      face: 1,
+    },
+  ];
 };

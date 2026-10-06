@@ -162,8 +162,10 @@ import {
   ESCORT_LINES,
   GARY_STARTLED,
   ARENA_EXCUSES,
+  ARENA_FIGHT,
+  ARENA_FIGHT_ALONE,
   ARENA_VERDICT,
-  ARENA_VERDICT_ALONE,
+  ARENA_WHO,
   ARENA_WELCOME,
   ARENA_WELCOME_ALONE,
   CELLS_FREED,
@@ -618,8 +620,9 @@ function World({
           start.map.boss.flag === 'pit-guards' ? (hero === 'brannoc' ? 'pit-guards-alone' : 'pit-guards') : 'pit-warden'
         ]
       : undefined;
-  // The Warden's answer to your excuse (dungeon.ts ARENA_VERDICT), once one's been picked.
-  const [verdict, setVerdict] = useState<string[] | null>(null);
+  // The Kaldorium's welcome goes on past your excuse (dungeon.ts): the Warden's answer, then Barnaby's question and
+  // his comeback. Each is set by the menu before it, once something's been picked.
+  const [verdict, setVerdict] = useState<Dialogue | null>(null);
   const [said, setDialogue] = useState<Dialogue | null>(() =>
     resume
       ? null
@@ -636,10 +639,18 @@ function World({
           ? (() => {
               // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE
               const freed = arrivalFlags.includes(CELLS_FREED);
-              const verdict = freed ? ARENA_VERDICT : ARENA_VERDICT_ALONE;
+              const fight = freed ? ARENA_FIGHT : ARENA_FIGHT_ALONE;
+              const who: Dialogue = {
+                lines: ARENA_VERDICT,
+                choices: ARENA_WHO.map(({ label, reply, deed }) => ({
+                  label,
+                  deed,
+                  then: () => setVerdict({ lines: [...reply, ...fight] }),
+                })),
+              };
               return {
                 lines: freed ? ARENA_WELCOME : ARENA_WELCOME_ALONE,
-                choices: ARENA_EXCUSES.map((e) => ({ ...e, then: () => setVerdict(verdict) })),
+                choices: ARENA_EXCUSES.map((e) => ({ ...e, then: () => setVerdict(who) })),
               };
             })()
           : prisonIntro
@@ -667,7 +678,7 @@ function World({
   );
   // Any excuse you like: UNACCEPTABLE. The Warden's answer, once an excuse has been picked, until it's read.
   const dialogue = useMemo(
-    () => said ?? (verdict ? { lines: verdict, then: () => setVerdict(null) } : null),
+    () => said ?? (verdict ? { ...verdict, then: () => setVerdict(null) } : null),
     [said, verdict],
   );
   const dialogueRef = useRef(dialogue);

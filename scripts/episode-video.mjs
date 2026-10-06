@@ -1669,6 +1669,16 @@ const arenaExcuses = () => {
   return [...block.slice(0, block.indexOf('];')).matchAll(/label: (['"])(.*?)\1/g)].map((m) => m[2].replace(/\\'/g, "'"));
 };
 
+/** Who you are, as Barnaby asks it (dungeon.ts ARENA_WHO): each option's label and his comeback, without his name. */
+const arenaWho = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  // (from its `= [`, past the type, whose `string[];` would end it early)
+  const block = src.slice(src.indexOf('= [', src.indexOf('export const ARENA_WHO')));
+  return [...block.slice(0, block.indexOf('\n];')).matchAll(/label: (['"])(.*?)\1,\s*reply: \[(['"])(.*?)\3\]/gs)].map(
+    (m) => ({ label: m[2], reply: unnamed(m[4]) }),
+  );
+};
+
 /**
  * The pothole's landing (src/world/dungeon.ts POTHOLE_LANDING), read from the game so the episode says the same:
  * what each of them says, by name ("OLD MOTT: Nice trip." → { 'OLD MOTT': ['Nice trip.'] }).
@@ -2319,9 +2329,14 @@ const EPISODES = {
     const pit = loadMap('the-pit', 'arena');
     const welcome = gameLines('ARENA_WELCOME').map(unnamed);
     const verdict = gameLines('ARENA_VERDICT');
-    const by = (name) => verdict.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    const [unacceptable, ...rest] = by('WARDEN');
-    const [pause, pathetic, fight] = by('BARNABY');
+    const after = gameLines('ARENA_FIGHT');
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    const [unacceptable, ...rest] = by(verdict, 'WARDEN');
+    const [pause, pathetic, whoAreYou] = by(verdict, 'BARNABY');
+    const [fight] = by(after, 'BARNABY');
+    // who are you? Gary's friend. (author, Oct 6, 2026)
+    const who = arenaWho();
+    const pick = who.findIndex((o) => o.label === "Gary's friend.");
     const barnaby = { name: 'Barnaby', sprite: 'barnaby' };
     // before they step aside, the three who lost stand in a sorry row in the middle of the sand
     Object.assign(pit.npcs['arena-mott'], { x: 14, y: 8 });
@@ -2342,27 +2357,30 @@ const EPISODES = {
       look: [15, 6],
       zoom: 1.5,
       script: [
-        { say: 'warden-watch', lines: welcome, punch: 0.6 },
-        { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.4 } },
+        { say: 'warden-watch', lines: welcome, punch: 0.5 },
+        { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.3 } },
         { jolt: 0.45 },
-        { say: 'warden-watch', lines: [unacceptable], punch: 0.6 },
-        { say: 'warden-watch', lines: rest, punch: 0.5 },
+        { say: 'warden-watch', lines: [unacceptable], punch: 0.5 },
+        { say: 'warden-watch', lines: rest, punch: 0.4 },
         // Brannoc goes over
         { look: [10, 11] },
         { faint: 'brannoc-pit' },
         { wait: 0.1 },
-        { as: barnaby, lines: [pause], punch: 0.4 },
-        { as: barnaby, lines: [pathetic], punch: 0.7 },
+        { as: barnaby, lines: [pause], punch: 0.3 },
+        { as: barnaby, lines: [pathetic], punch: 0.5 },
+        { as: barnaby, lines: [whoAreYou], punch: 0.3 },
+        { menu: { speaker: 'Barnaby', options: who.map((o) => o.label), pick, hold: 0.3 } },
+        { as: barnaby, lines: [who[pick].reply], punch: 0.7 },
         // the three shuffle out of the way
         { look: [19, 6] },
         { zoom: 1 },
         aside('arena-mott', 22, 4),
         aside('arena-nails', 23, 4),
         aside('arena-silas', 24, 4),
-        { say: 'arena-silas', lines: by('SILAS SEEN').map(unnamed), punch: 0.6 },
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
         { look: null },
         { jolt: 0.4 },
-        { as: barnaby, lines: [fight], punch: 0.7 },
+        { as: barnaby, lines: [fight], punch: 0.6 },
       ],
     };
   },
