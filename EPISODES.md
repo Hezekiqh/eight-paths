@@ -75,7 +75,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
   (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three: Silas Seen "I pulled a muscle on
   the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
-  "FIGHT!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.", "FINISH THEM!") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
+  "FINISH THEM!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
   `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby in his box
   (`barnaby-box`; the box `$`, its desk `+`, which you talk across, `talkThrough`), your three beside you where you come up through the trapdoor, and Brannoc
   asleep with a snot bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who

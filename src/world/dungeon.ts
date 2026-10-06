@@ -161,7 +161,7 @@ export const ARENA_FIGHT = [
   'OLD MOTT: I am too old for this.',
   'NAILS: My ice cubes melted.',
   '* Old Mott, Nails and Silas Seen shuffle to the side of the sand.',
-  'BARNABY: FIGHT!',
+  'BARNABY: FINISH THEM!',
 ];
 /** If you never let the three out: just you and Brannoc. */
 export const ARENA_WELCOME_ALONE = ["BARNABY: Well, well, well. If it isn't our runaways."];
