@@ -63,7 +63,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 16.2 s: allowed up to about twenty, author,
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 18.1 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
   right) and Barnaby in his commentator's box, a wedge of the Colosseum's own ring at the head of the sand, following the

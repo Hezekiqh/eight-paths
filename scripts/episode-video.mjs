@@ -2395,14 +2395,15 @@ const EPISODES = {
         { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
         { faint: 'brannoc-pit' },
         // a beat on him, out cold, snot bubble going
-        { wait: 1.2 },
+        { wait: 0.8 },
         // your three make their excuses where they stand, then rush over to Brannoc, pick him up and carry him off to
         // the side of the sand, out of the way of the fight (author, Oct 6, 2026)
-        { look: [19.5, 10] },
-        { zoom: 6 / 7 },
         { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
         { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
         { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
+        // cut wider, so the rush and the side of the sand are both in shot
+        { look: [19.5, 10] },
+        { zoom: 6 / 7 },
         // the rush (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over)
         { npcWalk: 'arena-mott', to: [[11, 12], [17, 12], [17, 10]], speed: 170, together: true },
         { npcWalk: 'arena-nails', to: [[12, 13], [20, 13], [20, 10]], speed: 190, together: true },
@@ -2414,7 +2415,7 @@ const EPISODES = {
         { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 70, together: true },
         { npcWalk: 'arena-nails', from: center(20, 10), to: [[24, 10]], speed: 70, together: true },
         { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 70, together: true },
-        { wait: 1.2 },
+        { wait: 1.0 },
         ...BOX,
         { jolt: 0.4 },
         { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 1.0 },
