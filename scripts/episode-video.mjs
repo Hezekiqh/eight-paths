@@ -137,12 +137,15 @@ function voiceFor(name, sprite) {
 // ---- the typewriter (typewriter-text.tsx): 28ms a letter, longer after punctuation
 const LETTER_MS = 28;
 const PAUSES = { '.': 260, '!': 260, '?': 260, ',': 120, ':': 160, ';': 160 };
-/** When each letter appears, in seconds from the line's start. */
-function letterTimes(text) {
+/**
+ * When each letter appears, in seconds from the line's start. The short-form template (EPISODES.md, from
+ * Episode 10) types faster than the game: `ms` a letter, and the punctuation pauses scaled by `pause`.
+ */
+function letterTimes(text, ms = LETTER_MS, pause = 1) {
   const at = [];
   let t = 0;
   for (let i = 0; i < text.length; i++) {
-    if (i > 0) t += (LETTER_MS + (PAUSES[text[i - 1]] ?? 0)) / 1000;
+    if (i > 0) t += (ms + (PAUSES[text[i - 1]] ?? 0) * pause) / 1000;
     at.push(t);
   }
   return at;
@@ -753,7 +756,7 @@ function compile(ep) {
         legs.push({ a: [ax, ay], b: [bx, by], d0: dist, len, dir });
         dist += len;
       }
-      const speed = step.speed ?? SPEED;
+      const speed = step.speed ?? ep.speed ?? SPEED;
       const dur = dist / speed;
       segs.push({ kind: 'walk', t0: t, t1: t + dur, legs, dist, speed });
       // `cut`: the episode ends this many seconds into the walk, mid-stride
@@ -808,15 +811,18 @@ function compile(ep) {
     } else if (step.laugh) {
       // someone laughs: shoulders shaking, a burst of HA over their head (`quiet`: just the shaking, a cower)
       segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh, quiet: step.quiet });
-      t += step.dur;
+      // `together`: the next one laughs at the same time
+      if (!step.together) t += step.dur;
     } else if (step.scene) {
       // somewhere else: fade to black, and up again there (a new map, you standing at `at`)
       const sc = step.scene;
-      segs.push({ kind: 'scene', t0: t, t1: t + SCENE_GAP, ...sc, at: center(...sc.at) });
+      // `gap`: how long the cut takes (the template cuts quicker than the old episodes' second)
+      const gap = sc.gap ?? SCENE_GAP;
+      segs.push({ kind: 'scene', t0: t, t1: t + gap, ...sc, gap, at: center(...sc.at) });
       map = sc.map;
       pos = center(...sc.at);
       facing = sc.facing;
-      t += SCENE_GAP + 0.1;
+      t += gap + 0.1;
     } else if (step.push) {
       // lean on the boulder in front a moment, then shove it a tile, stepping in behind it
       const [dx, dy] = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] }[step.push];
@@ -861,13 +867,14 @@ function compile(ep) {
       }
       const lines = step.you ?? step.lines ?? (npc ? npc.lines : []);
       lines.forEach((text, i) => {
-        const at = letterTimes(text);
+        const at = letterTimes(text, ep.letterMs, ep.pause);
         const typing = at[at.length - 1] + 0.03;
         const blips = speaker
           ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null)
           : [];
         // `hold`: how long a finished line stays, against the usual (a talky episode reads a touch quicker)
-        const dur = typing + HOLD(text) * (ep.hold ?? 1);
+        // `punch`: the last line of a beat (the punchline) stays this long instead, so it lands
+        const dur = typing + (i === lines.length - 1 && step.punch ? step.punch : HOLD(text) * (ep.hold ?? 1));
         segs.push({
           kind: 'line',
           t0: t,
@@ -883,7 +890,14 @@ function compile(ep) {
         });
         t += dur;
       });
-      t += 0.25;
+      t += step.gapAfter ?? ep.gapAfter ?? 0.25;
+    } else if (step.drop) {
+      // the floor gives way: you sink out of sight into a hole (the Maze Ward's pothole); `together` with what's said
+      segs.push({ kind: 'drop', t0: t, t1: t + step.drop });
+      if (!step.together) t += step.drop;
+    } else if (step.zoom) {
+      // a cut to closer in (or back out, 1): the template's hook opens close on whoever's talking
+      segs.push({ kind: 'zoom', t0: t, t1: t, z: step.zoom });
     } else if (step.hatch) {
       // the app's hatch, full screen (scripts/hatch-video.mjs beats), then back to the World
       segs.push({ kind: 'hatch', t0: t, t1: t + HATCH_END, ...step.hatch });
@@ -927,10 +941,14 @@ function stateAt(ep, compiled, t) {
   let opened = [];
   /** Tiles broken open (bars bent wide), drawn as the game's dark gap. */
   let gaps = [...(ep.gaps ?? [])];
+  let zoom = ep.zoom ?? 1;
+  /** How far you've sunk through the floor (0 to 1), and the hole you went down. */
+  let sink = 0;
+  let hole = null;
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
-      const half = SCENE_GAP / 2;
+      const half = s.gap / 2;
       white = !!s.flash;
       if (t < s.t0 + half) {
         blackout = (t - s.t0) / half;
@@ -952,6 +970,8 @@ function stateAt(ep, compiled, t) {
       opened = [];
       line = null;
       menu = null;
+      sink = 0;
+      hole = null;
       continue;
     }
     if (s.kind === 'push') {
@@ -1003,8 +1023,16 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'show') shown.push(s.id);
     else if (s.kind === 'open') opened.push(s.at);
     else if (s.kind === 'gap') gaps.push(s.at);
+    else if (s.kind === 'zoom') zoom = s.z;
+    else if (s.kind === 'drop') {
+      sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      hole = [hx, hy];
+    }
   }
   return {
+    zoom,
+    sink,
+    hole,
     hx,
     hy,
     facing,
@@ -1045,7 +1073,7 @@ function drawWorld(canvas, ep, st, t) {
   const mapH = map.image.height();
   // the camera follows you; for the card game it eases in close on the two of you, and back out
   const zk = st.cards ? zoomIn(st.cards.t, st.cards.dur) : 0;
-  const z = 1 + zk;
+  const z = (st.zoom ?? 1) + zk;
   const sk = K * z;
   const vw = W / sk;
   const vh = H / sk;
@@ -1170,14 +1198,22 @@ function drawWorld(canvas, ep, st, t) {
       }
       return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y];
     });
-  if (!st.cards)
-    ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
+  // the hole you went down: dark, with a lip of broken flagstone
+  if (st.hole) {
+    const [hx0, hy0] = st.hole;
+    canvas.drawRect(CK.XYWHRect(Math.round(hx0 - 6), Math.round(hy0 - 3), 12, 5), paint('#06040A'));
+    canvas.drawRect(CK.XYWHRect(Math.round(hx0 - 7), Math.round(hy0 - 4), 14, 1), paint('#5A524C'));
+  }
+  if (!st.cards && st.sink < 1)
+    ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy, st.sink]);
   ents.sort((a, b) => a[4] - b[4]);
-  for (const [row, dir, frame, x, y] of ents) {
+  for (const [row, dir, frame, x, y, sunk = 0] of ents) {
+    // sinking: lower and lower, cut off at the floor
+    const cut = Math.round(sunk * FH);
     canvas.drawImageRectOptions(
       WALKERS,
-      CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH),
-      CK.XYWHRect(Math.round(x - FW / 2), Math.round(y - FEET), FW, FH),
+      CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH - cut),
+      CK.XYWHRect(Math.round(x - FW / 2), Math.round(y - FEET) + cut, FW, FH - cut),
       NEAREST.filter,
       NEAREST.mipmap,
       null,
@@ -1418,6 +1454,26 @@ const menuOf = (questions, asked) => {
 };
 
 const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id) => `hall-${id}`);
+
+/**
+ * The short-form template (EPISODES.md, measured from Episode 10): text at 20 ms a letter with half the
+ * punctuation pauses, setups gone almost as soon as they're typed, a quick walk, no title card, no end card.
+ */
+const SHORT = { letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190, titleDur: 0, endDur: 0 };
+
+/**
+ * The pothole's landing (src/world/dungeon.ts POTHOLE_LANDING), read from the game so the episode says the same:
+ * the narration before Silas Seen speaks, and her two lines without her name.
+ */
+const POTHOLE_LANDING = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf('export const POTHOLE_LANDING'));
+  const lines = [...block.slice(0, block.indexOf('];')).matchAll(/^\s+(['"])(.*)\1,$/gm)].map((m) =>
+    m[2].replace(/\\'/g, "'"),
+  );
+  const said = lines.filter((l) => l.startsWith('SILAS SEEN: ')).map((l) => l.slice('SILAS SEEN: '.length));
+  return { thud: lines.slice(0, lines.findIndex((l) => l.startsWith('SILAS SEEN: '))), silas: said };
+};
 
 const EPISODES = {
   // Just you and the Keeper. Written by the author for this episode (not in the game yet).
@@ -1908,6 +1964,77 @@ const EPISODES = {
       ],
     };
   },
+  // ---- The short-form template (EPISODES.md, author, Oct 5, 2026): Episode 10, "the worst prisoners ever", is the
+  // one that worked. About 15 seconds, open on the line, three quick beats, punchlines that hold, no end card.
+  // 10: three prisoners, three petty crimes against the king, three sentences that don't fit them.
+  10: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    // each beat's menu flashes up and Goodbye is picked
+    const menu = (id) => {
+      const options = menuOf(cells.npcs[id].questions, []);
+      return { menu: { speaker: cells.npcs[id].name, options, pick: options.length - 1, hold: 0.5 } };
+    };
+    return {
+      ...SHORT,
+      number: 10,
+      title: 'THE WORST PRISONERS EVER',
+      map: cells,
+      hide: ['brannoc-cell'],
+      gaps: [[5, 5]],
+      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
+      // the hook: in close on Old Mott, then back out for the other two
+      zoom: 1.5,
+      script: [
+        { say: 'prisoner-1', punch: 1.6 },
+        menu('prisoner-1'),
+        { zoom: 1 },
+        { walk: [[14, 6]], face: 'up' },
+        { say: 'prisoner-2', punch: 1.4 },
+        menu('prisoner-2'),
+        { walk: [[18, 6]], face: 'up' },
+        { say: 'prisoner-3', punch: 1.6 },
+      ],
+    };
+  },
+  // 11: three steps into the Maze Ward the floor gives way. On your butt outside Silas Seen's cell, a verdict, a
+  // laugh, and straight up to Gary for the keys. It ends as you ask (author, Oct 6, 2026).
+  11: () => {
+    const ward = loadMap('dungeon-mazes', 'dungeon');
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const gary = cells.npcs.jailer;
+    const landing = POTHOLE_LANDING();
+    return {
+      ...SHORT,
+      number: 11,
+      title: 'ONE FOR EACH CHEEK',
+      map: ward,
+      hero: { sprite: 'quill', at: [2, 2], facing: 'right' },
+      script: [
+        // frame one: already typing
+        { you: ['(A maze. How hard can it be?)'], gapAfter: 0.05 },
+        { walk: [[4, 2]] },
+        // the floor goes
+        { drop: 0.3, together: true },
+        { you: ['AAAAAH!'], punch: 0.35, gapAfter: 0 },
+        {
+          scene: { map: cells, at: [18, 6], facing: 'down', hide: ['brannoc-cell'], gap: 0.5 },
+        },
+        { gap: [5, 5] },
+        { narrate: true, lines: landing.thud },
+        // dazed, facing the wrong way; then round to the voice behind the bars
+        { face: 'up' },
+        { say: 'prisoner-3', lines: landing.silas, punch: 1.5 },
+        // the other two crack up; Silas Seen does not
+        { laugh: 'prisoner-1', dur: 1.3, together: true },
+        { laugh: 'prisoner-2', dur: 1.3 },
+        // straight past the cells to Gary, and the keys
+        { walk: [[18, 7], [4, 7]], speed: 300, face: 'left' },
+        // asleep, of course
+        { say: 'jailer', lines: [gary.lines[0]], punch: 0.8 },
+        { menu: { speaker: gary.name, options: menuOf(gary.questions, []), pick: 0, hold: 0.6 } },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -2082,7 +2209,8 @@ async function renderPicture() {
       } else black(st.blackout);
       // no title card: the first frame is already the scene (author: open on the line, not a fade)
       if (ep.titleDur > 0) black(1 - (t - ep.titleDur) / FADE);
-      black((t - (compiled.end - FADE)) / FADE);
+      // the template ends on the last laugh, no fade and no end card, so the short loops straight back round
+      if (ep.endDur > 0) black((t - (compiled.end - FADE)) / FADE);
     } else {
       drawEnd(canvas, ep, t - compiled.end);
     }

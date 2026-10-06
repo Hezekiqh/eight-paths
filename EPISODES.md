@@ -34,14 +34,25 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 ## Where the series stands
 
 - **Posted:** Episodes up to 10.
-- **In the repo (`scripts/episode-video.mjs`):** Episodes 2–8 and two BONUS episodes, in the older,
-  longer style (title card off, 4.5 s end card). Episode 8 ends "NEXT TIME: GARY".
-- **Lost with the old cloud sessions (never pushed):** Episode 9 (Gary), Episode 10's code, the new
-  prisoner jokes and Silas Seen in `src/world/maps/kingdom-dungeon.json`, the faster typing, the
-  quicker walk, the close camera, dropping the end card, and the outlines for Episodes 11–14.
-  The video above is the record; rebuild from it.
-- **To do:** rebuild the template into the episode script; Episode 11, then 12, to build a buffer;
-  then rewrite the old 11–14 ideas to the template, funny first.
+- **Episode 9 (Gary)** was made in a cloud session that was lost before it was pushed. Its code is gone;
+  the posted video is the only record.
+- **Episode 10** is rebuilt from the posted video (`node scripts/episode-video.mjs 10`). Its timing matches the
+  post to within a few tenths of a second, and the game now matches it: the three prisoners' sprites, lines and
+  order (Old Mott, Nails, Silas Seen) are in `src/world/maps/kingdom-dungeon.json`. The prisoners' menu answers
+  weren't shown in the video, so they were rewritten.
+- **Episode 11, "One for Each Cheek"** (`node scripts/episode-video.mjs 11`): you try the Maze Ward, the floor
+  gives way three steps in, you land on your butt outside Silas Seen's cell, "The king would've given you two life
+  sentences. One for each cheek.", Old Mott and Nails laugh, you run to Gary ("Zzz."), and pick *Can I have the
+  keys?* The episode ends on the pick, before his answer. In the game: the pothole (`POTHOLE` in
+  `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only) and Gary's keys question.
+- **Next:** Episode 12 opens on Gary's answer to the keys question. Then rewrite the old 12–14 ideas to fit the
+  template, with the jokes first.
+
+## In the episode script
+
+Every template episode spreads `SHORT` (20 ms a letter, half pauses, quick holds, a 190 px/s walk, no title or end
+card). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
+the floor), `scene.gap` (a quicker cut), `laugh … together`.
 
 ## So nothing gets lost again
 

@@ -1440,7 +1440,7 @@ function drawDungeon(map) {
   // Shadow under the walls, and torchlight around each torch and candle.
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
-      const c = at(tx, ty);
+      const c = map.art?.[at(tx, ty)] ?? at(tx, ty);
       if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
@@ -2271,6 +2271,36 @@ const WALKERS = {
     belt: '#5C3A28',
     hair: ['short', '#C4442A'],
     beard: '#C4442A',
+  },
+  // The three in the Deep Cells (author, Episode 10, Oct 5, 2026), each in for something petty against the king.
+  // Old Mott: bald, a white tuft and a white beard, an old brown tunic. Didn't say bless you.
+  oldmott: {
+    top: '#7A6A48',
+    shade: '#5C4E34',
+    legs: '#3E3428',
+    boots: '#2A2018',
+    belt: '#3E3020',
+    skin: '#E0B498',
+    hair: ['bald', '#ECE8DC'],
+    beard: '#ECE8DC',
+  },
+  // Nails: spiky orange hair, a white shirt under a black jacket. One ice cube.
+  nails: {
+    top: '#E4DCC8',
+    shade: '#2E2430',
+    legs: '#2E2430',
+    boots: '#1A1418',
+    skin: '#E8B48C',
+    hair: ['spiky', '#C4642A'],
+  },
+  // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
+  silasseen: {
+    robe: true,
+    top: '#2E3C50',
+    shade: '#243040',
+    boots: '#1A2230',
+    skin: '#E8D8C8',
+    hair: ['hood', '#2E3C50'],
   },
 };
 

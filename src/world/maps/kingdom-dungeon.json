@@ -133,27 +133,21 @@
       "type": "npc",
       "x": 10,
       "y": 5,
-      "sprite": "raider",
+      "sprite": "oldmott",
       "facing": "down",
-      "name": "Nails",
+      "name": "Old Mott",
       "lines": [
-        "Don't look at me like that.",
-        "I only stole the king's spoon.",
-        "Then the king's other spoon. Then I got greedy."
+        "The king sneezed.",
+        "I didn't say bless you.",
+        "Twenty life sentences."
       ],
       "questions": [
         {
-          "ask": "Why the spoons?",
+          "ask": "Should've said bless you, then.",
           "answer": [
-            "Soup.",
-            "You wouldn't understand. You've never had the king's soup."
-          ]
-        },
-        {
-          "ask": "Spoons? What a pathetic little crime.",
-          "answer": [
-            "Two spoons. Get it right.",
-            "Next time I'm going for the ladle. Then we'll see who's pathetic."
+            "I know.",
+            "Five years I've had to think about it. I'd say it now.",
+            "He hasn't sneezed since."
           ],
           "deed": "bad"
         }
@@ -164,26 +158,27 @@
       "type": "npc",
       "x": 14,
       "y": 5,
-      "sprite": "raider",
+      "sprite": "nails",
       "facing": "down",
-      "name": "Old Mott",
+      "name": "Nails",
       "lines": [
-        "Five hundred years I've been in here.",
-        "...No, wait. Five. Five years. It feels like five hundred."
+        "The king asked for ice water.",
+        "I gave him one ice cube.",
+        "One life sentence."
       ],
       "questions": [
         {
-          "ask": "What did you do?",
+          "ask": "Why only one ice cube?",
           "answer": [
-            "Said the statue in the square looked like a potato.",
-            "It does, though. Look at it. Potato."
+            "Ice is expensive.",
+            "I'm not made of ice."
           ]
         },
         {
-          "ask": "You look a bit like a potato yourself.",
+          "ask": "One ice cube? You deserve it.",
           "answer": [
             "I know.",
-            "Why do you think the statue bothered me so much?"
+            "Next time it's half a cube. Then we'll see who deserves what."
           ],
           "deed": "bad"
         }
@@ -194,28 +189,30 @@
       "type": "npc",
       "x": 18,
       "y": 5,
-      "sprite": "raider",
+      "sprite": "silasseen",
       "facing": "down",
-      "name": "The Quiet One",
+      "name": "Silas Seen",
       "lines": [
+        "I left the king on read for twenty minutes.",
+        "Fifty life sentences.",
+        ".",
         "...",
-        "...",
-        "Gary's asleep again, isn't he."
+        "...Touchy."
       ],
       "questions": [
         {
           "ask": "Are you the worst prisoner?",
           "answer": [
-            "Yes.",
-            "I return library books late. On purpose."
+            "Fifty life sentences.",
+            "Do the maths."
           ]
         },
         {
-          "ask": "Shh. You're the Quiet One. Act like it.",
+          "ask": "Twenty minutes? I'd have left him on read for a week.",
           "answer": [
+            ".",
             "...",
-            "...",
-            "Rude."
+            "Show-off."
           ],
           "deed": "bad"
         }
@@ -235,6 +232,14 @@
         "I'm not going to stop you. I don't get paid enough for this."
       ],
       "questions": [
+        {
+          "ask": "Can I have the keys?",
+          "answer": [
+            "The keys.",
+            "...",
+            "The keys are upstairs. With everyone who gets paid."
+          ]
+        },
         {
           "ask": "Who are you?",
           "answer": [

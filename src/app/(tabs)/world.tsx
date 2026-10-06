@@ -161,6 +161,9 @@ import {
   CELL_DOOR,
   ESCORT_LINES,
   GARY_STARTLED,
+  FELL_IN,
+  POTHOLE,
+  POTHOLE_LANDING,
   brannocBolts,
   escortIn,
   escortStand,
@@ -446,7 +449,15 @@ function World({
   const [ways] = useState(() =>
     bossOn
       ? []
-      : EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
+      : EXITS.filter(
+          (e) =>
+            e.from === start.map.id &&
+            e.walk &&
+            e.to !== null &&
+            standing(e.needs, xpNow).met &&
+            // the pothole only gives way once
+            !(e.id === 'maze-pothole' && (xpNow.flags ?? []).includes(FELL_IN)),
+        ),
   );
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
@@ -1420,7 +1431,16 @@ function World({
             );
           },
         });
-      else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
+      else if (
+        map.id === 'kingdom-dungeon' &&
+        tx === POTHOLE.landing.x &&
+        Math.floor(start.y / TILE) === POTHOLE.landing.y &&
+        !w.flags.includes(FELL_IN)
+      ) {
+        // Down through the Maze Ward's floor: on your butt outside Silas Seen's cell (dungeon.ts).
+        w.setFlag(FELL_IN);
+        setDialogue({ lines: POTHOLE_LANDING });
+      } else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
         w.setFlag(JAIL_WOKE);
         // Knocked out by Himothy: you come to already in the cell, no guards, no march.
         if (w.flags.includes(KNOCKED_OUT)) {

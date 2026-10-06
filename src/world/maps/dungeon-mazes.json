@@ -4,19 +4,21 @@
   "style": "dungeon",
   "walkable": [
     ".",
-    ","
+    ",",
+    "h"
   ],
   "art": {
     "1": "H",
     "2": "H",
     "6": "W",
     "8": "W",
-    "0": "W"
+    "0": "W",
+    "h": "."
   },
   "tiles": [
     "#############################################",
     "#W6WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
-    "#1.....W.......W.W...........W...W...W...W.2#",
+    "#1..h..W.......W.W...........W...W...W...W.2#",
     "#WWWWW.W.WWWWW.W.W.WWWWWWWWW.WWW.W.W.W.W.W.W#",
     "#W...W.W.W.....W.W.W...W...W.W...W.W...W.W.W#",
     "#W.W.W.W.W.WWWWW.W.W.W.W.W.W.W.W.W.WWWWW.W.R#",
@@ -32,6 +34,10 @@
     "facing": "right"
   },
   "examine": {
+    "h": [
+      "Floor. It looks like floor.",
+      "It looked like floor last time, too."
+    ],
     "W": [
       "Damp stone. Someone has drawn an arrow on it, pointing at another arrow."
     ],

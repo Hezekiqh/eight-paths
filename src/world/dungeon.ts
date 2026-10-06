@@ -256,3 +256,20 @@ export const holeLines = (asBrannoc: boolean) =>
   asBrannoc
     ? ['(What is that shiny thing?)', "(It's a hidden passage!)"]
     : ['(What is that shiny thing?)', "(It's a hole in the wall. It is exactly Brannoc-shaped.)"];
+
+// ---- The pothole (author, Episode 11, Oct 6, 2026): three steps into the Maze Ward the floor gives way, and you
+// drop back into the Deep Cells, on your butt, right outside Silas Seen's cell. Once only: after that it's floor.
+
+/** You've fallen through it: it's just floor now. */
+export const FELL_IN = 'maze-pothole-fell';
+/** The Maze Ward's pothole tile, and where it drops you (in front of the third cell). */
+export const POTHOLE = { tile: 'h', landing: { x: 18, y: 6 } };
+
+/** Landing. */
+export const POTHOLE_LANDING = [
+  'THUD.',
+  'You land on your butt, right outside the last cell.',
+  "SILAS SEEN: The king would've given you two life sentences.",
+  'SILAS SEEN: One for each cheek.',
+  'Old Mott and Nails laugh. Silas Seen does not. Silas Seen is above laughing.',
+];
