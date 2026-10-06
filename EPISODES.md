@@ -10,7 +10,7 @@ episode for the next two weeks follows this. Numbers below are measured from the
 
 | | Episode 10 | Rule |
 | --- | --- | --- |
-| Length | 16.6 s | **About 15 s.** Never past ~17 s |
+| Length | 16.6 s | **15 s is the cap** (author, Oct 6, 2026). Lines held 1.3× longer than the template's so they read comfortably (`read: 1.3`); take the time out of the gaps, not the lines |
 | Opening | Frame one is already mid-sentence ("Th…" at 0.0 s) | **No title card, no fade.** Open on the line |
 | Ending | Ends on "...Touchy." over the scene | **No end card.** End on the last laugh, held ~1.5 s |
 | Shape | Three beats of ~5 s: Old Mott 0–5 s, Nails 5–10.5 s, Silas Seen 10.5–16.6 s | **Three beats, rule of three**, the third one topping the other two |
@@ -63,7 +63,8 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, ~15 s): up into the Kaldorium. The three you
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 14.9 s; every line held 1.3× longer, `read: 1.3`,
+  the time taken out of the gaps): up into the Kaldorium. The three you
   let out got there first and lost; the Warden (drawn twice as big) has been expecting you. Frame one, in close: "Well,
   well, well. If it isn't our final contestants." The menu: *I was just going for a walk.* "UNACCEPTABLE." (the screen
   jolts) / "You will pay with your lives!" Brannoc faints flat, away from you. Barnaby: "...Did he just faint?" /
@@ -88,7 +89,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 ## In the episode script
 
 Every template episode spreads `SHORT` (24 ms a letter, 0.7× the pauses, short holds, a 160 px/s walk, no title or end
-card). Episode 10 keeps its posted pace (`SHORT_10`: 20 ms, half pauses, a 190 px/s walk). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
+card). Episode 10 keeps its posted pace (`SHORT_10`: 20 ms, half pauses, a 190 px/s walk). Per episode: `read` (every line holds this many times longer). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
 the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a door unlocked, UNACCEPTABLE), `faint`, `as` (a line from someone not on the map: Barnaby), `npc size`, `ep.awake` (a sleeper awake
 for the episode),
 `scene.gap` (a quicker cut), `laugh … together`.

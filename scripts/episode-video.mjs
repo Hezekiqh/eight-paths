@@ -919,7 +919,9 @@ function compile(ep) {
           : [];
         // `hold`: how long a finished line stays, against the usual (a talky episode reads a touch quicker)
         // `punch`: the last line of a beat (the punchline) stays this long instead, so it lands
-        const dur = typing + (i === lines.length - 1 && step.punch ? step.punch : HOLD(text) * (ep.hold ?? 1));
+        // `ep.read`: every finished line stays this many times longer, so it reads comfortably (author, Episode 13: 1.3)
+        const dur =
+          typing + (i === lines.length - 1 && step.punch ? step.punch : HOLD(text) * (ep.hold ?? 1)) * (ep.read ?? 1);
         segs.push({
           kind: 'line',
           t0: t,
@@ -2334,6 +2336,9 @@ const EPISODES = {
     const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 8], [x, y]], speed: 90, together: true });
     return {
       ...SHORT,
+      // the lines hold 1.3 times as long as the template's, inside 15 seconds: the time comes out of the gaps
+      read: 1.3,
+      gapAfter: 0.03,
       number: 13,
       title: 'UNACCEPTABLE',
       map: pit,
@@ -2346,13 +2351,12 @@ const EPISODES = {
       zoom: 1.5,
       script: [
         { say: 'warden-watch', lines: welcome, punch: 0.5 },
-        { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.3 } },
+        { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.2 } },
         { jolt: 0.45 },
         { say: 'warden-watch', lines: by(verdict, 'WARDEN'), punch: 0.6 },
         // Brannoc goes over
         { look: [10, 11] },
         { faint: 'brannoc-pit' },
-        { wait: 0.1 },
         { as: barnaby, lines: [pause], punch: 0.4 },
         { as: barnaby, lines: [pathetic], punch: 0.6 },
         // the three who lost, backing out of it
