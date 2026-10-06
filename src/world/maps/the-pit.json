@@ -27,7 +27,7 @@
   },
   "examine": {
     "B": [
-      "The champions' wall: three hundred years of names, each crossed out when they fell. The newest line is blank."
+      "The champions' wall: centuries of names, each crossed out when they fell. Then one name, KALDOR, chalked fresh every year for five hundred years. The line under it is blank."
     ],
     "1": [
       "The way out, into Warrior City."
@@ -40,50 +40,6 @@
     ]
   },
   "objects": [
-    {
-      "id": "maelis",
-      "type": "npc",
-      "x": 17,
-      "y": 9,
-      "sprite": "maelis",
-      "facing": "left",
-      "name": "Sergeant Maelis",
-      "lines": [
-        "Broken Guard. We rake the sand, we carry the fallen out, we mind the drains.",
-        "Our great-great-grandmothers guarded a prince. We guard a sandbox with seats. Family tradition, of a sort."
-      ],
-      "questions": [
-        {
-          "ask": "What's the champions' wall?",
-          "answer": [
-            "Three hundred years of names. We cross them out when they fall. It's the only writing we're allowed.",
-            "The newest line's blank. Try not to make me cross you out. I've a steady hand, but I'd rather not."
-          ]
-        },
-        {
-          "ask": "Tell me about the prince.",
-          "answer": [
-            "His captain wrote him down as lost in action. Not deserter. Lost.",
-            "My family's kept that word for five hundred years. Lost things can be found."
-          ]
-        },
-        {
-          "ask": "Tell me about the drains.",
-          "answer": [
-            "Oh, now you've done it.",
-            "The north drain runs under the wall toward the maze. Hugo found something in it once. He won't say what. Gardeners."
-          ]
-        },
-        {
-          "ask": "Some guard. You rake sand for a living.",
-          "answer": [
-            "I do. In very straight lines. Nobody ever notices the lines.",
-            "I'll notice you, though. Long memory. Short rake."
-          ],
-          "deed": "bad"
-        }
-      ]
-    },
     {
       "id": "fight-card",
       "type": "sign",
@@ -176,7 +132,7 @@
           "ask": "How much do you get paid?",
           "answer": [
             "Nothing. We get a seat, a spear and the smell.",
-            "Sergeant Maelis says the honour's the pay. Maelis also rakes sand in straight lines for fun."
+            "The captain says the honour's the pay. The captain's never been paid either. Says it builds character."
           ]
         },
         {

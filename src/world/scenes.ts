@@ -71,7 +71,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
           "GUARD: Strength is valued more than anything here. You're free to explore the prison.",
           "GUARD: We don't get paid enough for this.",
           "THE WARDEN: (grunts) We don't get paid at all.",
-          "Barnaby chalks a new name on the champions' wall. The first one in three hundred years that isn't crossed out.",
+          "Barnaby chalks a new name on the champions' wall, under KALDOR. The first new name in five hundred years.",
         ],
         outcome: { flags: [flag] },
       };

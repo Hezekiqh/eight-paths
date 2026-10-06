@@ -230,7 +230,7 @@ export const BANTER: Record<string, Banter[]> = {
     },
   ],
   'warrior-city:barnaby': [
-    { who: 'pip', lines: ['PIP: The same victory for three hundred years? Have you tried a key change?'] },
+    { who: 'pip', lines: ['PIP: The same victory for five hundred years? Have you tried a key change?'] },
   ],
   'kingdom-town:pim': [{ who: 'ysolde', lines: ['YSOLDE: A penny a rumour. And a false one?', 'PIM: Two pennies!'] }],
   'kingdom-town:guard': [
@@ -268,16 +268,6 @@ export const BANTER: Record<string, Banter[]> = {
   'hedge-maze:hugo': [{ who: 'moss', lines: ["MOSS: They do have feelings. That one's sulking."] }],
   'the-pit:fight-card': [
     { who: 'pip', lines: ["PIP: Compulsory cheering? I've been training my whole life for this."] },
-  ],
-  'the-pit:maelis': [
-    {
-      who: 'brannoc',
-      lines: [
-        'BRANNOC: A prince, eh? I hope he was worth it.',
-        'SERGEANT MAELIS: Family says he ran.',
-        'BRANNOC: …He sounds a coward.',
-      ],
-    },
   ],
   'field-of-banners:hoot-field': [
     { who: 'pip', lines: ["PIP: He's right, you know. Go on. I'll hum while you drink."] },

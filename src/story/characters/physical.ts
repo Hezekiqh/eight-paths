@@ -164,7 +164,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 25,
-    bio: 'The tallest man in the kingdom, and the last to challenge its king. He came within one blow of the crown, and for three hundred years the king kept him standing guard. Laid to rest and woken properly, he is gentle, slow to speak and very, very tall.',
+    bio: 'The tallest man in the kingdom, and the last to challenge its king. The king beat him in front of the whole Colosseum, and Aurek, who holds that the strongest should rule, has served him ever since without a word of complaint. Laid to rest and woken properly, he is gentle, slow to speak and very, very tall.',
     quote: 'Almost. And then, at last.',
   },
   varga: {

@@ -195,8 +195,8 @@
         {
           "ask": "Heard any gossip?",
           "answer": [
-            "The Trial closed after the challenger called Aurek. Aurek the Tall. Almost won. Scarred the king's face.",
-            "The king… kept him. You'll see."
+            "The last man to call out the king was Aurek. Aurek the Tall. Tallest thing in the city, after the Colosseum. The king put him down in front of everyone.",
+            "Here, the strongest rules. Aurek lost, so Aurek serves. Never complains. Never smiles. Does the job. You'll see."
           ]
         },
         {
@@ -213,7 +213,7 @@
         "path": "social",
         "done": [
           "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
-          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE COLOSSEUM!",
+          "BARNABY: …That's the best story I've heard in five hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE COLOSSEUM!",
           "You're on the bill."
         ],
         "cant": [

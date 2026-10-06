@@ -86,7 +86,7 @@ export const TALE: Chapter[] = [
         text: 'He does not age. He does not fall. People say that he, too, casts no shadow.',
       },
       {
-        from: [told('Sergeant Maelis')],
+        from: [told('Gary')],
         text: 'The horde grew, the pit filled, and the kingdom forgot its old name.',
       },
     ],
