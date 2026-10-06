@@ -39,7 +39,7 @@ import {
   type Grid,
 } from '@/world/engine';
 import { W_FACING, newWanderers, stepWanderers, strolling, wandererFeet, type Wanderer } from '@/world/wander';
-import { sleepZs } from '@/world/sleep';
+import { sleepZs, snotBubble } from '@/world/sleep';
 import {
   E_ALIVE,
   E_AWAKE,
@@ -470,6 +470,14 @@ export function WorldView({
   // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
   const sleepers = useMemo(
     () => map.npcs.filter((n) => dozing(n, talkingTo)).map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
+    [map, talkingTo],
+  );
+  // ...and those with a snot bubble too
+  const snorers = useMemo(
+    () =>
+      map.npcs
+        .filter((n) => n.snot && dozing(n, talkingTo))
+        .map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
     [map, talkingTo],
   );
   // One more for a party member stepping in for a job (a cameo).
@@ -1102,6 +1110,24 @@ export function WorldView({
     }
     return path;
   });
+  const bubblePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    for (let i = 0; i < snorers.length; i++) {
+      const b = snotBubble(t + i * 0.5, snorers[i][0], snorers[i][1]);
+      for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
+    }
+    return path;
+  });
+  const shinePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    for (let i = 0; i < snorers.length; i++) {
+      const s = snotBubble(t + i * 0.5, snorers[i][0], snorers[i][1]).shine;
+      if (s) path.addRect(Skia.XYWHRect(s[0], s[1], 1, 1));
+    }
+    return path;
+  });
   const motePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     if (!ambience.motes) return path;
@@ -1234,6 +1260,8 @@ export function WorldView({
         )}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         <Path path={zPath} color="#DCE8FF" opacity={0.85} />
+        <Path path={bubblePath} color="#B8E0C8" opacity={0.8} />
+        <Path path={shinePath} color="#FFFFFF" />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />

@@ -771,6 +771,19 @@ function sleepZs(t, x, y) {
 const dozing = (ep, n) => !!n.asleep && !(ep.awake ?? []).includes(n.id);
 const spriteOf = (ep, n) => (dozing(ep, n) && WALKER_ROWS[`${n.sprite}asleep`] !== undefined ? `${n.sprite}asleep` : n.sprite);
 
+const BUBBLE_EVERY = 1.6;
+/** A snot bubble at a nose (sleep.ts snotBubble, the same swell and shrink), and its shine. */
+function bubbleAt(t, nx, ny) {
+  const k = (t % BUBBLE_EVERY) / BUBBLE_EVERY;
+  const r = 0.5 + 3 * Math.sin(k * Math.PI);
+  const cx = nx + r;
+  const cells = [];
+  const R = Math.ceil(r);
+  for (let dy = -R; dy <= R; dy++)
+    for (let dx = -R; dx <= R; dx++) if (dx * dx + dy * dy <= r * r) cells.push([Math.round(cx + dx), ny + dy]);
+  return { cells, shine: r > 1.5 ? [Math.round(cx - r / 2), ny - Math.round(r / 2)] : null };
+}
+
 /** After the fall's impact: the shake, the bounce and the flop, before anyone speaks. */
 const FALL_SETTLE = 0.45;
 /** A change of place: half of it fading out, half fading in. */
@@ -1304,8 +1317,10 @@ function drawWorld(canvas, ep, st, t) {
       const lt = st.laughing[n.id];
       const row = WALKER_ROWS[spriteOf(ep, n)];
       const over = st.fainted[n.id];
-      // fainted: tipped over onto their back, feet where they stood
-      if (over !== undefined) return [row, DIRS.down, 0, ...(at ? [at.x, at.y] : center(n.x, n.y)), 0, { lie: over }];
+      // fainted: tipped over onto their back, feet where they stood, eyes shut
+      const out = WALKER_ROWS[`${n.sprite}asleep`] ?? row;
+      if (over !== undefined)
+        return [over >= 1 ? out : row, DIRS.down, 0, ...(at ? [at.x, at.y] : center(n.x, n.y)), 0, { lie: over }];
       if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
@@ -1412,6 +1427,20 @@ function drawWorld(canvas, ep, st, t) {
       const [x, y] = center(n.x, n.y);
       for (const [zx, zy] of sleepZs(t + i * 0.37, x, y)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
     });
+  // out cold (fainted, flat on their back, head to the right): Zs rising off the head, a snot bubble at the nose
+  const snot = paint('#B8E0C8', 0.8);
+  const shine = paint('#FFFFFF');
+  for (const [id, over] of Object.entries(st.fainted)) {
+    const n = map.npcs[id];
+    if (!n || over < 1) continue;
+    const [x, y] = center(n.x, n.y);
+    for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+    if (n.snot) {
+      const b = bubbleAt(t, x + 13, y - 4);
+      for (const [bx, by] of b.cells) canvas.drawRect(CK.XYWHRect(bx, by, 1, 1), snot);
+      if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), shine);
+    }
+  }
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
@@ -2326,51 +2355,50 @@ const EPISODES = {
     const verdict = gameLines('ARENA_VERDICT');
     const after = gameLines('ARENA_FIGHT');
     const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    const [pause, pathetic] = by(verdict, 'BARNABY');
-    const barnaby = { name: 'Barnaby', sprite: 'barnaby' };
-    // before they step aside, the three who lost stand in a sorry row in the middle of the sand
-    Object.assign(pit.npcs['arena-mott'], { x: 14, y: 8 });
-    Object.assign(pit.npcs['arena-nails'], { x: 15, y: 8 });
-    Object.assign(pit.npcs['arena-silas'], { x: 16, y: 8 });
-    // across to the side of the sand, then up out of the way, making their excuses as they go
-    const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 8], [x, y]], speed: 90, together: true });
+    const [pause, pathetic] = by(verdict, 'BARNABY').slice(2);
+    // you in the middle of the ring with Brannoc a few tiles off; the three who lost already at the side
+    Object.assign(pit.npcs['brannoc-pit'], { x: 18, y: 8, facing: 'up' });
+    // three fixed shots, cut between, never panned (author, Oct 6, 2026: "camera angles are video game like")
+    const RING = [{ look: [16.5, 8] }, { zoom: 1.2 }];
+    const BOX = [{ look: [15.5, 2] }, { zoom: 1.5 }];
+    const CREW = [{ look: [23, 5] }, { zoom: 1.4 }];
     return {
       ...SHORT,
       // the lines hold 1.3 times as long as the template's, inside 15 seconds: the time comes out of the gaps
       read: 1.3,
-      gapAfter: 0.03,
+      gapAfter: 0,
       number: 13,
       title: 'UNACCEPTABLE',
       map: pit,
-      // the Warden at the head of the sand, the three who lost in the middle, Brannoc three tiles from you
-      shown: ['warden-watch', 'arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
-      // up through the trapdoor, Brannoc three tiles on: room to faint
-      hero: { sprite: 'quill', at: [8, 12], facing: 'right' },
-      // the hook: in close on the Warden, already talking
-      look: [15, 6],
+      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      // Brannoc's awake until he isn't
+      awake: ['brannoc-pit'],
+      hero: { sprite: 'quill', at: [15, 8], facing: 'up' },
+      // the hook: Barnaby in his box, already talking
+      look: [15.5, 2],
       zoom: 1.5,
       script: [
-        { say: 'warden-watch', lines: welcome, punch: 0.5 },
-        { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.2 } },
+        { say: 'barnaby-box', lines: welcome, punch: 0.4 },
+        ...RING,
+        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.1 } },
+        ...BOX,
         { jolt: 0.45 },
-        { say: 'warden-watch', lines: by(verdict, 'WARDEN'), punch: 0.6 },
-        // Brannoc goes over
-        { look: [10, 11] },
+        { say: 'barnaby-box', lines: by(verdict, 'BARNABY').slice(0, 2), punch: 0.4 },
+        ...RING,
+        { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.3 },
         { faint: 'brannoc-pit' },
-        { as: barnaby, lines: [pause], punch: 0.4 },
-        { as: barnaby, lines: [pathetic], punch: 0.6 },
-        // the three who lost, backing out of it
-        { look: [19, 6] },
-        { zoom: 1 },
-        aside('arena-silas', 24, 4),
-        aside('arena-mott', 22, 4),
-        aside('arena-nails', 23, 4),
-        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
-        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
-        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
-        { look: null },
+        { wait: 0.4 },
+        // still on him, out cold, snot bubble going, as Barnaby asks
+        { say: 'barnaby-box', lines: [pause], punch: 0.4 },
+        ...BOX,
+        { say: 'barnaby-box', lines: [pathetic], punch: 0.4 },
+        ...CREW,
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.4 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.4 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.4 },
+        ...BOX,
         { jolt: 0.4 },
-        { as: barnaby, lines: by(after, 'BARNABY'), punch: 0.8 },
+        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.6 },
       ],
     };
   },

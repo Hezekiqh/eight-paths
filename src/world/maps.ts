@@ -81,6 +81,8 @@ export type NpcObject = {
   lines: string[];
   /** Fast asleep where they stand: Zs float up off their head (sleep.ts). Gary, mostly. */
   asleep?: boolean;
+  /** Asleep with a snot bubble swelling and shrinking at their nose (sleep.ts): Brannoc, out cold. */
+  snot?: boolean;
   /**
    * Watching from the edge, never in the way: nothing bumps into them, so a fight goes exactly as it would
    * without them (the Kaldorium's Warden, and the three you let out, at the side of the sand).

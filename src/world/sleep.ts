@@ -36,3 +36,25 @@ export function sleepZs(t: number, x: number, y: number): number[][] {
   }
   return out;
 }
+
+/** How long a snot bubble takes to swell and shrink back. */
+export const BUBBLE_EVERY = 1.6;
+
+/**
+ * A snot bubble at the nose of a sleeper whose feet are at (x, y) (Brannoc, out cold in the Kaldorium): it swells
+ * from nothing to a big round bubble and shrinks again, over and over. Its pixels, as [x, y] pairs, and its
+ * highlight, a pixel of shine on the upper left.
+ */
+export function snotBubble(t: number, x: number, y: number): { cells: number[][]; shine: number[] | null } {
+  'worklet';
+  const k = (t % BUBBLE_EVERY) / BUBBLE_EVERY;
+  const r = 0.5 + 3 * Math.sin(k * Math.PI);
+  // just off the nose, on the right, growing outwards
+  const cx = x + 2 + r;
+  const cy = y - 12;
+  const cells: number[][] = [];
+  const R = Math.ceil(r);
+  for (let dy = -R; dy <= R; dy++)
+    for (let dx = -R; dx <= R; dx++) if (dx * dx + dy * dy <= r * r) cells.push([Math.round(cx + dx), cy + dy]);
+  return { cells, shine: r > 1.5 ? [Math.round(cx - r / 2), cy - Math.round(r / 2)] : null };
+}

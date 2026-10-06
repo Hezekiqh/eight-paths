@@ -1507,11 +1507,27 @@ function drawArena(map) {
     ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
     for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
   }
+  // Barnaby's announcer's box, at the front of the stands over the sand: timber, a red velvet front, a gold rail
+  const boxTiles = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === 'A' && boxTiles.push([tx, ty])));
+  if (boxTiles.length) {
+    const bx = Math.min(...boxTiles.map(([tx]) => tx)) * TILE - 3;
+    const bw = boxTiles.length * TILE + 6;
+    const by = boxTiles[0][1] * TILE - 2;
+    box(g, bx, by, bw, TILE + 4, '#5C3A28');
+    box(g, bx + 2, by + 2, bw - 4, TILE - 2, '#7A5236');
+    box(g, bx, by + TILE - 2, bw, 8, '#9A2A22');
+    box(g, bx, by + TILE - 2, bw, 1, '#C8963A');
+    for (let i = bx + 3; i < bx + bw - 2; i += 6) box(g, i, by + TILE + 1, 2, 2, '#C8963A');
+    // the speaking trumpet on its stand
+    box(g, bx + bw - 7, by + 4, 1, 8, '#3A2618');
+    box(g, bx + bw - 9, by + 2, 5, 2, '#C8963A');
+  }
   // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ('.,T1'.includes(at(tx, ty))) continue;
+      if ('.,T1A'.includes(at(tx, ty))) continue;
       const draw = DUNGEON_ART[letter];
       if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
       // the ladder down goes through a trapdoor: a timber frame, open, dark below
@@ -2419,6 +2435,18 @@ const WALKERS = {
     hair: ['short', '#3A2418'],
     beard: '#3A2418',
     sword: true,
+  },
+  // Brannoc out cold on the Kaldorium's sand (author, Episode 13): eyes shut, a snot bubble (sleep.ts).
+  brannocasleep: {
+    top: '#9AA0B4',
+    shade: '#6A7088',
+    legs: '#6A7088',
+    boots: '#5C3A28',
+    belt: '#5C3A28',
+    hair: ['short', '#C4442A'],
+    sword: true,
+    beard: '#C4442A',
+    sleepy: true,
   },
   // ...and the rest of the time, asleep at his post, eyes shut (the game floats Zs over him, sleep.ts).
   garyasleep: {

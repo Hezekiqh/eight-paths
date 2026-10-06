@@ -4,11 +4,12 @@
   "style": "dungeon",
   "walkable": [
     ".",
-    ","
+    ",",
+    "A"
   ],
   "tiles": [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTAATTTTTTTTTTTTTTT",
     "TTTTTTTTTT,,,,,,,,,,,,TTTTTTTTTT",
     "TTTTTTT,,,............,,,TTTTTTT",
     "TTTTT,,..................,,TTTTT",
@@ -42,9 +43,26 @@
     ],
     "T": [
       "The stands, packed to the top tier. Somebody's selling roast nuts. Somebody's always selling roast nuts."
+    ],
+    "A": [
+      "Barnaby's box: a velvet rail, a speaking trumpet, and a cushion that says LOUD."
     ]
   },
   "objects": [
+    {
+      "id": "barnaby-box",
+      "type": "npc",
+      "passable": true,
+      "x": 15,
+      "y": 1,
+      "sprite": "barnaby",
+      "facing": "down",
+      "name": "Barnaby",
+      "lines": [
+        "CHEERING IS COMPULSORY!",
+        "...You too. Especially you."
+      ]
+    },
     {
       "id": "maelis",
       "type": "npc",
@@ -200,8 +218,8 @@
     {
       "id": "crowd-4",
       "type": "npc",
-      "x": 22,
-      "y": 3,
+      "x": 20,
+      "y": 2,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -348,23 +366,6 @@
       "passable": true
     },
     {
-      "id": "warden-watch",
-      "type": "npc",
-      "passable": true,
-      "size": 2,
-      "x": 15,
-      "y": 4,
-      "sprite": "warden",
-      "facing": "down",
-      "name": "Warden",
-      "comesAfter": "cell-bars-bent",
-      "goneAfter": "pit-guards",
-      "lines": [
-        "...",
-        "* He's watching you. He hasn't blinked once."
-      ]
-    },
-    {
       "id": "arena-mott",
       "type": "npc",
       "passable": true,
@@ -424,7 +425,9 @@
       ],
       "questions": [],
       "comesAfter": "cell-bars-bent",
-      "goneAfter": "pit-champion"
+      "goneAfter": "pit-champion",
+      "asleep": true,
+      "snot": true
     },
     {
       "id": "brannoc-awake",

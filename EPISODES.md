@@ -63,19 +63,19 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 14.9 s; every line held 1.3× longer, `read: 1.3`,
-  the time taken out of the gaps): up into the Kaldorium. The three you
-  let out got there first and lost; the Warden (drawn twice as big) has been expecting you. Frame one, in close: "Well,
-  well, well. If it isn't our final contestants." The menu: *I was just going for a walk.* "UNACCEPTABLE." (the screen
-  jolts) / "You will pay with your lives!" Brannoc faints flat, away from you. Barnaby: "...Did he just faint?" /
-  "...pathetic." The three back away to the side of the sand, making excuses: Silas Seen "I pulled a muscle on the
-  way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby: "FINISH THEM!" Cut. The game
-  says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`, `ARENA_FIGHT` in `dungeon.ts`; any excuse
-  gets the same answer, and there's a mean one), then the five guards and the Warden as before. The Warden watches
-  from the head of the sand until his guards are down; the three stand at the side until he's beaten. If you never let
-  the three out, he welcomes "our runaways" and they aren't there. Cut along the way (author): "Escape is punishable
-  by death", "After we were so lenient with your sentences", Barnaby's "who are you?" (*Gary's friend.*), Silas's
-  "You got this".
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 14.8 s; every line held 1.3× longer, `read: 1.3`,
+  the time taken out of the gaps). Three fixed shots, cut between, never panned (author: "camera angles are video game
+  like"): the ring (you in the middle, Brannoc a few tiles off), Barnaby's announcer's box in the stands, and the crew
+  (the three who lost, at the side). The Warden is out of sight; he enters with the arena shaking, later.
+  Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was just going for a walk.*
+  Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc (ring): "Whaaaa?
+  D-D-D-Death!?" and he passes out flat, away from you, Zs and a snot bubble. Barnaby, off, still on him: "...Did he
+  just faint?" (box) "...pathetic." The crew: Silas Seen "I pulled a muscle on the way up here." Old Mott "I am too old
+  for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts): "FINISH THEM!" Cut. The game says exactly
+  the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`, `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same
+  answer, and there's a mean one), with Barnaby in his box (`barnaby-box`, tile `A`) and Brannoc asleep with a snot
+  bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who comes up the tunnel.
+  If you never let the three out, Barnaby welcomes "our runaways" and they aren't there.
 - **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×17), open to the sky: sand, a low stone wall, tiers
   packed with the crowd, the Crown's red banners with the gold fist, the great gate at the bottom and a trapdoor down

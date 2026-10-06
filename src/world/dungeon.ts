@@ -136,22 +136,24 @@ export const SAND_MIDDLE: [number, number] = [15, 12];
 const TRAPDOOR: [number, number] = [7, 12];
 
 // ---- Up into the Kaldorium after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
-// here first and lost, and the Warden's waiting for whoever let them out. He has his say, you make your excuse
-// (any excuse: it's UNACCEPTABLE), Brannoc faints, Barnaby is not impressed, and the three step aside for you.
+// here first and lost, and Barnaby, up in his announcer's box, has been expecting whoever let them out. He has his
+// say, you make your excuse (any excuse: it's UNACCEPTABLE), Brannoc faints, Barnaby is not impressed, and the three
+// make their excuses for losing. The Warden stays out of sight until the five guards are down.
 
-/** The Warden's welcome, before you answer. */
-export const ARENA_WELCOME = ["WARDEN: Well, well, well. If it isn't our final contestants."];
+/** Barnaby's welcome, from his box, before you answer. */
+export const ARENA_WELCOME = ["BARNABY: Well, well, well. If it isn't our final contestants."];
 /** Your excuse. It makes no difference. */
 export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
   { label: 'I was just going for a walk.' },
   { label: "It was Gary's idea." },
   { label: 'Death? For a walk? Bit much, big man.', deed: 'bad' },
 ];
-/** His answer, Brannoc's faint, and Barnaby's verdict on him. */
+/** His answer, Brannoc's faint (and his snot bubble), and Barnaby's verdict on him. */
 export const ARENA_VERDICT = [
-  'WARDEN: UNACCEPTABLE.',
-  'WARDEN: You will pay with your lives!',
-  '* Brannoc goes white. Then grey. Then he faints, flat on his back.',
+  'BARNABY: UNACCEPTABLE.',
+  'BARNABY: You will pay with your lives!',
+  'BRANNOC: Whaaaa? D-D-D-Death!?',
+  '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
   'BARNABY: ...Did he just faint?',
   'BARNABY: ...pathetic.',
 ];
@@ -164,7 +166,7 @@ export const ARENA_FIGHT = [
   'BARNABY: FINISH THEM!',
 ];
 /** If you never let the three out: just you and Brannoc. */
-export const ARENA_WELCOME_ALONE = ["WARDEN: Well, well, well. If it isn't our runaways."];
+export const ARENA_WELCOME_ALONE = ["BARNABY: Well, well, well. If it isn't our runaways."];
 export const ARENA_FIGHT_ALONE = ARENA_FIGHT.filter((l) => !/silas|old mott|nails/i.test(l));
 
 export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
