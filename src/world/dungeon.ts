@@ -130,6 +130,40 @@ export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 export const BRANNOC_FAINTED: [number, number] = [4, 9];
 const UNDER_WARDEN: [number, number] = [10, 6];
 
+// ---- Up into the Kaldorium after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
+// here first and lost, and the Warden's waiting for whoever let them out. He has his say, you make your excuse
+// (any excuse: it's UNACCEPTABLE), Brannoc faints, Barnaby is not impressed, and the three step aside for you.
+
+/** The Warden's welcome, before you answer. */
+export const ARENA_WELCOME = [
+  "WARDEN: Well, well, well. If it isn't our final contestants.",
+  'WARDEN: Escape is punishable by death, you know.',
+];
+/** Your excuse. It makes no difference. */
+export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
+  { label: 'I was just going for a walk.' },
+  { label: "It was Gary's idea." },
+  { label: 'Death? For a walk? Bit much, big man.', deed: 'bad' },
+];
+/** His answer, Brannoc's faint, Barnaby's verdict, and the three stepping aside. */
+export const ARENA_VERDICT = [
+  'WARDEN: UNACCEPTABLE.',
+  'WARDEN: After we were so lenient with your sentences.',
+  'WARDEN: You will pay with your lives!',
+  '* Brannoc goes white. Then grey. Then he faints, flat on his back.',
+  'BARNABY: ...Did he just faint?',
+  'BARNABY: ...pathetic.',
+  '* Old Mott, Nails and Silas Seen shuffle to the side of the sand.',
+  'SILAS SEEN: You got this, whatever your name is.',
+  'BARNABY: FIGHT!',
+];
+/** If you never let the three out: just you and Brannoc. */
+export const ARENA_WELCOME_ALONE = [
+  "WARDEN: Well, well, well. If it isn't our runaways.",
+  'WARDEN: Escape is punishable by death, you know.',
+];
+export const ARENA_VERDICT_ALONE = ARENA_VERDICT.filter((l) => !/Silas|Old Mott/.test(l));
+
 export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
   'pit-guards': {
     lines: [

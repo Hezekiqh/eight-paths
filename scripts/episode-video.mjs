@@ -893,10 +893,11 @@ function compile(ep) {
       const game = segs.findLast((x) => x.kind === 'cards');
       game.t1 = t + 0.6;
       t += 0.75;
-    } else if (step.say || step.narrate || step.you) {
+    } else if (step.say || step.narrate || step.you || step.as) {
       const npc = step.say ? map.npcs[step.say] : null;
-      const speaker = step.you ? 'You' : npc ? npc.name : undefined;
-      const sprite = step.you ? ep.hero.sprite : npc ? spriteOf(ep, npc) : undefined;
+      // `as`: someone heard but not on the map (Barnaby, announcing from the stands): { name, sprite }
+      const speaker = step.you ? 'You' : npc ? npc.name : step.as?.name;
+      const sprite = step.you ? ep.hero.sprite : npc ? spriteOf(ep, npc) : step.as?.sprite;
       const voice = step.you ? 3 : voiceFor(speaker, sprite);
       // the person turns to face you, as in the game
       if (npc) {
@@ -941,6 +942,10 @@ function compile(ep) {
     } else if ('look' in step) {
       // a cut to someone else (the camera on that tile), or back to you (null)
       segs.push({ kind: 'look', t0: t, t1: t, at: step.look && center(...step.look) });
+    } else if (step.faint) {
+      // someone goes white, then grey, then flat on their back
+      segs.push({ kind: 'faint', t0: t, t1: t + 0.35, id: step.faint });
+      t += 0.5;
     } else if (step.shrug) {
       // someone shrugs
       segs.push({ kind: 'shrug', t0: t, t1: t + 0.55, id: step.shrug });
@@ -1015,9 +1020,11 @@ function stateAt(ep, compiled, t) {
   let flippedAt = 0;
   let shake = 0;
   /** Where the camera is looking instead of at you (a cut to someone else), in art px. */
-  let look = null;
+  let look = ep.look ? center(...ep.look) : null;
   /** Who's mid-shrug, by id: seconds into it. */
   const shrugs = {};
+  /** Who's fainted, by id: how far over they've gone (0 standing, 1 flat). */
+  const fainted = {};
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1120,6 +1127,7 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'look') look = s.at;
     else if (s.kind === 'vanish') hide = [...hide, s.id];
     else if (s.kind === 'shrug' && t < s.t1) shrugs[s.id] = t - s.t0;
+    else if (s.kind === 'faint') fainted[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'jolt' && t < s.t1) shake = 2.5 * (1 - (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
@@ -1134,6 +1142,7 @@ function stateAt(ep, compiled, t) {
     flippedFor: t - flippedAt,
     look,
     shrugs,
+    fainted,
     shake,
     sink,
     hole,
@@ -1290,6 +1299,9 @@ function drawWorld(canvas, ep, st, t) {
       const at = st.npcAt[n.id];
       const lt = st.laughing[n.id];
       const row = WALKER_ROWS[spriteOf(ep, n)];
+      const over = st.fainted[n.id];
+      // fainted: tipped over onto their back, feet where they stood
+      if (over !== undefined) return [row, DIRS.down, 0, ...(at ? [at.x, at.y] : center(n.x, n.y)), 0, { lie: over }];
       if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
@@ -1307,7 +1319,7 @@ function drawWorld(canvas, ep, st, t) {
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      return [row, DIRS[st.npcFacing[n.id]], 0, x, y];
+      return [row, DIRS[st.npcFacing[n.id]], 0, x, y, 0, { size: n.size }];
     });
   // the hole you went down: dark, with a lip of broken flagstone
   if (st.hole) {
@@ -1341,6 +1353,18 @@ function drawWorld(canvas, ep, st, t) {
       canvas.translate(x, y + 2 - lift);
       canvas.scale(1 + fx.squash * 0.6, 1 - fx.squash);
       canvas.translate(-x, -(y + 2 - lift));
+    }
+    // bigger than everyone (the Warden), from the feet up, as the game draws him
+    if (fx.size && fx.size !== 1) {
+      canvas.translate(x, y + FH - FEET);
+      canvas.scale(fx.size, fx.size);
+      canvas.translate(-x, -(y + FH - FEET));
+    }
+    // fainting: tipping over backwards, pivoting on the feet, until flat
+    if (fx.lie) {
+      canvas.translate(x, y);
+      canvas.rotate(-90 * fx.lie, 0, 0);
+      canvas.translate(-x, -y);
     }
     if (fx.flipped) {
       const mid = y - FEET + FH / 2 - lift;
@@ -1626,6 +1650,21 @@ const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'mo
 const SHORT = { letterMs: 24, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
 /** Episode 10 as posted, before the author slowed the template a touch (Oct 6, 2026: "a little too fast"). */
 const SHORT_10 = { ...SHORT, letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190 };
+
+/** An exported array of lines from src/world/dungeon.ts, read from the game so the episodes say the same. */
+const gameLines = (name) => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf(`export const ${name} `));
+  return [...block.slice(0, block.indexOf('];')).matchAll(/^\s+(['"])(.*)\1,$/gm)].map((m) => m[2].replace(/\\'/g, "'"));
+};
+/** "WARDEN: Well, well, well." → "Well, well, well." */
+const unnamed = (l) => l.replace(/^[A-Z][A-Z ']+: /, '');
+/** The excuses on offer (dungeon.ts ARENA_EXCUSES), as the menu shows them. */
+const arenaExcuses = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf('export const ARENA_EXCUSES'));
+  return [...block.slice(0, block.indexOf('];')).matchAll(/label: (['"])(.*?)\1/g)].map((m) => m[2].replace(/\\'/g, "'"));
+};
 
 /**
  * The pothole's landing (src/world/dungeon.ts POTHOLE_LANDING), read from the game so the episode says the same:
@@ -2267,6 +2306,58 @@ const EPISODES = {
         // ...and double back, quick, to Gary. Who isn't there.
         { walk: [[4, 7]], speed: 380, face: 'left' },
         { wait: 1.4 },
+      ],
+    };
+  },
+  // 13: up into the Kaldorium. The Warden's been expecting you: the three you let out got here first, and lost.
+  // Any excuse is UNACCEPTABLE, Brannoc faints, Barnaby is unimpressed, the three step aside, and: FIGHT!
+  // (author, Oct 6, 2026). Lines from the game (dungeon.ts ARENA_WELCOME, ARENA_EXCUSES, ARENA_VERDICT).
+  13: () => {
+    const pit = loadMap('the-pit', 'dungeon');
+    const welcome = gameLines('ARENA_WELCOME').map(unnamed);
+    const verdict = gameLines('ARENA_VERDICT');
+    const by = (name) => verdict.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    const [unacceptable, ...rest] = by('WARDEN');
+    const [pause, pathetic, fight] = by('BARNABY');
+    const barnaby = { name: 'Barnaby', sprite: 'barnaby' };
+    // before they step aside, the three who lost stand in a sorry row in the middle of the sand
+    Object.assign(pit.npcs['arena-mott'], { x: 9, y: 6 });
+    Object.assign(pit.npcs['arena-nails'], { x: 10, y: 6 });
+    Object.assign(pit.npcs['arena-silas'], { x: 11, y: 6 });
+    const aside = (id, x, y) => ({ npcWalk: id, to: [[x, 6], [x, y]], speed: 120, together: true });
+    return {
+      ...SHORT,
+      number: 13,
+      title: 'UNACCEPTABLE',
+      map: pit,
+      // the Warden at the head of the sand, the three who lost in a sorry row in the middle, Brannoc beside you
+      shown: ['warden-watch', 'arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      hero: { sprite: 'quill', at: [3, 9], facing: 'right' },
+      // the hook: in close on the Warden, already talking
+      look: [10, 4],
+      zoom: 1.5,
+      script: [
+        { say: 'warden-watch', lines: welcome, punch: 0.6 },
+        { menu: { speaker: 'Warden', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.4 } },
+        { jolt: 0.45 },
+        { say: 'warden-watch', lines: [unacceptable], punch: 0.6 },
+        { say: 'warden-watch', lines: rest, punch: 0.5 },
+        // Brannoc goes over
+        { look: [4, 8] },
+        { faint: 'brannoc-pit' },
+        { wait: 0.1 },
+        { as: barnaby, lines: [pause], punch: 0.4 },
+        { as: barnaby, lines: [pathetic], punch: 0.7 },
+        // the three shuffle out of the way
+        { look: [14, 4] },
+        { zoom: 1 },
+        aside('arena-mott', 17, 2),
+        aside('arena-nails', 18, 2),
+        aside('arena-silas', 19, 2),
+        { say: 'arena-silas', lines: by('SILAS SEEN').map(unnamed), punch: 0.6 },
+        { look: null },
+        { jolt: 0.4 },
+        { as: barnaby, lines: [fight], punch: 0.7 },
       ],
     };
   },

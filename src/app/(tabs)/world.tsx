@@ -161,6 +161,11 @@ import {
   CELL_DOOR,
   ESCORT_LINES,
   GARY_STARTLED,
+  ARENA_EXCUSES,
+  ARENA_VERDICT,
+  ARENA_VERDICT_ALONE,
+  ARENA_WELCOME,
+  ARENA_WELCOME_ALONE,
   CELLS_FREED,
   FELL_IN,
   POTHOLE,
@@ -612,7 +617,9 @@ function World({
           start.map.boss.flag === 'pit-guards' ? (hero === 'brannoc' ? 'pit-guards-alone' : 'pit-guards') : 'pit-warden'
         ]
       : undefined;
-  const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
+  // The Warden's answer to your excuse (dungeon.ts ARENA_VERDICT), once one's been picked.
+  const [verdict, setVerdict] = useState<string[] | null>(null);
+  const [said, setDialogue] = useState<Dialogue | null>(() =>
     resume
       ? null
       : !bossOn
@@ -624,7 +631,17 @@ function World({
                 then: () => useWorldStore.getState().setFlag(`seen:${start.map.id}`),
               }
             : null))
-        : prisonIntro
+        : prisonIntro && start.map.boss?.flag === 'pit-guards' && hero !== 'brannoc'
+          ? (() => {
+              // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE
+              const freed = arrivalFlags.includes(CELLS_FREED);
+              const verdict = freed ? ARENA_VERDICT : ARENA_VERDICT_ALONE;
+              return {
+                lines: freed ? ARENA_WELCOME : ARENA_WELCOME_ALONE,
+                choices: ARENA_EXCUSES.map((e) => ({ ...e, then: () => setVerdict(verdict) })),
+              };
+            })()
+          : prisonIntro
           ? { lines: prisonIntro.lines }
           : start.map.boss?.intro
             ? {
@@ -646,6 +663,11 @@ function World({
             : bossNpc
               ? { speaker: bossNpc.name, lines: bossNpc.lines }
               : null,
+  );
+  // Any excuse you like: UNACCEPTABLE. The Warden's answer, once an excuse has been picked, until it's read.
+  const dialogue = useMemo(
+    () => said ?? (verdict ? { lines: verdict, then: () => setVerdict(null) } : null),
+    [said, verdict],
   );
   const dialogueRef = useRef(dialogue);
   useEffect(() => {

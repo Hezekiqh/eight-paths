@@ -461,7 +461,8 @@ export function WorldView({
               ? (WALKER_ROWS[`${n.sprite}asleep` as WalkerId] ?? WALKER_ROWS[n.sprite])
               : WALKER_ROWS[n.sprite],
             sim.npcIds.indexOf(n.id),
-          ] as [number, number],
+            n.size ?? 1,
+          ] as [number, number, number],
       ),
     [map, sim.npcIds, talkingTo],
   );
@@ -809,7 +810,7 @@ export function WorldView({
           ents.push([npcs[i][0], 3, walkFrame(d, true), fx + d, fy, 0, 1]);
           continue;
         }
-        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, 1]);
+        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, npcs[i][2]]);
       }
       const whites = whiteFor.get();
       const now = fight.get();

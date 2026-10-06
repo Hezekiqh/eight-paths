@@ -63,13 +63,24 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Next:** Episode 13.
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, ~16.8 s): up into the Kaldorium. The three you
+  let out got there first and lost; the Warden (drawn twice as big) has been expecting you. Frame one, in close:
+  "Well, well, well. If it isn't our final contestants." / "Escape is punishable by death, you know." The menu:
+  *I was just going for a walk.* "UNACCEPTABLE." (the screen jolts) / "After we were so lenient with your sentences." /
+  "You will pay with your lives!" Brannoc faints flat beside you. Barnaby: "...Did he just faint?" / "...pathetic."
+  The three shuffle to the side; Silas Seen: "You got this, whatever your name is." Barnaby: "FIGHT!" Cut. In the
+  game: the same arrival (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT` in `dungeon.ts`; any excuse gets the same
+  answer, and there's a mean one), then the five guards and the Warden as before. The Warden watches from the head of
+  the sand until his guards are down, and the three stand at the side of the sand until he's beaten
+  (`the-pit.json`; `passable`, so they never get in the way of a fight; `size` for the Warden). If you never let
+  the three out, he welcomes "our runaways" and they aren't there.
+- **Next:** Episode 14.
 
 ## In the episode script
 
 Every template episode spreads `SHORT` (24 ms a letter, 0.7× the pauses, short holds, a 160 px/s walk, no title or end
 card). Episode 10 keeps its posted pace (`SHORT_10`: 20 ms, half pauses, a 190 px/s walk). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
-the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a door unlocked), `ep.awake` (a sleeper awake
+the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a door unlocked, UNACCEPTABLE), `faint`, `as` (a line from someone not on the map: Barnaby), `npc size`, `ep.awake` (a sleeper awake
 for the episode),
 `scene.gap` (a quicker cut), `laugh … together`.
 

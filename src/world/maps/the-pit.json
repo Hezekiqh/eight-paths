@@ -335,6 +335,68 @@
       ]
     },
     {
+      "id": "warden-watch",
+      "type": "npc",
+      "passable": true,
+      "size": 2,
+      "x": 10,
+      "y": 3,
+      "sprite": "warden",
+      "facing": "down",
+      "name": "Warden",
+      "comesAfter": "cell-bars-bent",
+      "goneAfter": "pit-guards",
+      "lines": [
+        "...",
+        "* He's watching you. He hasn't blinked once."
+      ]
+    },
+    {
+      "id": "arena-mott",
+      "type": "npc",
+      "passable": true,
+      "x": 17,
+      "y": 2,
+      "sprite": "oldmott",
+      "facing": "down",
+      "name": "Old Mott",
+      "comesAfter": "cells-freed",
+      "goneAfter": "pit-champion",
+      "lines": [
+        "Don't look at me. I lost to a man named Doug."
+      ]
+    },
+    {
+      "id": "arena-nails",
+      "type": "npc",
+      "passable": true,
+      "x": 18,
+      "y": 2,
+      "sprite": "nails",
+      "facing": "down",
+      "name": "Nails",
+      "comesAfter": "cells-freed",
+      "goneAfter": "pit-champion",
+      "lines": [
+        "Five guards. Four of them were Doug."
+      ]
+    },
+    {
+      "id": "arena-silas",
+      "type": "npc",
+      "passable": true,
+      "x": 19,
+      "y": 2,
+      "sprite": "silasseen",
+      "facing": "down",
+      "name": "Silas Seen",
+      "comesAfter": "cells-freed",
+      "goneAfter": "pit-champion",
+      "lines": [
+        "You got this, whatever your name is."
+      ]
+    },
+    {
       "id": "brannoc-pit",
       "type": "npc",
       "x": 4,

@@ -81,6 +81,13 @@ export type NpcObject = {
   lines: string[];
   /** Fast asleep where they stand: Zs float up off their head (sleep.ts). Gary, mostly. */
   asleep?: boolean;
+  /**
+   * Watching from the edge, never in the way: nothing bumps into them, so a fight goes exactly as it would
+   * without them (the Kaldorium's Warden, and the three you let out, at the side of the sand).
+   */
+  passable?: boolean;
+  /** Drawn this many times bigger (the Warden, standing at the head of the sand, as big as when he fights). */
+  size?: number;
   /** Questions you can ask them afterwards, from a menu (plus Goodbye). */
   questions?: Question[];
   /** What they say back when you say Goodbye (Felix's adieu), before the talk closes. */
@@ -242,7 +249,8 @@ function solidFor(tiles: string[], walkable: string[], standing: Standing[]): nu
   return solid;
 }
 
-const blocking = (objects: MapObject[]): Standing[] => objects.filter((o) => o.type !== 'board');
+const blocking = (objects: MapObject[]): Standing[] =>
+  objects.filter((o) => o.type !== 'board' && !(o.type === 'npc' && o.passable));
 
 function build(data: MapData, image: number): WorldMap {
   const width = data.tiles[0].length;
