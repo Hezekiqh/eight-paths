@@ -1434,7 +1434,9 @@ function drawArena(map, cheer = false) {
   const rx = ((right - left) / 2) * TILE - 2;
   const ry = ((bottom - top) / 2) * TILE - 2;
   const SAND = hex('#C8A870');
-  const TIER = 11;
+  // CROWD=regular draws the spectators the size of everyone else in the World (the walkers), on deeper tiers
+  const REGULAR = process.env.CROWD === 'regular';
+  const TIER = REGULAR ? 18 : 11;
   const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
   const SKIN = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
   for (let y = 0; y < g.h; y++)
@@ -1506,7 +1508,45 @@ function drawArena(map, cheer = false) {
       }),
     );
   };
-  for (let x0 = 0; x0 < g.w; x0 += 7)
+  // the regular-sized crowd: townsfolk from the walkers, sitting (cut at the bench), the far side facing the sand and
+  // the near side with their backs to us; drawn back to front, standing up and waving in the cheering frame
+  const TOWNSFOLK = ['gert', 'tessa', 'pim', 'nana', 'holt', 'mira', 'fen', 'dunn', 'pell', 'hesper', 'jory', 'wenna',
+    'gudrun', 'hamm', 'marta', 'dobb', 'bellow', 'orrin', 'tova', 'ulfa', 'hekla', 'snorri', 'fawnley', 'fliss', 'joss',
+    'tolly', 'ox', 'leif', 'brug', 'bett', 'hild', 'tib', 'mog', 'abbot'].filter((k) => WALKERS[k] && !WALKERS[k].big);
+  const sitter = (px, py, seed, back) => {
+    const f = canvas(FW, FH);
+    drawWalker(f, 0, 0, WALKERS[TOWNSFOLK[Math.floor(hash(seed, 1, 81) * TOWNSFOLK.length)]], back ? 'up' : 'down', 0);
+    const up = cheer && hash(seed, 4, 81) < 0.7;
+    const lift = up ? 2 : 0;
+    const showRows = 16;
+    for (let j = 0; j < showRows; j++)
+      for (let i = 0; i < FW; i++) if (f[j][i]) put(g, px + i, py - showRows + j - lift, f[j][i]);
+    // hands up
+    if (up) {
+      const skin = hex(WALKERS[TOWNSFOLK[0]].skin ?? '#E8B48C');
+      for (const hx of [px + 1, px + 14]) {
+        put(g, hx, py - showRows + 6 - lift, OUTLINE);
+        put(g, hx, py - showRows + 7 - lift, skin);
+        put(g, hx, py - showRows + 8 - lift, OUTLINE);
+      }
+    }
+  };
+  if (REGULAR)
+    for (const side of [-1, 1])
+      for (const tier of side < 0 ? [...Array(30).keys()].reverse() : [...Array(30).keys()])
+        for (let x0 = -8; x0 < g.w; x0 += 13) {
+          const out = 4 + tier * TIER + TIER - 2;
+          const e = 1 + out / ry;
+          const dx = (x0 + 8 - cx) / rx;
+          if (Math.abs(dx) >= e) continue;
+          const py = Math.round(cy + side * Math.sqrt(e * e - dx * dx) * ry);
+          if (py < 4 || py >= g.h + 12) continue;
+          if (side < 0 && out < 9) continue;
+          const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
+          if (hash(seed, 0, 83) < 0.1) continue;
+          sitter(x0 + (tier % 2) * 6, py, seed, side > 0);
+        }
+  if (!REGULAR) for (let x0 = 0; x0 < g.w; x0 += 7)
     for (let tier = 0; tier < 40; tier++) {
       const out = 4 + tier * TIER + TIER - 2;
       const e = 1 + out / ry;
