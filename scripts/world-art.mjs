@@ -1433,7 +1433,7 @@ function drawArena(map, cheer = false) {
   const rx = ((right - left) / 2) * TILE - 2;
   const ry = ((bottom - top) / 2) * TILE - 2;
   const SAND = hex('#C8A870');
-  const TIER = 8;
+  const TIER = 11;
   const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
   const SKIN = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
   for (let y = 0; y < g.h; y++)
@@ -1476,29 +1476,36 @@ function drawArena(map, cheer = false) {
   // the crowd: a little person on every bench, five pixels apart, facing the sand (on the near side, their backs);
   // in the cheering frame most of them are up, arms in the air
   const HAIR = ['#2A1A12', '#6A4028', '#C8A040', '#1A1416', '#8A8A7A', '#A0482A'].map(hex);
+  // a spectator in the walkers' style (drawWalker): a dark outline, hair, a face with two eyes, shoulders in a
+  // shirt; from behind, all hair. Seven pixels wide, eight tall, sitting on the bench at (px, py).
+  const OUTLINE = hex('#140E1C');
   const person = (px, py, seed, back) => {
     const shirt = PEOPLE[Math.floor(hash(seed, 1, 71) * PEOPLE.length)];
+    const shade = mix(shirt, hex('#000000'), 0.3);
     const skin = SKIN[Math.floor(hash(seed, 2, 71) * SKIN.length)];
     const hair = HAIR[Math.floor(hash(seed, 3, 71) * HAIR.length)];
     const up = cheer && hash(seed, 4, 71) < 0.7;
-    const y = py - (up && hash(seed, 5, 71) < 0.5 ? 1 : 0);
-    // body: shoulders and a shirt, on the bench
-    box(g, px, y - 3, 5, 1, shirt);
-    box(g, px + 1, y - 2, 3, 2, shirt);
-    // head, hair on top (all hair from behind)
-    box(g, px + 1, y - 5, 3, 2, back ? hair : skin);
-    box(g, px + 1, y - 6, 3, 1, hair);
-    if (!back) put(g, px + 2, y - 4, mix(skin, hex('#000000'), 0.35));
-    // arms: down at the sides, or up in the air
-    if (up) {
-      put(g, px, y - 4, shirt);
-      put(g, px + 4, y - 4, shirt);
-      put(g, px, y - 5, skin);
-      put(g, px + 4, y - 5, skin);
-      put(g, px, y - 3, null);
-    }
+    const y = py - 8 - (up && hash(seed, 5, 71) < 0.5 ? 1 : 0);
+    const rows = up
+      ? ['O.OOO.O', 'KOHHHOK', 'BOSSSOB', 'BOESEOB', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.']
+      : ['..OOO..', '.OHHHO.', '.OSSSO.', '.OESEO.', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.'];
+    const colour = {
+      O: OUTLINE,
+      H: hair,
+      S: back ? hair : skin,
+      E: back ? hair : OUTLINE,
+      B: shirt,
+      D: shade,
+      K: skin,
+    };
+    rows.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch === '.') return;
+        put(g, px + i, y + j, colour[ch]);
+      }),
+    );
   };
-  for (let x0 = 0; x0 < g.w; x0 += 5)
+  for (let x0 = 0; x0 < g.w; x0 += 7)
     for (let tier = 0; tier < 40; tier++) {
       const out = 4 + tier * TIER + TIER - 2;
       const e = 1 + out / ry;
@@ -1512,7 +1519,7 @@ function drawArena(map, cheer = false) {
         if (side < 0 && out < 9) continue;
         const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
         if (hash(seed, 0, 73) < 0.12) continue; // an empty seat
-        person(x0 + (tier % 2) * 2, py, seed, side > 0);
+        person(x0 + (tier % 2) * 3, py, seed, side > 0);
       }
     }
   // the Crown's banners along the top of the stands: red, a gold fist, on poles
@@ -1539,9 +1546,10 @@ function drawArena(map, cheer = false) {
     ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
     for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
   }
-  // the commentator's box, built into the wall at the head of the sand (author, Oct 6, 2026): a stone alcove in the
-  // stands under a striped awning, panelled inside, a banner on the back wall, and across its front, at the sand's
-  // edge, Barnaby's desk: a red drape with a gold fringe, his speaking trumpet and his bell
+  // the commentator's box, set into the tiers at the head of the sand like an emperor's box (author, Oct 6, 2026:
+  // "a part of the arena"): the arena's own grey stone, a coursed frame and an arch, shadow inside, and across its
+  // front, at the sand's edge, a stone parapet for a desk with the Crown's red cloth hung over it, the gold fist on it,
+  // Barnaby's speaking trumpet on top
   const booth = [];
   rows.forEach((r, ty) => [...r].forEach((c, tx) => (c === '$' || c === '+') && booth.push([tx, ty])));
   if (booth.length) {
@@ -1552,39 +1560,52 @@ function drawArena(map, cheer = false) {
     const dy0 = desk[0][1] * TILE;
     const dx0 = Math.min(...desk.map(([tx]) => tx)) * TILE;
     const dx1 = (Math.max(...desk.map(([tx]) => tx)) + 1) * TILE;
-    // the alcove: dark panelling, planks, a floor
-    box(g, bx0, by0, bx1 - bx0, dy0 - by0 + 4, '#4A2E1E');
-    for (let x = bx0 + 3; x < bx1; x += 6) box(g, x, by0 + 8, 1, dy0 - by0 - 8, '#3A2216');
-    box(g, bx0, dy0 - 6, bx1 - bx0, 10, '#5C3A28');
-    // a banner on the back wall: red, the gold fist
-    const mid = Math.round((bx0 + bx1) / 2);
-    box(g, mid - 5, by0 + 9, 10, 12, '#9A2A22');
-    box(g, mid - 5, by0 + 9, 10, 1, '#C8963A');
-    box(g, mid - 1, by0 + 12, 2, 3, '#C8963A');
-    box(g, mid - 2, by0 + 13, 4, 2, '#C8963A');
-    // stone pillars either side
-    box(g, bx0, by0, 5, dy0 - by0 + 6, '#8A8280');
-    box(g, bx1 - 5, by0, 5, dy0 - by0 + 6, '#8A8280');
-    box(g, bx0 + 4, by0, 1, dy0 - by0 + 6, '#5A5250');
-    box(g, bx1 - 5, by0, 1, dy0 - by0 + 6, '#5A5250');
-    // the awning: red and gold stripes, scalloped
-    for (let x = bx0 - 2; x < bx1 + 2; x++) {
-      const c = Math.floor((x - bx0) / 4) % 2 ? '#C8963A' : '#9A2A22';
-      box(g, x, by0 - 2, 1, 7, c);
-      if ((x - bx0) % 4 !== 0) put(g, x, by0 + 5, c);
+    const stone = (x, y, w, h) => {
+      for (let j = 0; j < h; j++)
+        for (let i = 0; i < w; i++) {
+          const px = x + i;
+          const py = y + j;
+          const course = py % 5 === 0 || (px + (Math.floor(py / 5) % 2) * 4) % 9 === 0;
+          put(g, px, py, course ? '#5A5250' : (Math.floor(px / 9) + Math.floor(py / 5)) % 2 ? '#7A7270' : '#726A66');
+        }
+    };
+    // the frame: stone all round, a lit top edge, an arch over the opening
+    stone(bx0 - 4, by0 - 6, bx1 - bx0 + 8, dy0 - by0 + 10);
+    box(g, bx0 - 4, by0 - 6, bx1 - bx0 + 8, 1, '#9A928E');
+    // the opening: shadow, darker toward the back, under a round arch
+    const ox0 = bx0 + 4;
+    const ox1 = bx1 - 4;
+    const oy0 = by0 + 4;
+    box(g, ox0, oy0, ox1 - ox0, dy0 - oy0 + 4, '#2A2422');
+    ellipse(g, (ox0 + ox1) / 2, oy0, (ox1 - ox0) / 2, 5, '#2A2422');
+    box(g, ox0, dy0 - 6, ox1 - ox0, 10, '#3A3432');
+    // the arch's stones, lit along their edge, and the keystone
+    for (let a = 0; a <= Math.PI; a += 0.04) {
+      const ax = (ox0 + ox1) / 2 + Math.cos(a) * ((ox1 - ox0) / 2 + 1);
+      const ay = oy0 - Math.sin(a) * 6;
+      put(g, ax, ay, '#9A928E');
     }
-    box(g, bx0 - 2, by0 - 3, bx1 - bx0 + 4, 1, '#5C1A16');
-    // the desk across the front
-    box(g, dx0 - 2, dy0 + 2, dx1 - dx0 + 4, 3, '#7A5236');
-    box(g, dx0 - 2, dy0 + 2, dx1 - dx0 + 4, 1, '#9A6A44');
-    box(g, dx0 - 1, dy0 + 5, dx1 - dx0 + 2, 9, '#9A2A22');
-    for (let x = dx0; x < dx1; x += 3) put(g, x, dy0 + 13, '#C8963A');
-    box(g, dx0 - 1, dy0 + 14, dx1 - dx0 + 2, 1, '#5C1A16');
-    // the speaking trumpet, bell end out, and a brass bell
-    box(g, dx1 - 12, dy0, 6, 1, '#C8963A');
-    box(g, dx1 - 7, dy0 - 1, 2, 3, '#E0B040');
-    box(g, dx0 + 3, dy0, 3, 2, '#C8963A');
-    put(g, dx0 + 4, dy0 - 1, '#5C3A28');
+    box(g, Math.round((ox0 + ox1) / 2) - 2, oy0 - 8, 4, 4, '#9A928E');
+    // inside, the Crown's red curtain swagged across the back, gold-trimmed
+    for (let x = ox0; x < ox1; x++) {
+      const sag = Math.round(3 * Math.sin(((x - ox0) / (ox1 - ox0)) * Math.PI * 2) ** 2);
+      box(g, x, oy0 - 2, 1, 6 + sag, '#7A1E18');
+      put(g, x, oy0 + 4 + sag, '#C8963A');
+    }
+    // and its sides, hanging down
+    box(g, ox0, oy0, 3, dy0 - oy0, '#7A1E18');
+    box(g, ox1 - 3, oy0, 3, dy0 - oy0, '#7A1E18');
+    // the parapet: stone, a lit coping, the Crown's cloth over its middle with the gold fist
+    stone(bx0 - 4, dy0 + 2, bx1 - bx0 + 8, 12);
+    box(g, bx0 - 4, dy0 + 2, bx1 - bx0 + 8, 2, '#9A928E');
+    const mid = Math.round((dx0 + dx1) / 2);
+    box(g, mid - 7, dy0 + 4, 14, 10, '#9A2A22');
+    box(g, mid - 7, dy0 + 13, 14, 1, '#C8963A');
+    box(g, mid - 1, dy0 + 6, 2, 3, '#C8963A');
+    box(g, mid - 2, dy0 + 7, 4, 2, '#C8963A');
+    // the speaking trumpet on the coping, bell end out
+    box(g, dx1 - 11, dy0 + 1, 6, 1, '#C8963A');
+    box(g, dx1 - 6, dy0, 2, 3, '#E0B040');
   }
   // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
   for (let ty = 0; ty < H; ty++)

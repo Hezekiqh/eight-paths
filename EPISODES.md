@@ -66,8 +66,8 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 - **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 16.2 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
-  right) and Barnaby in his commentator's box, built into the wall at the head of the sand (a stone alcove under a
-  striped awning, a red-draped desk at the sand's edge). The Warden is out of sight; he enters
+  right) and Barnaby in his commentator's box, set into the tiers at the head of the sand like an emperor's box, in the
+  arena's own stone (an arch, a red curtain inside, a stone parapet at the sand's edge with the Crown's cloth on it). The Warden is out of sight; he enters
   with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
   just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
   (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three: Silas Seen "I pulled a muscle on
@@ -80,7 +80,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   Barnaby is a ringmaster now (top hat, red tailcoat, moustache), and a small guy (`short`: stubby legs), here and in Warrior City.
 - **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×19, two rows of stands over the box), open to the sky: sand, a low stone wall, tiers
-  packed with the crowd (little pixel people, faces toward the sand and backs on the near side, on their feet and
+  packed with the crowd (little pixel people in the walkers' style, outlined, seven pixels wide, faces toward the sand and backs on the near side, on their feet and
   cheering every other beat: a second picture, `the-pit-cheer.png`, `cheer` on the map), the Crown's red banners with the gold fist, the great gate at the bottom and a trapdoor down
   to the cells (`drawArena` in `scripts/world-art.mjs`, `floor: "sand"`). Everyone moved with it (`dungeon.ts`
   `BRANNOC_FAINTED`, `SAND_MIDDLE`; the exits in `progress.ts`). Spectators on the sand (the crowd, the Warden, the
