@@ -729,6 +729,8 @@ function drawSplitCocoon(canvas, x, y) {
 // ---- the script: walk, face, say, narrate, wait; compiled into timed segments
 const center = (tx, ty) => [tx * TILE + TILE / 2, ty * TILE + TILE - 2];
 const HOLD = (text) => Math.min(2.6, 1.1 + text.length * 0.022);
+/** After the fall's impact: the shake, the bounce and the flop, before anyone speaks. */
+const FALL_SETTLE = 0.45;
 /** A change of place: half of it fading out, half fading in. */
 const SCENE_GAP = 1.0;
 /** Pushing a boulder: leaning on it (engine.ts PUSH_DELAY), then the slide. */
@@ -891,6 +893,14 @@ function compile(ep) {
         t += dur;
       });
       t += step.gapAfter ?? ep.gapAfter ?? 0.25;
+    } else if (step.fall) {
+      // dropping in from above the screen onto where you stand: a shadow grows, you slam down, bounce, and end up
+      // upside down, seeing stars, until an `upright`
+      segs.push({ kind: 'fall', t0: t, t1: t + step.fall, height: step.height ?? 170 });
+      t += step.fall + FALL_SETTLE;
+    } else if (step.upright) {
+      segs.push({ kind: 'upright', t0: t, t1: t });
+      t += 0.2;
     } else if (step.drop) {
       // the floor gives way: you sink out of sight into a hole (the Maze Ward's pothole); `together` with what's said
       segs.push({ kind: 'drop', t0: t, t1: t + step.drop });
@@ -945,6 +955,12 @@ function stateAt(ep, compiled, t) {
   /** How far you've sunk through the floor (0 to 1), and the hole you went down. */
   let sink = 0;
   let hole = null;
+  /** The fall: how high above the floor you are (art px), the squash on impact, upside down, the shake. */
+  let air = 0;
+  let squash = 0;
+  let flipped = false;
+  let flippedAt = 0;
+  let shake = 0;
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -972,6 +988,11 @@ function stateAt(ep, compiled, t) {
       menu = null;
       sink = 0;
       hole = null;
+      // `airborne`: you arrive still above the screen, for a `fall` to bring you down
+      air = s.airborne ? 400 : 0;
+      squash = 0;
+      flipped = false;
+      shake = 0;
       continue;
     }
     if (s.kind === 'push') {
@@ -1024,6 +1045,21 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'open') opened.push(s.at);
     else if (s.kind === 'gap') gaps.push(s.at);
     else if (s.kind === 'zoom') zoom = s.z;
+    else if (s.kind === 'fall') {
+      if (t < s.t1) {
+        const k = (t - s.t0) / (s.t1 - s.t0);
+        air = s.height * (1 - k * k);
+      } else {
+        const since = t - s.t1;
+        // a little bounce off the flagstones, squashed flat at each touch
+        air = since < 0.28 ? Math.sin((Math.PI * since) / 0.28) * 7 : 0;
+        squash = since < 0.07 ? 0.45 : since >= 0.28 && since < 0.33 ? 0.25 : 0;
+        shake = since < 0.3 ? 3 * (1 - since / 0.3) : 0;
+        // over in mid-bounce: butt up
+        flipped = since >= 0.14;
+        flippedAt = s.t1 + 0.14;
+      }
+    } else if (s.kind === 'upright') flipped = false;
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1031,6 +1067,11 @@ function stateAt(ep, compiled, t) {
   }
   return {
     zoom,
+    air,
+    squash,
+    flipped,
+    flippedFor: t - flippedAt,
+    shake,
     sink,
     hole,
     hx,
@@ -1087,7 +1128,8 @@ function drawWorld(canvas, ep, st, t) {
   canvas.clear(color('#0C0806'));
   canvas.save();
   canvas.scale(sk, sk);
-  canvas.translate(-Math.round(camX * sk) / sk, -Math.round(camY * sk) / sk);
+  const shook = st.shake ? [Math.sin(t * 90) * st.shake, Math.cos(t * 77) * st.shake] : [0, 0];
+  canvas.translate(-Math.round((camX + shook[0]) * sk) / sk, -Math.round((camY + shook[1]) * sk) / sk);
   canvas.drawImageRectOptions(
     map.image,
     CK.XYWHRect(0, 0, mapW, mapH),
@@ -1205,19 +1247,58 @@ function drawWorld(canvas, ep, st, t) {
     canvas.drawRect(CK.XYWHRect(Math.round(hx0 - 7), Math.round(hy0 - 4), 14, 1), paint('#5A524C'));
   }
   if (!st.cards && st.sink < 1)
-    ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy, st.sink]);
+    ents.push([
+      WALKER_ROWS[ep.hero.sprite],
+      DIRS[st.facing],
+      walkFrame(st.walked, st.moving),
+      st.hx,
+      st.hy,
+      st.sink,
+      { air: st.air, squash: st.squash, flipped: st.flipped },
+    ]);
+  // where you're about to land: a shadow, bigger the closer you get
+  if (st.air > 0) {
+    const r = Math.max(2, 6 - st.air / 40);
+    canvas.drawOval(CK.XYWHRect(st.hx - r, st.hy - r / 3, r * 2, (r * 2) / 3), paint('#000000', 0.45));
+  }
   ents.sort((a, b) => a[4] - b[4]);
-  for (const [row, dir, frame, x, y, sunk = 0] of ents) {
+  for (const [row, dir, frame, x, y, sunk = 0, fx = {}] of ents) {
     // sinking: lower and lower, cut off at the floor
     const cut = Math.round(sunk * FH);
+    const lift = Math.round(fx.air ?? 0);
+    canvas.save();
+    // squashed flat on impact (from the feet), and upside down from the middle
+    if (fx.squash) {
+      canvas.translate(x, y + 2 - lift);
+      canvas.scale(1 + fx.squash * 0.6, 1 - fx.squash);
+      canvas.translate(-x, -(y + 2 - lift));
+    }
+    if (fx.flipped) {
+      const mid = y - FEET + FH / 2 - lift;
+      canvas.translate(0, mid);
+      canvas.scale(1, -1);
+      canvas.translate(0, -mid);
+    }
     canvas.drawImageRectOptions(
       WALKERS,
       CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH - cut),
-      CK.XYWHRect(Math.round(x - FW / 2), Math.round(y - FEET) + cut, FW, FH - cut),
+      CK.XYWHRect(Math.round(x - FW / 2), Math.round(y - FEET) + cut - lift, FW, FH - cut),
       NEAREST.filter,
       NEAREST.mipmap,
       null,
     );
+    canvas.restore();
+  }
+  // seeing stars: three little ones circling the head (at the bottom, upside down)
+  if (st.flipped && !st.air) {
+    const star = paint('#FFE070');
+    for (let i = 0; i < 3; i++) {
+      const a = st.flippedFor * 7 + (i * Math.PI * 2) / 3;
+      const sx = Math.round(st.hx + Math.cos(a) * 8);
+      const sy = Math.round(st.hy + 3 + Math.sin(a) * 2.5);
+      canvas.drawRect(CK.XYWHRect(sx, sy - 1, 1, 3), star);
+      canvas.drawRect(CK.XYWHRect(sx - 1, sy, 3, 1), star);
+    }
   }
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
@@ -2010,23 +2091,25 @@ const EPISODES = {
       map: ward,
       hero: { sprite: 'quill', at: [2, 2], facing: 'right' },
       script: [
-        // frame one: already typing
-        { you: ['(A maze. How hard can it be?)'], gapAfter: 0.05 },
+        // the wizard never speaks (author, Oct 6, 2026). Frame one: already walking into the maze, and two steps in the
+        // floor goes
         { walk: [[4, 2]] },
-        // the floor goes
-        { drop: 0.3, together: true },
-        { you: ['AAAAAH!'], punch: 0.35, gapAfter: 0 },
-        {
-          scene: { map: cells, at: [18, 6], facing: 'down', hide: ['brannoc-cell'], gap: 0.5 },
-        },
+        { drop: 0.25 },
+        { wait: 0.1 },
+        // the hook: out of the top of the screen and onto the flagstones, butt up, seeing stars
+        { zoom: 1.6 },
+        { scene: { map: cells, at: [18, 6], facing: 'down', hide: ['brannoc-cell'], gap: 0.3, airborne: true } },
         { gap: [5, 5] },
-        { narrate: true, lines: landing.thud },
-        // dazed, facing the wrong way; then round to the voice behind the bars
-        { face: 'up' },
+        { fall: 0.45 },
+        // a beat, butt up, before anyone says anything
+        { wait: 0.5 },
+        // and still like that for the verdict
         { say: 'prisoner-3', lines: landing.silas, punch: 1.5 },
         // the other two crack up; Silas Seen does not
+        { zoom: 1 },
         { laugh: 'prisoner-1', dur: 1.3, together: true },
         { laugh: 'prisoner-2', dur: 1.3 },
+        { upright: true },
         // straight past the cells to Gary, and the keys
         { walk: [[18, 7], [4, 7]], speed: 300, face: 'left' },
         // asleep, of course

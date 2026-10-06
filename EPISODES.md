@@ -19,6 +19,8 @@ episode for the next two weeks follows this. Numbers below are measured from the
 | Movement | Between cells, the wizard walks quick (~0.5 s) | **Speed the character up.** No slow walks |
 | Camera | Beat one framed close on Old Mott, then the wider corridor | **Hook close**, then open up |
 | Sound | Voice blips only | Voices only; add a sound when posting if wanted |
+| The wizard | Never says a word | **The character never talks**, alone least of all. Everyone else does the talking; he reacts with what he does |
+| The hook | Mid-sentence on frame one | **Open on something funny happening**, not on a setup. Episode 11 opens on a fall |
 
 The joke engine: a tiny, petty offence against the king → an absurd, deadpan sentence. The numbers
 don't follow the crime (twenty, then *one*, then fifty), and the last one gets a reaction tag.
@@ -40,10 +42,11 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   post to within a few tenths of a second, and the game now matches it: the three prisoners' sprites, lines and
   order (Old Mott, Nails, Silas Seen) are in `src/world/maps/kingdom-dungeon.json`. The prisoners' menu answers
   weren't shown in the video, so they were rewritten.
-- **Episode 11, "One for Each Cheek"** (`node scripts/episode-video.mjs 11`): you try the Maze Ward, the floor
-  gives way three steps in, you land on your butt outside Silas Seen's cell, "The king would've given you two life
-  sentences. One for each cheek.", Old Mott and Nails laugh, you run to Gary ("Zzz."), and pick *Can I have the
-  keys?* The episode ends on the pick, before his answer. In the game: the pothole (`POTHOLE` in
+- **Episode 11, "One for Each Cheek"** (`node scripts/episode-video.mjs 11`, ~10.7 s): two steps into the Maze Ward
+  the floor swallows you. The hook: you drop out of the top of the screen outside Silas Seen's cell, slam down,
+  bounce, and land upside down, butt in the air, seeing stars. Still like that: "The king would've given you two
+  life sentences. One for each cheek." Old Mott and Nails laugh; you flip upright, run to Gary ("Zzz."), and pick
+  *Can I have the keys?* It ends on the pick, before his answer. In the game: the pothole (`POTHOLE` in
   `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only) and Gary's keys question.
 - **Next:** Episode 12 opens on Gary's answer to the keys question. Then rewrite the old 12–14 ideas to fit the
   template, with the jokes first.
@@ -52,7 +55,8 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 
 Every template episode spreads `SHORT` (20 ms a letter, half pauses, quick holds, a 190 px/s walk, no title or end
 card). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
-the floor), `scene.gap` (a quicker cut), `laugh … together`.
+the floor), `fall` (drop in from above and land upside down; `scene.airborne` first, `upright` to get up),
+`scene.gap` (a quicker cut), `laugh … together`.
 
 ## So nothing gets lost again
 
