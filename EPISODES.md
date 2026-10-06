@@ -15,7 +15,7 @@ episode for the next two weeks follows this. Numbers below are measured from the
 | Ending | Ends on "...Touchy." over the scene | **No end card.** End on the last laugh, held ~1.5 s |
 | Shape | Three beats of ~5 s: Old Mott 0–5 s, Nails 5–10.5 s, Silas Seen 10.5–16.6 s | **Three beats, rule of three**, the third one topping the other two |
 | Each beat | Setup (1–2 short lines) → punchline held ~1.5–2 s → menu flashes ~1 s, Goodbye picked → cut | Setup fast, **punchline holds**, menu shows the game's choices for a second |
-| Text speed | ~20 ms a letter (the game's 28 ms, sped up); setups held only ~0.3 s once typed | **Type fast, don't linger on setups** |
+| Text speed | ~20 ms a letter (the game's 28 ms, sped up); setups held only ~0.3 s once typed | **Type fast, don't linger on setups.** From Episode 11 a touch slower (author, Oct 6: "a little too fast"): 24 ms a letter, setups held ~0.5 s |
 | Movement | Between cells, the wizard walks quick (~0.5 s) | **Speed the character up.** No slow walks |
 | Camera | Beat one framed close on Old Mott, then the wider corridor | **Hook close**, then open up |
 | Sound | Voice blips only | Voices only; add a sound when posting if wanted |
@@ -42,25 +42,27 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   post to within a few tenths of a second, and the game now matches it: the three prisoners' sprites, lines and
   order (Old Mott, Nails, Silas Seen) are in `src/world/maps/kingdom-dungeon.json`. The prisoners' menu answers
   weren't shown in the video, so they were rewritten.
-- **Episode 11, "See You Next Fall"** (`node scripts/episode-video.mjs 11`, ~9.5 s): two steps into the Maze Ward the
+- **Episode 11, "See You Next Fall"** (`node scripts/episode-video.mjs 11`, ~10.5 s): two steps into the Maze Ward the
   floor swallows you, and you drop out of the top of the screen onto your feet outside Silas Seen's cell. Cut to the
   other two. Old Mott: "Nice trip." Nails: "See you next fall." They laugh. Silas Seen: "Gary was supposed to fix that
   hole." Cut to Gary: "Zzzz" / "Zzzzz". End. In the game: the pothole (`POTHOLE` and `POTHOLE_LANDING` in
   `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only); the episode reads its lines from there.
   Rejected (author): Silas's "One for each cheek", and landing upside down seeing stars (it looks mean).
-- **Episode 12, "I Regret Nothing"** (`node scripts/episode-video.mjs 12`, ~12.5 s): frame one, *Could I please have
+- **Episode 12, "I Regret Nothing"** (`node scripts/episode-video.mjs 12`, ~14.5 s): frame one, *Could I please have
   the keys?* Gary: "You said please." / "Nobody says please to Gary." He hands them over. The cells open and the three
   confess on their way up the ladder: Nails "THERE WAS POISON IN THAT ICE CUBE!", Old Mott "I PUT PEPPER IN THE
   KING'S SANDWICH!", Silas Seen, strolling, "I REGRET NOTHING!!!!". You head for the way out, turn back quickly to
   Gary, and he's gone. In the game: Gary's polite question (`kingdom-dungeon.json`), its closing lines, and
   `cells-freed` (`CELLS_FREED`), which empties the cells and takes Gary once those lines have been read
   (`Question.after`, new).
+- **Gary sleeps** at his post, in the game and the episodes: eyes shut (his own walker, `gary`), Zs floating off his
+  head (`asleep` on a person, `src/world/sleep.ts`).
 - **Next:** Episode 13.
 
 ## In the episode script
 
-Every template episode spreads `SHORT` (20 ms a letter, half pauses, quick holds, a 190 px/s walk, no title or end
-card). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
+Every template episode spreads `SHORT` (24 ms a letter, 0.7× the pauses, short holds, a 160 px/s walk, no title or end
+card). Episode 10 keeps its posted pace (`SHORT_10`: 20 ms, half pauses, a 190 px/s walk). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
 the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone),
 `scene.gap` (a quicker cut), `laugh … together`.
 

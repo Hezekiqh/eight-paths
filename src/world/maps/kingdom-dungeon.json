@@ -226,8 +226,9 @@
       "type": "npc",
       "x": 3,
       "y": 7,
-      "sprite": "raider",
+      "sprite": "gary",
       "facing": "right",
+      "asleep": true,
       "goneAfter": "cells-freed",
       "name": "Gary",
       "lines": [

@@ -2293,6 +2293,19 @@ const WALKERS = {
     skin: '#E8B48C',
     hair: ['spiky', '#C4642A'],
   },
+  // Gary of the cells (author, Oct 6, 2026): the guards' kit, and fast asleep, eyes shut (the game floats Zs over him).
+  gary: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#3A2418'],
+    beard: '#3A2418',
+    sword: true,
+    sleepy: true,
+  },
   // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
   silasseen: {
     robe: true,

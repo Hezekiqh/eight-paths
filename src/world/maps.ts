@@ -79,6 +79,8 @@ export type NpcObject = {
   name: string;
   /** What they say when you first talk to them. */
   lines: string[];
+  /** Fast asleep where they stand: Zs float up off their head (sleep.ts). Gary, mostly. */
+  asleep?: boolean;
   /** Questions you can ask them afterwards, from a menu (plus Goodbye). */
   questions?: Question[];
   /** What they say back when you say Goodbye (Felix's adieu), before the talk closes. */

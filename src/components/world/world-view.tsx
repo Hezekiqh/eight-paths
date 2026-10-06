@@ -39,6 +39,7 @@ import {
   type Grid,
 } from '@/world/engine';
 import { W_FACING, newWanderers, stepWanderers, strolling, wandererFeet, type Wanderer } from '@/world/wander';
+import { sleepZs } from '@/world/sleep';
 import {
   E_ALIVE,
   E_AWAKE,
@@ -449,6 +450,11 @@ export function WorldView({
     [map, sim.npcIds],
   );
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
+  // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
+  const sleepers = useMemo(
+    () => map.npcs.filter((n) => n.asleep).map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
+    [map],
+  );
   // One more for a party member stepping in for a job (a cameo).
   // And room for a march's actors.
   const count = partyRows.length + npcs.length + map.enemies.length + 1 + MARCH_ACTORS;
@@ -1070,6 +1076,15 @@ export function WorldView({
     path.addRect(Skia.XYWHRect(Math.round(x) - 20, Math.round(y) - 4, 14, 1));
     return path;
   });
+  const zPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    for (let i = 0; i < sleepers.length; i++) {
+      const zs = sleepZs(t + i * 0.37, sleepers[i][0], sleepers[i][1]);
+      for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
+    }
+    return path;
+  });
   const motePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     if (!ambience.motes) return path;
@@ -1201,6 +1216,7 @@ export function WorldView({
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
+        <Path path={zPath} color="#DCE8FF" opacity={0.85} />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />

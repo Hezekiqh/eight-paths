@@ -729,6 +729,26 @@ function drawSplitCocoon(canvas, x, y) {
 // ---- the script: walk, face, say, narrate, wait; compiled into timed segments
 const center = (tx, ty) => [tx * TILE + TILE / 2, ty * TILE + TILE - 2];
 const HOLD = (text) => Math.min(2.6, 1.1 + text.length * 0.022);
+// ---- sleepers (src/world/sleep.ts, the same Zs, the same timing)
+const Z_EVERY = 0.8;
+const Z_LIFE = 2.4;
+const zCells = (rows) => rows.flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : [])));
+const Z_SMALL = zCells(['XXX', '.X.', 'XXX']);
+const Z_BIG = zCells(['XXXX', '..X.', '.X..', 'XXXX']);
+function sleepZs(t, x, y) {
+  const out = [];
+  const newest = Math.floor(t / Z_EVERY);
+  for (let k = 0; k < Math.ceil(Z_LIFE / Z_EVERY); k++) {
+    const age = t - (newest - k) * Z_EVERY;
+    if (age < 0 || age >= Z_LIFE) continue;
+    const f = age / Z_LIFE;
+    const ox = Math.round(x + 3 + f * 6 + Math.sin(age * 4) * 1.5);
+    const oy = Math.round(y - 26 - f * 16);
+    for (const [cx, cy] of f < 0.5 ? Z_SMALL : Z_BIG) out.push([ox + cx, oy + cy]);
+  }
+  return out;
+}
+
 /** After the fall's impact: the shake, the bounce and the flop, before anyone speaks. */
 const FALL_SETTLE = 0.45;
 /** A change of place: half of it fading out, half fading in. */
@@ -1312,6 +1332,20 @@ function drawWorld(canvas, ep, st, t) {
       canvas.drawRect(CK.XYWHRect(sx - 1, sy, 3, 1), star);
     }
   }
+  // asleep where they stand (Gary): Zs floating up off the head, as the game draws them
+  const zPaint = paint('#DCE8FF', 0.85);
+  Object.values(map.npcs)
+    .filter(
+      (n) =>
+        n.asleep &&
+        !(st.hide ?? ep.hide)?.includes(n.id) &&
+        !st.npcAt[n.id] &&
+        !(n.comesAfter && !st.shown.includes(n.id)),
+    )
+    .forEach((n, i) => {
+      const [x, y] = center(n.x, n.y);
+      for (const [zx, zy] of sleepZs(t + i * 0.37, x, y)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+    });
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
@@ -1552,7 +1586,9 @@ const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'mo
  * The short-form template (EPISODES.md, measured from Episode 10): text at 20 ms a letter with half the
  * punctuation pauses, setups gone almost as soon as they're typed, a quick walk, no title card, no end card.
  */
-const SHORT = { letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190, titleDur: 0, endDur: 0 };
+const SHORT = { letterMs: 24, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
+/** Episode 10 as posted, before the author slowed the template a touch (Oct 6, 2026: "a little too fast"). */
+const SHORT_10 = { ...SHORT, letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190 };
 
 /**
  * The pothole's landing (src/world/dungeon.ts POTHOLE_LANDING), read from the game so the episode says the same:
@@ -2072,7 +2108,7 @@ const EPISODES = {
       return { menu: { speaker: cells.npcs[id].name, options, pick: options.length - 1, hold: 0.5 } };
     };
     return {
-      ...SHORT,
+      ...SHORT_10,
       number: 10,
       title: 'THE WORST PRISONERS EVER',
       map: cells,
@@ -2164,12 +2200,12 @@ const EPISODES = {
         { gap: [14, 5] },
         { gap: [18, 5] },
         { wait: 0.2 },
-        run('prisoner-2', 14, 105),
+        run('prisoner-2', 14, 80),
         { say: 'prisoner-2', lines: [shout('Nails')] },
-        run('prisoner-1', 10, 145),
+        run('prisoner-1', 10, 104),
         { say: 'prisoner-1', lines: [shout('Old Mott')] },
         // Silas Seen, in no hurry at all
-        run('prisoner-3', 18, 45),
+        run('prisoner-3', 18, 40),
         { say: 'prisoner-3', lines: [shout('Silas Seen')], punch: 1.1 },
         // you head for the way out...
         { look: null },
