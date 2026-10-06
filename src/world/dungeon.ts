@@ -275,3 +275,12 @@ export const POTHOLE_LANDING = [
   'GARY: Zzzz',
   'GARY: Zzzzz',
 ];
+
+/** Landing when the cells are already empty (you let them out first): nobody to laugh. */
+export const POTHOLE_UNSEEN = ['THUD.', 'Nobody saw that. There is nobody left down here to see anything.'];
+
+// ---- The keys (author, Episode 12, Oct 6, 2026): ask Gary nicely and he hands them over. You let the three out;
+// they confess on the way up the ladder, at the tops of their voices. Turn round, and Gary's gone too.
+
+/** The cells are empty and Gary's gone: set once the prisoners' exit has been read (kingdom-dungeon.json). */
+export const CELLS_FREED = 'cells-freed';

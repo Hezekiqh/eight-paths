@@ -135,6 +135,7 @@
       "y": 5,
       "sprite": "oldmott",
       "facing": "down",
+      "goneAfter": "cells-freed",
       "name": "Old Mott",
       "lines": [
         "The king sneezed.",
@@ -160,6 +161,7 @@
       "y": 5,
       "sprite": "nails",
       "facing": "down",
+      "goneAfter": "cells-freed",
       "name": "Nails",
       "lines": [
         "The king asked for ice water.",
@@ -191,6 +193,7 @@
       "y": 5,
       "sprite": "silasseen",
       "facing": "down",
+      "goneAfter": "cells-freed",
       "name": "Silas Seen",
       "lines": [
         "I left the king on read for twenty minutes.",
@@ -225,6 +228,7 @@
       "y": 7,
       "sprite": "raider",
       "facing": "right",
+      "goneAfter": "cells-freed",
       "name": "Gary",
       "lines": [
         "Zzz.",
@@ -233,12 +237,23 @@
       ],
       "questions": [
         {
-          "ask": "Can I have the keys?",
+          "ask": "Could I please have the keys?",
           "answer": [
-            "The keys.",
             "...",
-            "The keys are upstairs. With everyone who gets paid."
-          ]
+            "You said please.",
+            "Nobody says please to Gary.",
+            "* Gary hands you the keys."
+          ],
+          "then": [
+            "You unlock the cells.",
+            "NAILS: THERE WAS POISON IN THAT ICE CUBE!",
+            "OLD MOTT: I PUT PEPPER IN THE KING'S SANDWICH!",
+            "SILAS SEEN: I REGRET NOTHING!!!!",
+            "They're up the ladder and gone.",
+            "You turn back to Gary. Gary is gone too."
+          ],
+          "after": "cells-freed",
+          "deed": "good"
         },
         {
           "ask": "Who are you?",

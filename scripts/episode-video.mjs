@@ -901,6 +901,9 @@ function compile(ep) {
     } else if ('look' in step) {
       // a cut to someone else (the camera on that tile), or back to you (null)
       segs.push({ kind: 'look', t0: t, t1: t, at: step.look && center(...step.look) });
+    } else if (step.vanish) {
+      // someone's simply gone (Gary, while you weren't looking)
+      segs.push({ kind: 'vanish', t0: t, t1: t, id: step.vanish });
     } else if (step.upright) {
       segs.push({ kind: 'upright', t0: t, t1: t });
       t += 0.2;
@@ -1066,6 +1069,7 @@ function stateAt(ep, compiled, t) {
       }
     } else if (s.kind === 'upright') flipped = false;
     else if (s.kind === 'look') look = s.at;
+    else if (s.kind === 'vanish') hide = [...hide, s.id];
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -2125,6 +2129,57 @@ const EPISODES = {
         // and Gary
         { look: [3, 7] },
         { say: 'jailer', lines: said.GARY, punch: 1.4 },
+      ],
+    };
+  },
+  // 12: ask Gary nicely and he hands over the keys. The three confess at the tops of their voices on the way up the
+  // ladder; you head for the way out, turn back, and Gary's gone too (author, Oct 6, 2026).
+  12: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const gary = cells.npcs.jailer;
+    const keys = gary.questions.find((q) => q.after === 'cells-freed');
+    // what each of them shouts on the way out, from the game (kingdom-dungeon.json, the keys' `then`)
+    const shout = (name) => keys.then.find((l) => l.startsWith(`${name.toUpperCase()}: `)).slice(name.length + 2);
+    // each gets to the ladder as their shout finishes
+    const run = (id, x, speed) => ({ npcWalk: id, to: [[x, 6], [20, 6], [20, 8]], speed, hide: true, together: true });
+    return {
+      ...SHORT,
+      number: 12,
+      title: 'I REGRET NOTHING',
+      map: cells,
+      hide: ['brannoc-cell'],
+      gaps: [[5, 5]],
+      hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
+      zoom: 1.4,
+      script: [
+        // frame one: the question, asked nicely
+        { menu: { speaker: gary.name, options: menuOf(gary.questions, []), pick: 0, hold: 0.4 } },
+        { say: 'jailer', lines: keys.answer.filter((l) => l !== '...' && !l.startsWith('* ')), punch: 0.9 },
+        { narrate: true, lines: keys.answer.filter((l) => l.startsWith('* ')).map((l) => l.slice(2)), punch: 0.7 },
+        // the cells open, and out they go, confessing
+        // the whole corridor, the cells to the ladder (6 px an art pixel, so it stays sharp)
+        { look: [15.5, 6] },
+        { zoom: 6 / 7 },
+        { gap: [10, 5] },
+        { gap: [14, 5] },
+        { gap: [18, 5] },
+        { wait: 0.2 },
+        run('prisoner-2', 14, 105),
+        { say: 'prisoner-2', lines: [shout('Nails')] },
+        run('prisoner-1', 10, 145),
+        { say: 'prisoner-1', lines: [shout('Old Mott')] },
+        // Silas Seen, in no hurry at all
+        run('prisoner-3', 18, 45),
+        { say: 'prisoner-3', lines: [shout('Silas Seen')], punch: 1.1 },
+        // you head for the way out...
+        { look: null },
+        { zoom: 1 },
+        { walk: [[11, 7]] },
+        { vanish: 'jailer' },
+        { wait: 0.25 },
+        // ...and back, quick, to Gary. Who isn't there.
+        { walk: [[5, 7]], speed: 340, face: 'left' },
+        { wait: 1.4 },
       ],
     };
   },

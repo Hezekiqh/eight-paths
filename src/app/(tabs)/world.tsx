@@ -161,9 +161,11 @@ import {
   CELL_DOOR,
   ESCORT_LINES,
   GARY_STARTLED,
+  CELLS_FREED,
   FELL_IN,
   POTHOLE,
   POTHOLE_LANDING,
+  POTHOLE_UNSEEN,
   brannocBolts,
   escortIn,
   escortStand,
@@ -492,6 +494,8 @@ function World({
   const map = useMemo(() => withoutGone(roomMap, flagsNow), [roomMap, flagsNow]);
   /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
   const afterTalk = useRef<string[] | null>(null);
+  /** A flag to set once that narration's been read (Question.after). */
+  const afterRead = useRef<string | null>(null);
   /** Someone to see off once the conversation closes (Question.leaves), and who's leaving now. */
   const leaving = useRef<{ id: string; flag: string } | null>(null);
   const [exit, setExit] = useState<{ id: string; flag: string } | null>(null);
@@ -1437,9 +1441,10 @@ function World({
         Math.floor(start.y / TILE) === POTHOLE.landing.y &&
         !w.flags.includes(FELL_IN)
       ) {
-        // Down through the Maze Ward's floor: on your butt outside Silas Seen's cell (dungeon.ts).
+        // Down through the Maze Ward's floor, outside Silas Seen's cell (dungeon.ts). If you've already let
+        // everyone out, there's nobody left to see it.
         w.setFlag(FELL_IN);
-        setDialogue({ lines: POTHOLE_LANDING });
+        setDialogue({ lines: w.flags.includes(CELLS_FREED) ? POTHOLE_UNSEEN : POTHOLE_LANDING });
       } else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
         w.setFlag(JAIL_WOKE);
         // Knocked out by Himothy: you come to already in the cell, no guards, no march.
@@ -1678,8 +1683,12 @@ function World({
               return;
             }
             const narration = afterTalk.current;
+            const flag = afterRead.current;
             afterTalk.current = null;
-            if (narration) setDialogue({ lines: narration });
+            afterRead.current = null;
+            if (narration)
+              setDialogue({ lines: narration, then: flag ? () => useWorldStore.getState().setFlag(flag) : undefined });
+            else if (flag) useWorldStore.getState().setFlag(flag);
             if (leaving.current) {
               // they laugh (out loud), then they're gone
               playSound('laugh');
@@ -1696,6 +1705,7 @@ function World({
               haptics.celebrate();
             }
             if (q.then) afterTalk.current = q.then;
+            if (q.after) afterRead.current = q.after;
             // a kind or mean thing to say counts once (honor.ts)
             if (q.deed)
               useWorldStore

@@ -48,15 +48,20 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   hole." Cut to Gary: "Zzzz" / "Zzzzz". End. In the game: the pothole (`POTHOLE` and `POTHOLE_LANDING` in
   `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only); the episode reads its lines from there.
   Rejected (author): Silas's "One for each cheek", and landing upside down seeing stars (it looks mean).
-- **Next:** Episode 12. Gary can be asked for the keys in the game ("The keys are upstairs. With everyone who gets
-  paid."), if that's where it goes. Then rewrite the old 12–14 ideas to fit the
-  template, with the jokes first.
+- **Episode 12, "I Regret Nothing"** (`node scripts/episode-video.mjs 12`, ~12.5 s): frame one, *Could I please have
+  the keys?* Gary: "You said please." / "Nobody says please to Gary." He hands them over. The cells open and the three
+  confess on their way up the ladder: Nails "THERE WAS POISON IN THAT ICE CUBE!", Old Mott "I PUT PEPPER IN THE
+  KING'S SANDWICH!", Silas Seen, strolling, "I REGRET NOTHING!!!!". You head for the way out, turn back quickly to
+  Gary, and he's gone. In the game: Gary's polite question (`kingdom-dungeon.json`), its closing lines, and
+  `cells-freed` (`CELLS_FREED`), which empties the cells and takes Gary once those lines have been read
+  (`Question.after`, new).
+- **Next:** Episode 13.
 
 ## In the episode script
 
 Every template episode spreads `SHORT` (20 ms a letter, half pauses, quick holds, a 190 px/s walk, no title or end
 card). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
-the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you),
+the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone),
 `scene.gap` (a quicker cut), `laugh … together`.
 
 ## So nothing gets lost again

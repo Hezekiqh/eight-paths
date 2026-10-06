@@ -136,6 +136,11 @@ export type Question = {
   then?: string[];
   /** The one answering leaves with a flourish once the talk ends (a laugh, then a dash), and then this flag is set. */
   leaves?: string;
+  /**
+   * A flag set only once `then` has been read to the end, so whoever goes with it (`goneAfter`) is still there while
+   * it's told: the prisoners shout their confessions on the way out, and only then are the cells empty.
+   */
+  after?: string;
   /** A kind or a mean thing to say (honor.ts): every menu has a mean one (author, Oct 4, 2026). */
   deed?: 'good' | 'bad';
 };
