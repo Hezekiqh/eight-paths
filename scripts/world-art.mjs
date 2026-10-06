@@ -1225,6 +1225,20 @@ const DUNGEON_ART = {
     box(g, x + 1, y + 12, 2, 4, DG.timberDark);
     box(g, x + 13, y + 12, 2, 4, DG.timberDark);
   },
+  '+'(g, x, y) {
+    // Barnaby's commentator's desk, ringside: a timber top, a red drape with a gold fringe, a speaking trumpet and a bell
+    box(g, x, y + 3, TILE, 3, '#7A5236');
+    box(g, x, y + 3, TILE, 1, '#9A6A44');
+    box(g, x + 1, y + 6, TILE - 2, 8, '#9A2A22');
+    for (let i = x + 2; i < x + TILE - 2; i += 3) put(g, i, y + 13, '#C8963A');
+    box(g, x + 1, y + 14, TILE - 2, 1, '#5C1A16');
+    // the trumpet, lying on the desk, bell end out
+    box(g, x + 3, y + 1, 5, 1, '#C8963A');
+    box(g, x + 7, y, 2, 3, '#E0B040');
+    // a little brass bell
+    box(g, x + 11, y + 1, 3, 2, '#C8963A');
+    put(g, x + 12, y, '#5C3A28');
+  },
   r(g, x, y) {
     // A weapon rack of rusted spears.
     box(g, x + 1, y + 12, 14, 2, DG.timber);
@@ -1539,35 +1553,11 @@ function drawArena(map, cheer = false) {
     ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
     for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
   }
-  // the aisle up through the crowd to Barnaby's box: stone steps, lit on each tread
-  rows.forEach((r, ty) =>
-    [...r].forEach((c, tx) => {
-      if (c !== 'S') return;
-      for (let j = 0; j < TILE; j++)
-        box(g, tx * TILE, ty * TILE + j, TILE, 1, j % 4 === 0 ? '#9A928E' : j % 4 === 3 ? '#5A5250' : '#7A7270');
-    }),
-  );
-  // Barnaby's announcer's box, high in the stands over the sand: timber, a red velvet front, a gold rail
-  const boxTiles = [];
-  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === 'A' && boxTiles.push([tx, ty])));
-  if (boxTiles.length) {
-    const bx = Math.min(...boxTiles.map(([tx]) => tx)) * TILE - 3;
-    const bw = boxTiles.length * TILE + 6;
-    const by = boxTiles[0][1] * TILE - 2;
-    box(g, bx, by, bw, TILE + 4, '#5C3A28');
-    box(g, bx + 2, by + 2, bw - 4, TILE - 2, '#7A5236');
-    box(g, bx, by + TILE - 2, bw, 8, '#9A2A22');
-    box(g, bx, by + TILE - 2, bw, 1, '#C8963A');
-    for (let i = bx + 3; i < bx + bw - 2; i += 6) box(g, i, by + TILE + 1, 2, 2, '#C8963A');
-    // the speaking trumpet on its stand
-    box(g, bx + bw - 7, by + 4, 1, 8, '#3A2618');
-    box(g, bx + bw - 9, by + 2, 5, 2, '#C8963A');
-  }
   // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ('.,T1AS'.includes(at(tx, ty))) continue;
+      if ('.,T1'.includes(at(tx, ty))) continue;
       const draw = DUNGEON_ART[letter];
       if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
       // the ladder down goes through a trapdoor: a timber frame, open, dark below

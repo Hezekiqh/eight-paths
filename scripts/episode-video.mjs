@@ -2366,7 +2366,7 @@ const EPISODES = {
     Object.assign(pit.npcs['brannoc-pit'], { x: 18, y: 10, facing: 'up' });
     // two fixed shots, cut between, never panned (author, Oct 6, 2026: "camera angles are video game like")
     const RING = [{ look: [15, 10] }, { zoom: 1 }];
-    const BOX = [{ look: [15.5, 1.5] }, { zoom: 1.5 }];
+    const BOX = [{ look: [15.5, 5] }, { zoom: 1.6 }];
     return {
       ...SHORT,
       // about twenty seconds, so every line has time to land (author, Oct 6, 2026: "its dialogue is too fast")
@@ -2379,9 +2379,9 @@ const EPISODES = {
       // Brannoc's awake until he isn't
       awake: ['brannoc-pit'],
       hero: { sprite: 'quill', at: [15, 10], facing: 'up' },
-      // the hook: Barnaby, high in his box, already talking
-      look: [15.5, 1.5],
-      zoom: 1.5,
+      // the hook: Barnaby, ringside at his commentator's desk, already talking
+      look: [15.5, 5],
+      zoom: 1.6,
       script: [
         { say: 'barnaby-box', lines: welcome, punch: 0.6 },
         ...RING,

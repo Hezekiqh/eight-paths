@@ -4,16 +4,14 @@
   "style": "dungeon",
   "walkable": [
     ".",
-    ",",
-    "A",
-    "S"
+    ","
   ],
   "tiles": [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTAATTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTSSTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTSSTTTTTTTTTTTTTTT",
-    "TTTTTTTTTT,,,,,,,,,,,,TTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTT,,,,,,+,,,,,TTTTTTTTTT",
     "TTTTTTT,,,............,,,TTTTTTT",
     "TTTTT,,..................,,TTTTT",
     "TTTT,,....................,,TTTT",
@@ -47,11 +45,8 @@
     "T": [
       "The stands, packed to the top tier. Somebody's selling roast nuts. Somebody's always selling roast nuts."
     ],
-    "A": [
-      "Barnaby's box: a velvet rail, a speaking trumpet, and a cushion that says LOUD."
-    ],
-    "S": [
-      "Steps up through the crowd to Barnaby's box. Every one of them creaks a different note."
+    "+": [
+      "Barnaby's desk: a speaking trumpet, a bell, and a list of names, most of them crossed out."
     ]
   },
   "objects": [
@@ -60,7 +55,7 @@
       "type": "npc",
       "passable": true,
       "x": 15,
-      "y": 1,
+      "y": 4,
       "sprite": "barnaby",
       "facing": "down",
       "name": "Barnaby",
