@@ -129,11 +129,11 @@ export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 /** Where Brannoc lies, fainted, just off the ladder; and where he walks to swing. */
 // (the Colosseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
 // and Brannoc is three tiles on, room enough to faint without landing on you)
-export const BRANNOC_FAINTED: [number, number] = [11, 12];
-const UNDER_WARDEN: [number, number] = [15, 8];
+export const BRANNOC_FAINTED: [number, number] = [11, 14];
+const UNDER_WARDEN: [number, number] = [15, 10];
 /** The middle of the sand, on the way from the trapdoor to the gate. */
-export const SAND_MIDDLE: [number, number] = [15, 12];
-const TRAPDOOR: [number, number] = [7, 12];
+export const SAND_MIDDLE: [number, number] = [15, 14];
+const TRAPDOOR: [number, number] = [7, 14];
 
 // ---- Up into the Kaldorium after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
 // here first and lost, and Barnaby, up in his announcer's box, has been expecting whoever let them out. He has his
@@ -152,7 +152,7 @@ export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
 export const ARENA_VERDICT = [
   'BARNABY: UNACCEPTABLE.',
   'BARNABY: You will pay with your lives!',
-  'BRANNOC: Whaaaa? D-D-D-Death!?',
+  'BRANNOC: Whaaaa? P-p-pay with our l-l-LIVES!?',
   '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
   'BARNABY: ...Did he just faint?',
   'BARNABY: ...pathetic.',
@@ -257,7 +257,7 @@ export const BRANNOC_NO = [
 ];
 /** Back to the ladder, very slowly. */
 export const brannocShuffles = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [UNDER_WARDEN, SAND_MIDDLE, [8, 12], TRAPDOOR] },
+  { row: brannoc, path: [UNDER_WARDEN, SAND_MIDDLE, [8, 14], TRAPDOOR] },
 ];
 
 /** Walking as Brannoc: the warden drops in, and you faint at the sight of him. */

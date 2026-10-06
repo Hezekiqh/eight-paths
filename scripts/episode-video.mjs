@@ -2355,50 +2355,55 @@ const EPISODES = {
     const verdict = gameLines('ARENA_VERDICT');
     const after = gameLines('ARENA_FIGHT');
     const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    const [pause, pathetic] = by(verdict, 'BARNABY').slice(2);
-    // you in the middle of the ring with Brannoc a few tiles off; the three who lost already at the side
-    Object.assign(pit.npcs['brannoc-pit'], { x: 18, y: 8, facing: 'up' });
-    // three fixed shots, cut between, never panned (author, Oct 6, 2026: "camera angles are video game like")
-    const RING = [{ look: [16.5, 8] }, { zoom: 1.2 }];
-    const BOX = [{ look: [15.5, 2] }, { zoom: 1.5 }];
-    const CREW = [{ look: [23, 5] }, { zoom: 1.4 }];
+    const [unacceptable, lives, pause, pathetic] = by(verdict, 'BARNABY');
+    // you in the middle of the ring, your three close by on your left, Brannoc a few tiles off on your right
+    // (side by side, a sprite's width apart: never stacked, never overlapping)
+    Object.assign(pit.npcs['arena-mott'], { x: 11, y: 11, facing: 'up' });
+    Object.assign(pit.npcs['arena-nails'], { x: 12, y: 11, facing: 'up' });
+    Object.assign(pit.npcs['arena-silas'], { x: 13, y: 11, facing: 'up' });
+    Object.assign(pit.npcs['brannoc-pit'], { x: 18, y: 10, facing: 'up' });
+    // two fixed shots, cut between, never panned (author, Oct 6, 2026: "camera angles are video game like")
+    const RING = [{ look: [15, 10] }, { zoom: 1 }];
+    const BOX = [{ look: [15.5, 1.5] }, { zoom: 1.5 }];
     return {
       ...SHORT,
-      // the lines hold 1.3 times as long as the template's, inside 15 seconds: the time comes out of the gaps
-      read: 1.3,
-      gapAfter: 0,
+      // about twenty seconds, so every line has time to land (author, Oct 6, 2026: "its dialogue is too fast")
+      read: 1.45,
+      gapAfter: 0.12,
       number: 13,
       title: 'UNACCEPTABLE',
       map: pit,
       shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
       // Brannoc's awake until he isn't
       awake: ['brannoc-pit'],
-      hero: { sprite: 'quill', at: [15, 8], facing: 'up' },
-      // the hook: Barnaby in his box, already talking
-      look: [15.5, 2],
+      hero: { sprite: 'quill', at: [15, 10], facing: 'up' },
+      // the hook: Barnaby, high in his box, already talking
+      look: [15.5, 1.5],
       zoom: 1.5,
       script: [
-        { say: 'barnaby-box', lines: welcome, punch: 0.4 },
+        { say: 'barnaby-box', lines: welcome, punch: 0.6 },
         ...RING,
-        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.1 } },
+        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.6 } },
         ...BOX,
         { jolt: 0.45 },
-        { say: 'barnaby-box', lines: by(verdict, 'BARNABY').slice(0, 2), punch: 0.4 },
+        { say: 'barnaby-box', lines: [unacceptable, lives], punch: 0.6 },
+        // Brannoc heard that
         ...RING,
-        { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.3 },
+        { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
         { faint: 'brannoc-pit' },
-        { wait: 0.4 },
+        { wait: 0.6 },
         // still on him, out cold, snot bubble going, as Barnaby asks
-        { say: 'barnaby-box', lines: [pause], punch: 0.4 },
+        { say: 'barnaby-box', lines: [pause], punch: 0.5 },
         ...BOX,
-        { say: 'barnaby-box', lines: [pathetic], punch: 0.4 },
-        ...CREW,
-        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.4 },
-        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.4 },
-        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.4 },
+        { say: 'barnaby-box', lines: [pathetic], punch: 0.6 },
+        // your three, right beside you, making their excuses
+        ...RING,
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
         ...BOX,
         { jolt: 0.4 },
-        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.6 },
+        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 1.0 },
       ],
     };
   },

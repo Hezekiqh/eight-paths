@@ -1507,7 +1507,15 @@ function drawArena(map) {
     ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
     for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
   }
-  // Barnaby's announcer's box, at the front of the stands over the sand: timber, a red velvet front, a gold rail
+  // the aisle up through the crowd to Barnaby's box: stone steps, lit on each tread
+  rows.forEach((r, ty) =>
+    [...r].forEach((c, tx) => {
+      if (c !== 'S') return;
+      for (let j = 0; j < TILE; j++)
+        box(g, tx * TILE, ty * TILE + j, TILE, 1, j % 4 === 0 ? '#9A928E' : j % 4 === 3 ? '#5A5250' : '#7A7270');
+    }),
+  );
+  // Barnaby's announcer's box, high in the stands over the sand: timber, a red velvet front, a gold rail
   const boxTiles = [];
   rows.forEach((r, ty) => [...r].forEach((c, tx) => c === 'A' && boxTiles.push([tx, ty])));
   if (boxTiles.length) {
@@ -1527,7 +1535,7 @@ function drawArena(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ('.,T1A'.includes(at(tx, ty))) continue;
+      if ('.,T1AS'.includes(at(tx, ty))) continue;
       const draw = DUNGEON_ART[letter];
       if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
       // the ladder down goes through a trapdoor: a timber frame, open, dark below
@@ -1836,14 +1844,18 @@ const WALKERS = {
     hair: ['bun', '#8A4A2A'],
     apron: '#F4F0EA',
   },
+  // Barnaby Loudmouth, the Colosseum's announcer (author, Oct 6, 2026: "a crowd announcer type"): a ringmaster's
+  // red tailcoat with gold, a white collar, a big moustache, and a tall black top hat with a red band.
   barnaby: {
-    top: '#8A2A2A',
-    shade: '#6A1E1E',
-    legs: '#3A2A20',
-    boots: '#2A1A12',
+    top: '#B02A22',
+    shade: '#8A1E18',
+    legs: '#1E1A22',
+    boots: '#140E14',
     belt: '#FFC940',
+    collar: '#F4F0EA',
     hair: ['short', '#4A3A2A'],
-    hat: 'wizard',
+    mustache: '#3A2418',
+    hat: 'top',
   },
   pim: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
   varga: {
@@ -2824,6 +2836,15 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       p(4, 5, '#6A4028');
       p(11, 5, '#6A4028');
     }
+  }
+
+  if (w.hat === 'top') {
+    // a ringmaster's top hat: a wide brim, a tall black crown, a red band
+    const hat = '#1A161E';
+    b(3, 4, 10, 1, hat);
+    b(5, -1, 6, 5, hat);
+    b(5, 2, 6, 1, '#B02A22');
+    if (!back) p(6, 0, '#4A4452');
   }
 
   if (w.stitches && !back) {
