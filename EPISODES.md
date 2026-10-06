@@ -66,8 +66,10 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 - **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 16.2 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
-  right) and Barnaby in his commentator's box, set into the tiers at the head of the sand like an emperor's box, in the
-  arena's own stone (an arch, a red curtain inside, a stone parapet at the sand's edge with the Crown's cloth on it). The Warden is out of sight; he enters
+  right) and Barnaby in his commentator's box, a wedge of the Colosseum's own ring at the head of the sand, following the
+  same oval as the tiers (author: "the circle that is the colosseum should include the box"): the arena wall built up
+  into a parapet with the Crown's cloth, the box recessed behind it under a red curtain and an arch, solid stone above
+  hiding the crowd behind it. The Warden is out of sight; he enters
   with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
   just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
   (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three: Silas Seen "I pulled a muscle on

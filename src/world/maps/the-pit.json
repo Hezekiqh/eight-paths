@@ -7,11 +7,11 @@
     ","
   ],
   "tiles": [
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTT$$$$TTTTTTTTTTTTTT",
     "TTTTTTTTTTTTTT$$$$TTTTTTTTTTTTTT",
     "TTTTTTTTTTTTTT$..$TTTTTTTTTTTTTT",
-    "TTTTTTTTTT,,,,,++,,,,,TTTTTTTTTT",
+    "TTTTTTTTTTTTTT$++$TTTTTTTTTTTTTT",
+    "TTTTTTTTTT,,,,,,,,,,,,TTTTTTTTTT",
     "TTTTTTT,,,............,,,TTTTTTT",
     "TTTTT,,..................,,TTTTT",
     "TTTT,,....................,,TTTT",
@@ -58,7 +58,7 @@
       "type": "npc",
       "passable": true,
       "x": 15,
-      "y": 3,
+      "y": 2,
       "sprite": "barnaby",
       "facing": "down",
       "name": "Barnaby",
