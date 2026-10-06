@@ -2396,22 +2396,25 @@ const EPISODES = {
         { faint: 'brannoc-pit' },
         // a beat on him, out cold, snot bubble going
         { wait: 1.2 },
-        // your three, making their excuses as they go: over to Brannoc, grab him, and off to the side of the sand with
-        // him, out of the way of the fight (author, Oct 6, 2026)
+        // your three make their excuses where they stand, then rush over to Brannoc, pick him up and carry him off to
+        // the side of the sand, out of the way of the fight (author, Oct 6, 2026)
         { look: [19.5, 10] },
         { zoom: 6 / 7 },
-        // (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over)
-        { npcWalk: 'arena-mott', to: [[11, 12], [17, 12], [17, 10]], speed: 130, together: true },
-        { npcWalk: 'arena-nails', to: [[12, 13], [20, 13], [20, 10]], speed: 160, together: true },
-        { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 130, together: true },
         { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
-        // carried off: Old Mott at his feet, Nails at his head, Silas Seen leading the way
-        { npcWalk: 'arena-mott', from: center(17, 10), to: [[21, 10]], speed: 55, together: true },
-        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 55, together: true },
-        { npcWalk: 'arena-nails', from: center(20, 10), to: [[24, 10]], speed: 55, together: true },
-        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 55, together: true },
         { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
         { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
+        // the rush (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over)
+        { npcWalk: 'arena-mott', to: [[11, 12], [17, 12], [17, 10]], speed: 170, together: true },
+        { npcWalk: 'arena-nails', to: [[12, 13], [20, 13], [20, 10]], speed: 190, together: true },
+        { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 170, together: true },
+        // (Silas Seen's is the longest run: 176 px at 170 px/s)
+        { wait: 1.2 },
+        // picked up and carried off: Old Mott at his feet, Nails at his head, Silas Seen leading the way
+        { npcWalk: 'arena-mott', from: center(17, 10), to: [[21, 10]], speed: 70, together: true },
+        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 70, together: true },
+        { npcWalk: 'arena-nails', from: center(20, 10), to: [[24, 10]], speed: 70, together: true },
+        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 70, together: true },
+        { wait: 1.2 },
         ...BOX,
         { jolt: 0.4 },
         { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 1.0 },
