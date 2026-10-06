@@ -98,7 +98,8 @@ export const WALKER_ROWS = {
   oldmott: 87,
   nails: 88,
   gary: 89,
-  silasseen: 90,
+  garyasleep: 90,
+  silasseen: 91,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

@@ -171,6 +171,8 @@ type MapData = {
   pushable?: string;
   /** The story flag set when every pressure plate has a boulder on it. */
   platesFlag?: string;
+  /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
+  talkThrough?: string[];
   enemies?: { kind: string; x: number; y: number }[];
   /** A boss fight here, until `flag` is set: the boss at (x, y) and the enemies that fight for them. */
   boss?: Boss;
@@ -200,6 +202,8 @@ export type WorldMap = {
   boulders: number[];
   plates: number[];
   platesFlag?: string;
+  /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
+  talkThrough?: string[];
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
   /** `hp`: tougher (or weaker) than the kind usually is, for this fight (the castle's shadows, castle.ts). */
   enemies: { kind: EnemyKind; x: number; y: number; hp?: number }[];
@@ -258,6 +262,7 @@ function build(data: MapData, image: number): WorldMap {
     boulders: data.pushable ? letterTiles(data.tiles, data.pushable) : [],
     plates: letterTiles(data.tiles, 'P'),
     platesFlag: data.platesFlag,
+    talkThrough: data.talkThrough,
     boss: data.boss,
     ladder: data.ladder,
     enemies: (data.enemies ?? []).filter((e): e is { kind: EnemyKind; x: number; y: number } =>

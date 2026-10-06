@@ -166,6 +166,7 @@ import {
   POTHOLE,
   POTHOLE_LANDING,
   POTHOLE_UNSEEN,
+  toTheLever,
   brannocBolts,
   escortIn,
   escortStand,
@@ -1532,6 +1533,7 @@ function World({
         husks={husks}
         onMarched={onMarched}
         exit={exit}
+        talkingTo={dialogue?.speaker ?? null}
         onExited={() => {
           if (exit) useWorldStore.getState().setFlag(exit.flag);
           setExit(null);
@@ -1686,9 +1688,15 @@ function World({
             const flag = afterRead.current;
             afterTalk.current = null;
             afterRead.current = null;
-            if (narration)
-              setDialogue({ lines: narration, then: flag ? () => useWorldStore.getState().setFlag(flag) : undefined });
-            else if (flag) useWorldStore.getState().setFlag(flag);
+            const tell = () => {
+              if (narration)
+                setDialogue({ lines: narration, then: flag ? () => useWorldStore.getState().setFlag(flag) : undefined });
+              else if (flag) useWorldStore.getState().setFlag(flag);
+            };
+            // "Sure. Why not." You go straight to the lever and pull it (dungeon.ts), then the cells empty.
+            if (flag === CELLS_FREED)
+              march(toTheLever(Math.floor(sim.x.get() / TILE), Math.floor(sim.y.get() / TILE)), tell);
+            else tell();
             if (leaving.current) {
               // they laugh (out loud), then they're gone
               playSound('laugh');
@@ -1975,8 +1983,19 @@ function useAct(
       return;
     }
     // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
+    // Through bars (map.talkThrough), whoever's just the other side.
+    const [dx, dy] = [
+      [0, 1],
+      [0, -1],
+      [-1, 0],
+      [1, 0],
+    ][facing];
+    const across = map.talkThrough?.includes(map.tiles[ty]?.[tx] ?? '')
+      ? whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx + dx, ty + dy)
+      : undefined;
     const thing =
       whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
+      across ??
       map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
     if (thing?.type === 'npc' && special(thing)) return;
     // party members you have may chime in, after the person's own lines (see banter.ts)

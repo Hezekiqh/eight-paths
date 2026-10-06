@@ -4,7 +4,9 @@
   "style": "dungeon",
   "walkable": [
     ".",
-    ",",
+    ","
+  ],
+  "talkThrough": [
     "p"
   ],
   "tiles": [
@@ -13,7 +15,7 @@
     "#Wb...,kW,.bW.b,W,.bW.W#",
     "#W,.....W...W...W...W.W#",
     "#W,,....W...W...W...W.W#",
-    "#WGGG24GWGpGWGpGWGpGW.W#",
+    "#WGGG24GVGpGWGpGWGpGW.W#",
     "#W....................W#",
     "#Wt...................W#",
     "#W...................1W#",
@@ -59,6 +61,10 @@
     ],
     "3": [
       "The guards' stair, up to the town. Locked from the other side. Of course it is."
+    ],
+    "V": [
+      "A lever on the wall. A sign over it: CELLS. DO NOT PULL.",
+      "Under that, in other handwriting: (unless Gary says so)"
     ],
     "4": [
       "The cell door. Locked, and the key is upstairs with somebody who doesn't like you."
@@ -132,7 +138,7 @@
       "id": "prisoner-1",
       "type": "npc",
       "x": 10,
-      "y": 5,
+      "y": 4,
       "sprite": "oldmott",
       "facing": "down",
       "goneAfter": "cells-freed",
@@ -158,7 +164,7 @@
       "id": "prisoner-2",
       "type": "npc",
       "x": 14,
-      "y": 5,
+      "y": 4,
       "sprite": "nails",
       "facing": "down",
       "goneAfter": "cells-freed",
@@ -190,7 +196,7 @@
       "id": "prisoner-3",
       "type": "npc",
       "x": 18,
-      "y": 5,
+      "y": 4,
       "sprite": "silasseen",
       "facing": "down",
       "goneAfter": "cells-freed",
@@ -241,12 +247,11 @@
           "ask": "Could I please have the keys?",
           "answer": [
             "...",
-            "You said please.",
-            "Nobody says please to Gary.",
-            "* Gary hands you the keys."
+            "* Gary thinks about it. Then he shrugs.",
+            "Sure. Why not."
           ],
           "then": [
-            "You unlock the cells.",
+            "You pull the lever. CLUNK. Every cell door swings open.",
             "NAILS: THERE WAS POISON IN THAT ICE CUBE!",
             "OLD MOTT: I PUT PEPPER IN THE KING'S SANDWICH!",
             "SILAS SEEN: I REGRET NOTHING!!!!",

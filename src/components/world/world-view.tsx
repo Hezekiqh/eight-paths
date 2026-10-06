@@ -277,6 +277,8 @@ type Props = {
    * east off the map, lightning fast. `onExited` runs once they're gone.
    */
   exit?: { id: string } | null;
+  /** Who you're talking to, by name: someone asleep at their post (Gary) is awake for it. */
+  talkingTo?: string | null;
   onExited?: () => void;
   /** A march (sim.march) has finished. */
   onMarched?: () => void;
@@ -290,6 +292,9 @@ type Props = {
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
 };
+
+/** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
+const dozing = (n: { asleep?: boolean; name: string }, talkingTo: string | null) => !!n.asleep && n.name !== talkingTo;
 
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
 const EXIT_LAUGH = 1.4;
@@ -350,6 +355,7 @@ export function WorldView({
   holdOut = 0,
   onWin,
   exit = null,
+  talkingTo = null,
   onExited,
   onMarched,
   chests = [],
@@ -445,15 +451,25 @@ export function WorldView({
   }, [exit, sim.npcIds, exitRow, exitT]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   // [sprite row, row in sim.npcWalk] for everyone still here.
+  // someone asleep at their post is drawn eyes shut (their "asleep" walker), unless you're talking to them
   const npcs = useMemo(
-    () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], sim.npcIds.indexOf(n.id)] as [number, number]),
-    [map, sim.npcIds],
+    () =>
+      map.npcs.map(
+        (n) =>
+          [
+            dozing(n, talkingTo)
+              ? (WALKER_ROWS[`${n.sprite}asleep` as WalkerId] ?? WALKER_ROWS[n.sprite])
+              : WALKER_ROWS[n.sprite],
+            sim.npcIds.indexOf(n.id),
+          ] as [number, number],
+      ),
+    [map, sim.npcIds, talkingTo],
   );
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
   // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
   const sleepers = useMemo(
-    () => map.npcs.filter((n) => n.asleep).map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
-    [map],
+    () => map.npcs.filter((n) => dozing(n, talkingTo)).map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
+    [map, talkingTo],
   );
   // One more for a party member stepping in for a job (a cameo).
   // And room for a march's actors.

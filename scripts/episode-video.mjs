@@ -749,6 +749,10 @@ function sleepZs(t, x, y) {
   return out;
 }
 
+/** Someone asleep at their post (Gary) is drawn eyes shut unless the episode has them awake (`ep.awake`). */
+const dozing = (ep, n) => !!n.asleep && !(ep.awake ?? []).includes(n.id);
+const spriteOf = (ep, n) => (dozing(ep, n) && WALKER_ROWS[`${n.sprite}asleep`] !== undefined ? `${n.sprite}asleep` : n.sprite);
+
 /** After the fall's impact: the shake, the bounce and the flop, before anyone speaks. */
 const FALL_SETTLE = 0.45;
 /** A change of place: half of it fading out, half fading in. */
@@ -876,7 +880,7 @@ function compile(ep) {
     } else if (step.say || step.narrate || step.you) {
       const npc = step.say ? map.npcs[step.say] : null;
       const speaker = step.you ? 'You' : npc ? npc.name : undefined;
-      const sprite = step.you ? ep.hero.sprite : npc ? npc.sprite : undefined;
+      const sprite = step.you ? ep.hero.sprite : npc ? spriteOf(ep, npc) : undefined;
       const voice = step.you ? 3 : voiceFor(speaker, sprite);
       // the person turns to face you, as in the game
       if (npc) {
@@ -921,6 +925,13 @@ function compile(ep) {
     } else if ('look' in step) {
       // a cut to someone else (the camera on that tile), or back to you (null)
       segs.push({ kind: 'look', t0: t, t1: t, at: step.look && center(...step.look) });
+    } else if (step.shrug) {
+      // someone shrugs
+      segs.push({ kind: 'shrug', t0: t, t1: t + 0.55, id: step.shrug });
+      t += 0.6;
+    } else if (step.jolt) {
+      // the screen jolts (a lever thrown: CLUNK)
+      segs.push({ kind: 'jolt', t0: t, t1: t + step.jolt });
     } else if (step.vanish) {
       // someone's simply gone (Gary, while you weren't looking)
       segs.push({ kind: 'vanish', t0: t, t1: t, id: step.vanish });
@@ -989,6 +1000,8 @@ function stateAt(ep, compiled, t) {
   let shake = 0;
   /** Where the camera is looking instead of at you (a cut to someone else), in art px. */
   let look = null;
+  /** Who's mid-shrug, by id: seconds into it. */
+  const shrugs = {};
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1090,6 +1103,8 @@ function stateAt(ep, compiled, t) {
     } else if (s.kind === 'upright') flipped = false;
     else if (s.kind === 'look') look = s.at;
     else if (s.kind === 'vanish') hide = [...hide, s.id];
+    else if (s.kind === 'shrug' && t < s.t1) shrugs[s.id] = t - s.t0;
+    else if (s.kind === 'jolt' && t < s.t1) shake = 2.5 * (1 - (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1102,6 +1117,7 @@ function stateAt(ep, compiled, t) {
     flipped,
     flippedFor: t - flippedAt,
     look,
+    shrugs,
     shake,
     sink,
     hole,
@@ -1257,20 +1273,25 @@ function drawWorld(canvas, ep, st, t) {
     .map((n) => {
       const at = st.npcAt[n.id];
       const lt = st.laughing[n.id];
-      if (at && lt === undefined) return [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y];
+      const row = WALKER_ROWS[spriteOf(ep, n)];
+      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
+      // a shrug: up on the shoulders a moment
+      const sh = st.shrugs[n.id];
+      if (sh !== undefined && lt === undefined)
+        return [row, DIRS[st.npcFacing[n.id]], 0, x, y - (sh > 0.1 && sh < 0.45 ? 1 : 0)];
       // laughing: a quick shake and a hop, head thrown back on every other beat
       if (lt !== undefined) {
         const beat = Math.floor(lt * 12);
         return [
-          WALKER_ROWS[n.sprite],
+          row,
           DIRS[st.npcFacing[n.id]],
           0,
           x + (beat % 2 ? 1 : -1),
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y];
+      return [row, DIRS[st.npcFacing[n.id]], 0, x, y];
     });
   // the hole you went down: dark, with a lip of broken flagstone
   if (st.hole) {
@@ -1337,7 +1358,7 @@ function drawWorld(canvas, ep, st, t) {
   Object.values(map.npcs)
     .filter(
       (n) =>
-        n.asleep &&
+        dozing(ep, n) &&
         !(st.hide ?? ep.hide)?.includes(n.id) &&
         !st.npcAt[n.id] &&
         !(n.comesAfter && !st.shown.includes(n.id)),
@@ -2168,16 +2189,24 @@ const EPISODES = {
       ],
     };
   },
-  // 12: ask Gary nicely and he hands over the keys. The three confess at the tops of their voices on the way up the
-  // ladder; you head for the way out, turn back, and Gary's gone too (author, Oct 6, 2026).
+  // 12: ask Gary nicely. He thinks, shrugs: "Sure. Why not." You go straight to the lever and the cells open; the three
+  // confess at the tops of their voices on the way up the ladder. You head for the way out, turn back, and Gary's
+  // gone too (author, Oct 6, 2026).
   12: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
     const gary = cells.npcs.jailer;
     const keys = gary.questions.find((q) => q.after === 'cells-freed');
-    // what each of them shouts on the way out, from the game (kingdom-dungeon.json, the keys' `then`)
+    const says = keys.answer.filter((l) => !l.startsWith('* '));
+    // what each of them shouts on the way out, from the game (kingdom-dungeon.json, the question's `then`)
     const shout = (name) => keys.then.find((l) => l.startsWith(`${name.toUpperCase()}: `)).slice(name.length + 2);
-    // each gets to the ladder as their shout finishes
-    const run = (id, x, speed) => ({ npcWalk: id, to: [[x, 6], [20, 6], [20, 8]], speed, hide: true, together: true });
+    // out of the cell, through the open door, along the corridor and up the ladder, getting there as the shout ends
+    const run = (id, x, speed) => ({
+      npcWalk: id,
+      to: [[x, 5], [x, 6], [20, 6], [20, 8]],
+      speed,
+      hide: true,
+      together: true,
+    });
     return {
       ...SHORT,
       number: 12,
@@ -2185,36 +2214,43 @@ const EPISODES = {
       map: cells,
       hide: ['brannoc-cell'],
       gaps: [[5, 5]],
+      // Gary's a chill guy, not an idiot: awake for this
+      awake: ['jailer'],
       hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
       zoom: 1.4,
       script: [
         // frame one: the question, asked nicely
         { menu: { speaker: gary.name, options: menuOf(gary.questions, []), pick: 0, hold: 0.4 } },
-        { say: 'jailer', lines: keys.answer.filter((l) => l !== '...' && !l.startsWith('* ')), punch: 0.9 },
-        { narrate: true, lines: keys.answer.filter((l) => l.startsWith('* ')).map((l) => l.slice(2)), punch: 0.7 },
-        // the cells open, and out they go, confessing
-        // the whole corridor, the cells to the ladder (6 px an art pixel, so it stays sharp)
-        { look: [15.5, 6] },
-        { zoom: 6 / 7 },
+        // he thinks about it...
+        { say: 'jailer', lines: says.slice(0, -1), punch: 0.9 },
+        // ...shrugs...
+        { shrug: 'jailer' },
+        { say: 'jailer', lines: says.slice(-1), punch: 0.8 },
+        // ...and you go straight to the lever
+        { walk: [[4, 6], [8, 6]], speed: 220, face: 'up' },
+        { jolt: 0.35 },
         { gap: [10, 5] },
         { gap: [14, 5] },
         { gap: [18, 5] },
-        { wait: 0.2 },
-        run('prisoner-2', 14, 80),
+        { narrate: true, lines: ['CLUNK.'], punch: 0.5 },
+        // out they go, confessing
+        { look: [15.5, 6] },
+        { zoom: 6 / 7 },
+        run('prisoner-2', 14, 84),
         { say: 'prisoner-2', lines: [shout('Nails')] },
-        run('prisoner-1', 10, 104),
+        run('prisoner-1', 10, 118),
         { say: 'prisoner-1', lines: [shout('Old Mott')] },
         // Silas Seen, in no hurry at all
-        run('prisoner-3', 18, 40),
+        run('prisoner-3', 18, 56),
         { say: 'prisoner-3', lines: [shout('Silas Seen')], punch: 1.1 },
         // you head for the way out...
         { look: null },
         { zoom: 1 },
-        { walk: [[11, 7]] },
+        { walk: [[14, 6]] },
         { vanish: 'jailer' },
         { wait: 0.25 },
         // ...and back, quick, to Gary. Who isn't there.
-        { walk: [[5, 7]], speed: 340, face: 'left' },
+        { walk: [[4, 6], [4, 7]], speed: 340, face: 'left' },
         { wait: 1.4 },
       ],
     };
