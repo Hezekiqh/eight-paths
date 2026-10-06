@@ -160,7 +160,7 @@ export const ARENA_FIGHT = [
   'SILAS SEEN: I pulled a muscle on the way up here.',
   'OLD MOTT: I am too old for this.',
   'NAILS: My ice cubes melted.',
-  '* Old Mott, Nails and Silas Seen shuffle to the side of the sand.',
+  '* Old Mott, Nails and Silas Seen run for the side of the sand, and they take Brannoc with them.',
   'BARNABY: FINISH THEM!',
 ];
 /** If you never let the three out: just you and Brannoc. */

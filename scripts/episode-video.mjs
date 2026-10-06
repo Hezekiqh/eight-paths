@@ -1435,7 +1435,8 @@ function drawWorld(canvas, ep, st, t) {
   for (const [id, over] of Object.entries(st.fainted)) {
     const n = map.npcs[id];
     if (!n || over < 1) continue;
-    const [x, y] = center(n.x, n.y);
+    // (wherever they are: carried off, say)
+    const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(n.x, n.y);
     for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
     if (n.snot) {
       const b = bubbleAt(t, x + 13, y - 4);
@@ -2395,8 +2396,20 @@ const EPISODES = {
         { faint: 'brannoc-pit' },
         // a beat on him, out cold, snot bubble going
         { wait: 1.2 },
-        // your three, right beside you, making their excuses
+        // your three, making their excuses as they go: over to Brannoc, grab him, and off to the side of the sand with
+        // him, out of the way of the fight (author, Oct 6, 2026)
+        { look: [19.5, 10] },
+        { zoom: 6 / 7 },
+        // (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over)
+        { npcWalk: 'arena-mott', to: [[11, 12], [17, 12], [17, 10]], speed: 130, together: true },
+        { npcWalk: 'arena-nails', to: [[12, 13], [20, 13], [20, 10]], speed: 160, together: true },
+        { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 130, together: true },
         { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
+        // carried off: Old Mott at his feet, Nails at his head, Silas Seen leading the way
+        { npcWalk: 'arena-mott', from: center(17, 10), to: [[21, 10]], speed: 55, together: true },
+        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 55, together: true },
+        { npcWalk: 'arena-nails', from: center(20, 10), to: [[24, 10]], speed: 55, together: true },
+        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 55, together: true },
         { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
         { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
         ...BOX,
