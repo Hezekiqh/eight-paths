@@ -1888,6 +1888,7 @@ const WALKERS = {
     hair: ['short', '#4A3A2A'],
     mustache: '#3A2418',
     hat: 'top',
+    short: true,
   },
   pim: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
   varga: {
@@ -2901,6 +2902,18 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     const bx = side ? 8 : 12;
     ellipse(f, bx, 7, 4, 4, '#6A6260');
     ellipse(f, bx - 1, 6, 2, 2, '#8A8280');
+  }
+
+  // a short one (Barnaby, author, Oct 6, 2026: "a small guy"): the same head and body on stubby legs, four rows
+  // shorter, feet where everyone's feet are
+  if (w.short) {
+    const rows = f.map((r) => r.slice());
+    for (let y = 0; y < FH; y++) {
+      const from = y >= 20 ? y : y - 4;
+      f[y] = from >= 0 ? rows[from].slice() : Array(FW).fill(null);
+    }
+    // the four rows of leg that went: the belt sits right on top of the boots
+    for (let y = 16; y < 20; y++) f[y] = rows[y - 4].slice();
   }
 
   // a dark outline around the whole silhouette, then a soft shadow at the feet

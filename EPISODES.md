@@ -76,7 +76,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`barnaby-box`, tiles `A`, the aisle `S`), your three beside you where you come up through the trapdoor, and Brannoc
   asleep with a snot bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who
   comes up the tunnel. If you never let the three out, Barnaby welcomes "our runaways" and they aren't there.
-  Barnaby is a ringmaster now (top hat, red tailcoat, moustache), here and in Warrior City.
+  Barnaby is a ringmaster now (top hat, red tailcoat, moustache), and a small guy (`short`: stubby legs), here and in Warrior City.
 - **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×19, two rows of stands over the box), open to the sky: sand, a low stone wall, tiers
   packed with the crowd (little pixel people, faces toward the sand and backs on the near side, on their feet and
