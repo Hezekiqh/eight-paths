@@ -1225,20 +1225,6 @@ const DUNGEON_ART = {
     box(g, x + 1, y + 12, 2, 4, DG.timberDark);
     box(g, x + 13, y + 12, 2, 4, DG.timberDark);
   },
-  '+'(g, x, y) {
-    // Barnaby's commentator's desk, ringside: a timber top, a red drape with a gold fringe, a speaking trumpet and a bell
-    box(g, x, y + 3, TILE, 3, '#7A5236');
-    box(g, x, y + 3, TILE, 1, '#9A6A44');
-    box(g, x + 1, y + 6, TILE - 2, 8, '#9A2A22');
-    for (let i = x + 2; i < x + TILE - 2; i += 3) put(g, i, y + 13, '#C8963A');
-    box(g, x + 1, y + 14, TILE - 2, 1, '#5C1A16');
-    // the trumpet, lying on the desk, bell end out
-    box(g, x + 3, y + 1, 5, 1, '#C8963A');
-    box(g, x + 7, y, 2, 3, '#E0B040');
-    // a little brass bell
-    box(g, x + 11, y + 1, 3, 2, '#C8963A');
-    put(g, x + 12, y, '#5C3A28');
-  },
   r(g, x, y) {
     // A weapon rack of rusted spears.
     box(g, x + 1, y + 12, 14, 2, DG.timber);
@@ -1553,11 +1539,58 @@ function drawArena(map, cheer = false) {
     ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
     for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
   }
+  // the commentator's box, built into the wall at the head of the sand (author, Oct 6, 2026): a stone alcove in the
+  // stands under a striped awning, panelled inside, a banner on the back wall, and across its front, at the sand's
+  // edge, Barnaby's desk: a red drape with a gold fringe, his speaking trumpet and his bell
+  const booth = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => (c === '$' || c === '+') && booth.push([tx, ty])));
+  if (booth.length) {
+    const bx0 = Math.min(...booth.map(([tx]) => tx)) * TILE;
+    const bx1 = (Math.max(...booth.map(([tx]) => tx)) + 1) * TILE;
+    const by0 = Math.min(...booth.map(([, ty]) => ty)) * TILE;
+    const desk = booth.filter(([tx, ty]) => at(tx, ty) === '+');
+    const dy0 = desk[0][1] * TILE;
+    const dx0 = Math.min(...desk.map(([tx]) => tx)) * TILE;
+    const dx1 = (Math.max(...desk.map(([tx]) => tx)) + 1) * TILE;
+    // the alcove: dark panelling, planks, a floor
+    box(g, bx0, by0, bx1 - bx0, dy0 - by0 + 4, '#4A2E1E');
+    for (let x = bx0 + 3; x < bx1; x += 6) box(g, x, by0 + 8, 1, dy0 - by0 - 8, '#3A2216');
+    box(g, bx0, dy0 - 6, bx1 - bx0, 10, '#5C3A28');
+    // a banner on the back wall: red, the gold fist
+    const mid = Math.round((bx0 + bx1) / 2);
+    box(g, mid - 5, by0 + 9, 10, 12, '#9A2A22');
+    box(g, mid - 5, by0 + 9, 10, 1, '#C8963A');
+    box(g, mid - 1, by0 + 12, 2, 3, '#C8963A');
+    box(g, mid - 2, by0 + 13, 4, 2, '#C8963A');
+    // stone pillars either side
+    box(g, bx0, by0, 5, dy0 - by0 + 6, '#8A8280');
+    box(g, bx1 - 5, by0, 5, dy0 - by0 + 6, '#8A8280');
+    box(g, bx0 + 4, by0, 1, dy0 - by0 + 6, '#5A5250');
+    box(g, bx1 - 5, by0, 1, dy0 - by0 + 6, '#5A5250');
+    // the awning: red and gold stripes, scalloped
+    for (let x = bx0 - 2; x < bx1 + 2; x++) {
+      const c = Math.floor((x - bx0) / 4) % 2 ? '#C8963A' : '#9A2A22';
+      box(g, x, by0 - 2, 1, 7, c);
+      if ((x - bx0) % 4 !== 0) put(g, x, by0 + 5, c);
+    }
+    box(g, bx0 - 2, by0 - 3, bx1 - bx0 + 4, 1, '#5C1A16');
+    // the desk across the front
+    box(g, dx0 - 2, dy0 + 2, dx1 - dx0 + 4, 3, '#7A5236');
+    box(g, dx0 - 2, dy0 + 2, dx1 - dx0 + 4, 1, '#9A6A44');
+    box(g, dx0 - 1, dy0 + 5, dx1 - dx0 + 2, 9, '#9A2A22');
+    for (let x = dx0; x < dx1; x += 3) put(g, x, dy0 + 13, '#C8963A');
+    box(g, dx0 - 1, dy0 + 14, dx1 - dx0 + 2, 1, '#5C1A16');
+    // the speaking trumpet, bell end out, and a brass bell
+    box(g, dx1 - 12, dy0, 6, 1, '#C8963A');
+    box(g, dx1 - 7, dy0 - 1, 2, 3, '#E0B040');
+    box(g, dx0 + 3, dy0, 3, 2, '#C8963A');
+    put(g, dx0 + 4, dy0 - 1, '#5C3A28');
+  }
   // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ('.,T1'.includes(at(tx, ty))) continue;
+      if ('.,T1$+'.includes(at(tx, ty))) continue;
       const draw = DUNGEON_ART[letter];
       if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
       // the ladder down goes through a trapdoor: a timber frame, open, dark below

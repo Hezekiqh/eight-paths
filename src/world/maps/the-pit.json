@@ -9,9 +9,9 @@
   "tiles": [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TTTTTTTTTT,,,,,,+,,,,,TTTTTTTTTT",
+    "TTTTTTTTTTTTTT$$$$TTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTT$..$TTTTTTTTTTTTTT",
+    "TTTTTTTTTT,,,,,++,,,,,TTTTTTTTTT",
     "TTTTTTT,,,............,,,TTTTTTT",
     "TTTTT,,..................,,TTTTT",
     "TTTT,,....................,,TTTT",
@@ -47,6 +47,9 @@
     ],
     "+": [
       "Barnaby's desk: a speaking trumpet, a bell, and a list of names, most of them crossed out."
+    ],
+    "$": [
+      "The commentator's box. Velvet, varnish, and a cushion that says LOUD."
     ]
   },
   "objects": [
@@ -55,7 +58,7 @@
       "type": "npc",
       "passable": true,
       "x": 15,
-      "y": 4,
+      "y": 3,
       "sprite": "barnaby",
       "facing": "down",
       "name": "Barnaby",
@@ -507,5 +510,8 @@
       }
     }
   ],
-  "floor": "sand"
+  "floor": "sand",
+  "talkThrough": [
+    "+"
+  ]
 }

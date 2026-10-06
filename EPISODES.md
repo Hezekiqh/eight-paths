@@ -66,14 +66,15 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 - **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 16.2 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
-  right) and Barnaby, ringside on the sand at his commentator's desk (author: the box looked bad). The Warden is out of sight; he enters
-  with the arena shaking, later. Barnaby (desk): "Well, well, well. If it isn't our final contestants." The menu: *I was
-  just going for a walk.* Barnaby (desk, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
+  right) and Barnaby in his commentator's box, built into the wall at the head of the sand (a stone alcove under a
+  striped awning, a red-draped desk at the sand's edge). The Warden is out of sight; he enters
+  with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
+  just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
   (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three: Silas Seen "I pulled a muscle on
-  the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (desk, the screen jolts):
+  the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
   "FIGHT!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.", "FINISH THEM!") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
-  `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby ringside at
-  his desk (`barnaby-box`, the desk is tile `+`), your three beside you where you come up through the trapdoor, and Brannoc
+  `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby in his box
+  (`barnaby-box`; the box `$`, its desk `+`, which you talk across, `talkThrough`), your three beside you where you come up through the trapdoor, and Brannoc
   asleep with a snot bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who
   comes up the tunnel. If you never let the three out, Barnaby welcomes "our runaways" and they aren't there.
   Barnaby is a ringmaster now (top hat, red tailcoat, moustache), and a small guy (`short`: stubby legs), here and in Warrior City.
