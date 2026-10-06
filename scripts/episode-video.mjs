@@ -854,10 +854,12 @@ function compile(ep) {
       }
       const speed = step.speed ?? SPEED;
       const dur = dist / speed;
+      // `delay`: sets off this long after now, while whatever comes next in the script goes on
+      const t0 = t + (step.delay ?? 0);
       segs.push({
         kind: 'npcWalk',
-        t0: t,
-        t1: t + dur,
+        t0,
+        t1: t0 + dur,
         id: step.npcWalk,
         legs,
         dist,
@@ -865,8 +867,13 @@ function compile(ep) {
         hide: step.hide,
         tears: step.tears,
         dash: step.dash,
+        // `turn`: which way they turn once there; `facing`: which way they face the whole way (walking backwards)
+        turn: step.turn,
+        facing: step.facing,
+        // `carried`: lifted off the ground as they set off, and set down when they get there (out cold, carried)
+        carried: step.carried,
       });
-      if (!step.together) t += dur + 0.15;
+      if (!step.together) t += (step.delay ?? 0) + dur + 0.15;
     } else if (step.laugh) {
       // someone laughs: shoulders shaking, a burst of HA over their head (`quiet`: just the shaking, a cower)
       segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh, quiet: step.quiet });
@@ -997,6 +1004,8 @@ function compile(ep) {
       segs.push({ kind: 'gap', t0: t, t1: t, at: step.gap });
     } else if (step.wait) t += step.wait;
   }
+  // (a `delay`ed walk starts after steps that come later in the script)
+  segs.sort((a, b) => a.t0 - b.t0);
   return { segs, end: t };
 }
 
@@ -1101,14 +1110,18 @@ function stateAt(ep, compiled, t) {
     } else if (s.kind === 'face') facing = s.dir;
     else if (s.kind === 'npcFace') npcFacing[s.id] = s.dir;
     else if (s.kind === 'npcWalk') {
-      const d = Math.min(s.dist, (t - s.t0) * s.speed);
+      const d = Math.max(0, Math.min(s.dist, (t - s.t0) * s.speed));
       const leg = s.legs.findLast((l) => l.d0 <= d) ?? s.legs[0];
       const k = Math.min(1, (d - leg.d0) / leg.len);
       const done = t >= s.t1;
+      // up over a quarter of a second, a bob with every step, and down again at the end
+      const LIFT = 10;
+      const up = Math.min(1, (t - s.t0) / 0.25, Math.max(0, 1 - (t - s.t1) / 0.25));
       npcAt[s.id] = {
         x: leg.a[0] + (leg.b[0] - leg.a[0]) * k,
         y: leg.a[1] + (leg.b[1] - leg.a[1]) * k,
-        dir: leg.dir,
+        dir: done && s.turn ? s.turn : (s.facing ?? leg.dir),
+        lift: s.carried ? Math.round(up * LIFT + (done ? 0 : Math.abs(Math.sin(d / 5)) * 1.5)) : 0,
         frame: walkFrame(d, !done),
         gone: done && s.hide,
         tears: s.tears && !done,
@@ -1321,8 +1334,11 @@ function drawWorld(canvas, ep, st, t) {
       const over = st.fainted[n.id];
       // fainted: tipped over onto their back, feet where they stood, eyes shut
       const out = WALKER_ROWS[`${n.sprite}asleep`] ?? row;
-      if (over !== undefined)
-        return [over >= 1 ? out : row, DIRS.down, 0, ...(at ? [at.x, at.y] : center(n.x, n.y)), 0, { lie: over }];
+      // carried: held up at their hands, drawn in front of whoever's carrying them
+      if (over !== undefined) {
+        const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
+        return [over >= 1 ? out : row, DIRS.down, 0, x, y - (at?.lift ?? 0), 0, { lie: over, sortY: y + 1 }];
+      }
       if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
@@ -1363,7 +1379,7 @@ function drawWorld(canvas, ep, st, t) {
     const r = Math.max(2, 6 - st.air / 40);
     canvas.drawOval(CK.XYWHRect(st.hx - r, st.hy - r / 3, r * 2, (r * 2) / 3), paint('#000000', 0.45));
   }
-  ents.sort((a, b) => a[4] - b[4]);
+  ents.sort((a, b) => (a[6]?.sortY ?? a[4]) - (b[6]?.sortY ?? b[4]));
   for (const [row, dir, frame, x, y, sunk = 0, fx = {}] of ents) {
     // sinking: lower and lower, cut off at the floor
     const cut = Math.round(sunk * FH);
@@ -1436,7 +1452,7 @@ function drawWorld(canvas, ep, st, t) {
     const n = map.npcs[id];
     if (!n || over < 1) continue;
     // (wherever they are: carried off, say)
-    const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(n.x, n.y);
+    const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y - st.npcAt[id].lift] : center(n.x, n.y);
     for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
     if (n.snot) {
       const b = bubbleAt(t, x + 13, y - 4);
@@ -2396,26 +2412,24 @@ const EPISODES = {
         { faint: 'brannoc-pit' },
         // a beat on him, out cold, snot bubble going
         { wait: 0.8 },
-        // your three make their excuses where they stand, then rush over to Brannoc, pick him up and carry him off to
-        // the side of the sand, out of the way of the fight (author, Oct 6, 2026)
-        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
-        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
-        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },
-        // cut wider, so the rush and the side of the sand are both in shot
+        // your three make their excuses as they grab Brannoc and carry him off to the side of the sand, out of the way
+        // of the fight (author, Oct 6, 2026): one wide shot for all of it
         { look: [19.5, 10] },
         { zoom: 6 / 7 },
-        // the rush (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over)
-        { npcWalk: 'arena-mott', to: [[11, 12], [17, 12], [17, 10]], speed: 170, together: true },
-        { npcWalk: 'arena-nails', to: [[12, 13], [20, 13], [20, 10]], speed: 190, together: true },
-        { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 170, together: true },
-        // (Silas Seen's is the longest run: 176 px at 170 px/s)
-        { wait: 1.2 },
-        // picked up and carried off: Old Mott at his feet, Nails at his head, Silas Seen leading the way
-        { npcWalk: 'arena-mott', from: center(17, 10), to: [[21, 10]], speed: 70, together: true },
-        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 70, together: true },
-        { npcWalk: 'arena-nails', from: center(20, 10), to: [[24, 10]], speed: 70, together: true },
-        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 70, together: true },
-        { wait: 1.0 },
+        // the rush (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over);
+        // Old Mott and Nails turn to him, hands on him, at his feet and at his head
+        { npcWalk: 'arena-mott', to: [[11, 12], [17.7, 12], [17.7, 10]], speed: 170, turn: 'right', together: true },
+        { npcWalk: 'arena-nails', to: [[12, 13], [19.6, 13], [19.6, 10]], speed: 190, turn: 'left', together: true },
+        { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 170, turn: 'right', together: true },
+        // the heave, then off they shuffle with him, slow, held up between them: Old Mott at his feet, Nails at his
+        // head walking backwards, Silas Seen (the pulled muscle) leading the way, empty-handed
+        { npcWalk: 'arena-mott', from: center(17.7, 10), to: [[21.7, 10]], speed: 24, delay: 1.25, turn: 'right', together: true },
+        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 24, delay: 1.25, carried: true, together: true },
+        { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 24, delay: 1.25, facing: 'left', together: true },
+        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 18, delay: 1.25, turn: 'left', together: true },
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.4 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.4 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.5 },
         ...BOX,
         { jolt: 0.4 },
         { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 1.0 },

@@ -63,7 +63,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 18.1 s: allowed up to about twenty, author,
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 15.5 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
   right) and Barnaby in his commentator's box, a wedge of the Colosseum's own ring at the head of the sand, following the
@@ -73,9 +73,10 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   stands, so he never looks like a giant among them (author). The Warden is out of sight; he enters
   with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
   just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
-  (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three make their excuses where they stand: Silas Seen "I pulled a muscle on the way up here." Old Mott "I am too
-  old for this." Nails "My ice cubes melted." Then they rush over to Brannoc, pick him up (Old Mott at his feet, Nails at
-  his head) and carry him off to the side of the sand, out of the way of the fight. Barnaby (box, the screen jolts):
+  (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three rush over, and make their excuses as they grab Brannoc and carry him off to
+  the side of the sand, out of the way of the fight (author: lines over the grab, to save time): held up off the sand
+  between Old Mott (his feet) and Nails (his head, walking backwards), Silas Seen leading, empty-handed. Silas Seen "I
+  pulled a muscle on the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
   "FINISH THEM!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
   `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby in his box
   (`barnaby-box`; the box `$`, its desk `+`, which you talk across, `talkThrough`), your three beside you where you come up through the trapdoor, and Brannoc
@@ -100,7 +101,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 
 Every template episode spreads `SHORT` (24 ms a letter, 0.7× the pauses, short holds, a 160 px/s walk, no title or end
 card). Episode 10 keeps its posted pace (`SHORT_10`: 20 ms, half pauses, a 190 px/s walk). Per episode: `read` (every line holds this many times longer). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
-the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a door unlocked, UNACCEPTABLE), `faint`, `as` (a line from someone not on the map: Barnaby), `npc size`, `ep.awake` (a sleeper awake
+the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a door unlocked, UNACCEPTABLE), `faint`, `npcWalk` `delay` / `turn` / `facing` / `carried` (set off later, turn once there, walk backwards, held up off the ground), `as` (a line from someone not on the map: Barnaby), `npc size`, `ep.awake` (a sleeper awake
 for the episode),
 `scene.gap` (a quicker cut), `laugh … together`.
 
