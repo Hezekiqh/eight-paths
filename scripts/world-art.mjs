@@ -1426,9 +1426,10 @@ function drawArena(map, cheer = false) {
   const mid = rows[Math.floor(H / 2)];
   const left = [...mid].findIndex((c) => c === ',');
   const right = mid.length - [...mid].reverse().findIndex((c) => c === ',');
-  const col = rows.map((r) => r[Math.floor(W / 2)]);
-  const top = col.findIndex((c) => c === ',');
-  const bottom = col.length - [...col].reverse().findIndex((c) => c === ',');
+  // (top and bottom across the middle dozen columns: the commentator's desk sits right on the middle one)
+  const band = (r) => r.slice(Math.floor(W / 2) - 6, Math.floor(W / 2) + 6).includes(',');
+  const top = rows.findIndex(band);
+  const bottom = rows.length - [...rows].reverse().findIndex(band);
   const cx = ((left + right) / 2) * TILE;
   const cy = ((top + bottom) / 2) * TILE;
   const rx = ((right - left) / 2) * TILE - 2;
@@ -1592,12 +1593,13 @@ function drawArena(map, cheer = false) {
     }
     for (let y = gy + 1; y < gy + TILE + 5; y += 5) box(g, gx, y, gw, 1, '#4A4442');
   }
-  // the commentator's box, part of the Colosseum's own ring (author, Oct 6, 2026: "the circle that is the colosseum
-  // should include the box"): a wedge of the stands at the head of the sand, following the same oval as the tiers.
-  // Measured out from the sand: the arena wall becomes a stone parapet with the Crown's cloth on it, then the box,
-  // recessed and dark under a red curtain, then an arch, then solid stone to the top, hiding the crowd behind it.
+  // the commentator's box, part of the Colosseum's own ring and down at the level of the sand (author, Oct 6, 2026:
+  // the crowd is scenery, far off, and a character among them looks like a giant; Barnaby stands where everyone else
+  // stands). A wedge of the ring at the head of the sand, following the same oval as the tiers: the box opens in the
+  // arena wall at ground level, dark under a red curtain and an arch, solid stone above it to the top of the stands
+  // so no spectator sits beside him; his desk is a low stone wall on the edge of the sand in front of it.
   if (hasBooth) {
-    const OPEN = 0.13; // the box's opening within it
+    const OPEN = 0.13; // the box's opening, within the wedge
     const STONE = (px, py) => {
       const course = py % 5 === 0 || (px + (Math.floor(py / 5) % 2) * 4) % 9 === 0;
       return course ? hex('#5A5250') : (Math.floor(px / 9) + Math.floor(py / 5)) % 2 ? hex('#7A7270') : hex('#726A66');
@@ -1611,38 +1613,47 @@ function drawArena(map, cheer = false) {
         const off = Math.abs(Math.atan2(dy, dx) + Math.PI / 2);
         if (off > HALF) continue;
         const out = (e - 1) * ry;
-        if (out < 2) continue;
+        if (out < 2 && off >= OPEN) continue;
         let c = STONE(x, y);
         // the wedge's edges, where the tiers meet it: radial pilasters, lit on the left, shaded on the right
         if (off > HALF - 0.025) c = dx < 0 ? mix(c, hex('#FFFFFF'), 0.15) : hex('#4E4846');
-        else if (out < 11) {
-          // the parapet: the arena wall, built up, a lit coping along its top
-          if (out >= 9) c = hex('#9A928E');
-          // the Crown's cloth over its middle, the gold fist on it
-          if (off < 0.035 && out >= 2 && out < 9) c = out < 3 ? hex('#C8963A') : hex('#9A2A22');
-          if (off < 0.008 && out >= 4 && out < 7) c = hex('#C8963A');
-        } else if (off < OPEN && out < 46) {
-          // the box: dark, darker at the back; the red curtain swagged across its top and down its sides
-          c = out > 36 ? hex('#2A2422') : hex('#3A3432');
-          const swag = 40 - Math.round(3 * Math.sin((off / OPEN) * Math.PI * 1.5) ** 2);
+        else if (off < OPEN && out < 32) {
+          // the box, opening right onto the sand: dark, darker at the back, the red curtain swagged across its top
+          // and hanging down its sides
+          c = out > 20 ? hex('#2A2422') : hex('#3A3432');
+          const swag = 27 - Math.round(3 * Math.sin((off / OPEN) * Math.PI * 1.5) ** 2);
           if (out >= swag) c = hex('#7A1E18');
           if (Math.round(out) === swag) c = hex('#C8963A');
           if (off > OPEN - 0.02) c = hex('#7A1E18');
-        } else if (off < OPEN + 0.02 && out < 50) {
+        } else if (off < OPEN + 0.02 && out < 36) {
           // the arch's stones, lit
           c = hex('#9A928E');
         }
         g[y][x] = c;
       }
-    // Barnaby's speaking trumpet on the coping, and two of the Crown's banners on top of the wedge
-    const coping = Math.round(cy - ry - 11);
-    box(g, Math.round(cx) + 8, coping - 1, 6, 1, '#C8963A');
-    box(g, Math.round(cx) + 13, coping - 2, 2, 3, '#E0B040');
+    // two of the Crown's banners on top of the wedge
     for (const side of [-1, 1]) {
       const bx = Math.round(cx + side * Math.sin(HALF - 0.05) * (rx + 60));
       box(g, bx, 0, 1, 5, '#3A2618');
       box(g, bx + 1, 0, 7, 4, '#9A2A22');
     }
+    // the desk: a low stone wall on the sand's edge, a lit coping, the Crown's cloth over it with the gold fist, his
+    // speaking trumpet on top
+    const desk = [];
+    rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '+' && desk.push([tx, ty])));
+    const dx0 = Math.min(...desk.map(([tx]) => tx)) * TILE - 6;
+    const dx1 = (Math.max(...desk.map(([tx]) => tx)) + 1) * TILE + 6;
+    const dy0 = desk[0][1] * TILE + 1;
+    for (let y = dy0; y < dy0 + 12; y++) for (let x = dx0; x < dx1; x++) put(g, x, y, STONE(x, y));
+    box(g, dx0, dy0, dx1 - dx0, 2, '#9A928E');
+    box(g, dx0, dy0 + 12, dx1 - dx0, 1, '#4E4846');
+    const mid = Math.round((dx0 + dx1) / 2);
+    box(g, mid - 7, dy0 + 2, 14, 9, '#9A2A22');
+    box(g, mid - 7, dy0 + 10, 14, 1, '#C8963A');
+    box(g, mid - 1, dy0 + 4, 2, 3, '#C8963A');
+    box(g, mid - 2, dy0 + 5, 4, 2, '#C8963A');
+    box(g, dx1 - 14, dy0 - 1, 6, 1, '#C8963A');
+    box(g, dx1 - 9, dy0 - 2, 2, 3, '#E0B040');
   }
   // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
   for (let ty = 0; ty < H; ty++)
