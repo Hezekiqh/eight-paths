@@ -1,7 +1,7 @@
 import { BASE_XP, emptyDimensionRecord, overallLevelFromXp, levelFromXp } from '@/game';
 
 import { MAPS } from '../maps';
-import { ARCHIVE_DOOR_LEVEL, EXITS, howToProgress, requirementLabel, standing, type Requirement, type XpTotals } from '../progress';
+import { EXITS, howToProgress, requirementLabel, standing, type Requirement, type XpTotals } from '../progress';
 
 const noXp: XpTotals = { total: 0, byPath: emptyDimensionRecord(0) };
 
@@ -13,8 +13,8 @@ function overallXpFor(level: number) {
 }
 
 describe('standing', () => {
-  it('opens the Archive door after the first level-up on any Path', () => {
-    const door = { kind: 'anyPath', level: ARCHIVE_DOOR_LEVEL } as const;
+  it('counts the habits to the first level-up on any Path', () => {
+    const door = { kind: 'anyPath', level: 6 } as const;
     const fresh = standing(door, noXp);
     expect(fresh.met).toBe(false);
     expect(howToProgress(fresh)).toBe('Finish about 1 more habit. Any habit counts.');
@@ -43,6 +43,12 @@ describe('standing', () => {
 });
 
 describe('EXITS', () => {
+  it('never lock a road behind a level (author, Oct 6, 2026)', () => {
+    const levels = (n: Requirement): number[] =>
+      n.kind === 'all' ? n.of.flatMap(levels) : n.kind === 'flag' ? [] : [n.level];
+    for (const e of EXITS) expect([e.id, levels(e.needs).filter((l) => l > 0)]).toEqual([e.id, []]);
+  });
+
   it('sit on a real tile of their map', () => {
     for (const exit of EXITS) {
       expect(MAPS[exit.from].tiles.some((row) => row.includes(exit.tile))).toBe(true);

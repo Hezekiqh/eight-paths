@@ -30,7 +30,7 @@ import { fonts } from '@/theme';
 import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
-import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet } from '@/world/meet';
+import { meetingLines, metFlag, whereToMeet } from '@/world/meet';
 import type { Owned } from '@/store/draws';
 import { COMPANIONS, DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 import {
@@ -1062,20 +1062,6 @@ function World({
           label: 'Yes.',
           deed: 'good',
           then: () => {
-            // not until you've done a Physical habit: he'll wait in his cell
-            if (!standing(recruitNeeds('brannoc'), xpRef.current).met) {
-              setDialogue({
-                speaker: 'Brannoc',
-                sprite: 'brannoc',
-                lines: NOT_YET.brannoc ?? [],
-                then: () => {
-                  setFlag(BRANNOC_WOKE);
-                  setFlag(BRANNOC_DECLINED);
-                  march(brannocShuffles(WALKER_ROWS.brannoc), () => {}, 1.2);
-                },
-              });
-              return;
-            }
             const { owned: have } = useGameStore.getState();
             setFlag(BRANNOC_WOKE);
             setFlag(BRANNOC_JOINED);
@@ -1115,7 +1101,7 @@ function World({
         },
       ],
     });
-  }, [setFlag, march, xpRef]);
+  }, [setFlag, march]);
   const onDefeat = useCallback(() => {
     if (map.boss) useWorldStore.getState().notice(fightNotice(map.id as MapId));
     useWorldStore.getState().setFlag('fallen');
@@ -1586,11 +1572,6 @@ function World({
                     label: 'Yes.',
                     deed: 'good',
                     then: () => {
-                      if (!standing(recruitNeeds('brannoc'), xpRef.current).met) {
-                        for (const f of [BARS_BENT, BRANNOC_WOKE, BRANNOC_DECLINED]) w.setFlag(f);
-                        setDialogue({ speaker: 'Brannoc', sprite: 'brannocbare', lines: NOT_YET.brannoc ?? [] });
-                        return;
-                      }
                       for (const f of [BARS_BENT, BRANNOC_WOKE, BRANNOC_JOINED, metFlag('brannoc')]) w.setFlag(f);
                       if (!(useGameStore.getState().owned?.brannoc ?? 0))
                         useGameStore.getState().giftCopies(['brannoc']);
@@ -2000,18 +1981,6 @@ function useAct(
       const { owned, player } = useGameStore.getState();
       // Meeting them joins them to you in this run of the story. The collection only gains them the
       // first time ever (author, Oct 3, 2026): after a restart they're already yours, so it's unchanged.
-      // not until you've done a habit of their kind (meet.ts RECRUIT_LEVEL): they send you off to do one
-      if (!flags.includes(metFlag(id)) && !standing(recruitNeeds(id), xp.current).met) {
-        sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
-        setDialogue({
-          speaker: thing.name,
-          sprite: thing.sprite,
-          lines: NOT_YET[id] ?? [
-            `Come back once you've done a ${CLASSES[COMPANIONS[id].dimension].dimensionLabel} habit.`,
-          ],
-        });
-        return;
-      }
       if (!flags.includes(metFlag(id))) {
         sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
         if (owned !== null && !(owned[id] ?? 0)) useGameStore.getState().meetCharacters([id]);
@@ -2024,11 +1993,6 @@ function useAct(
         });
         return;
       }
-    }
-    // Brannoc, waiting in his cell after you said no: he won't come until you've done a Physical habit
-    if (thing?.type === 'npc' && thing.id === 'brannoc-sulk' && !standing(recruitNeeds('brannoc'), xp.current).met) {
-      setDialogue({ speaker: thing.name, sprite: thing.sprite, lines: [...thing.lines, ...(NOT_YET.brannoc ?? [])] });
-      return;
     }
     if (thing?.type === 'npc') {
       talk(thing, facing);

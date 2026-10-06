@@ -46,9 +46,8 @@ describe('notices', () => {
     expect(n.hint).toMatch(/^A Bard can do this: \w+ will step up\.$/);
   });
 
-  it('says what a locked door needs, in habits', () => {
-    const n = describeNotice(exitNotice('city-north'), ctx())!;
-    expect(n.hint).toMatch(/Needs Overall Lv 10; you're Lv 5\. Finish about \d+ more habits\. Any habit counts\./);
+  it('has nothing to say about a road: no road is locked behind a level', () => {
+    expect(describeNotice(exitNotice('city-north'), ctx())).toBeNull();
   });
 
   it("explains a lost boss fight by its tell and the walking character's level", () => {

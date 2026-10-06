@@ -61,25 +61,3 @@ describe('the story and the collection', () => {
     expect(walkersFor(DEFAULT_PARTY, owned)).toHaveLength(8);
   });
 });
-
-describe('recruiting the core eight', () => {
-  const { NOT_YET, recruitNeeds, RECRUIT_LEVEL } = jest.requireActual('../meet') as typeof import('../meet');
-  const { standing } = jest.requireActual('../progress') as typeof import('../progress');
-  const { emptyDimensionRecord, levelFromXp } = jest.requireActual('@/game') as typeof import('@/game');
-  let lv6 = 0;
-  while (levelFromXp(lv6).level < 6) lv6++;
-
-  it('takes Lv 6 in their own Path, one habit past where everyone starts', () => {
-    expect(RECRUIT_LEVEL).toBe(6);
-    for (const id of Object.values(DEFAULT_PARTY)) {
-      const needs = recruitNeeds(id);
-      const none = { total: 0, byPath: emptyDimensionRecord(0), flags: [] };
-      expect(standing(needs, none).met).toBe(false);
-      const byPath = emptyDimensionRecord(0);
-      byPath[needs.dimension] = lv6;
-      expect(standing(needs, { total: 0, byPath, flags: [] }).met).toBe(true);
-      // and each says so in their own words
-      expect(NOT_YET[id]?.join(' ')).toMatch(/Come back/);
-    }
-  });
-});

@@ -49,19 +49,10 @@ export type Exit = {
 };
 
 /**
- * The Archive's door opens the first time any Path levels up (everyone starts
- * at Lv 5): one habit, the first "LEVELED UP!" a new player sees.
+ * No level barriers (author, Oct 6, 2026): the whole World is open to everyone from the first step,
+ * and the fights are what get harder. Your levels make you stronger in them, and open the Path-only
+ * ways round (a hidden passage, a clever answer), but never lock a road.
  */
-export const ARCHIVE_DOOR_LEVEL = 6;
-
-/**
- * After the door, three gates and no more (author, Oct 4, 2026: Season 1 beatable in 30 to 50
- * habits over two or three days; the story's the draw, habits are the fuel): the road north out of
- * Warrior City at Lv 10, the king at Lv 18, and the end of Season 1 at Lv 20. Overall, so any
- * habit counts. Recruiting the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
- */
-export const NORTH_ROAD_LEVEL = 10;
-export const KING_LEVEL = 18;
 
 /**
  * To face the king you need the whole party (author, Oct 4, 2026): Brannoc above all (it's his
@@ -87,11 +78,8 @@ export const WHOLE_PARTY: Requirement[] = (Object.keys(WHERE) as CharacterId[]).
 /** Never locked. */
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
-/**
- * Season 1 ends at this overall level (author, Sep 29, 2026): 35 habits
- * of any kind. Later kingdoms arrive as new seasons, each with its own finish.
- */
-export const FINAL_GOAL = { kind: 'overall', level: 20 } as const satisfies Requirement;
+/** The portal at the end of Season 1: open to everyone, like the rest of the World (author, Oct 6, 2026). */
+export const FINAL_GOAL = { kind: 'overall', level: 0 } as const satisfies Requirement;
 
 export const EXITS: Exit[] = [
   {
@@ -100,7 +88,7 @@ export const EXITS: Exit[] = [
     tile: '=',
     label: 'The great door',
     to: { map: 'courier-road', x: 12, y: 2, facing: 'down' },
-    needs: { kind: 'anyPath', level: ARCHIVE_DOOR_LEVEL },
+    needs: OPEN,
   },
   {
     id: 'road-archive',
@@ -575,7 +563,6 @@ export const EXITS: Exit[] = [
           hint: "Brannoc's armour hasn't fitted in five hundred years.",
         },
         ...WHOLE_PARTY,
-        { kind: 'overall', level: KING_LEVEL },
       ],
     },
     walk: true,
@@ -972,7 +959,7 @@ export const EXITS: Exit[] = [
     tile: '^',
     label: 'The road north',
     to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
-    needs: { kind: 'overall', level: NORTH_ROAD_LEVEL },
+    needs: OPEN,
     walk: true,
   },
   {

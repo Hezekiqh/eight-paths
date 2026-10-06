@@ -1,7 +1,7 @@
 import { emptyDimensionRecord } from '@/game';
 
 import { addLore, cleanLore, loreId, type LoreEntry } from '../lore';
-import { FINAL_GOAL, howToProgress, standing } from '../progress';
+import { FINAL_GOAL, standing } from '../progress';
 import { ROADMAP } from '../roadmap';
 
 const entry = (speaker: string, ask: string, at = 1): LoreEntry => ({
@@ -33,18 +33,9 @@ describe('the lore journal', () => {
   });
 });
 
-describe('the last seal (overall Lv 20)', () => {
-  const totals = (total: number) => ({ total, byPath: { ...zero, physical: total } });
-
-  it('counts every habit, whatever the Path', () => {
-    const start = standing(FINAL_GOAL, totals(0));
-    expect(start).toMatchObject({ met: false, have: 5, need: 20, className: null });
-    expect(start.habitsLeft).toBe(35);
-    expect(howToProgress(start)).toContain('Any habit counts');
-  });
-
-  it('is met at Overall Lv 20', () => {
-    expect(standing(FINAL_GOAL, totals(350))).toMatchObject({ met: true, habitsLeft: 0, fraction: 1 });
+describe('the last seal', () => {
+  it('is open from the start, like the rest of the World (author, Oct 6, 2026)', () => {
+    expect(standing(FINAL_GOAL, { total: 0, byPath: { ...zero } })).toMatchObject({ met: true, habitsLeft: 0 });
   });
 });
 
