@@ -73,8 +73,10 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   stands, so he never looks like a giant among them (author). The Warden is out of sight; he enters
   with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
   just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
-  (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three: Silas Seen "I pulled a muscle on
-  the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
+  (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three, making their
+  excuses as they run over, grab Brannoc (Old Mott at his feet, Nails at his head) and carry him off to the side of
+  the sand, out of the way of the fight: Silas Seen "I pulled a muscle on the way up here." Old Mott "I am too old for
+  this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
   "FINISH THEM!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
   `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby in his box
   (`barnaby-box`; the box `$`, its desk `+`, which you talk across, `talkThrough`), your three beside you where you come up through the trapdoor, and Brannoc
