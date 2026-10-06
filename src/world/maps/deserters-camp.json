@@ -1,6 +1,6 @@
 {
   "id": "deserters-camp",
-  "name": "The Deserters' Camp",
+  "name": "Osric's Rest",
   "style": "outdoor",
   "walkable": [
     ".",
@@ -8,29 +8,44 @@
     "g"
   ],
   "tiles": [
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-    "TMMMMMMMMMMMMMMMMMMMMMMMM.MMMT",
-    "TMMMMMMMMMMMMMEEMMMMMMMM.Y.MMT",
-    "TMMMMMMMMMMMMMEEMMMMMMMMMOMMMT",
-    "T.............,,.............T",
-    "T..AAA........,,........gg...T",
-    "T..AAA........,,.............T",
-    "<,,,,,,,,,,,,,,,.............T",
-    "<,,,,,,,,,,,,,,,......x......T",
-    "T.......................AAA..T",
-    "T..g....AAA.............AAA..T",
-    "T..gg...AAA..................T",
-    "TTTT...............gg....TTTTT",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+    "TTTTTTTTTTTTTTTTTTTT^TTTTTTTTTTTTTTTTTTT",
+    "TMMMMMMMMMMM.MMMMT..,...fffffffffffff..T",
+    "TMMMMMEEMMM.Y.MMMT..,...fffffffffffff..T",
+    "TMMMMMEEMMMMOMMMMT..,...fffffffffffff..T",
+    "T.....,,............,...fffffffffffff..T",
+    "T.....,,............,..................T",
+    "T..AAA,,AAA.........,...HHHH....HHHH...T",
+    "T..AAA,,AAA.........,...HHHH....HHHH...T",
+    "T.....,,............,...HDHH....HdHH...T",
+    "T.....,,.......c....,...........c......T",
+    "T.....,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,.T",
+    "T...................,..................T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP...c.c..,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWW6WWWW..T",
+    "T..PPPP2PPPP........,...........,......T",
+    "T......,............,...........,......T",
+    "T......,,,,,,,,,,,,,,,,,,,,,,,,,,......T",
+    "T...................,..................T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T...................,..................T",
+    "T..g................,................g.T",
+    "TTTTTTTTTTTTTTTTTTT._.TTTTTTTTTTTTTTTTTT"
   ],
   "spawn": {
-    "x": 1,
-    "y": 7,
-    "facing": "right"
+    "x": 20,
+    "y": 1,
+    "facing": "down"
   },
   "examine": {
     "T": [
-      "Pines, crowding close. The camp likes it that way."
+      "Pines, crowding close. The town likes it that way."
     ],
     "M": [
       "The hill's rock face. An old fort is buried in it, wall and all.",
@@ -41,12 +56,6 @@
       "The fort's arch, half swallowed by the hill. Cold air breathes out of it.",
       "Carved above, half gone: \"…LECREST SECOND REGIMENT…\""
     ],
-    "A": [
-      "A tent, patched more than it's tent. A plank by the flap reads NOT A DESERTERS' CAMP."
-    ],
-    "x": [
-      "A campfire. Someone's roasting something that might once have been a turnip."
-    ],
     "O": [
       "A boulder, wedged into a gap in the rock face. There's a space behind it.",
       "Too heavy to move. It would take real strength to shift it."
@@ -55,118 +64,48 @@
       "A child's wooden sword, worn smooth where a small hand held it.",
       "Carved into the grip: T."
     ],
-    "<": [
-      "The road back west."
+    "A": [
+      "A tent, patched more than it's tent. A plank by the flap reads NOT A DESERTERS' CAMP. Somebody has added, smaller: NOT ANY MORE. WE HAVE A CHAPEL NOW."
+    ],
+    "^": [
+      "The farm track north, up the South Road to Warrior City."
+    ],
+    "_": [
+      "The road south, toward the tithe camps and the old watchtower."
+    ],
+    "f": [
+      "Turnips, beans and barley, in rows so straight you could rule a page with them. Everybody here farms. Everybody here prays for rain, and for something else."
+    ],
+    "H": [
+      "A farmhouse. Over the door, a hand-painted sign: an open hand holding a sword by the blade."
+    ],
+    "D": [
+      "You knock. An old voice, through the door: \"Is it him? Is he back?\" A pause. \"Oh. Bless you anyway, dear.\""
+    ],
+    "d": [
+      "The weaver's cottage. The door isn't locked. Through it, a trapdoor stands open, and there are voices underneath."
+    ],
+    "c": [
+      "A candle in a lantern, burning steadily. Every house in Osric's Rest keeps one lit in the window, for when the prince comes home."
+    ],
+    "P": [
+      "The chapel. Small, whitewashed, and full every evening. They pray for the harvest first, and then for him."
+    ],
+    "2": [
+      "The chapel door. A carving over it: a crown, and under it, empty space, waiting."
+    ],
+    "W": [
+      "The Candle Inn. A sign of a candle and the words WARM. FED. NOT ASKED."
+    ],
+    "6": [
+      "The Candle Inn's door. The smell of soup, and somebody singing an old song about a prince, very quietly."
     ]
   },
   "objects": [
     {
-      "id": "holt",
-      "type": "npc",
-      "x": 11,
-      "y": 9,
-      "sprite": "holt",
-      "facing": "down",
-      "name": "Sergeant Holt",
-      "lines": [
-        "We didn't run. We relocated. Bravely.",
-        "The horde took the Kingdom. We took the long way round. It's still the long way round."
-      ],
-      "questions": [
-        {
-          "ask": "What is this camp?",
-          "answer": [
-            "Soldiers who wouldn't fight for the barbarian king. Or against him, if we're honest.",
-            "We tell ourselves we're waiting for the right moment. It's been a very long moment."
-          ]
-        },
-        {
-          "ask": "Heard any gossip?",
-          "answer": [
-            "That fort in the hill is the way into the Kingdom, now the horde holds the roads.",
-            "Nobody goes in. Nobody comes out. Except Fen's nephew, and he salutes the cat."
-          ]
-        },
-        {
-          "ask": "Why does strength matter?",
-          "answer": [
-            "Because one day you'll have to stand your ground, and it'll be too late to start training then.",
-            "Ask me how I know."
-          ]
-        },
-        {
-          "ask": "Relocated? You ran, you old coward.",
-          "answer": [
-            "We ran with purpose.",
-            "...The purpose was not being there. But it was a purpose."
-          ],
-          "deed": "bad"
-        }
-      ],
-      "after": {
-        "flag": "kaldor-beaten",
-        "lines": [
-          "We're going back. Bravely. Slightly behind everyone else, but bravely.",
-          "Somebody take down the sign. It's a deserters' camp now. Was. Ex-deserters'."
-        ]
-      }
-    },
-    {
-      "id": "mira",
-      "type": "npc",
-      "x": 18,
-      "y": 7,
-      "sprite": "mira",
-      "facing": "left",
-      "name": "Mira",
-      "lines": [
-        "I'm going back. Not today. But I'm going back.",
-        "Somebody has to."
-      ],
-      "questions": [
-        {
-          "ask": "Going back where?",
-          "answer": [
-            "The Kingdom. My family's still there, cheering at the pit because the horde tells them to.",
-            "If you ever get inside, I'll follow you. I mean it."
-          ]
-        },
-        {
-          "ask": "Heard any gossip?",
-          "answer": [
-            "The king doesn't age. Five hundred years. The horde says he casts no shadow.",
-            "Everybody casts a shadow. Somebody's lying."
-          ]
-        },
-        {
-          "ask": "Why the bow?",
-          "answer": [
-            "Because I'm small, and the horde isn't.",
-            "You don't have to be the biggest. You have to practise every day until you're the steadiest."
-          ]
-        },
-        {
-          "ask": "You? Take on the horde? You're tiny.",
-          "answer": [
-            "I've heard that before. From the horde.",
-            "They stopped laughing once I'd practised. You'll stop too."
-          ],
-          "deed": "bad"
-        }
-      ],
-      "after": {
-        "flag": "kaldor-beaten",
-        "lines": [
-          "You did it. I'm going home.",
-          "Today. It's finally today."
-        ]
-      },
-      "wander": 2
-    },
-    {
       "id": "fen",
       "type": "npc",
-      "x": 6,
+      "x": 4,
       "y": 9,
       "sprite": "fen",
       "facing": "right",
@@ -211,13 +150,317 @@
     {
       "id": "heart-camp",
       "type": "chest",
-      "x": 28,
-      "y": 4,
+      "x": 38,
+      "y": 5,
       "item": "heart-piece",
       "lines": [
         "Under a tent peg marked NOT A TREASURE: a Heart Piece.",
         "The deserters are very consistent about their signs."
       ]
+    },
+    {
+      "id": "bo",
+      "type": "npc",
+      "x": 14,
+      "y": 21,
+      "sprite": "bo",
+      "facing": "down",
+      "name": "Bo Tumble",
+      "lines": [
+        "Hup! Hup! Cartwheel number four thousand and nine!",
+        "Can't stop. If I stand still, it feels like the dream. So I don't."
+      ],
+      "questions": [
+        {
+          "ask": "What dream?",
+          "answer": [
+            "The long one. Everything soft, everything easy, forever.",
+            "I'd rather be dizzy."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king's raiders at the checkpoint can be bought. Or bored into it. Wim loves a good story. Grask loves a good coin."
+          ]
+        },
+        {
+          "ask": "Why keep moving?",
+          "answer": [
+            "Because moving is how you know you're awake. Try it. Every day. Just a bit."
+          ]
+        },
+        {
+          "ask": "Stop flailing about. You look daft.",
+          "answer": [
+            "Daft and awake!",
+            "Cartwheel four thousand and ten. That one was at you."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 3,
+      "along": "x"
+    },
+    {
+      "id": "wim",
+      "type": "npc",
+      "x": 23,
+      "y": 11,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Wim",
+      "lines": [
+        "Oh good, company. It's been Grask, Grask and more Grask all week.",
+        "Did you know the king sleeps standing up? Like a horse? I'm almost sure."
+      ],
+      "questions": [
+        {
+          "ask": "What do you do here?",
+          "answer": [
+            "Watch the farmers for the king. Report anything odd.",
+            "Nothing's ever odd. Except the yarn. Somebody here gets through a LOT of yarn."
+          ]
+        },
+        {
+          "ask": "Are you scared of the king?",
+          "answer": [
+            "Everyone's scared of the king. And chickens. Mostly chickens."
+          ]
+        },
+        {
+          "ask": "Seen anything odd?",
+          "answer": [
+            "A goose came through last week. Collar said DUCHESS. Took Grask's helmet.",
+            "Grask cried. Grask says he didn't cry. Grask cried."
+          ]
+        },
+        {
+          "ask": "No wonder nobody tells you stories.",
+          "answer": [
+            "...Oh.",
+            "That's a sad story. I didn't like that one."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 2
+    },
+    {
+      "id": "grask",
+      "type": "npc",
+      "x": 21,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Grask",
+      "lines": [
+        "Halt. Toll's everything you have.",
+        "You look like you've got nothing. Toll's double."
+      ],
+      "questions": [
+        {
+          "ask": "Can I pass?",
+          "answer": [
+            "...Fine. The king says watch who comes in, not stop them.",
+            "Watching's free. I'm watching you now. Very hard."
+          ]
+        },
+        {
+          "ask": "Does the king ever sleep?",
+          "answer": [
+            "Never. Wim says standing up, like a horse. Wim's an idiot."
+          ]
+        },
+        {
+          "ask": "Heard a goose made you cry.",
+          "answer": [
+            "I didn't cry.",
+            "WIM! What have you been telling people?",
+            "WIM: Nothing! ...Everything."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "heart-cairn",
+      "type": "chest",
+      "x": 1,
+      "y": 27,
+      "item": "heart-piece",
+      "lines": [
+        "Beneath the smallest cairn stone, wrapped in a regiment scarf: a Heart Piece.",
+        "Somebody meant it for whoever came home. You'll do."
+      ]
+    },
+    {
+      "id": "bellow",
+      "type": "npc",
+      "x": 19,
+      "y": 11,
+      "sprite": "bellow",
+      "facing": "down",
+      "name": "Sergeant Bellow",
+      "lines": [
+        "(whispering) Tithe camp. Fighters on the left. Iron on the right.",
+        "(whispering) Spoons are not iron. Tell Dobb. He won't hear it from me.",
+        "(whispering) I can't shout. Never could. The whole squad has to lean in. We're very close as a squad."
+      ],
+      "questions": [
+        {
+          "ask": "Why do you whisper?",
+          "answer": [
+            "(whispering) Born like it. My mum says I came out, looked around, and said 'oh no' very quietly.",
+            "(whispering) The horde made me a sergeant to toughen me up. Now everybody whispers back. It's quite nice."
+          ]
+        },
+        {
+          "ask": "SPEAK UP, SERGEANT!",
+          "answer": [
+            "(whispering) …There was no need for that.",
+            "(whispering) The whole squad heard. They're leaning away from you now. That's the worst thing we do."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 2,
+      "along": "x"
+    },
+    {
+      "id": "kings-guard-1",
+      "type": "npc",
+      "x": 24,
+      "y": 9,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "King's Guard",
+      "lines": [
+        "Move along. No gathering. No praying in groups of more than three.",
+        "...Four's fine if one of you is a child. I don't make the rules."
+      ],
+      "questions": [
+        {
+          "ask": "Why are you here?",
+          "answer": [
+            "To make sure nobody here gets ideas. The king says a town that prays this much is planning something.",
+            "I've been here six years. All they've planned is turnips."
+          ]
+        },
+        {
+          "ask": "Who are they praying for?",
+          "answer": [
+            "Rain, mostly. And some prince who's been gone five hundred years.",
+            "Nobody's told them he's not coming. I'm not going to be the one."
+          ]
+        },
+        {
+          "ask": "You look bored stiff.",
+          "answer": [
+            "I'm guarding a turnip field against a rebellion of grandmothers.",
+            "Bored is the best day. Bored means nobody's hit me with a hoe."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "kings-guard-2",
+      "type": "npc",
+      "x": 12,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "King's Guard",
+      "lines": [
+        "Curfew's at the last bell. Lanterns out.",
+        "...They never put the lanterns out. Every window, every night. I've stopped writing it down."
+      ],
+      "questions": [
+        {
+          "ask": "Why the lanterns?",
+          "answer": [
+            "For the prince. So he can find his way home in the dark.",
+            "I asked a little girl why. She said, 'So he knows we waited.' I didn't write that down either."
+          ]
+        },
+        {
+          "ask": "Seen anything suspicious?",
+          "answer": [
+            "The weaver gets through a lot of yarn for one woman. And there's a lot of digging at night, for a town that farms by day.",
+            "...It's turnips. It's always turnips."
+          ]
+        },
+        {
+          "ask": "Some guard. You can't even make them put a candle out.",
+          "answer": [
+            "You try. Go on. Tell Nana Birch to put her candle out.",
+            "...I'll wait here. Somebody should be around to carry you back."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 4,
+      "along": "x"
+    },
+    {
+      "id": "goodwife-ama",
+      "type": "npc",
+      "x": 10,
+      "y": 21,
+      "sprite": "marta",
+      "facing": "down",
+      "name": "Goodwife Ama",
+      "lines": [
+        "Mind the rows, love. Barley this side, beans that side, hope down the middle.",
+        "We plant, we pray, we wait. My mother waited. Her mother waited. It's a family skill."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you waiting for?",
+          "answer": [
+            "The prince. Brannoc, Osric's boy. The one who was lost.",
+            "His regiment wrote him down as lost, not dead. Lost things can be found. We hold them to it."
+          ]
+        },
+        {
+          "ask": "Why is it called Osric's Rest?",
+          "answer": [
+            "After the old king. Mad, they call him in the city. We called him ours.",
+            "When the shadow took him, his last soldiers walked out of the war and came here, and laid their swords down. So it's his rest, and theirs."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The guards think we're plotting. We're farming. Mostly.",
+            "Ask the weaver what she does with all that yarn. Actually, don't."
+          ]
+        },
+        {
+          "ask": "Five hundred years of waiting. He's not coming.",
+          "answer": [
+            "Maybe not.",
+            "But if he does, and nobody's waiting, what sort of people would that make us?"
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "heir-shrine",
+      "type": "sign",
+      "x": 16,
+      "y": 15,
+      "lines": [
+        "A little shrine of river stones between two candles. On it, a child's drawing of a man with a big beard and a small sword.",
+        "Under it, in many different hands: COME HOME. COME HOME. COME HOME.",
+        "Somebody has left him an apple."
+      ]
     }
-  ]
+  ],
+  "art": {
+    "2": ".",
+    "6": "."
+  }
 }

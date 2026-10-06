@@ -2787,6 +2787,7 @@ const MAPS = [
   'chapel',
   'old-kings-crypt',
   'royal-forest',
+  'root-cellar',
   'hedge-maze',
   'the-pit',
   'castle-grounds',

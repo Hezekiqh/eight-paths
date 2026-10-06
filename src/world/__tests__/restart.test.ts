@@ -8,8 +8,8 @@ describe('restarting the Other World', () => {
     useWorldStore.setState({
       controls: 'touchpad',
       hero: 'moss',
-      position: { map: 'kaldorhold', x: 40, y: 80, facing: 'up' },
-      discovered: ['archive', 'courier-road', 'kaldorhold'],
+      position: { map: 'warrior-city', x: 40, y: 80, facing: 'up' },
+      discovered: ['archive', 'courier-road', 'warrior-city'],
       heard: [{ id: 'gert:0', speaker: 'Gert', lines: ['Yeah, we know.'] }] as never,
       flags: ['kaldor-beaten', 'season-1', 'brawl-over'],
       noticed: ['exit:town-keep'],

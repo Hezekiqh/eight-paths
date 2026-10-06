@@ -124,39 +124,6 @@
       ]
     },
     {
-      "id": "bellow",
-      "type": "npc",
-      "x": 13,
-      "y": 7,
-      "sprite": "bellow",
-      "facing": "down",
-      "name": "Sergeant Bellow",
-      "lines": [
-        "(whispering) Tithe camp. Fighters on the left. Iron on the right.",
-        "(whispering) Spoons are not iron. Tell Dobb. He won't hear it from me.",
-        "(whispering) I can't shout. Never could. The whole squad has to lean in. We're very close as a squad."
-      ],
-      "questions": [
-        {
-          "ask": "Why do you whisper?",
-          "answer": [
-            "(whispering) Born like it. My mum says I came out, looked around, and said 'oh no' very quietly.",
-            "(whispering) The horde made me a sergeant to toughen me up. Now everybody whispers back. It's quite nice."
-          ]
-        },
-        {
-          "ask": "SPEAK UP, SERGEANT!",
-          "answer": [
-            "(whispering) …There was no need for that.",
-            "(whispering) The whole squad heard. They're leaning away from you now. That's the worst thing we do."
-          ],
-          "deed": "bad"
-        }
-      ],
-      "wander": 2,
-      "along": "x"
-    },
-    {
       "id": "tithe-sign",
       "type": "sign",
       "x": 13,

@@ -142,7 +142,6 @@ const FIGHTS: MapId[] = [
   'lower-barracks',
   'sleeping-keep',
   'the-pit',
-  'kaldorium-maximus',
   'war-hall',
 ];
 

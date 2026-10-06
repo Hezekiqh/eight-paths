@@ -8,14 +8,15 @@
     "T": ["Old oaks, planted in rows once. The rows have wandered off over the centuries, the way rows do."],
     "k": ["A clipped hedge, taller than you. On this side, at least, somebody still trims it."],
     "^": ["An arch cut through the hedge: the way into the royal maze."],
-    "_": ["The path back to town."],
+    "_": ["The road back down to Warrior City."],
+    ">": ["The castle road, climbing east through the oaks. Up ahead, over the trees: Kaldorhold."],
     "r": ["White roses, hundreds of them. Somebody has kept them alive for five hundred years."],
     "u": ["A fountain of white stone, still running.", "The water is so clear you can count the coins at the bottom. Nobody has taken one."]
   },
   "tiles": [
     "TTTTTTkkkkk^kkkkkTTTTT",
     "TTTTT......,.....TTTTT",
-    "TTTg.......,......gTTT",
+    "TTTg.......,,,,,,,,,,>",
     "TT..TT.....,.....TT.TT",
     "T..TTTT....,....TTT..T",
     "T.TTTT.....,.....TT..T",

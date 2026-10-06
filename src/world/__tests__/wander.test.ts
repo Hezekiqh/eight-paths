@@ -207,8 +207,8 @@ describe('who strolls in the Other World', () => {
     expect(lookers.length).toBeGreaterThanOrEqual(10);
   });
 
-  it('marches one drum-warden round the square; the other two keep their post', () => {
-    const wardens = MAPS['kingdom-town'].npcs.filter((n) => n.name.startsWith('Drum-warden'));
+  it('marches one drum-warden round the city; the other two keep their post', () => {
+    const wardens = MAPS['warrior-city'].npcs.filter((n) => n.name.startsWith('Drum-warden'));
     expect(wardens.filter((n) => (n.wander ?? 0) > 0).map((n) => n.name)).toEqual(['Drum-warden Tuk']);
   });
 

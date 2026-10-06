@@ -1,6 +1,6 @@
 {
   "id": "castle-grounds",
-  "name": "The Castle Grounds",
+  "name": "Kaldorhold",
   "style": "outdoor",
   "ground": "ash",
   "walkable": [".", ",", "s", "z"],
@@ -69,7 +69,7 @@
     "X": ["An iron cage, door open. Empty, for now."],
     "q": ["A barrel of salt pork. The army marches on its stomach. This army mostly stands about on it."],
     "c": ["A lantern on a post, the one warm light on the grounds."],
-    "_": ["Back south, to the town."]
+    "_": ["The castle road, back down through the forest to Warrior City."]
   },
   "objects": [
     {

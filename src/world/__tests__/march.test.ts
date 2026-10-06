@@ -53,7 +53,7 @@ describe('the prison route', () => {
     expect(prisonRoute('the-pit', ['cell-bars-bent'])).toBe(true);
     expect(prisonRoute('the-pit', [])).toBe(false);
     expect(prisonRoute('the-pit', ['cell-bars-bent', 'pit-champion'])).toBe(false);
-    expect(prisonRoute('kingdom-town', ['cell-bars-bent'])).toBe(false);
+    expect(prisonRoute('warrior-city', ['cell-bars-bent'])).toBe(false);
   });
 });
 

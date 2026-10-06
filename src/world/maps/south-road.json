@@ -34,7 +34,7 @@
     "TT...............T.........g......g....T",
     "TTTTTTTTTTTTTTTTTT........T......g.....T",
     "T........................g......g......T",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT_TTTTTTTTT"
   ],
   "spawn": {
     "x": 19,
@@ -72,6 +72,9 @@
     ],
     "^": [
       "North: back up to Warrior City."
+    ],
+    "_": [
+      "South: a farm track, down to Osric's Rest."
     ]
   },
   "objects": [

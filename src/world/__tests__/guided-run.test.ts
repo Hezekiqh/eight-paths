@@ -156,9 +156,9 @@ describe('Season 1, following only the guide', () => {
     expect(run.flags).toEqual(expect.arrayContaining(['pit-champion', GATE_FLAG, 'kaldor-beaten', 'season-1']));
   });
 
-  it('walks the whole Berserker kingdom in order', () => {
+  it('walks Warrior City, the forest and the castle road in order', () => {
     const did = run.steps.map((s) => s.did).join('\n');
-    for (const flag of ['checkpoint', 'on-the-bill', 'old-law', 'cages-open', 'varga-witness', 'forge-fixed']) {
+    for (const flag of ['on-the-bill', 'old-law', 'cages-open', 'varga-witness', 'forge-fixed']) {
       expect(did).toContain(`(${flag})`);
     }
   });

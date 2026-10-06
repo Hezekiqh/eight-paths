@@ -382,6 +382,129 @@
           "Thirty strikes, they say. Nobody's ever counted past twelve. FIGHT!"
         ]
       }
+    },
+    {
+      "flag": "maximus-1",
+      "x": 10,
+      "y": 3,
+      "kind": "raider",
+      "bearers": [
+        [
+          10,
+          5
+        ]
+      ],
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "LADIES! GENTLEMEN! BABIES! Rung one of the ladder: THE TWINS UGG!",
+          "One of them fights. The other one shouts advice. The advice is bad. FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-2",
+      "x": 10,
+      "y": 3,
+      "kind": "raider",
+      "bearers": [
+        [
+          8,
+          5
+        ],
+        [
+          12,
+          5
+        ]
+      ],
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "Rung two! She raised the Little Crushers! She fights with a RATTLE! MATRON SORREL!",
+          "And two of her biggest babies, all grown up! FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-3",
+      "x": 10,
+      "y": 3,
+      "kind": "raider",
+      "bearers": [
+        [
+          6,
+          5
+        ],
+        [
+          15,
+          5
+        ]
+      ],
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "Rung three! Nine years, never once hit! FENNICK THE UNBITTEN!",
+          "He's brought friends to do the hitting. He's going to run. FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-4",
+      "x": 10,
+      "y": 3,
+      "kind": "raider",
+      "bearers": [
+        [
+          7,
+          5
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          13,
+          5
+        ]
+      ],
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "Rung four! Nobody knows who he is! THE MASKED BRUTE!",
+          "(It's Captain Varga. Everybody knows. She's got her cloak on.) FIGHT!"
+        ]
+      }
+    },
+    {
+      "flag": "maximus-5",
+      "x": 10,
+      "y": 3,
+      "kind": "raider",
+      "bearers": [
+        [
+          6,
+          5
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          15,
+          5
+        ]
+      ],
+      "intro": {
+        "speaker": "Barnaby Loudmouth",
+        "lines": [
+          "THE TOP OF THE LADDER! Forty years undefeated! GRAND CHAMPION HROTH!",
+          "He looks tired. He looks hopeful, actually. And here come three young bloods who want his crown. FIGHT!"
+        ]
+      }
     }
   ]
 }

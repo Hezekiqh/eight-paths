@@ -18,7 +18,10 @@
     "6": ".",
     "7": ".",
     "8": ".",
-    "h": "."
+    "h": ".",
+    "9": ".",
+    "0": ".",
+    "J": "."
   },
   "tiles": [
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
@@ -35,7 +38,7 @@
     "MT.....s.........s...ssCCCCCCCCCCCCCCCCCCss.....s.........s...TM",
     "MT.uuuusuuuu.uuuus...ssCCCCCCCCCCCCCCCCCCss...uuuu.uuuu.uuuu..TM",
     "MT.uuuusuuuu.uuuus...ssCCCCCCCCCCCCCCCCCCss...uuuu.uuuu.uuuu..TM",
-    "MT.uhuusuhuu.uhuus...ssCCCCCCCCCCCCCCCCCCss...uhuu.uhuu.uhuu..TM",
+    "MT.uhuusuhuu.uhuus...ssCCCCCCCCCCCCCCCCCCss...uhuu.uJuu.uhuu..TM",
     "MT..s..s.s....s..s...ssCCCCCCCCCCCCCCCCCCss....ss...s....ss...TM",
     "MT..s..s.s....s..s...ssCCCCCCCCCCCCCCCCCCss....ss...s....ss...TM",
     "MT..s..s.s....s..s...ssCCCCCCCCCCCCCCCCCCss....ss...s....ss...TM",
@@ -51,11 +54,11 @@
     "MT.WWWWWWWWW.aaa7aaa.sbssssssssssssssssssbs.FzzzzzzzzF.rrr8rrrTM",
     "MT.WWWW6WWWW....s....ssssssssssssssssssssss.FzzzzzzzzF....s...TM",
     "MT.....s........s..............ss...........FzezezezkF....s...TM",
-    "MT.....s........s..............ss...........FzzzzzzzzF.FFFFFFFTM",
+    "MT.....s........s..............ss..X.X......FzzzzzzzzF.FFFFFFFTM",
     "MT.....s.......................ss...........FzzzzzzzzF.FgggggFTM",
     "MT.uuuu.uuuu.uuuu..............ss.uuuu..uuuuFFFFFFFFFF.FgggggFTM",
     "MT.uuuu.uuuu.uuuu..............ss.uuuu..uuuu...........FgggggFTM",
-    "MT.uhuu.uhuu.uhuu..............ss.uhuu..uhuu...........FFFFFFFTM",
+    "MT.uhuu.uhuu.uhuu..............ss.u9uu..u0uu...........FFFFFFFTM",
     "MT..s....s....s................ss..s.....s....................TM",
     "MT.............................ss.............................TM",
     "MT.............................ss.............................TM",
@@ -133,7 +136,8 @@
     ],
     "K": [
       "The statue of Kaldor, colossal, one boot on a broken crown.",
-      "The plaque: KALDOR THE KINGBREAKER. Undying."
+      "The plaque: KALDOR THE KINGBREAKER. He struck down the Mad King and saved the world from war. First of the Eight. Undying.",
+      "Its eyes are two lenses of old-world glass. They follow you round the square. They probably don't."
     ],
     "P": [
       "The chapel. A bell hangs in the tower, and the window glows in every colour."
@@ -170,6 +174,18 @@
     ],
     "u": [
       "A cottage. Window boxes, and a practice dummy in nearly every garden."
+    ],
+    "X": [
+      "An iron cage in the square. Inside, days scratched into the bars. The prisoners won't look at you."
+    ],
+    "9": [
+      "Old Harrow's forge. A horde quota board is nailed over the door: 40 AXES BY MOONFALL."
+    ],
+    "0": [
+      "The Gut & Gauntlet. A sign of a fist holding a tankard. From inside: singing, and a chair breaking."
+    ],
+    "J": [
+      "The Hall of Kaldor. Forty portraits, one king. A sign on the door: PLEASE DO NOT MENTION THE NOSE."
     ]
   },
   "objects": [
@@ -228,6 +244,1022 @@
           "Your name's on the wall. In chalk, but on the wall."
         ]
       }
+    },
+    {
+      "id": "gert",
+      "type": "npc",
+      "x": 25,
+      "y": 9,
+      "sprite": "gert",
+      "facing": "down",
+      "name": "Gert",
+      "lines": [
+        "Yeah, we know. He names everything after himself.",
+        "That's Kaldor Street. So's that one. They cross. You get used to it."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Gert. I sell lamps. I'm the only man here who hasn't challenged you to a fight. You're welcome."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "Don't make eye contact with the Crushers. The babies. They can smell weakness.",
+            "And if you're thinking of challenging the king: don't. My great-great-great-great-great-grandfather did. He fell to the king. Everyone does.",
+            "The old law's carved in the maze, if you're that sort. Hugo knows where."
+          ]
+        },
+        {
+          "ask": "How do I reach the king?",
+          "answer": [
+            "Get yourself billed at the Colosseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
+            "Or buy a lamp. Lamps are nice."
+          ]
+        },
+        {
+          "ask": "Who writes on the notices?",
+          "answer": [
+            "Couldn't tell you.",
+            "I sell lamps at the border post on Thursdays, though. Read the notices while I'm there.",
+            "Somebody ought to mark them."
+          ]
+        },
+        {
+          "ask": "What are the horns?",
+          "answer": [
+            "Old-world horns. Older than the king. Older than anybody.",
+            "At dusk they play the jingle, then a lady says nothing further is required of you. Nicest voice in the kingdom.",
+            "Nobody knows who she is. Five hundred years, same words. You get used to it."
+          ]
+        },
+        {
+          "ask": "Who'd buy a lamp from a man named Gert?",
+          "answer": [
+            "Everybody. Eventually. It gets dark, you see. Every single night.",
+            "You'll be back at dusk. They always come back at dusk."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "job": {
+        "flag": "gert-lamp",
+        "path": "any",
+        "joins": [
+          "gert"
+        ],
+        "done": [
+          "You buy a lamp. Gert looks genuinely surprised.",
+          "GERT: …Nobody's ever bought one. Huh. I'll walk you round, then. Somebody should.",
+          "Gert joins your collection."
+        ],
+        "cant": []
+      }
+    },
+    {
+      "id": "tessa",
+      "type": "npc",
+      "x": 18,
+      "y": 21,
+      "sprite": "tessa",
+      "facing": "down",
+      "name": "Tessa",
+      "lines": [
+        "Kaldorbread! The only bread allowed! Tastes of nothing, like the king likes it."
+      ],
+      "questions": [
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "He eats alone. Fourteen loaves. Never shares. Never sleeps, the guards say."
+          ]
+        },
+        {
+          "ask": "What's in the bread?",
+          "answer": [
+            "Flour. Water. And, in exactly one loaf a day, my opinion.",
+            "I have a system for choosing which."
+          ]
+        },
+        {
+          "ask": "Why are Durn and Haskel fighting?",
+          "answer": [
+            "Day eleven, is it? I was there when it started.",
+            "Last loaf of Kaldorbread on my cart. They both reached for it. Then they both remembered nobody likes it.",
+            "Neither of them would let go first. Fierce, see. Somebody ought to remind them."
+          ]
+        },
+        {
+          "ask": "Your bread tastes like a wet boot.",
+          "answer": [
+            "That's not me, that's the recipe. By royal decree.",
+            "…Mind you, I know exactly whose loaf my opinion's going in tomorrow."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "look": true
+    },
+    {
+      "id": "pim",
+      "type": "npc",
+      "x": 12,
+      "y": 36,
+      "sprite": "pim",
+      "facing": "left",
+      "name": "Pim",
+      "lines": [
+        "Rumours! A penny a rumour!"
+      ],
+      "questions": [
+        {
+          "ask": "Buy a rumour.",
+          "answer": [
+            "The king is made of iron.",
+            "…That one was a penny. The next one's two."
+          ]
+        },
+        {
+          "ask": "Buy another.",
+          "answer": [
+            "The king is three goats in a coat. Four pennies."
+          ]
+        },
+        {
+          "ask": "Buy the most expensive one.",
+          "answer": [
+            "The prince will come back up out of the ground, with a giant's beard.",
+            "…I made that one up. It costs the most because it's the least true."
+          ]
+        },
+        {
+          "ask": "Your rumours aren't worth a penny, Pim.",
+          "answer": [
+            "That's a rumour too. You owe me a penny.",
+            "Two, for the cheek."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 2
+    },
+    {
+      "id": "kett",
+      "type": "npc",
+      "x": 8,
+      "y": 30,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Kett",
+      "lines": [
+        "What are you looking at? I'm fierce. I'm very fierce.",
+        "…Everyone's afraid of the king. The trick is to be afraid loudly."
+      ],
+      "questions": [
+        {
+          "ask": "Are you scared?",
+          "answer": [
+            "I can't \"go red\". The Fury. Every raider can. I just go… pale.",
+            "Cold-blooded, they call me."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The cage guard takes bribes. Fat ones. Don't tell him I told you."
+          ]
+        },
+        {
+          "ask": "Fierce? You're the colour of porridge.",
+          "answer": [
+            "It's PALE fury. The rarest kind of fury.",
+            "* Kett goes a shade paler. Fiercely."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 1
+    },
+    {
+      "id": "guard",
+      "type": "npc",
+      "x": 36,
+      "y": 31,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "The Cage Guard",
+      "lines": [
+        "Back off. King's cages, king's prisoners.",
+        "I score their cheering at the Maximus. That one's a three. That one's a two.",
+        "You? You look like a one."
+      ],
+      "questions": [
+        {
+          "ask": "Who's in the cages?",
+          "answer": [
+            "People who wouldn't cheer at the Maximus. They'll cheer next time."
+          ]
+        },
+        {
+          "ask": "You score cheers? I'd score you a zero.",
+          "answer": [
+            "There is no zero. I asked for a zero. The king said no.",
+            "You're still a one. Back off."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "job": {
+        "flag": "cages-open",
+        "path": "financial",
+        "done": [
+          "{name} counts out a heavy purse, slowly, so the guard can hear every coin.",
+          "THE CAGE GUARD: …Keys must've fallen out of my pocket. Terrible. Anyway.",
+          "THE CAGE GUARD: Gerald, by the way. Nobody ever asks. Six out of ten, that purse.",
+          "(He's very tall. You hadn't noticed till now.)",
+          "The cages swing open. The prisoners stand, shaky, and follow you at a distance. They'll be witnesses.",
+          "Kett watches the cages open, then marches over to stand with the prisoners. \"Someone has to look after them.\" Kett joins your collection."
+        ],
+        "cant": [
+          "THE CAGE GUARD: Keys cost more than you've got, stranger.",
+          "(Someone who knows money might change his mind.)"
+        ],
+        "joins": [
+          "kett"
+        ]
+      },
+      "after": {
+        "flag": "cages-open",
+        "lines": [
+          "Gerald. Still Gerald. Unemployed Gerald.",
+          "A lady in Millbrook told my mum I'd be famous one day. Still waiting."
+        ]
+      }
+    },
+    {
+      "id": "varga",
+      "type": "npc",
+      "x": 29,
+      "y": 4,
+      "sprite": "varga",
+      "facing": "down",
+      "name": "Captain Varga",
+      "lines": [
+        "Stop. You. Nobody walks up to the castle.",
+        "Unless they've got a reason. And a spine."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Captain Varga. Second of the horde. The king took his crown with his own two hands. That's the only honest way to get one."
+          ]
+        },
+        {
+          "ask": "Will the march really come?",
+          "answer": [
+            "Any day. The king says we're finally strong enough. I can't wait."
+          ]
+        },
+        {
+          "ask": "Second of the horde? So, first loser.",
+          "answer": [
+            "Second is a rank. Not a result.",
+            "And you're the first in a long while to say that to my face. I'll remember both."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "job": {
+        "flag": "varga-witness",
+        "path": "emotional",
+        "done": [
+          "VARGA: COWARD! Swing at me! Go on!",
+          "{name} breathes in, counts four, breathes out, and doesn't move.",
+          "VARGA: …Huh. Most people swing. Fine. If you challenge the king by the old law, I'll witness it. Properly.",
+          "Captain Varga joins your collection."
+        ],
+        "cant": [
+          "VARGA: You flinched. Everybody flinches. Come back calmer.",
+          "(Someone steady, who won't rise to her, might earn her respect.)"
+        ],
+        "joins": [
+          "varga"
+        ]
+      }
+    },
+    {
+      "id": "brunna",
+      "type": "npc",
+      "x": 50,
+      "y": 36,
+      "sprite": "brunna",
+      "facing": "left",
+      "name": "Little Brunna",
+      "lines": [
+        "RAAAH.",
+        "(A toddler in tiny armour headbutts your shin. It genuinely hurts.)"
+      ],
+      "questions": [
+        {
+          "ask": "Hello, little one.",
+          "answer": [
+            "RAAAH."
+          ]
+        },
+        {
+          "ask": "Shouldn't you be having a nap?",
+          "answer": [
+            "RAAAH.",
+            "* Brunna headbutts your other shin. Now they match."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "job": {
+        "flag": "brunna-won",
+        "path": "any",
+        "joins": [
+          "brunna"
+        ],
+        "done": [
+          "You let Little Brunna headbutt you over. You go down dramatically.",
+          "LITTLE BRUNNA: RAAAAAH!",
+          "(It's a Tuesday. She bites you as well.)",
+          "She decides you're her friend now. Little Brunna joins your collection."
+        ],
+        "cant": []
+      }
+    },
+    {
+      "id": "street-sign",
+      "type": "sign",
+      "x": 19,
+      "y": 9,
+      "lines": [
+        "A street sign with two arms. One reads KALDOR STREET.",
+        "The other reads KALDOR STREET. They point different ways."
+      ]
+    },
+    {
+      "id": "crier-board",
+      "type": "sign",
+      "x": 45,
+      "y": 21,
+      "lines": [
+        "The Crier's board: VICTORIES OF THE KING: see previous notice.",
+        "The previous notice: see previous notice.",
+        "Underneath, in pencil: \"riveting.\""
+      ]
+    },
+    {
+      "id": "playpen-sign",
+      "type": "sign",
+      "x": 49,
+      "y": 36,
+      "lines": [
+        "KALDOR'S LITTLE CRUSHERS PLAYPEN. This way. No biting.",
+        "Smaller, underneath: Biting is for Tuesdays."
+      ]
+    },
+    {
+      "id": "heart-alley",
+      "type": "chest",
+      "x": 61,
+      "y": 37,
+      "item": "heart-piece",
+      "lines": [
+        "Wedged behind a rain barrel, out of the horde's sight: a Heart Piece.",
+        "Somebody in this town still hides good things."
+      ]
+    },
+    {
+      "id": "durn",
+      "type": "npc",
+      "x": 24,
+      "y": 30,
+      "sprite": "durn",
+      "facing": "right",
+      "name": "Durn",
+      "lines": [
+        "He looked at my axe.",
+        "HASKEL: I looked AT it. Not FOR it. There's a difference!",
+        "DURN: Day eleven. I'm not stopping first."
+      ],
+      "questions": [
+        {
+          "ask": "Is this about the last Kaldorbread?",
+          "answer": [
+            "DURN: …",
+            "HASKEL: …",
+            "DURN: Nobody even likes Kaldorbread.",
+            "HASKEL: It tastes of nothing. Like the king likes it.",
+            "DURN: Eleven days.",
+            "HASKEL: Drink?",
+            "DURN: Drink."
+          ],
+          "sets": "brawl-over",
+          "then": [
+            "Durn and Haskel let go of each other, stare at their fists for a while, and wander off east toward the city, arm in arm, for a drink."
+          ]
+        },
+        {
+          "ask": "You two fight like a pair of wet socks.",
+          "answer": [
+            "DURN: Wet socks.",
+            "HASKEL: My socks are bone dry, thank you very much.",
+            "DURN: …Mine aren't. Don't tell anyone."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "goneAfter": "brawl-over"
+    },
+    {
+      "id": "haskel",
+      "type": "npc",
+      "x": 25,
+      "y": 30,
+      "sprite": "haskel",
+      "facing": "left",
+      "name": "Haskel",
+      "lines": [
+        "I don't remember why we started. That's not the point.",
+        "The point is he started it.",
+        "DURN: YOU started it!"
+      ],
+      "goneAfter": "brawl-over",
+      "questions": [
+        {
+          "ask": "Why not just stop?",
+          "answer": [
+            "Because then he'd have stopped second. And I'd have stopped first. Do you see?",
+            "DURN: HE SEES. EVERYONE SEES."
+          ]
+        },
+        {
+          "ask": "Who's winning?",
+          "answer": [
+            "Odd Bett says nobody, every day, at the same odds. Sister Hild says the scarf.",
+            "Little Brunna says she is. She headbutted us both on day four. She might be right."
+          ]
+        },
+        {
+          "ask": "You'd lose to Brunna.",
+          "answer": [
+            "I did lose to Brunna. Day four. We don't talk about day four.",
+            "DURN: HE CRIED.",
+            "HASKEL: I HAD SOMETHING IN MY EYE. IT WAS BRUNNA."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "bett",
+      "type": "npc",
+      "x": 22,
+      "y": 29,
+      "sprite": "bett",
+      "facing": "right",
+      "name": "Odd Bett",
+      "lines": [
+        "Bets! Bets on the brawl! Odds on Durn: same as yesterday. Odds on Haskel: also same as yesterday.",
+        "Kaldor coins only. No markers, no IOUs, no 'I'll owe you a headbutt'."
+      ],
+      "after": {
+        "flag": "brawl-over",
+        "lines": [
+          "Fight's off. Eleven days of the best odds in the kingdom, and they go for a DRINK.",
+          "Worst day of my life. Don't talk to me."
+        ]
+      },
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who bets on a fight that never ends?",
+          "answer": [
+            "Everybody. That's the beauty. Nobody wins, nobody loses, the coins just go round and round, through me.",
+            "Pim sells the rumours, I sell the odds. Between us we're the whole economy of Kaldor Street. Both of them."
+          ]
+        },
+        {
+          "ask": "Any good tips?",
+          "answer": [
+            "Durn's been eating Tessa's Kaldorbread. Haskel hasn't. Make of that what you will.",
+            "Tessa says it tastes of nothing. I say nothing is very filling if you eat enough of it."
+          ]
+        },
+        {
+          "ask": "Your odds are rubbish.",
+          "answer": [
+            "My odds are the same every day. That's called reliable, love.",
+            "For being rude, odds on you: long. Very long. You'd need a ladder."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "hild",
+      "type": "npc",
+      "x": 25,
+      "y": 31,
+      "sprite": "hild",
+      "facing": "up",
+      "name": "Sister Hild",
+      "lines": [
+        "Day eleven. I've brought a stool, a bucket, and a lot of yarn.",
+        "Whoever drops first, I'll patch him up. Neither of them has dropped. I've knitted a scarf."
+      ],
+      "after": {
+        "flag": "brawl-over",
+        "lines": [
+          "They've gone for a drink. Together. Eleven days, and it was the bread.",
+          "I'll finish the scarf anyway. It's a very long scarf now."
+        ]
+      },
+      "look": true,
+      "questions": [
+        {
+          "ask": "What are you knitting?",
+          "answer": [
+            "Day one was a scarf. Day five, mittens. Day nine, a jumper for Hamm's boulder. Pebble gets cold.",
+            "If the brawl goes on to day thirty, I'll have done the whole street."
+          ]
+        },
+        {
+          "ask": "Do you patch up anyone else?",
+          "answer": [
+            "Gudrun's hands, when the cage bars give her blisters. Rumm's belly, when he drums it raw.",
+            "The medic up at the castle sends folk down to me. He's lovely. He isn't a medic."
+          ]
+        },
+        {
+          "ask": "Bucket's for you, is it?",
+          "answer": [
+            "The bucket is for whoever needs it. Today, perhaps, that's whoever's been rude to a nun.",
+            "* She keeps knitting. The needles click in a way that feels pointed."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "tuk",
+      "type": "npc",
+      "x": 8,
+      "y": 37,
+      "sprite": "drummer",
+      "facing": "left",
+      "name": "Drum-warden Tuk",
+      "lines": [
+        "BOOM. Curfew patrol. BOOM. Keep moving. BOOM.",
+        "We march in step. Tok is out of step. Tok has always been out of step."
+      ],
+      "wander": 3,
+      "along": "x",
+      "questions": [
+        {
+          "ask": "What does the patrol actually do?",
+          "answer": [
+            "Curfew. We walk. We BOOM. People go inside.",
+            "Nobody's been out after curfew in sixty years. The BOOM is very effective."
+          ]
+        },
+        {
+          "ask": "You're the one out of step.",
+          "answer": [
+            "…No.",
+            "* BOOM. He checks his feet. BOOM. He checks Tok's feet. BOOM. He looks worried."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "tok",
+      "type": "npc",
+      "x": 9,
+      "y": 37,
+      "sprite": "drummer",
+      "facing": "left",
+      "name": "Drum-warden Tok",
+      "lines": [
+        "BOOM. …BOOM.",
+        "I'm in step. Tuk's out of step. Rumm hasn't got a drum. Some patrol."
+      ],
+      "questions": [
+        {
+          "ask": "Why only one boom at a time?",
+          "answer": [
+            "Saving the second one. You never know when you'll need a second boom.",
+            "Tuk wastes his. Booms everywhere. Show-off."
+          ]
+        },
+        {
+          "ask": "Is that a drum or a bucket?",
+          "answer": [
+            "It is a drum.",
+            "…It was a bucket. Sister Hild lent it. Don't tell Tuk."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "rumm",
+      "type": "npc",
+      "x": 10,
+      "y": 37,
+      "sprite": "drummer",
+      "facing": "left",
+      "name": "Drum-warden Rumm",
+      "lines": [
+        "*slap* *slap*",
+        "Lost my drum. Belly works fine. Don't tell the captain.",
+        "*slap*"
+      ],
+      "questions": [
+        {
+          "ask": "What happened to your drum?",
+          "answer": [
+            "Bet it on Durn. Day two. Odd Bett has it now. She uses it as a stool.",
+            "*slap* Belly's lighter to carry anyway."
+          ]
+        },
+        {
+          "ask": "That's not a drum, mate.",
+          "answer": [
+            "*slap*",
+            "It's an instrument. Everything's an instrument if you're brave enough. *slap* *slap*"
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "gudrun",
+      "type": "npc",
+      "x": 34,
+      "y": 31,
+      "sprite": "gudrun",
+      "facing": "down",
+      "name": "Old Gudrun",
+      "lines": [
+        "Ninety-one. Ninety-two. Don't interrupt.",
+        "Chin-ups on the cage bars. The bars are the only thing in this town that don't wobble.",
+        "Ninety-three. When I was a girl I did these on the old king's gate. Ninety-four."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "How did you get so strong?",
+          "answer": [
+            "Every day. Little bit. Never skipped. That's all it is, and nobody believes me.",
+            "Strength's not a gift, dear. It's a habit you didn't put down. Ninety-five."
+          ]
+        },
+        {
+          "ask": "What was the old king like?",
+          "answer": [
+            "Hale. Kind man. Open hand. Let children swing on his gate. I was one of them.",
+            "Kaldor took the gate down. I took up the cage bars. Ninety-six."
+          ]
+        },
+        {
+          "ask": "Bet you can't do a hundred.",
+          "answer": [
+            "Ninety-seven. Ninety-eight. Ninety-nine. One hundred.",
+            "One hundred and one. Now you do one, dear. Go on. I'll wait."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "hamm",
+      "type": "npc",
+      "x": 45,
+      "y": 37,
+      "sprite": "hamm",
+      "facing": "right",
+      "name": "Hamm",
+      "lines": [
+        "Training. Carrying the boulder. Six years now.",
+        "Same boulder. I named him Pebble. Pebble isn't a pebble. That's the joke. I don't get many visitors."
+      ],
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Why carry a boulder?",
+          "answer": [
+            "The horde said, 'carry something heavy till you're strong.' Didn't say when to stop. So I haven't.",
+            "Pebble and I have seen the whole street. Both Kaldor Streets. He likes the bakery best. Tessa waves."
+          ]
+        },
+        {
+          "ask": "Pebble's your only friend, isn't he?",
+          "answer": [
+            "…Pebble's a very good friend. Never interrupts. Never leaves.",
+            "* Hamm hugs the boulder a little tighter. The boulder, being a boulder, says nothing kind back."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "fliss",
+      "type": "npc",
+      "x": 40,
+      "y": 9,
+      "sprite": "fliss",
+      "facing": "down",
+      "name": "Fliss",
+      "lines": [
+        "Kaldor's Sweat! Genuine sweat of the king! Tiny bottles! Makes you strong!",
+        "…It's water. It's water from the well. But it's Kaldor's Well, so technically."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Does anyone actually buy this?",
+          "answer": [
+            "Raiders before a fight. Sorrel buys six. She says it's for her knees.",
+            "Mott tried to tax it. I gave him a bottle. He's stronger now. Technically."
+          ]
+        },
+        {
+          "ask": "I can see the bucket you're filling it from.",
+          "answer": [
+            "That's a different bucket. A royal bucket.",
+            "…Two for one. Please. Don't tell Mott."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "brakka",
+      "type": "npc",
+      "x": 42,
+      "y": 9,
+      "sprite": "brakka",
+      "facing": "down",
+      "name": "Brakka",
+      "lines": [
+        "Furs. Best furs in Kaldorhold. Twenty push-ups and we'll talk.",
+        "No push-ups, no furs. I don't make the rules. Well. I made this one. I like it."
+      ],
+      "questions": [
+        {
+          "ask": "Where do the furs come from?",
+          "answer": [
+            "North. Up past the Frost Ward. My cousins trap. I sell. I make you do push-ups.",
+            "Elder Skadi says the old Kaldari wore wolves. I say wolves wore them first."
+          ]
+        },
+        {
+          "ask": "Twenty push-ups? I'll pass on fleas.",
+          "answer": [
+            "Fleas! These furs are clean! I washed them in Fliss's well. Kaldor's Well.",
+            "Sixty push-ups now. Price went up. For you."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "snik",
+      "type": "npc",
+      "x": 44,
+      "y": 10,
+      "sprite": "snik",
+      "facing": "down",
+      "name": "Snik",
+      "lines": [
+        "Sharpening! Axes, swords, spoons, bread, a cat's patience. I sharpen anything.",
+        "Brought me a pillow once. Took a week. Very pointy pillow now."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who's your best customer?",
+          "answer": [
+            "Hroth. Brings the same axe every week. It's sharp. He just likes the chat.",
+            "Ansel Chisk brings his chisels. Says Kaldor's nose keeps breaking them. Very hard nose."
+          ]
+        },
+        {
+          "ask": "Sharpen your wits next, Snik.",
+          "answer": [
+            "Ooh. I'll try. Leave them overnight.",
+            "* He holds out his hand for your wits. He's waiting.",
+            "…No? Pointy pillow, then. Half price."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "chisk",
+      "type": "npc",
+      "x": 28,
+      "y": 26,
+      "sprite": "chisk",
+      "facing": "down",
+      "name": "Ansel Chisk",
+      "lines": [
+        "The king wants another statue. I've done Kaldor standing. Kaldor striding. Kaldor looking at Kaldor.",
+        "Kaldor… sitting? Kaldor… thinking? Does he think? I can't ask. You can't ask."
+      ],
+      "wander": 1,
+      "questions": [
+        {
+          "ask": "How many statues are there?",
+          "answer": [
+            "Two hundred and twelve. All Kaldor. Some are the same statue facing the other way.",
+            "There's a pigeon on the big one I've grown fond of. It's the only thing in this city not owned by the king."
+          ]
+        },
+        {
+          "ask": "What happened to the old statues?",
+          "answer": [
+            "Under us. He built Kaldorhold on top of the old city. Old kings, old gods. Buried, standing up.",
+            "Dig a well and you hit somebody's marble foot. Fliss's well has a whole marble toe at the bottom."
+          ]
+        },
+        {
+          "ask": "Your Kaldors all have the same face.",
+          "answer": [
+            "He only has the one face!",
+            "…Shh. If he hears 'same face' I'll be doing Kaldor-hitting-a-sculptor next. From life."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "mott",
+      "type": "npc",
+      "x": 20,
+      "y": 36,
+      "sprite": "mott",
+      "facing": "left",
+      "name": "Mott",
+      "lines": [
+        "Tax collector. Not coin. Fights. Everybody here owes the king fights.",
+        "You, for example. Visitor. You owe nothing yet. I've opened a page for you, though. Just in case."
+      ],
+      "wander": 3,
+      "questions": [
+        {
+          "ask": "What happens if you don't pay?",
+          "answer": [
+            "The Kaldorium Maximus. Or the fighters' cells first. Then the Maximus.",
+            "Joss's whole camp owed a tithe. They sent Joss. He writes about clouds. I felt bad. I wrote it down anyway."
+          ]
+        },
+        {
+          "ask": "Do you get paid?",
+          "answer": [
+            "Paid? Nobody gets paid. The king pays in honour.",
+            "I've got a page for honour. It's empty. Don't tell anyone."
+          ]
+        },
+        {
+          "ask": "Tax collector? Did your mum know?",
+          "answer": [
+            "She did. She owes three fights. I've got her page right here.",
+            "* He writes something on your page. Underlines it twice."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "tib",
+      "type": "npc",
+      "x": 4,
+      "y": 36,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Tib",
+      "lines": [
+        "Fight club. Behind the houses. Rule one: tell everyone about fight club.",
+        "Rule two: no crying. Rule three: Brunna's not allowed. She bites."
+      ],
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Who's winning fight club?",
+          "answer": [
+            "Brunna. She bites. Brunna's not allowed. Brunna keeps coming.",
+            "Next week we're doing teams. It's me and a dog against Brunna. I think it's even."
+          ]
+        },
+        {
+          "ask": "Fight club's just you hitting a fence.",
+          "answer": [
+            "The fence hit me first.",
+            "Rule four: no being mean. I just made it. You're out."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "bazaar-heart",
+      "type": "chest",
+      "x": 2,
+      "y": 38,
+      "item": "heart-piece",
+      "lines": [
+        "Behind the Hall of Kaldor, in a crate marked RETURNS: a Heart Piece.",
+        "Somebody tried to sell it at the bazaar. Nobody could do enough push-ups."
+      ]
+    },
+    {
+      "id": "ring-heart",
+      "type": "chest",
+      "x": 61,
+      "y": 2,
+      "item": "heart-piece",
+      "lines": [
+        "Under the arena's outer stairs, where the children hide their wooden swords: a Heart Piece."
+      ]
+    },
+    {
+      "id": "joss",
+      "type": "npc",
+      "x": 18,
+      "y": 22,
+      "sprite": "joss",
+      "facing": "down",
+      "name": "Joss",
+      "lines": [
+        "I'm here for the tithe. From the camps. My mum knitted me armour.",
+        "It's wool. It's very thick wool. I'm a poet, really. I write about clouds."
+      ],
+      "questions": [
+        {
+          "ask": "Are you scared?",
+          "answer": [
+            "Yes. Very.",
+            "But I wrote a poem about it, and the poem's less scared than me, so I read it before I go out.",
+            "It's called 'Cloud, Heading Into a Storm, Being Brave About It'. It's quite long."
+          ]
+        },
+        {
+          "ask": "Wool armour? You'll lose to a moth.",
+          "answer": [
+            "…Mum said that about the moths too.",
+            "I'm going to write a poem about you. It's going to be about a very small, very grey cloud.",
+            "Nobody's going to like it. That's the point."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "edda",
+      "type": "npc",
+      "x": 19,
+      "y": 22,
+      "sprite": "kids",
+      "facing": "down",
+      "name": "Edda",
+      "lines": [
+        "Tithe fighter. Never held an axe. I held a goose once. It went badly.",
+        "They say you do the ladder. Beat Hroth and the tithe might change. That's what people whisper."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What happened with the goose?",
+          "answer": [
+            "It went for my ankles. I went for the hills. The goose won the hills.",
+            "My village said, 'Edda's brave, she fought a goose.' Next thing I'm the tithe."
+          ]
+        },
+        {
+          "ask": "Who whispers about the ladder?",
+          "answer": [
+            "Joss heard it from a guard. The guard heard it from Tova. Tova hears everything.",
+            "If somebody beats Hroth, the ladder changes. Maybe the tithe too. Maybe it's just a nice thing people say in cells."
+          ]
+        },
+        {
+          "ask": "Bet the goose would win this too.",
+          "answer": [
+            "…It would. Geese don't fear anyone.",
+            "I'll tell it you said hello. It'll find you."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

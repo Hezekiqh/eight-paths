@@ -53,6 +53,8 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
         outcome: { flags: [flag], joins: ['plush'] },
       };
     case 'the-pit':
+      // The champions' ladder (author, Oct 6, 2026: the Maximus's, folded into the Colosseum), after the warden.
+      if (flag.startsWith('maximus-')) return ladderScene(flag);
       // The Kaldorium (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
       if (flag === 'pit-guards')
         return {
@@ -212,22 +214,20 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
         ],
       };
     }
-    case 'kaldorium-maximus':
-      return ladderScene(flag);
     default:
       return null;
   }
 }
 
-/** Out of the Maximus after a bout, to the Ring Ward: the next rung waits for your next visit. */
-const RING_GATE = { map: 'ring-ward' as MapId, x: 15, y: 5, facing: 'down' as const };
+/** Out of the Colosseum after a bout, into Warrior City: the next rung waits for your next visit. */
+const RING_GATE = { map: 'warrior-city' as MapId, x: 31, y: 23, facing: 'down' as const };
 
-/** Winning a rung of the Maximus's ladder. Drafts, for the author. */
+/** Winning a rung of the Colosseum's ladder. Drafts, for the author. */
 function ladderScene(flag: string): Scene | null {
   const lines: Record<string, string[]> = {
     'maximus-1': [
       'Ugg goes down. Ogg, on the sideline, shouts "GET UP! No, stay down! No, get up!"',
-      'LADY HOLLER: RUNG ONE, CLIMBED! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
+      'BARNABY: RUNG ONE, CLIMBED! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
     ],
     'maximus-2': [
       'Matron Sorrel lowers her rattle, and pats you on the head.',
@@ -244,7 +244,7 @@ function ladderScene(flag: string): Scene | null {
     'maximus-5': [
       'Grand Champion Hroth sits down in the sand, and laughs, and laughs.',
       'HROTH: Forty years. Forty YEARS. Thank you. Thank you. I can retire.',
-      'Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.',
+      'Barnaby chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.',
       "HROTH: Find me at Tova's. I'll be the one smiling.",
     ],
   };

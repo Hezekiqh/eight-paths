@@ -35,29 +35,24 @@ const TAG_W = 120;
  * stays black. The Archive floats alone: it's outside space and time.
  */
 const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
-  // laid out on a grid (author, Oct 4, 2026), so the roads run the way their signs say: the castle
-  // north of the kingdom town, Kaldorhold to its east (its wards north, east and south), the Tithe
-  // Road south to the Broken Watch and the Field of Banners, and Warrior City's north road up past
-  // the camp to the barracks and on round by the March Road
+  // laid out on a grid (author, Oct 6, 2026), so the roads run the way their signs say: the road
+  // east from the Archive to Warrior City; north of the city, the Royal Forest and the castle; south
+  // of it, the South Road to Osric's Rest (the old regiment's fort beside it), and on down the Tithe
+  // Road to the Broken Watch and the Field of Banners
   archive: { x: 0.1, y: 0.08 },
-  'castle-grounds': { x: 0.3, y: 0.08 },
-  'ring-ward': { x: 0.5, y: 0.08 },
-  'barracks-ward': { x: 0.7, y: 0.08 },
-  'kingdom-town': { x: 0.3, y: 0.24 },
-  kaldorhold: { x: 0.5, y: 0.24 },
-  'tithe-road': { x: 0.3, y: 0.4 },
-  'frost-ward': { x: 0.5, y: 0.4 },
-  'march-road': { x: 0.7, y: 0.4 },
-  'barracks-hall': { x: 0.88, y: 0.4 },
-  'broken-watch': { x: 0.1, y: 0.56 },
-  'deserters-camp': { x: 0.88, y: 0.56 },
-  'field-of-banners': { x: 0.1, y: 0.72 },
-  'courier-road': { x: 0.3, y: 0.72 },
-  'felix-maze': { x: 0.5, y: 0.72 },
-  'warrior-city': { x: 0.7, y: 0.72 },
-  millbrook: { x: 0.1, y: 0.88 },
-  waystation: { x: 0.3, y: 0.88 },
-  'south-road': { x: 0.7, y: 0.88 },
+  'castle-grounds': { x: 0.7, y: 0.08 },
+  'royal-forest': { x: 0.7, y: 0.24 },
+  millbrook: { x: 0.1, y: 0.4 },
+  'courier-road': { x: 0.3, y: 0.4 },
+  'felix-maze': { x: 0.5, y: 0.4 },
+  'warrior-city': { x: 0.7, y: 0.4 },
+  waystation: { x: 0.3, y: 0.56 },
+  'south-road': { x: 0.7, y: 0.56 },
+  'deserters-camp': { x: 0.7, y: 0.72 },
+  'barracks-hall': { x: 0.88, y: 0.72 },
+  'field-of-banners': { x: 0.3, y: 0.88 },
+  'broken-watch': { x: 0.5, y: 0.88 },
+  'tithe-road': { x: 0.7, y: 0.88 },
 };
 
 /** Rooms shown on the World view as the place they belong to (a dungeon is one place). */
@@ -68,23 +63,18 @@ const REGION: Partial<Record<MapId, MapId>> = {
   'pit-below': 'barracks-hall',
   'lower-barracks': 'barracks-hall',
   'sleeping-keep': 'barracks-hall',
-  'candle-inn': 'kingdom-town',
-  forge: 'kingdom-town',
-  chapel: 'kingdom-town',
-  'old-kings-crypt': 'kingdom-town',
-  'hedge-maze': 'kingdom-town',
+  'candle-inn': 'deserters-camp',
+  'root-cellar': 'deserters-camp',
+  forge: 'warrior-city',
+  chapel: 'deserters-camp',
+  'old-kings-crypt': 'deserters-camp',
+  'hedge-maze': 'royal-forest',
   'the-pit': 'warrior-city',
   'castle-hall': 'castle-grounds',
   'castle-upper': 'castle-grounds',
   'war-hall': 'castle-grounds',
-  'gut-and-gauntlet': 'kaldorhold',
-  'hall-of-kaldor': 'kaldorhold',
-  'kaldorium-maximus': 'ring-ward',
-  'fighters-cells': 'ring-ward',
-  'fury-hall': 'barracks-ward',
-  stitchery: 'barracks-ward',
-  ironhouse: 'barracks-ward',
-  'ice-house': 'frost-ward',
+  'gut-and-gauntlet': 'warrior-city',
+  'hall-of-kaldor': 'warrior-city',
   'kingdom-dungeon': 'warrior-city',
   'dungeon-mazes': 'warrior-city',
   'old-mine': 'south-road',

@@ -28,11 +28,11 @@ describe('party banter', () => {
 
   it('lets every listed party member speak, in order, and nobody when none of them came', () => {
     const party = Object.values(DEFAULT_PARTY);
-    expect(banterFor('march-road', 'bo', party)[0]).toMatch(/^PIP: /);
-    const both = banterFor('march-road', 'bo', [...party, 'plush' as CharacterId]);
+    expect(banterFor('deserters-camp', 'bo', party)[0]).toMatch(/^PIP: /);
+    const both = banterFor('deserters-camp', 'bo', [...party, 'plush' as CharacterId]);
     expect(both[0]).toMatch(/^PLUSH: /);
     expect(both.some((l) => l.startsWith('PIP: '))).toBe(true);
-    expect(banterFor('march-road', 'grask', ['brannoc' as CharacterId])).toEqual([]);
+    expect(banterFor('deserters-camp', 'grask', ['brannoc' as CharacterId])).toEqual([]);
     expect(banterFor('millbrook', 'nowhere', party)).toEqual([]);
   });
 

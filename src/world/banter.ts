@@ -82,8 +82,24 @@ export const BANTER: Record<string, Banter[]> = {
   'millbrook:jory': [{ who: 'moss', lines: ['MOSS: Tuft likes it here. Tuft likes anywhere with turnips.'] }],
   'millbrook:hoot': [{ who: 'oren', lines: ["OREN: He's right.", 'OREN: …Drink some water.'] }],
 
-  // ---- the Deserters' Camp and the Buried Barracks
-  'deserters-camp:holt': [
+  // ---- Osric's Rest, its rebels' cellar, and the Buried Barracks
+  'deserters-camp:heir-shrine': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: …Is that meant to be me?',
+        'BRANNOC: The beard is very good. The sword is rather small.',
+        'BRANNOC: They waited. Five hundred years, and they kept the candles lit.',
+      ],
+    },
+  ],
+  'root-cellar:mira': [
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: Good lady. I… am the prince.', "MIRA: Course you are. And I'm the Queen of the Turnips.", 'BRANNOC: …Your Majesty.'],
+    },
+  ],
+  'root-cellar:holt': [
     {
       who: 'brannoc',
       lines: ['BRANNOC: That is what I always say!', 'BRANNOC: …That is, I have heard it said. By cowards. Ha.'],
@@ -153,7 +169,7 @@ export const BANTER: Record<string, Banter[]> = {
   ],
 
   // ---- the March Road
-  'march-road:bo': [
+  'deserters-camp:bo': [
     {
       who: 'plush',
       lines: [
@@ -163,7 +179,7 @@ export const BANTER: Record<string, Banter[]> = {
     },
     { who: 'pip', lines: ['PIP: Can I count the next one? FOUR THOUSAND AND TEN!'] },
   ],
-  'march-road:grask': [
+  'deserters-camp:grask': [
     {
       who: 'ysolde',
       with: 'brannoc',
@@ -179,7 +195,7 @@ export const BANTER: Record<string, Banter[]> = {
       lines: ['YSOLDE: Everything I have? Show me the toll schedule.', 'GRASK: The what?', 'YSOLDE: Thought so.'],
     },
   ],
-  'march-road:wim': [
+  'deserters-camp:wim': [
     {
       who: 'quill',
       lines: [
@@ -189,16 +205,8 @@ export const BANTER: Record<string, Banter[]> = {
       ],
     },
   ],
-  'march-road:tithe-notice': [{ who: 'wren', lines: ["WREN: Every mark is somebody's child."] }],
-
   // ---- the Berserker Kingdom
-  'kingdom-town:gate-stone': [
-    {
-      who: 'brannoc',
-      lines: ['BRANNOC: Strength in service. I know the rest of that oath.', 'BRANNOC: …I know not how I know that.'],
-    },
-  ],
-  'kingdom-town:street-sign': [
+  'warrior-city:street-sign': [
     {
       who: 'quill',
       lines: [
@@ -207,20 +215,20 @@ export const BANTER: Record<string, Banter[]> = {
       ],
     },
   ],
-  'kingdom-town:crier-board': [
+  'warrior-city:crier-board': [
     {
       who: 'quill',
       lines: ['QUILL: See previous notice… see previous notice… Oh no. It goes on forever.', 'QUILL: I love it.'],
     },
   ],
-  'kingdom-town:playpen-sign': [
+  'warrior-city:playpen-sign': [
     { who: 'moss', lines: ['MOSS: What day is it?', 'MOSS: …Tuft wants to know. No reason.'] },
   ],
-  'kingdom-town:brunna': [
+  'warrior-city:brunna': [
     { who: 'brannoc', lines: ['BRANNOC: Ha! She has you! Fear not, I shall protect y—', 'BRANNOC: OW. She has me.'] },
   ],
-  'kingdom-town:kett': [{ who: 'brannoc', lines: ['BRANNOC: …That is, in truth, very good counsel.'] }],
-  'kingdom-town:tessa': [
+  'warrior-city:kett': [{ who: 'brannoc', lines: ['BRANNOC: …That is, in truth, very good counsel.'] }],
+  'warrior-city:tessa': [
     {
       who: 'pip',
       lines: [
@@ -232,8 +240,8 @@ export const BANTER: Record<string, Banter[]> = {
   'warrior-city:barnaby': [
     { who: 'pip', lines: ['PIP: The same victory for five hundred years? Have you tried a key change?'] },
   ],
-  'kingdom-town:pim': [{ who: 'ysolde', lines: ['YSOLDE: A penny a rumour. And a false one?', 'PIM: Two pennies!'] }],
-  'kingdom-town:guard': [
+  'warrior-city:pim': [{ who: 'ysolde', lines: ['YSOLDE: A penny a rumour. And a false one?', 'PIM: Two pennies!'] }],
+  'warrior-city:guard': [
     {
       who: 'pip',
       lines: [
@@ -245,7 +253,7 @@ export const BANTER: Record<string, Banter[]> = {
     },
     { who: 'brannoc', lines: ['BRANNOC: And me? A great lad like me?', 'THE CAGE GUARD: Four. Pity marks.'] },
   ],
-  'kingdom-town:varga': [
+  'warrior-city:varga': [
     { who: 'brannoc', lines: ['BRANNOC: A spine. Yes. I have one of those. It is in here somewhere.'] },
   ],
   'candle-inn:nana': [

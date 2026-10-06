@@ -10,14 +10,13 @@ import barracksYardData from './maps/barracks-yard.json';
 import pitBelowData from './maps/pit-below.json';
 import lowerBarracksData from './maps/lower-barracks.json';
 import sleepingKeepData from './maps/sleeping-keep.json';
-import marchRoadData from './maps/march-road.json';
-import kingdomTownData from './maps/kingdom-town.json';
 import candleInnData from './maps/candle-inn.json';
 import forgeData from './maps/forge.json';
 import chapelData from './maps/chapel.json';
 import oldKingsCryptData from './maps/old-kings-crypt.json';
 import hedgeMazeData from './maps/hedge-maze.json';
 import royalForestData from './maps/royal-forest.json';
+import rootCellarData from './maps/root-cellar.json';
 import thePitData from './maps/the-pit.json';
 import castleGroundsData from './maps/castle-grounds.json';
 import castleHallData from './maps/castle-hall.json';
@@ -26,18 +25,8 @@ import warHallData from './maps/war-hall.json';
 import fieldOfBannersData from './maps/field-of-banners.json';
 import titheRoadData from './maps/tithe-road.json';
 import brokenWatchData from './maps/broken-watch.json';
-import kaldorholdData from './maps/kaldorhold.json';
 import gutAndGauntletData from './maps/gut-and-gauntlet.json';
 import hallOfKaldorData from './maps/hall-of-kaldor.json';
-import ringWardData from './maps/ring-ward.json';
-import kaldoriumMaximusData from './maps/kaldorium-maximus.json';
-import fightersCellsData from './maps/fighters-cells.json';
-import barracksWardData from './maps/barracks-ward.json';
-import furyHallData from './maps/fury-hall.json';
-import stitcheryData from './maps/stitchery.json';
-import ironhouseData from './maps/ironhouse.json';
-import frostWardData from './maps/frost-ward.json';
-import iceHouseData from './maps/ice-house.json';
 import felixMazeData from './maps/felix-maze.json';
 import kingdomDungeonData from './maps/kingdom-dungeon.json';
 import dungeonMazesData from './maps/dungeon-mazes.json';
@@ -341,12 +330,11 @@ export const MAPS = {
   'pit-below': build(pitBelowData, require('@/assets/world/pit-below.png')),
   'lower-barracks': build(lowerBarracksData, require('@/assets/world/lower-barracks.png')),
   'sleeping-keep': build(sleepingKeepData, require('@/assets/world/sleeping-keep.png')),
-  'march-road': build(marchRoadData as MapData, require('@/assets/world/march-road.png')),
-  'kingdom-town': build(kingdomTownData as MapData, require('@/assets/world/kingdom-town.png')),
   'candle-inn': build(candleInnData as MapData, require('@/assets/world/candle-inn.png')),
   forge: build(forgeData as MapData, require('@/assets/world/forge.png')),
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
+  'root-cellar': build(rootCellarData as MapData, require('@/assets/world/root-cellar.png')),
   'royal-forest': build(royalForestData as MapData, require('@/assets/world/royal-forest.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
   'the-pit': build(thePitData as MapData, require('@/assets/world/the-pit.png')),
@@ -357,18 +345,8 @@ export const MAPS = {
   'field-of-banners': build(fieldOfBannersData as MapData, require('@/assets/world/field-of-banners.png')),
   'tithe-road': build(titheRoadData as MapData, require('@/assets/world/tithe-road.png')),
   'broken-watch': build(brokenWatchData as MapData, require('@/assets/world/broken-watch.png')),
-  kaldorhold: build(kaldorholdData as MapData, require('@/assets/world/kaldorhold.png')),
   'gut-and-gauntlet': build(gutAndGauntletData as MapData, require('@/assets/world/gut-and-gauntlet.png')),
   'hall-of-kaldor': build(hallOfKaldorData as MapData, require('@/assets/world/hall-of-kaldor.png')),
-  'ring-ward': build(ringWardData as MapData, require('@/assets/world/ring-ward.png')),
-  'kaldorium-maximus': build(kaldoriumMaximusData as MapData, require('@/assets/world/kaldorium-maximus.png')),
-  'fighters-cells': build(fightersCellsData as MapData, require('@/assets/world/fighters-cells.png')),
-  'barracks-ward': build(barracksWardData as MapData, require('@/assets/world/barracks-ward.png')),
-  'fury-hall': build(furyHallData as MapData, require('@/assets/world/fury-hall.png')),
-  stitchery: build(stitcheryData as MapData, require('@/assets/world/stitchery.png')),
-  ironhouse: build(ironhouseData as MapData, require('@/assets/world/ironhouse.png')),
-  'frost-ward': build(frostWardData as MapData, require('@/assets/world/frost-ward.png')),
-  'ice-house': build(iceHouseData as MapData, require('@/assets/world/ice-house.png')),
   'felix-maze': build(felixMazeData as MapData, require('@/assets/world/felix-maze.png')),
   'kingdom-dungeon': build(kingdomDungeonData as MapData, require('@/assets/world/kingdom-dungeon.png')),
   'dungeon-mazes': build(dungeonMazesData as MapData, require('@/assets/world/dungeon-mazes.png')),
@@ -391,6 +369,10 @@ export const MAPS = {
   'room-tamsin': build(roomTamsinData as MapData, require('@/assets/world/room-tamsin.png')),
   'room-moss': build(roomMossData as MapData, require('@/assets/world/room-moss.png')),
 } satisfies Record<string, WorldMap>;
+// Retired (author, Oct 6, 2026): the kingdom town, Kaldorhold's districts and the March Road, folded into
+// Warrior City and Osric's Rest. Their files stay in maps/ for the ads and a later season:
+// kingdom-town, kaldorhold, ring-ward, kaldorium-maximus, fighters-cells, barracks-ward, fury-hall,
+// stitchery, ironhouse, frost-ward, ice-house, march-road.
 
 export type MapId = keyof typeof MAPS;
 

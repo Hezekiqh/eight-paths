@@ -47,9 +47,15 @@ describe('the next goal', () => {
   });
 
   it('leads to the winch through the right hole when it is in another room', () => {
-    const goal = nextGoal('barracks-hall', ALL, strong([]));
+    // the fort is a side trip after the castle (author, Oct 6, 2026): everything else done first
+    const fort = ['hall-portcullis', 'yard-plates', 'plush-won'];
+    const story = EXITS.flatMap(function flagsOf(e: { needs: Requirement }): string[] {
+      const n = e.needs;
+      return n.kind === 'flag' ? [n.flag] : n.kind === 'all' ? n.of.flatMap((r) => flagsOf({ needs: r })) : [];
+    }).filter((f) => !fort.includes(f));
+    const goal = nextGoal('barracks-hall', ALL, strong(story));
     expect(goal.mark?.exitId).toBe('hall-armoury');
-    expect(nextGoal('barracks-armoury', ALL, strong([])).mark).toMatchObject({ tag: 'The winch lever' });
+    expect(nextGoal('barracks-armoury', ALL, strong(story)).mark).toMatchObject({ tag: 'The winch lever' });
   });
 
   it('says Season 1 is done at the end', () => {
@@ -60,7 +66,7 @@ describe('the next goal', () => {
     const walked = { ...strong(every), total: overallXpFor(20) };
     // Strong enough and every way walked: the portal is last, marked even from back in town.
     expect(nextGoal('field-of-banners', ALL, walked)).toMatchObject({ mark: { tag: 'The portal' }, line: 'Touch the portal' });
-    expect(nextGoal('kingdom-town', ALL, walked).mark?.exitId).toBeDefined();
+    expect(nextGoal('warrior-city', ALL, walked).mark?.exitId).toBeDefined();
     const done = { ...walked, flags: [...every, 'season-1'] };
     expect(nextGoal('field-of-banners', ALL, done)).toEqual({
       mark: null,
