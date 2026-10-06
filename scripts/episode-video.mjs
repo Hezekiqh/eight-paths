@@ -2407,7 +2407,7 @@ const EPISODES = {
         { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.25 } },
         ...BOX,
         { jolt: 0.45 },
-        { say: 'barnaby-box', lines: by(verdict, 'BARNABY'), punch: 0.4, letterMs: 16, pause: 0.3, read: 1.1 },
+        { say: 'barnaby-box', lines: by(verdict, 'BARNABY'), punch: 0.4, letterMs: 16, pause: 0.2, read: 0.95 },
         // Brannoc heard that
         ...RING,
         { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
@@ -2430,9 +2430,9 @@ const EPISODES = {
         { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 21, delay: 1.25, facing: 'left', together: true },
         { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 15.5, delay: 1.25, turn: 'left', together: true },
         // (typed slower than the rest, so each excuse reads: author, Oct 6, 2026)
-        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.3, letterMs: 26 },
-        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.3, letterMs: 26 },
-        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.35, letterMs: 26 },
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.3, letterMs: 22 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.3, letterMs: 22 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.35, letterMs: 22 },
         ...BOX,
         { jolt: 0.4 },
         { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.55, letterMs: 16, pause: 0.3, read: 1.1 },

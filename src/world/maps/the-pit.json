@@ -381,7 +381,7 @@
       "comesAfter": "cells-freed",
       "goneAfter": "pit-champion",
       "lines": [
-        "I am way too old for this."
+        "You wouldn't want an old man fighting. I'll let you have at it!"
       ]
     },
     {
@@ -411,7 +411,7 @@
       "comesAfter": "cells-freed",
       "goneAfter": "pit-champion",
       "lines": [
-        "They're the strong silent type. They've got this."
+        "You're the strong silent type. You got this."
       ]
     },
     {

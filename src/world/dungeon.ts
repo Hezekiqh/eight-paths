@@ -153,14 +153,14 @@ export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
 export const ARENA_VERDICT = [
   'BARNABY: THIS IS UNACCEPTABLE!!!!!',
   'BARNABY: After we were so lenient with your sentences, this is how you repay me?',
-  'BARNABY: If you thought five life sentences were bad, try 500!',
-  'BRANNOC: O-Our lives!?',
+  'BARNABY: If you thought 5 life sentences were bad, try 500!',
+  'BRANNOC: 500!?',
   '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
 ];
 /** Then the three who lost make their excuses on the way to the side of the sand, and it's on (author, Episode 13). */
 export const ARENA_FIGHT = [
-  "SILAS SEEN: They're the strong silent type. They've got this.",
-  'OLD MOTT: I am way too old for this.',
+  "SILAS SEEN: You're the strong silent type. You got this.",
+  "OLD MOTT: You wouldn't want an old man fighting. I'll let you have at it!",
   'NAILS: My ice cubes melted.',
   '* Old Mott, Nails and Silas Seen rush over to Brannoc, pick him up, and carry him off to the side of the sand.',
   'BARNABY: FINISH THEM!',
