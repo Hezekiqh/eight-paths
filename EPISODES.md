@@ -51,7 +51,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 - **Episode 12, "I Regret Nothing"** (`node scripts/episode-video.mjs 12`, ~15 s): frame one, *Could I please have
   the keys?* Gary's a chill guy, not an idiot (author): awake, he thinks ("..."), shrugs, "Sure. Why not." You go
   straight to the lever on the wall; CLUNK, every cell opens, and the three confess on their way up the ladder: Nails
-  "THERE WAS POISON IN THAT ICE CUBE!", Old Mott "I PUT PEPPER IN THE KING'S SANDWICH!", Silas Seen, strolling, "I
+  "I STOLE THE OTHER ICE CUBES!", Old Mott "I PUT PEPPER IN THE KING'S SANDWICH!", Silas Seen, strolling, "I
   REGRET NOTHING!!!!". You head for the way out, turn back quickly to Gary, and he's gone. In the game: the same
   question and lines (`kingdom-dungeon.json`), the walk to the lever (`LEVER`, `toTheLever` in `dungeon.ts`), and
   `cells-freed` (`CELLS_FREED`), which empties the cells and takes Gary once those lines have been read
