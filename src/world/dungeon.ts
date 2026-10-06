@@ -285,12 +285,9 @@ export const POTHOLE_UNSEEN = ['THUD.', 'Nobody saw that. There is nobody left d
 /** The cells are empty and Gary's gone: set once the prisoners' exit has been read (kingdom-dungeon.json). */
 export const CELLS_FREED = 'cells-freed';
 
-/** The cells' lever, on the wall between the first two cells (tile V), and where you stand to pull it. */
-export const LEVER = { x: 8, y: 5, stand: [8, 6] as [number, number] };
-
-/** "Sure. Why not." Straight from Gary to the lever: out past him, along the corridor, facing it. */
-export const toTheLever = (x: number, y: number): Actor[] => {
+/** With Gary's keys, straight along the cells: out past him, every door in turn, ending clear of the corridor. */
+export const toTheCells = (x: number, y: number): Actor[] => {
   // directly above or below Gary, step aside first rather than walk through him
   const side = x === 3 ? 4 : x;
-  return [{ row: -1, path: [[x, y], [side, y], [side, LEVER.stand[1]], LEVER.stand], face: 1 }];
+  return [{ row: -1, path: [[x, y], [side, y], [side, 6], [10, 6], [14, 6], [18, 6], [18, 7]], face: 1 }];
 };

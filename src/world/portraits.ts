@@ -65,6 +65,12 @@ const VOICES: Partial<Record<WalkerId, Voice>> = {
   brannoc: 2,
   brunna: 5,
   pim: 5,
+  // the Deep Cells (author, Oct 6, 2026): four voices you can tell apart in one breath
+  oldmott: 1,
+  gary: 2,
+  garyasleep: 2,
+  silasseen: 3,
+  nails: 4,
 };
 
 /** A speaker's voice, lowest (1) to highest (5): set for some, otherwise one of the middle three, fixed by their name. */

@@ -126,7 +126,23 @@ function loadMap(id, style) {
 
 // ---- voices (portraits.ts)
 // The Keeper gets voice 0: lower than anyone, the lowest blip played an octave down.
-const VOICES = { kaldor: 1, aurek: 1, plush: 1, bo: 1, keeper: 0, harrow: 2, hugo: 2, brannoc: 2, brunna: 5, pim: 5 };
+const VOICES = {
+  kaldor: 1,
+  aurek: 1,
+  plush: 1,
+  bo: 1,
+  keeper: 0,
+  harrow: 2,
+  hugo: 2,
+  brannoc: 2,
+  brunna: 5,
+  pim: 5,
+  oldmott: 1,
+  gary: 2,
+  garyasleep: 2,
+  silasseen: 3,
+  nails: 4,
+};
 function voiceFor(name, sprite) {
   if (sprite && sprite in VOICES) return VOICES[sprite];
   let hash = 0;
@@ -2189,16 +2205,19 @@ const EPISODES = {
       ],
     };
   },
-  // 12: ask Gary nicely. He thinks, shrugs: "Sure. Why not." You go straight to the lever and the cells open; the three
-  // confess at the tops of their voices on the way up the ladder. You head for the way out, turn back, and Gary's
-  // gone too (author, Oct 6, 2026).
+  // 12: "Sure. Why not." Gary's Cell Keys. You unlock the cells one after another, and the three confess at the tops
+  // of their voices on the way up the ladder. You head for the way out, double back, and Gary's gone (author, Oct 6,
+  // 2026).
   12: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
     const gary = cells.npcs.jailer;
     const keys = gary.questions.find((q) => q.after === 'cells-freed');
-    const says = keys.answer.filter((l) => !l.startsWith('* '));
-    // what each of them shouts on the way out, from the game (kingdom-dungeon.json, the question's `then`)
+    // from the game (kingdom-dungeon.json): his answer's last line, the keys, and what each of them shouts
+    const says = keys.answer.filter((l) => !l.startsWith('* ') && l !== '...');
+    const received = keys.answer.filter((l) => l.startsWith('* You received')).map((l) => l.slice(2));
     const shout = (name) => keys.then.find((l) => l.startsWith(`${name.toUpperCase()}: `)).slice(name.length + 2);
+    // a cell door, unlocked as you pass: face it, click, it swings open
+    const unlock = (x) => [{ walk: [[x, 6]], face: 'up' }, { jolt: 0.15 }, { gap: [x, 5] }, { wait: 0.15 }];
     // out of the cell, through the open door, along the corridor and up the ladder, getting there as the shout ends
     const run = (id, x, speed) => ({
       npcWalk: id,
@@ -2219,38 +2238,34 @@ const EPISODES = {
       hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
       zoom: 1.4,
       script: [
-        // frame one: the question, asked nicely
-        { menu: { speaker: gary.name, options: menuOf(gary.questions, []), pick: 0, hold: 0.4 } },
-        // he thinks about it...
-        { say: 'jailer', lines: says.slice(0, -1), punch: 0.9 },
-        // ...shrugs...
-        { shrug: 'jailer' },
-        { say: 'jailer', lines: says.slice(-1), punch: 0.8 },
-        // ...and you go straight to the lever
-        { walk: [[4, 6], [8, 6]], speed: 220, face: 'up' },
-        { jolt: 0.35 },
-        { gap: [10, 5] },
-        { gap: [14, 5] },
-        { gap: [18, 5] },
-        { narrate: true, lines: ['CLUNK.'], punch: 0.5 },
+        // frame one: already saying it
+        { say: 'jailer', lines: says, punch: 0.8 },
+        { narrate: true, lines: received, punch: 0.9 },
+        // keys in hand, straight along the cells
+        { zoom: 1 },
+        { walk: [[4, 6]], speed: 220 },
+        ...unlock(10),
+        ...unlock(14),
+        ...unlock(18),
+        { walk: [[18, 7]], face: 'right' },
         // out they go, confessing
         { look: [15.5, 6] },
         { zoom: 6 / 7 },
-        run('prisoner-2', 14, 84),
+        run('prisoner-2', 14, 94),
         { say: 'prisoner-2', lines: [shout('Nails')] },
         run('prisoner-1', 10, 118),
         { say: 'prisoner-1', lines: [shout('Old Mott')] },
         // Silas Seen, in no hurry at all
         run('prisoner-3', 18, 56),
         { say: 'prisoner-3', lines: [shout('Silas Seen')], punch: 1.1 },
-        // you head for the way out...
+        // you start for the way out...
         { look: null },
         { zoom: 1 },
-        { walk: [[14, 6]] },
+        { walk: [[20, 7]] },
         { vanish: 'jailer' },
         { wait: 0.25 },
-        // ...and back, quick, to Gary. Who isn't there.
-        { walk: [[4, 6], [4, 7]], speed: 340, face: 'left' },
+        // ...and double back, quick, to Gary. Who isn't there.
+        { walk: [[4, 7]], speed: 380, face: 'left' },
         { wait: 1.4 },
       ],
     };

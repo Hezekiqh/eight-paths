@@ -48,14 +48,17 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   hole." Cut to Gary: "Zzzz" / "Zzzzz". End. In the game: the pothole (`POTHOLE` and `POTHOLE_LANDING` in
   `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only); the episode reads its lines from there.
   Rejected (author): Silas's "One for each cheek", and landing upside down seeing stars (it looks mean).
-- **Episode 12, "I Regret Nothing"** (`node scripts/episode-video.mjs 12`, ~15 s): frame one, *Could I please have
-  the keys?* Gary's a chill guy, not an idiot (author): awake, he thinks ("..."), shrugs, "Sure. Why not." You go
-  straight to the lever on the wall; CLUNK, every cell opens, and the three confess on their way up the ladder: Nails
-  "I STOLE THE OTHER ICE CUBES!", Old Mott "I PUT PEPPER IN THE KING'S SANDWICH!", Silas Seen, strolling, "I
-  REGRET NOTHING!!!!". You head for the way out, turn back quickly to Gary, and he's gone. In the game: the same
-  question and lines (`kingdom-dungeon.json`), the walk to the lever (`LEVER`, `toTheLever` in `dungeon.ts`), and
-  `cells-freed` (`CELLS_FREED`), which empties the cells and takes Gary once those lines have been read
-  (`Question.after`).
+- **Episode 12, "I Regret Nothing"** (`node scripts/episode-video.mjs 12`, ~15 s): frame one, Gary (a chill guy, not an
+  idiot): "Sure. Why not." *You received Gary's Cell Keys!* You go straight along the cells unlocking each door, and
+  the three confess on their way up the ladder: Nails "I STOLE THE OTHER ICE CUBES!", Old Mott "I PUT PEPPER IN THE
+  KING'S SANDWICH!", Silas Seen, strolling, "I REGRET NOTHING!!!!". You start for the way out, double back to Gary,
+  and he's gone. In the game: *Could I please have the keys?* (he thinks, shrugs, says it), the keys as a keepsake
+  (`gary-keys` in `items.ts`), the walk along the cells (`toTheCells` in `dungeon.ts`), the same lines
+  (`kingdom-dungeon.json`), and `cells-freed` (`CELLS_FREED`), which empties the cells and takes Gary once those
+  lines have been read (`Question.after`).
+- **Voices:** every speaker blips per letter, Undertale-style, in the game and the episodes alike, from the same
+  table (`VOICES` in `src/world/portraits.ts`, mirrored in the episode script). The Deep Cells: Old Mott 1 (low),
+  Gary 2, Silas Seen 3, Nails 4.
 - **Gary sleeps** at his post, in the game and the episodes: eyes shut (`garyasleep`), Zs floating off his head
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
@@ -66,7 +69,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 
 Every template episode spreads `SHORT` (24 ms a letter, 0.7× the pauses, short holds, a 160 px/s walk, no title or end
 card). Episode 10 keeps its posted pace (`SHORT_10`: 20 ms, half pauses, a 190 px/s walk). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
-the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a lever), `ep.awake` (a sleeper awake
+the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you), `vanish` (someone's gone), `shrug`, `jolt` (the screen jolts: a door unlocked), `ep.awake` (a sleeper awake
 for the episode),
 `scene.gap` (a quicker cut), `laugh … together`.
 

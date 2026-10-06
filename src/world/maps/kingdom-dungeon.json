@@ -15,7 +15,7 @@
     "#Wb...,kW,.bW.b,W,.bW.W#",
     "#W,.....W...W...W...W.W#",
     "#W,,....W...W...W...W.W#",
-    "#WGGG24GVGpGWGpGWGpGW.W#",
+    "#WGGG24GWGpGWGpGWGpGW.W#",
     "#W....................W#",
     "#Wt...................W#",
     "#W...................1W#",
@@ -61,10 +61,6 @@
     ],
     "3": [
       "The guards' stair, up to the town. Locked from the other side. Of course it is."
-    ],
-    "V": [
-      "A lever on the wall. A sign over it: CELLS. DO NOT PULL.",
-      "Under that, in other handwriting: (unless Gary says so)"
     ],
     "4": [
       "The cell door. Locked, and the key is upstairs with somebody who doesn't like you."
@@ -248,10 +244,12 @@
           "answer": [
             "...",
             "* Gary thinks about it. Then he shrugs.",
-            "Sure. Why not."
+            "Sure. Why not.",
+            "* You received Gary's Cell Keys!"
           ],
+          "sets": "keepsake:gary-keys",
           "then": [
-            "You pull the lever. CLUNK. Every cell door swings open.",
+            "You unlock the cells. One, two, three.",
             "NAILS: I STOLE THE OTHER ICE CUBES!",
             "OLD MOTT: I PUT PEPPER IN THE KING'S SANDWICH!",
             "SILAS SEEN: I REGRET NOTHING!!!!",

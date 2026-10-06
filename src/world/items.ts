@@ -13,6 +13,14 @@ export const PIECES_PER_HEART = 4;
 export const ITEMS: Record<string, { name: string; text: string[] }> = {
   // The first memory, from the last seal of Season 1 (see keeper-talk-lines.ts).
   'first-memory': { name: FINALE.keepsake.name, text: FINALE.keepsake.text },
+  // Gary's, handed over with a shrug (author, Episode 12, Oct 6, 2026): you unlock the cells with them.
+  'gary-keys': {
+    name: "Gary's Cell Keys",
+    text: [
+      'A ring of iron keys, warm from a pocket.',
+      "A tag on the ring, in Gary's handwriting: CELLS. Under it, smaller: (sure, why not)",
+    ],
+  },
   'dessa-letter': {
     name: "Dessa's letter",
     // The outside only: what's inside is for later.

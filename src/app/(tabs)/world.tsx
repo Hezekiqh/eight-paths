@@ -166,7 +166,7 @@ import {
   POTHOLE,
   POTHOLE_LANDING,
   POTHOLE_UNSEEN,
-  toTheLever,
+  toTheCells,
   brannocBolts,
   escortIn,
   escortStand,
@@ -1693,9 +1693,9 @@ function World({
                 setDialogue({ lines: narration, then: flag ? () => useWorldStore.getState().setFlag(flag) : undefined });
               else if (flag) useWorldStore.getState().setFlag(flag);
             };
-            // "Sure. Why not." You go straight to the lever and pull it (dungeon.ts), then the cells empty.
+            // "Sure. Why not." Keys in hand, you go straight along the cells unlocking them (dungeon.ts), then they empty.
             if (flag === CELLS_FREED)
-              march(toTheLever(Math.floor(sim.x.get() / TILE), Math.floor(sim.y.get() / TILE)), tell);
+              march(toTheCells(Math.floor(sim.x.get() / TILE), Math.floor(sim.y.get() / TILE)), tell);
             else tell();
             if (leaving.current) {
               // they laugh (out loud), then they're gone
