@@ -63,16 +63,15 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 19.9 s: this one runs to about twenty, author,
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 16.2 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
   right) and Barnaby's announcer's box, high in the stands up an aisle of steps. The Warden is out of sight; he enters
   with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
   just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
-  (ring): "Whaaaa? P-p-pay with our l-l-LIVES!?" and he passes out flat, away from you, Zs and a snot bubble.
-  Barnaby, off, still on him: "...Did he just faint?" (box) "...pathetic." Your three: Silas Seen "I pulled a muscle on
+  (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three: Silas Seen "I pulled a muscle on
   the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
-  "FINISH THEM!" Cut. The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
+  "FIGHT!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.", "FINISH THEM!") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
   `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby in his box
   (`barnaby-box`, tiles `A`, the aisle `S`), your three beside you where you come up through the trapdoor, and Brannoc
   asleep with a snot bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who
@@ -80,7 +79,8 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   Barnaby is a ringmaster now (top hat, red tailcoat, moustache), here and in Warrior City.
 - **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×19, two rows of stands over the box), open to the sky: sand, a low stone wall, tiers
-  packed with the crowd, the Crown's red banners with the gold fist, the great gate at the bottom and a trapdoor down
+  packed with the crowd (little pixel people, faces toward the sand and backs on the near side, on their feet and
+  cheering every other beat: a second picture, `the-pit-cheer.png`, `cheer` on the map), the Crown's red banners with the gold fist, the great gate at the bottom and a trapdoor down
   to the cells (`drawArena` in `scripts/world-art.mjs`, `floor: "sand"`). Everyone moved with it (`dungeon.ts`
   `BRANNOC_FAINTED`, `SAND_MIDDLE`; the exits in `progress.ts`). Spectators on the sand (the crowd, the Warden, the
   three) are `passable`, so every fight still balances (fights.test).

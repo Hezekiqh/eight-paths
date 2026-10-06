@@ -11,7 +11,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -117,6 +117,8 @@ function loadMap(id, style) {
     boulders,
     style,
     image: image(join(ROOT, `assets/world/${id}.png`)),
+    // the Colosseum's crowd on its feet, flicked to and back as the game does (world-view.tsx)
+    cheer: existsSync(join(ROOT, `assets/world/${id}-cheer.png`)) ? image(join(ROOT, `assets/world/${id}-cheer.png`)) : null,
     flames,
     npcs,
     signs,
@@ -1221,7 +1223,7 @@ function drawWorld(canvas, ep, st, t) {
   const shook = st.shake ? [Math.sin(t * 90) * st.shake, Math.cos(t * 77) * st.shake] : [0, 0];
   canvas.translate(-Math.round((camX + shook[0]) * sk) / sk, -Math.round((camY + shook[1]) * sk) / sk);
   canvas.drawImageRectOptions(
-    map.image,
+    map.cheer && Math.floor(t * 2.5) % 2 === 1 ? map.cheer : map.image,
     CK.XYWHRect(0, 0, mapW, mapH),
     CK.XYWHRect(0, 0, mapW, mapH),
     NEAREST.filter,
@@ -2355,7 +2357,7 @@ const EPISODES = {
     const verdict = gameLines('ARENA_VERDICT');
     const after = gameLines('ARENA_FIGHT');
     const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    const [unacceptable, lives, pause, pathetic] = by(verdict, 'BARNABY');
+    const [unacceptable, lives] = by(verdict, 'BARNABY');
     // you in the middle of the ring, your three close by on your left, Brannoc a few tiles off on your right
     // (side by side, a sprite's width apart: never stacked, never overlapping)
     Object.assign(pit.npcs['arena-mott'], { x: 11, y: 11, facing: 'up' });
@@ -2391,13 +2393,9 @@ const EPISODES = {
         ...RING,
         { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
         { faint: 'brannoc-pit' },
-        { wait: 0.6 },
-        // still on him, out cold, snot bubble going, as Barnaby asks
-        { say: 'barnaby-box', lines: [pause], punch: 0.5 },
-        ...BOX,
-        { say: 'barnaby-box', lines: [pathetic], punch: 0.6 },
+        // a beat on him, out cold, snot bubble going
+        { wait: 1.2 },
         // your three, right beside you, making their excuses
-        ...RING,
         { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.5 },
         { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.5 },
         { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.6 },

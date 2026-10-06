@@ -148,14 +148,12 @@ export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
   { label: "It was Gary's idea." },
   { label: 'Death? For a walk? Bit much, big man.', deed: 'bad' },
 ];
-/** His answer, Brannoc's faint (and his snot bubble), and Barnaby's verdict on him. */
+/** His answer, and Brannoc's echo of it, and his faint (and his snot bubble). */
 export const ARENA_VERDICT = [
   'BARNABY: UNACCEPTABLE.',
   'BARNABY: You will pay with your lives!',
-  'BRANNOC: Whaaaa? P-p-pay with our l-l-LIVES!?',
+  'BRANNOC: P-P-Pay with our lives!?',
   '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
-  'BARNABY: ...Did he just faint?',
-  'BARNABY: ...pathetic.',
 ];
 /** Then the three who lost make their excuses on the way to the side of the sand, and it's on (author, Episode 13). */
 export const ARENA_FIGHT = [
@@ -163,7 +161,7 @@ export const ARENA_FIGHT = [
   'OLD MOTT: I am too old for this.',
   'NAILS: My ice cubes melted.',
   '* Old Mott, Nails and Silas Seen shuffle to the side of the sand.',
-  'BARNABY: FINISH THEM!',
+  'BARNABY: FIGHT!',
 ];
 /** If you never let the three out: just you and Brannoc. */
 export const ARENA_WELCOME_ALONE = ["BARNABY: Well, well, well. If it isn't our runaways."];

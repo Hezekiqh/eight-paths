@@ -221,6 +221,8 @@ export type WorldMap = {
   ladder?: Boss[];
   /** The baked picture from scripts/world-art.mjs, one pixel per art pixel. */
   image: number;
+  /** A second picture to flick to and back, a few times a second: the Colosseum's crowd, on its feet, cheering. */
+  cheer?: number;
   /** Where a new game starts, in tiles. */
   spawn: { x: number; y: number; facing: Facing };
   /** What the player reads on examining a tile, by its letter in `tiles`. */
@@ -254,7 +256,7 @@ function solidFor(tiles: string[], walkable: string[], standing: Standing[]): nu
 const blocking = (objects: MapObject[]): Standing[] =>
   objects.filter((o) => o.type !== 'board' && !(o.type === 'npc' && o.passable));
 
-function build(data: MapData, image: number): WorldMap {
+function build(data: MapData, image: number, cheer?: number): WorldMap {
   const width = data.tiles[0].length;
   const height = data.tiles.length;
   const objects = data.objects as MapObject[];
@@ -279,6 +281,7 @@ function build(data: MapData, image: number): WorldMap {
       (ENEMY_KINDS as readonly string[]).includes(e.kind),
     ),
     image,
+    cheer,
     spawn: { ...data.spawn, facing: data.spawn.facing as Facing },
     examine: data.examine,
     objects,
@@ -369,7 +372,11 @@ export const MAPS = {
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
-  'the-pit': build(thePitData as MapData, require('@/assets/world/the-pit.png')),
+  'the-pit': build(
+    thePitData as MapData,
+    require('@/assets/world/the-pit.png'),
+    require('@/assets/world/the-pit-cheer.png'),
+  ),
   'castle-grounds': build(castleGroundsData as MapData, require('@/assets/world/castle-grounds.png')),
   'castle-hall': build(castleHallData as MapData, require('@/assets/world/castle-hall.png')),
   'castle-upper': build(castleUpperData as MapData, require('@/assets/world/castle-upper.png')),

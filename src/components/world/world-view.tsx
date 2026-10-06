@@ -370,6 +370,8 @@ export function WorldView({
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
+  // the crowd on its feet and back down again (the Colosseum): the second picture shows on every other beat
+  const cheerImage = useImage(map.cheer ?? null);
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.
   const solid = useSharedValue<number[]>(map.solid);
@@ -1128,6 +1130,7 @@ export function WorldView({
     }
     return path;
   });
+  const cheering = useDerivedValue(() => (Math.floor(clock.get() * 2.5) % 2 === 0 ? 0 : 1));
   const motePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     if (!ambience.motes) return path;
@@ -1175,6 +1178,9 @@ export function WorldView({
     <Canvas style={{ width, height, backgroundColor: '#0C0806' }}>
       <Group transform={camera}>
         {mapImage && <Image image={mapImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} />}
+        {cheerImage && (
+          <Image image={cheerImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} opacity={cheering} />
+        )}
         {patches.map((p) => (
           <Group key={`${p.x},${p.y}`}>
             <Rect x={p.x * TILE + 1} y={p.y * TILE + 1} width={TILE - 2} height={TILE - 1} color="#0C0908" />

@@ -1415,7 +1415,7 @@ function marbleAt(x, y) {
  * packed with the crowd, the Crown's red banners with the gold fist along the top, the great gate at the bottom,
  * open to the sky. The sand's oval sits just inside the walkable tiles (`.` and `,`); everything else is the stands.
  */
-function drawArena(map) {
+function drawArena(map, cheer = false) {
   const rows = map.tiles;
   const H = rows.length;
   const W = rows[0].length;
@@ -1433,6 +1433,7 @@ function drawArena(map) {
   const rx = ((right - left) / 2) * TILE - 2;
   const ry = ((bottom - top) / 2) * TILE - 2;
   const SAND = hex('#C8A870');
+  const TIER = 8;
   const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
   const SKIN = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
   for (let y = 0; y < g.h; y++)
@@ -1467,21 +1468,52 @@ function drawArena(map) {
         g[y][x] = hex('#5A5250');
         continue;
       }
-      // the tiers: a lit step every seven pixels, the seats between, and people on the seats
-      const step = (out - 4) % 7;
-      const tier = Math.floor((out - 4) / 7);
-      let c = step < 1 ? hex('#8A8280') : tier % 2 ? hex('#726A66') : hex('#625A56');
-      if (step >= 2 && step < 6) {
-        // a spectator every three pixels along the tier: a head over a body, some seats empty
-        const seat = Math.floor((x + tier * 2) / 3);
-        const filled = hash(seat, tier, 61) < 0.8;
-        const sx = (x + tier * 2) % 3;
-        if (filled && sx < 2) {
-          if (step < 3) c = sx === 0 ? SKIN[Math.floor(hash(seat, tier, 62) * SKIN.length)] : c;
-          else c = PEOPLE[Math.floor(hash(seat, tier, 63) * PEOPLE.length)];
-        }
+      // the tiers: stone benches, a lit edge on each (the people go on afterwards)
+      const step = (out - 4) % TIER;
+      const tier = Math.floor((out - 4) / TIER);
+      g[y][x] = step < 1 ? hex('#8A8280') : step > TIER - 3 ? hex('#4E4846') : tier % 2 ? hex('#726A66') : hex('#625A56');
+    }
+  // the crowd: a little person on every bench, five pixels apart, facing the sand (on the near side, their backs);
+  // in the cheering frame most of them are up, arms in the air
+  const HAIR = ['#2A1A12', '#6A4028', '#C8A040', '#1A1416', '#8A8A7A', '#A0482A'].map(hex);
+  const person = (px, py, seed, back) => {
+    const shirt = PEOPLE[Math.floor(hash(seed, 1, 71) * PEOPLE.length)];
+    const skin = SKIN[Math.floor(hash(seed, 2, 71) * SKIN.length)];
+    const hair = HAIR[Math.floor(hash(seed, 3, 71) * HAIR.length)];
+    const up = cheer && hash(seed, 4, 71) < 0.7;
+    const y = py - (up && hash(seed, 5, 71) < 0.5 ? 1 : 0);
+    // body: shoulders and a shirt, on the bench
+    box(g, px, y - 3, 5, 1, shirt);
+    box(g, px + 1, y - 2, 3, 2, shirt);
+    // head, hair on top (all hair from behind)
+    box(g, px + 1, y - 5, 3, 2, back ? hair : skin);
+    box(g, px + 1, y - 6, 3, 1, hair);
+    if (!back) put(g, px + 2, y - 4, mix(skin, hex('#000000'), 0.35));
+    // arms: down at the sides, or up in the air
+    if (up) {
+      put(g, px, y - 4, shirt);
+      put(g, px + 4, y - 4, shirt);
+      put(g, px, y - 5, skin);
+      put(g, px + 4, y - 5, skin);
+      put(g, px, y - 3, null);
+    }
+  };
+  for (let x0 = 0; x0 < g.w; x0 += 5)
+    for (let tier = 0; tier < 40; tier++) {
+      const out = 4 + tier * TIER + TIER - 2;
+      const e = 1 + out / ry;
+      const dx = (x0 + 2.5 - cx) / rx;
+      if (Math.abs(dx) >= e) continue;
+      const dy = Math.sqrt(e * e - dx * dx);
+      for (const side of [-1, 1]) {
+        const py = Math.round(cy + side * dy * ry);
+        if (py < 6 || py >= g.h) continue;
+        // the far side's wall face runs higher; nobody sits on it
+        if (side < 0 && out < 9) continue;
+        const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
+        if (hash(seed, 0, 73) < 0.12) continue; // an empty seat
+        person(x0 + (tier % 2) * 2, py, seed, side > 0);
       }
-      g[y][x] = c;
     }
   // the Crown's banners along the top of the stands: red, a gold fist, on poles
   for (let k = 0; k < 7; k++) {
@@ -2987,6 +3019,8 @@ for (const id of MAPS) {
             : drawMap(map),
     ),
   );
+  // the Colosseum's crowd, on its feet: a second picture the game and the episodes switch to and back
+  if (map.floor === 'sand') writeFileSync(`assets/world/${id}-cheer.png`, toPng(drawArena(map, true)));
 }
 const { g, ids } = drawWalkers();
 writeFileSync('assets/world/walkers.png', toPng(g));
