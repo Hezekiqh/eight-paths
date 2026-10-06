@@ -42,20 +42,21 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   post to within a few tenths of a second, and the game now matches it: the three prisoners' sprites, lines and
   order (Old Mott, Nails, Silas Seen) are in `src/world/maps/kingdom-dungeon.json`. The prisoners' menu answers
   weren't shown in the video, so they were rewritten.
-- **Episode 11, "One for Each Cheek"** (`node scripts/episode-video.mjs 11`, ~10.7 s): two steps into the Maze Ward
-  the floor swallows you. The hook: you drop out of the top of the screen outside Silas Seen's cell, slam down,
-  bounce, and land upside down, butt in the air, seeing stars. Still like that: "The king would've given you two
-  life sentences. One for each cheek." Old Mott and Nails laugh; you flip upright, run to Gary ("Zzz."), and pick
-  *Can I have the keys?* It ends on the pick, before his answer. In the game: the pothole (`POTHOLE` in
-  `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only) and Gary's keys question.
-- **Next:** Episode 12 opens on Gary's answer to the keys question. Then rewrite the old 12–14 ideas to fit the
+- **Episode 11, "See You Next Fall"** (`node scripts/episode-video.mjs 11`, ~9.5 s): two steps into the Maze Ward the
+  floor swallows you, and you drop out of the top of the screen onto your feet outside Silas Seen's cell. Cut to the
+  other two. Old Mott: "Nice trip." Nails: "See you next fall." They laugh. Silas Seen: "Gary was supposed to fix that
+  hole." Cut to Gary: "Zzzz" / "Zzzzz". End. In the game: the pothole (`POTHOLE` and `POTHOLE_LANDING` in
+  `src/world/dungeon.ts`, tile `h` in the Maze Ward, once only); the episode reads its lines from there.
+  Rejected (author): Silas's "One for each cheek", and landing upside down seeing stars (it looks mean).
+- **Next:** Episode 12. Gary can be asked for the keys in the game ("The keys are upstairs. With everyone who gets
+  paid."), if that's where it goes. Then rewrite the old 12–14 ideas to fit the
   template, with the jokes first.
 
 ## In the episode script
 
 Every template episode spreads `SHORT` (20 ms a letter, half pauses, quick holds, a 190 px/s walk, no title or end
 card). Per step: `punch` (seconds a beat's last line holds), `zoom` (cut closer or back out), `drop` (sink through
-the floor), `fall` (drop in from above and land upside down; `scene.airborne` first, `upright` to get up),
+the floor), `fall` (drop in from above onto your feet; `scene.airborne` first), `look` (cut the camera to a tile, `null` back to you),
 `scene.gap` (a quicker cut), `laugh … together`.
 
 ## So nothing gets lost again

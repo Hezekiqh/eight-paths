@@ -265,11 +265,13 @@ export const FELL_IN = 'maze-pothole-fell';
 /** The Maze Ward's pothole tile, and where it drops you (in front of the third cell). */
 export const POTHOLE = { tile: 'h', landing: { x: 18, y: 6 } };
 
-/** Landing. */
+/** Landing: the other two have a go, Silas Seen blames Gary, and Gary is asleep (author, Oct 6, 2026). */
 export const POTHOLE_LANDING = [
   'THUD.',
-  'You land on your butt, right outside the last cell.',
-  "SILAS SEEN: The king would've given you two life sentences.",
-  'SILAS SEEN: One for each cheek.',
-  'Old Mott and Nails laugh. Silas Seen does not. Silas Seen is above laughing.',
+  'OLD MOTT: Nice trip.',
+  'NAILS: See you next fall.',
+  'Old Mott and Nails laugh.',
+  'SILAS SEEN: Gary was supposed to fix that hole.',
+  'GARY: Zzzz',
+  'GARY: Zzzzz',
 ];

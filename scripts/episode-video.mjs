@@ -896,8 +896,11 @@ function compile(ep) {
     } else if (step.fall) {
       // dropping in from above the screen onto where you stand: a shadow grows, you slam down, bounce, and end up
       // upside down, seeing stars, until an `upright`
-      segs.push({ kind: 'fall', t0: t, t1: t + step.fall, height: step.height ?? 170 });
+      segs.push({ kind: 'fall', t0: t, t1: t + step.fall, height: step.height ?? 170, flop: step.flop });
       t += step.fall + FALL_SETTLE;
+    } else if ('look' in step) {
+      // a cut to someone else (the camera on that tile), or back to you (null)
+      segs.push({ kind: 'look', t0: t, t1: t, at: step.look && center(...step.look) });
     } else if (step.upright) {
       segs.push({ kind: 'upright', t0: t, t1: t });
       t += 0.2;
@@ -961,6 +964,8 @@ function stateAt(ep, compiled, t) {
   let flipped = false;
   let flippedAt = 0;
   let shake = 0;
+  /** Where the camera is looking instead of at you (a cut to someone else), in art px. */
+  let look = null;
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -993,6 +998,7 @@ function stateAt(ep, compiled, t) {
       squash = 0;
       flipped = false;
       shake = 0;
+      look = null;
       continue;
     }
     if (s.kind === 'push') {
@@ -1051,15 +1057,15 @@ function stateAt(ep, compiled, t) {
         air = s.height * (1 - k * k);
       } else {
         const since = t - s.t1;
-        // a little bounce off the flagstones, squashed flat at each touch
-        air = since < 0.28 ? Math.sin((Math.PI * since) / 0.28) * 7 : 0;
-        squash = since < 0.07 ? 0.45 : since >= 0.28 && since < 0.33 ? 0.25 : 0;
-        shake = since < 0.3 ? 3 * (1 - since / 0.3) : 0;
-        // over in mid-bounce: butt up
-        flipped = since >= 0.14;
+        // `flop`: a bounce off the flagstones, over in mid-air, butt up; otherwise feet first, a squash and you're up
+        air = s.flop && since < 0.28 ? Math.sin((Math.PI * since) / 0.28) * 7 : 0;
+        squash = since < 0.07 ? (s.flop ? 0.45 : 0.3) : s.flop && since >= 0.28 && since < 0.33 ? 0.25 : 0;
+        shake = since < 0.25 ? (s.flop ? 3 : 2) * (1 - since / 0.25) : 0;
+        flipped = !!s.flop && since >= 0.14;
         flippedAt = s.t1 + 0.14;
       }
     } else if (s.kind === 'upright') flipped = false;
+    else if (s.kind === 'look') look = s.at;
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1071,6 +1077,7 @@ function stateAt(ep, compiled, t) {
     squash,
     flipped,
     flippedFor: t - flippedAt,
+    look,
     shake,
     sink,
     hole,
@@ -1118,8 +1125,9 @@ function drawWorld(canvas, ep, st, t) {
   const sk = K * z;
   const vw = W / sk;
   const vh = H / sk;
-  const fx = st.cards ? lerpf(st.hx, cardsMid(ep, st)[0], zk) : st.hx;
-  const fy = st.cards ? lerpf(st.hy - 12, cardsMid(ep, st)[1] - 10, zk) : st.hy - 12;
+  const [ax, ay] = st.look ?? [st.hx, st.hy];
+  const fx = st.cards ? lerpf(st.hx, cardsMid(ep, st)[0], zk) : ax;
+  const fy = st.cards ? lerpf(st.hy - 12, cardsMid(ep, st)[1] - 10, zk) : ay - 12;
   const camX = mapW <= vw ? (mapW - vw) / 2 : Math.min(Math.max(fx - vw / 2, 0), mapW - vw);
   // the action sits a third of the way down, so the text box (raised clear of app captions) never covers it
   // (it may look past the map's bottom edge: that strip sits behind the box and the apps' captions anyway)
@@ -1544,7 +1552,7 @@ const SHORT = { letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190,
 
 /**
  * The pothole's landing (src/world/dungeon.ts POTHOLE_LANDING), read from the game so the episode says the same:
- * the narration before Silas Seen speaks, and her two lines without her name.
+ * what each of them says, by name ("OLD MOTT: Nice trip." → { 'OLD MOTT': ['Nice trip.'] }).
  */
 const POTHOLE_LANDING = () => {
   const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
@@ -1552,8 +1560,12 @@ const POTHOLE_LANDING = () => {
   const lines = [...block.slice(0, block.indexOf('];')).matchAll(/^\s+(['"])(.*)\1,$/gm)].map((m) =>
     m[2].replace(/\\'/g, "'"),
   );
-  const said = lines.filter((l) => l.startsWith('SILAS SEEN: ')).map((l) => l.slice('SILAS SEEN: '.length));
-  return { thud: lines.slice(0, lines.findIndex((l) => l.startsWith('SILAS SEEN: '))), silas: said };
+  const said = {};
+  for (const l of lines) {
+    const m = l.match(/^([A-Z][A-Z ]+): (.+)$/);
+    if (m) (said[m[1]] ??= []).push(m[2]);
+  }
+  return said;
 };
 
 const EPISODES = {
@@ -2077,44 +2089,42 @@ const EPISODES = {
       ],
     };
   },
-  // 11: three steps into the Maze Ward the floor gives way. On your butt outside Silas Seen's cell, a verdict, a
-  // laugh, and straight up to Gary for the keys. It ends as you ask (author, Oct 6, 2026).
+  // 11: two steps into the Maze Ward the floor gives way, and you drop into the Deep Cells outside Silas Seen's cell.
+  // The other two have a go, Silas Seen blames Gary, and Gary is asleep (author, Oct 6, 2026).
   11: () => {
     const ward = loadMap('dungeon-mazes', 'dungeon');
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const gary = cells.npcs.jailer;
-    const landing = POTHOLE_LANDING();
+    const said = POTHOLE_LANDING();
     return {
       ...SHORT,
       number: 11,
-      title: 'ONE FOR EACH CHEEK',
+      title: 'SEE YOU NEXT FALL',
       map: ward,
       hero: { sprite: 'quill', at: [2, 2], facing: 'right' },
       script: [
-        // the wizard never speaks (author, Oct 6, 2026). Frame one: already walking into the maze, and two steps in the
-        // floor goes
+        // the wizard never speaks. Frame one: already walking into the maze, and two steps in the floor goes
         { walk: [[4, 2]] },
         { drop: 0.25 },
         { wait: 0.1 },
-        // the hook: out of the top of the screen and onto the flagstones, butt up, seeing stars
+        // the hook: out of the top of the screen, down onto your feet outside the last cell
         { zoom: 1.6 },
-        { scene: { map: cells, at: [18, 6], facing: 'down', hide: ['brannoc-cell'], gap: 0.3, airborne: true } },
+        { scene: { map: cells, at: [18, 6], facing: 'up', hide: ['brannoc-cell'], gap: 0.3, airborne: true } },
         { gap: [5, 5] },
         { fall: 0.45 },
-        // a beat, butt up, before anyone says anything
-        { wait: 0.5 },
-        // and still like that for the verdict
-        { say: 'prisoner-3', lines: landing.silas, punch: 1.5 },
-        // the other two crack up; Silas Seen does not
-        { zoom: 1 },
+        // cut to the other two
+        { look: [12, 5] },
+        { zoom: 1.3 },
+        { say: 'prisoner-1', lines: said['OLD MOTT'] },
+        { say: 'prisoner-2', lines: said.NAILS, punch: 0.9 },
         { laugh: 'prisoner-1', dur: 1.3, together: true },
         { laugh: 'prisoner-2', dur: 1.3 },
-        { upright: true },
-        // straight past the cells to Gary, and the keys
-        { walk: [[18, 7], [4, 7]], speed: 300, face: 'left' },
-        // asleep, of course
-        { say: 'jailer', lines: [gary.lines[0]], punch: 0.8 },
-        { menu: { speaker: gary.name, options: menuOf(gary.questions, []), pick: 0, hold: 0.6 } },
+        // back to Silas Seen
+        { look: null },
+        { zoom: 1.6 },
+        { say: 'prisoner-3', lines: said['SILAS SEEN'], punch: 1.2 },
+        // and Gary
+        { look: [3, 7] },
+        { say: 'jailer', lines: said.GARY, punch: 1.4 },
       ],
     };
   },
