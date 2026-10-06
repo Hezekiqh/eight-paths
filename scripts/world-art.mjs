@@ -1434,11 +1434,7 @@ function drawArena(map, cheer = false) {
   const rx = ((right - left) / 2) * TILE - 2;
   const ry = ((bottom - top) / 2) * TILE - 2;
   const SAND = hex('#C8A870');
-  // CROWD=regular draws the spectators the size of everyone else in the World (the walkers), on deeper tiers
-  const REGULAR = process.env.CROWD === 'regular';
-  const TIER = REGULAR ? 18 : 11;
-  const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
-  const SKIN = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
+  const TIER = 19;
   for (let y = 0; y < g.h; y++)
     for (let x = 0; x < g.w; x++) {
       const dx = (x + 0.5 - cx) / rx;
@@ -1476,98 +1472,110 @@ function drawArena(map, cheer = false) {
       const tier = Math.floor((out - 4) / TIER);
       g[y][x] = step < 1 ? hex('#8A8280') : step > TIER - 3 ? hex('#4E4846') : tier % 2 ? hex('#726A66') : hex('#625A56');
     }
-  // the crowd: a little person on every bench, five pixels apart, facing the sand (on the near side, their backs);
-  // in the cheering frame most of them are up, arms in the air
-  const HAIR = ['#2A1A12', '#6A4028', '#C8A040', '#1A1416', '#8A8A7A', '#A0482A'].map(hex);
-  // a spectator in the walkers' style (drawWalker): a dark outline, hair, a face with two eyes, shoulders in a
-  // shirt; from behind, all hair. Seven pixels wide, eight tall, sitting on the bench at (px, py).
-  const OUTLINE = hex('#140E1C');
-  const person = (px, py, seed, back) => {
-    const shirt = PEOPLE[Math.floor(hash(seed, 1, 71) * PEOPLE.length)];
-    const shade = mix(shirt, hex('#000000'), 0.3);
-    const skin = SKIN[Math.floor(hash(seed, 2, 71) * SKIN.length)];
-    const hair = HAIR[Math.floor(hash(seed, 3, 71) * HAIR.length)];
-    const up = cheer && hash(seed, 4, 71) < 0.7;
-    const y = py - 8 - (up && hash(seed, 5, 71) < 0.5 ? 1 : 0);
-    const rows = up
-      ? ['O.OOO.O', 'KOHHHOK', 'BOSSSOB', 'BOESEOB', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.']
-      : ['..OOO..', '.OHHHO.', '.OSSSO.', '.OESEO.', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.'];
-    const colour = {
-      O: OUTLINE,
-      H: hair,
-      S: back ? hair : skin,
-      E: back ? hair : OUTLINE,
-      B: shirt,
-      D: shade,
-      K: skin,
-    };
-    rows.forEach((row, j) =>
-      [...row].forEach((ch, i) => {
-        if (ch === '.') return;
-        put(g, px + i, y + j, colour[ch]);
-      }),
-    );
+  // The Crown's banners along the top of the stands (not over the commentator's box), worked out first so nobody
+  // in the crowd sits behind one
+  const HALF = 0.2; // the commentator's box: a wedge of the ring either side of the top of the oval (radians)
+  const inWedge = (x, y, margin = 0) => {
+    const dx = (x + 0.5 - cx) / rx;
+    const dy = (y + 0.5 - cy) / ry;
+    return dy < 0 && Math.abs(Math.atan2(dy, dx) + Math.PI / 2) <= HALF + margin;
   };
-  // the regular-sized crowd: townsfolk from the walkers, sitting (cut at the bench), the far side facing the sand and
-  // the near side with their backs to us; drawn back to front, standing up and waving in the cheering frame
-  const TOWNSFOLK = ['gert', 'tessa', 'pim', 'nana', 'holt', 'mira', 'fen', 'dunn', 'pell', 'hesper', 'jory', 'wenna',
-    'gudrun', 'hamm', 'marta', 'dobb', 'bellow', 'orrin', 'tova', 'ulfa', 'hekla', 'snorri', 'fawnley', 'fliss', 'joss',
-    'tolly', 'ox', 'leif', 'brug', 'bett', 'hild', 'tib', 'mog', 'abbot'].filter((k) => WALKERS[k] && !WALKERS[k].big);
-  const sitter = (px, py, seed, back) => {
-    const f = canvas(FW, FH);
-    drawWalker(f, 0, 0, WALKERS[TOWNSFOLK[Math.floor(hash(seed, 1, 81) * TOWNSFOLK.length)]], back ? 'up' : 'down', 0);
-    const up = cheer && hash(seed, 4, 81) < 0.7;
-    const lift = up ? 2 : 0;
-    const showRows = 16;
-    for (let j = 0; j < showRows; j++)
-      for (let i = 0; i < FW; i++) if (f[j][i]) put(g, px + i, py - showRows + j - lift, f[j][i]);
-    // hands up
-    if (up) {
-      const skin = hex(WALKERS[TOWNSFOLK[0]].skin ?? '#E8B48C');
-      for (const hx of [px + 1, px + 14]) {
-        put(g, hx, py - showRows + 6 - lift, OUTLINE);
-        put(g, hx, py - showRows + 7 - lift, skin);
-        put(g, hx, py - showRows + 8 - lift, OUTLINE);
-      }
-    }
-  };
-  if (REGULAR)
-    for (const side of [-1, 1])
-      for (const tier of side < 0 ? [...Array(30).keys()].reverse() : [...Array(30).keys()])
-        for (let x0 = -8; x0 < g.w; x0 += 13) {
-          const out = 4 + tier * TIER + TIER - 2;
-          const e = 1 + out / ry;
-          const dx = (x0 + 8 - cx) / rx;
-          if (Math.abs(dx) >= e) continue;
-          const py = Math.round(cy + side * Math.sqrt(e * e - dx * dx) * ry);
-          if (py < 4 || py >= g.h + 12) continue;
-          if (side < 0 && out < 9) continue;
-          const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
-          if (hash(seed, 0, 83) < 0.1) continue;
-          sitter(x0 + (tier % 2) * 6, py, seed, side > 0);
-        }
-  if (!REGULAR) for (let x0 = 0; x0 < g.w; x0 += 7)
-    for (let tier = 0; tier < 40; tier++) {
-      const out = 4 + tier * TIER + TIER - 2;
-      const e = 1 + out / ry;
-      const dx = (x0 + 2.5 - cx) / rx;
-      if (Math.abs(dx) >= e) continue;
-      const dy = Math.sqrt(e * e - dx * dx);
-      for (const side of [-1, 1]) {
-        const py = Math.round(cy + side * dy * ry);
-        if (py < 6 || py >= g.h) continue;
-        // the far side's wall face runs higher; nobody sits on it
-        if (side < 0 && out < 9) continue;
-        const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
-        if (hash(seed, 0, 73) < 0.12) continue; // an empty seat
-        person(x0 + (tier % 2) * 3, py, seed, side > 0);
-      }
-    }
-  // the Crown's banners along the top of the stands: red, a gold fist, on poles
+  const hasBooth = rows.some((r) => r.includes('$'));
+  const banners = [];
   for (let k = 0; k < 7; k++) {
     const bx = Math.round(cx - rx + ((k + 0.5) / 7) * rx * 2);
     const ey = Math.sqrt(Math.max(0, 1 - ((bx - cx) / (rx + 60)) ** 2));
     const by = Math.max(2, Math.round(cy - (ry + 60) * ey));
+    if (hasBooth && (inWedge(bx, by + 6, 0.04) || inWedge(bx + 9, by + 6, 0.04))) continue;
+    banners.push([bx, by]);
+  }
+  const gateTiles = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '1' && gateTiles.push([tx, ty])));
+  const gateBox = gateTiles.length
+    ? [
+        Math.min(...gateTiles.map(([tx]) => tx)) * TILE - 6,
+        gateTiles[0][1] * TILE - 10,
+        gateTiles.length * TILE + 12,
+        TILE + 16,
+      ]
+    : null;
+  const inside = (x, y, [bx, by, bw, bh]) => x >= bx && x < bx + bw && y >= by && y < by + bh;
+
+  // The crowd (author, Oct 6, 2026: "regular" size): townsfolk from the walkers, the size of everyone else in the
+  // World, sitting on the benches (cut at the bench), the far side facing the sand, the near side with their backs to
+  // us; in the cheering frame they're up, arms in the air. Nobody touches anybody else, or the arena wall, a banner,
+  // the commentator's box, the gate or the edge of the picture: each spot is kept clear at full cheering height, and
+  // anyone who wouldn't fit isn't there.
+  const TOWNSFOLK = ['gert', 'tessa', 'pim', 'nana', 'holt', 'mira', 'fen', 'dunn', 'pell', 'hesper', 'jory',
+    'wenna', 'gudrun', 'hamm', 'marta', 'dobb', 'bellow', 'orrin', 'tova', 'ulfa', 'hekla', 'snorri', 'fawnley',
+    'fliss', 'joss', 'tolly', 'ox', 'leif', 'brug', 'bett', 'hild', 'tib', 'mog', 'abbot'].filter(
+    (k) => WALKERS[k] && !WALKERS[k].sword && !WALKERS[k].big && !WALKERS[k].back && !WALKERS[k].boulder,
+  );
+  const SEATED = 16; // rows of a walker that show above the bench
+  const HOP = 2; // how far up they come when they cheer
+  const taken = new Uint8Array(g.w * g.h);
+  const clear = (x, y, side) => {
+    if (x < 0 || y < 0 || x >= g.w || y >= g.h || taken[y * g.w + x]) return false;
+    const dx = (x + 0.5 - cx) / rx;
+    const dy = (y + 0.5 - cy) / ry;
+    const out = (Math.sqrt(dx * dx + dy * dy) - 1) * ry;
+    // in the stands, past the arena wall (its face is taller on the far side)
+    if (out < (side < 0 ? 10 : 5)) return false;
+    if (hasBooth && inWedge(x, y, 0.03)) return false;
+    if (banners.some(([bx, by]) => inside(x, y, [bx - 1, by - 1, 11, 21]))) return false;
+    if (gateBox && inside(x, y, gateBox)) return false;
+    return true;
+  };
+  const spectator = (px, py, seed, side, facing = side > 0 ? 'up' : 'down') => {
+    const top = py - SEATED - HOP;
+    // (outline to outline is fine; over each other isn't)
+    for (let j = top; j <= py; j++) for (let i = px; i < px + FW; i++) if (!clear(i, j, side)) return;
+    for (let j = top; j <= py; j++) for (let i = px; i < px + FW; i++) taken[j * g.w + i] = 1;
+    const w = WALKERS[TOWNSFOLK[Math.floor(hash(seed, 1, 81) * TOWNSFOLK.length)]];
+    const f = canvas(FW, FH);
+    drawWalker(f, 0, 0, w, facing, 0);
+    const up = cheer && hash(seed, 4, 81) < 0.7;
+    const lift = up ? HOP : 0;
+    const y0 = py - SEATED - lift;
+    for (let j = 0; j < SEATED; j++) for (let i = 0; i < FW; i++) if (f[j][i]) put(g, px + i, y0 + j, f[j][i]);
+    if (up) {
+      // arms up: a sleeve and a hand either side of the head, outlined
+      const sleeve = hex(w.shade ?? w.top ?? '#6A5A48');
+      const skin = hex(w.skin ?? '#E8B48C');
+      for (const ax of [1, 13]) {
+        box(g, px + ax - 1, y0 + 2, 4, 9, OUT);
+        box(g, px + ax, y0 + 5, 2, 5, sleeve);
+        box(g, px + ax, y0 + 3, 2, 2, skin);
+      }
+    }
+  };
+  // front rows first, so the people nearest the sand are the ones always there
+  for (const side of [-1, 1])
+    for (let tier = 0; tier < 30; tier++)
+      for (let x0 = -FW; x0 < g.w; x0 += FW) {
+        // the near side's benches sit lower, so heads stay clear of the arena wall
+        const out = 4 + tier * TIER + TIER - 2 + (side > 0 ? SEATED - 4 : 0);
+        const e = 1 + out / ry;
+        const px = x0 + (tier % 2) * 7;
+        const dx = (px + FW / 2 - cx) / rx;
+        if (Math.abs(dx) >= e) continue;
+        const py = Math.round(cy + side * Math.sqrt(e * e - dx * dx) * ry);
+        const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
+        if (hash(seed, 0, 83) < 0.08) continue; // an empty seat
+        spectator(px, py, seed, side);
+      }
+  // then anywhere else there's room (the ends of the oval, where the benches run up and down and the picture stops
+  // short): a seat every sprite's width and height, each facing the sand
+  for (let py = SEATED + HOP; py < g.h; py += SEATED + HOP + 1)
+    for (let px = 0; px + FW <= g.w; px += FW) {
+      const dx = (px + FW / 2 - cx) / rx;
+      const dy = (py - SEATED / 2 - cy) / ry;
+      const seed = py * 137 + px * 11;
+      if (hash(seed, 0, 85) < 0.08) continue;
+      const facing = Math.abs(dx) > 0.8 ? (dx < 0 ? 'right' : 'left') : dy < 0 ? 'down' : 'up';
+      spectator(px, py, seed, dy < 0 ? -1 : 1, facing);
+    }
+  for (const [bx, by] of banners) {
     box(g, bx, by, 1, 18, '#3A2618');
     box(g, bx + 1, by, 8, 11, '#9A2A22');
     box(g, bx + 1, by + 11, 3, 2, '#9A2A22');
@@ -1575,24 +1583,29 @@ function drawArena(map, cheer = false) {
     box(g, bx + 4, by + 3, 2, 3, '#C8963A');
     box(g, bx + 3, by + 4, 4, 2, '#C8963A');
   }
-  // the great gate at the bottom, over its tiles: a dark arch, the portcullis raised
-  const gate = [];
-  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '1' && gate.push([tx, ty])));
-  if (gate.length) {
-    const gx = Math.min(...gate.map(([tx]) => tx)) * TILE - 2;
-    const gw = gate.length * TILE + 4;
-    const gy = gate[0][1] * TILE - 6;
+  // the great gate at the bottom, over its tiles: a dark arch, shut, the portcullis down across it (author, Oct 6, 2026:
+  // "make the exit blocked by bars and a gate")
+  if (gateTiles.length) {
+    const gx = Math.min(...gateTiles.map(([tx]) => tx)) * TILE - 2;
+    const gw = gateTiles.length * TILE + 4;
+    const gy = gateTiles[0][1] * TILE - 6;
     box(g, gx - 3, gy - 3, gw + 6, TILE + 9, '#8A8280');
     box(g, gx, gy, gw, TILE + 6, '#1E1816');
     ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
-    for (let i = gx + 3; i < gx + gw - 2; i += 4) box(g, i, gy - 3, 1, 5, '#4A4442');
+    // timber doors behind, then the iron grid in front, spikes at its foot
+    for (let x = gx + 1; x < gx + gw - 1; x++) box(g, x, gy + 2, 1, TILE + 3, x % 4 === 0 ? '#3A2618' : '#5C3A28');
+    for (let x = gx + 2; x < gx + gw - 1; x += 4) {
+      box(g, x, gy - 3, 2, TILE + 9, '#4A4442');
+      put(g, x, gy - 3, '#7A7470');
+      put(g, x, gy + TILE + 6, '#2A2422');
+    }
+    for (let y = gy + 1; y < gy + TILE + 5; y += 5) box(g, gx, y, gw, 1, '#4A4442');
   }
   // the commentator's box, part of the Colosseum's own ring (author, Oct 6, 2026: "the circle that is the colosseum
   // should include the box"): a wedge of the stands at the head of the sand, following the same oval as the tiers.
   // Measured out from the sand: the arena wall becomes a stone parapet with the Crown's cloth on it, then the box,
   // recessed and dark under a red curtain, then an arch, then solid stone to the top, hiding the crowd behind it.
-  if (rows.some((r) => r.includes('$'))) {
-    const HALF = 0.2; // the wedge, either side of the top of the oval (radians)
+  if (hasBooth) {
     const OPEN = 0.13; // the box's opening within it
     const STONE = (px, py) => {
       const course = py % 5 === 0 || (px + (Math.floor(py / 5) % 2) * 4) % 9 === 0;
