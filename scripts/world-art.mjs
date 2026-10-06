@@ -899,6 +899,84 @@ const OUTDOOR_ART = {
     box(g, x + 3, y + 2, 10, 1, O.stoneLight);
     for (let j = 5; j < 13; j += 2) box(g, x + 5, y + j, 6, 1, O.stoneDark);
   },
+  royalHedge(g, x, y, m) {
+    // A clipped royal hedge (tile k in the Royal Forest): flat on top, a darker face where it meets the ground.
+    box(g, x, y, TILE, TILE, O.leafDark);
+    if (m.at(0, -1) !== 'k') box(g, x, y, TILE, 3, O.leafLight);
+    for (let i = 0; i < 8; i++)
+      put(g, x + Math.floor(hash(x, y, i + 60) * 16), y + 3 + Math.floor(hash(y, x, i + 61) * 10), O.leaf);
+    if (m.at(0, 1) !== 'k') box(g, x, y + 13, TILE, 3, '#16301A');
+  },
+  roseBed(g, x, y) {
+    // A white rose bush (tile r in the Royal Forest).
+    ellipse(g, x + 8, y + 10, 7, 5, O.leafDark);
+    ellipse(g, x + 8, y + 9, 6, 4, O.leaf);
+    put(g, x + 5, y + 7, O.leafLight);
+    for (let i = 0; i < 6; i++) {
+      const rx = x + 3 + Math.floor(hash(x, y, i + 70) * 9);
+      const ry = y + 6 + Math.floor(hash(y, x, i + 71) * 6);
+      box(g, rx, ry, 2, 2, '#F4F0EA');
+      put(g, rx + 1, ry + 1, '#D8C8C0');
+    }
+  },
+  queensFountain(g, x, y, m) {
+    // The queen's fountain (tile u in the Royal Forest), drawn once across its 3x3 tiles: a round marble basin of
+    // clear water, and on the plinth in the middle the old king and his queen, hand in hand.
+    if (m.at(-1, 0) === 'u' || m.at(0, -1) === 'u') return;
+    const MB = { o: '#3A3836', d: '#9A968E', m: '#C8C4BA', l: '#E6E2D8', h: '#F6F4EE' };
+    const WA = { d: '#2E5A86', m: '#4A80B4', l: '#8AB8E0', h: '#D0E8F8' };
+    const GOLD = '#C8963A';
+    // Its shadow, falling down and to the right.
+    for (let j = 30; j < 48; j++)
+      for (let i = 6; i < 50; i++) {
+        const c = g[y + j]?.[x + i];
+        if (c && ((i - 26) * (i - 26)) / 484 + ((j - 36) * (j - 36)) / 144 <= 1) g[y + j][x + i] = mix(c, [16, 12, 10], 0.35);
+      }
+    // The basin: an outline, the rim, the water.
+    ellipse(g, x + 24, y + 34, 23, 12, MB.o);
+    ellipse(g, x + 24, y + 33, 22, 11, MB.d);
+    ellipse(g, x + 24, y + 32, 22, 10, MB.l);
+    ellipse(g, x + 24, y + 33, 19, 8, WA.d);
+    ellipse(g, x + 24, y + 32, 18, 7, WA.m);
+    for (let i = 0; i < 18; i++)
+      put(g, x + 8 + Math.floor(hash(x, y, i + 80) * 32), y + 28 + Math.floor(hash(y, x, i + 81) * 9), i % 3 ? WA.l : WA.h);
+    // Coins at the bottom, glinting.
+    for (const [i, j] of [[12, 34], [33, 31], [29, 36], [17, 30]]) put(g, x + i, y + j, GOLD);
+    // The plinth.
+    box(g, x + 17, y + 24, 14, 10, MB.o);
+    box(g, x + 18, y + 24, 12, 9, MB.m);
+    box(g, x + 18, y + 24, 12, 2, MB.h);
+    box(g, x + 28, y + 26, 2, 7, MB.d);
+    // The plaque on its front.
+    box(g, x + 20, y + 28, 8, 3, GOLD);
+    box(g, x + 21, y + 29, 6, 1, '#8A6A28');
+    // The king, on the left: broad, a crown, a short cloak, his head thrown back laughing.
+    box(g, x + 16, y + 11, 8, 13, MB.o);
+    box(g, x + 17, y + 12, 6, 12, MB.l);
+    box(g, x + 21, y + 13, 2, 11, MB.d);
+    box(g, x + 17, y + 5, 6, 7, MB.o);
+    box(g, x + 18, y + 6, 4, 5, MB.h);
+    box(g, x + 18, y + 9, 4, 2, MB.m); // the beard
+    box(g, x + 18, y + 3, 4, 2, GOLD);
+    put(g, x + 18, y + 2, GOLD);
+    put(g, x + 21, y + 2, GOLD);
+    // The queen, on the right: slender, a long gown, a circlet, looking down the path.
+    box(g, x + 25, y + 11, 7, 13, MB.o);
+    box(g, x + 26, y + 12, 5, 12, MB.h);
+    box(g, x + 29, y + 14, 2, 10, MB.l);
+    box(g, x + 25, y + 20, 7, 4, MB.o);
+    box(g, x + 26, y + 20, 5, 4, MB.l);
+    box(g, x + 26, y + 5, 5, 7, MB.o);
+    box(g, x + 27, y + 6, 3, 5, MB.h);
+    box(g, x + 26, y + 6, 1, 7, MB.m); // her hair, down her back
+    box(g, x + 27, y + 4, 3, 1, GOLD);
+    // Their hands, joined between them.
+    box(g, x + 23, y + 15, 3, 2, MB.h);
+    put(g, x + 24, y + 17, MB.o);
+    // Water spilling from the plinth's corners into the basin.
+    for (const sx of [17, 30])
+      for (let j = 0; j < 6; j++) put(g, x + sx + (sx < 24 ? -Math.floor(j / 2) : Math.floor(j / 2)), y + 25 + j, j % 2 ? WA.l : WA.h);
+  },
   R(g, x, y) {
     // A white rose, and beside it a stone head facing it.
     box(g, x + 4, y + 8, 1, 7, O.leaf);
@@ -2708,6 +2786,7 @@ const MAPS = [
   'forge',
   'chapel',
   'old-kings-crypt',
+  'royal-forest',
   'hedge-maze',
   'the-pit',
   'castle-grounds',

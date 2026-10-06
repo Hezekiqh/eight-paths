@@ -265,6 +265,17 @@ export const BANTER: Record<string, Banter[]> = {
   'candle-inn:cellar-door': [
     { who: 'oren', lines: ['OREN: People are hiding down there.', "OREN: …We didn't see anything."] },
   ],
+  // The old queen's fountain: Brannoc's mother and father, in stone (author, Oct 6, 2026).
+  'royal-forest:queens-fountain': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: ...Mother.',
+        'BRANNOC: She planted the first oak with her own hands. Father carried the water, and complained the whole way.',
+        'BRANNOC: He is laughing. They got that right, at least. He always laughed when she was near.',
+      ],
+    },
+  ],
   'hedge-maze:hugo': [{ who: 'moss', lines: ["MOSS: They do have feelings. That one's sulking."] }],
   'the-pit:fight-card': [
     { who: 'pip', lines: ["PIP: Compulsory cheering? I've been training my whole life for this."] },

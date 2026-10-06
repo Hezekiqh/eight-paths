@@ -17,6 +17,7 @@ import forgeData from './maps/forge.json';
 import chapelData from './maps/chapel.json';
 import oldKingsCryptData from './maps/old-kings-crypt.json';
 import hedgeMazeData from './maps/hedge-maze.json';
+import royalForestData from './maps/royal-forest.json';
 import thePitData from './maps/the-pit.json';
 import castleGroundsData from './maps/castle-grounds.json';
 import castleHallData from './maps/castle-hall.json';
@@ -346,6 +347,7 @@ export const MAPS = {
   forge: build(forgeData as MapData, require('@/assets/world/forge.png')),
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
+  'royal-forest': build(royalForestData as MapData, require('@/assets/world/royal-forest.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
   'the-pit': build(thePitData as MapData, require('@/assets/world/the-pit.png')),
   'castle-grounds': build(castleGroundsData as MapData, require('@/assets/world/castle-grounds.png')),

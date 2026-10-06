@@ -1,0 +1,53 @@
+{
+  "id": "royal-forest",
+  "name": "The Royal Forest",
+  "style": "outdoor",
+  "walkable": [".", ",", "g", "s"],
+  "spawn": { "x": 11, "y": 18, "facing": "up" },
+  "examine": {
+    "T": ["Old oaks, planted in rows once. The rows have wandered off over the centuries, the way rows do."],
+    "k": ["A clipped hedge, taller than you. On this side, at least, somebody still trims it."],
+    "^": ["An arch cut through the hedge: the way into the royal maze."],
+    "_": ["The path back to town."],
+    "r": ["White roses, hundreds of them. Somebody has kept them alive for five hundred years."],
+    "u": ["A fountain of white stone, still running.", "The water is so clear you can count the coins at the bottom. Nobody has taken one."]
+  },
+  "tiles": [
+    "TTTTTTkkkkk^kkkkkTTTTT",
+    "TTTTT......,.....TTTTT",
+    "TTTg.......,......gTTT",
+    "TT..TT.....,.....TT.TT",
+    "T..TTTT....,....TTT..T",
+    "T.TTTT.....,.....TT..T",
+    "TT.TT.rsssssssssr.T..T",
+    "TT....rs.......sr...TT",
+    "TT....rs..uuu..sr...TT",
+    "TT....rs..uuu..sr...TT",
+    "TT....rs..uuu..sr...TT",
+    "TT....rs.......sr...TT",
+    "TT....rsssssssssr...TT",
+    "TTT........,.......TTT",
+    "TTTT.TT....,....TT.TTT",
+    "TTT..TTT...,...TTT..TT",
+    "TT..g.TT...,..TT.g..TT",
+    "TT.TTT.....,.....TT.TT",
+    "TTTTTTTT...,...TTTTTTT",
+    "TTTTTTTTTTT_TTTTTTTTTT"
+  ],
+  "art": { "k": "royalHedge", "r": "roseBed", "u": "queensFountain" },
+  "objects": [
+    {
+      "id": "queens-fountain",
+      "type": "sign",
+      "x": 11,
+      "y": 10,
+      "lines": [
+        "A fountain of white stone, still running after five hundred years.",
+        "In the water stand the old king and his queen, hand in hand. He is laughing at something. She is looking down the path, as if she is waiting for someone.",
+        "The plaque reads: FOR OUR QUEEN, WHO PLANTED THIS FOREST. MAY IT OUTGROW US ALL.",
+        "(You have never been here.)",
+        "(So why does it feel like you have?)"
+      ]
+    }
+  ]
+}
