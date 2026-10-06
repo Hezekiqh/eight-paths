@@ -141,7 +141,8 @@ const TRAPDOOR: [number, number] = [7, 14];
 // make their excuses for losing. The Warden stays out of sight until the five guards are down.
 
 /** Barnaby's welcome, from his box, before you answer. */
-export const ARENA_WELCOME = ["BARNABY: Well, well, well. If it isn't our final contestants."];
+// (a showman, author, Oct 6, 2026: "the diction of a performative guy who gets the crowd going")
+export const ARENA_WELCOME = ["BARNABY: Weeell, well, well! If it isn't our troublemaking escapees!"];
 /** Your excuse. It makes no difference. */
 export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
   { label: 'I was just going for a walk.' },
@@ -150,21 +151,21 @@ export const ARENA_EXCUSES: { label: string; deed?: 'bad' }[] = [
 ];
 /** His answer, and Brannoc's echo of it, and his faint (and his snot bubble). */
 export const ARENA_VERDICT = [
-  'BARNABY: UNACCEPTABLE.',
-  'BARNABY: You will pay with your lives!',
+  'BARNABY: SHUT IT. THIS IS UNACCEPTABLE!',
+  'BARNABY: You will pay with your lives for disrespecting our king!',
   'BRANNOC: P-P-Pay with our lives!?',
   '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
 ];
 /** Then the three who lost make their excuses on the way to the side of the sand, and it's on (author, Episode 13). */
 export const ARENA_FIGHT = [
-  'SILAS SEEN: I pulled a muscle on the way up here.',
-  'OLD MOTT: I am too old for this.',
+  "SILAS SEEN: They're the strong silent type. They've got this.",
+  'OLD MOTT: I am way too old for this.',
   'NAILS: My ice cubes melted.',
   '* Old Mott, Nails and Silas Seen rush over to Brannoc, pick him up, and carry him off to the side of the sand.',
   'BARNABY: FINISH THEM!',
 ];
 /** If you never let the three out: just you and Brannoc. */
-export const ARENA_WELCOME_ALONE = ["BARNABY: Well, well, well. If it isn't our runaways."];
+export const ARENA_WELCOME_ALONE = ["BARNABY: Weeell, well, well! If it isn't our troublemaking runaways!"];
 export const ARENA_FIGHT_ALONE = ARENA_FIGHT.filter((l) => !/silas|old mott|nails/i.test(l));
 
 export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {

@@ -63,7 +63,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   (`asleep` on a person, `src/world/sleep.ts`). Talk to him and he's awake (`gary`) until you're done.
 - **The prisoners stand behind their bars**, a tile back in their cells, never on them (author: they looked fused
   with the cell doors). You talk to them across the bars (`talkThrough` on the map).
-- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 17.3 s: allowed up to about twenty, author,
+- **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 15.1 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
   right) and Barnaby in his commentator's box, a wedge of the Colosseum's own ring at the head of the sand, following the
@@ -71,17 +71,17 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   ground level under a red curtain and an arch, his desk a low stone wall on the sand's edge, solid stone above. The
   crowd is small, scenery far off behind the action; Barnaby stands at the level of the sand, where everyone else
   stands, so he never looks like a giant among them (author). The Warden is out of sight; he enters
-  with the arena shaking, later. Barnaby (box): "Well, well, well. If it isn't our final contestants." The menu: *I was
-  just going for a walk.* Barnaby (box, the screen jolts): "UNACCEPTABLE." / "You will pay with your lives!" Brannoc
+  with the arena shaking, later. Barnaby (box), a showman working the crowd (author): "Weeell, well, well! If it isn't our troublemaking escapees!" The menu: *I was
+  just going for a walk.* Barnaby (box, the screen jolts): "SHUT IT. THIS IS UNACCEPTABLE!" / "You will pay with your lives for disrespecting our king!" Brannoc
   (ring): "P-P-Pay with our lives!?" and he passes out flat, away from you, Zs and a snot bubble. Your three rush over, and make their excuses as they grab Brannoc and carry him off to
   the side of the sand, out of the way of the fight (author: lines over the grab, to save time; the three typed slower than the rest, `letterMs` on the step, so their excuses read): held up off the sand
-  between Old Mott (his feet) and Nails (his head, walking backwards), Silas Seen leading, empty-handed. Silas Seen "I
-  pulled a muscle on the way up here." Old Mott "I am too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
+  between Old Mott (his feet) and Nails (his head, walking backwards), Silas Seen leading, empty-handed. Silas Seen "They're
+  the strong silent type. They've got this." Old Mott "I am way too old for this." Nails "My ice cubes melted." Barnaby (box, the screen jolts):
   "FINISH THEM!" Cut. (Cut along the way, author: "...Did he just faint?" / "...pathetic.") The game says exactly the same (`ARENA_WELCOME`, `ARENA_EXCUSES`, `ARENA_VERDICT`,
   `ARENA_FIGHT` in `dungeon.ts`; any excuse gets the same answer, and there's a mean one), with Barnaby in his box
   (`barnaby-box`; the box `$`, its desk `+`, which you talk across, `talkThrough`), your three beside you where you come up through the trapdoor, and Brannoc
   asleep with a snot bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who
-  comes up the tunnel. If you never let the three out, Barnaby welcomes "our runaways" and they aren't there.
+  comes up the tunnel. If you never let the three out, Barnaby welcomes "our troublemaking runaways" and they aren't there.
   Barnaby is a ringmaster now (top hat, red tailcoat, moustache), and a small guy (`short`: stubby legs), here and in Warrior City.
 - **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×19, two rows of stands over the box), open to the sky: sand, a low stone wall, tiers

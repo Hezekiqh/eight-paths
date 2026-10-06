@@ -2387,7 +2387,7 @@ const EPISODES = {
     const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
     return {
       ...SHORT,
-      // about twenty seconds, so every line has time to land (author, Oct 6, 2026: "its dialogue is too fast")
+      // fifteen seconds (author, Oct 6, 2026), every line held 1.45x so it lands; Barnaby types fast, the three slow
       read: 1.45,
       gapAfter: 0.12,
       number: 13,
@@ -2401,18 +2401,19 @@ const EPISODES = {
       look: [15.5, 4],
       zoom: 1.6,
       script: [
-        { say: 'barnaby-box', lines: welcome, punch: 0.6 },
+        // Barnaby talks fast, a showman working the crowd
+        { say: 'barnaby-box', lines: welcome, punch: 0.4, letterMs: 16 },
         ...RING,
-        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.6 } },
+        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.3 } },
         ...BOX,
         { jolt: 0.45 },
-        { say: 'barnaby-box', lines: [unacceptable, lives], punch: 0.6 },
+        { say: 'barnaby-box', lines: [unacceptable, lives], punch: 0.4, letterMs: 16 },
         // Brannoc heard that
         ...RING,
         { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
         { faint: 'brannoc-pit' },
         // a beat on him, out cold, snot bubble going
-        { wait: 0.5 },
+        { wait: 0.3 },
         // your three make their excuses as they grab Brannoc and carry him off to the side of the sand, out of the way
         // of the fight (author, Oct 6, 2026): one wide shot for all of it
         { look: [19.5, 10] },
@@ -2424,17 +2425,17 @@ const EPISODES = {
         { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 170, turn: 'right', together: true },
         // the heave, then off they shuffle with him, slow, held up between them: Old Mott at his feet, Nails at his
         // head walking backwards, Silas Seen (the pulled muscle) leading the way, empty-handed
-        { npcWalk: 'arena-mott', from: center(17.7, 10), to: [[21.7, 10]], speed: 15, delay: 1.25, turn: 'right', together: true },
-        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 15, delay: 1.25, carried: true, together: true },
-        { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 15, delay: 1.25, facing: 'left', together: true },
-        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 11, delay: 1.25, turn: 'left', together: true },
+        { npcWalk: 'arena-mott', from: center(17.7, 10), to: [[21.7, 10]], speed: 17, delay: 1.25, turn: 'right', together: true },
+        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 17, delay: 1.25, carried: true, together: true },
+        { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 17, delay: 1.25, facing: 'left', together: true },
+        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 12.5, delay: 1.25, turn: 'left', together: true },
         // (typed slower than the rest, so each excuse reads: author, Oct 6, 2026)
-        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.6, letterMs: 40 },
-        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.6, letterMs: 40 },
-        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.7, letterMs: 40 },
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.4, letterMs: 30 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.4, letterMs: 30 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.45, letterMs: 30 },
         ...BOX,
         { jolt: 0.4 },
-        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 1.0 },
+        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.65, letterMs: 16 },
       ],
     };
   },
