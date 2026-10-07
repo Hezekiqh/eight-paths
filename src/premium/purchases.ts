@@ -1,6 +1,12 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useEffect } from 'react';
-import Purchases, { PURCHASES_ERROR_CODE, type CustomerInfo, type PurchasesStoreProduct } from 'react-native-purchases';
+import Purchases, {
+  INTRO_ELIGIBILITY_STATUS,
+  PURCHASES_ERROR_CODE,
+  type CustomerInfo,
+  type IntroEligibility,
+  type PurchasesStoreProduct,
+} from 'react-native-purchases';
 
 import { useSocial } from '@/social/store';
 
@@ -19,8 +25,12 @@ export const purchasesEnabled = API_KEY !== '' && !inExpoGo;
 /** The RevenueCat entitlement both products grant. */
 export const ENTITLEMENT = 'premium';
 
-/** App Store Connect product ids, both in the "Eight Paths Premium" subscription group. */
-export const PRODUCTS = { regular: 'premium_monthly', founder: 'premium_founder_monthly' } as const;
+/** App Store Connect product ids, all in the "Eight Paths Premium" subscription group. */
+export const PRODUCTS = {
+  regular: 'premium_monthly',
+  yearly: 'premium_yearly',
+  founder: 'premium_founder_monthly',
+} as const;
 export type ProductKind = keyof typeof PRODUCTS;
 
 const hasPremium = (info: CustomerInfo) => info.entitlements.active[ENTITLEMENT] !== undefined;
@@ -57,13 +67,39 @@ export function usePurchases() {
   }, [userId]);
 }
 
+/** A product as the paywall offers it: its free trial, if this Apple ID can still take one (e.g. "7 days"). */
+export type Offer = { product: PurchasesStoreProduct; freeTrial: string | null };
+
+const UNITS: Record<string, string> = { DAY: 'day', WEEK: 'week', MONTH: 'month', YEAR: 'year' };
+
+/** "7 days" for a free introductory offer, or null when it isn't free or isn't a known length. */
+function trialLength(product: PurchasesStoreProduct): string | null {
+  const intro = product.introPrice;
+  const unit = intro && UNITS[intro.periodUnit];
+  if (!intro || intro.price !== 0 || !unit) return null;
+  const n = intro.periodNumberOfUnits * (intro.cycles || 1);
+  return `${n} ${unit}${n === 1 ? '' : 's'}`;
+}
+
 /** The App Store's localized products, or an empty list when they can't be loaded. */
-export async function loadProducts(): Promise<Partial<Record<ProductKind, PurchasesStoreProduct>>> {
+export async function loadProducts(): Promise<Partial<Record<ProductKind, Offer>>> {
   if (!purchasesEnabled) return {};
   try {
-    const products = await Purchases.getProducts(Object.values(PRODUCTS));
-    const byId = (id: string) => products.find((p) => p.identifier === id);
-    return { regular: byId(PRODUCTS.regular), founder: byId(PRODUCTS.founder) };
+    const ids = Object.values(PRODUCTS);
+    const products = await Purchases.getProducts(ids);
+    // A trial is only offered to an Apple ID that hasn't had one in this group yet.
+    const eligibility: Record<string, IntroEligibility> = await Purchases.checkTrialOrIntroductoryPriceEligibility(
+      ids,
+    ).catch(() => ({}));
+    const offers: Partial<Record<ProductKind, Offer>> = {};
+    for (const kind of Object.keys(PRODUCTS) as ProductKind[]) {
+      const product = products.find((p) => p.identifier === PRODUCTS[kind]);
+      if (!product) continue;
+      const eligible =
+        eligibility[product.identifier]?.status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE;
+      offers[kind] = { product, freeTrial: eligible ? trialLength(product) : null };
+    }
+    return offers;
   } catch {
     return {};
   }
