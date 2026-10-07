@@ -3342,6 +3342,92 @@ const WALKERS = {
   },
 };
 
+// The walkers' light, as the castle's: from the upper left. Lit edges warm toward candlelight, shade cools toward
+// dusk violet, so every palette gets the same three-step ramp without a hand-picked colour per character.
+const WALKER_LIGHT = hex('#FFF2D0');
+const WALKER_DUSK = hex('#1C1030');
+const HAT_COLOURS = { wizard: '#8B5CF6', sun: '#E8D08A', top: '#1A161E' };
+const lum = (c) => (c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11) / 255;
+/** One step up the ramp: a modest sheen on dark colours (black hair stays black), more on mid and pale ones. */
+const walkerLit = (c) => mix(c, WALKER_LIGHT, 0.2 + 0.12 * lum(c));
+/** One step down (half a step for `k` = 0.5): darker and a touch violet, never melting into the outline. */
+const walkerShade = (c, k = 1) => mix(c, WALKER_DUSK, (0.42 - 0.14 * (1 - lum(c))) * k);
+
+/**
+ * The shading pass over a flat walker frame. Only the spec's own colours (cloth, skin, hair, beard, apron...)
+ * are shaded; eyes, blades, lanterns and other small details are left exactly as drawn, and a run of cloth
+ * is measured straight across them (an eye doesn't split a face in two). In each run of one colour, the
+ * leftmost pixel catches the light and the rightmost falls into shade; a one-pixel run (an arm seen from
+ * the front, a hand) is lit or shaded by which side of the body it is on. Top edges on the lit half catch
+ * the light too, so hair and shoulders get their highlight in the upper left.
+ */
+function shadeWalker(f, w) {
+  const key = (c) => (c ? `${c[0]},${c[1]},${c[2]}` : '');
+  const mats = new Set();
+  const add = (c) => c && mats.add(key(hex(c)));
+  for (const k of ['top', 'shade', 'legs', 'boots', 'belt', 'beard', 'apron', 'cloak', 'collar', 'mustache', 'villain'])
+    add(w[k]);
+  add(w.skin ?? SKIN);
+  add(w.hair[1]);
+  for (const c of w.patchwork ?? []) add(c);
+  if (HAT_COLOURS[w.hat]) add(HAT_COLOURS[w.hat]);
+  const at = (x, y) => (x >= 0 && y >= 0 && x < FW && y < FH ? f[y][x] : null);
+  const mat = (c) => c && mats.has(key(c));
+  // the first pixel that isn't a detail, stepping from (x, y) by dx
+  const edge = (x, y, dx) => {
+    let i = x + dx;
+    while (at(i, y) && !mat(at(i, y))) i += dx;
+    return at(i, y);
+  };
+  const out = f.map((r) => r.slice());
+  for (let y = 0; y < FH; y++)
+    for (let x = 0; x < FW; x++) {
+      const c = f[y][x];
+      if (!mat(c)) continue;
+      const k = key(c);
+      const lc = edge(x, y, -1);
+      const rc = edge(x, y, 1);
+      const leftEdge = key(lc) !== k;
+      const rightEdge = key(rc) !== k;
+      // the whole run this pixel belongs to, details included, to tell a sleeve from a chest
+      let a = x;
+      let b = x;
+      if (!leftEdge) while (at(a - 1, y) && (key(at(a - 1, y)) === k || !mat(at(a - 1, y)))) a--;
+      if (!rightEdge) while (at(b + 1, y) && (key(at(b + 1, y)) === k || !mat(at(b + 1, y)))) b++;
+      const width = b - a + 1;
+      // the middle of the figure on this row, so an edge in the shaded half is never lit (and vice versa)
+      let sa = 0;
+      let sb = FW - 1;
+      while (sa < FW && !f[y][sa]) sa++;
+      while (sb >= 0 && !f[y][sb]) sb--;
+      const mid = (sa + sb) / 2;
+      const darker = (n) => !n || !mat(n) || lum(n) < lum(c) - 0.04;
+      const above = at(x, y - 1);
+      const topEdge = key(above) !== k && (!above || mat(above) || above === OUT);
+      let lit = false;
+      let dark = false;
+      if (width === 1) {
+        if (x < mid) lit = true;
+        else dark = true;
+      } else {
+        if (leftEdge && x < mid && darker(lc)) lit = true;
+        else if (rightEdge && (width >= 3 || x > mid)) dark = true;
+        else if (topEdge && !above && x < mid) lit = true;
+      }
+      // broad cloth turns away from the light over two pixels, not one
+      const nearRight =
+        !lit && !dark && width >= 6 && x > mid && key(at(x + 1, y)) === k && key(edge(x + 1, y, 1)) !== k;
+      // tucked under something else (the forehead under a fringe, the neck under the chin, legs under the
+      // tunic): a half step of shade along the top
+      const below = at(x, y + 1);
+      const tucked = !lit && above && mat(above) && key(above) !== k && lum(above) < lum(c) + 0.1 && key(below) === k;
+      if (lit) out[y][x] = walkerLit(c);
+      else if (dark) out[y][x] = walkerShade(c);
+      else if (nearRight || tucked) out[y][x] = walkerShade(c, 0.5);
+    }
+  for (let y = 0; y < FH; y++) f[y] = out[y];
+}
+
 /** Draws one frame of a walker into `g` at (ox, oy). */
 function drawWalker(g, ox, oy, w, dir, frame) {
   const f = canvas(FW, FH);
@@ -3776,6 +3862,11 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     }
   }
 
+  // right-facing frames are drawn left-facing, then mirrored, before the light goes on, so the light always
+  // comes from the upper left of the finished picture
+  if (dir === 'right') for (let y = 0; y < FH; y++) f[y].reverse();
+  shadeWalker(f, w);
+
   // a dark outline around the whole silhouette, then a soft shadow at the feet
   const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
   const outline = [];
@@ -3798,10 +3889,9 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       if (d <= 1 && !f[y][x]) f[y][x] = [16, 10, 8, 90];
     }
 
-  const mirror = dir === 'right';
   for (let y = 0; y < FH; y++)
     for (let x = 0; x < FW; x++) {
-      const c = f[y][mirror ? FW - 1 - x : x];
+      const c = f[y][x];
       if (c) g[oy + y][ox + x] = c;
     }
 }
