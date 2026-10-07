@@ -915,13 +915,22 @@ function compile(ep) {
       t += HATCH_END;
     } else if (step.vanish) {
       // gone at once, no smoke (someone getting up: the lying one swapped for the standing one)
-      for (const id of [step.vanish].flat()) segs.push({ kind: 'puff', t0: t, t1: t, hide: [id], show: [], spark: false, quiet: true });
+      for (const id of [step.vanish].flat())
+        segs.push({ kind: 'puff', t0: t, t1: t, hide: [id], show: [], spark: false, quiet: true });
     } else if (step.puff) {
       // a burst of black smoke that takes `hide` away and leaves `show` (a guard swallowed by his shadow),
       // with a white spark first if it's a blow (`spark`): the fights, told without the game's combat
       const p = step.puff;
       // `on`: a blow that lands on someone who stays standing (the Warden): just the spark, no smoke
-      segs.push({ kind: 'puff', t0: t, t1: t + PUFF, hide: p.hide ?? [], show: p.show ?? [], on: p.on ?? [], spark: !!p.spark });
+      segs.push({
+        kind: 'puff',
+        t0: t,
+        t1: t + PUFF,
+        hide: p.hide ?? [],
+        show: p.show ?? [],
+        on: p.on ?? [],
+        spark: !!p.spark,
+      });
       t += p.wait ?? PUFF;
     } else if (step.show) {
       segs.push({ kind: 'show', t0: t, t1: t, id: step.show });
@@ -1308,8 +1317,18 @@ function drawWorld(canvas, ep, st, t) {
       const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(n.x, n.y);
       const k = p.since / (SPARK * 1.6);
       const white = paint('#FFFFFF', 1 - k * 0.6);
-      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]])
-        for (let r = 2; r < 4 + k * 10; r += 2) canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 14 + dy * r - 1, 2, 2), white);
+      for (const [dx, dy] of [
+        [0, -1],
+        [0, 1],
+        [-1, 0],
+        [1, 0],
+        [-1, -1],
+        [1, 1],
+        [-1, 1],
+        [1, -1],
+      ])
+        for (let r = 2; r < 4 + k * 10; r += 2)
+          canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 14 + dy * r - 1, 2, 2), white);
     }
     for (const id of p.ids) {
       const n = map.npcs[id];
@@ -1318,7 +1337,16 @@ function drawWorld(canvas, ep, st, t) {
       if (p.spark && p.since < SPARK) {
         const k = p.since / SPARK;
         const white = paint('#FFFFFF', 1 - k * 0.5);
-        for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]])
+        for (const [dx, dy] of [
+          [0, -1],
+          [0, 1],
+          [-1, 0],
+          [1, 0],
+          [-1, -1],
+          [1, 1],
+          [-1, 1],
+          [1, -1],
+        ])
           for (let r = 2; r < 4 + k * 8; r += 2)
             canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 12 + dy * r - 1, 2, 2), white);
         continue;
@@ -1329,7 +1357,10 @@ function drawWorld(canvas, ep, st, t) {
         const r = 3 + k * (8 + (i % 4) * 3);
         const size = Math.max(1, Math.round(5 - k * 3 - (i % 3)));
         const dark = paint(i % 3 === 0 ? '#3A2A4A' : '#120C18', (1 - k) * 0.9);
-        canvas.drawRect(CK.XYWHRect(x + Math.cos(a) * r - size / 2, y - 12 + Math.sin(a) * r * 0.8 - k * 6, size, size), dark);
+        canvas.drawRect(
+          CK.XYWHRect(x + Math.cos(a) * r - size / 2, y - 12 + Math.sin(a) * r * 0.8 - k * 6, size, size),
+          dark,
+        );
       }
     }
   }
@@ -2021,7 +2052,14 @@ const EPISODES = {
         { say: 'brannoc-cell', lines: answer('Who are you?') },
         { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, ['Who are you?']), pick: 0, hold: 0.3 } },
         { say: 'brannoc-cell', lines: answer('Why are you cowering in the corner?') },
-        { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?']), pick: 0, hold: 0.3 } },
+        {
+          menu: {
+            speaker: 'Brannoc',
+            options: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?']),
+            pick: 0,
+            hold: 0.3,
+          },
+        },
         { say: 'brannoc-cell', lines: answer('What are you in for?') },
       ],
     };
@@ -2043,7 +2081,22 @@ const EPISODES = {
       endDur: 4.5,
       script: [
         // frame one: the menu, and "We need to escape." (author, Oct 4, 2026)
-        { menu: { speaker: 'Brannoc', options: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?', 'What are you in for?']), pick: menuOf(brannoc.questions, ['Who are you?', 'Why are you cowering in the corner?', 'What are you in for?']).indexOf('We need to escape.'), hold: 0.8 } },
+        {
+          menu: {
+            speaker: 'Brannoc',
+            options: menuOf(brannoc.questions, [
+              'Who are you?',
+              'Why are you cowering in the corner?',
+              'What are you in for?',
+            ]),
+            pick: menuOf(brannoc.questions, [
+              'Who are you?',
+              'Why are you cowering in the corner?',
+              'What are you in for?',
+            ]).indexOf('We need to escape.'),
+            hold: 0.8,
+          },
+        },
         { say: 'brannoc-cell', lines: answer('We need to escape.') },
         { narrate: true, lines: ['*squeak*'] },
         { say: 'brannoc-cell', lines: ['AAAAAAH!'] },
@@ -2076,7 +2129,8 @@ const EPISODES = {
   //   node scripts/episode-video.mjs clip-prisoners marketing/clip-prisoners.mp4
   'clip-prisoners': () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
+    const crime = (id) =>
+      cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
     return {
       number: 'CLIP',
       title: 'THE WORST PRISONERS',
@@ -2179,13 +2233,21 @@ const EPISODES = {
         { walk: [[18, 6]], face: 'up', speed: 260 },
         { say: 'prisoner-3', lines: cells.npcs['prisoner-3'].lines, beat: BEAT },
         // and you leave, up the ladder: cut
-        { walk: [[21, 6], [21, 8]], face: 'up', speed: 260 },
+        {
+          walk: [
+            [21, 6],
+            [21, 8],
+          ],
+          face: 'up',
+          speed: 260,
+        },
       ],
     };
   },
   10: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
+    const crime = (id) =>
+      cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
     const ask = (id, name) => ({
       menu: { speaker: name, options: menuOf(cells.npcs[id].questions, []), pick: 0, hold: 0.45 },
     });
@@ -2244,9 +2306,16 @@ const EPISODES = {
       endDur: 4.5,
       script: [
         // frame one: back at Gary's desk, asking for the keys (author: start there)
-        { menu: { speaker: 'Gary', options: menuOf([keys, ...cells.npcs.jailer.questions], asked), pick: 0, hold: 0.6 } },
+        {
+          menu: { speaker: 'Gary', options: menuOf([keys, ...cells.npcs.jailer.questions], asked), pick: 0, hold: 0.6 },
+        },
         { say: 'jailer', lines: ['...', 'Sure.'] },
-        { narrate: true, lines: ['Gary unhooks the ring of keys from his belt, drops it in your hand, and wanders off toward the ladder.'] },
+        {
+          narrate: true,
+          lines: [
+            'Gary unhooks the ring of keys from his belt, drops it in your hand, and wanders off toward the ladder.',
+          ],
+        },
         {
           npcWalk: 'jailer',
           to: [
@@ -2258,7 +2327,14 @@ const EPISODES = {
           together: true,
         },
         { you: ['(What a chill guy.)'] },
-        { walk: [[12, 7], [12, 6]], face: 'up', speed: 110 },
+        {
+          walk: [
+            [12, 7],
+            [12, 6],
+          ],
+          face: 'up',
+          speed: 110,
+        },
         { menu: { options: ['Unlock the cells', 'Not yet', 'You can all rot.'], pick: 0, hold: 0.5 } },
         { narrate: true, lines: ['Click. Click. Click.'] },
         // the bars in front of each cell swing open
@@ -2323,7 +2399,16 @@ const EPISODES = {
     const statue = fork.npcs.statue;
     const spots = might.boss.bearers;
     spots.forEach(([x, y], i) => {
-      might.npcs[`shade-${i}`] = { id: `shade-${i}`, type: 'npc', x, y, sprite: 'shadow', facing: 'down', name: 'Shadow', lines: [] };
+      might.npcs[`shade-${i}`] = {
+        id: `shade-${i}`,
+        type: 'npc',
+        x,
+        y,
+        sprite: 'shadow',
+        facing: 'down',
+        name: 'Shadow',
+        lines: [],
+      };
     });
     const shades = spots.map((_, i) => `shade-${i}`);
     const said = (l) => l.replace(/^STATUE: /, '');
@@ -2339,7 +2424,14 @@ const EPISODES = {
       script: [
         // frame one: the statue explains the two ways
         { say: 'statue', lines: statue.lines },
-        { walk: [[12, 4], [12, 2]], face: 'up', speed: 110 },
+        {
+          walk: [
+            [12, 4],
+            [12, 2],
+          ],
+          face: 'up',
+          speed: 110,
+        },
         { say: 'statue', lines: STATUE_SURE.map(said) },
         { menu: { speaker: 'Statue', options: ['Yes', 'No', 'Mind your own business.'], pick: 0, hold: 0.5 } },
         { say: 'statue', lines: FUNERAL.map(said) },
@@ -2355,7 +2447,16 @@ const EPISODES = {
     // (author, Oct 4, 2026) the last shadow, the statue lost its bet, and the king's note to the Warden
     const might = loadMap('dungeon-might', 'dungeon');
     const hall = loadMap('dungeon-lore', 'dungeon');
-    might.npcs['shade-3'] = { id: 'shade-3', type: 'npc', x: 11, y: 5, sprite: 'shadow', facing: 'left', name: 'Shadow', lines: [] };
+    might.npcs['shade-3'] = {
+      id: 'shade-3',
+      type: 'npc',
+      x: 11,
+      y: 5,
+      sprite: 'shadow',
+      facing: 'left',
+      name: 'Shadow',
+      lines: [],
+    };
     const letter = hall.examine['9'];
     return {
       number: 14,
@@ -2373,9 +2474,23 @@ const EPISODES = {
         { say: 'statue', lines: ["Wow. I can't believe you actually survived.", 'I really need to stop gambling.'] },
         { gap: [7, 1] },
         { narrate: true, lines: ['The gate opens.'] },
-        { walk: [[7, 5], [7, 1]], face: 'up', speed: 120 },
+        {
+          walk: [
+            [7, 5],
+            [7, 1],
+          ],
+          face: 'up',
+          speed: 120,
+        },
         { scene: { map: hall, at: [12, 5], facing: 'up' } },
-        { walk: [[10, 5], [10, 2]], face: 'up', speed: 120 },
+        {
+          walk: [
+            [10, 5],
+            [10, 2],
+          ],
+          face: 'up',
+          speed: 120,
+        },
         { narrate: true, lines: letter },
         { wait: 0.3 },
       ],
@@ -2391,7 +2506,13 @@ const EPISODES = {
     add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
     add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
     add('down-silas', 11, 8, 'silasseen', 'down', 'Silas Seen', { lying: true });
-    const guards = [[6, 4], [14, 4], [8, 5], [12, 5], [10, 4]].map(([x, y], i) => add(`pit-guard-${i}`, x, y, 'raider', 'down', 'Guard').id);
+    const guards = [
+      [6, 4],
+      [14, 4],
+      [8, 5],
+      [12, 5],
+      [10, 4],
+    ].map(([x, y], i) => add(`pit-guard-${i}`, x, y, 'raider', 'down', 'Guard').id);
     const crowd = Object.keys(pit.npcs).filter((id) => id.startsWith('crowd-'));
     const B = (l) => l.replace(/^BARNABY: /, '');
     return {
@@ -2406,8 +2527,14 @@ const EPISODES = {
       endDur: 4.5,
       script: [
         // frame one: up the ladder, onto the sand
-        { narrate: true, lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.'] },
-        { say: 'barnaby', lines: ["Really? You haven't been here twenty minutes, and you're causing this much trouble?"] },
+        {
+          narrate: true,
+          lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.'],
+        },
+        {
+          say: 'barnaby',
+          lines: ["Really? You haven't been here twenty minutes, and you're causing this much trouble?"],
+        },
         { menu: { speaker: 'Barnaby', options: ['Who are you?', "You're too loud."], pick: 0, hold: 0.6 } },
         {
           say: 'barnaby',
@@ -2447,7 +2574,14 @@ const EPISODES = {
       endDur: 4.5,
       script: [
         // frame one: the guards are down, and the Warden walks out
-        { npcWalk: 'warden', to: [[10, 2], [10, 5]], speed: 30 },
+        {
+          npcWalk: 'warden',
+          to: [
+            [10, 2],
+            [10, 5],
+          ],
+          speed: 30,
+        },
         { say: 'warden', lines: ['Having trouble, Barnaby?'] },
         { say: 'barnaby', lines: ["Wa... Bertrand! I didn't think you'd be back from your vacation so soon."] },
         {
@@ -2482,7 +2616,19 @@ const EPISODES = {
       add(`up-${id}`, x, 8, sprite, 'right', name);
     }
     const hits = (n) => Array.from({ length: n }, () => ({ puff: { on: ['warden'], spark: true, wait: 0.22 } }));
-    const run = (id, x) => ({ npcWalk: `up-${id}`, to: [[x, 7], [19, 6], [21, 6]], speed: 110, hide: true, together: true });
+    // up the stands and out through the hole in the banners (dungeon.ts FREED_ENDING)
+    const run = (id, x) => ({
+      npcWalk: `up-${id}`,
+      to: [
+        [x, 7],
+        [x, 4],
+        [8, 3],
+        [8, 1],
+      ],
+      speed: 110,
+      hide: true,
+      together: true,
+    });
     return {
       number: 17,
       title: 'FREEDOM',
@@ -2501,13 +2647,35 @@ const EPISODES = {
         { vanish: 'down-brannoc' },
         { show: 'brannoc' },
         { narrate: true, lines: ["Behind you, Brannoc stands up. He's still asleep."] },
-        { npcWalk: 'brannoc', to: [[4, 5], [9, 5]], speed: 70 },
+        {
+          npcWalk: 'brannoc',
+          to: [
+            [4, 5],
+            [9, 5],
+          ],
+          speed: 70,
+        },
         { say: 'brannoc', lines: ['BRANNOC SUPER SUPER SWING!'] },
-        // the Warden, straight through the side of the Colosseum
-        { npcWalk: 'warden', to: [[10, 5], [21, 5]], speed: 260, hide: true },
-        { gap: [20, 5] },
-        { gap: [20, 6] },
-        { narrate: true, lines: ['The Warden goes straight through the side of the Colosseum.'] },
+        // the Warden, up over the banners and out (STORY.md: he lands on the bakery in town, and the swing kills him);
+        // he tears through the banner nearest above him (swing.ts PIT_BANNERS: the pole at 138, 23 is tile 8, 1)
+        {
+          npcWalk: 'warden',
+          to: [
+            [10, 5],
+            [9, 3],
+            [8, 1],
+            [8, -3],
+          ],
+          speed: 260,
+          hide: true,
+        },
+        { gap: [8, 1] },
+        {
+          narrate: true,
+          lines: [
+            'Bertrand goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
+          ],
+        },
         // the prisoners get up, and run for it
         { vanish: ['down-nails', 'down-mott', 'down-silas'] },
         { show: 'up-nails' },
@@ -2525,7 +2693,6 @@ const EPISODES = {
       ],
     };
   },
-
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -2542,10 +2709,10 @@ const titleCase = (t) =>
 const out =
   outArg ??
   (mkdirSync(EPISODE_FOLDER, { recursive: true }),
-  (ep.short
+  ep.short
     ? (mkdirSync(join(EPISODE_FOLDER, 'Shorts'), { recursive: true }),
       join(EPISODE_FOLDER, 'Shorts', `Short ${String(ep.short).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`))
-    : join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`)));
+    : join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`));
 const compiled = compile(ep);
 const FADE = 0.5;
 // No end card (author, Oct 4, 2026: viewers leave the moment the story stops, and the card dragged
@@ -2756,7 +2923,8 @@ const place = (sound, at, gain) => {
   for (let i = 0; i < sound.length && start + i < mix.length; i++) mix[start + i] += (sound[i] / 32768) * gain;
 };
 for (const s of compiled.segs) {
-  if (s.kind === 'line' && !s.silent) for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
+  if (s.kind === 'line' && !s.silent)
+    for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {

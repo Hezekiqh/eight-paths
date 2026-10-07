@@ -1536,6 +1536,45 @@ function World({
     const [ex, ey] = npcFeet({ x: walk.end[0], y: walk.end[1] });
     const banner = bannerFor(wx, wy);
     const [hx, hy] = clothOf(banner);
+    // The prisoners you freed, on the sand (the-pit.json arena-*): where they stand now, the middle of them, and
+    // their run up the stands and out through the hole in the banners (the camera follows; they're gone at the top).
+    const FREED: [string, number][] = [
+      ['arena-mott', WALKER_ROWS.oldmott],
+      ['arena-nails', WALKER_ROWS.nails],
+      ['arena-silas', WALKER_ROWS.silasseen],
+    ];
+    const freedHere = () =>
+      FREED.flatMap(([id, row]) => {
+        const r = sim.npcWalk.get()[sim.npcIds.indexOf(id)];
+        return r && r[W_X] >= 0 ? [{ id, row, at: [r[W_X], r[W_Y]] as [number, number] }] : [];
+      });
+    const freedCentre = (): [number, number] => {
+      const at = freedHere().map((f) => f.at);
+      const mid = (k: 0 | 1) => at.reduce((n, a) => n + a[k], 0) / at.length;
+      return [mid(0) * TILE + TILE / 2, mid(1) * TILE + TILE / 2 - 8];
+    };
+    const freedRun = () => {
+      const out: [number, number] = [Math.floor(hx / TILE), Math.floor(hy / TILE)];
+      const runners = freedHere();
+      // off the map's people, into the march, which draws them running
+      const rows = sim.npcWalk.get().map((r) => r.slice());
+      for (const f of runners) {
+        const r = rows[sim.npcIds.indexOf(f.id)];
+        r[W_HX] = r[W_X] = r[W_TX] = -10;
+        r[W_HY] = r[W_Y] = r[W_TY] = -10;
+        r[W_T] = 0;
+      }
+      sim.npcWalk.set(rows);
+      sim.focus.set([FOCUS_MARCH]);
+      march(
+        runners.map((f, i) => ({
+          row: f.row,
+          path: [f.at, [f.at[0], 6 - i], [out[0], out[1] + 2], out] as [number, number][],
+        })),
+        () => {},
+        5,
+      );
+    };
     const asleep = WALKER_ROWS.brannocasleep;
     // the warden and the player, then a look round at the snore behind you
     setDialogue({
@@ -1579,10 +1618,15 @@ function World({
                     setDialogue({
                       // the prisoners you freed come to, and go free too (dungeon.ts)
                       lines: [...SNOT_SWING_HIT.slice(SWING_LINE), ...(freedNow() ? FREED_ENDING : [])],
-                      // up, up, over the banners: the camera stays on the hole he left while that's said
+                      // up, up, over the banners: the camera stays on the hole he left while that's said; then
+                      // the prisoners you freed get up and shout, with the camera on them, and run out through it
                       onLine: (_, line) => {
                         if (/over the banners/.test(line)) sim.focus.set([hx, hy + 40]);
-                        else if (!/SUPER SUPER SWING/.test(line)) sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
+                        else if (FREED_ENDING.includes(line) && freedHere().length > 0) {
+                          if (/scramble up the stands/.test(line)) freedRun();
+                          else sim.focus.set(freedCentre());
+                        } else if (!/SUPER SUPER SWING/.test(line))
+                          sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
                       },
                       then: () => {
                         // the hole he left in the banners stays (world-view draws it from the swing until now)
