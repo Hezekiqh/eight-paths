@@ -1,7 +1,17 @@
 import { emptyDimensionRecord, xpToNextLevel } from '@/game';
 
 import { MAPS, objectAt, withBouldersMoved, type MapId, type WorldMap } from '../maps';
-import { MEMORIES, PER_SEASON, SEASONS, memoryAt, notYetLines } from '../memories';
+import {
+  MEMORIES,
+  PER_SEASON,
+  SEASONS,
+  SHADOWS_RISE,
+  memoryAt,
+  memoryCall,
+  memoryShade,
+  notYetLines,
+  seasonMemory,
+} from '../memories';
 import { EXITS, describeRequirement, standing, type XpTotals } from '../progress';
 import { FRESH_WORLD, useWorldStore } from '../store';
 
@@ -26,8 +36,9 @@ describe('hidden memories', () => {
   it('holds at most four a season, each with its own id and its own spot', () => {
     expect(new Set(MEMORIES.map((m) => m.id)).size).toBe(MEMORIES.length);
     expect(new Set(MEMORIES.map((m) => `${m.map}:${m.x},${m.y}`)).size).toBe(MEMORIES.length);
+    // (someone's own, Brannoc's, aren't the season's: any number of those)
     for (let season = 1; season <= SEASONS; season++)
-      expect(MEMORIES.filter((m) => m.season === season).length).toBeLessThanOrEqual(PER_SEASON);
+      expect(MEMORIES.filter((m) => m.season === season && !m.whose).length).toBeLessThanOrEqual(PER_SEASON);
     for (const m of MEMORIES) expect(m.season).toBeGreaterThanOrEqual(1);
     for (const m of MEMORIES) expect(m.season).toBeLessThanOrEqual(SEASONS);
   });
@@ -52,7 +63,7 @@ describe('hidden memories', () => {
   });
 
   it('the first is the schoolyard, in Season 1, at Warrior Lv 6', () => {
-    const first = MEMORIES.find((m) => m.season === 1)!;
+    const first = seasonMemory(1)!;
     expect(first.id).toBe('schoolyard');
     expect(describeRequirement(first.needs)).toBe('Warrior Lv 6');
     expect(standing(first.needs, physical(0)).met).toBe(false);
@@ -74,5 +85,61 @@ describe('hidden memories', () => {
     expect(useWorldStore.getState().memories).toEqual(['schoolyard']);
     useWorldStore.getState().restart();
     expect(useWorldStore.getState().memories).toEqual(['schoolyard']);
+  });
+
+  describe("Brannoc's own", () => {
+    const school = MEMORIES.find((m) => m.id === 'brannoc-school')!;
+    const forest = MEMORIES.find((m) => m.id === 'brannoc-forest')!;
+
+    it('are his, in his places, and the school opens his dream', () => {
+      expect(school.whose).toBe('brannoc');
+      expect(school.map).toBe('painters-school');
+      expect(school.sets).toBe('brannoc-flashback');
+      expect(forest.whose).toBe('brannoc');
+      expect(forest.map).toBe('royal-forest');
+      expect(seasonMemory(1)!.id).toBe('schoolyard');
+    });
+
+    it('play only with him in the party; without him, a line of narration; before the paintings hang, nothing', () => {
+      expect(memoryCall(school, [], false, ['brannoc'])).toBeNull();
+      expect(memoryCall(school, [], true, ['brannoc', 'oren'])).toBe('play');
+      expect(memoryCall(school, [], true, ['oren'])).toEqual([
+        'The paintings hang in order. Nothing happens. The room seems to be waiting for someone who was here.',
+      ]);
+      // the hero is silent (STORY.md): narration, never an invented thought
+      expect(memoryCall(forest, [], true, ['oren'])?.at(-1)).not.toMatch(/^\(.*\)$/);
+      expect(memoryCall(forest, [], true, ['brannoc'])).toBe('play');
+      expect(memoryCall(forest, ['brannoc-forest'], true, ['brannoc'])).not.toBe('play');
+    });
+
+    it('tell what he remembers and no more: no Keeper, no cocoon, no king behind the shadows', () => {
+      const text = [...school.lines, ...forest.lines].join(' ');
+      expect(text).not.toMatch(/Keeper|cocoon|Kaldor|uncle|colours|king's men|sent/i);
+      expect(text).toContain("Yearning for battle doesn't make one a great warrior.");
+      expect(text).toContain('The responsibilities of the crown are heavy.');
+      expect(forest.lines.join(' ')).toMatch(/Shadows/);
+    });
+  });
+});
+
+describe('a memory, as it plays', () => {
+  it('washes the World into the past from its first line, and brings it back on its last', () => {
+    for (const m of MEMORIES) {
+      expect([m.id, memoryShade(m, 0)]).toEqual([m.id, 'past']);
+      expect([m.id, memoryShade(m, m.lines.length - 1)]).toEqual([m.id, null]);
+    }
+  });
+  it('goes dark where it does: the school shut up, and the shadows closing on the boy', () => {
+    const dark = (id: string) => {
+      const m = MEMORIES.find((x) => x.id === id)!;
+      return m.lines.filter((_, i) => memoryShade(m, i) === 'dark');
+    };
+    expect(dark('brannoc-school')).toEqual(['…', 'Black.']);
+    expect(dark('brannoc-forest')).toEqual(['They close.', "And that's all. That's all there is."]);
+    expect(dark('schoolyard')).toEqual([]);
+  });
+  it('raises the shadows round you in the forest, once', () => {
+    const forest = MEMORIES.find((m) => m.id === 'brannoc-forest')!;
+    expect(forest.lines.filter((l) => SHADOWS_RISE.test(l))).toHaveLength(1);
   });
 });

@@ -3,13 +3,27 @@ import { DEFAULT_PARTY, ROSTER, type CharacterId } from '@/story/companions';
 import { BANTER, banterFor } from '../banter';
 import { partyWithYou } from '../hero';
 import { MAPS, type MapId } from '../maps';
+import { MEMORIES } from '../memories';
 import { splitSpeaker } from '../portraits';
 
 describe('party banter', () => {
-  it('only hangs off people and signs that exist', () => {
+  it('only hangs off people, signs, tiles and memories that exist', () => {
     for (const key of Object.keys(BANTER)) {
-      const [mapId, objectId] = key.split(':');
-      const thing = MAPS[mapId as MapId]?.objects.find((o) => o.id === objectId);
+      const [mapId, objectId, letter] = key.split(':');
+      const map = MAPS[mapId as MapId];
+      // "tile:<letter>": a tile you examine, which has something to say of its own
+      if (objectId === 'tile') {
+        expect([key, map?.examine[letter]?.length ?? 0]).toEqual([key, expect.any(Number)]);
+        expect(map.examine[letter].length).toBeGreaterThan(0);
+        continue;
+      }
+      // a memory's id: the party has its say once the memory closes
+      const memory = MEMORIES.find((m) => m.id === objectId);
+      if (memory) {
+        expect([key, memory.map]).toEqual([key, mapId]);
+        continue;
+      }
+      const thing = map?.objects.find((o) => o.id === objectId);
       expect([key, thing?.type]).toEqual([key, expect.stringMatching(/^(npc|sign)$/)]);
     }
   });

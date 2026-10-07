@@ -4,6 +4,8 @@
   "style": "dungeon",
   "walkable": [".", ",", "=", "h"],
   "art": {
+    "2": "N",
+    "3": "N",
     "6": "D",
     "9": "D",
     "7": "A",
@@ -28,11 +30,15 @@
     "#W========================UUUW#",
     "#W........................U%UW#",
     "#W...........................W#",
-    "#WWWBWWWcWWWBWWWcWWBWWWcWWWWWW#",
+    "#WWWBW2WcWWWBW3WcWWBWWWcWWWWWW#",
     "###############################"
   ],
   "examine": {
     "%": ["The top of the winding stair. Down to the hall."],
+    "2": ["A door painted the same grey as the wall. Not hidden, exactly. Just hoping you won't notice it."],
+    "3": [
+      "Double doors, black and gold, with his face carved on both. On the left door he's smiling. On the right he's smiling more."
+    ],
     "=": ["A long runner, threadbare in a line down the middle. Someone paces here. A lot."],
     "W": ["Black stone. Somebody has hung a little embroidered sampler on it: HOME SWEET HOME. It is not convincing."],
     "B": ["The fist crushing a crown, again. He really likes that one."],

@@ -72,7 +72,29 @@ import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/wor
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 import { IDLE_SPLIT, idleDip } from '@/world/idle';
 import { cameoAt } from '@/world/step-aside';
-import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
+import { MARCH_ACTORS, MARCH_HEAD, fadeShown, marchPoses, marchVanished } from '@/world/march';
+import {
+  BREACH_AT,
+  FLASH_PEAK,
+  FLASH_TIME,
+  FLY_TIME,
+  HOLE_HOLD,
+  IMPACT_TIME,
+  SWING_STRIKE,
+  SWING_WINDUP,
+  SW_HY,
+  SW_RUN,
+  bladeAt,
+  SW_BX,
+  SW_BY,
+  SW_FACE,
+  SW_HX,
+  SW_ROW,
+  SW_T,
+  SW_WX,
+  SW_WY,
+  wardenFlight,
+} from '@/world/swing';
 
 const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
 const WALKERS_IMAGE = require('@/assets/world/walkers.png');
@@ -166,7 +188,34 @@ export type WorldSim = {
   march: SharedValue<number[]>;
   /** Test builds only: the tile [x, y] to walk to by itself (the guide's mark); empty: off. */
   walkTo: SharedValue<number[]>;
+  /**
+   * Where a cutscene points the camera instead of at you: an [x, y] in art pixels, or [FOCUS_MARCH] to follow the
+   * first walker in the march. Empty: on you, as usual. The camera glides there, it doesn't jump.
+   */
+  focus: SharedValue<number[]>;
+  /** Brannoc's Super Super Swing playing out (swing.ts SW_*). Empty: none. */
+  swing: SharedValue<number[]>;
+  /**
+   * Puffs a cutscene asks for, [x, y, dark (0/1), …] in art pixels at the feet: the frame loop takes them. A dark one
+   * is a shadow coming or going (Kaldor's, castle.ts).
+   */
+  puffs: SharedValue<number[]>;
+  /** The fight's enemies aren't drawn yet: they haven't stepped out of the walls (the war hall's cue, moments.ts). */
+  hideFoes: SharedValue<boolean>;
+  /** One kind of enemy (ENEMY_KINDS index) not drawn yet, after the rest are out: -1 for none (the raised Warden). */
+  hideKind: SharedValue<number>;
+  /** A cutscene draws you some other way (out cold on the sand, say): the lead isn't drawn. */
+  hideLead: SharedValue<boolean>;
+  /** A cutscene shakes the screen: how hard, in art pixels (the frame loop takes it, and sets it back to 0). */
+  quake: SharedValue<number>;
+  /** A wind through the room (the finale's banners all lifting at once): 0 still, up to 1; it dies away by itself. */
+  wind: SharedValue<number>;
+  /** Light out of the `glow` rect (the last seal loosening): 0 none, up to 1. */
+  glowing: SharedValue<number>;
 };
+
+/** sim.focus: follow whoever leads the march. */
+export const FOCUS_MARCH = -1;
 
 export function useWorldSim(start: { x: number; y: number; facing: Facing }, npcs: NpcObject[]): WorldSim {
   const facing = FACINGS.indexOf(start.facing);
@@ -186,6 +235,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
           wander: n.wander,
           along: n.along,
           look: n.look,
+          patrol: n.patrol,
         })),
       ),
     ),
@@ -202,6 +252,15 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     cameo: useSharedValue<number[]>([]),
     march: useSharedValue<number[]>([]),
     walkTo: useSharedValue<number[]>([]),
+    focus: useSharedValue<number[]>([]),
+    swing: useSharedValue<number[]>([]),
+    puffs: useSharedValue<number[]>([]),
+    hideFoes: useSharedValue(false),
+    hideKind: useSharedValue(-1),
+    hideLead: useSharedValue(false),
+    quake: useSharedValue(0),
+    wind: useSharedValue(0),
+    glowing: useSharedValue(0),
   };
 }
 
@@ -265,6 +324,8 @@ type Props = {
   signs?: { x: number; y: number }[];
   /** Cocoons broken open (see cocoons.ts): split silk drawn over the whole one in the map's art. */
   husks?: { x: number; y: number }[];
+  /** The Painters' School's paintings (painters-school.ts): fallen on the floor, or hung on their hooks. */
+  paintings?: { x: number; y: number; hung: boolean; scene: number }[];
   /** How dark it is here and what drifts in the air; every flame [x, y, light reach] (see ambience.ts). */
   ambience?: Ambience;
   flames?: number[][];
@@ -282,9 +343,10 @@ type Props = {
   onWin?: () => void;
   /**
    * Someone leaving with a flourish (Felix): they laugh, shoulders shaking, then dash
-   * east off the map, lightning fast. `onExited` runs once they're gone.
+   * east off the map, lightning fast. `onExited` runs once they're gone. `fade`: instead they flicker
+   * out where they stand, into nothing at all (Felix, once Kaldor's beaten).
    */
-  exit?: { id: string } | null;
+  exit?: { id: string; fade?: boolean } | null;
   /** Who you're talking to, by name: someone asleep at their post (Gary) is awake for it. */
   talkingTo?: string | null;
   onExited?: () => void;
@@ -295,17 +357,32 @@ type Props = {
    * gate over it: `down` runs 0 (raised against the gate) to 1 (lowered across the moat, gate open).
    */
   drawbridge?: { x: number; y: number; w: number; h: number; down: SharedValue<number> } | null;
+  /** Bridge tiles brought up out of a river by pressure plates (the Cull Road's ferry-bridge), drawn as planks. */
+  raised?: { x: number; y: number }[];
   /** A fight picked back up after a change of character, instead of a fresh one (session.ts carry). */
   resume?: Fight | null;
+  /** The hole the warden left in the Kaloseum's banners (swing.ts): its x in art pixels. */
+  breach?: [number, number] | null;
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
+  /** Tiles (y * width + x) a scene has just opened (a gate, a bridge): walkable from now, without coming back in. */
+  opened?: number[];
+  /** Banners standing in the room (tiles): they lift and stream in a wind (sim.wind). */
+  banners?: { x: number; y: number }[];
+  /** Where light comes from when sim.glowing is up (art pixels): the last seal. */
+  glow?: { x: number; y: number; w: number; h: number } | null;
 };
 
 /** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
 const dozing = (n: { asleep?: boolean; name: string }, talkingTo: string | null) => !!n.asleep && n.name !== talkingTo;
 
+/** The warden's kind, by index (Brannoc's swing hides him from the fight's drawing and flies him off). */
+const WARDEN_KIND = ENEMY_KINDS.indexOf('warden');
+
 /** A march actor's "facing" for someone out cold on the ground (march.ts), and for someone carried. */
 const LYING = 4;
+/** A snot bubble on someone lying down swells bigger: it has to read among the people round them. */
+const LYING_BUBBLE = 6.5;
 /** How high someone carried is held off the ground, in art pixels. */
 const CARRIED = 8;
 
@@ -315,13 +392,22 @@ const CARRIED = 8;
  */
 function sleeperAt([x, y]: [number, number], lying: boolean, what: 'zs' | 'snot'): [number, number] {
   'worklet';
-  if (!lying) return [x, y];
+  // standing (sleepwalking), the bubble's at the nose, a little above the mouth
+  if (!lying) return what === 'zs' ? [x, y] : [x, y - 2];
   return what === 'zs' ? [x - 2, y + 8] : [x - 1, y - 2];
 }
 
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
 const EXIT_LAUGH = 1.4;
 const EXIT_SPEED = 520;
+/** A fade out (seconds), and the time an exit is set to once it's over, so they stay gone. */
+const EXIT_FADE = 1.6;
+const EXIT_GONE = 999;
+/** A shadow's puff (seconds): slower and bigger than a fallen enemy's. */
+const DARK_PUFF = 0.7;
+/** Where a field banner's painted flag ends (its free edge) and its top, in art pixels within its tile. */
+const BANNER_EDGE_X = 13;
+const BANNER_TOP_Y = 3;
 /** "HA" in a 3×5 pixel font, as [x, y] cells. */
 const HA = [
   ...['X.X', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : []))),
@@ -385,13 +471,19 @@ export function WorldView({
   chests = [],
   signs = [],
   husks = [],
+  paintings = [],
   sealed = [],
   talker,
   ambience = { darkness: 0, motes: null },
   flames = [],
   snuffable = false,
   drawbridge = null,
+  raised = [],
   resume = null,
+  breach = null,
+  opened = [],
+  banners = [],
+  glow = null,
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
@@ -400,6 +492,15 @@ export function WorldView({
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.
   const solid = useSharedValue<number[]>(map.solid);
+  const openedKey = opened.join(',');
+  useEffect(() => {
+    if (opened.length === 0) return;
+    const next = solid.get().slice();
+    for (const t of opened) next[t] = 0;
+    solid.set(next);
+    // only when the set of tiles changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openedKey, solid]);
   const mapWidth = map.width;
   const mapHeight = map.height;
   const rocks = useSharedValue<number[]>(boulders);
@@ -429,7 +530,8 @@ export function WorldView({
   useEffect(() => {
     sim.hp.set(fight.get().hp);
   }, [sim, fight]);
-  const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
+  // Aurek the Tall is the Warden (author, Oct 7, 2026): in the throne room he looks like the Warden too
+  const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k === 'aurek' ? 'warden' : k]), []);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
@@ -461,6 +563,8 @@ export function WorldView({
   const whiteFor = useSharedValue<number[]>(map.enemies.map(() => 0));
   /** Puffs where enemies fell: [x, y, time left]. */
   const puffs = useSharedValue<number[][]>([]);
+  /** Dark ones, where a shadow came or went (a cutscene's): [x, y, time left]. */
+  const darkPuffs = useSharedValue<number[][]>([]);
   /** A blow shrugged off (Kaldor, guarded): a spark [x, y, time left]. */
   const sparks = useSharedValue<number[]>([0, 0, 0]);
   /** A torch guttering: the room dims for a moment (seconds left); and how many have gone out for good (war hall). */
@@ -478,10 +582,13 @@ export function WorldView({
   const exitRow = useSharedValue(-1);
   const exitT = useSharedValue(-1);
   const exitAt = useSharedValue<number[]>([0, 0, 0]);
+  const exitFades = !!exit?.fade;
   useEffect(() => {
     exitRow.set(exit ? sim.npcIds.indexOf(exit.id) : -1);
     exitT.set(exit ? 0 : -1);
   }, [exit, sim.npcIds, exitRow, exitT]);
+  /** A march actor laughing (march.ts MF_LAUGH): [x, y, seconds in], for the HAs; t < 0: nobody. */
+  const marchLaugh = useSharedValue<number[]>([0, 0, -1]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   // [sprite row, row in sim.npcWalk] for everyone still here.
   // someone asleep at their post is drawn eyes shut (their "asleep" walker), unless you're talking to them
@@ -500,7 +607,7 @@ export function WorldView({
       ),
     [map, sim.npcIds, talkingTo],
   );
-  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
+  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look || n.patrol), [map]);
   // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
   // (each as [row in sim.npcWalk, lying flat]: wherever they are now, carried off, say)
   const sleepers = useMemo(
@@ -510,9 +617,7 @@ export function WorldView({
   // ...and those with a snot bubble too
   const snorers = useMemo(
     () =>
-      map.npcs
-        .filter((n) => n.snot && dozing(n, talkingTo))
-        .map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+      map.npcs.filter((n) => n.snot && dozing(n, talkingTo)).map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
     [map, talkingTo, sim.npcIds],
   );
   // One more for a party member stepping in for a job (a cameo).
@@ -522,6 +627,11 @@ export function WorldView({
 
   const camX = useSharedValue(0);
   const camY = useSharedValue(0);
+  /** The camera unrounded, so a cutscene's glide doesn't stall a pixel short; and whether it's gliding yet. */
+  const camF = useSharedValue<number[]>([0, 0, 0]);
+  /** Marchers walking asleep (a snot bubble, Zs): [x, y, lying (0/1), nose side (1 right, -1 left), …]. */
+  const marchSleep = useSharedValue<number[]>([]);
+  const wardenRow = useMemo(() => WALKER_ROWS.warden, []);
   const bob = useSharedValue(0);
   /** Four numbers per walker, back to front: sheet x, sheet y, screen x, screen y. */
   const drawList = useSharedValue<number[]>([]);
@@ -782,6 +892,27 @@ export function WorldView({
             .filter((p) => p[2] > 0),
         );
       }
+      if (darkPuffs.get().length > 0) {
+        darkPuffs.set(
+          darkPuffs
+            .get()
+            .map((p) => [p[0], p[1], p[2] - realDt])
+            .filter((p) => p[2] > 0),
+        );
+      }
+      // puffs a cutscene asked for
+      const asked = sim.puffs.get();
+      if (asked.length >= 3) {
+        const light = puffs.get().slice();
+        const dark = darkPuffs.get().slice();
+        for (let k = 0; k + 2 < asked.length; k += 3) {
+          if (asked[k + 2] === 1) dark.push([asked[k], asked[k + 1], DARK_PUFF]);
+          else light.push([asked[k], asked[k + 1], FEEL.puff]);
+        }
+        puffs.set(light.slice(-8));
+        darkPuffs.set(dark.slice(-8));
+        sim.puffs.set([]);
+      }
 
       // Boulders slide toward their tiles.
       const rp = rockPos.get();
@@ -803,7 +934,7 @@ export function WorldView({
         if (changed) rockPos.set(next);
       }
 
-      // Townsfolk stroll and look about (wander.ts), but not while you're talking or paused.
+      // Townsfolk stroll, look about and walk their beats (wander.ts), but not while you're talking or paused.
       if (wanders && !frozen) {
         const walked = stepWanderers(
           sim.npcWalk.get(),
@@ -819,14 +950,32 @@ export function WorldView({
         if (walked.solid !== solid.get()) solid.set(walked.solid);
       }
 
-      // The camera follows the lead and stops at the map's edges (or centres a small map).
       const round = (v: number) => Math.round(v * scale) / scale;
-      const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(sim.x.get() - viewW / 2, 0), mapW - viewW);
-      const cy = mapH <= viewH ? (mapH - viewH) / 2 : Math.min(Math.max(sim.y.get() - 12 - viewH / 2, 0), mapH - viewH);
-      camX.set(round(cx));
-      camY.set(round(cy));
+      // Brannoc's swing (swing.ts): the blow lands with a big shake, a puff and a spark on the warden.
+      const sw = sim.swing.get();
+      const q = sim.quake.get();
+      if (q > 0) {
+        shake.set([FEEL.shakeTime * 3, q]);
+        sim.quake.set(0);
+      }
+      if (sw.length > 0 && sw[SW_RUN] !== 0) {
+        const before = sw[SW_T];
+        const st = before + realDt;
+        if (before < SWING_STRIKE && st >= SWING_STRIKE) {
+          shake.set([FEEL.shakeTime * 4, FEEL.killShake * 2]);
+          hitStop.set(FEEL.bigStop);
+          puffs.set([...puffs.get().slice(-3), [sw[SW_WX], sw[SW_WY], FEEL.puff]]);
+        }
+        if (before < SWING_STRIKE + FLY_TIME + HOLE_HOLD + 1) {
+          const next = sw.slice();
+          next[SW_T] = st;
+          sim.swing.set(next);
+        }
+      }
       bob.set(Math.floor(info.timestamp / 350) % 2);
       clock.set(clock.get() + realDt);
+      // a wind dies away slowly; the seal's light holds while a scene keeps it up
+      if (sim.wind.get() > 0) sim.wind.set(Math.max(0, sim.wind.get() - realDt * 0.05));
       if (exitT.get() >= 0) exitT.set(exitT.get() + realDt);
 
       // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
@@ -839,6 +988,20 @@ export function WorldView({
         const [fx, fy] = wandererFeet(w);
         // the one leaving: a laugh (a shake and a hop, facing you), then a dash east
         const et = npcs[i][1] === exitRow.get() ? exitT.get() : -1;
+        // fading out where they stand: a flicker, fewer frames shown the further it goes, then a soft puff
+        if (et >= 0 && exitFades) {
+          // gone: not drawn again (the room moves them off for good once it hears)
+          if (et >= EXIT_GONE) continue;
+          if (et >= EXIT_FADE) {
+            exitT.set(EXIT_GONE);
+            sim.puffs.set([...sim.puffs.get(), fx, fy, 0]);
+            scheduleOnRN(exited);
+            continue;
+          }
+          if (fadeShown(et / EXIT_FADE, Math.floor(et * 30)))
+            ents.push([npcs[i][0], w[W_FACING], 0, fx, fy, 0, npcs[i][2]]);
+          continue;
+        }
         if (et >= 0 && et < EXIT_LAUGH) {
           const beat = Math.floor(et * 12);
           const lx = fx + (beat % 2 === 1 ? 1 : -1);
@@ -865,12 +1028,23 @@ export function WorldView({
       const now = fight.get();
       const all = now.enemies;
       const shadows: number[] = [];
+      // not out of the walls yet (a cutscene's cue brings them in)
+      const foesHidden = sim.hideFoes.get();
+      const kindHidden = sim.hideKind.get();
       for (let i = 0; i < all.length; i++) {
         const e = all[i];
-        if (e[E_ALIVE] === 0) continue;
-        const toward = facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
-        // The tell: a winding-up enemy blinks red and stands still.
-        const tell = e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
+        if (e[E_ALIVE] === 0 || foesHidden || e[E_KIND] === kindHidden) continue;
+        // the warden in Brannoc's swing is drawn by it (below), flying
+        if (sw.length > 0 && e[E_KIND] === WARDEN_KIND) continue;
+        // after the fight, in a cutscene pointing the camera somewhere (Brannoc beside the warden), they look there
+        const look = sim.focus.get();
+        const toward =
+          now.won && look.length === 2
+            ? facingFor(look[0] - e[E_X], look[1] + 8 - e[E_Y], DOWN)
+            : facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
+        // The tell: a winding-up enemy blinks red and stands still (not once the fight's over, or held for a talk:
+        // frozen mid-blink, they'd stay solid red).
+        const tell = !now.won && !frozen && e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
         const tint = (whites[i] ?? 0) > 0 ? 1 : tell ? 2 : 0;
         const stepping = e[E_AWAKE] === 1 && e[E_MODE] !== WINDUP && e[E_MODE] !== EXPOSED && e[E_STUN] === 0;
         ents.push([
@@ -886,6 +1060,10 @@ export function WorldView({
         if (e[E_MODE] === EXPOSED && ENEMY_KINDS[e[E_KIND]] === 'kaldor') shadows.push(e[E_X], e[E_Y]);
       }
       shadowAt.set(shadows);
+      if (sw.length > 0) {
+        const fl = wardenFlight(sw[SW_T] - SWING_STRIKE, sw[SW_WX], sw[SW_WY], sw[SW_HX], sw[SW_HY]);
+        if (fl[2] > 0) ents.push([wardenRow, fl[3], 0, fl[0], fl[1], 0, fl[2]]);
+      }
       for (let k = partyRows.length - 1; k >= 1; k--) {
         const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
         ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
@@ -893,17 +1071,37 @@ export function WorldView({
       // A march: everyone in it walks their path; you too, if you're in it.
       const march = sim.march.get();
       let leadWalking = false;
+      let marchLead: number[] | null = null;
+      const asleep: number[] = [];
+      let laughAt: number[] = [0, 0, -1];
       if (march.length > MARCH_HEAD) {
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
-        for (const [row, facing, frame, x, y, walking] of poses) {
+        // anyone who's gone in a puff at the end of their path (Kaldor's shadows)
+        const vanished = marchVanished(march, march[0], t);
+        if (vanished.length > 0) {
+          const dark = darkPuffs.get().slice();
+          for (let k = 0; k + 1 < vanished.length; k += 2) dark.push([vanished[k], vanished[k + 1], DARK_PUFF]);
+          darkPuffs.set(dark.slice(-8));
+        }
+        for (const [row, facing, frame, x, y, walking, snot, gone, laughing] of poses) {
+          if (gone === 1) continue;
+          if (laughing === 1 && laughAt[2] < 0) laughAt = [x, y, t];
+          if (row >= 0 && marchLead === null) marchLead = [x, y];
           // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
           if (row >= 0 && facing >= LYING) {
             ents.push([row, 0, 0, x, y + 0.5, 0, facing === LYING ? -1 : -2]);
+            if (snot === 1) asleep.push(x, y - (facing === LYING ? 0 : CARRIED), 1, 1);
             continue;
           }
           if (row >= 0) {
-            ents.push([row, facing, frame, x, y, 0, 1]);
+            // swinging: he leans back as he raises the blade, then lunges into the blow
+            const swingT = sw.length > 0 && sw[SW_RUN] !== 0 && row === sw[SW_ROW] ? sw[SW_T] : -1;
+            const lunge = swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
+            const lx = facing === 2 ? -lunge : facing === 3 ? lunge : 0;
+            const ly = facing === 1 ? -lunge : facing === 0 ? lunge : 0;
+            ents.push([row, facing, lunge !== 0 ? 1 : frame, x + lx, y + ly, 0, 1]);
+            if (snot === 1) asleep.push(x + lx, y + ly, 0, facing === 2 ? -1 : 1);
             continue;
           }
           if (walking === 1) sim.walked.set(sim.walked.get() + Math.hypot(x - sim.x.get(), y - sim.y.get()));
@@ -928,6 +1126,43 @@ export function WorldView({
           sim.march.set(next);
         }
       }
+      if (asleep.length > 0 || marchSleep.get().length > 0) marchSleep.set(asleep);
+      if (laughAt[2] >= 0 || marchLaugh.get()[2] >= 0) marchLaugh.set(laughAt);
+      // The camera follows the lead and stops at the map's edges (or centres a small map). In a cutscene it glides
+      // to what the scene points at (sim.focus): someone on the ground, the march's lead, a warden in flight.
+      const focus = sim.focus.get();
+      let fx = sim.x.get();
+      let fy = sim.y.get() - 12;
+      let glide = 4;
+      const flying = sw.length > 0 ? sw[SW_T] - SWING_STRIKE : -1;
+      if (flying >= 0 && flying < FLY_TIME + HOLE_HOLD) {
+        // after the warden, up to the banners (no higher: the hole's the thing), and a beat on it once he's gone
+        const fl = wardenFlight(Math.min(flying, FLY_TIME * 0.99), sw[SW_WX], sw[SW_WY], sw[SW_HX], sw[SW_HY]);
+        fx = fl[0];
+        fy = Math.max(fl[1] - 20, sw[SW_HY] + 10);
+        glide = 6;
+      } else if (focus.length === 1 && focus[0] === FOCUS_MARCH && marchLead !== null) {
+        fx = marchLead[0];
+        fy = marchLead[1] - 12;
+      } else if (focus.length === 2) {
+        fx = focus[0];
+        fy = focus[1];
+      }
+      const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(fx - viewW / 2, 0), mapW - viewW);
+      const cy = mapH <= viewH ? (mapH - viewH) / 2 : Math.min(Math.max(fy - viewH / 2, 0), mapH - viewH);
+      const cf = camF.get();
+      if (focus.length > 0 || sw.length > 0) {
+        const k = Math.min(1, realDt * glide);
+        const gx = cf[2] === 1 ? cf[0] + (cx - cf[0]) * k : camX.get() + (cx - camX.get()) * k;
+        const gy = cf[2] === 1 ? cf[1] + (cy - cf[1]) * k : camY.get() + (cy - camY.get()) * k;
+        camF.set([gx, gy, 1]);
+        camX.set(round(gx));
+        camY.set(round(gy));
+      } else {
+        if (cf[2] === 1) camF.set([cx, cy, 0]);
+        camX.set(round(cx));
+        camY.set(round(cy));
+      }
       // A field move: the lead sidesteps while the party member the job needs walks into their place.
       const cameo = sim.cameo.get();
       let asideX = 0;
@@ -942,9 +1177,10 @@ export function WorldView({
         if (pose[6] === 1) ents.push([cameo[0], cameo[7], pose[5], pose[3], pose[4], 0, 1]);
       }
       // the lead goes last so they're drawn on top of a follower standing in the same spot;
-      // just hurt, they blink until they can be hurt again; striking, they lean into the blow
-      const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
-      if (!blink) {
+      // just hurt, they blink until they can be hurt again; striking, they lean into the blow. (Not once the fight's
+      // won, or held for a scene: frozen mid-blink, they'd vanish for the whole of it.)
+      const blink = !frozen && !now.won && now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
+      if (!blink && !sim.hideLead.get()) {
         const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
         const f = sim.facing.get();
         const lx = f === 2 ? -lean : f === 3 ? lean : 0;
@@ -967,7 +1203,15 @@ export function WorldView({
         // size -1: flat on their back, head to the right, along the ground; -2: the same, held up off it
         const item =
           size < 0
-            ? [(facing * 3 + f) * FW, row * FH, round(x + FH / 2), round(y - FW + 2 - (size < -1 ? CARRIED : 0)), -1, 0, FH]
+            ? [
+                (facing * 3 + f) * FW,
+                row * FH,
+                round(x + FH / 2),
+                round(y - FW + 2 - (size < -1 ? CARRIED : 0)),
+                -1,
+                0,
+                FH,
+              ]
             : [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size, 0, FH];
         if (dip) {
           // breathing: the legs where they are, the head and shoulders a pixel lower over them
@@ -1005,6 +1249,71 @@ export function WorldView({
         const r = 3 + 11 * p;
         path.addRect(
           Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size),
+        );
+      }
+    }
+    return path;
+  });
+  // Banners in a wind: from the top of each pole a cloth lifts and streams out sideways, rippling, as long as it
+  // blows (sim.wind), and hangs again as it dies.
+  const streamers = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.wind.get();
+    if (w <= 0.02) return path;
+    const t = clock.get();
+    for (let i = 0; i < banners.length; i++) {
+      const { x, y } = banners[i];
+      // on from the flag's free edge (the painted flag hangs from x+5 to x+13, y+3 to y+14)
+      const px = x * TILE + BANNER_EDGE_X;
+      const py = y * TILE + BANNER_TOP_Y;
+      const len = Math.round(3 + 9 * w);
+      for (let k = 0; k < len; k++) {
+        const wave = Math.round(Math.sin(t * 9 - k * 0.8 + i) * (0.5 + w * 1.5));
+        // the cloth rises with the wind: from hanging down to straight out
+        const sag = Math.round((1 - w) * k * 0.8);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave, 1, Math.max(2, 10 - k)));
+      }
+    }
+    return path;
+  });
+  const streamerShade = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.wind.get();
+    if (w <= 0.02) return path;
+    const t = clock.get();
+    for (let i = 0; i < banners.length; i++) {
+      const { x, y } = banners[i];
+      const px = x * TILE + BANNER_EDGE_X;
+      const py = y * TILE + BANNER_TOP_Y;
+      const len = Math.round(3 + 9 * w);
+      // a fold along the bottom, and a darker hem
+      for (let k = 0; k < len; k++) {
+        const wave = Math.round(Math.sin(t * 9 - k * 0.8 + i) * (0.5 + w * 1.5));
+        const sag = Math.round((1 - w) * k * 0.8);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave + Math.max(2, 10 - k) - 1, 1, 1));
+        if (k % 3 === 1) path.addRect(Skia.XYWHRect(px + k, py + sag + wave + 2, 1, Math.max(1, 5 - k)));
+      }
+    }
+    return path;
+  });
+
+  // A shadow coming or going: a dark smoke, swelling and rising, blobs thinning as it spreads.
+  const darkPuffPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, t] of darkPuffs.get()) {
+      const p = 1 - t / DARK_PUFF;
+      const size = Math.max(1, Math.round(5 * (1 - p)));
+      if (p < 0.35) path.addRect(Skia.XYWHRect(Math.round(x - 5), Math.round(y - 16 + p * 10), 10, 14));
+      for (let k = 0; k < 12; k++) {
+        const a = (k * Math.PI) / 6 + (k % 2) * 0.3;
+        const r = (k % 2 === 0 ? 4 : 7) + 14 * p;
+        path.addRect(
+          Skia.XYWHRect(
+            Math.round(x + Math.cos(a) * r - size / 2),
+            Math.round(y - 10 - 8 * p + Math.sin(a) * r * 0.7 - size / 2),
+            size,
+            size,
+          ),
         );
       }
     }
@@ -1131,17 +1440,23 @@ export function WorldView({
   // A laugh's HA popping out over the head, then the dash's dust and speed streaks.
   const exitPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
-    const t = exitT.get();
-    if (t < 0) return path;
-    const [x, y, d] = exitAt.get();
-    if (t < EXIT_LAUGH) {
+    const ha = (x: number, y: number, t: number, loop: boolean) => {
       for (let k = 0; k < 3; k++) {
-        const age = t - k * 0.35;
+        const age = (loop ? t % 1.05 : t) - k * 0.35;
         if (age < 0 || age > 0.9) continue;
         const ox = Math.round(x + (k % 2 === 1 ? 6 : -10));
         const oy = Math.round(y - 30 - age * 10);
         for (let r = 0; r < HA.length; r++) path.addRect(Skia.XYWHRect(ox + HA[r][0], oy + HA[r][1], 1, 1));
       }
+    };
+    // someone in a march laughing while they wait to go (Felix, as the guards close in)
+    const ml = marchLaugh.get();
+    if (ml[2] >= 0) ha(ml[0], ml[1], ml[2], true);
+    const t = exitT.get();
+    if (t < 0 || exitFades) return path;
+    const [x, y, d] = exitAt.get();
+    if (t < EXIT_LAUGH) {
+      ha(x, y, t, false);
       return path;
     }
     // dust where they set off, for a moment
@@ -1166,33 +1481,153 @@ export function WorldView({
       const zs = sleepZs(t + i * 0.37, x, y);
       for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
     }
+    const walking = marchSleep.get();
+    for (let i = 0; i < walking.length; i += 4) {
+      const [x, y] = sleeperAt([walking[i], walking[i + 1]], walking[i + 2] === 1, 'zs');
+      const zs = sleepZs(t + i * 0.37, x, y);
+      for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
+    }
     return path;
   });
-  const bubblePath = useDerivedValue(() => {
-    const path = Skia.Path.Make();
+  // Snot bubbles (sleep.ts): the lying and the sleepwalking, each a fill, a darker rim, and a pixel of shine.
+  const bubbles = useDerivedValue(() => {
     const t = clock.get();
+    const out: { cells: number[][]; rim: number[][]; shine: number[] | null }[] = [];
     const walkers = sim.npcWalk.get();
     for (let i = 0; i < snorers.length; i++) {
       const w = walkers[snorers[i][0]];
       if (!w) continue;
       const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
-      const b = snotBubble(t + i * 0.5, x, y);
-      for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
+      out.push(snotBubble(t + i * 0.5, x, y, 1, snorers[i][1] === 1 ? LYING_BUBBLE : undefined));
     }
+    const walking = marchSleep.get();
+    for (let i = 0; i < walking.length; i += 4) {
+      const [x, y] = sleeperAt([walking[i], walking[i + 1]], walking[i + 2] === 1, 'snot');
+      out.push(snotBubble(t + i * 0.13, x, y, walking[i + 3], walking[i + 2] === 1 ? LYING_BUBBLE : undefined));
+    }
+    return out;
+  });
+  const bubblePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const b of bubbles.get())
+      for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
+    return path;
+  });
+  const rimPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const b of bubbles.get())
+      for (let k = 0; k < b.rim.length; k++) path.addRect(Skia.XYWHRect(b.rim[k][0], b.rim[k][1], 1, 1));
     return path;
   });
   const shinePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
-    const t = clock.get();
-    const walkers = sim.npcWalk.get();
-    for (let i = 0; i < snorers.length; i++) {
-      const w = walkers[snorers[i][0]];
-      if (!w) continue;
-      const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
-      const s = snotBubble(t + i * 0.5, x, y).shine;
-      if (s) path.addRect(Skia.XYWHRect(s[0], s[1], 1, 1));
+    for (const b of bubbles.get()) if (b.shine) path.addRect(Skia.XYWHRect(b.shine[0], b.shine[1], 1, 1));
+    return path;
+  });
+  // Brannoc's swing: his blade, raised back and swept over and down (bladeAt), its arc, and the star where it lands.
+  const bladePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0 || w[SW_RUN] === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const [a] = bladeAt(w[SW_T]);
+    const hx = w[SW_BX] + dir * 3;
+    const hy = w[SW_BY] - 11;
+    const c = Math.cos(a) * dir;
+    const sn = Math.sin(a);
+    // a broad blade from the hilt out: two pixels either side of its line
+    const len = 22;
+    const nx = -sn * 1.6;
+    const ny = c * 1.6;
+    path.moveTo(hx + c * 3 + nx, hy + sn * 3 + ny);
+    path.lineTo(hx + c * len + nx * 0.5, hy + sn * len + ny * 0.5);
+    path.lineTo(hx + c * (len + 3), hy + sn * (len + 3));
+    path.lineTo(hx + c * len - nx * 0.5, hy + sn * len - ny * 0.5);
+    path.lineTo(hx + c * 3 - nx, hy + sn * 3 - ny);
+    path.close();
+    return path;
+  });
+  const hiltPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0 || w[SW_RUN] === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const [a] = bladeAt(w[SW_T]);
+    const hx = w[SW_BX] + dir * 3;
+    const hy = w[SW_BY] - 11;
+    const c = Math.cos(a) * dir;
+    const sn = Math.sin(a);
+    path.addCircle(hx + c * 3, hy + sn * 3, 2);
+    return path;
+  });
+  const arcPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0 || w[SW_RUN] === 0) return path;
+    const [a, drawn] = bladeAt(w[SW_T]);
+    if (drawn <= 0) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const hx = w[SW_BX] + dir * 3;
+    const hy = w[SW_BY] - 11;
+    const r = 20;
+    const start = -2.4;
+    const steps = 18;
+    for (let k = 0; k <= steps; k++) {
+      const ang = start + ((a - start) * k) / steps;
+      const x = hx + Math.cos(ang) * r * dir;
+      const y = hy + Math.sin(ang) * r;
+      if (k === 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
     }
     return path;
+  });
+  const arcO = useDerivedValue(() => {
+    const w = sim.swing.get();
+    return w.length === 0 ? 0 : bladeAt(w[SW_T])[2];
+  });
+  // where the blade meets him: a star of white and gold bursting out, then gone
+  const impactPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0) return path;
+    const k = (w[SW_T] - SWING_STRIKE) / IMPACT_TIME;
+    if (k < 0 || k > 1) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const x = (w[SW_BX] + w[SW_WX]) / 2 + dir * 2;
+    const y = w[SW_BY] - 16;
+    const inner = 3 + 10 * k;
+    const outer = 8 + 16 * k;
+    for (let i = 0; i < 8; i++) {
+      const ang = (i * Math.PI) / 4 + 0.2;
+      const len = i % 2 === 0 ? outer : outer * 0.6;
+      path.moveTo(x + Math.cos(ang) * inner, y + Math.sin(ang) * inner);
+      path.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+    }
+    path.addCircle(x, y, Math.max(0, 5 * (1 - k * 1.5)));
+    return path;
+  });
+  const impactO = useDerivedValue(() => {
+    const w = sim.swing.get();
+    if (w.length === 0) return 0;
+    const k = (w[SW_T] - SWING_STRIKE) / IMPACT_TIME;
+    return k < 0 || k > 1 ? 0 : 1 - k * 0.7;
+  });
+  // the hole he punches in the banners, from the moment he goes through them (saved at the scene's end: `breach`)
+  const breachAt = useDerivedValue(() => {
+    const w = sim.swing.get();
+    return w.length > 0
+      ? [{ translateX: w[SW_HX] - BANNER_MID[0] }, { translateY: w[SW_HY] - BANNER_MID[1] }]
+      : [{ translateX: 0 }];
+  });
+  const breaching = useDerivedValue(() => {
+    const w = sim.swing.get();
+    return w.length > 0 && w[SW_T] >= SWING_STRIKE + FLY_TIME * BREACH_AT ? 1 : 0;
+  });
+  const whiteOut = useDerivedValue(() => {
+    const w = sim.swing.get();
+    if (w.length === 0) return 0;
+    const k = w[SW_T] - SWING_STRIKE;
+    return k < 0 || k > FLASH_TIME ? 0 : FLASH_PEAK * (1 - k / FLASH_TIME);
   });
   const cheering = useDerivedValue(() => (Math.floor(clock.get() * 2.5) % 2 === 0 ? 0 : 1));
   const motePath = useDerivedValue(() => {
@@ -1245,6 +1680,13 @@ export function WorldView({
         {cheerImage && (
           <Image image={cheerImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} opacity={cheering} />
         )}
+        {breach !== null ? (
+          <Breach x={breach[0]} y={breach[1]} />
+        ) : (
+          <Group transform={breachAt} opacity={breaching}>
+            <Breach x={0} y={0} />
+          </Group>
+        )}
         {patches.map((p) => (
           <Group key={`${p.x},${p.y}`}>
             <Rect x={p.x * TILE + 1} y={p.y * TILE + 1} width={TILE - 2} height={TILE - 1} color="#0C0908" />
@@ -1252,7 +1694,10 @@ export function WorldView({
             <Rect x={p.x * TILE + 10} y={p.y * TILE + TILE - 3} width={4} height={3} color="#5A524C" />
           </Group>
         ))}
-        {drawbridge && <Drawbridge {...drawbridge} />}
+        {drawbridge && mapImage && <Drawbridge {...drawbridge} />}
+        {raised.map((p) => (
+          <RaisedPlanks key={`r${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
         {boulders.map((_, i) => (
           <Boulder key={i} index={i} positions={rockPos} />
         ))}
@@ -1267,6 +1712,9 @@ export function WorldView({
         ))}
         {husks.map((p) => (
           <Husk key={`h${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
+        {paintings.map((p) => (
+          <Painting key={`p${p.scene}`} x={p.x * TILE} y={p.y * TILE} hung={p.hung} scene={p.scene} />
         ))}
         {flames.length > 0 && (
           <>
@@ -1328,10 +1776,21 @@ export function WorldView({
         {ambience.motes && (
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
+        <Path path={darkPuffPath} color="#160C20" opacity={0.85} />
+        {banners.length > 0 && <Path path={streamers} color="#B8322A" />}
+        {banners.length > 0 && <Path path={streamerShade} color="#7A1E1A" />}
+        {glow && <Glow glow={glow} glowing={sim.glowing} clock={clock} />}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         <Path path={zPath} color="#DCE8FF" opacity={0.85} />
-        <Path path={bubblePath} color="#B8E0C8" opacity={0.8} />
+        <Path path={rimPath} color="#4E9A6A" />
+        <Path path={bubblePath} color="#C4F2D4" opacity={0.9} />
         <Path path={shinePath} color="#FFFFFF" />
+        <Path path={arcPath} color="#FFE9A0" style="stroke" strokeWidth={7} strokeCap="round" opacity={arcO} />
+        <Path path={arcPath} color="#FFFFFF" style="stroke" strokeWidth={2.5} strokeCap="round" opacity={arcO} />
+        <Path path={bladePath} color="#E8ECF4" />
+        <Path path={bladePath} color="#4A4E58" style="stroke" strokeWidth={0.75} />
+        <Path path={hiltPath} color="#8A6A3A" />
+        <Path path={impactPath} color="#FFF4C0" style="stroke" strokeWidth={2.5} strokeCap="round" opacity={impactO} />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
@@ -1366,7 +1825,83 @@ export function WorldView({
         </Group>
       </Group>
       <Rect x={0} y={0} width={width} height={height} color="#000000" opacity={dim} />
+      <Rect x={0} y={0} width={width} height={height} color="#FFFFFF" opacity={whiteOut} />
     </Canvas>
+  );
+}
+
+/** The middle of the breach, from a banner pole's top (where the warden went through its cloth). */
+const BANNER_MID = [5, 6];
+/** The torn gap, around the cloth's middle: ragged, a little taller than wide, the dark of the night behind. */
+const BREACH_EDGE = [
+  [-9, -14],
+  [-4, -11],
+  [-1, -16],
+  [3, -12],
+  [8, -15],
+  [10, -8],
+  [13, -4],
+  [10, 1],
+  [12, 6],
+  [8, 9],
+  [6, 14],
+  [1, 11],
+  [-3, 15],
+  [-6, 10],
+  [-11, 11],
+  [-9, 5],
+  [-13, 0],
+  [-10, -5],
+];
+/** What's left of the banner: rags of red hanging off the pole and the edges, and gold thread. */
+const RAGS = [
+  [-5, -7, 2, 7],
+  [-4, 0, 2, 5],
+  [-5, 6, 1, 3],
+  [7, -9, 2, 4],
+  [8, 2, 2, 5],
+];
+const DEBRIS = [
+  [-14, 16, 2, 2],
+  [-6, 18, 2, 1],
+  [3, 19, 2, 2],
+  [11, 16, 3, 2],
+  [16, 9, 2, 2],
+  [-17, 8, 2, 2],
+];
+/**
+ * The hole the warden left going through a Kaloseum banner (swing.ts): the cloth torn open on the dark sky behind,
+ * rags of it hanging off the pole, the pole snapped, and bits of the stands knocked loose round it. (x, y): the
+ * banner pole's top.
+ */
+function Breach({ x, y }: { x: number; y: number }) {
+  const cx = x + BANNER_MID[0];
+  const cy = y + BANNER_MID[1];
+  const hole = useMemo(() => {
+    const p = Skia.Path.Make();
+    BREACH_EDGE.forEach(([dx, dy], i) => (i === 0 ? p.moveTo(cx + dx, cy + dy) : p.lineTo(cx + dx, cy + dy)));
+    p.close();
+    return p;
+  }, [cx, cy]);
+  return (
+    <Group>
+      <Path path={hole} color="#0E1428" />
+      <Path path={hole} color="#3A2618" style="stroke" strokeWidth={1.5} />
+      <Rect x={cx - 5} y={cy - 8} width={1} height={1} color="#F4EFD0" />
+      <Rect x={cx + 4} y={cy - 3} width={1} height={1} color="#F4EFD0" />
+      <Rect x={cx - 1} y={cy + 5} width={1} height={1} color="#C8C4E0" />
+      {/* the pole, snapped halfway, its top half hanging off at an angle */}
+      <Rect x={x} y={y + 9} width={1} height={9} color="#3A2618" />
+      <Group transform={[{ translateX: x }, { translateY: y + 9 }, { rotate: -0.7 }]}>
+        <Rect x={0} y={-9} width={1} height={9} color="#3A2618" />
+      </Group>
+      {RAGS.map(([dx, dy, w, h], i) => (
+        <Rect key={`r${i}`} x={cx + dx} y={cy + dy} width={w} height={h} color={i === 2 ? '#C8963A' : '#9A2A22'} />
+      ))}
+      {DEBRIS.map(([dx, dy, w, h], i) => (
+        <Rect key={`d${i}`} x={cx + dx} y={cy + dy} width={w} height={h} color={i % 2 ? '#9A2A22' : '#6A625C'} />
+      ))}
+    </Group>
   );
 }
 
@@ -1404,6 +1939,32 @@ function Boulder({ index, positions }: { index: number; positions: SharedValue<n
       <Oval x={1} y={2} width={13} height={11} color="#4A4440" />
       <Oval x={3} y={4} width={5} height={3} color="#625A54" />
     </Group>
+  );
+}
+
+/**
+ * Light out of the last seal as it loosens: a hairline crack of white down its middle, and a soft gold glow that
+ * breathes around it, as strong as `glowing` says.
+ */
+function Glow({
+  glow,
+  glowing,
+  clock,
+}: {
+  glow: { x: number; y: number; w: number; h: number };
+  glowing: SharedValue<number>;
+  clock: SharedValue<number>;
+}) {
+  const halo = useDerivedValue(() => glowing.get() * (0.35 + 0.1 * Math.sin(clock.get() * 3)));
+  const crack = useDerivedValue(() => Math.min(1, glowing.get() * 1.4));
+  const r = useDerivedValue(() => Math.max(glow.w, glow.h) * (0.6 + 0.25 * glowing.get()));
+  const cx = glow.x + glow.w / 2;
+  const cy = glow.y + glow.h / 2;
+  return (
+    <>
+      <Circle cx={cx} cy={cy} r={r} color="#FFE9A8" opacity={halo} />
+      <Rect x={Math.round(cx)} y={glow.y + 2} width={1} height={glow.h - 4} color="#FFFFFF" opacity={crack} />
+    </>
   );
 }
 
@@ -1543,6 +2104,33 @@ function Husk({ x, y }: { x: number; y: number }) {
   );
 }
 
+/** Each painting's colours, in story order: the window, the balcony, the old man, the field. */
+const SCENES = [
+  { sky: '#8AAAD0', ground: '#C8A878', mark: '#4A3020' },
+  { sky: '#C8963A', ground: '#8A3A2A', mark: '#ACA5A0' },
+  { sky: '#6A4428', ground: '#B8884A', mark: '#E8DCC0' },
+  { sky: '#C8D8F0', ground: '#5A8A4A', mark: '#8A8280' },
+];
+
+/**
+ * A painting in the Painters' School: lying on the floor, a little crooked, where it fell; or hung, straight,
+ * on its hook (over the clean square the art leaves on the wall).
+ */
+function Painting({ x, y, hung, scene }: { x: number; y: number; hung: boolean; scene: number }) {
+  const c = SCENES[scene % SCENES.length];
+  const [px, py] = hung ? [x + 2, y - 7] : [x + 1, y + 4];
+  return (
+    <Group>
+      {!hung && <Rect x={px + 1} y={py + 10} width={14} height={2} color="#10080A" opacity={0.4} />}
+      <Rect x={px} y={py} width={12} height={hung ? 12 : 10} color="#5A3A20" />
+      <Rect x={px + 1} y={py + 1} width={10} height={hung ? 6 : 5} color={c.sky} />
+      <Rect x={px + 1} y={py + (hung ? 7 : 6)} width={10} height={hung ? 4 : 3} color={c.ground} />
+      <Rect x={px + 5} y={py + 3} width={2} height={hung ? 6 : 5} color={c.mark} />
+      {hung && <Rect x={px + 5} y={py - 2} width={2} height={2} color="#2A1C12" />}
+    </Group>
+  );
+}
+
 function Chest({ x, y, open }: { x: number; y: number; open: boolean }) {
   return (
     <Group>
@@ -1582,6 +2170,20 @@ function Bars({ x, y }: { x: number; y: number }) {
 }
 
 /** A sign on a post: A reads it. */
+/** One tile of a bridge raised out of a river: planks laid across, still glinting wet. */
+function RaisedPlanks({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x} y={y} width={TILE} height={TILE} color="#5A3E28" />
+      {[0, 4, 8, 12].map((i) => (
+        <Rect key={i} x={x + i} y={y} width={1} height={TILE} color="#3A2818" />
+      ))}
+      <Rect x={x + 2} y={y + 5} width={3} height={1} color="#6E7A78" />
+      <Rect x={x + 9} y={y + 11} width={4} height={1} color="#6E7A78" />
+    </Group>
+  );
+}
+
 function Sign({ x, y }: { x: number; y: number }) {
   return (
     <Group>

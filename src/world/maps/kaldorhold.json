@@ -350,6 +350,240 @@
       "comesAfter": "oona-hatched",
       "sets": "oona-left",
       "goneAfter": "oona-left"
+    },
+    {
+      "type": "npc",
+      "id": "gaudry",
+      "x": 36,
+      "y": 6,
+      "sprite": "hoot",
+      "facing": "down",
+      "name": "Sir Gaudry Plume",
+      "lines": [
+        "Mind the robe. It's woven from the beards of defeated men. Fourteen beards. Very itchy. Very expensive.",
+        "My grandson's a champion. So I live here, by the Hall of Kaldor, where the roads are paved and the rain is warmer."
+      ],
+      "questions": [
+        {
+          "ask": "What's it like, being rich?",
+          "answer": [
+            "Exhausting. Every morning I must choose which of my eleven gold spoons to be disappointed in.",
+            "And everybody's trying to rob me. Yesterday the butler. Today the second butler. Strong lads. I may hire them back."
+          ]
+        },
+        {
+          "ask": "Warmer rain?",
+          "answer": [
+            "The king's quarter gets the good weather. I don't know how. I don't ask.",
+            "In the old town the rain's cold and sideways. That's what you get for weak children."
+          ]
+        },
+        {
+          "ask": "Your spoons can't fight for you.",
+          "answer": [
+            "Spoons can't, no. But I can buy a man who can, and he can buy a spoon.",
+            "* He tucks all eleven spoons into his robe, and watches you very carefully."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "vessant",
+      "x": 36,
+      "y": 8,
+      "sprite": "mott",
+      "facing": "up",
+      "name": "Old Vessant",
+      "lines": [
+        "Gaudry's spoons. Gaudry's beard robe. Gaudry, Gaudry, Gaudry.",
+        "I have a solid gold chair. Gold is very cold, and very hard, and very mine."
+      ],
+      "questions": [
+        {
+          "ask": "How did you get so rich?",
+          "answer": [
+            "Four sons. All champions. The king pays a champion's family like a small country.",
+            "The fifth went north, to the camp. We don't say his name. Well. I say it at night, sometimes, when nobody's listening.",
+            "…Don't tell Gaudry."
+          ]
+        },
+        {
+          "ask": "Who would rob you?",
+          "answer": [
+            "Everyone. This is Kaldorhold. Your neighbour waves at you in the morning, and by teatime he's measuring your door.",
+            "So I sleep in the chair. It's very hard to steal a gold chair while somebody's sitting on it."
+          ]
+        },
+        {
+          "ask": "Bit sad, sleeping in a gold chair.",
+          "answer": [
+            "SAD? It's GOLD.",
+            "* He sniffs. His teeth chatter, ever so slightly. Gold is very cold."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "primrose",
+      "x": 26,
+      "y": 6,
+      "sprite": "fliss",
+      "facing": "right",
+      "name": "Primrose Varley",
+      "lines": [
+        "Don't block my view. Champion Vorn's flexing. He does it at eleven every morning. I've been here since six.",
+        "Oh, you're nobody. Never mind. Stand there if you like. You're practically see-through."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why Vorn?",
+          "answer": [
+            "He came out of the culling games top of his year, and he still has both his ears.",
+            "Marry a champion, bear a champion, and they treat you like a goddess. Statues. Chairs carried about. People bow at your soup."
+          ]
+        },
+        {
+          "ask": "Is it love?",
+          "answer": [
+            "It's better than love. It's a plan.",
+            "Love doesn't come with a house by the king."
+          ]
+        },
+        {
+          "ask": "He hasn't noticed you once.",
+          "answer": [
+            "He noticed me on Thursday! He sneezed in my direction.",
+            "* She takes out a little handkerchief, which she has clearly kept since Thursday."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "vorn",
+      "x": 28,
+      "y": 6,
+      "sprite": "bellow",
+      "facing": "down",
+      "name": "Champion Vorn",
+      "lines": [
+        "* He flexes. Somewhere behind you, Primrose sighs.",
+        "The culling games, the year I turned eighteen. Eleven went in. I came out. That's maths."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What happened to the other ten?",
+          "answer": [
+            "Didn't make it. That's what the games are for, small one. Only the strongest go on.",
+            "Now I live by the king, and I'm to father as many children as I like. Strong ones. The kingdom needs them, the king says. I've nine."
+          ]
+        },
+        {
+          "ask": "What's next for a champion?",
+          "answer": [
+            "The march. The wizard kingdom. Any day now, the king says. We take it, like the island.",
+            "Five hundred of us took the island in one day. I wasn't born yet. I'm still cross about it."
+          ]
+        },
+        {
+          "ask": "Have you noticed Primrose?",
+          "answer": [
+            "Everyone watches me. Odessa, Brisa, a horse in Warrior City. It's a lot of watching.",
+            "…Who's Primrose?"
+          ]
+        },
+        {
+          "ask": "Nine children? Name them.",
+          "answer": [
+            "…Strong. Little Strong. Strong Two. Big Strong.",
+            "* He counts on his fingers, gets to five, and starts flexing instead."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "hulda",
+      "x": 12,
+      "y": 17,
+      "sprite": "skadi",
+      "facing": "up",
+      "name": "Dame Gisela",
+      "lines": [
+        "Kneel, if you like. Most people kneel. I've had three champions. The city's very grateful.",
+        "They built a statue of me. Then a bigger one. Then they ran out of marble and did my feet in gold."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What's it like, being treated like a goddess?",
+          "answer": [
+            "Lovely. People carry me about. I haven't walked since the second champion.",
+            "My legs have forgotten how. I don't mind. Somebody else's legs are always nearby."
+          ]
+        },
+        {
+          "ask": "What about your other children?",
+          "answer": [
+            "…I had three champions.",
+            "* She says it again, more firmly, as if the number might change if she doesn't."
+          ]
+        },
+        {
+          "ask": "You didn't do any of the fighting.",
+          "answer": [
+            "No. I did the being-born-from. Try it sometime. See which you prefer.",
+            "* She waves a hand, and somebody nearby fans her, very hard, in your direction."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "krag",
+      "x": 28,
+      "y": 16,
+      "sprite": "ogg",
+      "facing": "left",
+      "name": "Krag",
+      "lines": [
+        "* He's tied a rope round his arm and is pulling it tighter, to make the arm look bigger. His hand has gone purple.",
+        "Champions have big arms. I'll have big arms. Even if I lose the hand."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Shouldn't you loosen that?",
+          "answer": [
+            "Loosen? Loose is weak. Weak goes north.",
+            "…It's tingling. Tingling's strength leaving. Or arriving. One of those."
+          ]
+        },
+        {
+          "ask": "Why do you want to be a champion?",
+          "answer": [
+            "Kaldorhold's cutthroat. Everybody's out for everybody. My landlord pushed me down the stairs last week, to see if I'd bounce.",
+            "Champions don't get pushed down stairs. Champions own the stairs."
+          ]
+        },
+        {
+          "ask": "Your hand's going to fall off.",
+          "answer": [
+            "Then I'll have one very strong arm. That's still one more than most.",
+            "* He pulls the rope tighter, out of spite."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

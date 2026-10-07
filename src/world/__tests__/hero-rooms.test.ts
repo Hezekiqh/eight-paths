@@ -1,6 +1,7 @@
-import { DEFAULT_PARTY } from '@/story/companions';
+import { DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 
-import { ADVENTURE_ASK, NEXT_ASK, roomOwner, roomQuestions } from '../hero-rooms';
+import { ADVENTURE_ASK, BRANNOC_FLASHBACK, DREAM_ASK, NEXT_ASK, roomOwner, roomQuestions } from '../hero-rooms';
+import { shownQuestions } from '../menu';
 
 describe("a hero's room", () => {
   it('belongs to the hero in its name', () => {
@@ -20,8 +21,40 @@ describe("a hero's room", () => {
   });
 });
 
+describe('"What was your dream?" (author, Oct 7, 2026)', () => {
+  const dream = (id: CharacterId, flags: string[] = []) =>
+    roomQuestions(id, { places: 1, met: 1, flags }, 'Go somewhere').find((q) => q.ask === DREAM_ASK)!;
+
+  it('can be asked of every one of the core eight, and is never the mean one', () => {
+    for (const id of Object.values(DEFAULT_PARTY)) {
+      const qs = roomQuestions(id, { places: 1, met: 1, flags: [] }, 'Go somewhere');
+      expect([id, dream(id).deed]).toEqual([id, undefined]);
+      expect(qs.filter((q) => q.deed === 'bad')).toHaveLength(1);
+      // the menu still shows the mean one, and the dream comes up once you've asked something
+      expect(shownQuestions(qs, []).at(-1)?.deed).toBe('bad');
+      expect(shownQuestions(qs, [ADVENTURE_ASK]).map((q) => q.ask)).toContain(DREAM_ASK);
+    }
+  });
+
+  it('gives away a little, not much, before their arc', () => {
+    for (const id of Object.values(DEFAULT_PARTY)) expect([id, dream(id).answer.length <= 2]).toEqual([id, true]);
+    expect(dream('brannoc').answer.join(' ')).toMatch(/mystery/);
+  });
+
+  it("is Brannoc's whole dream once his arc has reached it", () => {
+    const told = dream('brannoc', [BRANNOC_FLASHBACK]).answer.join(' ');
+    expect(told).toMatch(/professor/i);
+    expect(told).toMatch(/grandchild/);
+    expect(told).toMatch(/advice/);
+    // the others keep theirs
+    expect(dream('quill', [BRANNOC_FLASHBACK]).answer).toEqual(dream('quill').answer);
+  });
+});
+
 describe('who is where', () => {
-  const { outToday, withRoster, pendingNews, saidFlag } = jest.requireActual('../hero-rooms') as typeof import('../hero-rooms');
+  const { outToday, withRoster, pendingNews, saidFlag } = jest.requireActual(
+    '../hero-rooms',
+  ) as typeof import('../hero-rooms');
   const { MAPS } = jest.requireActual('../maps') as typeof import('../maps');
 
   it('puts each hero in exactly one place each day: the hall or their room', () => {
@@ -34,7 +67,10 @@ describe('who is where', () => {
   });
 
   it('sends some of them out exploring, but not everyone every day', () => {
-    const out = Array.from({ length: 30 }, (_, i) => Object.values(DEFAULT_PARTY).filter((id) => outToday(id, 20000 + i)).length);
+    const out = Array.from(
+      { length: 30 },
+      (_, i) => Object.values(DEFAULT_PARTY).filter((id) => outToday(id, 20000 + i)).length,
+    );
     expect(Math.max(...out)).toBeLessThan(8);
     expect(out.reduce((a, b) => a + b, 0)).toBeGreaterThan(30);
   });

@@ -18,14 +18,16 @@ export const TRAVELER_DIRECTIONS: Record<string, string[]> = {
   'warrior-city': [
     "Ooh, where to start! West, back through Felix's boulders, is the Courier Road: the Waystation, and Millbrook past it.",
     "South, the South Road: the Royal Garden, and the Old Mine. Somebody's waiting down there, I hear.",
-    "North, the road to the deserters' camp and the old fort in the hill. The gate won't open till you're overall Lv 10.",
+    'Past the garden, a forest nobody goes into. I went into it. I came straight back out. Twice.',
+    "North, the Cull Road, down to the deserters' camp and the old fort in the hill. The gate won't open till you're overall Lv 10.",
+    'Tithe-takers on that road, mind. And the bridge at the bottom is in the river. Bring something heavy. Or be something heavy.',
     "Past the fort, the king's checkpoints, and past those, the Berserker Kingdom. That's where it all happens.",
     "East is the bridge to the Mage Kingdom. They're still building it. Don't hold your breath. I did. Very bad idea.",
   ],
   'deserters-camp': [
     "Into the fort in the hill! It's the old Buried Barracks. Ghosts, but polite ones. Mostly.",
     "Out the far side is the March Road, and the king's checkpoint. Pay them, or tell them a good story.",
-    "Then the Berserker Kingdom itself. And back west, Warrior City, if you're homesick.",
+    "Then the Berserker Kingdom itself. And back down the Cull Road, Warrior City, if you're homesick.",
   ],
   'kingdom-town': [
     'This is the Berserker Kingdom! North, up the castle road, is Kaldor himself, on the throne.',

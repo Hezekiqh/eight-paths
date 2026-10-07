@@ -9,7 +9,6 @@
   ],
   "art": {
     "1": "E",
-    "2": "N",
     "4": "E",
     "5": "f",
     "6": "B",
@@ -17,7 +16,10 @@
     "8": "f",
     "9": "R",
     "0": "A",
-    "%": "."
+    "%": ".",
+    "H": "N",
+    "2": "E",
+    "3": "E"
   },
   "spawn": {
     "x": 12,
@@ -32,7 +34,7 @@
   "tiles": [
     "##########################",
     "#WW5W6W7WBfc44cfBW8W9W0WW#",
-    "#W..........==..........2#",
+    "#W..........==..........H#",
     "#W..........==..........W#",
     "#WZ......I..==..I......AW#",
     "#W..........==..........W#",
@@ -45,7 +47,7 @@
     "#W..........==.........AW#",
     "#W.......I..==..I.......W#",
     "#W...Z......==......Z...W#",
-    "#WWWWWWWWWWW11WWWWWWWWWWW#",
+    "#WWWWW3WWWWW11WWWWW2WWWWW#",
     "##########################"
   ],
   "examine": {
@@ -107,6 +109,12 @@
       "The winding stair: a round stone well of steps, turning up and up into the dark around a single black post. Somewhere above, people are laughing."
     ],
     "2": [
+      "A doorway. Through it: clattering, shouting, and a smell of porridge. So that's where everyone is."
+    ],
+    "3": [
+      "Steps going down, into the cold. Down there, something is standing very still. A lot of somethings."
+    ],
+    "H": [
       "A heavy door, shut. Behind it, low voices, and the scrape of something being pushed across a table."
     ]
   },

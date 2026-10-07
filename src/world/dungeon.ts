@@ -1,4 +1,4 @@
-import type { Actor } from './march';
+import { GONE, type Actor } from './march';
 import type { Arrival, Requirement } from './progress';
 
 // The Kingdom Dungeon (author, Oct 3, 2026), under the Kaloseum: thrown in by Felix's guards,
@@ -79,33 +79,52 @@ export const ESCORT_LINES = {
     'GUARD: Plotting to overtake the throne, huh? Five life sentences will teach you.',
     "GUARD: Barnaby's sentence, by order of the king. In you go.",
   ],
-  // after the door slams and the guards have gone
+  // the cell door, shut on you as the guards step back
+  clang: ['CLANG.'],
+  // the guards gone and the stair door locked: a look round
   cell: [
-    'CLANG.',
     'Stone walls. Iron bars. Straw that smells of other people.',
     'In the corner, someone is trying very hard to look like part of the wall.',
   ],
   // walking as Brannoc himself: nobody in the corner but you
-  alone: ['CLANG.', 'Stone walls. Iron bars. Straw that smells of other people.'],
+  alone: ['Stone walls. Iron bars. Straw that smells of other people.'],
   // the guards gone back up the stair: they lock the door behind them
   locked: ['Up the stair, the door slams. A key turns in the lock.'],
 };
 
-/** Brannoc, out of the corner: past you, through the bars, along the corridor and up the ladder. */
-export const brannocBolts = (brannoc: number): Actor[] => [
-  {
-    row: brannoc,
-    path: [
-      [2, 4],
-      [5, 4],
-      [5, 5],
-      [5, 6],
-      [20, 6],
-      [20, 8],
-    ],
-  },
-  { row: -1, path: [[6, 4]], face: 2 },
-];
+/**
+ * Brannoc, out of the corner: through the bars, along the corridor and up the ladder. He goes round you (along the
+ * back of the cell if you're on the front row, or the front if you're at the back), and if you're standing in the
+ * gap at the bars, you step aside for him. `you`: your tile.
+ */
+export const brannocBolts = (brannoc: number, you: [number, number] = [6, 4]): Actor[] => {
+  const [x, y] = you;
+  // across the cell on whichever row you're not on, then down to the bars (5, 5)
+  const row = y === 3 ? 4 : 3;
+  const run: [number, number][] = [
+    [2, 4],
+    ...(row === 3 ? ([[2, 3]] as [number, number][]) : []),
+    [5, row],
+    ...(row === 3 ? ([[5, 4]] as [number, number][]) : []),
+    [5, 5],
+    [5, 6],
+    [20, 6],
+    [20, 8],
+    [21, 8],
+  ];
+  // in his way at the bars: a step to the side, into the cell's far corner of that row
+  const inWay = x === 5 && (y === 3 || y === 4);
+  const step: [number, number][] = inWay
+    ? [
+        [x, y],
+        [6, y],
+      ]
+    : [[x, y]];
+  return [
+    { row: brannoc, path: run, face: GONE },
+    { row: -1, path: step, face: inWay ? 2 : x < 5 ? 3 : 2 },
+  ];
+};
 
 /** Gary, at his table, as Brannoc goes by. */
 export const GARY_STARTLED = [
@@ -135,11 +154,12 @@ export const BRANNOC_JOINED = 'brannoc-joined';
 /** Where you meet Brannoc and he can join you (said yes to): the cell, the Kaloseum sand, his cell again. */
 export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 
-/** Where Brannoc lies, fainted, just off the ladder; and where he walks to swing. */
+/** What the camera looks at when Barnaby speaks: his box, at the top of the stands, with a little of the sand. */
+export const BARNABY_BOX = [15 * 16 + 8, 6 * 16];
+/** Where Brannoc lies, fainted, just off the ladder. */
 // (the Kaloseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
 // and Brannoc is three tiles on, room enough to faint without landing on you)
 export const BRANNOC_FAINTED: [number, number] = [11, 14];
-const UNDER_WARDEN: [number, number] = [15, 10];
 /** The middle of the sand, on the way from the trapdoor to the gate. */
 export const SAND_MIDDLE: [number, number] = [15, 14];
 const TRAPDOOR: [number, number] = [7, 14];
@@ -288,22 +308,14 @@ export const PRISON_GUARDS_DOWN = [
   'Then the floor shakes. Something very big is walking up the tunnel.',
 ];
 
-/** Twenty strikes in: the warden yawns, raises his club, and Brannoc gets up. */
+/** Twenty strikes in: Bertrand has had enough, and Brannoc gets up, asleep. */
 export const SNOT_SWING = [
   'Twenty strikes.',
   'BERTRAND: That is enough. It is time I put an end to this.',
   "Behind you, Brannoc stands up. He's still asleep.",
 ];
-/** Brannoc walks to the warden, asleep, then swings (from the side of the sand, if the three carried him there). */
-export const brannocSleepwalks = (brannoc: number, carried = false): Actor[] => [
-  {
-    row: brannoc,
-    path: carried
-      ? [CARRIED_TO.brannoc, [CARRIED_TO.brannoc[0], 15], [SAND_MIDDLE[0], 15], SAND_MIDDLE, UNDER_WARDEN]
-      : [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN],
-    face: 1,
-  },
-];
+// Brannoc's sleepwalk to the warden, the swing and the flight are in swing.ts (they follow the warden, wherever
+// the fight left him).
 
 // ---- Carried off (author, Oct 7, 2026, as in Episode 13): Brannoc faints, and once the three have made their
 // excuses they rush over, pick him up (Old Mott at his feet, Nails at his head, Silas Seen leading the way), and
@@ -324,26 +336,54 @@ export const CARRIED_TO: Record<'mott' | 'brannoc' | 'nails' | 'silas', [number,
 type Carriers = { mott: number; nails: number; silas: number; brannoc: number };
 /** The rush: round you and over to him (Old Mott below, Nails up and over, Silas ahead), Brannoc out cold. */
 export const arenaRush = (r: Carriers): Actor[] => [
-  { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4 },
-  { row: r.mott, path: [[6, 12], [10, 12], [10, 14]], face: 3 },
-  { row: r.nails, path: [[7, 12], [7, 11], [12, 11], [12, 14]], face: 2 },
-  { row: r.silas, path: [[8, 12], [13, 12], [13, 13]], face: 3 },
+  { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4, snot: true },
+  {
+    row: r.mott,
+    path: [
+      [6, 12],
+      [10, 12],
+      [10, 14],
+    ],
+    face: 3,
+  },
+  {
+    row: r.nails,
+    path: [
+      [7, 12],
+      [7, 11],
+      [12, 11],
+      [12, 14],
+    ],
+    face: 2,
+  },
+  {
+    row: r.silas,
+    path: [
+      [8, 12],
+      [13, 12],
+      [13, 13],
+    ],
+    face: 3,
+  },
 ];
 /** ...and off they go with him, held up between them, to the side of the sand. */
 export const arenaCarry = (r: Carriers): Actor[] => [
   { row: r.mott, path: [[10, 14], CARRIED_TO.mott], face: 3 },
-  { row: r.brannoc, path: [BRANNOC_FAINTED, CARRIED_TO.brannoc], face: 5 },
+  { row: r.brannoc, path: [BRANNOC_FAINTED, CARRIED_TO.brannoc], face: 5, snot: true },
   { row: r.nails, path: [[12, 14], CARRIED_TO.nails], face: 2 },
   { row: r.silas, path: [[13, 13], CARRIED_TO.silas], face: 2 },
 ];
+// Bertrand goes over the banners, not through the wall (STORY.md: he lands on the bakery, and the swing kills him);
+// the hole he leaves is drawn in the banner he went through (swing.ts, world-view Breach).
 export const SNOT_SWING_HIT = [
+  'His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
   'BRANNOC SUPER SUPER SWING!',
-  'The Warden goes straight through the side of the Kaloseum.',
+  'Bertrand goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
 ];
 
 /**
  * The end of the warden fight (author, Oct 4, 2026), if you freed the prisoners: they get up, yell
- * FREEDOM, and run out through the hole Brannoc's swing made (they're at the Warrior City tavern after).
+ * FREEDOM, and run out through the hole Brannoc's swing made in the banners (they're at the Warrior City tavern after).
  */
 export const PARDONED = 'prisoners-pardoned';
 
@@ -364,9 +404,14 @@ export const FREED_ENDING = [
   'NAILS: FREEDOM!',
   'OLD MOTT: FREEDOM!',
   'SILAS: FREEDOM!',
-  'They run out through the hole in the wall.',
+  'They scramble up the stands, and out through the hole in the banners.',
 ];
 
+/** The line the swing lands on (world.tsx plays it with the blow). */
+export const SWING_LINE = SNOT_SWING_HIT.indexOf('BRANNOC SUPER SUPER SWING!');
+
+/** The snot bubble's popped: he's awake (the-pit.json's brannoc-awake dozes until then). */
+export const BRANNOC_BLINKED = 'brannoc-blinked';
 /** Brannoc wakes: will you pair up? */
 export const BRANNOC_OFFER = [
   'Brannoc wakes up.',
@@ -398,10 +443,39 @@ export const BRANNOC_NO = [
   'BRANNOC: No, I understand. Who would want a knight who faints.',
   'He shuffles off, very slowly, the way you came.',
 ];
-/** Back to the ladder, very slowly. */
-export const brannocShuffles = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [UNDER_WARDEN, SAND_MIDDLE, [8, 14], TRAPDOOR] },
-];
+/** Where Brannoc wakes after his swing (the-pit.json's brannoc-awake). */
+const BRANNOC_WAKES: [number, number] = [15, 10];
+/**
+ * Back to the ladder, very slowly: down to the bottom of the sand and along it to the trapdoor, round you if you're
+ * in the way (a row or a column over). `you`: your tile; `free`: whether a tile can be walked.
+ */
+export const brannocShuffles = (
+  brannoc: number,
+  you: [number, number] = [-1, -1],
+  free: (x: number, y: number) => boolean = () => true,
+): Actor[] => {
+  const [wx, wy] = BRANNOC_WAKES;
+  const routes: [number, number][][] = [];
+  for (const row of [14, 13, 12, 11])
+    for (const col of [wx, wx + 1, wx - 1, wx + 2])
+      routes.push([BRANNOC_WAKES, [col, wy], [col, row], [8, row], [8, 14], TRAPDOOR]);
+  const crosses = (path: [number, number][]) =>
+    path.some((p, i) => {
+      if (i === 0) return false;
+      const [ax, ay] = path[i - 1];
+      const [bx, by] = p;
+      for (let k = 0; k <= Math.abs(bx - ax) + Math.abs(by - ay); k++) {
+        const x = ax + Math.sign(bx - ax) * k;
+        const y = ay + Math.sign(by - ay) * k;
+        if ((x === you[0] && y === you[1]) || (!free(x, y) && !(x === TRAPDOOR[0] && y === TRAPDOOR[1]))) return true;
+      }
+      return false;
+    });
+  const path = routes.find((p) => !crosses(p)) ?? routes[0];
+  // drop the steps that go nowhere (a column over of zero, a row down of zero)
+  const steps = path.filter((p, i) => i === 0 || p[0] !== path[i - 1][0] || p[1] !== path[i - 1][1]);
+  return [{ row: brannoc, path: steps, face: GONE }];
+};
 
 /** Walking as Brannoc: the warden drops in, and you faint at the sight of him. `freed`: the three are watching. */
 export const aloneWarden = (freed: boolean) => {
@@ -594,7 +668,32 @@ export const POTHOLE_UNSEEN = ['THUD.', 'Nobody saw that. There is nobody left d
 /** The cells are empty and Gary's gone: set once the prisoners' exit has been read (kingdom-dungeon.json). */
 export const CELLS_FREED = 'cells-freed';
 
-/** With Gary's keys, straight along the cells: out past him, every door in turn, ending clear of the corridor. */
+/** The three cell doors Gary's keys open (tile p), left to right: Old Mott's, Nails's, Silas Seen's. */
+export const CELL_DOORS = [
+  { x: 10, y: 5 },
+  { x: 14, y: 5 },
+  { x: 18, y: 5 },
+];
+/** The ladder up out of the cells (tile 1). */
+const CELLS_LADDER: [number, number] = [21, 8];
+/**
+ * Out of their cells and up the ladder, confessing at the tops of their voices: Silas Seen first (he's nearest),
+ * then Nails, then Old Mott, along the top of the corridor (clear of you, below Silas's door) and gone.
+ */
+export const prisonersLeave = (r: { mott: number; nails: number; silas: number }): Actor[] =>
+  (
+    [
+      [r.silas, 18],
+      [r.nails, 14],
+      [r.mott, 10],
+    ] as [number, number][]
+  ).map(([row, x]) => ({
+    row,
+    path: [[x, 4], [x, 6], [20, 6], [20, 8], CELLS_LADDER],
+    face: GONE,
+  }));
+
+/** With Gary's keys, straight along the cells: out past him, every door in turn, ending clear of the way to the ladder. */
 export const toTheCells = (x: number, y: number): Actor[] => {
   // directly above or below Gary, step aside first rather than walk through him
   const side = x === 3 ? 4 : x;
@@ -608,7 +707,7 @@ export const toTheCells = (x: number, y: number): Actor[] => {
         [10, 6],
         [14, 6],
         [18, 6],
-        [18, 7],
+        [18, 8],
       ],
       face: 1,
     },

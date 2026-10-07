@@ -136,6 +136,7 @@ export function fight(id: MapId, path: Dimension, level: number, won: string[] =
 }
 
 const FIGHTS: MapId[] = [
+  'cull-road',
   'barracks-hall',
   'barracks-armoury',
   'barracks-yard',
@@ -144,6 +145,7 @@ const FIGHTS: MapId[] = [
   'the-pit',
   'kaldorium-maximus',
   'war-hall',
+  'graveyard',
 ];
 
 describe('fights', () => {

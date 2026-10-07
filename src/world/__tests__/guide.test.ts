@@ -18,7 +18,7 @@ const strong = (flags: string[]): XpTotals => {
 };
 
 const ALL = Object.keys(MAPS) as MapId[];
-const UP_TO_TOWN = ['hall-portcullis', 'yard-plates', 'plush-won', 'checkpoint'];
+const UP_TO_TOWN = ['cull-ferry', 'hall-portcullis', 'yard-plates', 'plush-won', 'checkpoint'];
 
 describe('the next goal', () => {
   it('points a new player at the Archive door', () => {
@@ -39,9 +39,21 @@ describe('the next goal', () => {
   });
 
   it('leads to the winch through the right hole when it is in another room', () => {
-    const goal = nextGoal('barracks-hall', ALL, strong([]));
+    // past the Cull Road's ferry-bridge, which comes first
+    const goal = nextGoal('barracks-hall', ALL, strong(['cull-ferry']));
     expect(goal.mark?.exitId).toBe('hall-armoury');
-    expect(nextGoal('barracks-armoury', ALL, strong([])).mark).toMatchObject({ tag: 'The winch lever' });
+    expect(nextGoal('barracks-armoury', ALL, strong(['cull-ferry'])).mark).toMatchObject({ tag: 'The winch lever' });
+  });
+
+  it("asks for the Cull Road's ferry-bridge before the fort, and marks the plates", () => {
+    const flags = strong([]);
+    expect(nextGoal('cull-road', ALL.filter((m) => m !== 'deserters-camp'), flags)).toMatchObject({
+      mark: { tag: 'The pressure plates' },
+      line: 'Raise the ferry-bridge',
+    });
+    expect(nextGoal('cull-road', ALL.filter((m) => m !== 'deserters-camp'), strong(['cull-ferry'])).mark?.exitId).toBe(
+      'cull-camp',
+    );
   });
 
   it('says Season 1 is done at the end', () => {

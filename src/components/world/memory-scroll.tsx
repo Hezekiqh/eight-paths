@@ -3,8 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Roll } from '@/components/world/lore-scroll';
 import { haptics } from '@/haptics';
+import { COMPANIONS } from '@/story/companions';
 import { FRAME, colors, fonts, spacing } from '@/theme';
-import { MEMORIES, PER_SEASON, SEASONS, type Memory } from '@/world/memories';
+import { MEMORIES, PER_SEASON, SEASONS, ownMemories, seasonMemories, type Memory } from '@/world/memories';
 import { requirementLabel } from '@/world/progress';
 import { useWorldProgress } from '@/world/use-progress';
 
@@ -16,7 +17,9 @@ import { useWorldProgress } from '@/world/use-progress';
 export function MemoryScroll({ seen }: { seen: string[] }) {
   const [open, setOpen] = useState(false);
   const xp = useWorldProgress();
-  const found = MEMORIES.filter((m) => seen.includes(m.id)).length;
+  const found = MEMORIES.filter((m) => !m.whose && seen.includes(m.id)).length;
+  // someone's own (Brannoc's): listed only once seen, never hinted at before
+  const theirs = ownMemories().filter((m) => seen.includes(m.id));
   return (
     <View>
       <Pressable
@@ -46,7 +49,7 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
             </Text>
             {Array.from({ length: SEASONS * PER_SEASON }, (_, i) => {
               const season = Math.floor(i / PER_SEASON) + 1;
-              const memory = MEMORIES.filter((m) => m.season === season)[i % PER_SEASON];
+              const memory = seasonMemories(season)[i % PER_SEASON];
               if (memory && seen.includes(memory.id)) return <Remembered key={i} memory={memory} />;
               return (
                 <View key={i} style={styles.entry}>
@@ -59,6 +62,9 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
                 </View>
               );
             })}
+            {theirs.map((m) => (
+              <Remembered key={m.id} memory={m} />
+            ))}
           </View>
           <Roll small />
         </>
@@ -71,7 +77,9 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
 function Remembered({ memory }: { memory: Memory }) {
   return (
     <View style={styles.entry}>
-      <Text style={styles.title}>{memory.title}</Text>
+      <Text style={styles.title}>
+        {memory.whose ? `${COMPANIONS[memory.whose].name}'s: ${memory.title}` : memory.title}
+      </Text>
       {memory.lines.map((line, i) => {
         const speech = /^([A-Z][A-Z' ]+): (.*)$/.exec(line);
         return speech ? (

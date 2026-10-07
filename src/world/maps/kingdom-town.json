@@ -936,6 +936,324 @@
         "Oh! Hello, hello! Lovely day for it."
       ],
       "goneAfter": "kaldor-beaten"
+    },
+    {
+      "type": "npc",
+      "id": "gall",
+      "x": 24,
+      "y": 6,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Watch-Sergeant Gall",
+      "lines": [
+        "Round the square. Round the square. Round the square.",
+        "Everybody in this town wants to stab everybody. I'm here to make sure they do it fairly."
+      ],
+      "patrol": [
+        [
+          21,
+          6
+        ],
+        [
+          37,
+          6
+        ],
+        [
+          37,
+          17
+        ],
+        [
+          21,
+          17
+        ]
+      ],
+      "questions": [
+        {
+          "ask": "What are you guarding against?",
+          "answer": [
+            "Everyone. Mostly each other.",
+            "Last week a baker hit a smith with a loaf. The smith was stronger. It was very sad for the loaf."
+          ]
+        },
+        {
+          "ask": "Do you ever stop?",
+          "answer": [
+            "At corners. Briefly. For effect.",
+            "Twenty-two laps a day. My feet are the strongest thing about me. The king's very pleased with my feet."
+          ]
+        },
+        {
+          "ask": "Walking in circles. Very brave.",
+          "answer": [
+            "Squares. I walk in squares.",
+            "* He marches off, a touch faster than regulation."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "grell",
+      "x": 11,
+      "y": 12,
+      "sprite": "gorm",
+      "facing": "right",
+      "name": "Grell",
+      "lines": [
+        "You. Fight me.",
+        "No? Your friend, then. The tall one. Anyone. I'm not fussy. I'm getting stronger."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why do you want to fight everyone?",
+          "answer": [
+            "The strong live near the king. The weak get sent up north, to the camp.",
+            "I've seen the camp. I'd rather see the king."
+          ]
+        },
+        {
+          "ask": "Who have you fought today?",
+          "answer": [
+            "A cart. Two brothers. A man I thought was a cart.",
+            "Won all four. The cart put up the best fight."
+          ]
+        },
+        {
+          "ask": "How about we don't fight?",
+          "answer": [
+            "…Nobody's ever said that to me.",
+            "I don't know what to do with my hands now."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "I'd fight you, but I'd hate to see you cry.",
+          "answer": [
+            "I DON'T CRY. I leak with RAGE.",
+            "* Grell sniffs. Ferociously."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "ulm",
+      "x": 13,
+      "y": 14,
+      "sprite": "ox",
+      "facing": "right",
+      "name": "Ulm",
+      "lines": [
+        "See this scar? Kaloseum. Man with a trident. Year of the big flood.",
+        "RAGNA: Pfft. See THIS one? Bear. Bare hands. His hands too."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who's winning?",
+          "answer": [
+            "Me. Forty-one scars.",
+            "RAGNA: Forty-one and a half.",
+            "That half's a paper cut. It doesn't count.",
+            "RAGNA: It was a very angry piece of paper."
+          ]
+        },
+        {
+          "ask": "What's your best scar?",
+          "answer": [
+            "Can't show you. It's on my pride.",
+            "Lost to a twelve-year-old at the Yard. They get stronger every year. It's horrible. It's wonderful."
+          ]
+        },
+        {
+          "ask": "Those look like you fell off a ladder.",
+          "answer": [
+            "…I did fall off a ladder.",
+            "But I fell off it AGGRESSIVELY."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "ragna",
+      "x": 14,
+      "y": 14,
+      "sprite": "hagga",
+      "facing": "left",
+      "name": "Ragna",
+      "lines": [
+        "Ulm thinks his scars are better than mine. Ulm thinks a lot of things. Ulm is wrong about all of them."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "How did you get so many scars?",
+          "answer": [
+            "Taken at twelve, like everyone. Trained day and night. Night's when you get the good ones.",
+            "You can't see what's hitting you. Builds character. And scars. Mostly scars."
+          ]
+        },
+        {
+          "ask": "Do you want to be a champion?",
+          "answer": [
+            "Everyone does. Champions live by the king. Fresh bread. Real beds. Doors that lock.",
+            "Here, doors are more of a suggestion. Somebody stole mine last Tuesday."
+          ]
+        },
+        {
+          "ask": "Your scars are nothing special.",
+          "answer": [
+            "Nothing special? This one was a WOLF.",
+            "ULM: It was a dog.",
+            "It was a VERY BIG dog, Ulm."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "thole",
+      "x": 17,
+      "y": 15,
+      "sprite": "grub",
+      "facing": "down",
+      "name": "Thole",
+      "lines": [
+        "* He's measuring his arm with a bit of string. He ties a knot. He frowns. He ties it again, further along.",
+        "Fourteen inches. Yesterday, fourteen inches. Tomorrow it'll be fourteen inches and a knot."
+      ],
+      "wander": 1,
+      "questions": [
+        {
+          "ask": "What's the string for?",
+          "answer": [
+            "My bicep. The biggest arms in town get noticed. Noticed gets your family a house by the king.",
+            "Kaldorhold, over the east wall. Roofs that don't leak. Bread with taste in it. I've heard."
+          ]
+        },
+        {
+          "ask": "Have you tried eating more?",
+          "answer": [
+            "Eating what? Kaldorbread? You can't get strong on Kaldorbread.",
+            "You can only get… quieter."
+          ]
+        },
+        {
+          "ask": "I've seen bigger arms on a chair.",
+          "answer": [
+            "A chair? Which chair?",
+            "* He measures the nearest chair leg he can think of. He goes very quiet."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "ennet",
+      "x": 28,
+      "y": 5,
+      "sprite": "hekla",
+      "facing": "down",
+      "name": "Mother Ennet",
+      "lines": [
+        "Going travelling, love? Stay on the roads. Stay out of the woods.",
+        "And keep away from the old graves. Some places in this kingdom aren't right. I'm not saying what. I'm saying keep away."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What kind of supernatural?",
+          "answer": [
+            "Lights, round the old graves by the chapel. Little ones, bobbing about where nobody's carrying a lantern.",
+            "Figures between the stones, standing too still. They're gone when you look properly. So don't look properly.",
+            "And three graves found open. Not dug up: dug out. The earth thrown upwards, from the inside.",
+            "…Folk say. I never saw it. I never want to."
+          ]
+        },
+        {
+          "ask": "Which woods?",
+          "answer": [
+            "The Royal Forest. South of Warrior City, past the old Royal Garden.",
+            "My cousin's lad went in after a goat. Came out without it. Said he heard a boy crying, deep in, where nobody lives.",
+            "He went back with a lantern. Nobody there. Not even the goat."
+          ]
+        },
+        {
+          "ask": "Is any of it true?",
+          "answer": [
+            "I don't know. That's the bit that keeps me up.",
+            "The graves could be badgers. The lights could be marsh gas. The crying could be the wind.",
+            "It's a very sad wind, if it is."
+          ]
+        },
+        {
+          "ask": "I'll be careful. Thank you.",
+          "answer": [
+            "Good. Somebody ought to be. Nobody here's careful. They're all too busy being strong."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "Ghosts? Grow up.",
+          "answer": [
+            "I'm seventy-three, love. I've grown up as far as I'm going.",
+            "Go on, then. Go and have a look. Do let me know, if you come back."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "tam",
+      "x": 3,
+      "y": 15,
+      "sprite": "kids",
+      "facing": "right",
+      "name": "Tam",
+      "lines": [
+        "I'm twelve today! They're coming for me at noon. The Yard!",
+        "Mum's been crying since breakfast. Happy crying, I think. It's hard to tell with Mum."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What happens at the Yard?",
+          "answer": [
+            "You train. Day and night. Then you train some more, in case you missed any.",
+            "If you come out strong, your whole family gets a house by the king. Mum would get a door that shuts."
+          ]
+        },
+        {
+          "ask": "And if you're not strong enough?",
+          "answer": [
+            "…Then you go north. To the camp.",
+            "Nobody writes from the camp. I asked. Mum said, 'Eat your bread.'"
+          ]
+        },
+        {
+          "ask": "You'll do brilliantly.",
+          "answer": [
+            "I know! I've been doing press-ups since I was nine. Twelve of them. Not in a row."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "They'll eat you alive, kid.",
+          "answer": [
+            "They don't EAT you. Do they?",
+            "…I'm going to ask Mum."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ],
   "art": {

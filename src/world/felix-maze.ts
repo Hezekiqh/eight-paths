@@ -3,6 +3,7 @@ import type { CharacterId } from '@/story/companions';
 
 import keeperWelcome from './keeper-welcome.json';
 
+import type { Actor } from './march';
 import type { MapId } from './maps';
 import type { Arrival, Requirement } from './progress';
 
@@ -292,3 +293,50 @@ export const ANSWERS: Answer[] = [
     jailed: true,
   },
 ];
+
+/** Where Felix and the two guards stand past the maze (felix-maze.json), in tiles. */
+const FELIX_AT: [number, number] = [24, 4];
+const GUARDS_AT: [number, number][] = [
+  [25, 3],
+  [26, 4],
+];
+/** Felix's dash: down onto the road, and east off the end of it. */
+const FELIX_DASH: [number, number][] = [FELIX_AT, [FELIX_AT[0], 5], [31, 5]];
+/** How long Felix laughs before he's off (as an NPC's exit laugh, world-view.tsx), and how much faster he runs. */
+const FELIX_LAUGH = 1.4;
+const FELIX_PACE = 5;
+
+/**
+ * "Seize him!" (author, Oct 4, 2026): the two guards close in on you from either side, round the trees, while Felix
+ * laughs; then he dashes off east, and it goes black as they reach you. `open`: whether a tile is floor. `close`:
+ * false, the guards stay put (you're knocked out, or off to buy their drink) and it's just Felix going.
+ */
+export function seizeMarch(
+  you: [number, number],
+  open: (x: number, y: number) => boolean,
+  rows: { felix: number; guard: number },
+  close = true,
+): Actor[] {
+  const [hx, hy] = you;
+  // beside you, on their side (they're east of you): above, below, in front; else one behind the other, in front
+  const spots = (
+    [
+      [hx, hy - 1],
+      [hx, hy + 1],
+      [hx + 1, hy],
+      [hx + 2, hy],
+    ] as [number, number][]
+  ).filter(([x, y]) => open(x, y));
+  const felix: Actor = { row: rows.felix, path: FELIX_DASH, face: 2, laugh: true, delay: FELIX_LAUGH, pace: FELIX_PACE };
+  const guards = GUARDS_AT.map((from, i): Actor => {
+    const to = close ? (spots[i] ?? from) : from;
+    // up or down to your row's neighbour first, then straight across to you: never through you, or each other
+    const turn: [number, number] = [from[0], to[1]];
+    const path = [from, turn, to].filter((p, k, all) => k === 0 || p[0] !== all[k - 1][0] || p[1] !== all[k - 1][1]);
+    // facing you
+    const face = to[1] < hy ? 0 : to[1] > hy ? 1 : to[0] > hx ? 2 : 3;
+    // the second a step behind the first, so they never walk on top of each other along the road
+    return { row: rows.guard, path, face, delay: i * 0.4 };
+  });
+  return [felix, ...guards, { row: -1, path: [you], face: 3 }];
+}

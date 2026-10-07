@@ -3,6 +3,7 @@ import courierRoadData from './maps/courier-road.json';
 import millbrookData from './maps/millbrook.json';
 import waystationData from './maps/waystation.json';
 import desertersCampData from './maps/deserters-camp.json';
+import cullRoadData from './maps/cull-road.json';
 import barracksHallData from './maps/barracks-hall.json';
 import barracksArmouryData from './maps/barracks-armoury.json';
 import officersMessData from './maps/officers-mess.json';
@@ -18,6 +19,7 @@ import candleInnData from './maps/candle-inn.json';
 import forgeData from './maps/forge.json';
 import chapelData from './maps/chapel.json';
 import oldKingsCryptData from './maps/old-kings-crypt.json';
+import graveyardData from './maps/graveyard.json';
 import hedgeMazeData from './maps/hedge-maze.json';
 import thePitData from './maps/the-pit.json';
 import castleGroundsData from './maps/castle-grounds.json';
@@ -49,6 +51,8 @@ import dungeonLoreData from './maps/dungeon-lore.json';
 import warriorCityData from './maps/warrior-city.json';
 import southRoadData from './maps/south-road.json';
 import oldMineData from './maps/old-mine.json';
+import royalForestData from './maps/royal-forest.json';
+import paintersSchoolData from './maps/painters-school.json';
 import wcChapelData from './maps/wc-chapel.json';
 import wcLibraryData from './maps/wc-library.json';
 import wcGuildData from './maps/wc-guild.json';
@@ -56,6 +60,8 @@ import wcHospitalData from './maps/wc-hospital.json';
 import wcTavernData from './maps/wc-tavern.json';
 import wcStoreData from './maps/wc-store.json';
 import wcBarnData from './maps/wc-barn.json';
+import wcBankData from './maps/wc-bank.json';
+import wcVaultData from './maps/wc-vault.json';
 import roomBrannocData from './maps/room-brannoc.json';
 import roomYsoldeData from './maps/room-ysolde.json';
 import roomQuillData from './maps/room-quill.json';
@@ -64,6 +70,10 @@ import roomOrenData from './maps/room-oren.json';
 import roomPipData from './maps/room-pip.json';
 import roomTamsinData from './maps/room-tamsin.json';
 import roomMossData from './maps/room-moss.json';
+import queensRoomData from './maps/queens-room.json';
+import kingsBedchamberData from './maps/kings-bedchamber.json';
+import messHallData from './maps/mess-hall.json';
+import royalDungeonData from './maps/royal-dungeon.json';
 import type { CharacterId } from '@/story/companions';
 
 import { ENEMY_KINDS, type EnemyKind } from './combat';
@@ -93,6 +103,8 @@ export type NpcObject = {
   lying?: boolean;
   /** Awake and on their feet until this story flag is set; then out cold, flat on their back (Brannoc, fainting). */
   faintsAfter?: string;
+  /** Asleep on their feet (Zs, and a snot bubble if `snot`) until this flag is set: Brannoc after his swing. */
+  dozesUntil?: string;
   /** Standing somewhere else once this story flag is set (carried off to the side of the sand, say). */
   movesAfter?: { flag: string; x: number; y: number };
   /**
@@ -129,6 +141,12 @@ export type NpcObject = {
   along?: 'x' | 'y';
   /** Stays put but looks about now and then: a glance another way, then back (wander.ts). Ignored if they wander. */
   look?: boolean;
+  /**
+   * Walks a beat round and round (wander.ts; author, Oct 7, 2026): a closed loop of waypoints [x, y], each in a
+   * straight line from the last, and the last from the first. They start wherever they stand on it, and march on
+   * to the next corner. Overrides `wander` and `look`.
+   */
+  patrol?: number[][];
 };
 
 /**
@@ -176,8 +194,21 @@ export type BoardObject = { id: string; type: 'board'; x: number; y: number };
 /** A chest: opening it once gives its item (see items.ts), with a line or two about the spot. */
 export type ChestObject = { id: string; type: 'chest'; x: number; y: number; item: string; lines: string[] };
 
-/** A sign or inscription standing on its own tile: A reads it. */
-export type SignObject = { id: string; type: 'sign'; x: number; y: number; lines: string[] };
+/**
+ * A sign or inscription standing on its own tile: A reads it. Like people, it can be gone once a story flag
+ * is set (`goneAfter`), or only there once one is (`comesAfter`): the royal dungeon's board, after Kaldor.
+ */
+export type SignObject = {
+  id: string;
+  type: 'sign';
+  x: number;
+  y: number;
+  lines: string[];
+  goneAfter?: string;
+  comesAfter?: string;
+  /** Already drawn in the map's picture (a tombstone, say): no signpost on top (author, Oct 7, 2026). */
+  inArt?: boolean;
+};
 
 export type MapObject = NpcObject | BoardObject | ChestObject | SignObject;
 
@@ -194,6 +225,10 @@ type MapData = {
   pushable?: string;
   /** The story flag set when every pressure plate has a boulder on it. */
   platesFlag?: string;
+  /** What's said as the plates go down (default: the Drill Yard's gate). */
+  platesLines?: string[];
+  /** The tile letter the plates raise out of the water once they're down (the Cull Road's ferry-bridge). */
+  raises?: string;
   /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
   talkThrough?: string[];
   enemies?: { kind: string; x: number; y: number }[];
@@ -225,6 +260,9 @@ export type WorldMap = {
   boulders: number[];
   plates: number[];
   platesFlag?: string;
+  platesLines?: string[];
+  /** Drawn raised over the picture once `platesFlag` is set: a bridge brought up out of the river. */
+  raises?: string;
   /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
   talkThrough?: string[];
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
@@ -288,6 +326,8 @@ function build(data: MapData, image: number, cheer?: number): WorldMap {
     boulders: data.pushable ? letterTiles(data.tiles, data.pushable) : [],
     plates: letterTiles(data.tiles, 'P'),
     platesFlag: data.platesFlag,
+    platesLines: data.platesLines,
+    raises: data.raises,
     talkThrough: data.talkThrough,
     boss: data.boss,
     ladder: data.ladder,
@@ -337,32 +377,34 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
-const away = (n: NpcObject, flags: string[]) =>
+const away = (n: { goneAfter?: string; comesAfter?: string }, flags: string[]) =>
   (!!n.goneAfter && flags.includes(n.goneAfter)) || (!!n.comesAfter && !flags.includes(n.comesAfter));
+const comesAndGoes = (o: MapObject): o is NpcObject | SignObject => o.type === 'npc' || o.type === 'sign';
 
 /**
- * The map without anyone who isn't here: who has left for good (NpcObject.goneAfter)
+ * The map without anyone (or any sign) who isn't here: who has left for good (NpcObject.goneAfter)
  * or hasn't come yet (comesAfter). The same map if everybody's here.
  */
 export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
-  if (!map.npcs.some((n) => away(n, flags))) return map;
-  const objects = map.objects.filter((o) => o.type !== 'npc' || !away(o, flags));
+  if (!map.objects.some((o) => comesAndGoes(o) && away(o, flags))) return map;
+  const objects = map.objects.filter((o) => !comesAndGoes(o) || !away(o, flags));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
 /**
- * Everyone as the story has left them: out cold once they've fainted (`faintsAfter`), and wherever they were
- * moved to (`movesAfter`).
+ * Everyone as the story has left them: out cold once they've fainted (`faintsAfter`), asleep on their feet until
+ * they wake (`dozesUntil`), and wherever they were moved to (`movesAfter`).
  */
 export function withStoryPoses(map: WorldMap, flags: string[]): WorldMap {
-  if (!map.npcs.some((n) => n.faintsAfter || n.movesAfter)) return map;
+  if (!map.npcs.some((n) => n.faintsAfter || n.movesAfter || n.dozesUntil)) return map;
   const pose = (n: NpcObject): NpcObject => {
     let out = n;
     if (n.faintsAfter) {
       const fainted = flags.includes(n.faintsAfter);
       out = { ...out, asleep: fainted, lying: fainted };
     }
+    if (n.dozesUntil) out = { ...out, asleep: !flags.includes(n.dozesUntil) };
     if (n.movesAfter && flags.includes(n.movesAfter.flag)) out = { ...out, x: n.movesAfter.x, y: n.movesAfter.y };
     return out;
   };
@@ -379,6 +421,19 @@ export function withoutNpcs(map: WorldMap, ids: string[]): WorldMap {
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
+/** The story flag that ends Kaldor's power (author, Oct 7, 2026): once he's beaten, his shadows are gone everywhere. */
+export const SHADOWS_FADE = 'kaldor-beaten';
+
+/**
+ * The map without its shadow soldiers once Kaldor is beaten (author, Oct 7, 2026): his power leaves him, and every
+ * shadow in every room (the barracks, the royal dungeon) fades with it. Everything else still fights. The same map
+ * if nothing changes.
+ */
+export function withoutShadows(map: WorldMap, flags: string[]): WorldMap {
+  if (!flags.includes(SHADOWS_FADE) || !map.enemies.some((e) => e.kind === 'shadow')) return map;
+  return { ...map, enemies: map.enemies.filter((e) => e.kind !== 'shadow') };
+}
+
 /** A ladder's fight for this visit: the first not yet won (the last, already won, once you've climbed it). */
 export function withLadder(map: WorldMap, flags: string[]): WorldMap {
   if (!map.ladder || map.ladder.length === 0) return map;
@@ -392,6 +447,7 @@ export const MAPS = {
   millbrook: build(millbrookData, require('@/assets/world/millbrook.png')),
   waystation: build(waystationData, require('@/assets/world/waystation.png')),
   'deserters-camp': build(desertersCampData, require('@/assets/world/deserters-camp.png')),
+  'cull-road': build(cullRoadData as MapData, require('@/assets/world/cull-road.png')),
   'barracks-hall': build(barracksHallData, require('@/assets/world/barracks-hall.png')),
   'barracks-armoury': build(barracksArmouryData, require('@/assets/world/barracks-armoury.png')),
   'officers-mess': build(officersMessData, require('@/assets/world/officers-mess.png')),
@@ -407,6 +463,7 @@ export const MAPS = {
   forge: build(forgeData as MapData, require('@/assets/world/forge.png')),
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
+  graveyard: build(graveyardData as MapData, require('@/assets/world/graveyard.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
   'the-pit': build(
     thePitData as MapData,
@@ -442,6 +499,8 @@ export const MAPS = {
   'warrior-city': build(warriorCityData as MapData, require('@/assets/world/warrior-city.png')),
   'south-road': build(southRoadData as MapData, require('@/assets/world/south-road.png')),
   'old-mine': build(oldMineData as MapData, require('@/assets/world/old-mine.png')),
+  'royal-forest': build(royalForestData as MapData, require('@/assets/world/royal-forest.png')),
+  'painters-school': build(paintersSchoolData as MapData, require('@/assets/world/painters-school.png')),
   'wc-chapel': build(wcChapelData as MapData, require('@/assets/world/wc-chapel.png')),
   'wc-library': build(wcLibraryData as MapData, require('@/assets/world/wc-library.png')),
   'wc-guild': build(wcGuildData as MapData, require('@/assets/world/wc-guild.png')),
@@ -449,6 +508,8 @@ export const MAPS = {
   'wc-tavern': build(wcTavernData as MapData, require('@/assets/world/wc-tavern.png')),
   'wc-store': build(wcStoreData as MapData, require('@/assets/world/wc-store.png')),
   'wc-barn': build(wcBarnData as MapData, require('@/assets/world/wc-barn.png')),
+  'wc-bank': build(wcBankData as MapData, require('@/assets/world/wc-bank.png')),
+  'wc-vault': build(wcVaultData as MapData, require('@/assets/world/wc-vault.png')),
   'room-brannoc': build(roomBrannocData as MapData, require('@/assets/world/room-brannoc.png')),
   'room-ysolde': build(roomYsoldeData as MapData, require('@/assets/world/room-ysolde.png')),
   'room-quill': build(roomQuillData as MapData, require('@/assets/world/room-quill.png')),
@@ -457,6 +518,11 @@ export const MAPS = {
   'room-pip': build(roomPipData as MapData, require('@/assets/world/room-pip.png')),
   'room-tamsin': build(roomTamsinData as MapData, require('@/assets/world/room-tamsin.png')),
   'room-moss': build(roomMossData as MapData, require('@/assets/world/room-moss.png')),
+  // the castle's new rooms (author, Oct 7, 2026)
+  'queens-room': build(queensRoomData as MapData, require('@/assets/world/queens-room.png')),
+  'kings-bedchamber': build(kingsBedchamberData as MapData, require('@/assets/world/kings-bedchamber.png')),
+  'mess-hall': build(messHallData as MapData, require('@/assets/world/mess-hall.png')),
+  'royal-dungeon': build(royalDungeonData as MapData, require('@/assets/world/royal-dungeon.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

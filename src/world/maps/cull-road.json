@@ -1,0 +1,288 @@
+{
+  "id": "cull-road",
+  "name": "The Cull Road",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "P"
+  ],
+  "pushable": "O",
+  "platesFlag": "cull-ferry",
+  "raises": "=",
+  "platesLines": [
+    "With a clank, both plates sink into the bank.",
+    "Chains draw taut out of the river. The old ferry-bridge comes up, streaming, and settles across the water."
+  ],
+  "art": {
+    "~": "cull-river",
+    "=": "cull-ferry",
+    "P": "cull-plate",
+    "O": ".",
+    "|": "cull-palisade",
+    "7": "cull-gatepost",
+    ";": "cull-reeds",
+    "1": "cull-milestone",
+    "2": "cull-milestone",
+    "4": "cull-shoe"
+  },
+  "firstVisit": [
+    "The road north narrows to a lane between the pines.",
+    "It has been worn very smooth, by a great many small feet."
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT~~~TTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTT|...Y.;~~~.TTT",
+    "TT.....TTTTTTTTTT.g..TTTTT|..O..;~~~.TTT",
+    "TTT......TT..g..TT.g...TTT|......~~~.TTT",
+    "TT...c....T.gg..T.........|.....P~~~..TT",
+    "T............1........2...7......~~~..TT",
+    "<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,===..TT",
+    "<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,===..TT",
+    "T.........................7......~~~..TT",
+    "T..gg...........T..4gg..x.|.....P~~~..TT",
+    "TTT.g..TT......TT....g..TT|.O....~~~.TTT",
+    "TTTTTTTTTT....TTTTT....TTT|.....;~~~.TTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTT|....;;~~~.TTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT~~~TTTT"
+  ],
+  "spawn": {
+    "x": 1,
+    "y": 6,
+    "facing": "right"
+  },
+  "examine": {
+    "T": [
+      "Pines, close on both sides of the road. Nowhere to run to.",
+      "That was the idea."
+    ],
+    "<": [
+      "The road back to Warrior City."
+    ],
+    "c": [
+      "A lantern on a post, a candle burning in it.",
+      "Somebody keeps it lit. Every night, for whoever's walking."
+    ],
+    "1": [
+      "A milestone: TWO MILES FROM THE CITY.",
+      "Carved underneath, small: I CAN STILL SEE THE WALLS."
+    ],
+    "2": [
+      "A milestone: THREE MILES FROM THE CITY.",
+      "Carved underneath, smaller: CAN'T SEE THE WALLS NOW. GOOD."
+    ],
+    "4": [
+      "A child's shoe, in the long grass. Just the one.",
+      "Double-knotted. Somebody's mother did that."
+    ],
+    "x": [
+      "The tithe-takers' fire, still warm. They never stay long.",
+      "They don't like this road either. Nobody does."
+    ],
+    "|": [
+      "The deserters' palisade: sharpened stakes, all along the bank.",
+      "Built to keep the tithe-takers out. It mostly did."
+    ],
+    "7": [
+      "What's left of the gate, hanging off one hinge. Smashed in from this side.",
+      "Whatever did it didn't use hands."
+    ],
+    "Y": [
+      "A wooden sword, snapped in two. Somebody practised with it very hard.",
+      "Not hard enough, the tithe-takers said."
+    ],
+    ";": [
+      "Reeds, as tall as a twelve-year-old.",
+      "Taller than some."
+    ],
+    "~": [
+      "The river, fast and brown. The old bridge went downstream years ago.",
+      "Nobody has built a new one. That was also the idea."
+    ],
+    "=": [
+      "The old ferry-bridge, sunk on its chains just under the water.",
+      "Two chains run up out of the river to two plates in the bank. It only rises from this side."
+    ],
+    "P": [
+      "An iron plate in the mud, chained to the ferry-bridge. It wants something heavy on it.",
+      "Something heavier than a child. That was the whole idea."
+    ],
+    "O": [
+      "A boulder. Heavy. You could push it, if you leaned in."
+    ]
+  },
+  "objects": [
+    {
+      "id": "orders",
+      "type": "sign",
+      "x": 3,
+      "y": 5,
+      "lines": [
+        "BY ORDER OF THE KING. THE TITHE OF CHILDREN, AT TWELVE:",
+        "STRONG: TO THE YARD. FED, HOUSED, TRAINED. FAMILY MOVED TO THE CITY.",
+        "NOT STRONG: TO THE CAMP. NO RATIONS. NO COIN. NO COMING BACK.",
+        "RUNAWAYS TO BE WALKED BACK DOWN. AGAIN.",
+        "Scratched underneath, at about elbow height: \"I'll come back strong.\""
+      ]
+    },
+    {
+      "id": "mile-post",
+      "type": "sign",
+      "x": 9,
+      "y": 5,
+      "lines": [
+        "A mile-post: ONE MILE FROM THE CITY.",
+        "Carved under it, small and careful: I WAS 12. I WAS NOT STRONG ENOUGH.",
+        "Under that, in a different hand: ME NEITHER.",
+        "And under that: ME NEITHER. And under that, and under that, all the way down into the grass."
+      ]
+    },
+    {
+      "id": "heights",
+      "type": "sign",
+      "x": 11,
+      "y": 8,
+      "lines": [
+        "A plank nailed to a pine, notched all the way up. Heights, with names.",
+        "ODO, 12. BRIDGET, 12. HAL, 12 AND A HALF.",
+        "The Yard's mark is nailed near the top, in iron. Nobody's notch comes close to it."
+      ]
+    },
+    {
+      "id": "maud",
+      "type": "npc",
+      "x": 6,
+      "y": 4,
+      "sprite": "bett",
+      "facing": "down",
+      "name": "Ada",
+      "lines": [
+        "I come up here every year. On the day.",
+        "I count them going past, and I wave. You're meant to wave. Somebody has to."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you waiting for?",
+          "answer": [
+            "My girl. She went down this road eleven years ago. Twelve, and small for it.",
+            "She'll be twenty-three now. Taller, I should think. I'd like to see that."
+          ]
+        },
+        {
+          "ask": "Why keep the lantern lit?",
+          "answer": [
+            "So they can see the way back up.",
+            "Nobody's used it yet. You don't put a lantern out just because nobody's used it."
+          ]
+        },
+        {
+          "ask": "What's it like at the camp?",
+          "answer": [
+            "Not much food. Not much warmth. No money at all. No fighting, though.",
+            "I tell myself the last part is the important part. Most days it works."
+          ]
+        },
+        {
+          "ask": "She wasn't strong enough. That's on her.",
+          "answer": [
+            "No. It's on whoever decided strong was the only thing worth being.",
+            "* She turns back to the road, and waves at nobody."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "The tithe-takers didn't come this year. They say the king's gone.",
+          "I'm walking down to the camp. Then the two of us are walking back up. Slowly. She's taller than me now."
+        ]
+      }
+    },
+    {
+      "id": "lark",
+      "type": "npc",
+      "x": 31,
+      "y": 11,
+      "sprite": "fitch",
+      "facing": "up",
+      "name": "Linnet",
+      "lines": [
+        "Shh. Shadows at the gate. They came up out of the river mist a month back, and nobody's asked them to leave.",
+        "I'm the camp's scout. I scout. Mostly from in here."
+      ],
+      "questions": [
+        {
+          "ask": "How do I get across?",
+          "answer": [
+            "The ferry-bridge. It's sunk on its chains. Weigh down both plates in the bank and up it comes.",
+            "The tithe-takers roll those boulders on, cross over, and roll them off again behind them.",
+            "It only rises from this side. They thought that was very clever."
+          ]
+        },
+        {
+          "ask": "How did you end up at the camp?",
+          "answer": [
+            "Walked down this road at twelve. Too short, the yardmaster said. Bad eyes.",
+            "I can see a shadow at forty paces in the dark. I'm just short. That's not an eye thing."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The tithe-takers still walk the road, looking for runaways.",
+            "Runaways from where, I ask you. We're already away. That's the whole complaint."
+          ]
+        },
+        {
+          "ask": "A scout who hides in the reeds? Coward.",
+          "answer": [
+            "Brave scouts get seen. Seen scouts get walked back down.",
+            "* He sinks a little lower into the reeds, on principle."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "after": {
+        "flag": "cull-ferry",
+        "lines": [
+          "You raised it! Last time that took two tithe-takers and a mule.",
+          "Go on over. Mind the roses at the camp. Old Mags has opinions about feet."
+        ]
+      }
+    }
+  ],
+  "enemies": [
+    {
+      "kind": "raider",
+      "x": 14,
+      "y": 6
+    },
+    {
+      "kind": "raider",
+      "x": 19,
+      "y": 7
+    },
+    {
+      "kind": "raider",
+      "x": 23,
+      "y": 6
+    },
+    {
+      "kind": "shadow",
+      "x": 29,
+      "y": 5
+    },
+    {
+      "kind": "shadow",
+      "x": 30,
+      "y": 8
+    },
+    {
+      "kind": "shadow",
+      "x": 28,
+      "y": 7
+    }
+  ]
+}

@@ -33,6 +33,14 @@ export const ITEMS: Record<string, { name: string; text: string[] }> = {
       "The seal has never been broken. You don't break it either.",
     ],
   },
+  // From the small chest in the bank's vault (author, Oct 7, 2026): in no ledger, so nobody can say it's missing.
+  'unlisted-coin': {
+    name: 'The Unlisted Coin',
+    text: [
+      "One gold coin. Kaldor's face on one side, a fist on the other.",
+      "It isn't in any ledger, so nobody can say it's missing. A banker would find that very upsetting.",
+    ],
+  },
 };
 
 export const chestFlag = (id: string) => `chest:${id}`;

@@ -467,7 +467,9 @@
       ],
       "questions": [],
       "comesAfter": "brannoc-swung",
-      "goneAfter": "brannoc-woke"
+      "goneAfter": "brannoc-woke",
+      "snot": true,
+      "dozesUntil": "brannoc-blinked"
     }
   ],
   "art": {

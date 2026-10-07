@@ -31,8 +31,8 @@ function useShowing(flash: SharedValue<number[]>) {
   return useDerivedValue(() => (flash.get()[3] > 0 ? 1 : 0));
 }
 
-/** Warrior: a blade sweeping an arc in front of you, with a white trail. */
-function Sword({ flash, color, range }: FlashProps) {
+/** Warrior: a blade sweeping an arc in front of you, with a white trail (and Brannoc's Super Super Swing). */
+export function Sword({ flash, color, range }: FlashProps) {
   const p = useProgress(flash);
   const shown = useShowing(flash);
   const reach = range + 2;

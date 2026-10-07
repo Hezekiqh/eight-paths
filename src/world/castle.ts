@@ -1,6 +1,8 @@
 import type { Dimension } from '@/game';
 import type { CharacterId } from '@/story/companions';
 
+import type { Actor } from './march';
+
 // Kaldor's castle (author, Oct 4, 2026), at the end of the north road: soldiers drilling on the
 // grounds (one of them down), a guard post, and a drawbridge over the moat that won't come down
 // until you talk, push, pay or argue your way past the gate guards. Inside, an empty hall: straight
@@ -34,6 +36,9 @@ export type GateAnswer = {
 /** The captain, before you've said anything. */
 export const GATE_OPEN = [
   'CAPTAIN ORSK: Halt. Nobody crosses. King says.',
+  // (author, Oct 7, 2026)
+  "CAPTAIN ORSK: And you don't look like you have an appointment with the king.",
+  "CAPTAIN ORSK: Nobody has an appointment with the king. That's how he likes it.",
   'CAPTAIN ORSK: Not merchants. Not priests. Not his own mother, and she asked very nicely.',
   'CAPTAIN ORSK: So. What makes you special?',
 ];
@@ -281,3 +286,93 @@ export const WIVES_GOSSIP = [
   'QUEEN MAREN: I would be a little heartbroken.',
   'QUEEN HELKA: The favourite.',
 ];
+
+// ---- the throne room, once Kaldor's beaten (author, Oct 7, 2026; the scene's words are in scenes.ts). In tiles.
+
+/** Kaldor's seat, at the top of the carpet: where he stands through the fight, and where a new ruler sits. */
+export const KALDOR_THRONE: [number, number] = [11, 2];
+/** Where you're walked to for the ending, at the side of the carpet, facing the throne; Brannoc beside you. */
+export const THRONE_STAND: [number, number] = [9, 6];
+export const BRANNOC_STAND: [number, number] = [8, 6];
+/** Where the camera looks for the throne room's talk (art pixels): the throne, and the floor in front of it. */
+export const THRONE_FOCUS: [number, number] = [11 * 16 + 8, 88];
+/** Below the doors at the foot of the hall: where the guards come in from, and lead Kaldor out to. */
+const DOOR_X = 11;
+const OFF_MAP_Y = 13;
+
+/**
+ * Kaldor beaten: his power leaves him. Four of his shadows pour out of him, from the throne, across the floor to the
+ * pillars (round Felix, beside the throne, and round you and Brannoc), and are gone in a puff at the foot of each
+ * (fast: they're fleeing).
+ */
+export const kaldorShadows = (shadow: number): Actor[] =>
+  (
+    [
+      [
+        [11, 3],
+        [4, 3],
+      ],
+      [
+        [11, 3],
+        [17, 3],
+      ],
+      [
+        [11, 4],
+        [6, 4],
+        [6, 6],
+        [4, 6],
+      ],
+      [
+        [11, 4],
+        [16, 4],
+        [16, 6],
+        [17, 6],
+      ],
+    ] as [number, number][][]
+  ).map((to, i) => ({ row: shadow, path: [KALDOR_THRONE, ...to], vanish: true, delay: i * 0.12, pace: 2 }));
+
+/** Two of his own guards, in through the doors and up either side of the carpet to take him by the arms. */
+export const guardsForKaldor = (guard: number): Actor[] => [
+  {
+    row: guard,
+    path: [
+      [DOOR_X - 1, OFF_MAP_Y],
+      [DOOR_X - 1, KALDOR_THRONE[1]],
+    ],
+    face: 3,
+  },
+  {
+    row: guard,
+    path: [
+      [DOOR_X + 1, OFF_MAP_Y],
+      [DOOR_X + 1, KALDOR_THRONE[1]],
+    ],
+    face: 2,
+    delay: 0.2,
+  },
+];
+
+/** ...and out again with him between them, down the carpet and through the doors. Kaldor leads (the camera follows him). */
+export const kaldorLedOut = (kaldor: number, guard: number): Actor[] => [
+  { row: kaldor, path: [KALDOR_THRONE, [DOOR_X, OFF_MAP_Y]] },
+  {
+    row: guard,
+    path: [
+      [DOOR_X - 1, KALDOR_THRONE[1]],
+      [DOOR_X - 1, OFF_MAP_Y],
+    ],
+  },
+  {
+    row: guard,
+    path: [
+      [DOOR_X + 1, KALDOR_THRONE[1]],
+      [DOOR_X + 1, OFF_MAP_Y],
+    ],
+  },
+];
+
+/** Whoever takes the throne walks up the carpet to it, and turns to face the hall. */
+export const toTheThrone = (who: 'you' | 'brannoc'): [number, number][] =>
+  who === 'you'
+    ? [THRONE_STAND, [DOOR_X, THRONE_STAND[1]], KALDOR_THRONE]
+    : [BRANNOC_STAND, [BRANNOC_STAND[0], THRONE_STAND[1] + 1], [DOOR_X, THRONE_STAND[1] + 1], KALDOR_THRONE];

@@ -54,7 +54,7 @@ export function whoCan(
 const TELLS: Partial<Record<MapId, string>> = {
   'the-pit': 'The pit fighters crouch and flash red before they lunge. Roll aside, then strike while they get up.',
   'war-hall':
-    'The shadows chase; Aurek flashes red before he slams the ground. Roll away from the ring, then hit him while he rises. The stronger you are, the faster the shadows break: every habit counts.',
+    'The shadows chase; the Warden flashes red before he slams the ground. Roll away from the ring, then hit him while he rises. The stronger you are, the faster the shadows break: every habit counts.',
 };
 
 /**

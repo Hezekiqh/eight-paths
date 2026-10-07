@@ -48,13 +48,15 @@ describe('every menu has a mean answer (author, Oct 4, 2026)', () => {
     expect(missing).toEqual([]);
   });
 
-  it("each of the core eight has one in their room, and the throne room's ending has one", () => {
+  it("each of the core eight has one in their room; the throne room's ending reads your record instead", () => {
     for (const id of Object.values(DEFAULT_PARTY)) {
       const qs = roomQuestions(id, { places: 1, met: 1, flags: [] }, 'Go somewhere');
       expect(qs.filter((q) => q.deed === 'bad')).toHaveLength(1);
     }
-    const ending = winScene('war-hall', 'kaldor-beaten', true, true)!;
-    expect(ending.choices!.filter((c) => c.deed === 'bad')).toHaveLength(1);
-    expect(ending.choices!.length).toBeLessThanOrEqual(4);
+    // (author, Oct 7, 2026) no mean option at the throne: how you've treated people decides how you put it
+    const kind = winScene('war-hall', 'kaldor-beaten', true, true, false, false, { mean: false })!;
+    const mean = winScene('war-hall', 'kaldor-beaten', true, true, false, false, { mean: true })!;
+    expect(kind.choices!.length).toBeLessThanOrEqual(4);
+    expect(kind.choices!.map((c) => c.lines)).not.toEqual(mean.choices!.map((c) => c.lines));
   });
 });

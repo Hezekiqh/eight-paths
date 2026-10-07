@@ -138,7 +138,7 @@
     {
       "id": "king-brannoc",
       "type": "npc",
-      "x": 10,
+      "x": 11,
       "y": 2,
       "sprite": "brannoc",
       "facing": "down",

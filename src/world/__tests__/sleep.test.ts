@@ -1,4 +1,4 @@
-import { Z_EVERY, Z_LIFE, sleepZs } from '../sleep';
+import { BUBBLE_EVERY, BUBBLE_MAX, Z_EVERY, Z_LIFE, sleepZs, snotBubble } from '../sleep';
 import cells from '../maps/kingdom-dungeon.json';
 
 describe('sleepers', () => {
@@ -20,5 +20,26 @@ describe('sleepers', () => {
     const gary = cells.objects.find((o) => o.id === 'jailer') as { sprite: string; asleep?: boolean };
     expect(gary.sprite).toBe('gary');
     expect(gary.asleep).toBe(true);
+  });
+
+  it('swells a snot bubble big enough to see, then shrinks it back', () => {
+    const size = (t: number) => {
+      const b = snotBubble(t, 100, 100);
+      return b.cells.length + b.rim.length;
+    };
+    const widest = snotBubble(BUBBLE_EVERY / 2, 100, 100);
+    const xs = [...widest.cells, ...widest.rim].map(([x]) => x);
+    expect(Math.max(...xs) - Math.min(...xs) + 1).toBeGreaterThanOrEqual(BUBBLE_MAX * 2 - 1);
+    expect(widest.rim.length).toBeGreaterThan(0);
+    expect(widest.shine).not.toBeNull();
+    expect(size(0.02)).toBeLessThan(size(BUBBLE_EVERY / 2));
+    expect(size(BUBBLE_EVERY - 0.02)).toBeLessThan(size(BUBBLE_EVERY / 2));
+  });
+
+  it('blows the bubble out the side the nose points', () => {
+    const right = snotBubble(BUBBLE_EVERY / 2, 100, 100, 1).cells.map(([x]) => x);
+    const left = snotBubble(BUBBLE_EVERY / 2, 100, 100, -1).cells.map(([x]) => x);
+    expect(Math.min(...right)).toBeGreaterThan(100);
+    expect(Math.max(...left)).toBeLessThan(100);
   });
 });

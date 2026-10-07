@@ -84,6 +84,11 @@ export const WHOLE_PARTY: Requirement[] = (Object.keys(WHERE) as CharacterId[]).
   hint: WHERE[id],
 }));
 
+/** Set once a boulder sits on each plate by the Cull Road's river: the ferry-bridge is up for good. */
+export const CULL_FERRY = 'cull-ferry';
+/** Set when the graveyard's three stones are back in their sockets: the gate in the crypt's mound opens. */
+export const GRAVEYARD_GATE = 'graveyard-gate';
+
 /** Never locked. */
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
@@ -178,12 +183,46 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The Cull Road (author, Oct 7, 2026), between Warrior City and the deserters' camp: the road the
+  // unfit children are walked down at twelve. Tithe-takers on it, shadows at the camp's broken gate,
+  // and a ferry-bridge sunk in the river that only rises with a boulder on each plate in the bank.
+  // Listed before the camp's own ways, so the guide asks for the bridge before the fort in the hill.
+  {
+    id: 'cull-camp',
+    from: 'cull-road',
+    tile: '=',
+    label: 'The ferry-bridge',
+    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    needs: {
+      // in an "all" so the bridge isn't drawn as a hole once it's up: the game draws it raised (maps.ts raises)
+      kind: 'all',
+      of: [
+        {
+          kind: 'flag',
+          flag: CULL_FERRY,
+          label: 'Raise the ferry-bridge',
+          hint: 'Two plates in the bank, chained to it. Something heavy on each.',
+        },
+      ],
+    },
+    walk: true,
+  },
+  {
+    id: 'cull-city',
+    from: 'cull-road',
+    tile: '<',
+    label: 'The road back to the city',
+    to: { map: 'warrior-city', x: 31, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'camp-road',
     from: 'deserters-camp',
     tile: '<',
     label: 'The road west',
-    to: { map: 'warrior-city', x: 31, y: 2, facing: 'down' },
+    to: { map: 'cull-road', x: 31, y: 6, facing: 'left' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -490,6 +529,59 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The Graveyard of Kings, behind the chapel and over the crypt (author, Oct 7, 2026): a back door out
+  // of the chapel, and a second way down to the crypt once the three stones are back in their sockets.
+  {
+    id: 'chapel-graveyard',
+    from: 'chapel',
+    tile: '3',
+    label: 'The back door',
+    to: { map: 'graveyard', x: 15, y: 18, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'graveyard-chapel',
+    from: 'graveyard',
+    tile: '1',
+    label: 'The back door',
+    to: { map: 'chapel', x: 6, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'graveyard-crypt',
+    from: 'graveyard',
+    tile: 'G',
+    label: 'The iron gate in the mound',
+    to: { map: 'old-kings-crypt', x: 7, y: 2, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: GRAVEYARD_GATE,
+      label: 'Open the gate in the mound',
+      hint: 'Three sockets in front of it, and three stones rolled out of them.',
+    },
+    // a side way, like the hidden stair: the story doesn't need it, so the guide doesn't send you here
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'crypt-graveyard',
+    from: 'old-kings-crypt',
+    tile: '3',
+    label: 'The passage up',
+    to: { map: 'graveyard', x: 23, y: 4, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: GRAVEYARD_GATE,
+      label: 'Open the gate at the top',
+      hint: "It's shut fast from outside.",
+    },
+    back: true,
+    walk: true,
+  },
   {
     id: 'town-maze',
     from: 'kingdom-town',
@@ -581,7 +673,7 @@ export const EXITS: Exit[] = [
   {
     id: 'hall-war-room',
     from: 'castle-hall',
-    tile: '2',
+    tile: 'H',
     label: 'The heavy door',
     to: { map: 'war-room', x: 6, y: 6, facing: 'up' },
     needs: OPEN,
@@ -654,6 +746,86 @@ export const EXITS: Exit[] = [
     tile: '%',
     label: 'The winding stair',
     to: { map: 'castle-hall', x: 3, y: 12, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The castle's new rooms (author, Oct 7, 2026): the mess hall and the royal dungeon off the Great Hall, the old
+  // queen's room and the king's bedchamber off the King's Floor.
+  {
+    id: 'hall-mess',
+    from: 'castle-hall',
+    tile: '2',
+    label: 'The noisy doorway',
+    to: { map: 'mess-hall', x: 16, y: 9, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'mess-back',
+    from: 'mess-hall',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'castle-hall', x: 19, y: 14, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'hall-dungeon',
+    from: 'castle-hall',
+    tile: '3',
+    label: 'The steps down',
+    to: { map: 'royal-dungeon', x: 20, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'dungeon-hall',
+    from: 'royal-dungeon',
+    tile: '1',
+    label: 'The steps up',
+    to: { map: 'castle-hall', x: 6, y: 14, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'upper-queen',
+    from: 'castle-upper',
+    tile: '2',
+    label: 'The grey door',
+    to: { map: 'queens-room', x: 6, y: 6, facing: 'up' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'queen-upper',
+    from: 'queens-room',
+    tile: '1',
+    label: 'The door',
+    to: { map: 'castle-upper', x: 6, y: 11, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'upper-king',
+    from: 'castle-upper',
+    tile: '3',
+    label: 'The gold doors',
+    to: { map: 'kings-bedchamber', x: 8, y: 7, facing: 'up' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'king-upper',
+    from: 'kings-bedchamber',
+    tile: '1',
+    label: 'The doors',
+    to: { map: 'castle-upper', x: 14, y: 11, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -970,8 +1142,8 @@ export const EXITS: Exit[] = [
     walk: true,
   },
   // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Kaloseum at its heart, the
-  // castle road north (through the camp, the barracks and on to Kaldor), a bridge east to the Mage
-  // kingdom and a road south to the old mines (both still being built).
+  // castle road north (down the Cull Road, through the camp, the barracks and on to Kaldor), a
+  // bridge east to the Mage kingdom and a road south to the old mines (both still being built).
   {
     id: 'city-maze',
     from: 'warrior-city',
@@ -987,7 +1159,7 @@ export const EXITS: Exit[] = [
     from: 'warrior-city',
     tile: '^',
     label: 'The road north',
-    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    to: { map: 'cull-road', x: 1, y: 6, facing: 'right' },
     needs: { kind: 'overall', level: NORTH_ROAD_LEVEL },
     walk: true,
   },
@@ -1036,6 +1208,60 @@ export const EXITS: Exit[] = [
     tile: '1',
     label: 'Out to the South Road',
     to: { map: 'south-road', x: 32, y: 12, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // Brannoc's places (author, Oct 7, 2026): the Royal Forest, west past the garden, and the Painters'
+  // School by its gate. Both open from the start; nothing in the story waits on them.
+  {
+    id: 'south-forest',
+    from: 'south-road',
+    tile: '<',
+    label: 'The path into the trees',
+    to: { map: 'royal-forest', x: 38, y: 12, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'forest-south',
+    from: 'royal-forest',
+    tile: '>',
+    label: 'Out to the South Road',
+    to: { map: 'south-road', x: 1, y: 24, facing: 'right' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    // The wrong way through the forest: it turns you round and walks you back out where you came in
+    // (royal-forest.ts). Every wrong gap is the same letter, so they all go to the same place.
+    id: 'forest-loop',
+    from: 'royal-forest',
+    tile: 'o',
+    label: 'A gap in the undergrowth',
+    to: { map: 'royal-forest', x: 38, y: 12, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'south-school',
+    from: 'south-road',
+    tile: 'D',
+    label: 'The boarded-up door',
+    to: { map: 'painters-school', x: 8, y: 9, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'school-south',
+    from: 'painters-school',
+    tile: '1',
+    label: 'Out to the South Road',
+    to: { map: 'south-road', x: 6, y: 4, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -1176,6 +1402,51 @@ export const EXITS: Exit[] = [
     tile: '1',
     label: 'Out to Warrior City',
     to: { map: 'warrior-city', x: 58, y: 28, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The Bank of Warrior City (author, Oct 7, 2026), and its vault: the combination is in the ledgers (vault.ts).
+  {
+    id: 'city-bank',
+    from: 'warrior-city',
+    tile: '9',
+    label: 'The bank',
+    to: { map: 'wc-bank', x: 8, y: 9, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'bank-city',
+    from: 'wc-bank',
+    tile: '1',
+    label: 'Out to Warrior City',
+    to: { map: 'warrior-city', x: 24, y: 35, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'bank-vault',
+    from: 'wc-bank',
+    tile: 'G',
+    label: 'The vault door',
+    to: { map: 'wc-vault', x: 5, y: 6, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'bank-vault-open',
+      label: 'Open the vault',
+      hint: 'The combination is in the ledgers, if you read them as a banker would.',
+    },
+    back: true,
+  },
+  {
+    id: 'vault-bank',
+    from: 'wc-vault',
+    tile: '1',
+    label: 'Back out to the bank',
+    to: { map: 'wc-bank', x: 8, y: 3, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,

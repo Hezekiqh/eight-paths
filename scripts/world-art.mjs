@@ -12,6 +12,7 @@ import { cityArt } from './city-art.mjs';
 import { FLOORS, interiorArt } from './interior-art.mjs';
 import { mineArt } from './mine-art.mjs';
 import { ASH, castleArt } from './castle-art.mjs';
+import { graveyardArt } from './graveyard-art.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
 
@@ -1936,6 +1937,64 @@ const OUTDOOR_ART = {
     ellipse(g, x + 12, y + 8, 3, 3, O.stoneLight);
     for (let i = 0; i < 5; i++) put(g, x + 3 + i * 2, y + 11, O.leaf);
   },
+  // The Royal Forest (author, Oct 7, 2026), where Brannoc ran. Drawn by name (a map's `art` points a
+  // letter at them), so they never take a letter another place uses.
+  brush(g, x, y) {
+    // A gap in the undergrowth: trodden earth between two walls of bracken. Every gap looks the same,
+    // the ones that go somewhere and the ones the forest turns you round in.
+    box(g, x + 3, y, 10, TILE, O.dirtDark);
+    box(g, x + 4, y, 8, TILE, O.dirt[0]);
+    for (const side of [0, 12])
+      for (let j = 0; j < TILE; j += 3) ellipse(g, x + side + 2, y + j + 1, 2, 2, j % 2 ? O.leaf : O.leafDark);
+    for (let i = 0; i < 4; i++) put(g, x + 5 + Math.floor(hash(x, y, i + 40) * 6), y + 2 + i * 4, O.leafLight);
+  },
+  carved(g, x, y) {
+    // A tree with a picture scratched into its trunk: pale cuts in the bark.
+    tree(g, x, y);
+    box(g, x + 5, y + 9, 6, 7, O.trunk);
+    box(g, x + 6, y + 10, 4, 4, '#C8A878');
+    put(g, x + 7, y + 11, O.trunkDark);
+    put(g, x + 8, y + 12, O.trunkDark);
+    put(g, x + 9, y + 11, O.trunkDark);
+  },
+  carvedWild(g, x, y) {
+    // The same, cut harder: gouges all down the trunk.
+    tree(g, x, y);
+    box(g, x + 5, y + 8, 6, 8, O.trunk);
+    for (let j = 0; j < 4; j++) {
+      box(g, x + 5 + (j % 2), y + 9 + j * 2, 4, 1, '#D8B888');
+      put(g, x + 9 - (j % 2), y + 9 + j * 2, '#E8D0A0');
+    }
+  },
+  deadGrass(g, x, y) {
+    // Grass gone grey and flat, in a ring.
+    box(g, x, y, TILE, TILE, '#7A7458');
+    for (let i = 0; i < 14; i++) {
+      const bx = x + Math.floor(hash(x, y, i + 50) * 15);
+      const by = y + Math.floor(hash(y, x, i + 50) * 15);
+      put(g, bx, by, i % 3 ? '#5E5844' : '#9A9278');
+    }
+  },
+  husk(g, x, y) {
+    // An old cocoon, split down the front and gone grey, sunk into the ground.
+    box(g, x, y, TILE, TILE, '#7A7458');
+    ellipse(g, x + 8, y + 12, 7, 3, '#4A4636');
+    ellipse(g, x + 8, y + 9, 6, 6, '#9A968A');
+    ellipse(g, x + 6, y + 8, 3, 4, '#B0AC9E');
+    box(g, x + 8, y + 3, 2, 11, '#2A2620');
+    put(g, x + 7, y + 6, '#2A2620');
+    put(g, x + 10, y + 10, '#2A2620');
+  },
+  woodpile(g, x, y) {
+    // Logs stacked neat, ends out.
+    for (let r = 0; r < 3; r++)
+      for (let c = 0; c < 3 - (r === 2 ? 1 : 0); c++) {
+        const cx = x + 3 + c * 5 + (r === 2 ? 2 : 0);
+        const cy = y + 13 - r * 4;
+        ellipse(g, cx, cy, 2, 2, O.trunk);
+        put(g, cx, cy, '#C8A878');
+      }
+  },
 };
 
 /** The bottom row of a cottage: plaster between timber beams, sitting on a stone footing. */
@@ -1977,6 +2036,12 @@ for (const [k, rx] of Object.entries({ n: 4, q: 6, S: 5, c: 3, y: 5, m: 7, l: 6,
     dropShadow(g, x + 9, y + 15, rx, 2, 0.45);
     draw(g, x, y, m);
   };
+}
+
+// The Graveyard of Kings (graveyard-art.mjs): named keys, so they can't clash with anyone's letters.
+for (const [k, v] of Object.entries(graveyardArt({ box, put, ellipse, hash }))) {
+  if (OUTDOOR_ART[k]) throw new Error(`graveyard-art: "${k}" is already drawn`);
+  OUTDOOR_ART[k] = v;
 }
 
 function drawOutdoor(map) {
@@ -2033,7 +2098,12 @@ function drawOutdoor(map) {
     for (let tx = 0; tx < W; tx++) {
       const draw = OUTDOOR_ART[map.art?.[at(tx, ty)] ?? at(tx, ty)];
       if (!draw) throw new Error(`No outdoor art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy), ground });
+      // `at` is the letter on the map; `key` is the art it's drawn with (the map's `art` applied), for named keys
+      draw(g, tx * TILE, ty * TILE, {
+        at: (dx, dy) => at(tx + dx, ty + dy),
+        key: (dx, dy) => map.art?.[at(tx + dx, ty + dy)] ?? at(tx + dx, ty + dy),
+        ground,
+      });
     }
   return g;
 }
@@ -2735,6 +2805,102 @@ const SMALL_ROOMS = {
 for (const [k, v] of Object.entries(SMALL_ROOMS)) {
   if (DUNGEON_ART[k]) throw new Error(`small rooms: "${k}" is already drawn`);
   DUNGEON_ART[k] = v;
+}
+
+// The Cull Road (author, Oct 7, 2026): a fast brown river, the ferry-bridge sunk in it on its chains,
+// two plates in the bank, the deserters' palisade with its gate smashed in, reeds, milestones and a
+// child's shoe. Named keys (the map's `art` points its letters at them), so no letter is taken.
+{
+  const RIVER = ['#5A4E3A', '#544834', '#605440'];
+  const isWater = (c) => c === '~' || c === '=';
+  const river = (g, x, y, m) => {
+    for (let j = 0; j < TILE; j++)
+      for (let i = 0; i < TILE; i++) {
+        let c = RIVER[Math.floor(hash(Math.floor((x + i) / 4), Math.floor((y + j) / 6), 91) * 3)];
+        // streaks running downstream (south), fast
+        if ((x + i * 3 + (y + j)) % 19 === 0 || hash(x + i, Math.floor((y + j) / 4), 92) < 0.03) c = '#8A7C60';
+        put(g, x + i, y + j, c);
+      }
+    // muddy banks
+    if (!isWater(m.at(-1, 0))) {
+      box(g, x, y, 3, TILE, O.soilDark);
+      box(g, x + 3, y, 1, TILE, '#3A3024');
+    }
+    if (!isWater(m.at(1, 0))) {
+      box(g, x + 13, y, 3, TILE, O.soilDark);
+      box(g, x + 12, y, 1, TILE, '#3A3024');
+    }
+  };
+  Object.assign(OUTDOOR_ART, {
+    'cull-river': river,
+    'cull-ferry'(g, x, y, m) {
+      // The ferry-bridge, sunk just under the water: dim planks, and the broken pilings sticking up.
+      river(g, x, y, m);
+      for (let i = 1; i < TILE; i += 4) box(g, x + i, y + 1, 2, 14, '#4A3E2C');
+      if (m.at(0, -1) !== '=') {
+        box(g, x + 6, y, 3, 4, O.trunkDark);
+        box(g, x + 6, y, 3, 1, O.trunk);
+      }
+      if (m.at(0, 1) !== '=') {
+        box(g, x + 6, y + 12, 3, 4, O.trunkDark);
+        box(g, x + 6, y + 12, 3, 1, O.trunk);
+      }
+      // a chain, slack, running back to the bank
+      if (m.at(-1, 0) !== '=') for (let i = 0; i < 6; i += 2) put(g, x + i, y + 7 + (i % 4 ? 1 : 0), '#7A7A80');
+    },
+    'cull-plate'(g, x, y) {
+      // An iron plate set in the mud, a chain running off it to the river.
+      box(g, x + 1, y + 2, 14, 12, O.soilDark);
+      box(g, x + 3, y + 4, 10, 8, '#4A4A50');
+      box(g, x + 3, y + 4, 10, 1, '#6A6A72');
+      box(g, x + 7, y + 7, 2, 2, '#2A2A30');
+      for (let i = 13; i < TILE; i += 2) put(g, x + i, y + 8, '#7A7A80');
+    },
+    'cull-palisade'(g, x, y) {
+      // Sharpened stakes, side by side, lashed to a crossbeam.
+      for (let i = 1; i < TILE; i += 5) {
+        box(g, x + i, y + 3, 4, 13, O.trunk);
+        box(g, x + i + 3, y + 3, 1, 13, O.trunkDark);
+        box(g, x + i + 1, y + 1, 2, 2, O.trunk);
+        put(g, x + i + 1, y, O.rail);
+      }
+      box(g, x, y + 8, TILE, 2, O.trunkDark);
+    },
+    'cull-gatepost'(g, x, y, m) {
+      // A thick gatepost, and the gate hanging off it by one hinge, its planks splintered.
+      box(g, x + 5, y, 6, TILE, O.trunk);
+      box(g, x + 10, y, 1, TILE, O.trunkDark);
+      box(g, x + 6, y, 4, 1, O.rail);
+      const down = m.at(0, 1) === ',';
+      for (let k = 0; k < 4; k++) box(g, x + 1 + k * 3, down ? y + 10 + k : y + 2 + k, 2, 5, '#6A5034');
+    },
+    'cull-reeds'(g, x, y) {
+      for (let i = 0; i < 9; i++) {
+        const bx = x + 1 + Math.floor(hash(x, y, i + 60) * 14);
+        const h = 8 + Math.floor(hash(x, y, i + 61) * 6);
+        box(g, bx, y + 15 - h, 1, h, i % 3 ? O.blade : '#A8904A');
+        if (i % 3 === 0) box(g, bx, y + 15 - h, 1, 3, '#6A4A2A');
+      }
+    },
+    'cull-milestone'(g, x, y) {
+      // A squat milestone, rounded on top, with a line of small carving.
+      ellipse(g, x + 8, y + 14, 6, 2, O.grassDark);
+      box(g, x + 4, y + 5, 8, 10, O.stone);
+      ellipse(g, x + 8, y + 5, 4, 3, O.stone);
+      box(g, x + 4, y + 5, 2, 10, O.stoneLight);
+      box(g, x + 6, y + 7, 4, 1, O.stoneDark);
+      box(g, x + 6, y + 10, 3, 1, O.stoneDark);
+      box(g, x + 6, y + 12, 4, 1, O.stoneDark);
+    },
+    'cull-shoe'(g, x, y) {
+      // One small shoe, laces still tied.
+      box(g, x + 4, y + 10, 8, 3, '#6A4428');
+      box(g, x + 4, y + 8, 4, 2, '#6A4428');
+      box(g, x + 4, y + 13, 9, 1, O.trunkDark);
+      put(g, x + 6, y + 8, '#E8E0D0');
+      put(g, x + 7, y + 9, '#E8E0D0');
+    },
+  });
 }
 
 /** Kaldor's floors: big squares of black and dark grey marble, veined, with a soft sheen. */
@@ -4063,6 +4229,19 @@ const WALKERS = {
     hat: 'sun',
     glasses: true,
   },
+  // Mattock, the gravedigger behind the chapel (author, Oct 7, 2026): earth-brown, a flat cap's worth of grey
+  // hair, a spade in his hand. He fills the graves in every evening.
+  mattock: {
+    top: '#6A5A44',
+    shade: '#4E4232',
+    legs: '#3E3428',
+    boots: '#2A1E14',
+    belt: '#2A1E14',
+    skin: '#D0A07C',
+    hair: ['short', '#8A847C'],
+    beard: '#8A847C',
+    spade: true,
+  },
 };
 
 // The walkers' light, as the castle's: from the upper left. Lit edges warm toward candlelight, shade cools toward
@@ -4300,6 +4479,18 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       b(x, 15 + s, 1, 2, GRIP);
       p(x, 16 + s, skin); // the fist over the grip
     }
+  }
+
+  // a spade held upright at the side, blade down (Mattock)
+  if (w.spade) {
+    const HAFT = '#6A4A2A';
+    const BLADE = '#8A8A96';
+    const x = side ? (step === 0 ? 7 : step === 1 ? 6 : 8) - 2 : back ? 2 : 13;
+    b(x, 6, 1, 11, HAFT);
+    b(x - 1, 6, 3, 1, HAFT);
+    b(x - 1, 17, 3, 3, BLADE);
+    p(x, 20, BLADE);
+    if (!side) p(x, 16, skin);
   }
 
   if (w.beads && dir === 'down') {
@@ -4641,6 +4832,7 @@ const MAPS = [
   'millbrook',
   'waystation',
   'deserters-camp',
+  'cull-road',
   'barracks-hall',
   'barracks-armoury',
   'officers-mess',
@@ -4655,6 +4847,7 @@ const MAPS = [
   'forge',
   'chapel',
   'old-kings-crypt',
+  'graveyard',
   'hedge-maze',
   'the-pit',
   'castle-grounds',
@@ -4687,6 +4880,8 @@ const MAPS = [
   'warrior-city',
   'south-road',
   'old-mine',
+  'royal-forest',
+  'painters-school',
   'wc-chapel',
   'wc-library',
   'wc-guild',
@@ -4694,6 +4889,8 @@ const MAPS = [
   'wc-tavern',
   'wc-store',
   'wc-barn',
+  'wc-bank',
+  'wc-vault',
   'room-brannoc',
   'room-ysolde',
   'room-quill',
@@ -4702,6 +4899,10 @@ const MAPS = [
   'room-pip',
   'room-tamsin',
   'room-moss',
+  'queens-room',
+  'kings-bedchamber',
+  'mess-hall',
+  'royal-dungeon',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {
