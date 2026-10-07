@@ -6,6 +6,9 @@
 // A walker takes the tile they're stepping into in the solid grid before they
 // set off and gives the old one back when they get there, so the player bumps
 // into them like anyone else, and they never step onto the player.
+// People on patrol (NpcObject.patrol, author, Oct 7, 2026) walk a loop of
+// waypoints round and round at a steady march, a beat at every corner, facing
+// the way they go; they take tiles the same way, and wait if you're in the way.
 
 const TILE = 16;
 
@@ -33,6 +36,20 @@ export const W_SEED = 10;
 export const W_FACING = 11;
 export const W_LOOK = 12;
 export const W_HF = 13;
+/**
+ * A patrol (author, Oct 7, 2026): how many waypoints in their loop (0: not on patrol), which one they're
+ * marching to, and the waypoints themselves from W_PTS on, flat: x0, y0, x1, y1, ...
+ */
+export const W_PN = 14;
+export const W_PI = 15;
+export const W_PTS = 16;
+
+/** A patrol's march: a touch brisker than a stroll, and the same all the way round. */
+export const PATROL_SPEED = 28;
+/** Seconds a patrol stands at each corner, looking smart, before the next leg. */
+export const PATROL_PAUSE = 0.8;
+/** Seconds before a patrol tries again when someone's in the way. */
+const PATROL_RETRY = 0.3;
 
 /** Facing indices, as in engine.ts: down, up, left, right. */
 const STEPS = [
@@ -42,7 +59,32 @@ const STEPS = [
   [1, 0],
 ];
 
-export type WanderSpec = { x: number; y: number; facing: number; wander?: number; along?: 'x' | 'y'; look?: boolean };
+export type WanderSpec = {
+  x: number;
+  y: number;
+  facing: number;
+  wander?: number;
+  along?: 'x' | 'y';
+  look?: boolean;
+  /** A closed loop of waypoints, each in a straight line from the last (and the last from the first). */
+  patrol?: number[][];
+};
+
+/**
+ * The waypoint someone standing at (x, y) on a loop marches to next: the far end of the leg they're on.
+ * 0 if they're not on it at all (they set off for the first waypoint).
+ */
+export function nextWaypoint(loop: number[][], x: number, y: number): number {
+  for (let i = 0; i < loop.length; i++) {
+    const [ax, ay] = loop[i];
+    const [bx, by] = loop[(i + 1) % loop.length];
+    const on =
+      (ax === bx && x === ax && y >= Math.min(ay, by) && y <= Math.max(ay, by)) ||
+      (ay === by && y === ay && x >= Math.min(ax, bx) && x <= Math.max(ax, bx));
+    if (on) return x === bx && y === by ? (i + 2) % loop.length : (i + 1) % loop.length;
+  }
+  return 0;
+}
 
 /** Everyone standing at home, facing their own way, each with a seed of their own. */
 export function newWanderers(npcs: WanderSpec[]): Wanderer[] {
@@ -61,6 +103,7 @@ export function newWanderers(npcs: WanderSpec[]): Wanderer[] {
     n.facing,
     n.look ? 1 : 0,
     n.facing,
+    ...(n.patrol && n.patrol.length > 1 ? [n.patrol.length, nextWaypoint(n.patrol, n.x, n.y), ...n.patrol.flat()] : []),
   ]);
 }
 
@@ -76,6 +119,67 @@ function underPlayer(tx: number, ty: number, px: number, py: number): boolean {
   'worklet';
   const pad = 2;
   return px + 5 + pad > tx * TILE && px - 5 - pad < (tx + 1) * TILE && py + pad > ty * TILE && py - 5 - pad < (ty + 1) * TILE;
+}
+
+/**
+ * A patrol's next moment (w is their own copy of the row): a step carries on, a pause runs down, and then
+ * the next step towards the waypoint they're marching to, along the leg. Returns the grid, a new array if
+ * they took or gave back a tile.
+ */
+function stepPatrol(
+  w: Wanderer,
+  grid: number[],
+  solid: number[],
+  width: number,
+  height: number,
+  px: number,
+  py: number,
+  dt: number,
+): number[] {
+  'worklet';
+  if (w[W_TX] !== w[W_X] || w[W_TY] !== w[W_Y]) {
+    w[W_T] += (PATROL_SPEED * dt) / TILE;
+    if (w[W_T] < 1) return grid;
+    const out = grid === solid ? solid.slice() : grid;
+    out[w[W_Y] * width + w[W_X]] = 0;
+    w[W_X] = w[W_TX];
+    w[W_Y] = w[W_TY];
+    w[W_T] = 0;
+    const k = w[W_PI];
+    if (w[W_X] === w[W_PTS + k * 2] && w[W_Y] === w[W_PTS + k * 2 + 1]) {
+      // a corner: a beat to look smart (or longer, if you've just been talking to them)
+      w[W_PI] = (k + 1) % w[W_PN];
+      w[W_WAIT] = Math.max(w[W_WAIT], PATROL_PAUSE);
+    }
+    return out;
+  }
+  w[W_WAIT] -= dt;
+  if (w[W_WAIT] > 0) return grid;
+  let k = w[W_PI];
+  if (w[W_X] === w[W_PTS + k * 2] && w[W_Y] === w[W_PTS + k * 2 + 1]) {
+    k = (k + 1) % w[W_PN];
+    w[W_PI] = k;
+  }
+  const dx = Math.sign(w[W_PTS + k * 2] - w[W_X]);
+  const dy = Math.sign(w[W_PTS + k * 2 + 1] - w[W_Y]);
+  if (dx === 0 && dy === 0) return grid;
+  // along the leg: across first, then up or down (legs are straight, so it's only ever one)
+  const dir = dx > 0 ? 3 : dx < 0 ? 2 : dy > 0 ? 0 : 1;
+  const tx = w[W_X] + STEPS[dir][0];
+  const ty = w[W_Y] + STEPS[dir][1];
+  w[W_FACING] = dir;
+  const free = tx >= 0 && ty >= 0 && tx < width && ty < height && grid[ty * width + tx] === 0;
+  if (!free || underPlayer(tx, ty, px, py)) {
+    // someone's in the way: stand and wait for them to move
+    w[W_WAIT] = PATROL_RETRY;
+    return grid;
+  }
+  const out = grid === solid ? solid.slice() : grid;
+  out[ty * width + tx] = 1;
+  w[W_TX] = tx;
+  w[W_TY] = ty;
+  w[W_T] = 0;
+  return out;
 }
 
 /**
@@ -100,6 +204,10 @@ export function stepWanderers(
   for (let i = 0; i < rows.length; i++) {
     const w = rows[i].slice();
     out.push(w);
+    if (w[W_PN] > 0) {
+      grid = stepPatrol(w, grid, solid, width, height, px, py, dt);
+      continue;
+    }
     if (w[W_R] <= 0) {
       if (w[W_LOOK] !== 1) continue;
       // Standing still, looking about: a short glance another way, then a longer while back as they stand.
