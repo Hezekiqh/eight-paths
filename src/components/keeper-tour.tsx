@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TypewriterText } from '@/components/typewriter-text';
 import { TUTORIAL_QUEST_ID } from '@/game/quests';
 import { haptics } from '@/haptics';
-import { COMPANIONS, DEFAULT_PARTY } from '@/story/companions';
+import { COMPANIONS, DEFAULT_PARTY, ROSTER } from '@/story/companions';
 import { useGameStore } from '@/store';
 import { useSession } from '@/store/session';
 import { fonts } from '@/theme';
@@ -93,7 +93,8 @@ export function KeeperTour({ inside = false }: { inside?: boolean }) {
   const first = player ? (player.origin ?? DEFAULT_PARTY[player.classDimension]) : null;
   const line = step.line
     .replace('{name}', player?.name ?? 'friend')
-    .replace('{hero}', first ? COMPANIONS[first].name : 'Your first hero');
+    .replace('{hero}', first ? COMPANIONS[first].name : 'Your first hero')
+    .replace('{left}', String(ROSTER.length - 1));
 
   // Open this step's screen (only the tabs' copy does, so it happens once).
   useEffect(() => {

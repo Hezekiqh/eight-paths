@@ -123,7 +123,7 @@ export function winScene(
                     'BRANNOC: ...And I came back. That has to count for something.',
                     `Kaldor gets up off the throne. He looks at ${prince} for a long moment, and hands over the crown himself.`,
                     'KALDOR: It never did fit me.',
-                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.`,
+                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters. In the buried barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.`,
                     "Aurek the Tall is laid to rest, and his name goes back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
                     'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
                     'Captain Ingrid, Aurek and Widow Aldane join your collection.',
@@ -168,7 +168,7 @@ export function winScene(
                         ]
                       : []),
                     'KALDOR: Hm. Five hundred years. I thought I would mind more.',
-                    'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+                    'The horde scatters. In the buried barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
                     'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
                     'Captain Ingrid, Aurek and Widow Aldane join your collection.',
                     'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
@@ -206,7 +206,7 @@ export function winScene(
               'Two of his own guards march him out. Neither of them is getting paid for it.',
               ...(brannoc && !asBrannoc ? ['BRANNOC: That was... very cold, friend. Effective. But cold.'] : []),
               'You sit. The throne is cold, and far too big, and it suits you a little too well.',
-              'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+              'The horde scatters. In the buried barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
               'Captain Ingrid, Aurek and Widow Aldane join your collection.',
               'Far below, a cell door clangs.',
               // Gary left with the prisoners (dungeon.ts, CELLS_FREED): nobody's down there to see it

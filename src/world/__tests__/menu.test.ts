@@ -1,4 +1,4 @@
-import { ANSWERS } from '../felix-maze';
+import { ANSWERS, DRINKS } from '../felix-maze';
 import { MENU_ROWS, shownQuestions } from '../menu';
 
 const qs = ['a', 'b', 'c', 'd', 'e'].map((ask) => ({ ask }));
@@ -38,5 +38,13 @@ describe("Sir Himothy's answers", () => {
     const mean = ANSWERS.filter((a) => a.deed === 'bad');
     expect(mean).toHaveLength(1);
     expect(mean[0].knockout && mean[0].jailed).toBe(true);
+  });
+  it('lands you in the cells whatever you say (the drink by way of the Candle Inn)', () => {
+    for (const a of ANSWERS) expect(a.jailed || a.drinks).toBe(true);
+  });
+  it('has four drinks at the bar, every one named for the king', () => {
+    expect(DRINKS.menu.length).toBeLessThanOrEqual(MENU_ROWS);
+    for (const d of DRINKS.menu) expect(d.label).toContain('Kaldor');
+    expect(DRINKS.noMoney.join(' ')).toContain('{them}');
   });
 });

@@ -75,7 +75,10 @@ import {
   ANSWER_LEVEL,
   CLEARED_BOULDERS,
   CLEARING_TILE,
-  FELIX_FOILED,
+  DRINKS,
+  DRINKS_DUE,
+  TAB_UNPAID,
+  TO_THE_BAR,
   CUT_OFF,
   forHero,
   MISTER,
@@ -1199,8 +1202,8 @@ function World({
       then: () => travel(here),
     });
   }, [map, setFlag, sim, travel]);
-  // Felix frames you to the king's guards (felix-maze.ts): you answer, and either walk free while he
-  // laughs and dashes off, or (a wrong answer) wake in the dungeon next to Brannoc. First he gives his
+  // Felix frames you to the king's guards (felix-maze.ts): you answer, and however you answer, you end
+  // up in the dungeon next to Brannoc (the drink goes by way of the Candle Inn). First he gives his
   // name, you try "Mr. Himothy", and he cuts you off.
   const guardScene = useCallback(() => {
     const ask = (lines: string[]): void =>
@@ -1230,58 +1233,63 @@ function World({
                 });
                 return;
               }
-              if (a.jailed) {
-                // "Seize him!" (or her): they only want you
-                const seize = a.lines.map((l) => forHero(l, hero));
-                setDialogue({
-                  lines: seize,
-                  then: () => {
-                    // the guards close in on you from either side while Felix laughs (march.ts stands in
-                    // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
-                    setFlag(FRAMED);
-                    const hx = Math.floor(sim.x.get() / TILE);
-                    const hy = Math.floor((sim.y.get() - 1) / TILE);
-                    playSound('laugh');
-                    march(
-                      [
-                        { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
-                        {
-                          row: WALKER_ROWS.raider,
-                          path: [
-                            [25, 3],
-                            [hx, hy - 1],
-                          ],
-                          face: 0,
-                        },
-                        {
-                          row: WALKER_ROWS.raider,
-                          path: [
-                            [26, 4],
-                            [26, hy + 1],
-                            [hx, hy + 1],
-                          ],
-                          face: 1,
-                        },
-                        { row: -1, path: [[hx, hy]], face: 3 },
+              if (a.drinks) {
+                // "Let me buy you a drink" (author, Oct 7, 2026): they thank you, you answer, and it's off to the
+                // Candle Inn there and then. The bar (TO_THE_BAR, on arrival) is where it goes wrong.
+                sayAs(can.who!, a.lines, a.by, () =>
+                  setDialogue({
+                    lines: DRINKS.thanks,
+                    choices: DRINKS.replies.map((label) => ({
+                      label,
+                      then: () =>
+                        setDialogue({
+                          lines: DRINKS.off,
+                          then: () => {
+                            setFlag(FRAMED);
+                            travel(TO_THE_BAR);
+                          },
+                        }),
+                    })),
+                  }),
+                );
+                return;
+              }
+              // "Seize him!" (or her): they only want you. Every other answer ends here (author, Oct 7, 2026).
+              const seize = a.lines.map((l) => forHero(l, hero));
+              const by = a.by && Object.fromEntries(Object.entries(a.by).map(([id, ls]) => [id, ls!.map((l) => forHero(l, hero))]));
+              sayAs(can.who!, seize, by, () => {
+                // the guards close in on you from either side while Felix laughs (march.ts stands in
+                // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
+                setFlag(FRAMED);
+                const hx = Math.floor(sim.x.get() / TILE);
+                const hy = Math.floor((sim.y.get() - 1) / TILE);
+                playSound('laugh');
+                march(
+                  [
+                    { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
+                    {
+                      row: WALKER_ROWS.raider,
+                      path: [
+                        [25, 3],
+                        [hx, hy - 1],
                       ],
-                      () => travel(INTO_THE_CELL),
-                      2.5,
-                      true,
-                    );
-                  },
-                });
-                return;
-              }
-              // Let go: once the talk closes, Felix laughs and dashes off, and the guards go with him.
-              if (can.who === hero) {
-                leaving.current = { id: 'felix-maze', flag: FRAMED };
-                setDialogue({ lines: [...a.lines, ...FELIX_FOILED] });
-                return;
-              }
-              // a party member said it: they step back in, then Felix has his say and goes
-              sayAs(can.who!, a.lines, a.by, () => {
-                leaving.current = { id: 'felix-maze', flag: FRAMED };
-                setDialogue({ lines: FELIX_FOILED });
+                      face: 0,
+                    },
+                    {
+                      row: WALKER_ROWS.raider,
+                      path: [
+                        [26, 4],
+                        [26, hy + 1],
+                        [hx, hy + 1],
+                      ],
+                      face: 1,
+                    },
+                    { row: -1, path: [[hx, hy]], face: 3 },
+                  ],
+                  () => travel(INTO_THE_CELL),
+                  2.5,
+                  true,
+                );
               });
             },
           };
@@ -1474,6 +1482,24 @@ function World({
         // everyone out, there's nobody left to see it.
         w.setFlag(FELL_IN);
         setDialogue({ lines: w.flags.includes(CELLS_FREED) ? POTHOLE_UNSEEN : POTHOLE_LANDING });
+      } else if (map.id === 'candle-inn' && w.flags.includes(DRINKS_DUE) && !w.flags.includes(TAB_UNPAID)) {
+        // The guards' drink (felix-maze.ts): you order, Nana asks for the money, and you haven't got any.
+        // Then it's black, and the guards march you down to the cells from their stair.
+        setDialogue({
+          lines: DRINKS.bar,
+          choices: DRINKS.menu.map((d) => ({
+            label: d.label,
+            then: () =>
+              setDialogue({
+                lines: DRINKS.noMoney.map((l) => forHero(l.replace('{drink}', d.drink), hero)),
+                then: () => {
+                  w.setFlag(TAB_UNPAID);
+                  w.setFlag(JAILED);
+                  travel(INTO_THE_CELL);
+                },
+              }),
+          })),
+        });
       } else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
         w.setFlag(JAIL_WOKE);
         // Knocked out by Himothy: you come to already in the cell, no guards, no march.

@@ -247,7 +247,7 @@ export const REJOIN_MAP = 'broken-watch';
 export const BRANNOC_REJOINS = [
   'BRANNOC: WAIT! WAIT FOR ME!',
   'Brannoc comes pounding down the road, crown jammed on over his helmet, a scroll flapping in one hand.',
-  'BRANNOC: I have appointed a royal advisor. I gave her two rules. Do not go to war. Do not cause problems.',
+  'BRANNOC: I have appointed a royal advisor. I gave him two rules. Do not go to war. Do not cause problems.',
   "BRANNOC: Everything else, she sends by raven. I am... what is the Keeper's word for it... working remotely.",
   'BRANNOC: I have set my banner to "Away". I shall attend the royal council by candle. I have learned to say "you are on mute." I know not what it means. It is very powerful.',
   'BRANNOC: And I have written an out-of-office scroll. Behold.',

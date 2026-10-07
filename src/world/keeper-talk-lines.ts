@@ -236,7 +236,7 @@ export const FINALE: {
     "It's a fearsome peace. But it's a peace, and you chose it.",
   ],
   dethroned: [
-    "Far behind you, a royal advisor sits beside Brannoc's empty throne, under a sign in his own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
+    "Far behind you, a royal advisor sits beside Brannoc's empty throne, under a sign in the king's own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
     'Beside you, King Brannoc checks the sky for ravens. He is working remotely.',
     "The horde is gone. Nobody guards the streets, and nobody asks permission. It's frightening. It's theirs.",
     'You chose to let them choose. Somewhere, someone would call that reckless.',

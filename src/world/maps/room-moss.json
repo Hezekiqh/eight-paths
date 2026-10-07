@@ -42,7 +42,7 @@
       "name": "Moss",
       "character": "moss",
       "lines": [
-        "Hey."
+        "Hey. Tuft's asleep on the windowsill. Come in quiet."
       ],
       "comesAfter": "met:moss",
       "goneAfter": "left:moss"
