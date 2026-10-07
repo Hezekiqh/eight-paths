@@ -129,7 +129,7 @@ export default function Paywall() {
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.kicker, { color }]}>EIGHT PATHS PREMIUM</Text>
-        <Text style={styles.title}>Wake the legends faster</Text>
+        <Text style={styles.title}>Unlock the whole journey</Text>
 
         <View style={[styles.letter, { borderColor: color }]}>
           <Text style={[styles.letterHead, { color }]}>A NOTE FROM THE CREATOR</Text>
