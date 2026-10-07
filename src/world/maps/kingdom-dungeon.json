@@ -15,7 +15,7 @@
     "#Wb...,kW,.bW.b,W,.bW.W#",
     "#W,.....W...W...W...W.W#",
     "#W,,....W...W...W...W.W#",
-    "#WGGG24GWGpGWGpGWGpGW.W#",
+    "#WGpG24GWGpGWGpGWGpGW.W#",
     "#W....................W#",
     "#Wt...................W#",
     "#W...................1W#",
@@ -364,6 +364,49 @@
       ],
       "comesAfter": "brannoc-declined",
       "goneAfter": "brannoc-joined"
+    },
+    {
+      "id": "kaldor-jailed",
+      "type": "npc",
+      "x": 3,
+      "y": 4,
+      "sprite": "kaldor",
+      "facing": "down",
+      "name": "Kaldor",
+      "lines": [
+        "...",
+        "Five hundred years, and not one grey hair. And now look at me.",
+        "They took my shadows. My master never even said goodbye."
+      ],
+      "questions": [
+        {
+          "ask": "Who was your master?",
+          "answer": [
+            "I never knew. Something in the dark that knew my name.",
+            "It gave me everything I ever wanted. It asked for one thing: build the army, and never use it for war.",
+            "I waited a hundred years for it to change its mind. Then I stopped waiting."
+          ]
+        },
+        {
+          "ask": "Why war?",
+          "answer": [
+            "What is an army for, if not war?",
+            "I built the strongest army the world has ever seen. It seemed a shame to waste it."
+          ]
+        },
+        {
+          "ask": "Enjoy the straw, old man.",
+          "answer": [
+            "...",
+            "The guard tells me the straw is the best part. I think he's lying. I think he likes to watch."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "farewell": [
+        "This was my nephew's cell, once. Or so they say."
+      ],
+      "comesAfter": "kaldor-jailed"
     }
   ],
   "art": {

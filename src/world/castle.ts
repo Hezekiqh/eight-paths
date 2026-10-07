@@ -1,6 +1,8 @@
 import type { Dimension } from '@/game';
 import type { CharacterId } from '@/story/companions';
 
+import type { Actor } from './march';
+
 // Kaldor's castle (author, Oct 4, 2026), at the end of the north road: soldiers drilling on the
 // grounds (one of them down), a guard post, and a drawbridge over the moat that won't come down
 // until you talk, push, pay or argue your way past the gate guards. Inside, an empty hall: straight
@@ -281,3 +283,28 @@ export const WIVES_GOSSIP = [
   'QUEEN MAREN: I would be a little heartbroken.',
   'QUEEN HELKA: The favourite.',
 ];
+
+/**
+ * Kaldor beaten (author, Oct 7, 2026): his power leaves him. Four of his shadows pour out of him, from the throne,
+ * to the corners of the hall, and are gone; then he's just an old man.
+ */
+export const KALDOR_THRONE: [number, number] = [11, 2];
+export const kaldorShadows = (shadow: number): Actor[] =>
+  [
+    [
+      [3, 2],
+      [2, 4],
+    ],
+    [
+      [19, 2],
+      [19, 4],
+    ],
+    [
+      [11, 6],
+      [3, 10],
+    ],
+    [
+      [11, 6],
+      [19, 10],
+    ],
+  ].map((to) => ({ row: shadow, path: [KALDOR_THRONE, ...(to as [number, number][])] }));

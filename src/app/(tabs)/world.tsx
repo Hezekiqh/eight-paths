@@ -122,7 +122,7 @@ import { MARCH_PACE, newMarch, type Actor } from '@/world/march';
 import { SPEED_RATE } from '@/world/speed';
 import { BOSS_CUE, bossMoment } from '@/world/moments';
 import { noneLeft, practiceWarning, specialsLeft } from '@/world/specials';
-import { deedId } from '@/world/honor';
+import { deedId, honor } from '@/world/honor';
 import keeperWelcome from '@/world/keeper-welcome.json';
 import { TEST_TOOLS } from '@/world/test-tools';
 import { usePremium } from '@/premium/store';
@@ -138,6 +138,7 @@ import {
   BRANNOC_REJOINS,
   REJOIN_MAP,
   brannocAway,
+  kaldorShadows,
   needsSomeone,
 } from '@/world/castle';
 import { LEAVE_IT_TO, MORE, NEVER_MIND, heroOrder, heroPage } from '@/world/hero-pick';
@@ -1202,6 +1203,11 @@ function World({
       map.npcs.some((n) => n.id === 'felix'),
       hero === 'brannoc',
       useWorldStore.getState().flags.includes(CELLS_FREED),
+      // at the throne: more mean answers than kind ones changes how you put it, and Brannoc asks your name
+      {
+        mean: honor(useWorldStore.getState().deeds) < 0,
+        name: useGameStore.getState().player?.name?.trim() || undefined,
+      },
     );
     if (!scene) return;
     // whoever stepped out for it steps back in as the scene ends, however it ends
@@ -1209,8 +1215,8 @@ function World({
       sim.cameo.set([]);
       finish(o);
     };
-    const said: Dialogue = {
-      lines: scene.lines,
+    const ending: Dialogue = {
+      lines: scene.after ?? [],
       then: scene.outcome ? () => done(scene.outcome!) : undefined,
       choices: scene.choices?.map((c) => ({
         label: c.label,
@@ -1218,6 +1224,10 @@ function World({
         then: () => setDialogue({ lines: c.lines, then: () => done(c.outcome) }),
       })),
     };
+    // Kaldor's shadows leave him (castle.ts): his lines, then they pour out across the hall, then the rest
+    const said: Dialogue = scene.shadows
+      ? { lines: scene.lines, then: () => march(kaldorShadows(WALKER_ROWS.shadow), () => setDialogue(ending), 5) }
+      : { ...ending, lines: [...scene.lines, ...ending.lines] };
     if (scene.stepOut && scene.stepOut !== hero) stepOut(sim, scene.stepOut as HeroId, said, setDialogue);
     else setDialogue(said);
   }, [map, gameParty, owned, finish, prison, hero, setFlag, march, travel, hereNow, sim]);
@@ -1377,7 +1387,9 @@ function World({
               }
               // "Seize him!" (or her): they only want you. Every other answer ends here (author, Oct 7, 2026).
               const seize = a.lines.map((l) => forHero(l, hero));
-              const by = a.by && Object.fromEntries(Object.entries(a.by).map(([id, ls]) => [id, ls!.map((l) => forHero(l, hero))]));
+              const by =
+                a.by &&
+                Object.fromEntries(Object.entries(a.by).map(([id, ls]) => [id, ls!.map((l) => forHero(l, hero))]));
               sayAs(can.who!, seize, by, () => {
                 // the guards close in on you from either side while Felix laughs (march.ts stands in
                 // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
