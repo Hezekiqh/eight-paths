@@ -18,7 +18,8 @@
     "6": ".",
     "7": ".",
     "8": ".",
-    "h": "."
+    "h": ".",
+    "9": "."
   },
   "tiles": [
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
@@ -51,12 +52,12 @@
     "MT.WWWWWWWWW.aaa7aaa.sbssssssssssssssssssbs.FzzzzzzzzF.rrr8rrrTM",
     "MT.WWWW6WWWW....s....ssssssssssssssssssssss.FzzzzzzzzF....s...TM",
     "MT.....s........s..............ss...........FzezezezkF....s...TM",
-    "MT.....s........s..............ss...........FzzzzzzzzF.FFFFFFFTM",
-    "MT.....s.......................ss...........FzzzzzzzzF.FgggggFTM",
-    "MT.uuuu.uuuu.uuuu..............ss.uuuu..uuuuFFFFFFFFFF.FgggggFTM",
-    "MT.uuuu.uuuu.uuuu..............ss.uuuu..uuuu...........FgggggFTM",
-    "MT.uhuu.uhuu.uhuu..............ss.uhuu..uhuu...........FFFFFFFTM",
-    "MT..s....s....s................ss..s.....s....................TM",
+    "MT.....s........s...$$$$$$$$$..ss...........FzzzzzzzzF.FFFFFFFTM",
+    "MT.....s............$$$$$$$$$..ss...........FzzzzzzzzF.FgggggFTM",
+    "MT.uuuu.uuuu.uuuu...$$$$$$$$$..ss.uuuu..uuuuFFFFFFFFFF.FgggggFTM",
+    "MT.uuuu.uuuu.uuuu...$$$$$$$$$..ss.uuuu..uuuu...........FgggggFTM",
+    "MT.uhuu.uhuu.uhuu...$$$$9$$$$..ss.uhuu..uhuu...........FFFFFFFTM",
+    "MT..s....s....s.........sssssssss..s.....s....................TM",
     "MT.............................ss.............................TM",
     "MT.............................ss.............................TM",
     "MT.............................ss.............................TM",
@@ -170,6 +171,12 @@
     ],
     "u": [
       "A cottage. Window boxes, and a practice dummy in nearly every garden."
+    ],
+    "9": [
+      "The Bank of Warrior City. Over the door, in gold: STRENGTH IS WEALTH. Under it, smaller: WEALTH IS ALSO WEALTH."
+    ],
+    "$": [
+      "The Bank of Warrior City. Pale stone, gold trim, not a scratch on it. The only building in town nobody has punched."
     ]
   },
   "objects": [

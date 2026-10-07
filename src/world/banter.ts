@@ -369,6 +369,185 @@ export const BANTER: Record<string, Banter[]> = {
   'royal-dungeon:rackwarden': [
     { who: 'wren', lines: ['WREN: Rows and rows of them. And nobody has said the words over a single one.'] },
   ],
+  // ---- the Bank of Warrior City (author, Oct 7, 2026): Ysolde has an opinion on every ledger
+  'wc-bank:coyne': [
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: Charming. I'd like to see the books.",
+        'MASTER COYNE: The books are not for customers.',
+        "YSOLDE: I'm not a customer. I'm an auditor. I've just decided.",
+      ],
+    },
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: When I was a boy the treasury was one room and a man called Gilbert. I miss Gilbert.'],
+    },
+  ],
+  'wc-bank:grimsby': [
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: Steel, three dials, and a guard who doesn't know the numbers. Oh, that's lovely. That's a proper vault.",
+        "YSOLDE: Don't look at me. I'm having a moment.",
+      ],
+    },
+    { who: 'pip', lines: ['PIP: Three dials. That rhymes with nothing. I hate it already.'] },
+  ],
+  'wc-bank:dimmock': [
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: Rations by the strength of a child. That isn't balancing a book. That's tipping people off the edge of it.",
+      ],
+    },
+    {
+      who: 'wren',
+      lines: ['WREN: He writes them in red so he never has to write them again. I shall pray for him. Loudly.'],
+    },
+  ],
+  'wc-bank:pennywhistle': [
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: 'Paid as goddesses.' I've read the column. For goddesses, it's frankly underpaid. I'd ask for a review.",
+      ],
+    },
+  ],
+  'wc-bank:tallis': [
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: Five hundred soldiers, one day, and they're still carrying it forward. That isn't a ledger. That's a trophy cabinet.",
+      ],
+    },
+    {
+      who: 'quill',
+      lines: ["QUILL: One casualty. Tripped. I'd like to read his file. Nobody ever reads the tripping ones."],
+    },
+  ],
+  'wc-bank:hulda': [
+    {
+      who: 'ysolde',
+      lines: ["YSOLDE: Three carriages, and she'd swap the lot. First sensible thing anyone's said in here."],
+    },
+    { who: 'oren', lines: ['OREN: Her son is across town. In a bed. Go and see him, if you can.'] },
+  ],
+  'wc-bank:rask': [
+    { who: 'brannoc', lines: ['BRANNOC: A bow with every stipend. Nobody bows to me. I should like a bow.'] },
+    {
+      who: 'ysolde',
+      lines: ["YSOLDE: 'They'd never cheat a champion.' Of course not. They just stop paying him."],
+    },
+  ],
+  'wc-bank:ferrant': [
+    { who: 'ysolde', lines: ['YSOLDE: Old money, all of two years old. You can tell. It still squeaks.'] },
+  ],
+  'wc-bank:agna': [
+    {
+      who: 'ysolde',
+      lines: ["YSOLDE: Since the spring. I'd have lent it to her by now, and I'm famously horrible."],
+    },
+    { who: 'wren', lines: ['WREN: Nine, and trying. Bless him. Bless the lot of them.'] },
+  ],
+  'wc-bank:rates': [
+    {
+      who: 'brannoc',
+      with: 'ysolde',
+      lines: ['BRANNOC: Is forty a lot?', 'YSOLDE: Yes.', 'BRANNOC: ...In the hundred?', 'YSOLDE: Monthly, Brannoc.'],
+    },
+    {
+      who: 'ysolde',
+      lines: [
+        'YSOLDE: Forty. In the hundred. Monthly.',
+        "YSOLDE: I have collected debts from dukes, and I have never once charged forty. That isn't interest. That's a mugging with a receipt.",
+      ],
+    },
+  ],
+  'wc-vault:war-chest': [
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: I have never seen so much money in one room, and been so sure it'll be spent badly.",
+        "YSOLDE: ...Don't touch the boxes. Touch the little chest. That one isn't anybody's.",
+      ],
+    },
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: For the march. Everyone in this city says it as if it were the weather.'],
+    },
+    {
+      who: 'tamsin',
+      lines: ["TAMSIN: All that gold, and they've stacked it on the floor. Somebody give me a week and some shelving."],
+    },
+  ],
+  // ---- the hospital (author, Oct 7, 2026): the strong, once
+  'wc-hospital:wc-healer': [
+    {
+      who: 'wren',
+      lines: ["WREN: Sit down, Maud. I'll do the next one. No, sit. That's a blessing, not a suggestion."],
+    },
+    { who: 'oren', lines: ['OREN: She has not eaten. I will bring soup. Then she will be grumpy and fed.'] },
+  ],
+  'wc-hospital:champion-bruck': [
+    {
+      who: 'brannoc',
+      lines: [
+        "BRANNOC: Ah. The arm's broken and he's standing as if it isn't. I know that one.",
+        'BRANNOC: ...Not the arm. The standing.',
+      ],
+    },
+    { who: 'wren', lines: ["WREN: Bent is not a kind of strong. Bent is a kind of splint. I'll fetch one."] },
+    { who: 'oren', lines: ['OREN: Being hurt is not losing. Tell him. He will not listen. Tell him anyway.'] },
+  ],
+  'wc-hospital:soldier-tam': [
+    { who: 'wren', lines: ['WREN: It will set. Clean breaks do. The stipend is the bit that never mends.'] },
+  ],
+  'wc-hospital:soldier-hett': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Twenty years, and struck off by the afternoon. That is not how you treat a soldier. That is not how you treat a horse.',
+      ],
+    },
+    { who: 'oren', lines: ['OREN: Breathe, Brannoc. ...Good. Now be angry. Slowly.'] },
+  ],
+  'wc-hospital:soldier-sigi': [
+    {
+      who: 'oren',
+      with: 'wren',
+      lines: [
+        'OREN: Seventeen.',
+        'WREN: I know.',
+        'OREN: ...I will sit with him a while.',
+        "WREN: I'll sit with his mum.",
+      ],
+    },
+    { who: 'wren', lines: ["WREN: Seventeen. I'll say one for him. Then I'll say one for whoever made the rules."] },
+  ],
+  'wc-hospital:soldier-osk': [
+    { who: 'brannoc', lines: ["BRANNOC: Walls do fall over. I've fallen over a great deal. It's very survivable."] },
+  ],
+  'wc-hospital:soldier-corran': [
+    { who: 'oren', lines: ['OREN: Thirty-nine good years. He remembers the one bad one. People do.'] },
+    {
+      who: 'wren',
+      lines: ["WREN: If she comes north, the camp will have her. They're kind there. Kinder than here, anyway."],
+    },
+  ],
+  'wc-hospital:mother-ilse': [
+    { who: 'wren', lines: ['WREN: Knit fast, love. I shall pray fast. Between us we might beat the bank.'] },
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: My mother would have liked her. She would have shouted at the bank with her.'],
+    },
+  ],
+  'wc-hospital:kids-bench': [
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: Your father is a very good wall. I can tell from here. Solid. Excellent mortar.'],
+    },
+  ],
 };
 
 /**

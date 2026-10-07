@@ -137,6 +137,21 @@ export const JOBS: Job[] = [
     already: ['Two bars, bent wide apart. Somebody went through here in a hurry.'],
     opens: true,
   },
+  {
+    // The bank's vault (author, Oct 7, 2026): a Noble reads the ledgers the way a banker does, and just sees it.
+    // Anyone else turns the dials themselves (vault.ts).
+    map: 'wc-bank',
+    tile: 'G',
+    flag: 'bank-vault-open',
+    label: 'The vault door',
+    path: 'financial',
+    done: [
+      '{name} runs an eye down the three ledgers, the way other people glance at the weather.',
+      '"Red ink, in order. Six, two, one. They might as well have painted it on the door."',
+      'The dials click round. Somewhere inside, something very heavy agrees. The vault swings open.',
+    ],
+    already: ['The vault door stands open.'],
+  },
 ];
 
 export const jobAt = (map: MapId, tile: string) => JOBS.find((j) => j.map === map && j.tile === tile);
