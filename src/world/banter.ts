@@ -743,6 +743,100 @@ export const BANTER: Record<string, Banter[]> = {
       ],
     },
   ],
+  // ---- the bakery by the Kaloseum (author, Oct 7, 2026): the Warden came down through its roof. Brannoc swung,
+  // asleep, and remembers none of it; he has a feeling. Pip has a song. Ysolde has questions about the roof.
+  'warrior-city:ambrose': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: A man, out of the sky, from the Kaloseum? How very strange.',
+        'BRANNOC: …I have the oddest feeling I owe these people a roof.',
+        'BRANNOC: I cannot think why. I was asleep the whole time.',
+      ],
+    },
+    {
+      who: 'ysolde',
+      lines: [
+        'YSOLDE: Are you insured?',
+        'MASTER AMBROSE: Against what?',
+        'YSOLDE: Acts of the king. Acts of the Kaloseum. Very large men, from a height.',
+        "MASTER AMBROSE: We're insured against fire.",
+        'YSOLDE: Pity.',
+      ],
+    },
+  ],
+  'warrior-city:hettie': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Madam, I am… very sorry about your roof.',
+        'MISTRESS HETTIE: Why? Did you do it?',
+        'BRANNOC: No! No. I was asleep. …I am almost certain I was asleep.',
+      ],
+    },
+    {
+      who: 'ysolde',
+      lines: [
+        "YSOLDE: The Kaloseum threw him, so the Kaloseum pays for the roof. That isn't the law. That's arithmetic.",
+        'MISTRESS HETTIE: They wrote back STRENGTH ABOVE EVERYTHING.',
+        "YSOLDE: Then send them a bill that's stronger. I'll word it for you. No charge. Well. A bun.",
+      ],
+    },
+  ],
+  'warrior-city:dot': [
+    {
+      who: 'pip',
+      lines: [
+        "PIP: A big man, ever so high up, going AAAAAAA. Dot, that's a song. I'm putting you in the chorus.",
+        'LITTLE DOT: What rhymes with roof?',
+        'PIP: Oof. Everything rhymes with roof, if you fall far enough.',
+      ],
+    },
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: Out of the sky, onto your house. …Did he say anything? On the way down? A name, perhaps?'],
+    },
+  ],
+  'warrior-city:bakery-sign': [
+    {
+      who: 'pip',
+      lines: [
+        "PIP: 'Open. Roof closed.' Oh, that's the last line. The Ballad of the Bakery Roof.",
+        "PIP: Verse one, he goes up. Verse two, he comes down. There isn't a verse three. That's what makes it sad.",
+      ],
+    },
+    {
+      who: 'ysolde',
+      lines: ['YSOLDE: Ambrose and Daughter. Two names on the sign, and not one on a policy. I asked.'],
+    },
+  ],
+  'wc-bakery:bryony': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Shall I sweep? I feel very strongly that I ought to sweep.',
+        'BRYONY: Why?',
+        'BRANNOC: I cannot say. Give me the broom.',
+      ],
+    },
+  ],
+  'wc-bakery:tile:w': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Arms out. Legs out. As if somebody hit him very, very hard, once.',
+        'BRANNOC: …Who could hit a man that hard? Not I. I am almost sure. I have never been sure of anything less.',
+      ],
+    },
+    { who: 'pip', lines: ["PIP: He landed like a star. Oh, that's lovely. That's the bit everyone will cry at."] },
+    {
+      who: 'ysolde',
+      lines: [
+        'YSOLDE: Roof, rafters, floor, stock and a till. Somebody owes somebody a great deal of money.',
+        "YSOLDE: And nobody's going to pay it. I can always tell. The air goes a certain way.",
+      ],
+    },
+  ],
   'wc-vault:war-chest': [
     {
       who: 'ysolde',

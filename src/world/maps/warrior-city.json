@@ -19,19 +19,21 @@
     "7": ".",
     "8": ".",
     "h": ".",
-    "9": "."
+    "9": ".",
+    "0": ".",
+    "o": "bakery"
   },
   "tiles": [
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM^^MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     "MT.............................ss.............................TM",
     "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBB3BBB..........ss...........NNNN4NNNN.VVVV5VVVTM",
-    "MT.PPPP2PPPP.....s............cssc..............s.........s...TM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBB3BBB..........ss..ooo0ooo..NNNN4NNNN.VVVV5VVVTM",
+    "MT.PPPP2PPPP.....s............cssc....s.........s.........s...TM",
     "MT.....s.........s...ssssssssssssssssssssss.....s.........s...TM",
     "MT.....s.........s...ssCCCCCCCCCCCCCCCCCCss.....s.........s...TM",
     "MT.uuuusuuuu.uuuus...ssCCCCCCCCCCCCCCCCCCss...uuuu.uuuu.uuuu..TM",
@@ -177,6 +179,13 @@
     ],
     "$": [
       "The Bank of Warrior City. Pale stone, gold trim, not a scratch on it. The only building in town nobody has punched."
+    ],
+    "o": [
+      "The bakery. A roof of red tiles, with a hole in it the shape of a very large man: arms out, legs out.",
+      "Flour has settled over everything round it, like snow. Smoke is still coming out of the chimney."
+    ],
+    "0": [
+      "The bakery door. A card in the window says OPEN. Somebody has added, smaller: TO THE SKY."
     ]
   },
   "objects": [
@@ -871,6 +880,152 @@
           ],
           "deed": "bad"
         }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "ambrose",
+      "x": 36,
+      "y": 9,
+      "sprite": "chisk",
+      "facing": "down",
+      "name": "Master Ambrose",
+      "lines": [
+        "Morning. We're open.",
+        "* Behind him, his bakery has no roof. A bit more of it comes down while you watch.",
+        "Flatbread? Very flat. Today's special. Yesterday it was a cottage loaf."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What happened?",
+          "answer": [
+            "Second batch had just gone in. Then a very large man came through the roof.",
+            "Out of the sky. From the direction of the Kaloseum. In chains. It's not how people usually come in.",
+            "He landed on the bread. Then on the floor. Then a bit further into the floor."
+          ]
+        },
+        {
+          "ask": "What happened to the body?",
+          "answer": [
+            "Carried away by soldiers, shortly after he landed.",
+            "It took six of them. They didn't pay for the roof. Or the buns.",
+            "One of them took a bun on the way out. You don't argue with six men carrying a seventh."
+          ]
+        },
+        {
+          "ask": "Did anyone get hurt?",
+          "answer": [
+            "Nobody. We were all out the back, arguing about the rye.",
+            "The bread got hurt. The bread got very hurt.",
+            "And him, I suppose. He was past saying."
+          ]
+        },
+        {
+          "ask": "Who was he?",
+          "answer": [
+            "The Warden, Hettie says. Out of the Kaloseum. Big as a door, and chained like one.",
+            "Word is somebody in the arena hit him. Once. I'd like to meet whoever it was.",
+            "I'd like to give him the bill."
+          ]
+        },
+        {
+          "ask": "Maybe bake something lighter next time.",
+          "answer": [
+            "* He looks at you for a long time.",
+            "I'll write that down.",
+            "* He doesn't write it down."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "hettie",
+      "x": 37,
+      "y": 9,
+      "sprite": "hesper",
+      "facing": "down",
+      "name": "Mistress Hettie",
+      "lines": [
+        "Buns. They were two coppers. They spent the morning under a very large man, so now they're one.",
+        "They're very thin buns. You get more of them to a bag."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Are you all right?",
+          "answer": [
+            "We're fine. The shop isn't. The shop's having a lie-down.",
+            "Ambrose keeps going back in to check on the oven. The oven's fine. It's the only thing in there that is."
+          ]
+        },
+        {
+          "ask": "Will you rebuild?",
+          "answer": [
+            "With what? The roof money was in the till. The till was under him.",
+            "We wrote to the Kaloseum. They wrote back. It said STRENGTH ABOVE EVERYTHING.",
+            "That isn't a sum. I checked."
+          ]
+        },
+        {
+          "ask": "At least it's open-plan now.",
+          "answer": [
+            "It is. Lovely light.",
+            "* She goes back to dusting the flour off a bun. Under the flour is more flour."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "dot",
+      "x": 40,
+      "y": 9,
+      "sprite": "kids",
+      "facing": "down",
+      "name": "Little Dot",
+      "lines": [
+        "A man fell out of the sky onto our house. He went in the floor. Nobody else in my class has seen that.",
+        "I'm selling crumbs. A copper a bag. They're the bread from before."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What did you see?",
+          "answer": [
+            "A big man, ever so high up, going AAAAAAA.",
+            "Then he stopped going AAAAAAA, and the roof went, and Dad said a word I'm not allowed."
+          ]
+        },
+        {
+          "ask": "I'll take a bag of crumbs.",
+          "answer": [
+            "That's a copper. You can owe me.",
+            "Everybody owes us. The soldiers owe us a roof."
+          ]
+        },
+        {
+          "ask": "I bet your bread's what knocked him out.",
+          "answer": [
+            "It is NOT. Our bread's soft. Dad says.",
+            "* She looks up at the roof. She looks less sure."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "sign",
+      "id": "bakery-sign",
+      "x": 41,
+      "y": 8,
+      "inArt": true,
+      "lines": [
+        "The bakery's sign, hanging by one chain. A painted loaf, and under it: AMBROSE & DAUGHTER. FRESH DAILY.",
+        "Somebody has chalked a line through FRESH DAILY and written: OPEN. ROOF CLOSED."
       ]
     }
   ]

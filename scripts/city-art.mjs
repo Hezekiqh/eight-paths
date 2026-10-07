@@ -481,6 +481,126 @@ export function cityArt({ box, put, ellipse, hash }) {
     }
   };
 
+  // The bakery by the Kaloseum (author, Oct 7, 2026): warm plaster and dark timber under a red tile roof, with a
+  // hole in the roof the shape of a very large man, arms and legs out. The Warden came down through it, out of the
+  // sky (dungeon.ts: "Somewhere in town, a roof gives way."). Flour over everything, the shop window full of flat
+  // loaves, the sign hanging by one chain, and smoke from the chimney: the oven is still going. Every letter is
+  // taken, so it's a named key: the map's `art` points a letter at it, and it fills that letter's block.
+  art.bakery = (g, x, y, m) => {
+    const me = m.at(0, 0);
+    if (m.at(-1, 0) === me || m.at(0, -1) === me) return;
+    const ext = extent(m, me);
+    const wall = Math.round(ext.h * 0.5);
+    const wy = y + ext.h - wall;
+    const rows = ext.h - wall;
+    ground(g, x, y, ext.w, ext.h, rows);
+    box(g, x, wy, ext.w, wall, '#E8D8B8');
+    for (let i = 0; i < ext.w; i += 14) box(g, x + i, wy, 2, wall, '#5A3A22');
+    box(g, x, wy + Math.round(wall / 2) - 1, ext.w, 2, '#5A3A22');
+    box(g, x, wy, ext.w, 2, '#5A3A22');
+    footing(g, x, y, ext.w, ext.h, rows);
+    roof(g, x, y, ext.w, rows, '#A8503A', '#7A3426', '#C8705A', { chimney: 0.84 });
+    // smoke from the chimney: the oven never got the news
+    const sx = x - 2 + Math.round((ext.w + 4) * 0.84) + 3;
+    for (let k = 0; k < 4; k++) {
+      const puff = k % 2 ? '#B8B4B0' : '#D0CCC8';
+      ellipse(g, sx + k * 2 + (k % 2), y - 11 - k * 5, 2 + k, 2 + Math.floor(k / 2), puff);
+    }
+
+    // the hole, a man spread-eagled: head, body, arms flung up and out, legs apart
+    const hx = x + Math.round(ext.w * 0.4);
+    const hy = y + Math.round(rows * 0.52);
+    const seg = (px, py, ax, ay, bx, by) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+      return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+    };
+    const depth = (px, py) => {
+      const i = px - hx;
+      const j = py - hy;
+      return Math.min(
+        Math.hypot(i / 1.1, j + 11) - 4.5,
+        Math.max(Math.abs(i) - 6, Math.abs(j + 1) - 7),
+        seg(i, j, -5, -5, -14, -13) - 2.6,
+        seg(i, j, 5, -5, 14, -13) - 2.6,
+        seg(i, j, -3, 5, -9, 14) - 3,
+        seg(i, j, 3, 5, 9, 14) - 3,
+      );
+    };
+    for (let j = -20; j <= 20; j++)
+      for (let i = -20; i <= 20; i++) {
+        const px = hx + i;
+        const py = hy + j;
+        const d = depth(px, py);
+        if (d <= 0) {
+          // the dark inside, and the bakery's floor far below, lit by the hole
+          let c = j > 6 && Math.abs(i) < 7 ? '#6A5444' : '#241812';
+          if (hash(px, py, 71) < 0.08) c = '#E8E0D0';
+          put(g, px, py, c);
+        } else if (d < 1.6 && hash(px, py, 72) < 0.7) {
+          // the broken edge: snapped tiles, pale where they cracked
+          put(g, px, py, hash(px, py, 73) < 0.5 ? '#E8B8A0' : '#5A2418');
+        }
+      }
+    // two rafters across it, one snapped and hanging in
+    for (let i = -16; i <= 16; i++) {
+      const py = hy - 3 + Math.round(i * 0.12);
+      if (depth(hx + i, py) < 1) box(g, hx + i, py, 1, 2, '#7A5230');
+    }
+    for (let k = 0; k < 9; k++) box(g, hx + 6 - k, hy + 5 + Math.round(k * 0.7), 1, 2, '#6A4428');
+    // flour dust, puffed up out of the hole and settled on everything round it
+    for (let k = 0; k < 140; k++) {
+      const a = hash(k, 1, 74) * Math.PI * 2;
+      const r = 6 + hash(k, 2, 74) * 22;
+      const px = Math.round(hx + Math.cos(a) * r * 1.2);
+      const py = Math.round(hy + Math.sin(a) * r * 0.8);
+      if (depth(px, py) <= 0) continue;
+      const cur = g[py]?.[px];
+      if (cur) g[py][px] = mixC(cur, '#F8F4EC', 0.4 + hash(k, 3, 74) * 0.5);
+    }
+    // the shop window, left of the door: a row of loaves, every one of them flat
+    if (ext.doors.length) {
+      const dx = x + ext.doors[0] * TILE;
+      win(g, x + 6, wy + 9, dx - x - 14, 10, '#4A3A2E', '#5A3A22');
+      for (let lx = x + 8; lx < dx - 10; lx += 7) {
+        box(g, lx, wy + 16, 6, 2, '#C8904A');
+        box(g, lx + 1, wy + 15, 4, 1, '#E0B06A');
+      }
+      // a right-hand window, cracked
+      win(g, dx + 26, wy + 9, 12, 10, '#6A8AB0', '#5A3A22');
+      for (let k = 0; k < 6; k++) put(g, dx + 29 + k, wy + 10 + Math.round(k * 1.4), '#E8F0F8');
+    }
+    door(g, x, y, ext, '#7A5030', '#3A2618', 20);
+    // the sign: a bracket off the wall, one chain, and the board hanging from it by a corner, a loaf painted on it
+    const bx = x + ext.w - 12;
+    const by = wy + 3;
+    box(g, bx - 2, by, 12, 2, '#2A1C12');
+    box(g, bx + 8, by + 2, 1, 4, '#8A8280');
+    for (let j = 0; j < 12; j++) {
+      const off = Math.round(j * 0.45);
+      box(g, bx + 8 - off - 8, by + 6 + j, 9, 1, j === 0 || j === 11 ? '#3A2618' : '#B8884A');
+      put(g, bx + 8 - off - 8, by + 6 + j, '#3A2618');
+      put(g, bx + 8 - off, by + 6 + j, '#3A2618');
+    }
+    ellipse(g, bx + 1, by + 12, 3, 2, '#8A5A2A');
+    put(g, bx, by + 11, '#C8904A');
+    // the other chain, snapped, dangling from the bracket
+    box(g, bx - 1, by + 2, 1, 3, '#8A8280');
+    // bits of roof on the ground along the wall, and flour drifted against it
+    for (let k = 0; k < 9; k++) {
+      const px = x + 4 + Math.floor(hash(k, 5, 75) * (ext.w - 10));
+      if (ext.doors.some((c) => Math.abs(x + c * TILE + 8 - px) < 9)) continue;
+      box(g, px, y + ext.h - 3, 3, 2, hash(k, 6, 75) < 0.5 ? '#A8503A' : '#7A3426');
+    }
+    for (let i = 0; i < ext.w; i++)
+      for (let j = 1; j <= 3; j++) {
+        const px = x + i;
+        const py = y + ext.h - j;
+        if (hash(px, py, 76) < 0.35 - j * 0.08 && g[py]?.[px]) g[py][px] = mixC(g[py][px], '#F8F4EC', 0.75);
+      }
+  };
+
   // The training ground's sand, and its furniture: straw dummies and racks of practice weapons.
   art.z = (g, x, y) => {
     for (let j = 0; j < TILE; j++)

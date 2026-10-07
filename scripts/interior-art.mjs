@@ -396,5 +396,173 @@ export function interiorArt({ box, put, ellipse, hash }) {
     put(g, x + 6, y + 7, '#3A2618');
     put(g, x + 10, y + 9, '#3A2618');
   };
+
+  // ---- the bakery by the Kaloseum (author, Oct 7, 2026): the Warden came down through its roof. Named keys too.
+  /** The block of `name` tiles this one is part of: its top-left tile, in pixels, and its size in tiles. */
+  const block = (x, y, m, name) => {
+    let l = 0;
+    while (m.at(-l - 1, 0) === name) l++;
+    let u = 0;
+    while (m.at(0, -u - 1) === name) u++;
+    let w = 1;
+    while (m.at(w - l, -u) === name) w++;
+    let h = 1;
+    while (m.at(-l, h - u) === name) h++;
+    return { bx: x - l * TILE, by: y - u * TILE, w, h, last: m.at(1, 0) !== name && m.at(0, 1) !== name };
+  };
+  const rgb = (c) => (typeof c === 'string' ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)) : c);
+  const mixAt = (a, b, k) => rgb(a).map((v, i) => Math.round(v + (rgb(b)[i] - v) * k));
+  const flour = (g, x, y, w, h, n, seed) => {
+    for (let k = 0; k < n; k++)
+      put(g, x + Math.floor(hash(k, seed, 81) * w), y + Math.floor(hash(seed, k, 82) * h), '#F4F0EA');
+  };
+  // a hole in the top of the back wall, where the roof gave way: sky through it, broken laths, a rafter hanging in.
+  // Each tile draws its wall; the last tile of the block draws the hole across all of it.
+  art.skyhole = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    const b = block(x, y, m, 'skyhole');
+    if (!b.last) return;
+    const w = b.w * TILE;
+    const h = b.h * TILE;
+    for (let j = 0; j < h - 6; j++)
+      for (let i = 0; i < w; i++) {
+        const edge = 3 + Math.round(hash(i, j, 83) * 2) + Math.round(Math.abs(i - w / 2) * 0.35);
+        if (j > h - 6 - edge || i < edge - 3 || i > w - edge + 2) continue;
+        put(g, b.bx + i, b.by + j, j < 6 ? '#6A9AD0' : j < 14 ? '#8AB4E0' : '#A8C8EC');
+      }
+    // one cloud
+    ellipse(g, b.bx + w / 2 + 3, b.by + 8, 5, 2, '#F4F4F8');
+    ellipse(g, b.bx + w / 2 + 6, b.by + 7, 3, 2, '#FFFFFF');
+    // laths snapped off round the edge, and a rafter hanging in at an angle
+    for (let i = 2; i < w - 2; i += 5) box(g, b.bx + i, b.by + 1, 2, 3 + (i % 3), '#7A5230');
+    for (let k = 0; k < 18; k++) box(g, b.bx + 4 + k, b.by + 4 + Math.round(k * 0.9), 2, 2, '#6A4428');
+    flour(g, b.bx, b.by + h - 10, w, 10, 30, 1);
+  };
+  // the bread oven: a brick dome set into the wall, its mouth glowing, a peel leaning beside it. Drawn whole by the
+  // block's last tile.
+  art.oven = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    const b = block(x, y, m, 'oven');
+    if (!b.last) return;
+    const w = b.w * TILE;
+    const h = b.h * TILE;
+    const cx = b.bx + w / 2;
+    box(g, b.bx + 2, b.by + 6, w - 4, h - 6, '#8A3A2A');
+    ellipse(g, cx, b.by + 10, w / 2 - 2, 8, '#8A3A2A');
+    for (let j = 4; j < h; j += 4)
+      for (let i = 2 + ((j / 4) % 2) * 3; i < w - 2; i += 6) box(g, b.bx + i, b.by + j, 1, 3, '#6A2A1E');
+    for (let j = 4; j < h; j += 4) box(g, b.bx + 2, b.by + j, w - 4, 1, '#6A2A1E');
+    // the mouth, and the fire in it
+    box(g, cx - 7, b.by + 15, 14, 11, '#1E1816');
+    ellipse(g, cx, b.by + 15, 7, 4, '#1E1816');
+    box(g, cx - 6, b.by + 21, 12, 5, '#E86A2A');
+    box(g, cx - 4, b.by + 19, 8, 3, '#F8B040');
+    put(g, cx - 1, b.by + 18, '#FFE080');
+    put(g, cx + 2, b.by + 19, '#FFE080');
+    box(g, cx - 9, b.by + 26, 18, 2, '#5A5450');
+    // the peel, leaning on the right
+    box(g, b.bx + w - 4, b.by + 6, 1, h - 6, '#8A6440');
+    ellipse(g, b.bx + w - 4, b.by + 6, 2, 3, '#A8804A');
+  };
+  // a rack of loaves, every one of them flattened
+  art.flatbread = (g, x, y) => {
+    box(g, x + 1, y + 1, 14, 14, '#6A4428');
+    for (const sy of [y + 5, y + 10, y + 14]) box(g, x + 2, sy, 12, 1, '#3A2618');
+    for (const sy of [y + 3, y + 8, y + 12])
+      for (let i = 0; i < 2; i++) {
+        box(g, x + 2 + i * 6, sy, 6, 2, '#C8904A');
+        box(g, x + 3 + i * 6, sy, 4, 1, '#E0B06A');
+      }
+    flour(g, x + 1, y + 1, 14, 14, 6, x);
+  };
+  // the roof, in a heap: tiles, laths, a rafter, and the end of a loaf poking out of the bottom
+  art.rubblepile = (g, x, y) => {
+    ellipse(g, x + 8, y + 10, 7, 5, '#7A3426');
+    for (let k = 0; k < 14; k++) {
+      const px = x + 2 + Math.floor(hash(x + k, y, 84) * 11);
+      const py = y + 6 + Math.floor(hash(y, x + k, 85) * 8);
+      box(g, px, py, 3, 2, ['#A8503A', '#C8705A', '#6A5A50', '#8A8280'][k % 4]);
+    }
+    box(g, x + 1, y + 7, 13, 2, '#6A4428');
+    ellipse(g, x + 12, y + 14, 3, 1, '#C8904A');
+    flour(g, x, y + 4, 16, 12, 10, y);
+  };
+  // a sack of flour, burst: a slumped sack, and a white fan of flour across the floor
+  art.flourburst = (g, x, y) => {
+    for (let k = 0; k < 60; k++) {
+      const a = hash(k, 1, 86) * Math.PI;
+      const r = hash(k, 2, 86) * 8;
+      put(g, x + 8 + Math.cos(a) * r * 1.3, y + 9 + Math.sin(a) * r, k % 3 ? '#F4F0EA' : '#E0DCD4');
+    }
+    ellipse(g, x + 8, y + 7, 5, 5, '#C8B890');
+    ellipse(g, x + 8, y + 6, 4, 3, '#D8C8A0');
+    box(g, x + 6, y + 2, 4, 2, '#A8986C');
+    box(g, x + 6, y + 9, 5, 2, '#F4F0EA');
+    put(g, x + 5, y + 6, '#8A7A54');
+  };
+  // the crater: the floor broken in the shape of a very large man, arms and legs out, flagstones cracked round it,
+  // daylight from the hole above on it. Drawn whole by the block's last tile.
+  art.crater = (g, x, y, m) => {
+    const b = block(x, y, m, 'crater');
+    if (!b.last) return;
+    const w = b.w * TILE;
+    const h = b.h * TILE;
+    const cx = b.bx + w / 2;
+    const cy = b.by + h / 2;
+    const s = Math.min(w, h) / 34;
+    const seg = (px, py, ax, ay, bx, by) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+      return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+    };
+    const depth = (i, j) =>
+      Math.min(
+        Math.hypot(i, j + 13) - 5,
+        Math.max(Math.abs(i) - 7, Math.abs(j + 1) - 8),
+        seg(i, j, -6, -6, -17, -15) - 3,
+        seg(i, j, 6, -6, 17, -15) - 3,
+        seg(i, j, -4, 6, -10, 17) - 3.5,
+        seg(i, j, 4, 6, 10, 17) - 3.5,
+      );
+    for (let py = b.by - 4; py < b.by + h + 4; py++)
+      for (let px = b.bx - 4; px < b.bx + w + 4; px++) {
+        const i = (px - cx) / s;
+        const j = (py - cy) / s;
+        const d = depth(i, j);
+        const cur = g[py]?.[px];
+        if (!cur) continue;
+        // a pool of daylight from the hole in the roof
+        const lit = Math.hypot((px - cx) / (w * 0.62), (py - cy) / (h * 0.62));
+        let c = lit < 1 ? mixAt(cur, '#F8F0D8', 0.22 * (1 - lit)) : cur;
+        if (d <= 0) c = d > -1.2 ? '#2A2220' : j > 0 && d > -3 ? '#3A3230' : '#463E3A';
+        else if (d < 2) c = '#2A2220';
+        else if (d < 7 && hash(px, py, 87) < 0.05) c = '#2A2220';
+        put(g, px, py, c);
+      }
+    // cracks running out across the flagstones
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2 + hash(k, 3, 88);
+      let px = cx + Math.cos(a) * 15 * s;
+      let py = cy + Math.sin(a) * 15 * s;
+      for (let n = 0; n < 6 + Math.floor(hash(k, 4, 88) * 6); n++) {
+        put(g, px, py, '#2A2220');
+        px += Math.cos(a + (hash(k, n, 89) - 0.5)) * 1.2;
+        py += Math.sin(a + (hash(n, k, 89) - 0.5)) * 1.2;
+      }
+    }
+    flour(g, b.bx - 2, b.by - 2, w + 4, h + 4, 40, 9);
+  };
+  // the counter: dark wood, and a tray of buns pressed thin as coins
+  art.bakecounter = (g, x, y, m) => {
+    box(g, x, y + 4, TILE, 10, '#5A3A20');
+    box(g, x, y + 4, TILE, 2, '#7A5230');
+    box(g, x, y + 13, TILE, 2, '#3A2618');
+    if (m.at(-1, 0) !== 'bakecounter') box(g, x, y + 4, 1, 11, '#2A1C12');
+    if (m.at(1, 0) !== 'bakecounter') box(g, x + 15, y + 4, 1, 11, '#2A1C12');
+    box(g, x + 3, y + 1, 10, 4, '#8A8280');
+    for (let i = 0; i < 3; i++) ellipse(g, x + 5 + i * 3, y + 3, 1, 1, '#D8A060');
+    flour(g, x, y + 4, 16, 9, 5, x + y);
+  };
   return art;
 }

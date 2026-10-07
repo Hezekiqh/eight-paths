@@ -1,0 +1,115 @@
+{
+  "id": "wc-bakery",
+  "name": "Ambrose & Daughter, Bakers",
+  "wall": "plaster",
+  "floor": "stone",
+  "tiles": [
+    "################",
+    "#VVVVSSVVVVQQVV#",
+    "#VVVVSSVVVVQQVV#",
+    "#ll..RR.......f#",
+    "#..............#",
+    "#.....www......#",
+    "#.....www......#",
+    "#.....www......#",
+    "#bbb.......bbb.#",
+    "#..............#",
+    "#______11______#",
+    "################"
+  ],
+  "art": {
+    "1": "=",
+    "S": "skyhole",
+    "l": "flatbread",
+    "R": "rubblepile",
+    "f": "flourburst",
+    "b": "bakecounter",
+    "w": "crater",
+    "Q": "oven"
+  },
+  "spawn": {
+    "x": 7,
+    "y": 9,
+    "facing": "up"
+  },
+  "firstVisit": [
+    "Warm. The oven's going. It smells of fresh bread, and there's a draught from above, where the roof was."
+  ],
+  "examine": {
+    "1": [
+      "The door back out to Warrior City. It still opens. It's the only thing in here still doing its old job."
+    ],
+    "V": [
+      "Plaster, white with flour from the floor up to where the ceiling used to start."
+    ],
+    "S": [
+      "The roof, or where it was. There's a hole in it the size of a very large man, and through it, sky. Blue, with one cloud.",
+      "A pigeon looks in. It doesn't come in."
+    ],
+    "R": [
+      "Roof. Tiles, laths, a rafter and half a chimney pot. It all came in with him, and stayed when he left.",
+      "A loaf is sticking out of the bottom of the pile. It's fine. It's flat, but it's fine."
+    ],
+    "l": [
+      "A rack of loaves. Every one of them is flat now. Each has a new label in the same tired hand: FLATBREAD."
+    ],
+    "f": [
+      "A sack of flour, burst. Most of it is on the floor. Some of it is on the walls.",
+      "A surprising amount of it went up, onto the ceiling. The ceiling isn't there. Nobody knows where that lot went."
+    ],
+    "b": [
+      "The counter. A tray of buns, pressed thin as coins, still for sale. A card: SECONDS. Under it, in pencil: THIRDS."
+    ],
+    "_": [
+      "The bakery wall. Still standing. Give it time."
+    ],
+    "w": [
+      "A crater in the floor, the shape of a very large man. Arms out. Legs out. A deeper dent where the head went.",
+      "The flagstones are cracked in a ring round it. Somebody has swept right up to the edge, very carefully, and not one inch further."
+    ],
+    "Q": [
+      "The bread oven, brick, and still lit. Still warm. Still baking, as far as anyone can tell, out of habit.",
+      "It's the one thing in here he missed."
+    ]
+  },
+  "objects": [
+    {
+      "type": "npc",
+      "id": "bryony",
+      "x": 10,
+      "y": 6,
+      "sprite": "tessa",
+      "facing": "left",
+      "name": "Bryony",
+      "lines": [
+        "* The apprentice is sweeping flour into a pile. The hole in the roof sends down a little more. She sweeps that too.",
+        "Mind the hole. Not that one. The one in the floor. Well. Both."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why are you still sweeping?",
+          "answer": [
+            "Master Ambrose said keep the place tidy. I'm the apprentice. I don't get to decide when a place is past tidy.",
+            "It's past tidy."
+          ]
+        },
+        {
+          "ask": "Is the oven still lit?",
+          "answer": [
+            "Nobody's had the heart to put it out. It's done four batches since. There's nowhere to put them.",
+            "So I've been eating them. I'm the nowhere."
+          ]
+        },
+        {
+          "ask": "You missed a bit.",
+          "answer": [
+            "* She looks at the crater the shape of a man.",
+            "Yes. Yes, I did."
+          ],
+          "deed": "bad"
+        }
+      ]
+    }
+  ]
+}
