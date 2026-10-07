@@ -66,6 +66,7 @@ import { habitMemory } from '@/world/memory';
 import { MEMORIES, SEEN_LINES, memoryAt, notYetLines } from '@/world/memories';
 import { TALKED, loreId, talkedId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
+import { hasWalkBanter, walkBanterFlag, walkBanterFor } from '@/world/walk-banter';
 import { characterQuestions } from '@/world/talk';
 import { PhoneCall } from '@/components/world/phone-call';
 import { callDue, callFlag, callLines, type KeeperCall } from '@/world/keeper-calls';
@@ -1699,6 +1700,38 @@ function World({
     const timer = setTimeout(() => setRinging(call), 1200);
     return () => clearTimeout(timer);
   }, [callFlags, dialogue, cutscene, ringing, paused, bossOn]);
+
+  // Walking banter (walk-banter.ts, author, Oct 7, 2026): the party talks among themselves as you arrive
+  // or pass a spot, once each, after any arrival scene and only while nothing else is going on.
+  const arrivalBanter = useRef(false);
+  useEffect(() => {
+    if (dialogue || cutscene || ringing || paused || bossOn || fightMap.enemies.length > 0) return;
+    if (!hasWalkBanter(map.id)) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const check = () => {
+      if (sim.march.get().length === 0 && sim.cameo.get().length === 0 && !dialogueRef.current) {
+        const w = useWorldStore.getState();
+        const game = useGameStore.getState();
+        const chat = walkBanterFor(
+          map.id,
+          partyWithYou(game.party, game.owned, w.flags),
+          w.flags,
+          Math.floor(sim.x.get() / TILE),
+          Math.floor((sim.y.get() - 1) / TILE),
+          arrivalBanter.current,
+        );
+        if (chat) {
+          if (!chat.area) arrivalBanter.current = true;
+          w.setFlag(walkBanterFlag(chat));
+          setDialogue({ lines: chat.lines });
+          return;
+        }
+      }
+      timer = setTimeout(check, 500);
+    };
+    timer = setTimeout(check, 1500);
+    return () => clearTimeout(timer);
+  }, [map, dialogue, cutscene, ringing, paused, bossOn, fightMap, sim]);
 
   return (
     <View style={styles.root}>
