@@ -290,6 +290,8 @@ type Props = {
    * gate over it: `down` runs 0 (raised against the gate) to 1 (lowered across the moat, gate open).
    */
   drawbridge?: { x: number; y: number; w: number; h: number; down: SharedValue<number> } | null;
+  /** Bridge tiles brought up out of a river by pressure plates (the Cull Road's ferry-bridge), drawn as planks. */
+  raised?: { x: number; y: number }[];
   /** A fight picked back up after a change of character, instead of a fresh one (session.ts carry). */
   resume?: Fight | null;
   /** Where the fight lives, so a change of character can carry it over. */
@@ -385,6 +387,7 @@ export function WorldView({
   flames = [],
   snuffable = false,
   drawbridge = null,
+  raised = [],
   resume = null,
   fightRef,
 }: Props) {
@@ -1234,6 +1237,9 @@ export function WorldView({
           </Group>
         ))}
         {drawbridge && <Drawbridge {...drawbridge} />}
+        {raised.map((p) => (
+          <RaisedPlanks key={`r${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
+        ))}
         {boulders.map((_, i) => (
           <Boulder key={i} index={i} positions={rockPos} />
         ))}
@@ -1560,6 +1566,20 @@ function Bars({ x, y }: { x: number; y: number }) {
 }
 
 /** A sign on a post: A reads it. */
+/** One tile of a bridge raised out of a river: planks laid across, still glinting wet. */
+function RaisedPlanks({ x, y }: { x: number; y: number }) {
+  return (
+    <Group>
+      <Rect x={x} y={y} width={TILE} height={TILE} color="#5A3E28" />
+      {[0, 4, 8, 12].map((i) => (
+        <Rect key={i} x={x + i} y={y} width={1} height={TILE} color="#3A2818" />
+      ))}
+      <Rect x={x + 2} y={y + 5} width={3} height={1} color="#6E7A78" />
+      <Rect x={x + 9} y={y + 11} width={4} height={1} color="#6E7A78" />
+    </Group>
+  );
+}
+
 function Sign({ x, y }: { x: number; y: number }) {
   return (
     <Group>

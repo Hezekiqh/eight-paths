@@ -3,6 +3,7 @@ import courierRoadData from './maps/courier-road.json';
 import millbrookData from './maps/millbrook.json';
 import waystationData from './maps/waystation.json';
 import desertersCampData from './maps/deserters-camp.json';
+import cullRoadData from './maps/cull-road.json';
 import barracksHallData from './maps/barracks-hall.json';
 import barracksArmouryData from './maps/barracks-armoury.json';
 import officersMessData from './maps/officers-mess.json';
@@ -188,6 +189,10 @@ type MapData = {
   pushable?: string;
   /** The story flag set when every pressure plate has a boulder on it. */
   platesFlag?: string;
+  /** What's said as the plates go down (default: the Drill Yard's gate). */
+  platesLines?: string[];
+  /** The tile letter the plates raise out of the water once they're down (the Cull Road's ferry-bridge). */
+  raises?: string;
   /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
   talkThrough?: string[];
   enemies?: { kind: string; x: number; y: number }[];
@@ -219,6 +224,9 @@ export type WorldMap = {
   boulders: number[];
   plates: number[];
   platesFlag?: string;
+  platesLines?: string[];
+  /** Drawn raised over the picture once `platesFlag` is set: a bridge brought up out of the river. */
+  raises?: string;
   /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
   talkThrough?: string[];
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
@@ -282,6 +290,8 @@ function build(data: MapData, image: number, cheer?: number): WorldMap {
     boulders: data.pushable ? letterTiles(data.tiles, data.pushable) : [],
     plates: letterTiles(data.tiles, 'P'),
     platesFlag: data.platesFlag,
+    platesLines: data.platesLines,
+    raises: data.raises,
     talkThrough: data.talkThrough,
     boss: data.boss,
     ladder: data.ladder,
@@ -386,6 +396,7 @@ export const MAPS = {
   millbrook: build(millbrookData, require('@/assets/world/millbrook.png')),
   waystation: build(waystationData, require('@/assets/world/waystation.png')),
   'deserters-camp': build(desertersCampData, require('@/assets/world/deserters-camp.png')),
+  'cull-road': build(cullRoadData as MapData, require('@/assets/world/cull-road.png')),
   'barracks-hall': build(barracksHallData, require('@/assets/world/barracks-hall.png')),
   'barracks-armoury': build(barracksArmouryData, require('@/assets/world/barracks-armoury.png')),
   'officers-mess': build(officersMessData, require('@/assets/world/officers-mess.png')),
