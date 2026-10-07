@@ -1409,27 +1409,6 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // The bakery by the Kaloseum (author, Oct 7, 2026): the Warden came down through its roof (dungeon.ts).
-  {
-    id: 'city-bakery',
-    from: 'warrior-city',
-    tile: '0',
-    label: 'The bakery',
-    to: { map: 'wc-bakery', x: 7, y: 9, facing: 'up' },
-    needs: OPEN,
-    back: true,
-    walk: true,
-  },
-  {
-    id: 'bakery-city',
-    from: 'wc-bakery',
-    tile: '1',
-    label: 'Out to Warrior City',
-    to: { map: 'warrior-city', x: 38, y: 9, facing: 'down' },
-    needs: OPEN,
-    back: true,
-    walk: true,
-  },
   // The Kingdom Dungeon, under Warrior City's Kaloseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
   {
     id: 'cells-mazes',

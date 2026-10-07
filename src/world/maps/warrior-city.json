@@ -7,7 +7,8 @@
     ",",
     "s",
     "g",
-    "z"
+    "z",
+    "i"
   ],
   "art": {
     "1": ".",
@@ -20,20 +21,26 @@
     "8": ".",
     "h": ".",
     "9": ".",
-    "0": ".",
-    "o": "bakery"
+    "X": "bakery-wall",
+    "Q": "bakery-oven",
+    "w": "bakery-crater",
+    "f": "bakery-flour",
+    "l": "bakery-loaves",
+    "R": "bakery-rubble",
+    "i": "bakery-floor",
+    "n": "bakery-tray"
   },
   "tiles": [
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM^^MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     "MT.............................ss.............................TM",
     "MT.PPPPPPPPP.BBBBBBBB..........ss...........NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBBBBBB..........ss..ooooooo..NNNNNNNNN.VVVVVVVVTM",
-    "MT.PPPPPPPPP.BBBB3BBB..........ss..ooo0ooo..NNNN4NNNN.VVVV5VVVTM",
-    "MT.PPPP2PPPP.....s............cssc....s.........s.........s...TM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..XXXQQXX..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..XwwwifX..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..XwwwilX..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBBBBBB..........ss..XwwwilX..NNNNNNNNN.VVVVVVVVTM",
+    "MT.PPPPPPPPP.BBBB3BBB..........ss..XRRRiRX..NNNN4NNNN.VVVV5VVVTM",
+    "MT.PPPP2PPPP.....s............csscn.R..s........s.........s...TM",
     "MT.....s.........s...ssssssssssssssssssssss.....s.........s...TM",
     "MT.....s.........s...ssCCCCCCCCCCCCCCCCCCss.....s.........s...TM",
     "MT.uuuusuuuu.uuuus...ssCCCCCCCCCCCCCCCCCCss...uuuu.uuuu.uuuu..TM",
@@ -180,12 +187,31 @@
     "$": [
       "The Bank of Warrior City. Pale stone, gold trim, not a scratch on it. The only building in town nobody has punched."
     ],
-    "o": [
-      "The bakery. A roof of red tiles, with a hole in it the shape of a very large man: arms out, legs out.",
-      "Flour has settled over everything round it, like snow. Smoke is still coming out of the chimney."
+    "X": [
+      "The bakery wall. Still standing. Give it time.",
+      "Plaster, white with flour from the floor up to where the ceiling used to start. A corner of the roof is still up there, hanging on by its nails. A pigeon looks down from it. It doesn't come down."
     ],
-    "0": [
-      "The bakery door. A card in the window says OPEN. Somebody has added, smaller: TO THE SKY."
+    "R": [
+      "Roof. Tiles, laths, a rafter and half a chimney pot. It all came in with him, and stayed when he left.",
+      "A loaf is sticking out of the bottom of the pile. It's fine. It's flat, but it's fine."
+    ],
+    "w": [
+      "A crater in the floor, the shape of a very large man. Arms out. Legs out. A deeper dent where the head went.",
+      "The flagstones are cracked in a ring round it. Somebody has swept right up to the edge, very carefully, and not one inch further."
+    ],
+    "Q": [
+      "The bread oven, brick, and still lit. Still warm. Still baking, as far as anyone can tell, out of habit.",
+      "It's the one thing in here he missed."
+    ],
+    "f": [
+      "A sack of flour, burst. Most of it is on the floor. Some of it is on the walls.",
+      "A surprising amount of it went up, onto the ceiling. The ceiling isn't there. Nobody knows where that lot went."
+    ],
+    "l": [
+      "The counter, snapped in the middle. Loaves along it, every one of them flat now. Each has a new label in the same tired hand: FLATBREAD."
+    ],
+    "n": [
+      "Mistress Hettie's tray, on an upturned crate. Buns, pressed thin as coins, still for sale. A card: SECONDS. Under it, in pencil: THIRDS."
     ]
   },
   "objects": [
@@ -885,7 +911,7 @@
     {
       "type": "npc",
       "id": "ambrose",
-      "x": 36,
+      "x": 40,
       "y": 9,
       "sprite": "chisk",
       "facing": "down",
@@ -943,8 +969,8 @@
     {
       "type": "npc",
       "id": "hettie",
-      "x": 37,
-      "y": 9,
+      "x": 34,
+      "y": 8,
       "sprite": "hesper",
       "facing": "down",
       "name": "Mistress Hettie",
@@ -982,7 +1008,7 @@
     {
       "type": "npc",
       "id": "dot",
-      "x": 40,
+      "x": 42,
       "y": 9,
       "sprite": "kids",
       "facing": "down",
@@ -1011,7 +1037,7 @@
           "ask": "I bet your bread's what knocked him out.",
           "answer": [
             "It is NOT. Our bread's soft. Dad says.",
-            "* She looks up at the roof. She looks less sure."
+            "* She looks up at where the roof was. She looks less sure."
           ],
           "deed": "bad"
         }
@@ -1020,12 +1046,50 @@
     {
       "type": "sign",
       "id": "bakery-sign",
-      "x": 41,
+      "x": 35,
       "y": 8,
       "inArt": true,
       "lines": [
         "The bakery's sign, hanging by one chain. A painted loaf, and under it: AMBROSE & DAUGHTER. FRESH DAILY.",
         "Somebody has chalked a line through FRESH DAILY and written: OPEN. ROOF CLOSED."
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "bryony",
+      "x": 37,
+      "y": 9,
+      "sprite": "tessa",
+      "facing": "right",
+      "name": "Bryony",
+      "lines": [
+        "* The apprentice is sweeping flour off the path. The wind brings a little more out of the bakery. She sweeps that too.",
+        "Mind the hole. The one in the floor. The one in the roof isn't a hole any more. It's just the sky."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why are you still sweeping?",
+          "answer": [
+            "Master Ambrose said keep the place tidy. I'm the apprentice. I don't get to decide when a place is past tidy.",
+            "It's past tidy."
+          ]
+        },
+        {
+          "ask": "Is the oven still lit?",
+          "answer": [
+            "Nobody's had the heart to put it out. It's done four batches since. There's nowhere to put them.",
+            "So I've been eating them. I'm the nowhere."
+          ]
+        },
+        {
+          "ask": "You missed a bit.",
+          "answer": [
+            "* She looks at the crater the shape of a man.",
+            "Yes. Yes, I did."
+          ],
+          "deed": "bad"
+        }
       ]
     }
   ]

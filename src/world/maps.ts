@@ -56,7 +56,6 @@ import wcStoreData from './maps/wc-store.json';
 import wcBarnData from './maps/wc-barn.json';
 import wcBankData from './maps/wc-bank.json';
 import wcVaultData from './maps/wc-vault.json';
-import wcBakeryData from './maps/wc-bakery.json';
 import roomBrannocData from './maps/room-brannoc.json';
 import roomYsoldeData from './maps/room-ysolde.json';
 import roomQuillData from './maps/room-quill.json';
@@ -499,8 +498,6 @@ export const MAPS = {
   'wc-barn': build(wcBarnData as MapData, require('@/assets/world/wc-barn.png')),
   'wc-bank': build(wcBankData as MapData, require('@/assets/world/wc-bank.png')),
   'wc-vault': build(wcVaultData as MapData, require('@/assets/world/wc-vault.png')),
-  // the bakery the Warden landed on (author, Oct 7, 2026)
-  'wc-bakery': build(wcBakeryData as MapData, require('@/assets/world/wc-bakery.png')),
   'room-brannoc': build(roomBrannocData as MapData, require('@/assets/world/room-brannoc.png')),
   'room-ysolde': build(roomYsoldeData as MapData, require('@/assets/world/room-ysolde.png')),
   'room-quill': build(roomQuillData as MapData, require('@/assets/world/room-quill.png')),
