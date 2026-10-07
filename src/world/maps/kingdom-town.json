@@ -109,7 +109,8 @@
       "name": "Gert",
       "lines": [
         "Yeah, we know. He names everything after himself.",
-        "That's Kaldor Street. So's that one. They cross. You get used to it."
+        "That's Kaldor Street. So's that one. They cross. You get used to it.",
+        "Got everything he ever wanted, folk say. The money, the wealth, the fame, the women. Now he collects streets."
       ],
       "questions": [
         {
@@ -788,7 +789,7 @@
         {
           "ask": "What was the old king like?",
           "answer": [
-            "Hale. Kind man, the family says. Open hand. Let children swing on his gate. My gran's gran was one of them.",
+            "Hale. King Osric, last of them. Kind man, the family says. Open hand. Let children swing on his gate. My gran's gran was one of them.",
             "Kaldor took the gate down. I took up the cage bars. Ninety-six."
           ]
         },

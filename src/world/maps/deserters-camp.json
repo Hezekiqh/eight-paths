@@ -103,6 +103,13 @@
           ]
         },
         {
+          "ask": "Tell me a camp story.",
+          "answer": [
+            "The old war, the one that never was. Every forge in the land beat out blades for the old king, and the other seven kingdoms sharpened theirs.",
+            "Then nobody marched. Soldiers, waiting for the right moment. Sound familiar?"
+          ]
+        },
+        {
           "ask": "Relocated? You ran, you old coward.",
           "answer": [
             "We ran with purpose.",
@@ -203,6 +210,13 @@
           "answer": [
             "Terrified. Always have been.",
             "Doesn't stop me walking. Just stops me walking fast."
+          ]
+        },
+        {
+          "ask": "Tell me an old story.",
+          "answer": [
+            "The old riddle round this fire: why would a shadow make a king?",
+            "Some say to rule. Some say to stop the war. I say don't ask it after dark."
           ]
         },
         {

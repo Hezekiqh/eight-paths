@@ -212,7 +212,10 @@
       "sprite": "ulfa",
       "facing": "up",
       "name": "Queen Helka",
-      "lines": ["Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than my own name."],
+      "lines": [
+        "Five hundred years of 'tomorrow we march'. I have heard 'tomorrow' more than my own name.",
+        "Some say he swore it to someone: the strongest army in the eight kingdoms, and never march it to war."
+      ],
       "questions": [
         {
           "ask": "What's the king like?",
