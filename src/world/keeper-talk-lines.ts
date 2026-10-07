@@ -5,7 +5,8 @@ import type { Trigger } from './keeper-talk';
 // approved by the author. {placeholders} are filled from your record (memory.ts).
 
 export const KEEPER_TALK: {
-  moments: { id: string; when: Trigger; lines: string[] }[];
+  /** `asBrannoc`: what he says instead when you're walking as Brannoc (the king he's talking about is you). */
+  moments: { id: string; when: Trigger; lines: string[]; asBrannoc?: string[] }[];
   habits: Record<string, string[]>;
   ambient: string[];
 } = {
@@ -63,6 +64,11 @@ export const KEEPER_TALK: {
         "He ran from that throne once. Now he's sitting on it. The roads people take home are rarely straight.",
         "Nobody tells that kingdom what to do now. It's frightening, and it's theirs. Choosing usually is both.",
       ],
+      asBrannoc: [
+        "King Brannoc. I'll need a fresh page for that. Possibly two.",
+        "You ran from that throne once. Now it's yours, mostly by raven. The roads people take home are rarely straight.",
+        "Nobody tells that kingdom what to do now. It's frightening, and it's theirs. Choosing usually is both.",
+      ],
     },
     {
       id: 'kaldor-dethroned-2',
@@ -72,13 +78,23 @@ export const KEEPER_TALK: {
         "You gave them back the right to get things wrong. It's a heavy gift. It's the only kind worth giving.",
         "Tell Brannoc the crown suits him. He won't believe you. Tell him anyway.",
       ],
+      asBrannoc: [
+        "The horde's scattered, I hear, and the Kaloseum's just an arena again. Children will be climbing the walls by spring.",
+        "You gave them back the right to get things wrong. It's a heavy gift. It's the only kind worth giving.",
+        "The crown suits you, by the way. You won't believe me. I'm saying it anyway.",
+      ],
     },
     {
       id: 'you-crowned',
       when: 'you-crowned',
       lines: [
         'You took the throne yourself. I shall need a fresh page for that. Perhaps a fresh book.',
-        'Brannoc tells me you sit on it as if it might bite. Good. It might.',
+        "The steward tells me you sit on it as if it might bite. Good. It might.",
+        'A crown is mostly a promise to keep turning up. You know a little about that already.',
+      ],
+      asBrannoc: [
+        "Your father's throne, and your uncle in the cells beneath it. I shall need a fresh page for that. Perhaps a fresh book.",
+        'The steward tells me you sit on it as if it might bite. Good. It might.',
         'A crown is mostly a promise to keep turning up. You know a little about that already.',
       ],
     },
@@ -248,7 +264,7 @@ export const FINALE: {
     'You chose to let them choose. Somewhere, someone would call that reckless.',
   ],
   crowned: [
-    'Far behind you, there is an empty throne with your name on it, and a captain who faints keeping it warm.',
+    'Far behind you, there is an empty throne with your name on it, and a steward with a ledger keeping it warm.',
     "The horde is gone. The cages are open. Nobody is quite sure what a kingdom does next, and they're asking you.",
     'You chose to carry it yourself. Somewhere, someone would call that brave.',
   ],

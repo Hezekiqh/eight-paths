@@ -175,6 +175,14 @@ export const HERO_NEWS: Partial<Record<CharacterId, News[]>> = {
       lines: ['I tried the swing. Awake, this time.', 'I felled a bookshelf. Quill is furious. I am overjoyed.'],
     },
     {
+      id: 'brannoc-king',
+      when: { flag: 'kaldor-beaten' },
+      lines: [
+        'We bested the Kingbreaker. Me. Brannoc the Fainter.',
+        'I did not faint once. I very nearly did. Twice. But I did not.',
+      ],
+    },
+    {
       // back from his throne (castle.ts): ruling by raven
       id: 'brannoc-remote',
       when: { flag: 'brannoc-rejoined' },
@@ -182,14 +190,6 @@ export const HERO_NEWS: Partial<Record<CharacterId, News[]>> = {
         'Three ravens this morning. The advisor asks whether building a moat counts as causing a problem.',
         'I replied: it depends on the moat. Then I put a candle in the window so they know I am "in the office".',
         'I do not know what an office is. But I am in it.',
-      ],
-    },
-    {
-      id: 'brannoc-king',
-      when: { flag: 'kaldor-beaten' },
-      lines: [
-        'We bested the Kingbreaker. Me. Brannoc the Fainter.',
-        'I did not faint once. I very nearly did. Twice. But I did not.',
       ],
     },
   ],

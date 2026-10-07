@@ -28,6 +28,23 @@
         "*click*"
       ],
       "aboutOthers": 2
+    },
+    {
+      "id": "brannoc-free",
+      "after": "brannoc-free",
+      "lines": [
+        "Hello? Ah, splendid. It is the Keeper again. Properly, this time.",
+        "Forgive me for earlier. While you slept, I slipped a telephone into your pocket. One never knows when a word might be needed.",
+        "Now. You are out, and on your feet. More or less. I heard about the Warden. Everyone heard about the Warden.",
+        "I believe {others} like you have left their cocoons and are wandering the realm.",
+        "Some came out early, and are rather lost. Some are still trapped inside.",
+        "Whether you set them free is entirely your choice.",
+        "Oh. Oh dear, I must go. I am expecting a guest."
+      ],
+      "end": [
+        "*click*"
+      ],
+      "aboutOthers": 2
     }
   ]
 }

@@ -143,7 +143,9 @@ import { LEAVE_IT_TO, MORE, NEVER_MIND, heroOrder, heroPage } from '@/world/hero
 import {
   MAZE_HOLES,
   holeLines,
-  ALONE_WARDEN,
+  aloneWarden,
+  ARENA_FIGHT_AS_BRANNOC,
+  ARENA_VERDICT_AS_BRANNOC,
   BRANNOC_DECLINED,
   BRANNOC_JOINED,
   BRANNOC_NO,
@@ -654,18 +656,24 @@ function World({
                 then: () => useWorldStore.getState().setFlag(`seen:${start.map.id}`),
               }
             : null))
-        : prisonIntro && start.map.boss?.flag === 'pit-guards' && hero !== 'brannoc'
+        : prisonIntro && start.map.boss?.flag === 'pit-guards'
           ? (() => {
-              // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE
+              // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE. Walking as
+              // Brannoc, the "500!?" is yours, you stay up (your faint is the Warden's), and nobody's carried off.
               const freed = arrivalFlags.includes(CELLS_FREED);
-              const fight = freed ? ARENA_FIGHT : ARENA_FIGHT_ALONE;
+              const asBrannoc = hero === 'brannoc';
+              const fight = !freed ? ARENA_FIGHT_ALONE : asBrannoc ? ARENA_FIGHT_AS_BRANNOC : ARENA_FIGHT;
+              const verdictLines = asBrannoc ? ARENA_VERDICT_AS_BRANNOC : ARENA_VERDICT;
               return {
                 lines: freed ? ARENA_WELCOME : ARENA_WELCOME_ALONE,
                 choices: ARENA_EXCUSES.map((e) => ({
                   ...e,
                   // the verdict, then Brannoc's down; then the three's excuses, and they carry him off (arenaNext)
                   then: () =>
-                    setVerdict({ lines: ARENA_VERDICT, then: () => setAfterVerdict({ fight, carry: freed }) }),
+                    setVerdict({
+                      lines: verdictLines,
+                      then: () => setAfterVerdict({ fight, carry: freed && !asBrannoc }),
+                    }),
                 })),
               };
             })()
@@ -1558,9 +1566,11 @@ function World({
         brannocOffer();
       else if (faints)
         setDialogue({
-          lines: ALONE_WARDEN,
+          lines: aloneWarden(w.flags.includes(CELLS_FREED)),
           then: () => {
             w.setFlag('pit-champion');
+            // the Keeper's first proper call, yours instead of 'brannoc-joined' (keeper-calls.json)
+            w.setFlag('brannoc-free');
             // confused, you walk out into the town
             march(
               [
@@ -2086,6 +2096,7 @@ function useAct(
             heartPieces: heartPieces(w.flags),
             memory: habitMemory(useGameStore.getState(), toDateKey(new Date())),
             day: Math.floor(Date.now() / 86400000),
+            hero,
           });
           if (news.said) w.setFlag(news.said);
           setDialogue({
@@ -2111,7 +2122,7 @@ function useAct(
         farewell: thing.farewell,
       });
     },
-    [map, sim, setDialogue, xp],
+    [map, sim, setDialogue, xp, hero],
   );
   const act = useCallback(() => {
     if (busy.current) return;

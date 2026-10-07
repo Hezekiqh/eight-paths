@@ -161,6 +161,12 @@ export const ARENA_VERDICT = [
   'BRANNOC: 500!?',
   '* Brannoc passes out, flat on his back. A snot bubble swells from his nose, and shrinks, and swells.',
 ];
+/** Walking as Brannoc (author, Oct 7, 2026): the same verdict, and your own "500!?". You sway, but you stay up:
+ * your faint is saved for the Warden (ALONE_WARDEN). */
+export const ARENA_VERDICT_AS_BRANNOC = [
+  ...ARENA_VERDICT.slice(0, 4),
+  '* You sway. The sand tilts. Somehow, you stay on your feet. For now.',
+];
 /** Then the three who lost make their excuses on the way to the side of the sand, and it's on (author, Episode 13). */
 export const ARENA_FIGHT = [
   "SILAS SEEN: You're the strong silent type. You got this.",
@@ -172,6 +178,12 @@ export const ARENA_FIGHT = [
 /** If you never let the three out: just you and Brannoc. */
 export const ARENA_WELCOME_ALONE = ["BARNABY: Weeell, well, well! If it isn't our troublemaking runaways!"];
 export const ARENA_FIGHT_ALONE = ARENA_FIGHT.filter((l) => !/silas|old mott|nails/i.test(l));
+/** Walking as Brannoc, with the three let out: their excuses, and nobody to carry, so they keep well out of it. */
+export const ARENA_FIGHT_AS_BRANNOC = [
+  ...ARENA_FIGHT.slice(0, 3),
+  '* Old Mott, Nails and Silas Seen stay well out of it, at the side of the sand.',
+  'BARNABY: FINISH THEM!',
+];
 
 export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
   'pit-guards': {
@@ -302,8 +314,15 @@ export const brannocShuffles = (brannoc: number): Actor[] => [
   { row: brannoc, path: [UNDER_WARDEN, SAND_MIDDLE, [8, 14], TRAPDOOR] },
 ];
 
-/** Walking as Brannoc: the warden drops in, and you faint at the sight of him. */
-export const ALONE_WARDEN = [
+/** Walking as Brannoc: the warden drops in, and you faint at the sight of him. `freed`: the three are watching. */
+export const aloneWarden = (freed: boolean) => {
+  const lines = [...ALONE_WARDEN];
+  if (freed) lines.splice(lines.indexOf(ALONE_GUARD_LINE), 0, ...ALONE_WITNESSES);
+  return lines;
+};
+const ALONE_GUARD_LINE = "GUARD: Hey. Hey, buddy. We don't want any smoke with you.";
+const ALONE_WITNESSES = ["OLD MOTT: Don't look at us. We were over there.", 'NAILS: Way over there.'];
+const ALONE_WARDEN = [
   'The floor shakes. Then it shakes again.',
   'BARNABY: Oh, you have done it now. Everybody, please welcome... THE WARDEN!',
   'He is enormous. He is right in front of you. He smiles.',
@@ -312,7 +331,7 @@ export const ALONE_WARDEN = [
   'BRANNOC SUPER SUPER SWING!',
   '...',
   'You wake up on the sand. Your sword is in your hand. There is a warden-shaped hole in the banners.',
-  "GUARD: Hey. Hey, buddy. We don't want any smoke with you.",
+  ALONE_GUARD_LINE,
   "GUARD: You're free to leave. Please leave.",
   'You have no idea what just happened.',
 ];

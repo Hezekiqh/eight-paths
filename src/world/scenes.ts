@@ -98,7 +98,7 @@ export function winScene(
             : ['You close the empty eyes. Whatever held him lets go.']),
           'Kaldor has not moved from his throne. He claps. Slowly.',
           brannoc
-            ? `KALDOR: So. My brother's son, and ${asBrannoc ? 'not one friend in the world, and yet here you are' : 'whoever this is'}. My best, and you went through them like a door.`
+            ? `KALDOR: So. My brother's boy, and ${asBrannoc ? 'his little band of friends' : 'whoever this is'}. My best, and you went through them like a door.`
             : 'KALDOR: So. My best, and you went through them like a door.',
           "KALDOR: The law is the law, and the court is watching. Beat the king's champions, and the throne is yours to settle. So. Settle it.",
           // Felix, gone the moment the fight turned (author): only a note where he stood

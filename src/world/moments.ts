@@ -46,11 +46,17 @@ export const BOSS_MOMENTS: Partial<Record<MapId, Moment>> = {
       'BRANNOC: That is NOT single combat!',
       'KALDOR: Take it up with the court.',
     ],
+    // walking as Brannoc (author, Oct 7, 2026): the same words, said to his face
     asThem: [
       '* Kaldor stops. He leans forward on his throne.',
       'KALDOR: ...That beard.',
       "KALDOR: Well, well. My brother's boy. They told me you were dead.",
       "* (Uncle Kaldor. He hasn't aged a day.)",
+      'BRANNOC: I did not die, Uncle. I slept. For rather a long while.',
+      'BRANNOC: And my father was not mad! ...He was loud. There is a difference.',
+      "BRANNOC: Uncle Kaldor! You sit upon my father's throne. I have come to have a very firm word with you about it.",
+      'KALDOR: A firm word. Your knees are knocking, boy.',
+      'BRANNOC: That is a war drum. Of my people.',
     ],
   },
 };

@@ -54,6 +54,15 @@ describe('the Keeper', () => {
   });
 });
 
+describe('the Keeper, talking to King Brannoc himself', () => {
+  it('says "you", not "he", about the throne when you are Brannoc', () => {
+    for (const flags of [['kaldor-dethroned'], ['kaldor-dethroned', 'you-king']]) {
+      const said = keeperTalk(ctx({ flags, hero: 'brannoc' })).lines.join(' ');
+      expect(said).not.toMatch(/Brannoc tells|Tell Brannoc|He ran from/);
+    }
+  });
+});
+
 describe('the last seal', () => {
   it('recalls your record and the king you left', () => {
     const allowed = seasonFinale(memory({ habits: 35 }), ['kaldor-allowed']);
