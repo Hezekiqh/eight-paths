@@ -199,6 +199,8 @@ export type WorldSim = {
   puffs: SharedValue<number[]>;
   /** The fight's enemies aren't drawn yet: they haven't stepped out of the walls (the war hall's cue, moments.ts). */
   hideFoes: SharedValue<boolean>;
+  /** One kind of enemy (ENEMY_KINDS index) not drawn yet, after the rest are out: -1 for none (the raised Warden). */
+  hideKind: SharedValue<number>;
   /** A cutscene draws you some other way (out cold on the sand, say): the lead isn't drawn. */
   hideLead: SharedValue<boolean>;
   /** A cutscene shakes the screen: how hard, in art pixels (the frame loop takes it, and sets it back to 0). */
@@ -251,6 +253,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     swing: useSharedValue<number[]>([]),
     puffs: useSharedValue<number[]>([]),
     hideFoes: useSharedValue(false),
+    hideKind: useSharedValue(-1),
     hideLead: useSharedValue(false),
     quake: useSharedValue(0),
     wind: useSharedValue(0),
@@ -518,7 +521,8 @@ export function WorldView({
   useEffect(() => {
     sim.hp.set(fight.get().hp);
   }, [sim, fight]);
-  const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
+  // Aurek the Tall is the Warden (author, Oct 7, 2026): in the throne room he looks like the Warden too
+  const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k === 'aurek' ? 'warden' : k]), []);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
@@ -598,9 +602,7 @@ export function WorldView({
   // ...and those with a snot bubble too
   const snorers = useMemo(
     () =>
-      map.npcs
-        .filter((n) => n.snot && dozing(n, talkingTo))
-        .map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+      map.npcs.filter((n) => n.snot && dozing(n, talkingTo)).map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
     [map, talkingTo, sim.npcIds],
   );
   // One more for a party member stepping in for a job (a cameo).
@@ -1010,9 +1012,10 @@ export function WorldView({
       const shadows: number[] = [];
       // not out of the walls yet (a cutscene's cue brings them in)
       const foesHidden = sim.hideFoes.get();
+      const kindHidden = sim.hideKind.get();
       for (let i = 0; i < all.length; i++) {
         const e = all[i];
-        if (e[E_ALIVE] === 0 || foesHidden) continue;
+        if (e[E_ALIVE] === 0 || foesHidden || e[E_KIND] === kindHidden) continue;
         // the warden in Brannoc's swing is drawn by it (below), flying
         if (sw.length > 0 && e[E_KIND] === WARDEN_KIND) continue;
         // after the fight, in a cutscene pointing the camera somewhere (Brannoc beside the warden), they look there
@@ -1076,8 +1079,7 @@ export function WorldView({
           if (row >= 0) {
             // swinging: he leans back as he raises the blade, then lunges into the blow
             const swingT = sw.length > 0 && sw[SW_RUN] !== 0 && row === sw[SW_ROW] ? sw[SW_T] : -1;
-            const lunge =
-              swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
+            const lunge = swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
             const lx = facing === 2 ? -lunge : facing === 3 ? lunge : 0;
             const ly = facing === 1 ? -lunge : facing === 0 ? lunge : 0;
             ents.push([row, facing, lunge !== 0 ? 1 : frame, x + lx, y + ly, 0, 1]);
@@ -1159,8 +1161,7 @@ export function WorldView({
       // the lead goes last so they're drawn on top of a follower standing in the same spot;
       // just hurt, they blink until they can be hurt again; striking, they lean into the blow. (Not once the fight's
       // won, or held for a scene: frozen mid-blink, they'd vanish for the whole of it.)
-      const blink =
-        !frozen && !now.won && now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
+      const blink = !frozen && !now.won && now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
       if (!blink && !sim.hideLead.get()) {
         const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
         const f = sim.facing.get();

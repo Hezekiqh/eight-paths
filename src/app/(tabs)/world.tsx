@@ -131,7 +131,7 @@ import {
   seizeMarch,
 } from '@/world/felix-maze';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
-import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
+import { chattersWithYou, partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
 import { MARCH_PACE, newMarch, walkPath, type Actor } from '@/world/march';
 import { SPEED_RATE } from '@/world/speed';
@@ -495,6 +495,17 @@ function startFor(
   const [x, y] = npcFeet(map.spawn);
   return { map, x, y, facing: map.spawn.facing };
 }
+
+/** The Warden, raised (moments.ts BOSS_CUE): the line he comes up out of the floor on, and the heap he climbs out of. */
+const AUREK_KIND = ENEMY_KINDS.indexOf('aurek');
+const RAISED = /The floor cracks/;
+const RISE_HEAP = [
+  [0, 0],
+  [-7, 2],
+  [7, 2],
+  [-4, -6],
+  [4, -9],
+];
 
 function World({
   hero,
@@ -1111,29 +1122,50 @@ function World({
   const owned = useGameStore((s) => s.owned);
   // Kaldor's throne room (castle.ts): the camera's on the throne while he talks, and his shadows don't step out of
   // the walls until he snaps his fingers (moments.ts BOSS_CUE).
+  // The Warden is raised after them: Kaldor lifts a hand, the floor cracks, and he climbs up out of it.
   const snap = BOSS_CUE['war-hall']?.[1];
   const [throneIntro] = useState(() => bossOn && !resume && map.id === 'war-hall');
   useEffect(() => {
     if (!throneIntro) return;
     sim.focus.set(THRONE_FOCUS);
     sim.hideFoes.set(true);
+    sim.hideKind.set(AUREK_KIND);
   }, [throneIntro, sim]);
+  // out of the dark, in a puff of it: `which` says who; the Warden (heavy) out of a heap of dark earth and smoke
+  const bringOut = useCallback(
+    (which: (kind: number) => boolean, heavy: boolean) => {
+      const f = fightRef.current?.get();
+      const at: number[] = [];
+      for (const e of f?.enemies ?? []) {
+        if (e[E_ALIVE] !== 1 || !which(e[E_KIND])) continue;
+        const heap = e[E_KIND] === AUREK_KIND ? RISE_HEAP : [[0, 0]];
+        for (const [dx, dy] of heap) at.push(e[E_X] + dx, e[E_Y] + dy, 1);
+      }
+      sim.puffs.set([...sim.puffs.get(), ...at]);
+      if (heavy) sim.quake.set(4);
+      playSound('slam');
+      haptics.rumble('crash');
+    },
+    [sim],
+  );
   const revealFoes = useCallback(() => {
-    if (!sim.hideFoes.get()) return;
+    const kind = sim.hideKind.get();
+    const shadows = sim.hideFoes.get();
+    if (!shadows && kind < 0) return;
     sim.hideFoes.set(false);
-    // each of them out of the dark, in a puff of it
-    const f = fightRef.current?.get();
-    const at: number[] = [];
-    for (const e of f?.enemies ?? []) if (e[E_ALIVE] === 1) at.push(e[E_X], e[E_Y], 1);
-    sim.puffs.set([...sim.puffs.get(), ...at]);
-    playSound('slam');
-    haptics.rumble('crash');
-  }, [sim]);
+    sim.hideKind.set(-1);
+    bringOut((k) => (shadows && k !== kind) || k === kind, kind >= 0);
+  }, [sim, bringOut]);
   useEffect(() => {
     onCue.current = (line) => {
-      if (line === snap) revealFoes();
+      // his shadows peel off the walls; the Warden waits under the floor until it cracks
+      if (line === snap && sim.hideFoes.get()) {
+        const kind = sim.hideKind.get();
+        sim.hideFoes.set(false);
+        bringOut((k) => k !== kind, false);
+      } else if (RAISED.test(line)) revealFoes();
     };
-  }, [snap, revealFoes]);
+  }, [snap, revealFoes, bringOut, sim]);
   // The moment before this boss fight (moments.ts), once the intro closes: once only, not on every retry.
   const introOver = bossOn && dialogue === null;
   const introDone = useRef(false);
@@ -2397,7 +2429,7 @@ function World({
         const game = useGameStore.getState();
         const chat = walkBanterFor(
           map.id,
-          partyWithYou(game.party, game.owned, w.flags),
+          chattersWithYou(game.party, game.owned, w.flags, hero),
           w.flags,
           Math.floor(sim.x.get() / TILE),
           Math.floor((sim.y.get() - 1) / TILE),
@@ -2414,7 +2446,7 @@ function World({
     };
     timer = setTimeout(check, 1500);
     return () => clearTimeout(timer);
-  }, [map, dialogue, cutscene, ringing, paused, bossOn, stepping, exit, fightMap, sim]);
+  }, [map, dialogue, cutscene, ringing, paused, bossOn, stepping, exit, fightMap, sim, hero]);
 
   return (
     <View style={styles.root}>
@@ -2898,7 +2930,11 @@ function useAct(
   const talk = useCallback(
     (thing: NpcObject, facing: number) => {
       const game = useGameStore.getState();
-      const banter = banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags));
+      const banter = banterFor(
+        map.id,
+        thing.id,
+        chattersWithYou(game.party, game.owned, useWorldStore.getState().flags, hero),
+      );
       // they turn to face you
       sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
       // talking to anyone writes their part of the story on the Story scroll (tale.ts)
@@ -3005,7 +3041,11 @@ function useAct(
       if (memory.sets) w.setFlag(memory.sets);
       playSound('quest');
       haptics.celebrate();
-      const after = banterFor(map.id, memory.id, party);
+      const after = banterFor(
+        map.id,
+        memory.id,
+        party.filter((id) => id !== hero),
+      );
       // the World washes out into the past while it plays, goes black where it does, and comes back for the last line
       setDialogue({
         lines: memory.lines,
@@ -3073,7 +3113,7 @@ function useAct(
     // party members you have may chime in, after the person's own lines (see banter.ts)
     const game = useGameStore.getState();
     const banter = thing
-      ? banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags))
+      ? banterFor(map.id, thing.id, chattersWithYou(game.party, game.owned, useWorldStore.getState().flags, hero))
       : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const job = thing.job;
@@ -3511,7 +3551,7 @@ function useAct(
     const lines = map.examine[tile];
     // the party can have a word about what you're looking at, too (banter.ts, "tile:<letter>")
     const { party, owned } = useGameStore.getState();
-    const said = banterFor(map.id, `tile:${tile}`, partyWithYou(party, owned, useWorldStore.getState().flags));
+    const said = banterFor(map.id, `tile:${tile}`, chattersWithYou(party, owned, useWorldStore.getState().flags, hero));
     if (lines) setDialogue({ lines: [...lines, ...said] });
   }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special, hold, shade, finale]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.

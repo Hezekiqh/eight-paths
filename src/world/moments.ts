@@ -22,7 +22,11 @@ export const BOSS_CUE: Partial<Record<MapId, string[]>> = {
     'KALDOR: Enough. You want single combat, by the old law? Then you shall have it.',
     '* He snaps his fingers. The shadows in the corners of the room peel off the walls, and stand up.',
     'KALDOR: These are me. Every one. The law never said how many of me there would be.',
-    '* Behind them, something tall and stitched unfolds. A tag hangs from its neck: AUREK THE TALL. Almost.',
+    // the Warden, raised from the dead (author, Oct 7, 2026): Brannoc's swing killed him in the Kaloseum; he was
+    // buried in the Graveyard of Kings, and Kaldor raises him for the fight before the king
+    '* Kaldor lifts a hand. The floor cracks, and something huge climbs up out of it, earth sliding off its shoulders.',
+    '* The Warden. Dead, and up again. His eyes are empty.',
+    '* A tag hangs from his neck: AUREK THE TALL. Almost.',
     '* Up by the throne, Felix settles in to watch.',
   ],
 };
