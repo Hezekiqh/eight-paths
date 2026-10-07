@@ -25,6 +25,9 @@ const DARKER: Partial<Record<MapId, number>> = {
   'candle-inn': 0.2,
   forge: 0.25,
   waystation: 0.1,
+  // the Royal Forest's canopy, and the Painters' School, boarded up (author, Oct 7, 2026)
+  'royal-forest': 0.22,
+  'painters-school': 0.3,
 };
 
 export function ambienceOf(map: WorldMap): Ambience {

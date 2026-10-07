@@ -309,6 +309,93 @@ export const BANTER: Record<string, Banter[]> = {
     { who: 'pip', lines: ['PIP: Five queens and a chandelier with opinions. I smell a ballad.'] },
   ],
   'castle-upper:queen-maren': [{ who: 'wren', lines: ['WREN: She does love him. Somebody ought to.'] }],
+  // ---- the Royal Forest and the Painters' School (author, Oct 7, 2026): where Brannoc ran. He remembers
+  // bits, never the whole; Moss reads the trees. "tile:<letter>" is a tile you examine; a memory's id plays
+  // once the memory closes (memories.ts).
+  'royal-forest:forest-woodcutter': [
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: A prince ran in there? Poor fellow. I would have run the other way. I am very good at the other way.'],
+    },
+    { who: 'moss', lines: ["MOSS: He's right not to. The trees in there are listening. Not to us."] },
+  ],
+  'royal-forest:tile:1': [
+    {
+      who: 'brannoc',
+      lines: ['BRANNOC: Everybody draws sparrows. …I used to sign mine like that. Small, in the corner. Funny.'],
+    },
+    {
+      who: 'moss',
+      lines: ["MOSS: The bark's grown over the cuts. Five hundred rings, near enough. Somebody careful, in a hurry."],
+    },
+  ],
+  'royal-forest:tile:2': [
+    { who: 'brannoc', lines: ['BRANNOC: The legs are wrong. I would have fixed the legs. …Why would I have fixed the legs?'] },
+  ],
+  'royal-forest:tile:3': [
+    { who: 'moss', lines: ['MOSS: Cut with something small and sharp. A palette knife, maybe. Not a sword.'] },
+  ],
+  'royal-forest:tile:4': [
+    { who: 'brannoc', lines: ["BRANNOC: I don't like this one. Can we go north? We should go north."] },
+    { who: 'moss', lines: ['MOSS: The tree remembers being cut. It flinched.'] },
+  ],
+  'royal-forest:tile:5': [{ who: 'brannoc', lines: ["BRANNOC: …He didn't finish it."] }],
+  'royal-forest:brannoc-forest': [
+    {
+      who: 'brannoc',
+      lines: [
+        "BRANNOC: That's where it stops. Every time I try to think past it, there's just… grass.",
+      ],
+    },
+    { who: 'moss', lines: ["MOSS: Nothing's grown in that ring since. The ground's still holding its breath."] },
+  ],
+  'painters-school:tile:S': [
+    { who: 'brannoc', lines: ["BRANNOC: One arm's longer than the other. …I think that arm was mine. I did the arms."] },
+  ],
+  'painters-school:tile:k': [
+    {
+      who: 'brannoc',
+      with: 'wren',
+      lines: [
+        'BRANNOC: These are rather good. Whoever B was.',
+        'WREN: B. …Brannoc?',
+        'BRANNOC: Lots of people begin with B.',
+      ],
+    },
+    { who: 'brannoc', lines: ['BRANNOC: These are rather good. Whoever B was.'] },
+  ],
+  'painters-school:brannoc-school': [
+    {
+      who: 'brannoc',
+      lines: [
+        "BRANNOC: I ran. That night. I didn't even go back for my sketchbook.",
+        "BRANNOC: He said I was a great warrior. I still don't know what he meant. I think he did, though.",
+      ],
+    },
+    {
+      who: 'oren',
+      lines: [
+        'OREN: He meant it.',
+        'BRANNOC: Meant what?',
+        'OREN: Ask me in a year.',
+      ],
+    },
+    {
+      who: 'wren',
+      lines: [
+        'WREN: He sounds kind.',
+        'BRANNOC: He was. He was the only one who never wanted anything from me. Except to look properly.',
+      ],
+    },
+    {
+      who: 'quill',
+      lines: [
+        'QUILL: "Yearning for battle doesn\'t make one a great warrior." I\'m writing that down.',
+        'QUILL: …Sorry. Is now a bad time?',
+        'BRANNOC: No. Write it down. Somebody should.',
+      ],
+    },
+  ],
 };
 
 /**

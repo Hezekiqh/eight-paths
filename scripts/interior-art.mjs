@@ -226,5 +226,68 @@ export function interiorArt({ box, put, ellipse, hash }) {
     ellipse(g, x + 8, y + 8, 5, 4, '#D8B85A');
     for (let k = 0; k < 8; k++) put(g, x + 3 + Math.floor(hash(x, y, k) * 10), y + 5 + Math.floor(hash(y, x, k) * 8), '#E8C86A');
   };
+  // The Painters' School (author, Oct 7, 2026): boarded up five hundred years. Drawn by name (a map's
+  // `art` points a letter at them).
+  // a window, boarded over from outside: light through the cracks
+  art.boarded = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    if (m.at(0, -1) === '#') return;
+    box(g, x + 3, y + 1, 10, 10, '#3A2618');
+    box(g, x + 4, y + 2, 8, 8, '#E8D8A8');
+    for (const by of [y + 2, y + 5, y + 8]) box(g, x + 3, by, 10, 2, '#6A4428');
+  };
+  // four bare hooks over clean squares where the paintings hung, and a brass plate under each
+  art.hooks = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    if (m.at(0, -1) === '#') {
+      box(g, x + 7, y + 6, 2, 2, '#2A1C12');
+      box(g, x + 3, y + 9, 10, 7, '#E8DEC4');
+      return;
+    }
+    box(g, x + 3, y, 10, 8, '#E8DEC4');
+    box(g, x + 5, y + 9, 6, 2, '#C8963A');
+    put(g, x + 6, y + 9, '#F0D07A');
+  };
+  // an easel with a canvas never finished: a sky, and a pencil line for the ground
+  art.easel = (g, x, y) => {
+    box(g, x + 4, y + 4, 1, 12, '#5A3A20');
+    box(g, x + 11, y + 4, 1, 12, '#5A3A20');
+    box(g, x + 7, y + 2, 2, 13, '#4A3020');
+    box(g, x + 3, y + 2, 10, 9, '#F0E6CC');
+    box(g, x + 3, y + 2, 10, 5, '#8AAAD0');
+    box(g, x + 3, y + 8, 10, 1, '#8A8280');
+    box(g, x + 2, y + 11, 12, 1, '#5A3A20');
+  };
+  // the master, in stone: an old man, a brush behind his ear, one arm a little longer than the other
+  art.statue = (g, x, y) => {
+    box(g, x + 3, y + 12, 10, 4, '#6A6260');
+    box(g, x + 3, y + 12, 10, 1, '#8A8280');
+    box(g, x + 5, y + 5, 6, 7, '#9A928C');
+    ellipse(g, x + 8, y + 3, 3, 3, '#ACA5A0');
+    box(g, x + 4, y + 6, 1, 6, '#8A8280');
+    box(g, x + 11, y + 6, 1, 5, '#8A8280');
+    box(g, x + 10, y + 1, 3, 1, '#C8963A');
+  };
+  // the master's stool, paint on the seat
+  art.stool = (g, x, y) => {
+    ellipse(g, x + 8, y + 7, 5, 3, '#7A5230');
+    box(g, x + 4, y + 8, 1, 7, '#4A3020');
+    box(g, x + 11, y + 8, 1, 7, '#4A3020');
+    box(g, x + 7, y + 9, 2, 6, '#4A3020');
+    put(g, x + 6, y + 6, '#B04030');
+    put(g, x + 9, y + 7, '#4A6AA0');
+  };
+  // a student's desk, a sketchbook open on it
+  art.desk = (g, x, y) => {
+    box(g, x + 1, y + 4, 14, 9, '#6A4428');
+    box(g, x + 1, y + 4, 14, 1, '#8A6440');
+    box(g, x + 2, y + 13, 2, 3, '#3A2618');
+    box(g, x + 12, y + 13, 2, 3, '#3A2618');
+    box(g, x + 4, y + 6, 4, 5, '#F0E6CC');
+    box(g, x + 8, y + 6, 4, 5, '#E8DCC0');
+    put(g, x + 5, y + 8, '#3A2618');
+    put(g, x + 6, y + 7, '#3A2618');
+    put(g, x + 10, y + 9, '#3A2618');
+  };
   return art;
 }
