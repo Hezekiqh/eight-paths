@@ -64,7 +64,7 @@ import {
 } from '@/world/combat';
 import { CHARGE_TIME, startFight, stepFight, type Fight, type Special } from '@/world/fight';
 import { autopilot as autoplay, newPilot, walkToward, type Pilot } from '@/world/autopilot';
-import { AttackEffects, Sword } from '@/components/world/attack-effects';
+import { AttackEffects } from '@/components/world/attack-effects';
 import { MAX_GUTTERED, type Ambience } from '@/world/ambience';
 import { playSound, type Effect } from '@/audio';
 import { haptics } from '@/haptics';
@@ -73,11 +73,16 @@ import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 import { cameoAt } from '@/world/step-aside';
 import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
 import {
+  BREACH_AT,
+  FLASH_PEAK,
   FLASH_TIME,
   FLY_TIME,
-  BREACH_AT,
-  SWING_ARC,
+  HOLE_HOLD,
+  IMPACT_TIME,
   SWING_STRIKE,
+  SWING_WINDUP,
+  SW_HY,
+  bladeAt,
   SW_BX,
   SW_BY,
   SW_FACE,
@@ -326,7 +331,7 @@ type Props = {
   /** A fight picked back up after a change of character, instead of a fresh one (session.ts carry). */
   resume?: Fight | null;
   /** The hole the warden left in the Kaloseum's banners (swing.ts): its x in art pixels. */
-  breach?: number | null;
+  breach?: [number, number] | null;
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
 };
@@ -339,6 +344,8 @@ const WARDEN_KIND = ENEMY_KINDS.indexOf('warden');
 
 /** A march actor's "facing" for someone out cold on the ground (march.ts), and for someone carried. */
 const LYING = 4;
+/** A snot bubble on someone lying down swells bigger: it has to read among the people round them. */
+const LYING_BUBBLE = 6.5;
 /** How high someone carried is held off the ground, in art pixels. */
 const CARRIED = 8;
 
@@ -861,10 +868,10 @@ export function WorldView({
         const st = before + realDt;
         if (before < SWING_STRIKE && st >= SWING_STRIKE) {
           shake.set([FEEL.shakeTime * 4, FEEL.killShake * 2]);
+          hitStop.set(FEEL.bigStop);
           puffs.set([...puffs.get().slice(-3), [sw[SW_WX], sw[SW_WY], FEEL.puff]]);
-          sparks.set([sw[SW_WX], sw[SW_WY] - 20, 0.15]);
         }
-        if (before < SWING_STRIKE + FLY_TIME + 1) {
+        if (before < SWING_STRIKE + FLY_TIME + HOLE_HOLD + 1) {
           const next = sw.slice();
           next[SW_T] = st;
           sim.swing.set(next);
@@ -938,7 +945,7 @@ export function WorldView({
       }
       shadowAt.set(shadows);
       if (sw.length > 0) {
-        const fl = wardenFlight(sw[SW_T] - SWING_STRIKE, sw[SW_WX], sw[SW_WY], sw[SW_HX]);
+        const fl = wardenFlight(sw[SW_T] - SWING_STRIKE, sw[SW_WX], sw[SW_WY], sw[SW_HX], sw[SW_HY]);
         if (fl[2] > 0) ents.push([wardenRow, fl[3], 0, fl[0], fl[1], 0, fl[2]]);
       }
       for (let k = partyRows.length - 1; k >= 1; k--) {
@@ -962,11 +969,13 @@ export function WorldView({
             continue;
           }
           if (row >= 0) {
-            // swinging: he lunges into the blow
-            const lunge = sw.length > 0 && row === sw[SW_ROW] && sw[SW_T] < SWING_ARC ? 3 : 0;
+            // swinging: he leans back as he raises the blade, then lunges into the blow
+            const swingT = sw.length > 0 && row === sw[SW_ROW] ? sw[SW_T] : -1;
+            const lunge =
+              swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
             const lx = facing === 2 ? -lunge : facing === 3 ? lunge : 0;
             const ly = facing === 1 ? -lunge : facing === 0 ? lunge : 0;
-            ents.push([row, facing, lunge > 0 ? 1 : frame, x + lx, y + ly, 0, 1]);
+            ents.push([row, facing, lunge !== 0 ? 1 : frame, x + lx, y + ly, 0, 1]);
             if (snot === 1) asleep.push(x + lx, y + ly, 0, facing === 2 ? -1 : 1);
             continue;
           }
@@ -999,11 +1008,13 @@ export function WorldView({
       let fx = sim.x.get();
       let fy = sim.y.get() - 12;
       let glide = 4;
-      if (sw.length > 0 && sw[SW_T] >= SWING_STRIKE) {
-        const fl = wardenFlight(sw[SW_T] - SWING_STRIKE, sw[SW_WX], sw[SW_WY], sw[SW_HX]);
+      const flying = sw.length > 0 ? sw[SW_T] - SWING_STRIKE : -1;
+      if (flying >= 0 && flying < FLY_TIME + HOLE_HOLD) {
+        // after the warden, up to the banners (no higher: the hole's the thing), and a beat on it once he's gone
+        const fl = wardenFlight(Math.min(flying, FLY_TIME * 0.99), sw[SW_WX], sw[SW_WY], sw[SW_HX], sw[SW_HY]);
         fx = fl[0];
-        fy = fl[1] - 12;
-        glide = 7;
+        fy = Math.max(fl[1] - 20, sw[SW_HY] + 10);
+        glide = 6;
       } else if (focus.length === 1 && focus[0] === FOCUS_MARCH && marchLead !== null) {
         fx = marchLead[0];
         fy = marchLead[1] - 12;
@@ -1277,12 +1288,12 @@ export function WorldView({
       const w = walkers[snorers[i][0]];
       if (!w) continue;
       const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
-      out.push(snotBubble(t + i * 0.5, x, y));
+      out.push(snotBubble(t + i * 0.5, x, y, 1, snorers[i][1] === 1 ? LYING_BUBBLE : undefined));
     }
     const walking = marchSleep.get();
     for (let i = 0; i < walking.length; i += 4) {
       const [x, y] = sleeperAt([walking[i], walking[i + 1]], walking[i + 2] === 1, 'snot');
-      out.push(snotBubble(t + i * 0.13, x, y, walking[i + 3]));
+      out.push(snotBubble(t + i * 0.13, x, y, walking[i + 3], walking[i + 2] === 1 ? LYING_BUBBLE : undefined));
     }
     return out;
   });
@@ -1303,16 +1314,100 @@ export function WorldView({
     for (const b of bubbles.get()) if (b.shine) path.addRect(Skia.XYWHRect(b.shine[0], b.shine[1], 1, 1));
     return path;
   });
-  // Brannoc's swing: his blade's arc (the Warrior's sword, attack-effects.tsx), and the white of the blow landing.
-  const swingFlash = useDerivedValue(() => {
+  // Brannoc's swing: his blade, raised back and swept over and down (bladeAt), its arc, and the star where it lands.
+  const bladePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
     const w = sim.swing.get();
-    if (w.length === 0) return [0, 0, 0, 0, 0, 0, 0, SWING_ARC];
-    return [0, 0, 0, Math.max(0, SWING_ARC - w[SW_T]), w[SW_BX], w[SW_BY], w[SW_FACE], SWING_ARC];
+    if (w.length === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const [a] = bladeAt(w[SW_T]);
+    const hx = w[SW_BX] + dir * 3;
+    const hy = w[SW_BY] - 11;
+    const c = Math.cos(a) * dir;
+    const sn = Math.sin(a);
+    // a broad blade from the hilt out: two pixels either side of its line
+    const len = 22;
+    const nx = -sn * 1.6;
+    const ny = c * 1.6;
+    path.moveTo(hx + c * 3 + nx, hy + sn * 3 + ny);
+    path.lineTo(hx + c * len + nx * 0.5, hy + sn * len + ny * 0.5);
+    path.lineTo(hx + c * (len + 3), hy + sn * (len + 3));
+    path.lineTo(hx + c * len - nx * 0.5, hy + sn * len - ny * 0.5);
+    path.lineTo(hx + c * 3 - nx, hy + sn * 3 - ny);
+    path.close();
+    return path;
+  });
+  const hiltPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const [a] = bladeAt(w[SW_T]);
+    const hx = w[SW_BX] + dir * 3;
+    const hy = w[SW_BY] - 11;
+    const c = Math.cos(a) * dir;
+    const sn = Math.sin(a);
+    path.addCircle(hx + c * 3, hy + sn * 3, 2);
+    return path;
+  });
+  const arcPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0) return path;
+    const [a, drawn] = bladeAt(w[SW_T]);
+    if (drawn <= 0) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const hx = w[SW_BX] + dir * 3;
+    const hy = w[SW_BY] - 11;
+    const r = 20;
+    const start = -2.4;
+    const steps = 18;
+    for (let k = 0; k <= steps; k++) {
+      const ang = start + ((a - start) * k) / steps;
+      const x = hx + Math.cos(ang) * r * dir;
+      const y = hy + Math.sin(ang) * r;
+      if (k === 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
+    }
+    return path;
+  });
+  const arcO = useDerivedValue(() => {
+    const w = sim.swing.get();
+    return w.length === 0 ? 0 : bladeAt(w[SW_T])[2];
+  });
+  // where the blade meets him: a star of white and gold bursting out, then gone
+  const impactPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0) return path;
+    const k = (w[SW_T] - SWING_STRIKE) / IMPACT_TIME;
+    if (k < 0 || k > 1) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const x = (w[SW_BX] + w[SW_WX]) / 2 + dir * 2;
+    const y = w[SW_BY] - 16;
+    const inner = 3 + 10 * k;
+    const outer = 8 + 16 * k;
+    for (let i = 0; i < 8; i++) {
+      const ang = (i * Math.PI) / 4 + 0.2;
+      const len = i % 2 === 0 ? outer : outer * 0.6;
+      path.moveTo(x + Math.cos(ang) * inner, y + Math.sin(ang) * inner);
+      path.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+    }
+    path.addCircle(x, y, Math.max(0, 5 * (1 - k * 1.5)));
+    return path;
+  });
+  const impactO = useDerivedValue(() => {
+    const w = sim.swing.get();
+    if (w.length === 0) return 0;
+    const k = (w[SW_T] - SWING_STRIKE) / IMPACT_TIME;
+    return k < 0 || k > 1 ? 0 : 1 - k * 0.7;
   });
   // the hole he punches in the banners, from the moment he goes through them (saved at the scene's end: `breach`)
   const breachAt = useDerivedValue(() => {
     const w = sim.swing.get();
-    return [{ translateX: w.length > 0 ? w[SW_HX] : 0 }];
+    return w.length > 0
+      ? [{ translateX: w[SW_HX] - BANNER_MID[0] }, { translateY: w[SW_HY] - BANNER_MID[1] }]
+      : [{ translateX: 0 }];
   });
   const breaching = useDerivedValue(() => {
     const w = sim.swing.get();
@@ -1322,7 +1417,7 @@ export function WorldView({
     const w = sim.swing.get();
     if (w.length === 0) return 0;
     const k = w[SW_T] - SWING_STRIKE;
-    return k < 0 || k > FLASH_TIME ? 0 : 0.9 * (1 - k / FLASH_TIME);
+    return k < 0 || k > FLASH_TIME ? 0 : FLASH_PEAK * (1 - k / FLASH_TIME);
   });
   const cheering = useDerivedValue(() => (Math.floor(clock.get() * 2.5) % 2 === 0 ? 0 : 1));
   const motePath = useDerivedValue(() => {
@@ -1376,10 +1471,10 @@ export function WorldView({
           <Image image={cheerImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} opacity={cheering} />
         )}
         {breach !== null ? (
-          <Breach x={breach} />
+          <Breach x={breach[0]} y={breach[1]} />
         ) : (
           <Group transform={breachAt} opacity={breaching}>
-            <Breach x={0} />
+            <Breach x={0} y={0} />
           </Group>
         )}
         {patches.map((p) => (
@@ -1476,7 +1571,12 @@ export function WorldView({
         <Path path={rimPath} color="#4E9A6A" />
         <Path path={bubblePath} color="#C4F2D4" opacity={0.9} />
         <Path path={shinePath} color="#FFFFFF" />
-        <Sword flash={swingFlash} color="#FFF4C0" range={26} />
+        <Path path={arcPath} color="#FFE9A0" style="stroke" strokeWidth={7} strokeCap="round" opacity={arcO} />
+        <Path path={arcPath} color="#FFFFFF" style="stroke" strokeWidth={2.5} strokeCap="round" opacity={arcO} />
+        <Path path={bladePath} color="#E8ECF4" />
+        <Path path={bladePath} color="#4A4E58" style="stroke" strokeWidth={0.75} />
+        <Path path={hiltPath} color="#8A6A3A" />
+        <Path path={impactPath} color="#FFF4C0" style="stroke" strokeWidth={2.5} strokeCap="round" opacity={impactO} />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
@@ -1516,58 +1616,76 @@ export function WorldView({
   );
 }
 
-/** The hole the warden left going out through the top of the Kaloseum (swing.ts): night sky through torn stands. */
+/** The middle of the breach, from a banner pole's top (where the warden went through its cloth). */
+const BANNER_MID = [5, 6];
+/** The torn gap, around the cloth's middle: ragged, a little taller than wide, the dark of the night behind. */
 const BREACH_EDGE = [
-  [-21, 0],
-  [-18, 10],
-  [-22, 17],
-  [-15, 21],
-  [-17, 29],
-  [-8, 28],
-  [-4, 36],
-  [3, 31],
-  [8, 35],
-  [13, 27],
-  [20, 28],
-  [17, 20],
-  [22, 13],
-  [20, 0],
+  [-9, -14],
+  [-4, -11],
+  [-1, -16],
+  [3, -12],
+  [8, -15],
+  [10, -8],
+  [13, -4],
+  [10, 1],
+  [12, 6],
+  [8, 9],
+  [6, 14],
+  [1, 11],
+  [-3, 15],
+  [-6, 10],
+  [-11, 11],
+  [-9, 5],
+  [-13, 0],
+  [-10, -5],
 ];
-const BREACH_SCRAPS = [
-  [-25, 1, 3, 10],
-  [-21, 15, 2, 5],
-  [21, 3, 3, 8],
-  [17, 25, 2, 4],
-  [-11, 38, 2, 2],
-  [6, 41, 3, 2],
+/** What's left of the banner: rags of red hanging off the pole and the edges, and gold thread. */
+const RAGS = [
+  [-5, -7, 2, 7],
+  [-4, 0, 2, 5],
+  [-5, 6, 1, 3],
+  [7, -9, 2, 4],
+  [8, 2, 2, 5],
 ];
-const BREACH_RUBBLE = [
-  [-14, 34, 3, 2],
-  [-3, 39, 2, 2],
-  [10, 38, 3, 2],
-  [15, 32, 2, 2],
-  [-20, 31, 2, 2],
-  [0, 45, 2, 1],
+const DEBRIS = [
+  [-14, 16, 2, 2],
+  [-6, 18, 2, 1],
+  [3, 19, 2, 2],
+  [11, 16, 3, 2],
+  [16, 9, 2, 2],
+  [-17, 8, 2, 2],
 ];
-function Breach({ x }: { x: number }) {
-  const [hole, rim] = useMemo(() => {
+/**
+ * The hole the warden left going through a Kaloseum banner (swing.ts): the cloth torn open on the dark sky behind,
+ * rags of it hanging off the pole, the pole snapped, and bits of the stands knocked loose round it. (x, y): the
+ * banner pole's top.
+ */
+function Breach({ x, y }: { x: number; y: number }) {
+  const cx = x + BANNER_MID[0];
+  const cy = y + BANNER_MID[1];
+  const hole = useMemo(() => {
     const p = Skia.Path.Make();
-    BREACH_EDGE.forEach(([dx, dy], i) => (i === 0 ? p.moveTo(x + dx, dy) : p.lineTo(x + dx, dy)));
+    BREACH_EDGE.forEach(([dx, dy], i) => (i === 0 ? p.moveTo(cx + dx, cy + dy) : p.lineTo(cx + dx, cy + dy)));
     p.close();
-    return [p, p.copy()];
-  }, [x]);
+    return p;
+  }, [cx, cy]);
   return (
     <Group>
-      <Path path={hole} color="#141A30" />
-      <Path path={rim} color="#2A1A12" style="stroke" strokeWidth={2} />
-      <Rect x={x - 8} y={5} width={1} height={1} color="#F4EFD0" />
-      <Rect x={x + 7} y={12} width={1} height={1} color="#F4EFD0" />
-      <Rect x={x - 3} y={19} width={1} height={1} color="#C8C4E0" />
-      {BREACH_SCRAPS.map(([dx, dy, w, h], i) => (
-        <Rect key={`s${i}`} x={x + dx} y={dy} width={w} height={h} color="#9A2A22" />
+      <Path path={hole} color="#0E1428" />
+      <Path path={hole} color="#3A2618" style="stroke" strokeWidth={1.5} />
+      <Rect x={cx - 5} y={cy - 8} width={1} height={1} color="#F4EFD0" />
+      <Rect x={cx + 4} y={cy - 3} width={1} height={1} color="#F4EFD0" />
+      <Rect x={cx - 1} y={cy + 5} width={1} height={1} color="#C8C4E0" />
+      {/* the pole, snapped halfway, its top half hanging off at an angle */}
+      <Rect x={x} y={y + 9} width={1} height={9} color="#3A2618" />
+      <Group transform={[{ translateX: x }, { translateY: y + 9 }, { rotate: -0.7 }]}>
+        <Rect x={0} y={-9} width={1} height={9} color="#3A2618" />
+      </Group>
+      {RAGS.map(([dx, dy, w, h], i) => (
+        <Rect key={`r${i}`} x={cx + dx} y={cy + dy} width={w} height={h} color={i === 2 ? '#C8963A' : '#9A2A22'} />
       ))}
-      {BREACH_RUBBLE.map(([dx, dy, w, h], i) => (
-        <Rect key={`r${i}`} x={x + dx} y={dy} width={w} height={h} color="#6A625C" />
+      {DEBRIS.map(([dx, dy, w, h], i) => (
+        <Rect key={`d${i}`} x={cx + dx} y={cy + dy} width={w} height={h} color={i % 2 ? '#9A2A22' : '#6A625C'} />
       ))}
     </Group>
   );

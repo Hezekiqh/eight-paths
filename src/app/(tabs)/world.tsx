@@ -206,7 +206,8 @@ import {
   SWING_DELAY,
   SWING_STRIKE,
   WARDEN_HOLE,
-  breachX,
+  bannerFor,
+  clothOf,
   holeAt,
   sleepwalkTo,
 } from '@/world/swing';
@@ -1203,7 +1204,8 @@ function World({
     const [lx, ly] = npcFeet({ x: from[0], y: from[1] });
     const walk = sleepwalkTo(from, [wx, wy], (x, y) => !map.solid[y * map.width + x] && x >= 0 && y >= 0);
     const [ex, ey] = npcFeet({ x: walk.end[0], y: walk.end[1] });
-    const hx = breachX(wx, map.width * TILE);
+    const banner = bannerFor(wx, wy);
+    const [hx, hy] = clothOf(banner);
     const asleep = WALKER_ROWS.brannocasleep;
     // the warden and the player, then a look round at the snore behind you
     setDialogue({
@@ -1233,7 +1235,7 @@ function World({
                   then: () => {
                     // the blow lands as the line's shouted (it types out in well under a second)
                     setTimeout(() => {
-                      sim.swing.set([0, asleep, ex, ey, walk.face, wx, wy, hx]);
+                      sim.swing.set([0, asleep, ex, ey, walk.face, wx, wy, hx, hy]);
                       playSound('swing');
                       haptics.kill();
                     }, SWING_DELAY * 1000);
@@ -1248,7 +1250,7 @@ function World({
                       lines: SNOT_SWING_HIT.slice(SWING_LINE),
                       then: () => {
                         // the hole he left in the banners stays (world-view draws it from the swing until now)
-                        setFlag(`${WARDEN_HOLE}${hx}`);
+                        setFlag(`${WARDEN_HOLE}${banner[0]},${banner[1]}`);
                         setFlag('pit-champion');
                         setFlag('brannoc-swung');
                         travel(hereNow());

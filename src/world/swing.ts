@@ -9,24 +9,38 @@ import { TILE } from './maps';
 export const WARDEN_HOLE = 'warden-hole:';
 /** How far from the warden Brannoc stops to swing, in tiles (the warden is two tiles wide). */
 export const STAND_OFF = 1.75;
-/** The swing, from when it starts: the blade sweeps for SWING_ARC, and lands at SWING_STRIKE. */
-export const SWING_ARC = 0.35;
-export const SWING_STRIKE = 0.15;
-/** How long after "BRANNOC SUPER SUPER SWING!" starts typing the swing starts, so the blow lands on its last word. */
-export const SWING_DELAY = 0.45;
-/** The white flash on the strike, and how long the warden takes to fly up and out of sight. */
-export const FLASH_TIME = 0.5;
-export const FLY_TIME = 1.6;
-/** How far through his flight he goes through the banners (the hole shows from then on). */
-export const BREACH_AT = 0.7;
+/**
+ * The swing, from when it starts (author, Oct 7, 2026: "a short wind-up"): he raises the blade up and back over his
+ * shoulder for SWING_WINDUP, sweeps it over and down for SWING_SWEEP, and it lands at SWING_STRIKE; its trail fades
+ * for SWING_TRAIL after.
+ */
+export const SWING_WINDUP = 0.4;
+export const SWING_SWEEP = 0.18;
+export const SWING_STRIKE = SWING_WINDUP + SWING_SWEEP;
+export const SWING_TRAIL = 0.5;
+/** The blade's angles (radians, facing right; mirrored facing left): at rest, raised back, and where it ends. */
+export const BLADE_REST = -0.5;
+export const BLADE_RAISED = -2.4;
+export const BLADE_END = 0.9;
+/** How long the swing waits after "BRANNOC SUPER SUPER SWING!" starts typing, so the blow lands on its last word. */
+export const SWING_DELAY = 0.25;
+/** The white flash on the strike, and how bright it gets; the impact star at the blade's tip. */
+export const FLASH_TIME = 0.4;
+export const FLASH_PEAK = 0.7;
+export const IMPACT_TIME = 0.3;
+/** How long the warden takes to fly up through the banners and out of sight, and how far through it he hits them. */
+export const FLY_TIME = 1.8;
+export const BREACH_AT = 0.55;
+/** After he's gone, the camera holds on the hole for a beat before it comes back down. */
+export const HOLE_HOLD = 1.4;
 /** Where the warden's flight ends: above the top of the map, out of the Kaloseum. */
-export const FLY_TOP = -48;
+export const FLY_TOP = -64;
 /** How fast Brannoc sleepwalks, in tiles per second (before the game's speed): a slow, swaying shuffle. */
 export const SLEEPWALK_PACE = 2.2;
 
 /**
  * The scene on the UI thread (sim.swing): [seconds since the swing started, Brannoc's walker row, his feet x, y,
- * his facing, the warden's feet x, y, the hole's x]. Empty: no swing.
+ * his facing, the warden's feet x, y, the middle of the banner he goes through x, y]. Empty: no swing.
  */
 export const SW_T = 0;
 export const SW_ROW = 1;
@@ -36,6 +50,17 @@ export const SW_FACE = 4;
 export const SW_WX = 5;
 export const SW_WY = 6;
 export const SW_HX = 7;
+export const SW_HY = 8;
+
+/** The Kaloseum's banners (the-pit.png, scripts/world-art.mjs): each pole's top in art pixels; the cloth is 8x13. */
+export const PIT_BANNERS: [number, number][] = [
+  [79, 47],
+  [138, 23],
+  [374, 23],
+  [433, 47],
+];
+/** The middle of a banner's cloth, from its pole's top. */
+export const clothOf = ([x, y]: [number, number]): [number, number] => [x + 5, y + 6];
 
 /** A tile from an NPC's feet (art pixels), fractional. */
 const tileOf = (x: number, y: number): [number, number] => [(x - TILE / 2) / TILE, (y - (TILE - 2)) / TILE];
@@ -71,39 +96,82 @@ export function sleepwalkTo(
 }
 
 /**
- * Where the warden goes through the banners, in art pixels across a map `mapW` wide: straight up from where he
- * stood, kept clear of Barnaby's box in the middle of the top of the stands and of the map's edges.
+ * The banner the warden goes through: the one nearest straight up from where he stood (its pole's top), so it
+ * reads as torn banners, not a hole in the crowd.
  */
-export function breachX(wx: number, mapW: number): number {
-  const mid = mapW / 2;
-  const box = 64;
-  let x = Math.min(Math.max(wx, 40), mapW - 40);
-  if (Math.abs(x - mid) < box) x = x < mid ? mid - box : mid + box;
-  return Math.round(x);
+export function bannerFor(wx: number, wy: number, banners: [number, number][] = PIT_BANNERS): [number, number] {
+  let best = banners[0];
+  let score = Infinity;
+  for (const b of banners) {
+    const [cx, cy] = clothOf(b);
+    // mostly sideways distance: he goes up
+    const d = Math.abs(cx - wx) * 2 + Math.abs(cy - wy) * 0.5;
+    if (d < score) {
+      score = d;
+      best = b;
+    }
+  }
+  return best;
 }
 
-/** The hole in the banners, if the warden's been through them: its x in art pixels. */
-export function holeAt(flags: readonly string[]): number | null {
+/** The hole in the banners, if the warden's been through them: the torn banner's pole top, in art pixels. */
+export function holeAt(flags: readonly string[]): [number, number] | null {
   const f = flags.find((x) => x.startsWith(WARDEN_HOLE));
   if (!f) return null;
-  const x = Number(f.slice(WARDEN_HOLE.length));
-  return Number.isFinite(x) ? x : null;
+  const [x, y] = f.slice(WARDEN_HOLE.length).split(',').map(Number);
+  return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
 }
 
+/** How far a walker's feet are below the middle of their body, at `size`. */
+const MID = 10;
+
 /**
- * The warden in flight, `t` seconds after the strike: [x, y, size, facing], from his feet at (wx, wy) up to the
- * hole at hx and out over the top. He shoots up fast and slows, shrinks as he goes (away into the sky), and
- * tumbles: his facing turns round and round. Past FLY_TIME he's gone (size 0).
+ * The warden in flight, `t` seconds after the strike: [x, y (his feet), size, facing]. From where he stood (wx, wy)
+ * he's hurled up and across to the banner's cloth at (hx, hy), through it at BREACH_AT, and on up out of the top of
+ * the map, shrinking as he goes (away into the sky) and tumbling, slowly enough to see it's a man: his facing turns
+ * round, front, side, back, side. Past FLY_TIME he's gone (size 0).
  */
-export function wardenFlight(t: number, wx: number, wy: number, hx: number): number[] {
+export function wardenFlight(t: number, wx: number, wy: number, hx: number, hy: number): number[] {
   'worklet';
   if (t < 0) return [wx, wy, 2, 0];
   if (t >= FLY_TIME) return [hx, FLY_TOP, 0, 0];
   const f = t / FLY_TIME;
-  const up = 1 - (1 - f) * (1 - f);
-  const x = wx + (hx - wx) * f;
-  const y = wy + (FLY_TOP - wy) * up;
-  const size = 2 - 1.4 * f;
-  const facing = [0, 3, 1, 2][Math.floor(t * 14) % 4];
-  return [x, y, size, facing];
+  let cx: number;
+  let cy: number;
+  let size: number;
+  if (f < BREACH_AT) {
+    const k = f / BREACH_AT;
+    const e = 1 - (1 - k) * (1 - k);
+    cx = wx + (hx - wx) * e;
+    cy = wy - MID * 2 + (hy - (wy - MID * 2)) * e;
+    size = 2 - 0.8 * k;
+  } else {
+    const k = (f - BREACH_AT) / (1 - BREACH_AT);
+    cx = hx;
+    cy = hy + (FLY_TOP - hy) * k * k;
+    size = 1.2 - 0.6 * k;
+  }
+  const facing = [0, 3, 1, 2][Math.floor(t * 6) % 4];
+  return [cx, cy + MID * size, size, facing];
+}
+
+/**
+ * The swing's blade, `t` seconds after it starts: [angle (radians, facing right), how much of the arc is drawn
+ * (0 to 1), the trail's opacity]. Raised back through the wind-up (a little shake at the top), swept over and down,
+ * then the trail fades.
+ */
+export function bladeAt(t: number): number[] {
+  'worklet';
+  if (t < SWING_WINDUP) {
+    const k = t / SWING_WINDUP;
+    const e = 1 - (1 - k) * (1 - k);
+    const shake = k > 0.6 ? Math.sin(t * 90) * 0.06 : 0;
+    return [BLADE_REST + (BLADE_RAISED - BLADE_REST) * e + shake, 0, 0];
+  }
+  if (t < SWING_STRIKE) {
+    const k = (t - SWING_WINDUP) / SWING_SWEEP;
+    return [BLADE_RAISED + (BLADE_END - BLADE_RAISED) * k, k, 0.9];
+  }
+  const k = Math.min(1, (t - SWING_STRIKE) / SWING_TRAIL);
+  return [BLADE_END, 1, 0.9 * (1 - k)];
 }
