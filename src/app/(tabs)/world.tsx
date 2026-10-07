@@ -60,7 +60,7 @@ import {
   type Requirement,
   type XpTotals,
 } from '@/world/progress';
-import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome, type Scene } from '@/world/scenes';
+import { PORTAL_HOME, SEASON_END, finaleStage, seasonFinale, winScene, type Outcome, type Scene } from '@/world/scenes';
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { FINALE } from '@/world/keeper-talk-lines';
@@ -525,7 +525,7 @@ function World({
   const [faints] = useState(() => prison && hero === 'brannoc' && start.map.boss?.flag === 'pit-champion');
   const [bossOn] = useState(() => !!start.map.boss && !(xpNow.flags ?? []).includes(start.map.boss.flag) && !faints);
   // While it's on, the doorways stay shut (as in Zelda), so backing away never walks you out of it by accident.
-  const [ways] = useState(() =>
+  const [ways, setWays] = useState(() =>
     bossOn
       ? []
       : EXITS.filter(
@@ -537,6 +537,21 @@ function World({
             // the pothole only gives way once
             !(e.id === 'maze-pothole' && (xpNow.flags ?? []).includes(FELL_IN)),
         ),
+  );
+  /** The boss fight's over and its scene played (the throne room): the doorways open again, without coming back in. */
+  const [bossOver, setBossOver] = useState(false);
+  /** Ways a scene opened while you're here (a gate, a bridge): their letters, walkable from now on. */
+  const [openedLetters, setOpenedLetters] = useState<string[]>([]);
+  // A scene opens a way out (the drawbridge down, the plates' gate, the throne room's doors) there and then: no
+  // coming back into the room, it just becomes a way through. Its flag is saved as ever, so it's open next time too.
+  const openWays = useCallback(
+    (which: (e: (typeof EXITS)[number]) => boolean) => {
+      const more = EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && which(e));
+      if (more.length === 0) return;
+      setWays((w) => [...w, ...more.filter((e) => !w.includes(e))]);
+      setOpenedLetters((l) => [...new Set([...l, ...more.map((e) => e.tile)])]);
+    },
+    [start],
   );
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
@@ -671,10 +686,29 @@ function World({
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
   const sealed = useMemo(() => {
-    if (!bossOn) return [];
+    if (!bossOn || bossOver) return [];
     const letters = EXITS.filter((e) => e.from === map.id && e.walk).map((e) => e.tile);
     return tilesOf(map, letters).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
-  }, [bossOn, map]);
+  }, [bossOn, bossOver, map]);
+  // The field of banners: every banner in it (they lift in the finale's wind), and the seal's light
+  const banners = useMemo(
+    () =>
+      map.id === 'field-of-banners'
+        ? tilesOf(map, ['n']).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }))
+        : [],
+    [map],
+  );
+  const sealGlow = useMemo(() => {
+    const seal = map.id === 'field-of-banners' ? tilesOf(map, ['Q']) : [];
+    if (seal.length === 0) return null;
+    const xs = seal.map((t) => t % map.width);
+    const ys = seal.map((t) => Math.floor(t / map.width));
+    const x = Math.min(...xs) * TILE;
+    const y = Math.min(...ys) * TILE;
+    return { x, y, w: (Math.max(...xs) + 1) * TILE - x, h: (Math.max(...ys) + 1) * TILE - y };
+  }, [map]);
+  // ...and the tiles a scene has opened, for the walls to give way under
+  const openedTiles = useMemo(() => tilesOf(map, openedLetters), [map, openedLetters]);
   const flames = useMemo(() => flamesOn(map), [map]);
   // Hearts for this visit: five, plus one for every four pieces found (the walker's level adds more below).
   const [pieceHearts] = useState(() => maxHearts(arrivalFlags));
@@ -976,7 +1010,61 @@ function World({
   const specialTalk = useRef<(thing: NpcObject) => boolean>(() => false);
   const special = useCallback((thing: NpcObject) => specialTalk.current(thing), []);
   const [memoryShown, setMemoryShown] = useState<Shade>(null);
-  const { act, talk } = useAct(map, sim, setDialogue, save, xpRef, travel, hero, special, setStepping, setMemoryShown);
+  // The season's last seal: your party walks up and hangs back a step behind you (King Brannoc, if he's with you,
+  // comes up beside you), and then it's said. The seal's light shows as it loosens, and every banner in the field
+  // lifts on the line that says so. Nobody says anything new: they just stand there with you.
+  const finale = useCallback(
+    (said: Dialogue) => {
+      const game = useGameStore.getState();
+      const w = useWorldStore.getState();
+      const [hx, hy] = tileOf(sim);
+      const open = (x: number, y: number) =>
+        x >= 0 && y >= 0 && x < map.width && y < map.height && !map.solid[y * map.width + x];
+      const withYou = partyWithYou(game.party, game.owned, w.flags).filter(
+        (id) => id !== hero && id in WALKER_ROWS,
+      ) as HeroId[];
+      const king = withYou.includes('brannoc');
+      const others = withYou.filter((id) => id !== 'brannoc');
+      const actors: Actor[] = finaleStage([hx, hy], king, others, open).map(({ id, path, face }) => ({
+        row: WALKER_ROWS[id as HeroId],
+        path,
+        face,
+      }));
+      const lit = (line: string) => {
+        if (/hairline of light/.test(line)) sim.glowing.set(withTiming(0.6, { duration: 700 }));
+        else if (/It loosens|It doesn't break/.test(line)) sim.glowing.set(withTiming(1, { duration: 900 }));
+        if (/every banner in the field lifts/.test(line)) sim.wind.set(1);
+      };
+      const play = () =>
+        setDialogue({
+          ...said,
+          onLine: (i, line) => {
+            lit(line);
+            said.onLine?.(i, line);
+          },
+          then: () => {
+            sim.glowing.set(withTiming(0, { duration: 600 }));
+            said.then?.();
+          },
+        });
+      if (actors.length === 0) return play();
+      march(actors, play, MARCH_PACE, true);
+    },
+    [sim, map, hero, march],
+  );
+  const { act, talk } = useAct(
+    map,
+    sim,
+    setDialogue,
+    save,
+    xpRef,
+    travel,
+    hero,
+    special,
+    setStepping,
+    setMemoryShown,
+    finale,
+  );
   // Back from a cocoon's hatch: whoever came out of it talks to you straight away. (Not in the room being left: it
   // re-renders as the cocoon breaks, still focused, and would use the talk up unseen behind the hatch. The room come
   // back into talks, once the hatch has closed.)
@@ -1203,7 +1291,7 @@ function World({
                 lines: BRIDGE_LOWERS.slice(1),
                 then: () => {
                   sim.focus.set([]);
-                  travel(hereNow());
+                  openWays((e) => needsFlag(e.needs, GATE_FLAG));
                 },
               });
             },
@@ -1263,7 +1351,7 @@ function World({
         ],
       });
     ask(GATE_OPEN);
-  }, [setFlag, travel, hereNow, bridgeDown, sayAs, hero, drawbridge, sim]);
+  }, [setFlag, bridgeDown, sayAs, hero, drawbridge, sim, openWays]);
   // Brannoc's down (dungeon.ts): the three make their excuses, rush over, pick him up and carry him off to the side
   // of the sand (as in Episode 13), and then: FINISH THEM. Whoever's in a march is drawn by it, so the four of them
   // step off the map while it plays, and are put down where it leaves them.
@@ -1430,7 +1518,7 @@ function World({
   // of the carpet with the camera on the throne and Brannoc steps out beside you; the shadows pour out of Kaldor and
   // are gone; two guards come in and lead him out; Felix fades; and whoever takes the throne walks up to it.
   const playThrone = useCallback(
-    (scene: Scene, done: (o: Outcome) => void) => {
+    (scene: Scene, done: (o: Outcome, after: () => void) => void) => {
       const throne = scene.throne!;
       const after = scene.after ?? [];
       const beside = scene.stepOut === 'brannoc' && hero !== 'brannoc';
@@ -1447,7 +1535,21 @@ function World({
             label: c.label,
             deed: c.deed,
             then: () => {
-              const end = () => done(c.outcome);
+              // once it's said: the new ruler stays on the throne, Brannoc beside it or on it, and you're free to go
+              const end = () =>
+                done(c.outcome, () => {
+                  const brannocStays: Actor[] = beside
+                    ? [
+                        {
+                          row: brannoc,
+                          path: [c.toThrone?.who === 'brannoc' ? KALDOR_THRONE : BRANNOC_STAND],
+                          face: c.toThrone?.who === 'brannoc' ? 0 : 1,
+                        },
+                      ]
+                    : [];
+                  if (brannocStays.length > 0) march(brannocStays, () => {}, MARCH_PACE, true);
+                  else sim.march.set([]);
+                });
               if (!c.toThrone) return setDialogue({ lines: c.lines, then: end });
               const { who, at } = c.toThrone;
               say(c.lines.slice(0, at), () =>
@@ -1558,14 +1660,39 @@ function World({
         then: () => setDialogue({ lines: c.lines, then: () => done(c.outcome) }),
       })),
     };
-    if (scene.throne) return playThrone(scene, done);
+    if (scene.throne)
+      return playThrone(scene, (o, after) => {
+        sim.cameo.set([]);
+        for (const f of o.flags) setFlag(f);
+        if (o.joins) giftCharacters(o.joins);
+        setBossOver(true);
+        // the doors are a way out again; the camera back on you; whoever rules where they sat
+        openWays((e) => standing(e.needs, xpRef.current).met);
+        sim.focus.set([]);
+        after();
+      });
     // Kaldor's shadows leave him (castle.ts): his lines, then they pour out across the hall, then the rest
     const said: Dialogue = scene.shadows
       ? { lines: scene.lines, then: () => march(kaldorShadows(WALKER_ROWS.shadow), () => setDialogue(ending), 5) }
       : { ...ending, lines: [...scene.lines, ...ending.lines] };
     if (scene.stepOut && scene.stepOut !== hero) stepOutHere(scene.stepOut as HeroId, said);
     else setDialogue(said);
-  }, [map, gameParty, owned, finish, prison, hero, sim, march, snotSwing, playThrone, stepOutHere]);
+  }, [
+    map,
+    gameParty,
+    owned,
+    finish,
+    prison,
+    hero,
+    sim,
+    march,
+    snotSwing,
+    playThrone,
+    stepOutHere,
+    setFlag,
+    giftCharacters,
+    openWays,
+  ]);
   // Brannoc wakes after his swing: will you pair up? (Asked again each time you come in, until you answer.)
   const brannocOffer = useCallback(() => {
     // he shuffles off to the trapdoor, very slowly, as the line says so; the camera goes with him
@@ -1671,7 +1798,6 @@ function World({
   const onPlates = useCallback(() => {
     const flag = map.platesFlag;
     if (!flag) return;
-    const here = hereNow();
     const [first, ...rest] = map.platesLines ?? [
       'With a clank, all three plates sink at once.',
       'Chains draw taut. Across the yard, the gate grinds up into the dark.',
@@ -1700,13 +1826,13 @@ function World({
             lines: rest,
             then: () => {
               sim.focus.set([]);
-              travel(here);
+              openWays((e) => needsFlag(e.needs, flag));
             },
           });
         }, PLATES_PAN_MS);
       },
     });
-  }, [map, setFlag, sim, travel, hereNow]);
+  }, [map, setFlag, sim, openWays]);
   // Felix frames you to the king's guards (felix-maze.ts): you answer, and however you answer, you end
   // up in the dungeon next to Brannoc (the drink goes by way of the tavern). First he gives his
   // name, you try "Mr. Himothy", and he cuts you off.
@@ -2352,6 +2478,9 @@ function World({
         resume={resumeFight}
         fightRef={fightRef}
         breach={map.id === 'the-pit' ? holeAt(liveFlags) : null}
+        opened={openedTiles}
+        banners={banners}
+        glow={sealGlow}
         sealed={sealed}
         autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}
@@ -2672,7 +2801,8 @@ function MemoryWash({ shade }: { shade: Shade }) {
     past.set(withTiming(shade === 'past' || shade === 'dark' ? 1 : 0, { duration: 700 }));
     dark.set(withTiming(shade === 'dark' ? 1 : 0, { duration: 450 }));
   }, [shade, past, dark]);
-  const pastStyle = useAnimatedStyle(() => ({ opacity: past.value * 0.5 }));
+  // an old photograph, not a filter: a light warm wash
+  const pastStyle = useAnimatedStyle(() => ({ opacity: past.value * 0.25 }));
   const darkStyle = useAnimatedStyle(() => ({ opacity: dark.value * 0.94 }));
   return (
     <>
@@ -2760,6 +2890,8 @@ function useAct(
   hold: (on: boolean) => void = () => {},
   /** A memory playing (memories.ts): how the World looks under it. */
   shade: (s: Shade) => void = () => {},
+  /** The season's last seal (castle.ts finaleStage): the party walks up behind you, then `said` plays. */
+  finale: (said: Dialogue) => void = (said) => setDialogue(said),
 ) {
   const busy = useRef(false);
   /** Talking to someone in the room: they turn to face you, say their piece, and the party chimes in. */
@@ -3176,7 +3308,7 @@ function useAct(
           playSound('levelUp');
           // All eight stay with you through the first story; the party splits at the start of Season 2
           // (author, Oct 4, 2026: partySplit in scenes.ts, kept for then).
-          setDialogue({
+          finale({
             lines: [
               ...seasonFinale(memory, flags, hero === 'brannoc'),
               `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
@@ -3381,7 +3513,7 @@ function useAct(
     const { party, owned } = useGameStore.getState();
     const said = banterFor(map.id, `tile:${tile}`, partyWithYou(party, owned, useWorldStore.getState().flags));
     if (lines) setDialogue({ lines: [...lines, ...said] });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special, hold, shade]);
+  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special, hold, shade, finale]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
   const safeAct = useCallback(() => {
     try {

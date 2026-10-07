@@ -404,3 +404,40 @@ export function partySplit(flags: string[]): { lines: string[]; leaving: Charact
     leaving: going.map((p) => p.id),
   };
 }
+
+/** How far below their places the party starts their walk up to the seal, in tiles. */
+const FINALE_WALK = 3;
+
+/**
+ * Who stands where at the last seal (author, Oct 7, 2026: "Your party hangs back a step, and lets you go first"):
+ * King Brannoc, if he's with you, beside you; everyone else (four at most) in a row a step behind, each walking up
+ * from further back, all facing the seal. You're at `you`, facing it; `open` says a tile is floor.
+ */
+export function finaleStage(
+  you: [number, number],
+  king: boolean,
+  others: readonly string[],
+  open: (x: number, y: number) => boolean,
+): { id: string; path: [number, number][]; face: number }[] {
+  const [x, y] = you;
+  const out: { id: string; path: [number, number][]; face: number }[] = [];
+  const taken = new Set([`${x},${y}`]);
+  const place = (id: string, spots: [number, number][]) => {
+    const at = spots.find(([sx, sy]) => open(sx, sy) && !taken.has(`${sx},${sy}`));
+    if (!at) return;
+    taken.add(at.join());
+    // up from behind, straight
+    let from = at[1];
+    while (from < at[1] + FINALE_WALK && open(at[0], from + 1)) from++;
+    out.push({ id, path: from === at[1] ? [at] : [[at[0], from], at], face: 1 });
+  };
+  if (king)
+    place('brannoc', [
+      [x + 1, y],
+      [x - 1, y],
+    ]);
+  // a step back, and out to either side
+  const row: [number, number][] = [0, 1, -1, 2, -2, 3].map((dx) => [x + dx, y + 2]);
+  for (const id of others.slice(0, 4)) place(id, row);
+  return out;
+}

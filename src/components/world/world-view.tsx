@@ -203,6 +203,10 @@ export type WorldSim = {
   hideLead: SharedValue<boolean>;
   /** A cutscene shakes the screen: how hard, in art pixels (the frame loop takes it, and sets it back to 0). */
   quake: SharedValue<number>;
+  /** A wind through the room (the finale's banners all lifting at once): 0 still, up to 1; it dies away by itself. */
+  wind: SharedValue<number>;
+  /** Light out of the `glow` rect (the last seal loosening): 0 none, up to 1. */
+  glowing: SharedValue<number>;
 };
 
 /** sim.focus: follow whoever leads the march. */
@@ -249,6 +253,8 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     hideFoes: useSharedValue(false),
     hideLead: useSharedValue(false),
     quake: useSharedValue(0),
+    wind: useSharedValue(0),
+    glowing: useSharedValue(0),
   };
 }
 
@@ -351,6 +357,12 @@ type Props = {
   breach?: [number, number] | null;
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
+  /** Tiles (y * width + x) a scene has just opened (a gate, a bridge): walkable from now, without coming back in. */
+  opened?: number[];
+  /** Banners standing in the room (tiles): they lift and stream in a wind (sim.wind). */
+  banners?: { x: number; y: number }[];
+  /** Where light comes from when sim.glowing is up (art pixels): the last seal. */
+  glow?: { x: number; y: number; w: number; h: number } | null;
 };
 
 /** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
@@ -457,6 +469,9 @@ export function WorldView({
   raised = [],
   resume = null,
   breach = null,
+  opened = [],
+  banners = [],
+  glow = null,
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
@@ -465,6 +480,15 @@ export function WorldView({
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.
   const solid = useSharedValue<number[]>(map.solid);
+  const openedKey = opened.join(',');
+  useEffect(() => {
+    if (opened.length === 0) return;
+    const next = solid.get().slice();
+    for (const t of opened) next[t] = 0;
+    solid.set(next);
+    // only when the set of tiles changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openedKey, solid]);
   const mapWidth = map.width;
   const mapHeight = map.height;
   const rocks = useSharedValue<number[]>(boulders);
@@ -932,6 +956,8 @@ export function WorldView({
       }
       bob.set(Math.floor(info.timestamp / 350) % 2);
       clock.set(clock.get() + realDt);
+      // a wind dies away slowly; the seal's light holds while a scene keeps it up
+      if (sim.wind.get() > 0) sim.wind.set(Math.max(0, sim.wind.get() - realDt * 0.18));
       if (exitT.get() >= 0) exitT.set(exitT.get() + realDt);
 
       // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
@@ -1197,6 +1223,46 @@ export function WorldView({
     }
     return path;
   });
+  // Banners in a wind: from the top of each pole a cloth lifts and streams out sideways, rippling, as long as it
+  // blows (sim.wind), and hangs again as it dies.
+  const streamers = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.wind.get();
+    if (w <= 0.02) return path;
+    const t = clock.get();
+    for (let i = 0; i < banners.length; i++) {
+      const { x, y } = banners[i];
+      const px = x * TILE + 9;
+      const py = y * TILE + 1;
+      const len = Math.round(4 + 12 * w);
+      for (let k = 0; k < len; k++) {
+        const wave = Math.round(Math.sin(t * 9 + k * 0.7 + i) * (1 + w * 1.5));
+        // the cloth rises with the wind: from hanging down the pole to straight out
+        const sag = Math.round((1 - w) * k * 0.6);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave, 1, 5 - Math.floor(k / 6)));
+      }
+    }
+    return path;
+  });
+  const streamerShade = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.wind.get();
+    if (w <= 0.02) return path;
+    const t = clock.get();
+    for (let i = 0; i < banners.length; i++) {
+      const { x, y } = banners[i];
+      const px = x * TILE + 9;
+      const py = y * TILE + 1;
+      const len = Math.round(4 + 12 * w);
+      for (let k = 0; k < len; k += 3) {
+        const wave = Math.round(Math.sin(t * 9 + k * 0.7 + i) * (1 + w * 1.5));
+        const sag = Math.round((1 - w) * k * 0.6);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave + 4 - Math.floor(k / 6), 1, 1));
+      }
+    }
+    return path;
+  });
+
   // A shadow coming or going: a dark smoke, swelling and rising, blobs thinning as it spreads.
   const darkPuffPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
@@ -1677,6 +1743,9 @@ export function WorldView({
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
         <Path path={darkPuffPath} color="#160C20" opacity={0.85} />
+        {banners.length > 0 && <Path path={streamers} color="#B8322A" />}
+        {banners.length > 0 && <Path path={streamerShade} color="#7A1E1A" />}
+        {glow && <Glow glow={glow} glowing={sim.glowing} clock={clock} />}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         <Path path={zPath} color="#DCE8FF" opacity={0.85} />
         <Path path={rimPath} color="#4E9A6A" />
@@ -1833,6 +1902,32 @@ function Boulder({ index, positions }: { index: number; positions: SharedValue<n
       <Oval x={1} y={2} width={13} height={11} color="#4A4440" />
       <Oval x={3} y={4} width={5} height={3} color="#625A54" />
     </Group>
+  );
+}
+
+/**
+ * Light out of the last seal as it loosens: a hairline crack of white down its middle, and a soft gold glow that
+ * breathes around it, as strong as `glowing` says.
+ */
+function Glow({
+  glow,
+  glowing,
+  clock,
+}: {
+  glow: { x: number; y: number; w: number; h: number };
+  glowing: SharedValue<number>;
+  clock: SharedValue<number>;
+}) {
+  const halo = useDerivedValue(() => glowing.get() * (0.35 + 0.1 * Math.sin(clock.get() * 3)));
+  const crack = useDerivedValue(() => Math.min(1, glowing.get() * 1.4));
+  const r = useDerivedValue(() => Math.max(glow.w, glow.h) * (0.6 + 0.25 * glowing.get()));
+  const cx = glow.x + glow.w / 2;
+  const cy = glow.y + glow.h / 2;
+  return (
+    <>
+      <Circle cx={cx} cy={cy} r={r} color="#FFE9A8" opacity={halo} />
+      <Rect x={Math.round(cx)} y={glow.y + 2} width={1} height={glow.h - 4} color="#FFFFFF" opacity={crack} />
+    </>
   );
 }
 
