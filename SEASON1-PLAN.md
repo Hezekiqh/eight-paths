@@ -72,10 +72,10 @@ straight in, with no fights. The Cull Road goes in between.
 In each hero's room off the Archive: **"What was your dream?"**
 
 - **Not their time yet:** a little, not much (one line, a deflection).
-- **During their arc:** the whole dream. In Season 1 that's Brannoc, after the Painters' School: he wanted to paint, and
-  to be free.
+- **During their arc:** the whole dream. In Season 1 that's Brannoc, after the Painters' School (his dream is in
+  STORY.md: the professor, the students, his parents alive).
 
-The other seven need dreams written: one teaser line each now, the full dream saved for their arc.
+The other seven still need dreams from the author: one teaser line each now, the full dream saved for their arc.
 
 ### Party banter while walking
 
@@ -90,7 +90,8 @@ March Road, the tithe road.
 
 ### The ending, as STORY.md now has it
 
-- **Brannoc asks "What do we do?"** after you beat Kaldor.
+- **Kaldor always goes to prison:** the shadows pour out of him as he's beaten, and he's just an old man.
+- **Brannoc asks "What do we do?"** The only choice is who rules: Brannoc or you.
 - **Kind or mean variants:** your answer depends on your choice and on your record of kind and mean answers. Honor is
   counted already, but nothing reads it yet.
 - **Your name:** Brannoc says it ("OK, *name*. As you command."). It's read from onboarding.

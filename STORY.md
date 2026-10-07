@@ -103,8 +103,19 @@ Most of this is **Told** over Brannoc's arc, through the places in the Season 1 
   nearly dead.)
 - That is what made B flee into **the forest**. Shadows found him there and surrounded him, and that is the last thing he
   remembers. 🔒 The Keeper caught him in a cocoon, and he slept five hundred years.
-- 🔒 Open: who attacked the teacher, and whose shadows were in the forest. (Proposal: Kaldor's. He cleared away the heir
-  before he killed the king, and the Keeper got to B first.)
+- 🔒 **Who did it** (author, Oct 7, 2026): the Shadow Monarch manipulated Kaldor into removing the prince, to make Kaldor
+  the next heir. Kaldor sent his goons: they attacked the teacher, and the shadows ran B down in the forest. (Osric was
+  about to march on the wizards; the Shadow Monarch wanted no war, so he cleared away the king *and* his general, and
+  put Kaldor on the throne with "never use it for war" as the price.)
+
+### Brannoc's dream (told in full in his arc; a teaser before then)
+
+He dreamt that he lived peacefully, alone, in the city, reading books and making art. He became a professor, a teacher.
+He wanted to raise a generation of critical thinkers: boys and girls who would do what was best for the kingdom, and
+what was best for themselves. He wasn't a prince. He didn't have to go to war. The kingdom was at peace. Nobody knew him,
+except his students. His parents were alive: his mother, cross with him that she had no grandchild yet; his father,
+laughing, telling her to stop rushing the boy, and asking Brannoc if he needed any advice. Brannoc laughed. The man who
+never wanted power in the first place had his freedom.
 
 ## 🔒 The Keeper and the cocoons
 
@@ -132,8 +143,11 @@ Never revealed in Season 1. Felix gives no hints, ever.
 
 ## Season 1's ending: what do we do? (author, Oct 7, 2026)
 
-After you beat Kaldor, Brannoc: "I can't believe you actually defeated him. The kingdom was a night's sleep from going
-to war. The nation is without a king. What do we do?" Your answer depends on your choice **and on how you've treated
+**Kaldor always goes to prison.** Once he's beaten, his power leaves him: the shadows pour out of him and are gone, and
+he's just an old man. He's thrown in his own cells whatever you choose. The only choice is who rules.
+
+After you beat him, Brannoc: "I can't believe you actually defeated him. The kingdom was a night's sleep from going to
+war. The nation is without a king. What do we do?" Your answer depends on your choice **and on how you've treated
 people** (honor.ts: more good and neutral answers than bad, or more bad).
 
 - **Brannoc takes the throne, kind:** you ask him to take it. It was always his. He needs to overcome his fears, and
@@ -146,6 +160,8 @@ people** (honor.ts: more good and neutral answers than bad, or more bad).
   champion." He agrees, and will support you to the end.
 - **You take the throne, mean:** Brannoc tries to speak up, then: "Of course. You obviously would make a great king. You
   will have my sword for life, my liege."
+
+"Let him keep it, on your terms" and "Throw him in his own cells" are no longer choices.
 
 ## The Shadow Monarch
 
