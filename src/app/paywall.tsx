@@ -6,7 +6,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { close } from '@/components/modal-header';
 import { haptics } from '@/haptics';
-import { CREATOR_NOTE, CREATOR_SIGNATURE, FALLBACK_PRICES, PERKS, PRIVACY_URL, TERMS_URL } from '@/premium/config';
+import {
+  CREATOR_NOTE,
+  CREATOR_SIGNATURE,
+  FALLBACK_PRICES,
+  MORE_PERKS,
+  PERKS,
+  PRIVACY_URL,
+  TERMS_URL,
+} from '@/premium/config';
 import { buy, loadProducts, purchasesEnabled, restore, type Offer, type ProductKind } from '@/premium/purchases';
 import { usePremium } from '@/premium/store';
 import { useSocial } from '@/social/store';
@@ -31,6 +39,7 @@ export default function Paywall() {
   const kind: ProductKind = founder ? 'founder' : chosen;
   const [offers, setOffers] = useState<Partial<Record<ProductKind, Offer>> | null>(purchasesEnabled ? null : {});
   const [busy, setBusy] = useState(false);
+  const [allPerks, setAllPerks] = useState(false);
   const offer = offers?.[kind];
 
   // The App Store's localized prices when they have loaded; ours until then.
@@ -134,13 +143,27 @@ export default function Paywall() {
             <Text style={[styles.cell, styles.head]}>FREE</Text>
             <Text style={[styles.cell, styles.head, { color }]}>PREMIUM</Text>
           </View>
-          {PERKS.map((perk) => (
+          {(allPerks ? [...PERKS, ...MORE_PERKS] : PERKS).map((perk) => (
             <View key={perk.title} style={[styles.row, styles.rowLine]}>
               <Text style={[styles.cell, styles.perk]}>{perk.title}</Text>
               <Text style={[styles.cell, styles.free]}>{perk.free}</Text>
               <Text style={[styles.cell, styles.premium]}>{perk.premium}</Text>
             </View>
           ))}
+          {/* The three that matter most are always shown; the rest wait behind this. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: allPerks }}
+            onPress={() => {
+              haptics.select();
+              setAllPerks((open) => !open);
+            }}
+            hitSlop={8}
+            style={[styles.rowLine, styles.more]}>
+            <Text style={[styles.moreText, { color }]}>
+              {allPerks ? 'Show less  ▲' : `Everything in Premium (${MORE_PERKS.length} more)  ▼`}
+            </Text>
+          </Pressable>
         </View>
 
         {premium ? (
@@ -251,6 +274,8 @@ const styles = StyleSheet.create({
   badgeText: { color: colors.background, fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1 },
   row: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
   rowLine: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  more: { paddingVertical: spacing.sm, alignItems: 'center' },
+  moreText: { fontFamily: fonts.bold, fontSize: 17, letterSpacing: 0.5 },
   cell: { flex: 1, fontFamily: fonts.regular, fontSize: 13, lineHeight: 17 },
   head: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 16 },
   perk: { color: colors.text, fontWeight: '600' },
