@@ -1,7 +1,16 @@
 import { emptyDimensionRecord, xpToNextLevel } from '@/game';
 
 import { MAPS, objectAt, withBouldersMoved, type MapId, type WorldMap } from '../maps';
-import { MEMORIES, SEASONS, memoryAt, memoryCall, notYetLines, seasonMemory } from '../memories';
+import {
+  MEMORIES,
+  SEASONS,
+  SHADOWS_RISE,
+  memoryAt,
+  memoryCall,
+  memoryShade,
+  notYetLines,
+  seasonMemory,
+} from '../memories';
 import { EXITS, describeRequirement, standing, type XpTotals } from '../progress';
 import { FRESH_WORLD, useWorldStore } from '../store';
 
@@ -105,5 +114,27 @@ describe('hidden memories', () => {
       expect(text).toContain('The responsibilities of the crown are heavy.');
       expect(forest.lines.join(' ')).toMatch(/Shadows/);
     });
+  });
+});
+
+describe('a memory, as it plays', () => {
+  it('washes the World into the past from its first line, and brings it back on its last', () => {
+    for (const m of MEMORIES) {
+      expect([m.id, memoryShade(m, 0)]).toEqual([m.id, 'past']);
+      expect([m.id, memoryShade(m, m.lines.length - 1)]).toEqual([m.id, null]);
+    }
+  });
+  it('goes dark where it does: the school shut up, and the shadows closing on the boy', () => {
+    const dark = (id: string) => {
+      const m = MEMORIES.find((x) => x.id === id)!;
+      return m.lines.filter((_, i) => memoryShade(m, i) === 'dark');
+    };
+    expect(dark('brannoc-school')).toEqual(['…', 'Black.']);
+    expect(dark('brannoc-forest')).toEqual(['They close.', "And that's all. That's all there is."]);
+    expect(dark('schoolyard')).toEqual([]);
+  });
+  it('raises the shadows round you in the forest, once', () => {
+    const forest = MEMORIES.find((m) => m.id === 'brannoc-forest')!;
+    expect(forest.lines.filter((l) => SHADOWS_RISE.test(l))).toHaveLength(1);
   });
 });

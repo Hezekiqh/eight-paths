@@ -33,6 +33,8 @@ export type Dialogue = {
    * locked one. Four at most (MENU_ROWS in world/menu.ts).
    */
   choices?: { label: string; then: () => void; locked?: string; icon?: SFSymbol; deed?: 'good' | 'bad' }[];
+  /** Each line as it comes up (a cutscene timing something to it: the shadows stepping out on the snap). */
+  onLine?: (line: string, index: number) => void;
 };
 
 type Props = {
@@ -80,6 +82,12 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   useEffect(() => {
     felt.current = 0;
   }, [round, index]);
+  // the dialogue's own hook, as each line comes up
+  const onLine = dialogue.onLine;
+  const lineNow = lines[index] ?? '';
+  useEffect(() => {
+    onLine?.(lineNow, index);
+  }, [onLine, lineNow, index, round]);
   const feelRumbles = useCallback(
     (upTo: number) => {
       // One step at a time: a ref bumped mid-expression (`rumbles[felt.current++]`) can be

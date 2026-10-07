@@ -1,4 +1,4 @@
-import { MARCH_HEAD, marchPoses, newMarch } from '../march';
+import { ACTOR_HEAD, MARCH_HEAD, fadeShown, marchPoses, marchVanished, newMarch, walkPath } from '../march';
 import { MAPS, TILE } from '../maps';
 import { brannocBolts, escortIn, escortStand, guardsLeave, shovedIn } from '../dungeon';
 
@@ -6,8 +6,21 @@ const at = (x: number, y: number) => [x * TILE + TILE / 2, y * TILE + TILE - 2];
 
 describe('a march', () => {
   it('walks everyone along their path and stops them at the end, facing the way asked', () => {
-    const m = newMarch([{ row: 3, path: [[1, 1], [4, 1], [4, 3]], face: 0 }], 2);
-    expect(m.length).toBe(MARCH_HEAD + 4 + 6);
+    const m = newMarch(
+      [
+        {
+          row: 3,
+          path: [
+            [1, 1],
+            [4, 1],
+            [4, 3],
+          ],
+          face: 0,
+        },
+      ],
+      2,
+    );
+    expect(m.length).toBe(MARCH_HEAD + ACTOR_HEAD + 6);
     const half = marchPoses(m, 1).poses[0]; // 2 tiles in: along the top, walking right
     expect(half.slice(3, 5)).toEqual(at(3, 1));
     expect(half[1]).toBe(3);
@@ -20,9 +33,117 @@ describe('a march', () => {
     expect(end.poses[0][6]).toBe(0);
   });
   it('carries a snot bubble for whoever walks it asleep', () => {
-    const m = newMarch([{ row: 3, path: [[1, 1], [2, 1]], snot: true }, { row: 4, path: [[5, 5]] }]);
+    const m = newMarch([
+      {
+        row: 3,
+        path: [
+          [1, 1],
+          [2, 1],
+        ],
+        snot: true,
+      },
+      { row: 4, path: [[5, 5]] },
+    ]);
     const { poses } = marchPoses(m, 0.1);
     expect(poses.map((p) => p[6])).toEqual([1, 0]);
+  });
+});
+
+describe('a march, staged', () => {
+  it('holds someone with a delay at the start, laughing if asked, then sends them off at their own pace', () => {
+    // one tile a second; Felix waits a second, then goes four times as fast
+    const m = newMarch(
+      [
+        {
+          row: 3,
+          path: [
+            [0, 0],
+            [2, 0],
+          ],
+        },
+        {
+          row: 4,
+          path: [
+            [0, 1],
+            [8, 1],
+          ],
+          delay: 1,
+          pace: 4,
+          laugh: true,
+          face: 2,
+        },
+      ],
+      1,
+    );
+    const early = marchPoses(m, 0.5).poses[1];
+    expect(early[8]).toBe(1); // laughing
+    expect(early[5]).toBe(0); // not walking yet
+    expect(early[1]).toBe(2); // facing the way asked while he waits
+    expect(Math.abs(early[3] - at(0, 1)[0])).toBeLessThanOrEqual(1);
+    const off = marchPoses(m, 1.5).poses[1];
+    expect(off[8]).toBe(0);
+    expect(off[3]).toBe(at(2, 1)[0]); // half a second at four tiles a second
+    // over once the slowest is there: Felix, at 1 + 8/4 = 3 seconds (and the beat after)
+    expect(marchPoses(m, 2.9).done).toBe(false);
+    expect(marchPoses(m, 3.4).done).toBe(true);
+  });
+  it('takes anyone who vanishes off at the end of their path, and says where, once', () => {
+    const m = newMarch(
+      [
+        {
+          row: 3,
+          path: [
+            [0, 0],
+            [2, 0],
+          ],
+          vanish: true,
+        },
+        { row: 4, path: [[5, 5]] },
+      ],
+      1,
+    );
+    expect(marchPoses(m, 1).poses[0][7]).toBe(1);
+    expect(marchPoses(m, 2.1).poses[0][7]).toBe(0);
+    expect(marchPoses(m, 2.1).poses[1][7]).toBe(1); // standing still is not vanishing
+    expect(marchVanished(m, 1.9, 2.1)).toEqual(at(2, 0));
+    expect(marchVanished(m, 2.1, 2.3)).toEqual([]);
+    expect(marchVanished(m, 0, 1)).toEqual([]);
+  });
+  it('flickers a fade out: every frame at first, then fewer, then none', () => {
+    const shown = (p: number) => [0, 1, 2, 3].filter((f) => fadeShown(p, f)).length;
+    expect(shown(0)).toBe(4);
+    expect(shown(0.3)).toBe(3);
+    expect(shown(0.5)).toBe(2);
+    expect(shown(0.7)).toBe(1);
+    expect(shown(0.95)).toBe(0);
+  });
+});
+
+describe('a walk round the walls', () => {
+  // 5 wide, 3 high: a wall down the middle with a gap at the bottom
+  const solid = [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0];
+  it('goes the shortest way round, corners only', () => {
+    const p = walkPath(solid, 5, 3, [0, 0], [4, 0]);
+    expect(p[0]).toEqual([0, 0]);
+    expect(p[p.length - 1]).toEqual([4, 0]);
+    // every leg straight, and never through the wall
+    for (let i = 1; i < p.length; i++) {
+      const [ax, ay] = p[i - 1];
+      const [bx, by] = p[i];
+      expect(ax === bx || ay === by).toBe(true);
+      for (let x = Math.min(ax, bx); x <= Math.max(ax, bx); x++)
+        for (let y = Math.min(ay, by); y <= Math.max(ay, by); y++) expect(solid[y * 5 + x]).toBe(0);
+    }
+    const steps = p.slice(1).reduce((n, [x, y], i) => n + Math.abs(x - p[i][0]) + Math.abs(y - p[i][1]), 0);
+    expect(steps).toBe(8);
+  });
+  it('stands still when already there, and goes straight when there is no way', () => {
+    expect(walkPath(solid, 5, 3, [1, 1], [1, 1])).toEqual([[1, 1]]);
+    const walled = [0, 1, 0];
+    expect(walkPath(walled, 3, 1, [0, 0], [2, 0])).toEqual([
+      [0, 0],
+      [2, 0],
+    ]);
   });
 });
 

@@ -71,7 +71,7 @@ import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 import { cameoAt } from '@/world/step-aside';
-import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
+import { MARCH_ACTORS, MARCH_HEAD, fadeShown, marchPoses, marchVanished } from '@/world/march';
 import {
   FLASH_TIME,
   FLY_TIME,
@@ -186,6 +186,13 @@ export type WorldSim = {
   focus: SharedValue<number[]>;
   /** Brannoc's Super Super Swing playing out (swing.ts SW_*). Empty: none. */
   swing: SharedValue<number[]>;
+  /**
+   * Puffs a cutscene asks for, [x, y, dark (0/1), …] in art pixels at the feet: the frame loop takes them. A dark one
+   * is a shadow coming or going (Kaldor's, castle.ts).
+   */
+  puffs: SharedValue<number[]>;
+  /** The fight's enemies aren't drawn yet: they haven't stepped out of the walls (the war hall's cue, moments.ts). */
+  hideFoes: SharedValue<boolean>;
 };
 
 /** sim.focus: follow whoever leads the march. */
@@ -228,6 +235,8 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     walkTo: useSharedValue<number[]>([]),
     focus: useSharedValue<number[]>([]),
     swing: useSharedValue<number[]>([]),
+    puffs: useSharedValue<number[]>([]),
+    hideFoes: useSharedValue(false),
   };
 }
 
@@ -308,9 +317,10 @@ type Props = {
   onWin?: () => void;
   /**
    * Someone leaving with a flourish (Felix): they laugh, shoulders shaking, then dash
-   * east off the map, lightning fast. `onExited` runs once they're gone.
+   * east off the map, lightning fast. `onExited` runs once they're gone. `fade`: instead they flicker
+   * out where they stand, into nothing at all (Felix, once Kaldor's beaten).
    */
-  exit?: { id: string } | null;
+  exit?: { id: string; fade?: boolean } | null;
   /** Who you're talking to, by name: someone asleep at their post (Gary) is awake for it. */
   talkingTo?: string | null;
   onExited?: () => void;
@@ -356,6 +366,11 @@ function sleeperAt([x, y]: [number, number], lying: boolean, what: 'zs' | 'snot'
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
 const EXIT_LAUGH = 1.4;
 const EXIT_SPEED = 520;
+/** A fade out (seconds), and the time an exit is set to once it's over, so they stay gone. */
+const EXIT_FADE = 1.6;
+const EXIT_GONE = 999;
+/** A shadow's puff (seconds): slower and bigger than a fallen enemy's. */
+const DARK_PUFF = 0.7;
 /** "HA" in a 3×5 pixel font, as [x, y] cells. */
 const HA = [
   ...['X.X', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : []))),
@@ -497,6 +512,8 @@ export function WorldView({
   const whiteFor = useSharedValue<number[]>(map.enemies.map(() => 0));
   /** Puffs where enemies fell: [x, y, time left]. */
   const puffs = useSharedValue<number[][]>([]);
+  /** Dark ones, where a shadow came or went (a cutscene's): [x, y, time left]. */
+  const darkPuffs = useSharedValue<number[][]>([]);
   /** A blow shrugged off (Kaldor, guarded): a spark [x, y, time left]. */
   const sparks = useSharedValue<number[]>([0, 0, 0]);
   /** A torch guttering: the room dims for a moment (seconds left); and how many have gone out for good (war hall). */
@@ -508,10 +525,13 @@ export function WorldView({
   const exitRow = useSharedValue(-1);
   const exitT = useSharedValue(-1);
   const exitAt = useSharedValue<number[]>([0, 0, 0]);
+  const exitFades = !!exit?.fade;
   useEffect(() => {
     exitRow.set(exit ? sim.npcIds.indexOf(exit.id) : -1);
     exitT.set(exit ? 0 : -1);
   }, [exit, sim.npcIds, exitRow, exitT]);
+  /** A march actor laughing (march.ts MF_LAUGH): [x, y, seconds in], for the HAs; t < 0: nobody. */
+  const marchLaugh = useSharedValue<number[]>([0, 0, -1]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   // [sprite row, row in sim.npcWalk] for everyone still here.
   // someone asleep at their post is drawn eyes shut (their "asleep" walker), unless you're talking to them
@@ -816,6 +836,27 @@ export function WorldView({
             .filter((p) => p[2] > 0),
         );
       }
+      if (darkPuffs.get().length > 0) {
+        darkPuffs.set(
+          darkPuffs
+            .get()
+            .map((p) => [p[0], p[1], p[2] - realDt])
+            .filter((p) => p[2] > 0),
+        );
+      }
+      // puffs a cutscene asked for
+      const asked = sim.puffs.get();
+      if (asked.length >= 3) {
+        const light = puffs.get().slice();
+        const dark = darkPuffs.get().slice();
+        for (let k = 0; k + 2 < asked.length; k += 3) {
+          if (asked[k + 2] === 1) dark.push([asked[k], asked[k + 1], DARK_PUFF]);
+          else light.push([asked[k], asked[k + 1], FEEL.puff]);
+        }
+        puffs.set(light.slice(-8));
+        darkPuffs.set(dark.slice(-8));
+        sim.puffs.set([]);
+      }
 
       // Boulders slide toward their tiles.
       const rp = rockPos.get();
@@ -884,6 +925,20 @@ export function WorldView({
         const [fx, fy] = wandererFeet(w);
         // the one leaving: a laugh (a shake and a hop, facing you), then a dash east
         const et = npcs[i][1] === exitRow.get() ? exitT.get() : -1;
+        // fading out where they stand: a flicker, fewer frames shown the further it goes, then a soft puff
+        if (et >= 0 && exitFades) {
+          // gone: not drawn again (the room moves them off for good once it hears)
+          if (et >= EXIT_GONE) continue;
+          if (et >= EXIT_FADE) {
+            exitT.set(EXIT_GONE);
+            sim.puffs.set([...sim.puffs.get(), fx, fy, 0]);
+            scheduleOnRN(exited);
+            continue;
+          }
+          if (fadeShown(et / EXIT_FADE, Math.floor(et * 30)))
+            ents.push([npcs[i][0], w[W_FACING], 0, fx, fy, 0, npcs[i][2]]);
+          continue;
+        }
         if (et >= 0 && et < EXIT_LAUGH) {
           const beat = Math.floor(et * 12);
           const lx = fx + (beat % 2 === 1 ? 1 : -1);
@@ -908,9 +963,11 @@ export function WorldView({
       const now = fight.get();
       const all = now.enemies;
       const shadows: number[] = [];
+      // not out of the walls yet (a cutscene's cue brings them in)
+      const foesHidden = sim.hideFoes.get();
       for (let i = 0; i < all.length; i++) {
         const e = all[i];
-        if (e[E_ALIVE] === 0) continue;
+        if (e[E_ALIVE] === 0 || foesHidden) continue;
         // the warden in Brannoc's swing is drawn by it (below), flying
         if (sw.length > 0 && e[E_KIND] === WARDEN_KIND) continue;
         // after the fight, in a cutscene pointing the camera somewhere (Brannoc beside the warden), they look there
@@ -950,10 +1007,20 @@ export function WorldView({
       let leadWalking = false;
       let marchLead: number[] | null = null;
       const asleep: number[] = [];
+      let laughAt: number[] = [0, 0, -1];
       if (march.length > MARCH_HEAD) {
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
-        for (const [row, facing, frame, x, y, walking, snot] of poses) {
+        // anyone who's gone in a puff at the end of their path (Kaldor's shadows)
+        const gone = marchVanished(march, march[0], t);
+        if (gone.length > 0) {
+          const dark = darkPuffs.get().slice();
+          for (let k = 0; k + 1 < gone.length; k += 2) dark.push([gone[k], gone[k + 1], DARK_PUFF]);
+          darkPuffs.set(dark.slice(-8));
+        }
+        for (const [row, facing, frame, x, y, walking, snot, shown, laughing] of poses) {
+          if (shown === 0) continue;
+          if (laughing === 1 && laughAt[2] < 0) laughAt = [x, y, t];
           if (row >= 0 && marchLead === null) marchLead = [x, y];
           // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
           if (row >= 0 && facing >= LYING) {
@@ -993,6 +1060,7 @@ export function WorldView({
         }
       }
       if (asleep.length > 0 || marchSleep.get().length > 0) marchSleep.set(asleep);
+      if (laughAt[2] >= 0 || marchLaugh.get()[2] >= 0) marchLaugh.set(laughAt);
       // The camera follows the lead and stops at the map's edges (or centres a small map). In a cutscene it glides
       // to what the scene points at (sim.focus): someone on the ground, the march's lead, a warden in flight.
       const focus = sim.focus.get();
@@ -1040,8 +1108,10 @@ export function WorldView({
         if (pose[6] === 1) ents.push([cameo[0], cameo[7], pose[5], pose[3], pose[4], 0, 1]);
       }
       // the lead goes last so they're drawn on top of a follower standing in the same spot;
-      // just hurt, they blink until they can be hurt again; striking, they lean into the blow
-      const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
+      // just hurt, they blink until they can be hurt again; striking, they lean into the blow. (Not once the fight's
+      // won, or held for a scene: frozen mid-blink, they'd vanish for the whole of it.)
+      const blink =
+        !frozen && !now.won && now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
       if (!blink) {
         const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
         const f = sim.facing.get();
@@ -1099,6 +1169,28 @@ export function WorldView({
         const r = 3 + 11 * p;
         path.addRect(
           Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size),
+        );
+      }
+    }
+    return path;
+  });
+  // A shadow coming or going: a dark smoke, swelling and rising, blobs thinning as it spreads.
+  const darkPuffPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, t] of darkPuffs.get()) {
+      const p = 1 - t / DARK_PUFF;
+      const size = Math.max(1, Math.round(5 * (1 - p)));
+      if (p < 0.35) path.addRect(Skia.XYWHRect(Math.round(x - 5), Math.round(y - 16 + p * 10), 10, 14));
+      for (let k = 0; k < 12; k++) {
+        const a = (k * Math.PI) / 6 + (k % 2) * 0.3;
+        const r = (k % 2 === 0 ? 4 : 7) + 14 * p;
+        path.addRect(
+          Skia.XYWHRect(
+            Math.round(x + Math.cos(a) * r - size / 2),
+            Math.round(y - 10 - 8 * p + Math.sin(a) * r * 0.7 - size / 2),
+            size,
+            size,
+          ),
         );
       }
     }
@@ -1225,17 +1317,23 @@ export function WorldView({
   // A laugh's HA popping out over the head, then the dash's dust and speed streaks.
   const exitPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
-    const t = exitT.get();
-    if (t < 0) return path;
-    const [x, y, d] = exitAt.get();
-    if (t < EXIT_LAUGH) {
+    const ha = (x: number, y: number, t: number, loop: boolean) => {
       for (let k = 0; k < 3; k++) {
-        const age = t - k * 0.35;
+        const age = (loop ? t % 1.05 : t) - k * 0.35;
         if (age < 0 || age > 0.9) continue;
         const ox = Math.round(x + (k % 2 === 1 ? 6 : -10));
         const oy = Math.round(y - 30 - age * 10);
         for (let r = 0; r < HA.length; r++) path.addRect(Skia.XYWHRect(ox + HA[r][0], oy + HA[r][1], 1, 1));
       }
+    };
+    // someone in a march laughing while they wait to go (Felix, as the guards close in)
+    const ml = marchLaugh.get();
+    if (ml[2] >= 0) ha(ml[0], ml[1], ml[2], true);
+    const t = exitT.get();
+    if (t < 0 || exitFades) return path;
+    const [x, y, d] = exitAt.get();
+    if (t < EXIT_LAUGH) {
+      ha(x, y, t, false);
       return path;
     }
     // dust where they set off, for a moment
@@ -1389,7 +1487,7 @@ export function WorldView({
             <Rect x={p.x * TILE + 10} y={p.y * TILE + TILE - 3} width={4} height={3} color="#5A524C" />
           </Group>
         ))}
-        {drawbridge && <Drawbridge {...drawbridge} />}
+        {drawbridge && mapImage && <Drawbridge {...drawbridge} />}
         {raised.map((p) => (
           <RaisedPlanks key={`r${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
         ))}
@@ -1471,6 +1569,7 @@ export function WorldView({
         {ambience.motes && (
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
+        <Path path={darkPuffPath} color="#160C20" opacity={0.85} />
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         <Path path={zPath} color="#DCE8FF" opacity={0.85} />
         <Path path={rimPath} color="#4E9A6A" />
