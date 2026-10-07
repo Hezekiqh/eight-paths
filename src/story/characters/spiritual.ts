@@ -35,16 +35,16 @@ export const SPIRITUAL = {
     bio: 'The Ringmaster: a striped coat, a top hat and a candy-colored carnival that smells of spun sugar. Dazzling, flattering and restless, he is never quite satisfied.',
     quote: 'Why wait for meaning when you can have delight right now?',
   },
-  sage: {
+  chaplain: {
     number: 66,
     rarity: 2,
     alignment: 'Neutral Good',
-    name: 'Mother Sage',
+    name: "The Chaplain's Echo",
     dimension: 'spiritual',
     kind: 'recruit',
     unlockLevel: 20,
-    bio: 'An old hermit who tends a garden of candles on a windy hill. She talks to the stars as if they owe her a letter, and they usually answer.',
-    quote: 'Sit. The answer walks slower than you.',
+    bio: "What is left of a chaplain who sat up too long beside a candle in the Old King's Crypt: pale, collared and lantern in hand, half there and wholly kind. Centuries on, the Echo still keeps the candle lit, because somebody should.",
+    quote: "Don't be frightened. I'm only what's left of someone who stayed.",
   },
   moth: {
     number: 71,
