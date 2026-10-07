@@ -486,7 +486,7 @@ export const BANTER: Record<string, Banter[]> = {
       who: 'ysolde',
       lines: [
         'YSOLDE: Gold feet on a marble statue. Who insures those?',
-        'DAME HULDA: The city.',
+        'DAME OTTILIE: The city.',
         'YSOLDE: Then the city has never met a thief. Feet walk off.',
       ],
     },
