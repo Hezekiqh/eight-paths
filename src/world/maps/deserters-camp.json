@@ -42,7 +42,7 @@
       "Carved above, half gone: \"…LECREST SECOND REGIMENT…\""
     ],
     "A": [
-      "A tent, patched more than it's tent. A plank by the flap reads NOT A DESERTERS' CAMP."
+      "A tent, more patch than tent. A plank by the flap reads NOT A DESERTERS' CAMP."
     ],
     "x": [
       "A campfire. Someone's roasting something that might once have been a turnip."
@@ -92,7 +92,7 @@
           "ask": "Heard any gossip?",
           "answer": [
             "That fort in the hill is the way into the Kingdom, now the horde holds the roads.",
-            "Nobody goes in. Nobody comes out. Except Fen's nephew, and he salutes the cat."
+            "Nobody goes in. Nobody comes out. Except Old Wenna's nephew, and he salutes the cat."
           ]
         },
         {

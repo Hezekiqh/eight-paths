@@ -60,8 +60,8 @@
       "facing": "down",
       "name": "Pip",
       "lines": [
-        "A new face! I've played the same song to Grask four hundred times. He hasn't smiled once.",
-        "Pip, Bard. You look like you need a song. Or a way past that checkpoint. I can do both."
+        "A new face! I've played the same song to this tavern four hundred times. Rolla hasn't smiled once.",
+        "Pip, Bard. You look like you need a song. Or someone who knows this city. I can do both."
       ],
       "character": "pip",
       "meets": true,
@@ -82,7 +82,7 @@
         {
           "ask": "Heard anything?",
           "answer": [
-            "They say the old king up north hasn't aged a day. They say he's building an army.",
+            "They say the king up north hasn't aged a day. They say he's building an army.",
             "They say a lot of things in here after the third mug."
           ]
         },

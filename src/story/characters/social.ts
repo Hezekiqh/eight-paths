@@ -150,7 +150,7 @@ export const SOCIAL = {
     dimension: 'social',
     kind: 'recruit',
     unlockLevel: 18,
-    bio: "A widow of the Berserker Kingdom whose family has hidden the old king's portrait under her floorboards for five hundred years. She remembers everything her grandmothers told her, and tells it, at length, to anyone who sits still.",
-    quote: 'My family kept his portrait for five hundred years. It was worth it.',
+    bio: 'A widow of the Berserker Kingdom who remembers everything her grandmothers told her, and their grandmothers before them, and tells it, at length, to anyone who sits still.',
+    quote: 'Sit down, dear. This one is a long one. They are all long ones.',
   },
 } satisfies Record<string, CharacterData>;

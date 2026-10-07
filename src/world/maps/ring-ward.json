@@ -43,13 +43,13 @@
       "The yard gate. Every time you go in, the next name on the sparring board is waiting."
     ],
     "I": [
-      "The fighters' entrance: a squat stone hut against the arena wall."
+      "The fighters' entrance: a squat stone hut against the yard wall."
     ],
     "4": [
       "THE FIGHTERS' DOOR. TITHE FIGHTERS REPORT HERE. BRING YOUR OWN COURAGE."
     ],
     "q": [
-      "A barrel of sand for the arena floor. Somebody has written HELP in it with a finger."
+      "A barrel of sand for the yard floor. Somebody has written HELP in it with a finger."
     ],
     "n": [
       "The fist crushing the crown."
@@ -82,8 +82,8 @@
         {
           "ask": "Why don't you speak to Odd Bett?",
           "answer": [
-            "She took bets on Durn and Haskel. Eleven days. Paid out on day seven. Day SEVEN.",
-            "A bet's a bet. You don't pay till the bread's eaten. Everybody knows that."
+            "She took bets on Durn and Haskel. Eleven days. Same odds every single day. ELEVEN DAYS.",
+            "Odds move, love. That's what makes them odds. Otherwise it's just a number on a wall."
           ]
         },
         {
@@ -208,7 +208,7 @@
       "y": 4,
       "item": "heart-piece",
       "lines": [
-        "Under the arena's outer stairs, where the children hide their wooden swords: a Heart Piece."
+        "Under the yard's outer stairs, where the children hide their wooden swords: a Heart Piece."
       ]
     }
   ]

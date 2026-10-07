@@ -122,7 +122,7 @@
           "ask": "Heard any gossip?",
           "answer": [
             "Don't make eye contact with the Crushers. The babies. They can smell weakness.",
-            "Also the king closed the Trial of Arms three hundred years ago. You'd need the old law to get near him. Hugo knows where it's carved. In the maze."
+            "Also the king closed the Trial of Arms five hundred years ago. You'd need the old law to get near him. Hugo knows where it's carved. In the maze."
           ]
         },
         {
@@ -774,7 +774,7 @@
       "lines": [
         "Ninety-one. Ninety-two. Don't interrupt.",
         "Chin-ups on the cage bars. The bars are the only thing in this town that don't wobble.",
-        "Ninety-three. When I was a girl I did these on the old king's gate. Ninety-four."
+        "Ninety-three. My gran's gran did these on the old king's gate, they say. Ninety-four."
       ],
       "look": true,
       "questions": [
@@ -788,7 +788,7 @@
         {
           "ask": "What was the old king like?",
           "answer": [
-            "Hale. Kind man. Open hand. Let children swing on his gate. I was one of them.",
+            "Hale. Kind man, the family says. Open hand. Let children swing on his gate. My gran's gran was one of them.",
             "Kaldor took the gate down. I took up the cage bars. Ninety-six."
           ]
         },

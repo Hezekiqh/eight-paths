@@ -1,4 +1,4 @@
-import { talkedId, type LoreEntry } from './lore';
+import { loreId, talkedId, type LoreEntry } from './lore';
 
 // The World menu's Story scroll (author, Oct 7, 2026): how a grieving king nearly let the eight kingdoms fall into
 // war, how his younger brother Kaldor took the throne with the Shadow Monarch's help, and the one condition that
@@ -49,12 +49,12 @@ export const TALE: Chapter[] = [
     blocks: [
       { from: [told('Private Dunn')], text: 'On the night of the march, the drums never sounded.' },
       {
-        from: [told('Sexton Rook')],
-        text: 'The king had a younger brother, Kaldor. Second born, and second best, his whole life.',
+        from: [loreId('Sexton Rook', 'Who was the old king?')],
+        text: 'The king had a younger brother, Kaldor. Second best, folk said.',
       },
       {
-        from: [told("The Chaplain's Echo")],
-        text: 'Something that cast no shadow was listening. It promised Kaldor power over the dead, and youth without end.',
+        from: [loreId("The Chaplain's Echo", 'Who are you?')],
+        text: "The king's chaplain sealed away what he saw. Some say a shadow promised Kaldor power over the dead, and endless youth.",
       },
       {
         from: [told('Hugo Thornbeard')],
@@ -70,23 +70,23 @@ export const TALE: Chapter[] = [
     title: 'The king who never ages',
     blocks: [
       {
-        from: [told('Barnaby Loudmouth')],
-        text: 'King Osric named Kaldor his heir. A month later he was dead. A broken heart, they said. People talked.',
+        from: [loreId('Old Gardener', 'Who was the queen?')],
+        text: 'King Osric named Kaldor his heir. Soon after, he was gone. A broken heart, they said. People talked.',
       },
       {
         from: [told('Gert')],
-        text: 'Kaldor had everything he ever wanted: the gold, the fame, the queens. On one condition.',
+        text: 'People say Kaldor got all he wanted: the money, the wealth, the fame, the women.',
       },
       {
-        from: [told('Captain Varga')],
-        text: 'Build the strongest army in the eight kingdoms, and never march it to war. Defend, and only defend.',
+        from: [told('Queen Helka')],
+        text: 'Some say it came with one condition: build the strongest army in the eight kingdoms, and never march it to war.',
       },
       {
-        from: [told('Old Harrow')],
-        text: 'He does not age. He does not fall. People say that he casts no shadow either.',
+        from: [loreId('Mira', 'Heard any gossip?')],
+        text: 'He does not age. The horde says he casts no shadow either.',
       },
       {
-        from: [told('Sergeant Maelis')],
+        from: [told('Barnaby Loudmouth')],
         text: 'The horde grew, the Kaloseum filled, and the kingdom forgot its old name.',
       },
     ],

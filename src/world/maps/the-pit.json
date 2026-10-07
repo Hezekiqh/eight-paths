@@ -61,7 +61,7 @@
       "y": 3,
       "sprite": "barnaby",
       "facing": "down",
-      "name": "Barnaby",
+      "name": "Barnaby Loudmouth",
       "lines": [
         "CHEERING IS COMPULSORY!",
         "...You too. Especially you."
@@ -83,7 +83,7 @@
         {
           "ask": "What's the champions' wall?",
           "answer": [
-            "Three hundred years of names. We cross them out when they fall. It's the only writing we're allowed.",
+            "Five hundred years of names. We cross them out when they fall. It's the only writing we're allowed.",
             "The newest line's blank. Try not to make me cross you out. I've a steady hand, but I'd rather not."
           ]
         },
@@ -137,7 +137,7 @@
         "flag": "brannoc-declined",
         "lines": [
           "Hey. We're not gonna mess with you.",
-          "Your big friend's down on level three, if you want to talk to him. Crying about an apple cart."
+          "Your friend's back down in the cells. Holding his corner, he says."
         ]
       },
       "questions": [

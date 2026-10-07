@@ -71,6 +71,13 @@
           ]
         },
         {
+          "ask": "Who was the old king?",
+          "answer": [
+            "Osric. Last of the Hales. The king we've got now was his younger brother, Kaldor.",
+            "Second born, and second best, his whole life, folk said. They said it quietly then. They say it quieter now."
+          ]
+        },
+        {
           "ask": "You say good morning to soot? That's sad.",
           "answer": [
             "The soot doesn't interrupt, dear. Or say things like that.",

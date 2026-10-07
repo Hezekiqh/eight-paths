@@ -57,8 +57,8 @@
       "facing": "down",
       "name": "Wren",
       "lines": [
-        "Welcome. Take it slowly. The first steps are always the strangest.",
-        "Wren. I keep the old lights. There's something under this chapel. I can feel it, like a draught from a door nobody's opened."
+        "Welcome. Sit a while. The city's loud. In here it isn't.",
+        "Wren. I keep the old lights. Somebody has to, in a city that only lights torches for fights."
       ],
       "character": "wren",
       "meets": true,

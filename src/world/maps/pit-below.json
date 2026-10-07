@@ -1,6 +1,6 @@
 {
   "id": "pit-below",
-  "name": "The Pit Below the Pit",
+  "name": "The Hole Below the Yard",
   "style": "dungeon",
   "walkable": [
     ".",
@@ -47,22 +47,22 @@
       "facing": "down",
       "name": "The Drill Sergeant",
       "lines": [
-        "YOU. MAGGOT. You found my pit.",
-        "Nobody finds my pit. Come back when you can hold a sword, and we'll see what you're made of."
+        "YOU. MAGGOT. You found me.",
+        "Nobody finds me down here. Come back when you can hold a sword, and we'll see what you're made of."
       ],
       "questions": [
         {
           "ask": "What is this place?",
           "answer": [
-            "THE PIT BELOW THE PIT, MAGGOT. Where fighters come to learn the bits the crowd never sees.",
+            "THE HOLE BELOW THE YARD, MAGGOT. Where fighters come to learn the bits nobody claps for.",
             "Footwork. Breathing. Getting up. Mostly getting up."
           ]
         },
         {
           "ask": "What do you think of the Warden?",
           "answer": [
-            "Thirty strikes and stands there like a wall. Good wall. Bad soldier.",
-            "A wall doesn't win. A wall waits. I trained him to stand. Nobody trained him to move. My mistake."
+            "Never met him. Only what you've told me. Thirty strikes and stands there like a wall? Good wall. Bad soldier.",
+            "A wall doesn't win. A wall waits. Somebody trained him to stand. Nobody trained him to move."
           ]
         },
         {

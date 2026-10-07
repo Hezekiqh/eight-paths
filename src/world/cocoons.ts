@@ -46,10 +46,10 @@ export const COCOON_WALL = {
   x: 27,
   until: 'felix-hatched',
   lines: [
-    'I wonder what that cocoon is over there.',
-    'I should probably check out that cocoon.',
-    'Cocoooooooooooooooon.',
-    'There is absolutely no way I could ever move forward without checking out that cocoon.',
+    '(I wonder what that cocoon is over there.)',
+    '(I should probably check out that cocoon.)',
+    '(Cocoooooooooooooooon.)',
+    '(There is absolutely no way I could ever move forward without checking out that cocoon.)',
   ],
 } as const;
 
