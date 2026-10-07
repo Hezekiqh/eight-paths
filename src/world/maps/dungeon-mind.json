@@ -1,0 +1,64 @@
+{
+  "id": "dungeon-mind",
+  "name": "The Test of the Mind",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "P"
+  ],
+  "pushable": "O",
+  "platesFlag": "mind-plates",
+  "art": {
+    "1": "E",
+    "7": "W"
+  },
+  "tiles": [
+    "##############",
+    "#WWWWWWGWW7WW#",
+    "#W..........W#",
+    "#W..........W#",
+    "#W..O...O...W#",
+    "#W..........W#",
+    "#W...PPP....W#",
+    "#W.......O..W#",
+    "#W..........W#",
+    "#WWWWWW1WWWWW#",
+    "##############"
+  ],
+  "spawn": {
+    "x": 7,
+    "y": 8,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Damp stone."
+    ],
+    "G": [
+      "A gate. Three plates in the floor, three boulders, and one gate.",
+      "Something heavy on every plate, and it should open."
+    ],
+    "7": [
+      "Damp stone. Someone has drawn a very small door on it, and an arrow, and the word: MAGES."
+    ],
+    "P": [
+      "A pressure plate."
+    ],
+    "1": [
+      "The tunnel back to the fork."
+    ]
+  },
+  "objects": [
+    {
+      "id": "sign-plates",
+      "type": "sign",
+      "x": 3,
+      "y": 2,
+      "lines": [
+        "THREE PLATES. THREE STONES. ONE DOOR.",
+        "Scratched underneath, in a big round hand: I did not do the puzzle. I went through the wall. Sorry. B."
+      ]
+    }
+  ]
+}

@@ -68,6 +68,57 @@ describe('the Drill Yard puzzle', () => {
   });
 });
 
+describe('the Test of the Mind', () => {
+  const room = MAPS['dungeon-mind'];
+  const at = (x: number, y: number) => y * room.width + x;
+
+  it('can be solved by pushing each boulder onto a plate, from the tunnel in', () => {
+    let solid = room.solid;
+    let boulders = room.boulders;
+    const arrival = EXITS.find((e) => e.to?.map === 'dungeon-mind' && e.from === 'dungeon-fork')!.to!;
+    const canReach = (x: number, y: number) => {
+      const seen = new Set<number>();
+      const queue = [at(arrival.x, arrival.y)];
+      while (queue.length > 0) {
+        const t = queue.pop()!;
+        if (seen.has(t) || solid[t]) continue;
+        seen.add(t);
+        const tx = t % room.width;
+        const ty = Math.floor(t / room.width);
+        if (tx > 0) queue.push(t - 1);
+        if (tx < room.width - 1) queue.push(t + 1);
+        if (ty > 0) queue.push(t - room.width);
+        if (ty < room.height - 1) queue.push(t + room.width);
+      }
+      return seen.has(at(x, y));
+    };
+    const push = (from: [number, number], dx: number, dy: number) => {
+      const i = boulders.indexOf(at(...from));
+      expect(i).not.toBe(-1);
+      expect([from, dx, dy, canReach(from[0] - dx, from[1] - dy)]).toEqual([from, dx, dy, true]);
+      const next = pushBoulder(solid, room.width, room.height, boulders, i, dx, dy);
+      expect(next).not.toBeNull();
+      solid = next!.solid;
+      boulders = next!.boulders;
+    };
+    expect([room.boulders.length, room.plates.length]).toEqual([3, 3]);
+    // left boulder: right once, down twice
+    push([4, 4], 1, 0);
+    push([5, 4], 0, 1);
+    push([5, 5], 0, 1);
+    // right boulder: left once, down twice
+    push([8, 4], -1, 0);
+    push([7, 4], 0, 1);
+    push([7, 5], 0, 1);
+    // bottom boulder: left three times, up once into the middle
+    push([9, 7], -1, 0);
+    push([8, 7], -1, 0);
+    push([7, 7], -1, 0);
+    push([6, 7], 0, -1);
+    expect(platesCovered(room.plates, boulders)).toBe(true);
+  });
+});
+
 describe('pushing a boulder by walking into it', () => {
   const yard = MAPS['barracks-yard'];
   const at = (x: number, y: number) => y * yard.width + x;

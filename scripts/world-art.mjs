@@ -2076,6 +2076,11 @@ const DUNGEON_ART = {
     box(g, x, y, TILE, TILE, DG.earth);
   },
   '.'() {},
+  v(g, x, y) {
+    // A trap pit (author, Oct 4, 2026): floor like any other, bar a hairline crack, if you look.
+    for (const [i, j] of [[4, 6], [5, 7], [6, 7], [7, 8], [8, 9], [9, 9], [10, 10], [11, 10]])
+      put(g, x + i, y + j, DG.floorLine);
+  },
   ','(g, x, y) {
     for (let i = 0; i < 6; i++)
       put(g, x + 2 + Math.floor(hash(x, y, i) * 12), y + 2 + Math.floor(hash(y, x, i) * 12), DG.rubble);
@@ -3099,7 +3104,7 @@ function drawDungeon(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const c = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoEN#flaXg'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      if ((c === '.' || c === ',' || c === 'P' || c === 'v') && 'WBCcRGoEN#flaXg'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;
@@ -3342,6 +3347,16 @@ const WALKERS = {
     boots: '#2A2020',
     hair: ['spiky', '#FFC940'],
     patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'],
+  },
+  // the statue at the Two Tunnels (author, Oct 4, 2026): grey stone, robed and bearded, and it talks
+  statue: {
+    robe: true,
+    top: '#8A8A92',
+    shade: '#6E6E78',
+    boots: '#5E5E66',
+    skin: '#A2A2AA',
+    hair: ['bald', '#A2A2AA'],
+    beard: '#7E7E88',
   },
   raider: {
     top: '#6A4A3A',
@@ -4665,6 +4680,10 @@ const MAPS = [
   'felix-maze',
   'kingdom-dungeon',
   'dungeon-mazes',
+  'dungeon-fork',
+  'dungeon-mind',
+  'dungeon-might',
+  'dungeon-lore',
   'warrior-city',
   'south-road',
   'old-mine',

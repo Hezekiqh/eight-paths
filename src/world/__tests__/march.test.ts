@@ -137,8 +137,9 @@ describe('the Maze Ward', () => {
     expect(three).toBeLessThan(Infinity);
   });
   it('has one Brannoc-shaped hole, in the wall by the way in, landing you on floor further along', () => {
-    expect(MAZE_HOLES).toHaveLength(1);
-    for (const h of MAZE_HOLES) {
+    const holes = MAZE_HOLES.filter((m) => m.map === 'dungeon-mazes');
+    expect(holes).toHaveLength(1);
+    for (const h of holes) {
       const spots = find(h.tile);
       expect(spots).toHaveLength(1);
       const [x, y] = spots[0];
@@ -153,5 +154,11 @@ describe('the Maze Ward', () => {
       expect(h.to.x).toBeGreaterThan(x);
       expect(h.needs.kind === 'path' ? h.needs.level : 0).toBe(6);
     }
+  });
+  it("include the Test of the Mind's shortcut, a Mage's way past the plates to the Hall of Champions", () => {
+    const mind = MAZE_HOLES.find((h) => h.map === 'dungeon-mind');
+    expect(mind?.to.map).toBe('dungeon-lore');
+    expect(MAPS['dungeon-mind'].tiles.some((row) => row.includes(mind!.tile))).toBe(true);
+    expect(MAPS['dungeon-lore'].walkable).toContain(MAPS['dungeon-lore'].tiles[mind!.to.y][mind!.to.x]);
   });
 });

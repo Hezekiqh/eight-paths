@@ -25,30 +25,14 @@
     "facing": "up"
   },
   "examine": {
-    "1": [
-      "The door back out to Warrior City."
-    ],
-    "W": [
-      "Shelves to the ceiling. Somebody has catalogued them by smell."
-    ],
-    "T": [
-      "A bookcase. HISTORY OF THE EIGHT KINGDOMS, volumes one to forty. Volume nine is missing."
-    ],
-    "B": [
-      "A bookcase of maps, folded wrong."
-    ],
-    "t": [
-      "A reading table. A book lies open: 'On the Bridges Between the Kingdoms.'"
-    ],
-    "L": [
-      "A lectern, and on it a heavy book: THE BUBBLE. Someone has written in the margin: 'and what's outside it?'"
-    ],
-    "p": [
-      "A fern that has read more than most people."
-    ],
-    "_": [
-      "The library wall."
-    ]
+    "1": ["The door back out to Warrior City."],
+    "W": ["Shelves to the ceiling. Somebody has catalogued them by smell."],
+    "T": ["A bookcase. HISTORY OF THE EIGHT KINGDOMS, volumes one to forty. Volume nine is missing."],
+    "B": ["A bookcase of maps, folded wrong."],
+    "t": ["A reading table. A book lies open: 'On the Bridges Between the Kingdoms.'"],
+    "L": ["A lectern, and on it a heavy book: THE BUBBLE. Someone has written in the margin: 'and what's outside it?'"],
+    "p": ["A fern that has read more than most people."],
+    "_": ["The library wall."]
   },
   "objects": [
     {
@@ -75,9 +59,7 @@
       "sprite": "hoot",
       "facing": "down",
       "name": "Librarian Pell",
-      "lines": [
-        "Shh. No, you can talk. I just like saying it."
-      ],
+      "lines": ["Shh. No, you can talk. I just like saying it."],
       "questions": [
         {
           "ask": "What's in the missing volume?",
@@ -88,13 +70,21 @@
         },
         {
           "ask": "Nobody reads your letters, you know.",
-          "answer": [
-            "Shh.",
-            "...That one I meant."
-          ],
+          "answer": ["Shh.", "...That one I meant."],
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "keeper-wc-library",
+      "type": "npc",
+      "x": 9,
+      "y": 4,
+      "sprite": "keeper",
+      "facing": "down",
+      "name": "The Keeper",
+      "comesAfter": "woke-as:quill",
+      "lines": ["What? You thought I couldn't leave that place?", "I have a life outside of you."]
     }
   ]
 }

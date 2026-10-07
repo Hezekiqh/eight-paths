@@ -221,10 +221,11 @@ export type Answer = {
 };
 
 const SUBJECT = { him: 'he is', her: 'she is', them: 'they are' } as const;
-/** A guard-scene line for whoever you're walking as: `{them}` (him/her) and `{he is}` (he is/she is). */
+const POSSESSIVE = { him: 'his', her: 'her', them: 'their' } as const;
+/** A line for whoever you're walking as: `{them}` (him/her), `{he is}` (he is/she is), `{his}` (his/her). */
 export const forHero = (line: string, hero: string) => {
   const p = PRONOUN[hero] ?? 'them';
-  return line.replace('{them}', p).replace('{he is}', SUBJECT[p]);
+  return line.replace('{them}', p).replace('{he is}', SUBJECT[p]).replace('{his}', POSSESSIVE[p]);
 };
 
 /**
@@ -275,7 +276,7 @@ export const ANSWERS: Answer[] = [
     lines: [
       `${HIMOTHY}: ...Timmy.`,
       `${HIMOTHY}: Nobody has called me Timmy since the academy.`,
-      "GUARD: Oh no. Sir, remember what the healer said about your temper—",
+      'GUARD: Oh no. Sir, remember what the healer said about your temper—',
       `${HIMOTHY}: SIR. HIMOTHY. THE. THIRD.`,
       'He hits you with the whole name. Every syllable lands.',
     ],

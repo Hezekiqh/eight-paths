@@ -31,7 +31,7 @@ import { advisedBy, brokenCocoons, cocoonAt, COCOON_WALL } from '@/world/cocoons
 import { isTraveler, TRAVELER_FRIEND, travelerTalk } from '@/world/traveler';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, W_HX, W_HY, W_T, W_TX, W_TY, W_X, W_Y, whoIsAt } from '@/world/wander';
-import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet } from '@/world/meet';
+import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet, wokeFlag } from '@/world/meet';
 import type { Owned } from '@/store/draws';
 import { COMPANIONS, DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 import {
@@ -143,6 +143,18 @@ import {
 import { LEAVE_IT_TO, MORE, NEVER_MIND, heroOrder, heroPage } from '@/world/hero-pick';
 import {
   MAZE_HOLES,
+  FUNERAL,
+  STATUE_SURE,
+  STRENGTH_TUNNEL,
+  withRaven,
+  FREED_ENDING,
+  PARDONED,
+  FREED_FLAG,
+  FALLING,
+  FELL_INTO,
+  PIT_TILE,
+  fallLines,
+  fellFlag,
   holeLines,
   aloneWarden,
   ARENA_FIGHT_AS_BRANNOC,
@@ -280,9 +292,14 @@ export default function WorldScreen() {
   const origin = useGameStore((s) => s.player?.origin);
   // The hero you woke as is always met in the story, after a restart of the Other World too:
   // their room off the Archive is open, and they walk with you.
-  const originMet = useWorldStore((s) => !origin || s.flags.includes(metFlag(origin)));
+  const originMet = useWorldStore(
+    (s) => !origin || (s.flags.includes(metFlag(origin)) && s.flags.includes(wokeFlag(origin))),
+  );
   useEffect(() => {
-    if (hydrated && origin && !originMet) useWorldStore.getState().setFlag(metFlag(origin));
+    if (!hydrated || !origin || originMet) return;
+    useWorldStore.getState().setFlag(metFlag(origin));
+    // and the Keeper takes their place in Warrior City (meet.ts wokeFlag)
+    useWorldStore.getState().setFlag(wokeFlag(origin));
   }, [hydrated, origin, originMet]);
   const flash = useSharedValue(0);
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
@@ -299,6 +316,7 @@ export default function WorldScreen() {
         useGameStore.getState().chooseOrigin(id);
         useWorldStore.getState().setHero(id);
         useWorldStore.getState().setFlag(metFlag(id));
+        useWorldStore.getState().setFlag(wokeFlag(id));
         useSession.setState({ heroIntro: id });
         // No habit done yet: they sleep until the first one, so it's back to the World menu.
         if (!heroAwake(useGameStore.getState())) setPlaying(false);
@@ -584,7 +602,11 @@ function World({
   const cocoonWall = map.id === COCOON_WALL.map && !liveFlags.includes(COCOON_WALL.until);
   const stepTiles = useMemo(
     () => [
-      ...tilesOf(map, [...ways.map((e) => e.tile), ...(map.id === MAZE ? [CLEARING_TILE] : [])]),
+      ...tilesOf(map, [
+        ...ways.map((e) => e.tile),
+        ...(map.id === MAZE ? [CLEARING_TILE] : []),
+        ...(map.id === 'dungeon-mazes' ? [PIT_TILE] : []),
+      ]),
       ...(cocoonWall ? map.tiles.map((_, y) => y * map.width + COCOON_WALL.x) : []),
     ],
     [map, ways, cocoonWall],
@@ -652,7 +674,10 @@ function World({
   const prisonIntro =
     bossOn && prison && start.map.boss
       ? PRISON_INTROS[
-          start.map.boss.flag === 'pit-guards' ? (hero === 'brannoc' ? 'pit-guards-alone' : 'pit-guards') : 'pit-warden'
+          start.map.boss.flag === 'pit-guards'
+            ? // the prisoners you freed went up ahead of you, and didn't get far (author, Oct 4, 2026)
+              `pit-guards${arrivalFlags.includes(FREED_FLAG) ? '-freed' : ''}${hero === 'brannoc' ? '-alone' : ''}`
+            : 'pit-warden'
         ]
       : undefined;
   /** The verdict's been read: what comes next (the three's excuses and the carry, if they're here), played below. */
@@ -693,13 +718,17 @@ function World({
               };
             })()
           : prisonIntro
-            ? { lines: prisonIntro.lines }
+            ? // one with a menu (Barnaby's, the Warden's) is put up just after, below, so its choices can say more
+              prisonIntro.choices
+              ? null
+              : { speaker: prisonIntro.speaker, lines: prisonIntro.lines.map((l) => forHero(l, hero)) }
             : start.map.boss?.intro
               ? {
                   speaker: start.map.boss.intro.speaker ?? undefined,
                   lines: [
                     // a line of Felix's only if he's in the room to say it
-                    ...start.map.boss.intro.lines.filter(aboutFelix),
+                    // Silas's raven, if you freed him (dungeon.ts): it takes the place of the king's last line
+                    ...withRaven(start.map.id, start.map.boss.intro.lines.filter(aboutFelix), arrivalFlags),
                     ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
                     // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
                     // this, and ends in the fight's cue; already seen, the cue comes straight after
@@ -730,6 +759,23 @@ function World({
         : null),
     [said, verdict],
   );
+  // Barnaby's or the Warden's menu as you come into the Kaloseum (dungeon.ts PRISON_INTROS): ask, and
+  // it's back to the menu; choose, and that's said, then the fight
+  const introMenuShown = useRef(false);
+  useEffect(() => {
+    if (introMenuShown.current || resume || !prisonIntro?.choices) return;
+    introMenuShown.current = true;
+    setDialogue({
+      speaker: prisonIntro.speaker,
+      lines: prisonIntro.lines.map((l) => forHero(l, hero)),
+      questions: prisonIntro.questions,
+      choices: prisonIntro.choices.map((c) => ({
+        label: c.label,
+        deed: c.deed,
+        then: () => setDialogue({ lines: c.lines.map((l) => forHero(l, hero)) }),
+      })),
+    });
+  }, [prisonIntro, resume, hero]);
   const dialogueRef = useRef(dialogue);
   useEffect(() => {
     dialogueRef.current = dialogue;
@@ -1182,8 +1228,10 @@ function World({
             brannocSleepwalks(WALKER_ROWS.brannoc, useWorldStore.getState().flags.includes(ARENA_CARRIED)),
             () =>
               setDialogue({
-                lines: SNOT_SWING_HIT,
+                // the prisoners you freed come to, and go free too (dungeon.ts)
+                lines: [...SNOT_SWING_HIT, ...(freedNow() ? FREED_ENDING : [])],
                 then: () => {
+                  if (freedNow()) setFlag(PARDONED);
                   setFlag('brannoc-swung');
                   travel(hereNow());
                 },
@@ -1441,6 +1489,36 @@ function World({
         if (scenePending(flags) && dialogueRef.current === null) guardScene();
         return;
       }
+      // The Test of Strength: the statue asks if you're sure, the first time (dungeon.ts)
+      if (
+        map.id === 'dungeon-fork' &&
+        letter === STRENGTH_TUNNEL &&
+        !useWorldStore.getState().flags.includes('might-shadows')
+      ) {
+        const to = ways.find((e) => e.tile === letter)?.to;
+        if (!to) return;
+        const go = () => setDialogue({ lines: FUNERAL, then: () => travel(to) });
+        setDialogue({
+          lines: STATUE_SURE,
+          choices: [
+            { label: 'Yes', then: go },
+            { label: 'No', then: () => {} },
+            { label: 'Mind your own business.', deed: 'bad', then: go },
+          ],
+        });
+        return;
+      }
+      // A trap pit in the Maze Ward (dungeon.ts): down you go, back to the cells, and they've seen it all.
+      if (map.id === 'dungeon-mazes' && letter === PIT_TILE) {
+        const { flags } = useWorldStore.getState();
+        const n = [1, 2, 3].filter((i) => flags.includes(fellFlag(i))).length + 1;
+        if (n <= 3) setFlag(fellFlag(n));
+        playSound('slam');
+        haptics.rumble('crash');
+        useSession.setState({ fell: n });
+        setDialogue({ lines: FALLING, then: () => travel(FELL_INTO) });
+        return;
+      }
       const to = ways.find((e) => e.tile === letter)?.to;
       if (to) travel(to);
     },
@@ -1451,7 +1529,7 @@ function World({
   const passageSeen = map.id === MAZE && standing(PASSAGE, xp).met;
   // The Maze Ward's holes (dungeon.ts): each twinkles once you're Mage enough to notice it.
   const holesSeen = useMemo(
-    () => MAZE_HOLES.filter((h) => map.id === 'dungeon-mazes' && standing(h.needs, xp).met).map((h) => h.tile),
+    () => MAZE_HOLES.filter((h) => h.map === map.id && standing(h.needs, xp).met).map((h) => h.tile),
     [map, xp],
   );
   // A hero's room off the Archive: its door twinkles once it's open, until you've been in (hero-rooms.ts).
@@ -1518,7 +1596,12 @@ function World({
       arrivedRef.current = true;
       const w = useWorldStore.getState();
       const tx = Math.floor(start.x / TILE);
-      if (map.id === MAZE && tx >= 20 && scenePending(w.flags)) guardScene();
+      const fell = useSession.getState().fell;
+      if (fell && map.id === FELL_INTO.map) {
+        // dropped back into the cells through a trap pit: the prisoners have seen it all
+        useSession.setState({ fell: null });
+        setDialogue({ lines: fallLines(fell, w.flags.includes(FREED_FLAG), !w.flags.includes(CELLS_FREED)) });
+      } else if (map.id === MAZE && tx >= 20 && scenePending(w.flags)) guardScene();
       else if (map.id === MAZE && tx < 5 && passageSeen && !w.flags.includes(PASSAGE_TAKEN) && !dialogueRef.current)
         setDialogue({ lines: PASSAGE_LINES.notice });
       else if (map.id === 'archive' && greenLit(w.flags) && !w.flags.includes('keeper:welcome-back')) {
@@ -1583,6 +1666,7 @@ function World({
         setDialogue({
           lines: aloneWarden(w.flags.includes(CELLS_FREED)),
           then: () => {
+            if (freedNow()) w.setFlag(PARDONED);
             w.setFlag('pit-champion');
             // the Keeper's first proper call, yours instead of 'brannoc-joined' (keeper-calls.json)
             w.setFlag('brannoc-free');
@@ -1721,6 +1805,7 @@ function World({
         hearts={hearts}
         chests={chests}
         husks={husks}
+        talker={dialogue?.speaker}
         onMarched={onMarched}
         exit={exit}
         talkingTo={dialogue?.speaker ?? null}
@@ -2110,7 +2195,8 @@ function useAct(
               ...(general ?? []),
             ]
           : general;
-      const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      const asked = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      const questions = asked;
       // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
       if (thing.id === 'keeper' && map.id === 'archive') {
         const w = useWorldStore.getState();
@@ -2440,7 +2526,7 @@ function useAct(
       return;
     }
     // The Maze Ward: a hole that skips a maze, if you're Mage enough to see it (dungeon.ts).
-    const hole = map.id === 'dungeon-mazes' ? MAZE_HOLES.find((h) => h.tile === tile) : undefined;
+    const hole = MAZE_HOLES.find((h) => h.map === map.id && h.tile === tile);
     if (hole) {
       if (!standing(hole.needs, xp.current).met) {
         setDialogue({ lines: map.examine[tile] ?? [] });
@@ -2606,10 +2692,11 @@ function needsFlag(needs: Requirement, flag: string): boolean {
   return false;
 }
 
-/**
- * Who steps in for a job only `path` can do, like a field move: a party
- * member of that Path you've met who can walk the World. Undefined if none.
- */
+/** You let the prisoners out of their cells (read live: it can change mid-visit). */
+function freedNow(): boolean {
+  return useWorldStore.getState().flags.includes(FREED_FLAG);
+}
+
 /** Whether one of the core eight is you, or walking with you right now. */
 function withYou(id: CharacterId, hero: HeroId): boolean {
   if (id === hero) return true;
@@ -2618,6 +2705,10 @@ function withYou(id: CharacterId, hero: HeroId): boolean {
   return walkersFor(party, owned, flags, flags).includes(id as HeroId);
 }
 
+/**
+ * Who steps in for a job only `path` can do, like a field move: a party
+ * member of that Path you've met who can walk the World. Undefined if none.
+ */
 function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
   const { party, owned } = useGameStore.getState();
   const flags = useWorldStore.getState().flags;

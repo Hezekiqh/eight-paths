@@ -191,6 +191,30 @@ export async function claimUsername(name: string, inviteCode?: string) {
   await loadAccount(auth.user!.id);
 }
 
+/** Renames the player. Same rules as claiming a name; the founder number and friends stay. */
+export async function changeUsername(name: string) {
+  const profile = useSocial.getState().profile;
+  if (!profile) fail('Please sign in again.');
+  const next = name.trim();
+  if (next === profile!.username) return;
+  // Only the capitals changing: the name is still theirs, so skip the "taken" check.
+  if (next.toLowerCase() !== profile!.username.toLowerCase()) {
+    const problem = await checkUsername(next);
+    if (problem) fail(problem);
+  } else {
+    const problem = usernameProblem(next);
+    if (problem) fail(problem);
+  }
+  const { error } = await supabase().from('profiles').update({ username: next }).eq('id', profile!.id);
+  if (error) {
+    if (error.code === '23505') fail('That name was just taken. Try another.');
+    if (error.message.includes('username_not_allowed')) fail("That name isn't allowed.");
+    fail(OFFLINE);
+  }
+  const current = useSocial.getState().profile;
+  if (current) useSocial.setState({ profile: { ...current, username: next } });
+}
+
 /**
  * Heroes earned from friends who joined with this player's code since last
  * time. Returns those friends' usernames; the server marks them handed out.

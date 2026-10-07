@@ -158,6 +158,12 @@ function pointAt(here: MapId, target: Setter, line: string, xp: XpTotals): Goal 
   const path = target.path;
   if (target.map === here) return { mark: { box: target.box, tag: target.tag, exitId: target.exitId }, line, path };
   const step = firstStep(here, target.map, xp);
+  // the way on is shut, and what opens it is right here (the plates by the gate): point at that instead
+  const todo = step && firstUnmet(step.needs, xp);
+  if (todo?.kind === 'flag') {
+    const setter = settersOf(todo.flag).find((s) => s.map === here);
+    if (setter) return { mark: { box: setter.box, tag: setter.tag, exitId: setter.exitId }, line: todo.label, path };
+  }
   const box = step && tileBox(MAPS[here], step.tile);
   return { mark: step && box ? { box, tag: step.label, exitId: step.id } : null, line, path };
 }

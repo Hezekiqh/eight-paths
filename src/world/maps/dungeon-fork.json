@@ -1,0 +1,47 @@
+{
+  "id": "dungeon-fork",
+  "name": "The Two Tunnels",
+  "style": "dungeon",
+  "walkable": [".", ","],
+  "art": {
+    "a": "E",
+    "b": "E",
+    "2": "H"
+  },
+  "tiles": [
+    "##################",
+    "#WWWWaWWcWWWbWWWW#",
+    "#W..............W#",
+    "#W..............W#",
+    "#W,.............W#",
+    "#W............,.W#",
+    "#W.......2......W#",
+    "#WWWWWWWWWWWWWWWW#",
+    "##################"
+  ],
+  "spawn": {
+    "x": 9,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "W": ["Damp stone."],
+    "c": ["A torch, burning low."],
+    "a": ["A low tunnel. Cold air, and a smell of old books."],
+    "b": ["A wide tunnel. Something in there is breathing.", "Five somethings."],
+    "2": ["The ladder back down, to the Maze Ward."],
+    ",": ["Rubble."]
+  },
+  "objects": [
+    {
+      "id": "statue",
+      "type": "npc",
+      "x": 8,
+      "y": 2,
+      "sprite": "statue",
+      "facing": "down",
+      "name": "Statue",
+      "lines": ["Two paths.", "Strength, to the right. Intelligence, to the left."]
+    }
+  ]
+}

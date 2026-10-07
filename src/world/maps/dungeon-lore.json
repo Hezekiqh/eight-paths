@@ -1,0 +1,47 @@
+{
+  "id": "dungeon-lore",
+  "name": "The Hall of Champions",
+  "style": "dungeon",
+  "walkable": [".", ","],
+  "art": {
+    "1": "E",
+    "3": "E",
+    "2": "H",
+    "9": "R"
+  },
+  "tiles": [
+    "################",
+    "#WWcWRWWWW9WcWW#",
+    "#W............W#",
+    "#W..........k.W#",
+    "#W......2.....W#",
+    "#W............W#",
+    "#WW1WWWWWWWW3WW#",
+    "################"
+  ],
+  "spawn": {
+    "x": 8,
+    "y": 5,
+    "facing": "up"
+  },
+  "examine": {
+    "W": ["Damp stone."],
+    "c": ["A torch, burning low."],
+    "R": [
+      "Carved deep: THE KALDORIUM. STRENGTH ABOVE ALL.",
+      "Under it, a list of champions. Every name has been chiselled off but one.",
+      "KALDOR. Then, in fresher stone: KALDOR. KALDOR. KALDOR. Five hundred years of KALDOR."
+    ],
+    "9": [
+      "A letter, pinned to the wall. The seal is the king's.",
+      "BERTRAND. Make sure you put on a show.",
+      "The last few weeks have been very one-sided.",
+      "Maybe take a vacation, so the prisoners stand a chance."
+    ],
+    "2": ["A ladder up. The crowd is right above you."],
+    "1": ["Back to the Test of the Mind."],
+    "3": ["Back to the Test of Strength."],
+    "k": ["A candle, burning steady."]
+  },
+  "objects": []
+}
