@@ -78,16 +78,6 @@ export const TOUR_STEPS: TourStep[] = [
     line: 'Here are your stats: your level, what is improving, what needs tending, and when you do best. Health data is coming soon.',
   },
   {
-    route: '/journey',
-    target: 'regulator',
-    line: 'And for seasoned travellers, the Dopamine Regulator: it shows how super stimuli wear down your Health Points, and how your habits bring them back.',
-  },
-  {
-    route: '/journey',
-    target: 'regulator',
-    line: 'It is part of Premium, and stays off unless you choose it. When you are ready, turn it on right here, in Stats.',
-  },
-  {
     route: '/social-tab',
     target: 'social',
     line: 'In Social you can search for friends, look through their collections, and add them to your leaderboard.',
@@ -96,6 +86,16 @@ export const TOUR_STEPS: TourStep[] = [
     route: '/collection',
     target: 'collection',
     line: "Here are the heroes you've collected. The more stars, the rarer they are: five-star heroes are the rarest of all.",
+  },
+  {
+    route: '/world',
+    target: 'regulator',
+    line: 'Every setting lives here, under Settings. So does the Dopamine Regulator, for seasoned travellers: it shows how super stimuli wear down your Dopamine Baseline, and how your habits bring them back.',
+  },
+  {
+    route: '/world',
+    target: 'regulator',
+    line: 'It is part of Premium, and stays off unless you choose it.',
   },
   {
     route: '/world',

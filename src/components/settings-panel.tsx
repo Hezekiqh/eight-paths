@@ -1,10 +1,11 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { Alert, Linking, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { playSound, useAudioSettings } from '@/audio';
 import { Segmented } from '@/components/segmented';
 import { KeeperStatusRows } from '@/components/keeper-status';
+import { RegulatorRow } from '@/components/regulator-row';
 import { SettingsRow } from '@/components/settings-row';
 import { ThemePicker } from '@/components/theme-picker';
 import { HINTS, SCHEMES } from '@/components/world/pause-menu';
@@ -17,11 +18,13 @@ import { shareFriendCode } from '@/social/api';
 import { useSocial } from '@/social/store';
 import { useGameStore } from '@/store';
 import { NOT_CONFIRMED, deleteAccountOnly, deleteEverything } from '@/store/delete-everything';
-import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
+import { useClassInfo, useLearnedReminderTime, usePlayer, useToday } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
 import { SPEED_HINTS, SPEEDS } from '@/world/speed';
 import { useWorldStore } from '@/world/store';
+import { showDialog } from '@/components/dialog';
+import { useSession } from '@/store/session';
 
 /** "7:25 PM", in the phone's own clock style. */
 function clock(time: string): string {
@@ -41,14 +44,14 @@ const DAY_CALL_OPTIONS: { value: DayReminders; label: string }[] = [
 
 const DAY_CALL_HINTS: Record<DayReminders, string> = {
   off: 'Only the call at your usual time.',
-  bookends: 'At noon and 9 PM, if any quests are left.',
-  '4': 'At noon, every 4 hours, and 9 PM, if any quests are left.',
-  '2': 'At noon, every 2 hours, and 9 PM, if any quests are left.',
-  '1': 'Every hour from noon to 9 PM, if any quests are left.',
+  bookends: 'At noon and 9 PM, while any quests are still unfinished.',
+  '4': 'At noon, every 4 hours, and 9 PM, while any quests are still unfinished.',
+  '2': 'At noon, every 2 hours, and 9 PM, while any quests are still unfinished.',
+  '1': 'Every hour from noon to 9 PM, while any quests are still unfinished.',
 };
 
 function openSupport() {
-  Alert.alert(
+  showDialog(
     '988 Suicide & Crisis Lifeline',
     'Free, confidential support, 24/7, in the US. If you are in immediate danger, call 911.',
     [
@@ -60,12 +63,13 @@ function openSupport() {
 }
 
 /**
- * Every setting in one place, on the World menu's Settings tab: how the game
- * plays, how it looks, when the Keeper calls, and everything else.
+ * Every setting in one place, on the World menu's Settings tab: the Dopamine
+ * Regulator, how the game plays, how it looks, when the Keeper calls, and everything else.
  */
 export function SettingsPanel() {
   const player = usePlayer();
   const classInfo = useClassInfo();
+  const today = useToday();
   const setNotificationTime = useGameStore((s) => s.setNotificationTime);
   const setSmartReminders = useGameStore((s) => s.setSmartReminders);
   const setDayReminders = useGameStore((s) => s.setDayReminders);
@@ -73,6 +77,7 @@ export function SettingsPanel() {
   const { music, sounds, setMusic, setSounds } = useAudioSettings();
   const learnedTime = useLearnedReminderTime();
   const replayTour = useTour((s) => s.replay);
+  const replayIntro = useSession((s) => s.replayIntro);
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
   const speed = useWorldStore((s) => s.speed);
@@ -90,7 +95,7 @@ export function SettingsPanel() {
   // Asks first, since it can't be undone.
   const confirmDelete = () => {
     haptics.tap();
-    Alert.alert(
+    showDialog(
       'Delete your account?',
       profile
         ? "Your username, founder number, friends and heroes are deleted from the server, and you're signed out. Your game on this phone stays. This can't be undone, and your founder number won't come back."
@@ -104,10 +109,10 @@ export function SettingsPanel() {
           onPress: () =>
             (profile ? deleteAccountOnly() : deleteEverything())
               .then((r) => {
-                if (r === 'canceled') Alert.alert('Nothing was deleted', NOT_CONFIRMED);
+                if (r === 'canceled') showDialog('Nothing was deleted', NOT_CONFIRMED);
                 else if (profile) router.push('/social');
               })
-              .catch((e: Error) => Alert.alert('Not deleted', e.message)),
+              .catch((e: Error) => showDialog('Not deleted', e.message)),
         },
       ],
     );
@@ -115,6 +120,8 @@ export function SettingsPanel() {
 
   return (
     <View style={styles.panel}>
+      <RegulatorRow today={today} />
+
       <Text style={styles.section}>GAMEPLAY</Text>
       <View style={styles.list}>
         <View style={styles.controls}>
@@ -146,6 +153,14 @@ export function SettingsPanel() {
             replayTour();
             router.navigate('/');
           }}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          icon="script"
+          iconColor={color}
+          title="Watch the intro"
+          subtitle="The story of how it all began"
+          onPress={replayIntro}
         />
         <View style={styles.divider} />
         <SettingsRow
@@ -245,7 +260,7 @@ export function SettingsPanel() {
         />
         <View style={styles.divider} />
         <View style={styles.controls}>
-          <Text style={styles.label}>Quests left</Text>
+          <Text style={styles.label}>Reminders for unfinished quests</Text>
           <Segmented
             options={DAY_CALL_OPTIONS}
             value={player.dayReminders}
@@ -255,7 +270,7 @@ export function SettingsPanel() {
             }}
             color={color}
           />
-          <Text style={styles.hint}>{DAY_CALL_HINTS[player.dayReminders]} Stops once they&apos;re all done.</Text>
+          <Text style={styles.hint}>{DAY_CALL_HINTS[player.dayReminders]}</Text>
         </View>
         <View style={styles.divider} />
         <KeeperStatusRows color={color} />

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { CHARACTER_ART } from '@/art/sprites';
 import { Button } from '@/components/button';
@@ -14,6 +14,7 @@ import { isCharacterId, type CharacterId } from '@/story/companions';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { worldHero } from '@/world/hero';
 import { useWorldStore } from '@/world/store';
+import { showDialog } from '@/components/dialog';
 
 const message = (e: unknown) => (e instanceof SocialError ? e.message : 'Something went wrong. Please try again.');
 
@@ -72,7 +73,7 @@ function OfferCard({ offer, incoming, color }: { offer: TradeOffer; incoming: bo
     setBusy(true);
     work()
       .then(done)
-      .catch((e) => Alert.alert('That didn’t work', message(e)))
+      .catch((e) => showDialog('That didn’t work', message(e)))
       .finally(() => setBusy(false));
   };
 
@@ -81,13 +82,13 @@ function OfferCard({ offer, incoming, color }: { offer: TradeOffer; incoming: bo
     const { owned, drops, party, player } = useGameStore.getState();
     const walking = worldHero(useWorldStore.getState().hero, party, player?.classDimension ?? 'physical', owned);
     if (!covers(giveable(countCopies(give), { owned, drops }, walking as CharacterId), give)) {
-      Alert.alert(
+      showDialog(
         'Not yet',
         'Some of the heroes they want are still waiting to hatch, or walking the Other World. Hatch them, or pick someone else to walk, then try again.',
       );
       return;
     }
-    Alert.alert(`Trade with ${name}?`, `You give: ${describeSide(give)}\nYou get: ${describeSide(get)}`, [
+    showDialog(`Trade with ${name}?`, `You give: ${describeSide(give)}\nYou get: ${describeSide(get)}`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Trade',
@@ -102,7 +103,7 @@ function OfferCard({ offer, incoming, color }: { offer: TradeOffer; incoming: bo
   };
 
   const decline = () =>
-    Alert.alert(incoming ? `Decline ${name}'s offer?` : 'Take back your offer?', undefined, [
+    showDialog(incoming ? `Decline ${name}'s offer?` : 'Take back your offer?', undefined, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: incoming ? 'Decline' : 'Take back',

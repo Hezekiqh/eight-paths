@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -21,6 +21,7 @@ import { useSocial } from '@/social/store';
 import { founderLabel } from '@/social/username';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 const dollars = (n: number) => `$${n.toFixed(2)}`;
 const PERIOD: Record<ProductKind, 'month' | 'year'> = { regular: 'month', yearly: 'year', founder: 'month' };
@@ -72,21 +73,21 @@ export default function Paywall() {
       haptics.celebrate();
       close();
     } else if (result === 'failed') {
-      Alert.alert('Purchase failed', "The App Store couldn't complete it. You haven't been charged.");
+      showDialog('Purchase failed', "The App Store couldn't complete it. You haven't been charged.");
     }
   };
 
   const restorePurchases = async () => {
-    if (!purchasesEnabled) return Alert.alert('Restore purchases', 'Purchases are off in this build.');
+    if (!purchasesEnabled) return showDialog('Restore purchases', 'Purchases are off in this build.');
     setBusy(true);
     try {
       const restored = await restore();
-      Alert.alert(
+      showDialog(
         restored ? 'Premium restored' : 'Nothing to restore',
         restored ? 'Welcome back.' : "This Apple ID doesn't have Premium.",
       );
     } catch {
-      Alert.alert('Restore failed', "Couldn't reach the App Store. Please try again.");
+      showDialog('Restore failed', "Couldn't reach the App Store. Please try again.");
     } finally {
       setBusy(false);
     }

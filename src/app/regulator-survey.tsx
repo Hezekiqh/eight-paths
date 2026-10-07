@@ -17,9 +17,9 @@ const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 /** Kind words after a check-in. Never a verdict. */
 function afterword(drain: number, clean: boolean): string {
-  if (clean) return 'A clean day. That is what it feels like to come back up.';
-  if (drain >= 30) return 'A heavy day. It happens. Noticing it is the hard part, and you just did it.';
-  return "Noted. A slip is data, not a verdict. Today's habits will bring some of it back.";
+  if (clean) return 'A steady day. Your Dopamine Baseline is rising.';
+  if (drain >= 30) return "A day of big spikes. Today's habits will help your baseline settle back up.";
+  return "Noted. Today's habits will bring your baseline back up.";
 }
 
 /**
@@ -63,9 +63,9 @@ export default function RegulatorSurvey() {
     return (
       <SafeAreaView style={styles.screen}>
         <View style={styles.result}>
-          <Text style={styles.resultLabel}>{done.clean ? 'CLEAN DAY' : 'CHECKED IN'}</Text>
+          <Text style={styles.resultLabel}>{done.clean ? 'STEADY DAY' : 'CHECKED IN'}</Text>
           <Text style={[styles.resultBig, { color: done.clean ? '#3FA34D' : REGULATOR_COLOR }]}>
-            {done.clean ? `+${CLEAN_DAY_BONUS} HP` : `−${done.drain} HP`}
+            {done.clean ? `+${CLEAN_DAY_BONUS} DB` : `−${done.drain} DB`}
           </Text>
           {done.capped && <Text style={styles.hint}>A single day never costs more than this.</Text>}
           <Text style={styles.afterword}>{afterword(done.drain, done.clean)}</Text>

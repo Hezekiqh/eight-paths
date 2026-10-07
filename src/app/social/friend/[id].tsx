@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { CHARACTER_ART } from '@/art/sprites';
 import { Button } from '@/components/button';
@@ -13,6 +13,7 @@ import { founderLabel } from '@/social/username';
 import { ROSTER, isCharacterId } from '@/story/companions';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 const COLUMNS = 5;
 const REPORT_REASONS = ['Offensive username', 'Harassment', 'Something else'];
@@ -43,7 +44,7 @@ export default function FriendScreen() {
   }
 
   const act = (title: string, text: string, label: string, run: () => Promise<void>) =>
-    Alert.alert(title, text, [
+    showDialog(title, text, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: label,
@@ -51,18 +52,18 @@ export default function FriendScreen() {
         onPress: () =>
           run()
             .then(() => router.back())
-            .catch((e) => Alert.alert('That didn’t work', message(e))),
+            .catch((e) => showDialog('That didn’t work', message(e))),
       },
     ]);
 
   const report = () =>
-    Alert.alert(`Report ${friend.username}?`, 'Reports are reviewed by the developer.', [
+    showDialog(`Report ${friend.username}?`, 'Reports are reviewed by the developer.', [
       ...REPORT_REASONS.map((reason) => ({
         text: reason,
         onPress: () =>
           reportPlayer(friend.id, reason)
-            .then(() => Alert.alert('Thanks', 'Your report was sent.'))
-            .catch((e) => Alert.alert('Not sent', message(e))),
+            .then(() => showDialog('Thanks', 'Your report was sent.'))
+            .catch((e) => showDialog('Not sent', message(e))),
       })),
       { text: 'Cancel', style: 'cancel' as const },
     ]);

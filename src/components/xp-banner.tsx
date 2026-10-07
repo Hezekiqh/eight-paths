@@ -14,6 +14,8 @@ import Animated, {
 
 import { CharacterPortrait } from '@/components/character-portrait';
 import { CLASSES, type Dimension, type XpGain } from '@/game';
+import { MAX_HP } from '@/game/regulator';
+import { HP_COLOR } from '@/components/player-card';
 import { useGameStore } from '@/store';
 import { COMPANIONS } from '@/story/companions';
 import type { Milestone } from '@/store';
@@ -29,6 +31,8 @@ type Props = {
   dimension: Dimension;
   gain: XpGain;
   milestone?: Milestone | null;
+  /** With the Dopamine Regulator on: the Dopamine Baseline (DB) before and after this habit gave some back. */
+  hp?: { before: number; after: number } | null;
   onDone: () => void;
 };
 
@@ -40,7 +44,7 @@ const MILESTONE_HOLD_MS = 1800;
  * level-up the bar maxes out, flashes, announces the level, and refills
  * from the carry-over XP.
  */
-export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
+export function XpBanner({ dimension, gain, milestone, hp, onDone }: Props) {
   const info = CLASSES[dimension];
   const { before, after, leveledUp } = gain;
   const [level, setLevel] = useState(before.level);
@@ -50,6 +54,7 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
   const hop = useSharedValue(0);
   const width = useSharedValue(before.xpIntoLevel / before.xpForNext);
   const flash = useSharedValue(0);
+  const hpWidth = useSharedValue(hp ? hp.before / MAX_HP : 0);
 
   useEffect(() => {
     const afterFill = after.xpIntoLevel / after.xpForNext;
@@ -58,6 +63,8 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
     const fill = { duration: FILL_MS, easing: FILL_EASING };
     const hold = HOLD_MS + (milestone ? MILESTONE_HOLD_MS : 0);
     const filled = FADE_IN_MS + FILL_MS;
+    // The Dopamine Baseline climbs alongside the XP.
+    if (hp) hpWidth.value = withDelay(FADE_IN_MS, withTiming(hp.after / MAX_HP, fill));
 
     if (leveledUp) {
       width.value = withDelay(
@@ -103,6 +110,7 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
     width: `${width.value * 100}%`,
   }));
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+  const hpFillStyle = useAnimatedStyle(() => ({ width: `${hpWidth.value * 100}%` }));
   const hopStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: hop.value }],
   }));
@@ -124,12 +132,23 @@ export function XpBanner({ dimension, gain, milestone, onDone }: Props) {
           <Text style={[styles.gain, { color: info.color }]}>
             {gain.gained > 0 ? `+${gain.gained} XP` : 'XP full today'}
           </Text>
+          {hp && <Text style={[styles.gain, { color: HP_COLOR }]}>+{hp.after - hp.before} DB</Text>}
         </View>
         <View style={styles.track}>
           <Animated.View style={[styles.fill, { backgroundColor: info.color }, fillStyle]} />
           <Animated.View style={[StyleSheet.absoluteFill, styles.flash, flashStyle]} />
         </View>
         <Text style={styles.xp}>{xpLabel}</Text>
+        {hp && (
+          <>
+            <View style={styles.track}>
+              <Animated.View style={[styles.fill, { backgroundColor: HP_COLOR }, hpFillStyle]} />
+            </View>
+            <Text style={styles.xp} accessibilityLabel={`Dopamine Baseline: ${hp.after} of ${MAX_HP}`}>
+              {hp.after} / {MAX_HP} DB
+            </Text>
+          </>
+        )}
         {milestone && (
           <Animated.View entering={FadeIn.delay(FADE_IN_MS + FILL_MS).duration(400)} style={styles.milestone}>
             <SymbolView name="sparkles" tintColor={info.color} size={20} />

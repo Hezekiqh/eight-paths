@@ -23,7 +23,7 @@ const HEAVY = 25;
 type Kind = 'clean' | 'slip' | 'unanswered' | 'outside';
 
 /**
- * The Dopamine Regulator's month view: clean days in green, slip days in
+ * The Baseline calendar, the Regulator's month view: steady days in green, spike days in
  * purple (deeper the more they cost), days not checked in left plain. Tap a
  * day to see what came up.
  */
@@ -66,7 +66,7 @@ export default function SlipCalendarScreen() {
 
   return (
     <Screen>
-      <BackHeader title="Slip calendar" back="Regulator" color={REGULATOR_COLOR} />
+      <BackHeader title="Baseline calendar" back="Regulator" color={REGULATOR_COLOR} />
 
       <View style={styles.streaks}>
         <View style={styles.streak}>
@@ -163,15 +163,15 @@ export default function SlipCalendarScreen() {
         ))}
 
         <Text style={styles.summary}>
-          {clean} clean {clean === 1 ? 'day' : 'days'} · {slips} slip {slips === 1 ? 'day' : 'days'}
+          {clean} steady {clean === 1 ? 'day' : 'days'} · {slips} spike {slips === 1 ? 'day' : 'days'}
         </Text>
         <View style={styles.legend}>
           <View style={[styles.legendCell, { backgroundColor: CLEAN }]} />
-          <Text style={styles.legendText}>Clean</Text>
+          <Text style={styles.legendText}>Steady</Text>
           <View style={[styles.legendCell, { backgroundColor: SLIP }]} />
-          <Text style={styles.legendText}>Slip</Text>
+          <Text style={styles.legendText}>Spike</Text>
           <View style={[styles.legendCell, { backgroundColor: REGULATOR_COLOR }]} />
-          <Text style={styles.legendText}>Heavy</Text>
+          <Text style={styles.legendText}>Big spike</Text>
           <View style={[styles.legendCell, { backgroundColor: colors.cardRaised }]} />
           <Text style={styles.legendText}>No check-in</Text>
         </View>
@@ -187,7 +187,7 @@ export default function SlipCalendarScreen() {
           {!pickedReport ? (
             <Text style={styles.body}>No check-in for this day.</Text>
           ) : pickedSlips.length === 0 ? (
-            <Text style={styles.body}>A clean day.</Text>
+            <Text style={styles.body}>A steady day.</Text>
           ) : (
             pickedSlips.map((s) => (
               <View key={s.id} style={styles.slipRow}>
@@ -198,7 +198,7 @@ export default function SlipCalendarScreen() {
           )}
         </View>
       )}
-      <Text style={styles.note}>A slip is data, not a verdict.</Text>
+      <Text style={styles.note}>Every steady day lets your Dopamine Baseline rise.</Text>
     </Screen>
   );
 }

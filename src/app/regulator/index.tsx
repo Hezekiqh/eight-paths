@@ -1,6 +1,6 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { BackHeader } from '@/components/back-header';
 import { Button } from '@/components/button';
@@ -29,11 +29,17 @@ import { MODES, MODE_HINTS } from '@/regulator/modes';
 import { useRegulator } from '@/regulator/store';
 import { useToday } from '@/store/hooks';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 /** The Dopamine Regulator's own screen, pushed from Stats. Everything here stays on this phone. */
 export default function DopamineRegulatorScreen() {
   const today = useToday();
   const premium = usePremium((s) => s.premium);
+  // Opened from Settings or from the DB bar on Today; Back returns there.
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const header = (
+    <BackHeader title="Dopamine Regulator" back={from === 'settings' ? 'Settings' : 'Today'} color={REGULATOR_COLOR} />
+  );
   const enabled = useRegulator((s) => s.enabled);
   const onboarded = useRegulator((s) => s.onboarded);
   const mode = useRegulator((s) => s.mode);
@@ -50,9 +56,9 @@ export default function DopamineRegulatorScreen() {
 
   const confirmErase = () => {
     haptics.tap();
-    Alert.alert(
+    showDialog(
       'Erase the Regulator?',
-      "Your super stimuli, check-ins and Health Points are erased from this phone, and it's switched off. Your habits and the rest of the game are untouched. This can't be undone.",
+      "Your super stimuli, check-ins and Dopamine Baseline are erased from this phone, and it's switched off. Your habits and the rest of the game are untouched. This can't be undone.",
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Erase', style: 'destructive', onPress: reset },
@@ -63,7 +69,7 @@ export default function DopamineRegulatorScreen() {
   if (!premium) {
     return (
       <Screen>
-        <BackHeader title="Dopamine Regulator" back="Stats" color={REGULATOR_COLOR} />
+        {header}
         <View style={styles.card}>
           <Text style={styles.body}>{REGULATOR_PITCH}</Text>
         </View>
@@ -77,12 +83,12 @@ export default function DopamineRegulatorScreen() {
   if (!onboarded) {
     return (
       <Screen>
-        <BackHeader title="Dopamine Regulator" back="Stats" color={REGULATOR_COLOR} />
+        {header}
         <View style={styles.card}>
           <Text style={styles.label}>OFF</Text>
           <Text style={styles.body}>
-            Track the super stimuli that pull at you, and watch what they cost in Health Points. Keep your habits to win
-            them back. Awareness, not shame: a slip is data, not a verdict.
+            Keep your Dopamine Baseline steady. Note the super stimuli that spike it, see your baseline as Health
+            Points, and lift it back up with every habit you keep.
           </Text>
           <Text style={styles.small}>
             Everything you enter stays on this phone. It is never backed up or sent anywhere.
@@ -95,7 +101,7 @@ export default function DopamineRegulatorScreen() {
 
   return (
     <Screen>
-      <BackHeader title="Dopamine Regulator" back="Stats" color={REGULATOR_COLOR} />
+      {header}
 
       <View style={styles.list}>
         <SettingsRow
@@ -103,7 +109,7 @@ export default function DopamineRegulatorScreen() {
           iconColor={REGULATOR_COLOR}
           title={enabled ? 'On' : 'Off'}
           subtitle={
-            enabled ? 'Health Points show on Today and Stats' : 'Paused. Nothing is lost; turn it back on any time.'
+            enabled ? 'Your Dopamine Baseline shows on Today' : 'Paused. Nothing is lost; turn it back on any time.'
           }
           accessory={
             <Switch
@@ -121,7 +127,7 @@ export default function DopamineRegulatorScreen() {
       {enabled && (
         <>
           <View style={styles.card}>
-            <Text style={styles.label}>HEALTH POINTS</Text>
+            <Text style={styles.label}>DOPAMINE BASELINE</Text>
             <Text style={styles.big}>
               {hp}
               <Text style={styles.bigOf}> / {MAX_HP}</Text>
@@ -129,12 +135,12 @@ export default function DopamineRegulatorScreen() {
             <HpBar hp={hp} height={14} />
             <Text style={styles.small}>
               {todayRestore > 0
-                ? `+${todayRestore} HP from habits today${todayRestore >= DAILY_RESTORE_CAP ? ' (the most a day gives)' : ''}.`
-                : `Each habit you keep today gives back ${HP_PER_HABIT} HP.`}{' '}
-              {hp < MAX_HP ? `Climbing ${REGEN_PER_HOUR} HP an hour, even while you sleep.` : ''}
+                ? `+${todayRestore} DB from habits today${todayRestore >= DAILY_RESTORE_CAP ? ' (the most a day gives)' : ''}.`
+                : `Each habit you keep today gives back ${HP_PER_HABIT} DB.`}{' '}
+              {hp < MAX_HP ? `Climbing ${REGEN_PER_HOUR} DB an hour, even while you sleep.` : ''}
             </Text>
             <Text style={styles.small}>
-              Clean-day streak: {streaks.current} {streaks.current === 1 ? 'day' : 'days'} · best {streaks.best}
+              Steady-day streak: {streaks.current} {streaks.current === 1 ? 'day' : 'days'} · best {streaks.best}
             </Text>
           </View>
 
@@ -170,7 +176,7 @@ export default function DopamineRegulatorScreen() {
         {stimuli.map((s) => (
           <View key={s.id} style={styles.stimulus}>
             <Text style={styles.stimulusName}>{s.name}</Text>
-            <Text style={styles.stimulusCost}>−{stimulusCost(s.severity)} HP</Text>
+            <Text style={styles.stimulusCost}>−{stimulusCost(s.severity)} DB</Text>
           </View>
         ))}
         <View style={styles.divider} />
@@ -186,9 +192,9 @@ export default function DopamineRegulatorScreen() {
         <SettingsRow
           icon="calendar"
           iconColor={REGULATOR_COLOR}
-          title="Slip calendar"
-          subtitle="Clean days, slip days and streaks, month by month"
-          onPress={() => router.push('/journey/slip-calendar')}
+          title="Baseline calendar"
+          subtitle="Steady days, spike days and streaks, month by month"
+          onPress={() => router.push('/regulator/slip-calendar')}
         />
       </View>
 
@@ -203,7 +209,7 @@ export default function DopamineRegulatorScreen() {
         <Text style={styles.label}>HOW THE BAR WORKS {mathOpen ? '▲' : '▼'}</Text>
         {mathOpen && (
           <Text style={styles.body}>
-            {`You start at ${MAX_HP}. Each super stimulus costs its strength × 2 in Health Points${mode === 'hard' ? ', for every time' : ''}, taken when you check in. A single day never costs more than ${DAILY_DRAIN_CAP}.\n\nThe bar climbs back ${REGEN_PER_HOUR} HP every hour on its own, sleep included: a night's rest is worth 16 or more. Every habit you keep gives back ${HP_PER_HABIT}, up to ${DAILY_RESTORE_CAP} a day, and a clean day adds ${CLEAN_DAY_BONUS}.\n\nIf you ever fall below ${POTION_BELOW}, the Keeper hands you a potion that brings you back to ${POTION_TO}.`}
+            {`You start at ${MAX_HP}. Each super stimulus costs its strength × 2 in DB${mode === 'hard' ? ', for every time' : ''}, taken when you check in. A single day never costs more than ${DAILY_DRAIN_CAP}.\n\nThe bar climbs back ${REGEN_PER_HOUR} HP every hour on its own, sleep included: a night's rest is worth 16 or more. Every habit you keep gives back ${HP_PER_HABIT}, up to ${DAILY_RESTORE_CAP} a day, and a steady day adds ${CLEAN_DAY_BONUS}.\n\nIf you ever fall below ${POTION_BELOW}, the Keeper hands you a potion that brings you back to ${POTION_TO}.`}
           </Text>
         )}
       </Pressable>

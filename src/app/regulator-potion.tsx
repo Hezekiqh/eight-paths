@@ -20,12 +20,12 @@ export default function RegulatorPotion() {
       <SafeAreaView edges={['bottom']} style={styles.bottom}>
         <View style={styles.potion}>
           <PixelIcon name="potion" color={HP_COLORS.high} size={72} />
-          <Text style={styles.restored}>HP restored to {POTION_TO}</Text>
+          <Text style={styles.restored}>DB restored to {POTION_TO}</Text>
         </View>
         <View style={styles.dialogue} accessibilityRole="alert">
           <Text style={styles.speaker}>THE KEEPER</Text>
           <Text style={styles.line}>
-            Your Health Points dipped below {POTION_BELOW}. Here, drink this. It will put you back on your feet.
+            Your Dopamine Baseline dipped below {POTION_BELOW}. Here, drink this. It will put you back on your feet.
           </Text>
           <Text style={styles.line}>You can do it. Regulate that dopamine!</Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Thank you" onPress={done} hitSlop={8}>

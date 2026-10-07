@@ -11,8 +11,8 @@ import { useRegulator } from './store';
 const QUIET_ENOUGH = new Set([
   '/',
   '/journey',
-  '/journey/dopamine-regulator',
-  '/journey/slip-calendar',
+  '/regulator',
+  '/regulator/slip-calendar',
   '/social-tab',
   '/collection',
 ]);

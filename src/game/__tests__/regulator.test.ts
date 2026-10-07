@@ -28,7 +28,7 @@ const shortVideo = byId('short-video');
 
 describe('costs', () => {
   it('costs severity × 2', () => {
-    expect(DEFAULT_STIMULI.map((s) => stimulusCost(s.severity))).toEqual([20, 18, 16, 14, 14, 12, 8, 6]);
+    expect(DEFAULT_STIMULI.map((s) => stimulusCost(s.severity))).toEqual([20, 18, 16, 14, 14, 12, 12, 8, 6]);
   });
 
   it('counts any yes once in Easy mode, and times in Hard mode', () => {

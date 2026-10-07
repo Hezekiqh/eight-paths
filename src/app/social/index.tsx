@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -44,6 +43,7 @@ import { isCharacterId } from '@/story/companions';
 import { NOT_CONFIRMED, deleteAccountOnly } from '@/store/delete-everything';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 const message = (e: unknown) => (e instanceof SocialError ? e.message : 'Something went wrong. Please try again.');
 
@@ -74,7 +74,7 @@ function Join() {
     try {
       await provider();
     } catch (e) {
-      Alert.alert('Sign in failed', message(e));
+      showDialog('Sign in failed', message(e));
     } finally {
       setBusy(false);
     }
@@ -307,7 +307,7 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
   const shareCode = () => shareFriendCode(profile.friendCode);
 
   const confirmDelete = () =>
-    Alert.alert(
+    showDialog(
       'Delete your account?',
       "Your username, founder number, friends and heroes are deleted from the server, and you're signed out. Your game on this phone stays. This can't be undone, and your founder number won't come back.",
       [
@@ -317,9 +317,9 @@ function Account({ profile, color }: { profile: Profile; color: string }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              if ((await deleteAccountOnly()) === 'canceled') Alert.alert('Nothing was deleted', NOT_CONFIRMED);
+              if ((await deleteAccountOnly()) === 'canceled') showDialog('Nothing was deleted', NOT_CONFIRMED);
             } catch (e) {
-              Alert.alert('Not deleted', message(e));
+              showDialog('Not deleted', message(e));
             }
           },
         },
@@ -438,7 +438,7 @@ export default function SocialScreen() {
     useSocial.setState({ pendingFriendCode: null });
     addFriend(pending)
       .then(() => haptics.success())
-      .catch((e) => Alert.alert("Couldn't add friend", message(e)));
+      .catch((e) => showDialog("Couldn't add friend", message(e)));
   }, [status, pending]);
 
   return (

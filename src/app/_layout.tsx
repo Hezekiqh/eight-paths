@@ -7,7 +7,7 @@ import { Stack } from 'expo-router/stack';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ErrorScreen } from '@/components/error-screen';
@@ -16,6 +16,8 @@ import { useGameStore } from '@/store';
 import { useHydrated } from '@/store/hooks';
 import { useSession } from '@/store/session';
 import { colors, theme } from '@/theme';
+import { DialogHost } from '@/components/dialog';
+import { useIntroHydrated, useIntroSeen } from '@/store/intro';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,10 +56,23 @@ export default function RootLayout() {
     IMFellEnglish_400Regular_Italic,
     MedievalSharp_400Regular,
   });
-  const ready = hydrated && (fontsLoaded || fontError !== null);
-  // The story intro plays over everything each time the app starts.
+  const introHydrated = useIntroHydrated();
+  const ready = hydrated && introHydrated && (fontsLoaded || fontError !== null);
+  // The story intro plays over everything the first time the app opens (players from before
+  // count as having seen it), and again whenever Settings asks.
   const introDone = useSession((s) => s.introDone);
+  const introReplay = useSession((s) => s.introReplay);
   const finishIntro = useSession((s) => s.finishIntro);
+  const introSeen = useIntroSeen((s) => s.seen);
+  const showIntro = ready && !introDone && (introReplay || (!introSeen && !onboarded));
+  const endIntro = useCallback(() => {
+    useIntroSeen.setState({ seen: true });
+    finishIntro();
+  }, [finishIntro]);
+  // Not playing it: everything waiting on the intro can go ahead.
+  useEffect(() => {
+    if (ready && !introDone && !showIntro) finishIntro();
+  }, [ready, introDone, showIntro, finishIntro]);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -96,6 +111,8 @@ export default function RootLayout() {
               name="keeper-call"
               options={{ presentation: 'transparentModal', animation: 'fade', gestureEnabled: false }}
             />
+            <Stack.Screen name="regulator/index" />
+            <Stack.Screen name="regulator/slip-calendar" />
             <Stack.Screen name="regulator-intro" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
             <Stack.Screen name="regulator-survey" options={{ presentation: 'modal' }} />
             <Stack.Screen
@@ -122,7 +139,9 @@ export default function RootLayout() {
             options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
           />
         </Stack>
-        {!introDone && <Intro onDone={finishIntro} />}
+        {showIntro && <Intro onDone={endIntro} />}
+        {/* Every pop-up, in the game's own look, over every screen and sheet. */}
+        <DialogHost />
       </ThemeProvider>
     </GestureHandlerRootView>
   );

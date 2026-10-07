@@ -44,20 +44,25 @@ describe('the tale of the Kingdom', () => {
     expect(taleProgress(TALE, [heard(last.from[0])]).found).toBe(1);
   });
 
-  it('gives each person their own sentence or two, about a minute of reading in all', () => {
+  it('gives each person their own piece, about two minutes of reading in all', () => {
     const people = blocks.flatMap((b) => b.from);
     expect(new Set(people).size).toBe(people.length);
-    const words = blocks.map((b) => b.text).join(' ').split(/\s+/).length;
+    const words = blocks
+      .map((b) => b.text)
+      .join(' ')
+      .split(/\s+/).length;
     expect(words).toBeGreaterThan(200);
-    expect(words).toBeLessThan(350);
+    expect(words).toBeLessThan(700);
   });
 
-  it('names the Shadow Monarch, and tells of the grieving king, his brother Kaldor, and the one condition', () => {
+  it('never names the Shadow Monarch, and tells of the queen, the painter, the brother, the puppet king and the march', () => {
     const text = blocks.map((b) => b.text).join(' ');
-    expect(text).toMatch(/Shadow Monarch/);
+    // No one has ever seen the Shadow Monarch: the scroll only knows "the thing in the dark".
+    expect(text).not.toMatch(/Shadow Monarch/);
     expect(text).toMatch(/King Osric/);
     expect(text).toMatch(/younger brother, Kaldor/);
-    expect(text).toMatch(/never march it to war/);
-    expect(text).toMatch(/I need to be strong\. I need to protect them\./);
+    expect(text).toMatch(/Is that what you believe, or what you were told\?/);
+    expect(text).toMatch(/You can rest easy now\./);
+    expect(text).toMatch(/Why, after all this time\?/);
   });
 });

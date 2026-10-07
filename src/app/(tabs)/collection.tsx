@@ -2,12 +2,17 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { CollectionGrid } from '@/components/collection-grid';
 import { Screen } from '@/components/screen';
+import { XpBar } from '@/components/xp-bar';
 import { useStanding } from '@/social/use-standing';
 import { useClassInfo, useCollection } from '@/store/hooks';
-import { colors, fonts, spacing } from '@/theme';
+import type { CollectionEntry } from '@/store/selectors';
+import { RARITY_TIERS, type Rarity } from '@/story/companions';
+import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
 
-/** The Collection tab: every hero there is, woken or still asleep. */
+const RARITIES: Rarity[] = [5, 4, 3, 2, 1];
+
+/** The Collection tab: how many heroes you've woken, by rarity, then every hero there is. */
 export default function CollectionScreen() {
   const classInfo = useClassInfo();
   const collection = useCollection();
@@ -16,34 +21,52 @@ export default function CollectionScreen() {
   const collectionRef = useTourTarget('collection', scroller);
 
   if (!classInfo) return null;
+  const total = collection.entries.length;
 
   return (
-    <Screen scrollRef={scroller.ref} onScroll={scroller.onScroll}>
-      <View style={styles.collection}>
-        {/* The Keeper's tour points at the collection's heading and its first rows. */}
-        <View ref={collectionRef} collapsable={false} style={styles.tourCollection} pointerEvents="none" />
-        <View style={styles.sectionRow}>
-          <Text style={styles.section}>YOUR COLLECTION</Text>
-          {standing?.value != null && (
-            <Text style={[styles.sectionCount, { color: classInfo.color }]}>
-              {standing.value.toLocaleString()} value
-            </Text>
-          )}
-          <Text style={styles.sectionCount}>
-            {collection.unlockedCount} / {collection.entries.length}
-          </Text>
+    <Screen title="Collection" scrollRef={scroller.ref} onScroll={scroller.onScroll}>
+      {/* The Keeper's tour points at the tally: how many, and how rare. */}
+      <View ref={collectionRef} collapsable={false} style={styles.summary}>
+        <View style={styles.countRow}>
+          <Text style={[styles.count, { color: classInfo.color }]}>{collection.unlockedCount}</Text>
+          <Text style={styles.of}>/ {total} heroes woken</Text>
+          {standing?.value != null && <Text style={styles.value}>{standing.value.toLocaleString()} value</Text>}
         </View>
-        <CollectionGrid entries={collection.entries} />
+        <XpBar fill={total > 0 ? collection.unlockedCount / total : 0} color={classInfo.color} height={10} />
+        <View style={styles.tally}>
+          {RARITIES.map((r) => (
+            <RarityTally key={r} rarity={r} entries={collection.entries} />
+          ))}
+        </View>
       </View>
+      <CollectionGrid entries={collection.entries} />
     </Screen>
   );
 }
 
+function RarityTally({ rarity, entries }: { rarity: Rarity; entries: CollectionEntry[] }) {
+  const tier = entries.filter((e) => e.companion.rarity === rarity);
+  if (tier.length === 0) return null;
+  const woken = tier.filter((e) => e.unlocked).length;
+  const { name, color } = RARITY_TIERS[rarity];
+  return (
+    <View style={styles.tier} accessible accessibilityLabel={`${name}: ${woken} of ${tier.length}`}>
+      <Text style={[styles.tierStars, { color }]}>{rarity}★</Text>
+      <Text style={styles.tierCount}>
+        {woken}/{tier.length}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  section: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, letterSpacing: 1.2 },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  sectionCount: { color: colors.textMuted, fontSize: 16, fontFamily: fonts.bold, fontVariant: ['tabular-nums'] },
-  // Same spacing as the Screen's own children.
-  collection: { gap: spacing.md },
-  tourCollection: { position: 'absolute', top: 0, left: 0, right: 0, height: 320 },
+  summary: { ...windowStyle, padding: spacing.lg, gap: spacing.sm },
+  countRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs },
+  count: { fontFamily: fonts.bold, fontSize: 40, fontVariant: ['tabular-nums'] },
+  of: { flex: 1, color: colors.textMuted, fontFamily: fonts.bold, fontSize: 16 },
+  value: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14, fontVariant: ['tabular-nums'] },
+  tally: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xs },
+  tier: { alignItems: 'center', gap: 2 },
+  tierStars: { fontFamily: fonts.bold, fontSize: 16 },
+  tierCount: { color: colors.text, fontFamily: fonts.bold, fontSize: 14, fontVariant: ['tabular-nums'] },
 });

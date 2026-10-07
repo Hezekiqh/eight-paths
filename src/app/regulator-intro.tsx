@@ -1,14 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { PixelIcon } from '@/components/pixel-icon';
+import { HpBar } from '@/components/player-card';
 import { REGULATOR_COLOR } from '@/components/regulator-row';
 import { TypewriterText } from '@/components/typewriter-text';
 import { addDays } from '@/game';
 import {
+  BUILT_IN_STIMULI,
   CUSTOM_NOTE,
+  MAX_HP,
   DEFAULT_STIMULI,
   PHONE_CHECK,
   STIMULUS_NOTES,
@@ -22,21 +26,22 @@ import { allStimuli, useRegulator } from '@/regulator/store';
 import { usePlayer, useToday } from '@/store/hooks';
 import { FRAME, colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
-type Step = 'keeper' | 'select' | 'confirm' | 'summary' | 'mode';
+type Step = 'keeper' | 'ranking' | 'select' | 'confirm' | 'summary' | 'mode';
 
-/** The Keeper's introduction. Short: what a spike does, and why it's hard to see. */
+/** The Keeper's introduction: your Dopamine Baseline, what a spike does to it, and how the Regulator keeps it steady. */
 const KEEPER_LINES = [
   'Ah, {name}. You found the Regulator. Few do. Let me tell you how it works.',
-  'Some pleasures spike you high, then drop you lower than where you began. I call them super stimuli.',
-  'Chase them again and again, and the ground itself sinks. You need more to feel the same, and ordinary things turn grey.',
-  'The trouble is, we forget from one day to the next. And we would sooner reach for a spike than sit with a little discomfort.',
-  'So each morning, tell me honestly how yesterday went. No judgement: a slip is data, not a verdict. It stays here, on this phone.',
+  'Each of us has a Dopamine Baseline: the steady level beneath the whole day. It is what lets ordinary things feel good.',
+  'Some pleasures lift you far above it, all at once. I call them super stimuli. Afterwards, your baseline settles a little lower while it recovers.',
+  'The Regulator helps you keep it steady. Your DB bar shows where your Dopamine Baseline sits.',
+  'Each morning, tell me what spiked yesterday. Every habit you keep lifts it again. It all stays here, on this phone.',
 ];
 
-const close = () => (router.canGoBack() ? router.back() : router.replace('/journey'));
+const close = () => (router.canGoBack() ? router.back() : router.replace('/regulator'));
 
 /**
- * Switching on the Dopamine Regulator: the Keeper explains, the player picks
+ * Switching on the Dopamine Regulator: the Keeper explains, the super stimuli
+ * are ranked by strength, the player picks
  * their super stimuli (and names their own), checks the list, learns what
  * each one does, picks a mode, and answers the first check-in. Opened with
  * `start=select`, it just changes the list.
@@ -51,6 +56,8 @@ export default function RegulatorIntro() {
   const mode = useRegulator((s) => s.mode);
   const { setSelected, addCustom, removeCustom, setMode, finishOnboarding } = useRegulator.getState();
   const [step, setStep] = useState<Step>(editing ? 'select' : 'keeper');
+  // Padded by hand: SafeAreaView reads no insets inside this full-screen modal.
+  const insets = useSafeAreaInsets();
 
   const picked = allStimuli(custom).filter((s) => selected.includes(s.id));
 
@@ -63,13 +70,14 @@ export default function RegulatorIntro() {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.topBar}>
         <Pressable accessibilityRole="button" onPress={close} hitSlop={12}>
           <Text style={styles.cancel}>{editing ? 'Cancel' : 'Not now'}</Text>
         </Pressable>
       </View>
-      {step === 'keeper' && <KeeperIntro name={player?.name ?? 'traveller'} onDone={() => setStep('select')} />}
+      {step === 'keeper' && <KeeperIntro name={player?.name ?? 'traveller'} onDone={() => setStep('ranking')} />}
+      {step === 'ranking' && <RankingStep onNext={() => setStep('select')} />}
       {step === 'select' && (
         <SelectStep
           selected={selected}
@@ -90,7 +98,7 @@ export default function RegulatorIntro() {
         <SummaryStep picked={picked} last={editing} onNext={editing ? finish : () => setStep('mode')} />
       )}
       {step === 'mode' && <ModeStep mode={mode} onChange={setMode} onNext={finish} />}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -117,6 +125,15 @@ function KeeperIntro({ name, onDone }: { name: string; onDone: () => void }) {
       onPress={onTap}
       accessibilityRole="button"
       accessibilityLabel={`${line} Tap to continue.`}>
+      {/* What he's describing, above him: the baseline as a DB bar. */}
+      <View style={styles.scene}>
+        <PixelIcon name="potion" color={REGULATOR_COLOR} size={96} />
+        <Text style={styles.sceneTitle}>DOPAMINE REGULATOR</Text>
+        <View style={styles.sceneBar}>
+          <HpBar hp={MAX_HP} height={14} />
+          <Text style={styles.sceneCaption}>Your Dopamine Baseline</Text>
+        </View>
+      </View>
       <View style={styles.dialogue}>
         <Text style={styles.speaker}>THE KEEPER</Text>
         <TypewriterText
@@ -132,6 +149,48 @@ function KeeperIntro({ name, onDone }: { name: string; onDone: () => void }) {
         </Text>
       </View>
     </Pressable>
+  );
+}
+
+/** Every built-in super stimulus, strongest first, before the player picks their own. */
+function RankingStep({ onNext }: { onNext: () => void }) {
+  const ranked = [...BUILT_IN_STIMULI].sort((a, b) => b.severity - a.severity);
+  return (
+    <View style={styles.flex}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.heading}>The super stimuli, ranked</Text>
+        <Text style={styles.hint}>
+          Strongest first: how far each one lifts you above your Dopamine Baseline, and the DB it takes while your
+          baseline settles back.
+        </Text>
+        <View style={styles.list}>
+          {ranked.map((s, i) => (
+            <View
+              key={s.id}
+              style={styles.rankRow}
+              accessible
+              accessibilityLabel={`${i + 1}. ${s.name}, strength ${s.severity} of 10, ${stimulusCost(s.severity)} DB`}>
+              <Text style={styles.rankNumber}>{i + 1}</Text>
+              <View style={styles.rankText}>
+                <Text style={styles.listName}>{s.name}</Text>
+                <View style={styles.strength}>
+                  {Array.from({ length: 10 }, (_, n) => (
+                    <View
+                      key={n}
+                      style={[styles.strengthCell, n < s.severity && { backgroundColor: REGULATOR_COLOR }]}
+                    />
+                  ))}
+                </View>
+              </View>
+              <Text style={styles.listCost}>−{stimulusCost(s.severity)} DB</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+      <View style={styles.footer}>
+        <Button title="Pick mine" color={REGULATOR_COLOR} onPress={onNext} />
+      </View>
+    </View>
   );
 }
 
@@ -222,7 +281,7 @@ function SelectStep({
                 </Pressable>
               ))}
             </View>
-            <Text style={styles.hint}>Costs {stimulusCost(severity)} HP when it comes up.</Text>
+            <Text style={styles.hint}>Costs {stimulusCost(severity)} DB when it comes up.</Text>
             <View style={styles.addButtons}>
               <View style={styles.flex}>
                 <Button title="Cancel" variant="ghost" color={colors.textMuted} onPress={() => setAdding(false)} />
@@ -284,7 +343,7 @@ function ConfirmStep({ picked, onYes, onBack }: { picked: Stimulus[]; onYes: () 
           {picked.map((s) => (
             <View key={s.id} style={styles.listRow}>
               <Text style={styles.listName}>{s.name}</Text>
-              <Text style={styles.listCost}>−{stimulusCost(s.severity)} HP</Text>
+              <Text style={styles.listCost}>−{stimulusCost(s.severity)} DB</Text>
             </View>
           ))}
         </View>
@@ -319,7 +378,7 @@ function SummaryStep({ picked, last, onNext }: { picked: Stimulus[]; last: boole
               style={styles.noteCard}>
               <View style={styles.noteTop}>
                 <Text style={styles.noteName}>{s.name}</Text>
-                <Text style={styles.listCost}>−{stimulusCost(s.severity)} HP</Text>
+                <Text style={styles.listCost}>−{stimulusCost(s.severity)} DB</Text>
                 <Text style={styles.caret}>{expanded ? '▲' : '▼'}</Text>
               </View>
               <Text style={styles.noteShort}>{note.short}</Text>
@@ -399,7 +458,11 @@ const styles = StyleSheet.create({
   },
   hint: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
   label: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14, letterSpacing: 1 },
-  keeperWrap: { flex: 1, justifyContent: 'flex-end', padding: spacing.lg },
+  keeperWrap: { flex: 1, justifyContent: 'space-between', padding: spacing.lg },
+  scene: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  sceneTitle: { color: REGULATOR_COLOR, fontFamily: fonts.bold, fontSize: 24, letterSpacing: 2 },
+  sceneBar: { alignSelf: 'stretch', gap: spacing.xs, paddingHorizontal: spacing.lg },
+  sceneCaption: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 14, textAlign: 'center' },
   dialogue: {
     borderWidth: 3,
     borderColor: '#FFFFFF',
@@ -408,7 +471,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 12,
     gap: 6,
-    minHeight: 200,
   },
   speaker: { color: '#FFD27A', fontFamily: fonts.bold, fontSize: 18, letterSpacing: 2 },
   line: { color: '#FFFFFF', fontFamily: fonts.dialogue, fontSize: 16, lineHeight: 26 },
@@ -447,6 +509,23 @@ const styles = StyleSheet.create({
   scaleText: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 16 },
   addButtons: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
   list: { ...windowStyle, paddingVertical: spacing.sm },
+  rankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  rankNumber: {
+    width: 22,
+    color: REGULATOR_COLOR,
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    fontVariant: ['tabular-nums'],
+  },
+  rankText: { flex: 1, gap: 4 },
+  strength: { flexDirection: 'row', gap: 2 },
+  strengthCell: { flex: 1, maxWidth: 14, height: 6, backgroundColor: colors.cardRaised },
   listRow: { flexDirection: 'row', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   listName: { flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 17 },
   listCost: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 18, fontVariant: ['tabular-nums'] },

@@ -77,7 +77,7 @@ const heartbeat = () => {
 };
 
 /**
- * The opening intro, played every time the app starts: the Keeper telling
+ * The opening intro, played the first time the app opens (and from Settings): the Keeper telling
  * the waking player what happened. Each panel moves on by itself once its
  * line has been read; a tap finishes a line that is still typing, or moves
  * on from one that has. Skip jumps to the title; a tap on the title

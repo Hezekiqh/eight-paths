@@ -16,7 +16,7 @@ export function BackHeader({ title, back = 'Back', color }: { title: string; bac
         onPress={() => {
           haptics.tap();
           if (router.canGoBack()) router.back();
-          else router.replace('/journey');
+          else router.replace('/');
         }}
         style={({ pressed }) => [styles.back, pressed && { opacity: 0.6 }]}>
         <SymbolView name="chevron.left" tintColor={color} size={18} weight="bold" />

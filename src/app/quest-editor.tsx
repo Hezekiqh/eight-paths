@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ClassChips } from '@/components/class-chips';
 import { KeeperTour } from '@/components/keeper-tour';
@@ -24,6 +24,7 @@ import { usePremium } from '@/premium/store';
 import { useGameStore } from '@/store';
 import { usePlayer, useQuest } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 const SCHEDULES = [
   { value: 'daily', label: 'Daily' },
@@ -77,7 +78,7 @@ export default function QuestEditor() {
 
   const archive = () => {
     if (!existing) return;
-    Alert.alert('Archive this quest?', 'It leaves your quest board. The XP you earned stays.', [
+    showDialog('Archive this quest?', 'It leaves your quest board. The XP you earned stays.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Archive',

@@ -19,7 +19,7 @@ export function LoreScroll({ heard }: { heard: LoreEntry[] }) {
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={`Scroll 1, the story of the Kingdom, ${found} of ${total} found`}
+        accessibilityLabel={`Scroll 1, the Lore of the Berserker Kingdom, ${found} of ${total} found`}
         onPress={() => {
           haptics.tap();
           setOpen((o) => !o);
@@ -27,8 +27,9 @@ export function LoreScroll({ heard }: { heard: LoreEntry[] }) {
         {({ pressed }) => (
           <Roll style={pressed && { opacity: 0.8 }}>
             <Text style={styles.number}>1</Text>
-            <Text style={styles.caption}>
-              The Kingdom · {found} of {total}
+            <Text style={styles.caption}>The Berserker Kingdom Lore</Text>
+            <Text style={styles.count}>
+              {found} of {total} found
             </Text>
             <Text style={styles.toggle}>{open ? 'roll up ▴' : 'unroll ▾'}</Text>
           </Roll>
@@ -39,7 +40,7 @@ export function LoreScroll({ heard }: { heard: LoreEntry[] }) {
           <View style={styles.sheet}>
             <Text style={styles.how}>
               {found === 0
-                ? 'Talk to everyone in the Other World. Each of them knows a little of the story, and what they tell you is written here.'
+                ? 'Talking to characters in the Other World unlocks pieces of the Lore and Memories. What you learn is logged here. Talk to everyone!'
                 : 'Where the page is blank, someone has yet to tell you. Tap a passage to see who told you.'}
             </Text>
             {TALE.map((chapter) => (
@@ -75,30 +76,35 @@ function TaleChapter({ chapter, heard }: { chapter: Chapter; heard: LoreEntry[] 
         <Text style={styles.count}>{found === total ? '✓' : `${found}/${total}`}</Text>
       </View>
       {/* Nothing found yet: just the title, so an untouched chapter doesn't fill the scroll with blank page. */}
-      {found > 0 &&
-        chapter.blocks.map((block, i) =>
-          toldBy(block, heard) ? (
-            <Text
-              key={i}
-              accessibilityRole="button"
-              suppressHighlighting
-              onPress={() => {
-                haptics.select();
-                setPicked((p) => (p === i ? null : i));
-              }}
-              style={[styles.story, picked === i && styles.picked]}>
-              {block.text}
-            </Text>
-          ) : (
-            // Its own words, drawn invisible: blank space the size of what's missing.
-            <Text key={i} accessibilityLabel="Blank" style={[styles.story, styles.hidden]}>
-              {block.text}
-            </Text>
-          ),
-        )}
+      {/* One paragraph: what you've heard reads on, and what you haven't is a blank of its own size. */}
+      {found > 0 && (
+        <Text style={styles.story}>
+          {chapter.blocks.map((block, i) => {
+            const text = i < chapter.blocks.length - 1 ? `${block.text} ` : block.text;
+            return toldBy(block, heard) ? (
+              <Text
+                key={i}
+                suppressHighlighting
+                onPress={() => {
+                  haptics.select();
+                  setPicked((p) => (p === i ? null : i));
+                }}
+                style={picked === i && styles.picked}>
+                {text}
+              </Text>
+            ) : (
+              <Text key={i} accessibilityLabel="Blank" style={styles.hidden}>
+                {text}
+              </Text>
+            );
+          })}
+        </Text>
+      )}
       {who && (
         <Text style={styles.who}>
-          {who.ask === TALKED ? `${who.speaker} told you this.` : `${who.speaker} told you this, when you asked “${who.ask}”`}
+          {who.ask === TALKED
+            ? `${who.speaker} told you this.`
+            : `${who.speaker} told you this, when you asked “${who.ask}”`}
         </Text>
       )}
     </View>
@@ -127,7 +133,7 @@ const styles = StyleSheet.create({
   },
   bandSmall: { paddingVertical: 6 },
   number: { color: colors.accent, fontFamily: fonts.medieval, fontSize: 40, lineHeight: 46 },
-  caption: { color: colors.text, fontFamily: fonts.medieval, fontSize: 16 },
+  caption: { color: colors.text, fontFamily: fonts.medieval, fontSize: 18 },
   toggle: { color: colors.textMuted, fontFamily: fonts.ancientItalic, fontSize: 13, marginTop: 2 },
   sheet: {
     marginHorizontal: ROD / 2,

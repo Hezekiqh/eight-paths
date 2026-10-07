@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PixelIcon } from '@/components/pixel-icon';
 import { HpBar } from '@/components/player-card';
@@ -9,19 +9,21 @@ import { usePremium } from '@/premium/store';
 import { useHp, useRegulatorActive } from '@/regulator/hooks';
 import { useRegulator } from '@/regulator/store';
 import { FRAME, colors, fonts, spacing } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 /** The Regulator's purple: set apart from every other setting. */
 export const REGULATOR_COLOR = '#8B5CF6';
 
 /** Told to a player without Premium, in place of opening it. */
 export const REGULATOR_PITCH =
-  'Super stimuli like short-form video, sugar or vaping spike your dopamine for a moment, then drop it below where it started. The more you chase them, the more you need.\n\nThe Dopamine Regulator turns that into a Health Points bar. Answer a ten-second check-in each morning, and keep your habits to bring the bar back up. Everything stays on this phone.\n\nIt is an advanced, optional tool, part of Eight Paths Premium.';
+  'Short videos, sugar and vaping lift your dopamine far above your Dopamine Baseline, the steady level that makes ordinary things feel good. Afterwards, your baseline settles a little lower while it recovers.\n\nThe Regulator helps you keep it steady. Your baseline shows as a DB bar: a ten-second check-in each morning notes what spiked it, and every habit you keep lifts it back up. Everything stays on your phone.';
 
-export function openRegulator() {
+/** Opens the Regulator over the current screen (`from` names it on the Back button), or tells a free player about it. */
+export function openRegulator(from?: 'settings') {
   haptics.tap();
   if (!usePremium.getState().premium) {
-    Alert.alert(
-      'The Dopamine Regulator',
+    showDialog(
+      'Dopamine Regulator · Premium',
       REGULATOR_PITCH,
       premiumEnabled
         ? [
@@ -32,10 +34,10 @@ export function openRegulator() {
     );
     return;
   }
-  router.push('/journey/dopamine-regulator');
+  router.push({ pathname: '/regulator', params: from ? { from } : {} });
 }
 
-/** The entry on Profile: framed and coloured to stand out from the other settings. */
+/** The entry in Settings: framed and coloured to stand out from the other settings. */
 export function RegulatorRow({ today }: { today: string }) {
   const premium = usePremium((s) => s.premium);
   const enabled = useRegulator((s) => s.enabled);
@@ -54,7 +56,7 @@ export function RegulatorRow({ today }: { today: string }) {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Dopamine Regulator. ${subtitle}`}
-      onPress={openRegulator}
+      onPress={() => openRegulator('settings')}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.row}>
         <View style={styles.icon}>

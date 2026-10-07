@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CHARACTER_ART } from '@/art/sprites';
@@ -16,6 +16,7 @@ import { COMPANIONS, RARITY_TIERS, ROSTER, type CharacterId } from '@/story/comp
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { worldHero } from '@/world/hero';
 import { useWorldStore } from '@/world/store';
+import { showDialog } from '@/components/dialog';
 
 const COLUMNS = 4;
 
@@ -75,7 +76,7 @@ export default function TradeScreen() {
   const ready = giveList.length > 0 && getList.length > 0;
 
   const send = () =>
-    Alert.alert(
+    showDialog(
       `Offer ${friend.username} a trade?`,
       `You give: ${describeSide(giveList)}\nYou get: ${describeSide(getList)}\n\nThey have 3 days to answer.`,
       [
@@ -89,7 +90,7 @@ export default function TradeScreen() {
                 haptics.success();
                 router.back();
               })
-              .catch((e) => Alert.alert('Offer not sent', message(e)))
+              .catch((e) => showDialog('Offer not sent', message(e)))
               .finally(() => setSending(false));
           },
         },
@@ -213,12 +214,8 @@ function Picker({
                   <Text style={styles.cellName} numberOfLines={1}>
                     {COMPANIONS[c.id].name}
                   </Text>
-                  <Text style={[styles.cellMeta, { color: RARITY_TIERS[c.rarity].color }]}>
-                    {'★'.repeat(c.rarity)}
-                  </Text>
-                  <Text style={[styles.cellMeta, n > 0 && { color }]}>
-                    {n > 0 ? `${n} of ${has}` : `×${has}`}
-                  </Text>
+                  <Text style={[styles.cellMeta, { color: RARITY_TIERS[c.rarity].color }]}>{'★'.repeat(c.rarity)}</Text>
+                  <Text style={[styles.cellMeta, n > 0 && { color }]}>{n > 0 ? `${n} of ${has}` : `×${has}`}</Text>
                 </Pressable>
               );
             })}

@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
 
 import { haptics } from '@/haptics';
 import { useGameStore } from '@/store';
@@ -8,6 +7,7 @@ import { useSession } from '@/store/session';
 
 import { collectInviteRewards } from './api';
 import { useSocial } from './store';
+import { showDialog } from '@/components/dialog';
 
 /** Picks `count` random characters the player hasn't unlocked yet. */
 export function pickGifts<T>(lockedIds: T[], count: number, random = Math.random): T[] {
@@ -34,7 +34,8 @@ export function pickFiveStars<T extends string>(
     random,
   );
   const copies: T[] = [];
-  while (wake.length + copies.length < count && five.length > 0) copies.push(five[Math.floor(random() * five.length)].id);
+  while (wake.length + copies.length < count && five.length > 0)
+    copies.push(five[Math.floor(random() * five.length)].id);
   return { wake, copies };
 }
 
@@ -67,7 +68,7 @@ export function useInviteRewards() {
       );
       const who = friends.map((f) => `@${f}`).join(', ');
       haptics.celebrate();
-      Alert.alert(
+      showDialog(
         friends.length === 1 ? 'A friend answered your call' : `${friends.length} friends answered your call`,
         `${who} joined the Second 100. ${friends.length === 1 ? 'A 5★ hero is' : `${friends.length} 5★ heroes are`} waking up…`,
         [

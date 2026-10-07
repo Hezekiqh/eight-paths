@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 import { ClassChips } from '@/components/class-chips';
 import { ModalHeader } from '@/components/modal-header';
@@ -11,6 +11,7 @@ import { useGameStore } from '@/store';
 import { useGoals, useToday } from '@/store/hooks';
 import { GOAL_XP } from '@/store/rewards';
 import { colors, fonts, spacing, windowStyle, theme } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 const keyToDate = (key: string) => {
   const [y, m, d] = key.split('-').map(Number);
@@ -42,7 +43,7 @@ export default function GoalEditor() {
   const remove = () => {
     if (!existing) return;
     const earned = existing.completedAt && existing.dimension ? ` The ${GOAL_XP} XP it earned goes with it.` : '';
-    Alert.alert('Delete this goal?', `This can't be undone.${earned}`, [
+    showDialog('Delete this goal?', `This can't be undone.${earned}`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',

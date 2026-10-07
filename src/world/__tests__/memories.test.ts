@@ -74,7 +74,7 @@ describe('hidden memories', () => {
   it('never names who the children grow up to be', () => {
     for (const m of MEMORIES) {
       const text = m.lines.join(' ');
-      expect(text).not.toMatch(/Monarch|Keeper|Entity|Chosen/i);
+      expect(text).not.toMatch(/Monarch|Keeper|Entity|Chosen|Kairos/i);
     }
   });
 
@@ -115,7 +115,7 @@ describe('hidden memories', () => {
     it('tell what he remembers and no more: no Keeper, no cocoon, no king behind the shadows', () => {
       const text = [...school.lines, ...forest.lines].join(' ');
       expect(text).not.toMatch(/Keeper|cocoon|Kaldor|uncle|colours|king's men|sent/i);
-      expect(text).toContain("Yearning for battle doesn't make one a great warrior.");
+      expect(text).toContain('Is that what you believe, or what you were told?');
       expect(text).toContain('The responsibilities of the crown are heavy.');
       expect(forest.lines.join(' ')).toMatch(/Shadows/);
     });

@@ -36,7 +36,8 @@ how long ago the old king died is five hundred years.
 ## The old king's death (the crypt's flashback)
 
 The players can see this flashback in the old king's crypt, under the chapel: it's the chaplain's sealed account
-(`old-kings-crypt.json`, tile `L`). The Story scroll (`tale.ts`) only ever tells what people *believe*.
+(`old-kings-crypt.json`, tile `L`). The Lore scroll (`tale.ts`) tells the true story too, murder included (author,
+Oct 7, 2026), but never what the queen was, nor who sent the men to the art teacher.
 
 - **What people believe:** the queen wanted war on the mages, and King Osric, who listened to her in everything, made
   ready. Then the queen went missing, and the king shut himself away. Rumours said he'd gone mad. He hesitated over
@@ -58,11 +59,22 @@ The players can see this flashback in the old king's crypt, under the chapel: it
   1. Kaldor was the second-born. He believed the throne had been stolen from him, and that he'd make the better king.
   2. The Shadow Monarch was listening. He promised Kaldor power over the dead and eternal youth.
   3. Using a shadow ability, Kaldor appeared in the king's bedroom. The king, lying awake, recognised his brother.
-  4. Kaldor killed him. Then, with his power over the dead, he worked the king's corpse to write him in as successor
-     ("Should I die, my brother Kaldor shall be king.").
-  5. A month later the king's death was announced.
-- **The condition:** Kaldor got everything he wanted: the money, the wealth, the fame, the women. All of it came under one
-  condition. He must strengthen his army, but never, under any circumstances, use it for war. It is for defence
+  4. Kaldor killed him. Then, with his power over the dead, he raised the king's corpse and worked it like a puppet: the
+     "king" named Kaldor his successor ("Should I die, my brother Kaldor shall be king.") and delayed the war (author,
+     Oct 7, 2026).
+  5. **(author, Oct 7, 2026, replaces "a month later")** For **two years** the puppet king raises taxes, makes every boy
+     train for war from 12, and passes laws setting the soldiers above everyone who doesn't serve. The people are
+     outraged. Bored of his toy, Kaldor **stages an assassination** and plays the kingdom's hero, spreads lies about the
+     king's vices, the queen's motives and the missing prince, and repeals the laws, all but the training. The people
+     think things are better and accept him. In the bedchamber: "Don't worry, my dear brother. About the war. About the
+     queen. You can rest easy now."
+  - **The master's question** (replaces the older exchange): Brannoc says yearning for war is what makes a true warrior;
+    the master smiles, "Is that what you believe, or what you were told?", and returns to his work.
+    Brannoc sits with the words through the night; **the next morning he finds his master dead**, runs into the woods
+    and never returns (author, Oct 7, 2026).
+- **The conditions:** Kaldor got everything he wanted: the money, the wealth, the fame, the women. The Shadow Monarch granted
+  his powers on two conditions (author, Oct 7, 2026): "Build the strongest army you can. Do not go to war
+  without my say." It is for defence
   only.
 
 ### 🔒 The queen
@@ -132,7 +144,7 @@ Most of this is **Told** over Brannoc's arc, through the places in the Season 1 
   great warrior. The teacher told him he *was* a great warrior: yearning for battle doesn't make one a great warrior.
   B didn't understand. B told him his mother and father wanted him to lead their army. The teacher smiled: "The
   responsibilities of the crown are heavy." (Fade to black. The school is closed. The teacher has been attacked, and is
-  nearly dead.)
+  nearly dead. He dies before morning: author, Oct 7, 2026.)
 - That is what made B flee into **the forest**. Shadows found him there and surrounded him, and that is the last thing he
   remembers. 🔒 The Keeper caught him in a cocoon, and he slept five hundred years.
 - 🔒 **Who did it** (author, Oct 7, 2026): the Shadow Monarch manipulated Kaldor into removing the prince, to make Kaldor

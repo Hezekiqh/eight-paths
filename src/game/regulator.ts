@@ -5,8 +5,10 @@
  * storage: the bar is replayed from the moment the player started, so
  * changing a past answer just changes the result.
  *
- * Tone: a slip is data, not a verdict. Big spikes sting, but a good day or
- * two should always bring the bar back.
+ * Tone: it's about keeping your Dopamine Baseline steady, never about
+ * failing. Words like "slip", "clean" or "bad" stay out of what the player
+ * reads: days are steady or have spikes, and a good day or two always brings
+ * the bar back.
  */
 
 import { addDays } from './dates';
@@ -50,7 +52,8 @@ export const DEFAULT_STIMULI: Stimulus[] = [
   { id: 'nicotine', name: 'Nicotine / vaping', severity: 8 },
   { id: 'short-video', name: 'Short-form video', severity: 7 },
   { id: 'alcohol', name: 'Alcohol', severity: 7 },
-  { id: 'weed', name: 'Weed', severity: 6 },
+  { id: 'dating-apps', name: 'Dating apps', severity: 6 },
+  { id: 'weed', name: 'Marijuana', severity: 6 },
   { id: 'fast-food', name: 'Fast food', severity: 4 },
   { id: 'sugar', name: 'Sugar / sweets', severity: 3 },
 ];
@@ -230,6 +233,10 @@ export const STIMULUS_NOTES: Record<string, { short: string; more: string }> = {
     short: 'Loosens you up tonight, and leaves you lower tomorrow.',
     more: 'Alcohol lifts mood at first, then the brain rebounds the other way: poorer sleep, more anxiety and a flatter mood the next day. Many people find the next morning is the clearest place to see its real cost.',
   },
+  'dating-apps': {
+    short: 'Swipe, match, wait. Every buzz is a maybe.',
+    more: 'Matches and messages arrive at random, and not knowing when the next one comes keeps you checking. An endless stack of profiles can make one real conversation feel like less than it is. A set time of day for the apps keeps them from filling the rest.',
+  },
   weed: {
     short: 'Takes the edge off, and the edge of motivation with it.',
     more: 'Regular use can blunt how rewarding everyday things feel, and make it easier to sit out of things you used to enjoy. Sleep and dreams often change for a while after cutting back; that settles.',
@@ -250,5 +257,5 @@ export const STIMULUS_NOTES: Record<string, { short: string; more: string }> = {
 
 export const CUSTOM_NOTE = {
   short: 'One you named yourself. You know its pull better than anyone.',
-  more: 'Watch for the moment the urge shows up: the time of day, the feeling, the place. That moment is where the change happens, not the slip itself.',
+  more: 'Watch for the moment the urge shows up: the time of day, the feeling, the place. That moment is where you can steady your baseline.',
 };

@@ -22,11 +22,19 @@ import { useClassInfo, usePlayer, useToday, useTodayQuests, useTutorialQuest } f
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 import type { CharacterId } from '@/story/companions';
 import { useTour, useTourScroller, useTourTarget } from '@/tutorial/tour';
+import { DAILY_RESTORE_CAP, HP_PER_HABIT, MAX_HP } from '@/game/regulator';
+import { useHp, useRegulatorActive } from '@/regulator/hooks';
 
 /** Lets Today appear before a quest marked done from a notification celebrates. */
 const DONE_ACTION_DELAY_MS = 600;
 
-type Banner = { key: string; dimension: Dimension; gain: XpGain; milestone: Milestone | null };
+type Banner = {
+  key: string;
+  dimension: Dimension;
+  gain: XpGain;
+  milestone: Milestone | null;
+  hp: { before: number; after: number } | null;
+};
 
 export default function TodayScreen() {
   const today = useToday();
@@ -38,6 +46,8 @@ export default function TodayScreen() {
   const toggleQuest = useGameStore((s) => s.toggleQuest);
   const completeTutorial = useGameStore((s) => s.completeTutorial);
   const setKeeperHold = useSession((s) => s.setKeeperHold);
+  const regulatorOn = useRegulatorActive();
+  const { hp, todayRestore } = useHp(today);
 
   const [banner, setBanner] = useState<Banner | null>(null);
   const [levelUp, setLevelUp] = useState<{ characterId: CharacterId; level: number } | null>(null);
@@ -61,6 +71,9 @@ export default function TodayScreen() {
   }, [touring, beginTour]);
 
   const onToggle = (questId: string) => {
+    // What this habit gives back to the Dopamine Baseline (DB) bar, from the bar as it stands before it (see hpEvents):
+    // a habit's worth, up to the day's limit and never past full.
+    const hpGain = regulatorOn ? Math.max(0, Math.min(HP_PER_HABIT, DAILY_RESTORE_CAP - todayRestore, MAX_HP - hp)) : 0;
     const outcome = toggleQuest(questId, today);
     if (outcome.kind === 'completed') {
       // The big double thump is saved for every tenth overall level, so
@@ -76,6 +89,7 @@ export default function TodayScreen() {
         dimension: outcome.dimension,
         gain: outcome.gain,
         milestone: outcome.milestone,
+        hp: hpGain > 0 ? { before: hp, after: hp + hpGain } : null,
       });
       // Only for someone already awake: the first habit levels Quill before they've even hatched.
       const levelled = outcome.characterLevelUp;
@@ -128,6 +142,7 @@ export default function TodayScreen() {
   return (
     <View style={styles.flex}>
       <Screen
+        title="Today"
         scrollRef={scroller.ref}
         onScroll={scroller.onScroll}
         action={
@@ -158,8 +173,8 @@ export default function TodayScreen() {
           </View>
         ) : (
           <>
-            {/* Your level and (with the Dopamine Regulator on) your Health Points, over your graph and habits. */}
-            <PlayerCard today={today} compact />
+            {/* You: name, level, XP and (with the Dopamine Regulator on) Dopamine Baseline, over your graph and habits. */}
+            <PlayerCard today={today} />
             <SurveyPrompt today={today} />
             <View ref={radarRef} collapsable={false}>
               <RadarCard today={today} classInfo={classInfo} />
@@ -223,6 +238,7 @@ export default function TodayScreen() {
           dimension={banner.dimension}
           gain={banner.gain}
           milestone={banner.milestone}
+          hp={banner.hp}
           onDone={onBannerDone}
         />
       )}

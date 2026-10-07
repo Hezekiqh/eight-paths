@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ModalHeader } from '@/components/modal-header';
 import { useGameStore } from '@/store';
 import { useClassInfo } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 /** Paste a backup made with "Back up progress" to restore it on this phone. */
 export default function RestoreBackup() {
@@ -27,10 +28,14 @@ export default function RestoreBackup() {
 
   const confirm = () => {
     if (!hasProgress) return restore();
-    Alert.alert('Replace your progress?', "Everything on this phone will be replaced by the backup. This can't be undone.", [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Replace', style: 'destructive', onPress: restore },
-    ]);
+    showDialog(
+      'Replace your progress?',
+      "Everything on this phone will be replaced by the backup. This can't be undone.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Replace', style: 'destructive', onPress: restore },
+      ],
+    );
   };
 
   return (

@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import {
@@ -19,6 +19,7 @@ import { haptics } from '@/haptics';
 import { useGameStore } from '@/store';
 import { useHabitStats, useToday } from '@/store/hooks';
 import { colors, fonts, radius, spacing } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -85,7 +86,7 @@ export default function HabitSheet() {
   const todayDay = month === monthOf(today) ? days.find((d) => d.date === today) : undefined;
 
   const skip = () =>
-    Alert.alert(
+    showDialog(
       `Skip "${quest.title}" today?`,
       "It's erased from today: no XP, and your streak is left alone. This can't be undone.",
       [

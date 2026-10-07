@@ -33,8 +33,9 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
         {({ pressed }) => (
           <Roll style={pressed && { opacity: 0.8 }}>
             <Text style={styles.number}>2</Text>
-            <Text style={styles.caption}>
-              Memories · {found} of {SEASONS * PER_SEASON}
+            <Text style={styles.caption}>Memories</Text>
+            <Text style={styles.count}>
+              {found} of {SEASONS * PER_SEASON} found
             </Text>
             <Text style={styles.toggle}>{open ? 'roll up ▴' : 'unroll ▾'}</Text>
           </Roll>
@@ -44,8 +45,8 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
         <>
           <View style={styles.sheet}>
             <Text style={styles.how}>
-              Memories hide in quiet corners of the Other World, four each season. They only shimmer once your habits
-              are strong enough to remember them.
+              Memories lie hidden in the quiet corners of the Other World, four in every season. Only when your habits
+              grow strong enough to remember them do they shimmer into sight.
             </Text>
             {Array.from({ length: SEASONS * PER_SEASON }, (_, i) => {
               const season = Math.floor(i / PER_SEASON) + 1;
@@ -101,7 +102,8 @@ const ROD = 14;
 
 const styles = StyleSheet.create({
   number: { color: colors.accent, fontFamily: fonts.medieval, fontSize: 40, lineHeight: 46 },
-  caption: { color: colors.text, fontFamily: fonts.medieval, fontSize: 16 },
+  caption: { color: colors.text, fontFamily: fonts.medieval, fontSize: 18 },
+  count: { color: colors.textMuted, fontFamily: fonts.medieval, fontSize: 14 },
   toggle: { color: colors.textMuted, fontFamily: fonts.ancientItalic, fontSize: 13, marginTop: 2 },
   sheet: {
     marginHorizontal: ROD / 2,

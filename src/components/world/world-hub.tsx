@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenTitle } from '@/components/screen';
 import { Segmented } from '@/components/segmented';
 import { SettingsPanel } from '@/components/settings-panel';
 import { LoreScroll } from '@/components/world/lore-scroll';
@@ -13,6 +14,7 @@ import { useTourScroller, useTourTarget } from '@/tutorial/tour';
 import { COMPANIONS, type CharacterId } from '@/story/companions';
 import { useGameStore } from '@/store';
 import { useWorldStore } from '@/world/store';
+import { showDialog } from '@/components/dialog';
 
 const TABS = [
   { value: 'world', label: 'Other World' },
@@ -43,6 +45,7 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
   // The Keeper's tour ends here, at the door out.
   const scroller = useTourScroller();
   const playRef = useTourTarget('step-outside', scroller);
+  const settingsRef = useTourTarget('regulator', scroller);
   const { ref: scrollRef, onScroll } = scroller;
   if (asked !== lastAsked) {
     setLastAsked(asked);
@@ -51,13 +54,12 @@ export function WorldHub({ onPlay }: { onPlay: () => void }) {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView
-        ref={scrollRef}
-        onScroll={onScroll}
-        scrollEventThrottle={32}
-        contentContainerStyle={styles.content}>
-        <Text style={styles.title}>OTHER WORLD</Text>
-        <Segmented options={TABS} value={tab} onChange={setTab} color={colors.accent} />
+      <ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={32} contentContainerStyle={styles.content}>
+        <ScreenTitle title="Other World" />
+        {/* The Keeper's tour points here for Settings and the Dopamine Regulator inside it. */}
+        <View ref={settingsRef} collapsable={false}>
+          <Segmented options={TABS} value={tab} onChange={setTab} color={colors.accent} />
+        </View>
 
         {tab === 'settings' ? (
           <SettingsPanel />
@@ -87,7 +89,7 @@ function Play({ started, onPlay }: { started: boolean; onPlay: () => void }) {
         onPlay();
       }}
       style={({ pressed }) => [styles.play, pressed && { opacity: 0.8 }]}>
-      <Text style={styles.playLabel}>{started ? '▶︎  JUMP BACK IN' : '▶︎  STEP OUTSIDE'}</Text>
+      <Text style={styles.playLabel}>{started ? '▶︎  JUMP BACK IN' : '▶︎  PLAY'}</Text>
       <Text style={styles.playHint}>Turn your phone sideways</Text>
     </Pressable>
   );
@@ -99,7 +101,7 @@ function Asleep({ id }: { id: CharacterId }) {
   return (
     <View style={styles.asleep} accessible>
       <Text style={styles.asleepLabel}>{name.toUpperCase()} IS ASLEEP</Text>
-      <Text style={styles.how}>Finish your first habit to wake {name}. Then you can step outside.</Text>
+      <Text style={styles.how}>Finish your first habit to wake {name}. Then you can play.</Text>
     </View>
   );
 }
@@ -109,7 +111,7 @@ function Restart({ started }: { started: boolean }) {
   if (!started) return null;
   const confirm = () => {
     haptics.tap();
-    Alert.alert(
+    showDialog(
       'Restart the Other World?',
       "You'll start again on the Archive floor. Every place found, story choice, Heart Piece and lore page in the Other World is forgotten. Your habits, levels and heroes stay. This can't be undone.",
       [
@@ -139,8 +141,7 @@ function Restart({ started }: { started: boolean }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: 120 },
-  title: { color: colors.accent, fontFamily: fonts.bold, fontSize: 36, letterSpacing: 2 },
+  content: { padding: spacing.lg, gap: spacing.md, paddingBottom: 120 },
   play: {
     borderWidth: 3,
     borderColor: colors.frame,

@@ -2,7 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { haptics } from '@/haptics';
@@ -13,6 +13,7 @@ import { useGameStore } from '@/store';
 import { useGoals, useObjectives, useToday } from '@/store/hooks';
 import type { ObjectiveView } from '@/store/selectors';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { showDialog } from '@/components/dialog';
 
 type Category = 'daily' | 'weekly' | 'personal';
 
@@ -45,7 +46,7 @@ export default function QuestBoardScreen() {
     if (!reward) return;
     if (reward.big) haptics.celebrate();
     else haptics.success();
-    Alert.alert(reward.title, reward.detail);
+    showDialog(reward.title, reward.detail);
   };
 
   const waiting = (key: Category) =>
