@@ -1,6 +1,16 @@
-import { MARCH_HEAD, marchPoses, newMarch } from '../march';
+import { GONE, MARCH_HEAD, marchPoses, newMarch } from '../march';
 import { MAPS, TILE } from '../maps';
-import { brannocBolts, escortIn, escortStand, guardsLeave, shovedIn } from '../dungeon';
+import {
+  CELL_DOORS,
+  brannocBolts,
+  brannocShuffles,
+  escortIn,
+  escortStand,
+  guardsLeave,
+  prisonersLeave,
+  shovedIn,
+  toTheCells,
+} from '../dungeon';
 
 const at = (x: number, y: number) => [x * TILE + TILE / 2, y * TILE + TILE - 2];
 
@@ -19,6 +29,13 @@ describe('a march', () => {
     expect(marchPoses(m, 2).done).toBe(false);
     expect(end.poses[0][6]).toBe(0);
   });
+  it("is gone once there, for whoever's leaving (up a ladder), and walks there like anyone else", () => {
+    const m = newMarch([{ row: 3, path: [[1, 1], [4, 1]], face: GONE }]);
+    const mid = marchPoses(m, 0.5).poses[0];
+    expect(mid[7]).toBe(0);
+    expect(mid[1]).toBe(3);
+    expect(marchPoses(m, 5).poses[0][7]).toBe(1);
+  });
   it('carries a snot bubble for whoever walks it asleep', () => {
     const m = newMarch([{ row: 3, path: [[1, 1], [2, 1]], snot: true }, { row: 4, path: [[5, 5]] }]);
     const { poses } = marchPoses(m, 0.1);
@@ -35,21 +52,95 @@ describe('the escort to the cell', () => {
     ['shoved', shovedIn(23)],
     ['out', guardsLeave(23)],
     ['brannoc', brannocBolts(0)],
+    ['brannoc, from beside him', brannocBolts(0, [3, 4])],
+    ['brannoc, from the back', brannocBolts(0, [3, 3])],
+    ['brannoc, you in the way', brannocBolts(0, [5, 4])],
+    ['the prisoners', prisonersLeave({ mott: 1, nails: 2, silas: 3 })],
   ])('%s: every path runs in straight lines over floor (or the doors it goes through)', (_, actors) => {
     for (const a of actors)
       a.path.forEach(([x, y], i) => {
         const tile = cells.tiles[y][x];
-        // the cell door (4) and the bars Brannoc goes through (2) are walked through in the scene
-        expect([x, y, open.has(tile) || tile === '4' || tile === '2']).toEqual([x, y, true]);
+        // the cell doors (4, p), the bars Brannoc goes through (2) and the ladder up (1) are walked through
+        expect([x, y, open.has(tile) || ['4', '2', 'p', '1'].includes(tile)]).toEqual([x, y, true]);
         if (i > 0) {
           const [px, py] = a.path[i - 1];
           expect(px === x || py === y).toBe(true);
         }
       });
   });
+  it("Brannoc never runs through you, and you're never moved more than a step", () => {
+    for (const you of [
+      [3, 4],
+      [3, 3],
+      [4, 4],
+      [2, 3],
+      [5, 3],
+      [5, 4],
+      [6, 4],
+    ] as [number, number][]) {
+      const [run, me] = brannocBolts(0, you);
+      const end = me.path[me.path.length - 1];
+      expect(me.path[0]).toEqual(you);
+      expect(Math.abs(end[0] - you[0]) + Math.abs(end[1] - you[1])).toBeLessThanOrEqual(1);
+      // every tile he crosses, on each straight run
+      const crossed = new Set<string>();
+      run.path.forEach(([x, y], i) => {
+        if (i === 0) return crossed.add(`${x},${y}`);
+        const [px, py] = run.path[i - 1];
+        for (let k = 0; k <= Math.abs(x - px) + Math.abs(y - py); k++)
+          crossed.add(`${px + Math.sign(x - px) * (px === x ? 0 : k)},${py + Math.sign(y - py) * (py === y ? 0 : k)}`);
+      });
+      expect([you, crossed.has(end.join())]).toEqual([you, false]);
+    }
+  });
+  it('the prisoners go up the ladder clear of you, where the keys left you (not a tile above your head)', () => {
+    const [me] = toTheCells(4, 7);
+    const [x, y] = me.path[me.path.length - 1];
+    for (const a of prisonersLeave({ mott: 1, nails: 2, silas: 3 }))
+      for (const [px, py] of a.path) expect([px, py]).not.toEqual([x, y - 1]);
+  });
+  it("the prisoners come out of their own cells' doors, one at a time, never on the same tile", () => {
+    const leave = prisonersLeave({ mott: 1, nails: 2, silas: 3 });
+    const doors = leave.map((a) => [a.path[0][0], a.path[0][1] + 1]);
+    expect(doors.sort()).toEqual(CELL_DOORS.map((d) => [d.x, d.y]).sort());
+    const m = newMarch(leave);
+    for (let t = 0; t < 10; t += 0.05) {
+      const at = marchPoses(m, t)
+        .poses.filter((p) => p[7] === 0)
+        .map((p) => `${Math.round(p[3] / 4)},${Math.round(p[4] / 4)}`);
+      expect(new Set(at).size).toBe(at.length);
+    }
+  });
   it('ends with you inside the cell', () => {
     const you = shovedIn(23).find((a) => a.row === -1)!;
     expect(you.path[you.path.length - 1]).toEqual([6, 4]);
+  });
+});
+
+describe('Brannoc shuffling off after his swing', () => {
+  const pit = MAPS['the-pit'];
+  const free = (x: number, y: number) => pit.walkable.includes(pit.tiles[y]?.[x] ?? 'T');
+  it.each([
+    [15, 12],
+    [15, 14],
+    [12, 14],
+    [9, 14],
+    [16, 13],
+    [20, 9],
+  ])('goes round you at %i,%i, over sand, to the trapdoor', (x, y) => {
+    const [a] = brannocShuffles(0, [x, y], free);
+    expect(a.path[a.path.length - 1]).toEqual([7, 14]);
+    a.path.forEach(([px, py], i) => {
+      if (i === 0) return;
+      const [qx, qy] = a.path[i - 1];
+      expect(px === qx || py === qy).toBe(true);
+      for (let k = 0; k <= Math.abs(px - qx) + Math.abs(py - qy); k++) {
+        const tx = qx + Math.sign(px - qx) * k;
+        const ty = qy + Math.sign(py - qy) * k;
+        expect([tx, ty]).not.toEqual([x, y]);
+        if (!(tx === 7 && ty === 14)) expect([tx, ty, free(tx, ty)]).toEqual([tx, ty, true]);
+      }
+    });
   });
 });
 

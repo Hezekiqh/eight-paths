@@ -82,6 +82,7 @@ import {
   SWING_STRIKE,
   SWING_WINDUP,
   SW_HY,
+  SW_RUN,
   bladeAt,
   SW_BX,
   SW_BY,
@@ -191,6 +192,10 @@ export type WorldSim = {
   focus: SharedValue<number[]>;
   /** Brannoc's Super Super Swing playing out (swing.ts SW_*). Empty: none. */
   swing: SharedValue<number[]>;
+  /** A cutscene draws you some other way (out cold on the sand, say): the lead isn't drawn. */
+  hideLead: SharedValue<boolean>;
+  /** A cutscene shakes the screen: how hard, in art pixels (the frame loop takes it, and sets it back to 0). */
+  quake: SharedValue<number>;
 };
 
 /** sim.focus: follow whoever leads the march. */
@@ -233,6 +238,8 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     walkTo: useSharedValue<number[]>([]),
     focus: useSharedValue<number[]>([]),
     swing: useSharedValue<number[]>([]),
+    hideLead: useSharedValue(false),
+    quake: useSharedValue(0),
   };
 }
 
@@ -863,7 +870,12 @@ export function WorldView({
       const round = (v: number) => Math.round(v * scale) / scale;
       // Brannoc's swing (swing.ts): the blow lands with a big shake, a puff and a spark on the warden.
       const sw = sim.swing.get();
-      if (sw.length > 0) {
+      const q = sim.quake.get();
+      if (q > 0) {
+        shake.set([FEEL.shakeTime * 3, q]);
+        sim.quake.set(0);
+      }
+      if (sw.length > 0 && sw[SW_RUN] !== 0) {
         const before = sw[SW_T];
         const st = before + realDt;
         if (before < SWING_STRIKE && st >= SWING_STRIKE) {
@@ -960,7 +972,8 @@ export function WorldView({
       if (march.length > MARCH_HEAD) {
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
-        for (const [row, facing, frame, x, y, walking, snot] of poses) {
+        for (const [row, facing, frame, x, y, walking, snot, gone] of poses) {
+          if (gone === 1) continue;
           if (row >= 0 && marchLead === null) marchLead = [x, y];
           // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
           if (row >= 0 && facing >= LYING) {
@@ -970,7 +983,7 @@ export function WorldView({
           }
           if (row >= 0) {
             // swinging: he leans back as he raises the blade, then lunges into the blow
-            const swingT = sw.length > 0 && row === sw[SW_ROW] ? sw[SW_T] : -1;
+            const swingT = sw.length > 0 && sw[SW_RUN] !== 0 && row === sw[SW_ROW] ? sw[SW_T] : -1;
             const lunge =
               swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
             const lx = facing === 2 ? -lunge : facing === 3 ? lunge : 0;
@@ -1053,7 +1066,7 @@ export function WorldView({
       // the lead goes last so they're drawn on top of a follower standing in the same spot;
       // just hurt, they blink until they can be hurt again; striking, they lean into the blow
       const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
-      if (!blink) {
+      if (!blink && !sim.hideLead.get()) {
         const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
         const f = sim.facing.get();
         const lx = f === 2 ? -lean : f === 3 ? lean : 0;
@@ -1318,7 +1331,7 @@ export function WorldView({
   const bladePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     const w = sim.swing.get();
-    if (w.length === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
+    if (w.length === 0 || w[SW_RUN] === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
     const dir = w[SW_FACE] === 2 ? -1 : 1;
     const [a] = bladeAt(w[SW_T]);
     const hx = w[SW_BX] + dir * 3;
@@ -1340,7 +1353,7 @@ export function WorldView({
   const hiltPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     const w = sim.swing.get();
-    if (w.length === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
+    if (w.length === 0 || w[SW_RUN] === 0 || w[SW_T] > SWING_STRIKE + 0.35) return path;
     const dir = w[SW_FACE] === 2 ? -1 : 1;
     const [a] = bladeAt(w[SW_T]);
     const hx = w[SW_BX] + dir * 3;
@@ -1353,7 +1366,7 @@ export function WorldView({
   const arcPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     const w = sim.swing.get();
-    if (w.length === 0) return path;
+    if (w.length === 0 || w[SW_RUN] === 0) return path;
     const [a, drawn] = bladeAt(w[SW_T]);
     if (drawn <= 0) return path;
     const dir = w[SW_FACE] === 2 ? -1 : 1;

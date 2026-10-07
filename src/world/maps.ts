@@ -97,6 +97,8 @@ export type NpcObject = {
   lying?: boolean;
   /** Awake and on their feet until this story flag is set; then out cold, flat on their back (Brannoc, fainting). */
   faintsAfter?: string;
+  /** Asleep on their feet (Zs, and a snot bubble if `snot`) until this flag is set: Brannoc after his swing. */
+  dozesUntil?: string;
   /** Standing somewhere else once this story flag is set (carried off to the side of the sand, say). */
   movesAfter?: { flag: string; x: number; y: number };
   /**
@@ -385,17 +387,18 @@ export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
 }
 
 /**
- * Everyone as the story has left them: out cold once they've fainted (`faintsAfter`), and wherever they were
- * moved to (`movesAfter`).
+ * Everyone as the story has left them: out cold once they've fainted (`faintsAfter`), asleep on their feet until
+ * they wake (`dozesUntil`), and wherever they were moved to (`movesAfter`).
  */
 export function withStoryPoses(map: WorldMap, flags: string[]): WorldMap {
-  if (!map.npcs.some((n) => n.faintsAfter || n.movesAfter)) return map;
+  if (!map.npcs.some((n) => n.faintsAfter || n.movesAfter || n.dozesUntil)) return map;
   const pose = (n: NpcObject): NpcObject => {
     let out = n;
     if (n.faintsAfter) {
       const fainted = flags.includes(n.faintsAfter);
       out = { ...out, asleep: fainted, lying: fainted };
     }
+    if (n.dozesUntil) out = { ...out, asleep: !flags.includes(n.dozesUntil) };
     if (n.movesAfter && flags.includes(n.movesAfter.flag)) out = { ...out, x: n.movesAfter.x, y: n.movesAfter.y };
     return out;
   };

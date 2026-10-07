@@ -24,6 +24,11 @@ export type Dialogue = {
   questions?: Question[];
   /** Said back when the player picks Goodbye, before the conversation closes. */
   farewell?: string[];
+  /**
+   * Cutscene cues: runs as each line starts, with its index and text (the camera turning to whoever speaks,
+   * someone fainting on the line that says so). Only for the conversation's own lines, not answers.
+   */
+  onLine?: (index: number, line: string) => void;
   /** Runs once the conversation closes (e.g. stepping through a door). */
   then?: () => void;
   /**
@@ -80,6 +85,11 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   useEffect(() => {
     felt.current = 0;
   }, [round, index]);
+  // The line's cue, as it starts (its own lines only: an answer restarts the count)
+  const onLine = dialogue.onLine;
+  useEffect(() => {
+    if (round === 0 && lines[index] !== undefined) onLine?.(index, lines[index]);
+  }, [round, index, lines, onLine]);
   const feelRumbles = useCallback(
     (upTo: number) => {
       // One step at a time: a ref bumped mid-expression (`rumbles[felt.current++]`) can be

@@ -40,7 +40,7 @@ export const SLEEPWALK_PACE = 2.2;
 
 /**
  * The scene on the UI thread (sim.swing): [seconds since the swing started, Brannoc's walker row, his feet x, y,
- * his facing, the warden's feet x, y, the middle of the banner he goes through x, y]. Empty: no swing.
+ * his facing, the warden's feet x, y, the middle of the banner he goes through x, y, running (SW_RUN)]. Empty: none.
  */
 export const SW_T = 0;
 export const SW_ROW = 1;
@@ -51,6 +51,8 @@ export const SW_WX = 5;
 export const SW_WY = 6;
 export const SW_HX = 7;
 export const SW_HY = 8;
+/** 1: the swing plays; 0: held at its start (the warden just standing there, before anyone swings). */
+export const SW_RUN = 9;
 
 /** The Kaloseum's banners (the-pit.png, scripts/world-art.mjs): each pole's top in art pixels; the cloth is 8x13. */
 export const PIT_BANNERS: [number, number][] = [

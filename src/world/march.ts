@@ -17,6 +17,8 @@ export const MARCH_ACTORS = 4;
 export const MARCH_HEAD = 5;
 /** A beat at the end, everyone standing, before the march is over. */
 const HOLD = 0.35;
+/** An actor's face for someone who's gone once they get there: up the ladder, out of sight. */
+export const GONE = 6;
 /** How fast a march walks unless told otherwise, in tiles per second (before the game's speed). */
 export const MARCH_PACE = 3;
 
@@ -27,7 +29,7 @@ export type Actor = {
   path: [number, number][];
   /**
    * 0 down, 1 up, 2 left, 3 right: which way to face once there. 4: out cold, flat on their back the whole way
-   * (Brannoc); 5: the same, carried, held up off the ground.
+   * (Brannoc); 5: the same, carried, held up off the ground. GONE (6): gone once there (up a ladder, out a door).
    */
   face?: number;
   /** Fast asleep the whole way, a snot bubble swelling at the nose (Brannoc sleepwalking to the warden). */
@@ -52,7 +54,7 @@ function facingOf(dx: number, dy: number, was: number): number {
 }
 
 /**
- * Where everyone is, `t` seconds in: one [row, facing, frame, x, y, walking (0/1), snot (0/1)] each, and whether
+ * Where everyone is, `t` seconds in: one [row, facing, frame, x, y, walking (0/1), snot (0/1), gone (0/1)] each, and whether
  * it's over (everyone arrived, and the beat after).
  */
 export function marchPoses(m: number[], t: number): { poses: number[][]; done: boolean } {
@@ -64,7 +66,8 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
   let i = MARCH_HEAD;
   for (let k = 0; k < count; k++) {
     const row = m[i];
-    const face = m[i + 1];
+    const gone = m[i + 1] === GONE;
+    const face = gone ? -1 : m[i + 1];
     const snot = m[i + 2];
     const n = m[i + 3];
     const pts = i + 4;
@@ -96,7 +99,8 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
     }
     if (walking === 0 && face >= 0) facing = face;
     longest = Math.max(longest, length);
-    poses.push([row, facing, walkFrame(t * speed, walking === 1), x, y, walking, snot]);
+    const there = t * speed >= length;
+    poses.push([row, facing, walkFrame(t * speed, walking === 1), x, y, walking, snot, gone && there ? 1 : 0]);
     i = pts + n * 2;
   }
   return { poses, done: t * speed >= longest + HOLD * speed };
