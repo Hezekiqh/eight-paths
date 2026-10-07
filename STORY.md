@@ -9,6 +9,13 @@ Every fact here is one of three kinds, and the game must keep them apart:
 - **Secret:** the author's canon, so every line stays consistent. **Never shown in Season 1**, not even as a hint
   unless the line says so. Secret sections are marked 🔒.
 
+## The silent hero (author, Oct 7, 2026)
+
+The character you walk as is **silent**, like Frisk in Undertale or a Pokémon trainer. They never speak, never think
+out loud, and never join the party's banter, **unless the author explicitly writes a line for them**. Party members
+talk among themselves and to you; you answer only through the choices you pick. Narration ("You turn to Brannoc.")
+is fine; invented thoughts in brackets and invented lines for the hero are not.
+
 ## Timeline
 
 It is **500 years** everywhere. Every mention of how long Kaldor has reigned, how long the soldiers have waited, or

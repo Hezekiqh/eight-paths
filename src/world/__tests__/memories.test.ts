@@ -89,11 +89,14 @@ describe('hidden memories', () => {
       expect(seasonMemory(1)!.id).toBe('schoolyard');
     });
 
-    it('play only with him in the party; without him, a thought; before the paintings hang, nothing', () => {
+    it('play only with him in the party; without him, a line of narration; before the paintings hang, nothing', () => {
       expect(memoryCall(school, [], false, ['brannoc'])).toBeNull();
       expect(memoryCall(school, [], true, ['brannoc', 'oren'])).toBe('play');
-      expect(memoryCall(school, [], true, ['oren'])).toEqual(['(Someone should see this. Someone who was here.)']);
-      expect(memoryCall(forest, [], true, ['oren'])?.at(-1)).toMatch(/^\(.*\)$/);
+      expect(memoryCall(school, [], true, ['oren'])).toEqual([
+        'The paintings hang in order. Nothing happens. The room seems to be waiting for someone who was here.',
+      ]);
+      // the hero is silent (STORY.md): narration, never an invented thought
+      expect(memoryCall(forest, [], true, ['oren'])?.at(-1)).not.toMatch(/^\(.*\)$/);
       expect(memoryCall(forest, [], true, ['brannoc'])).toBe('play');
       expect(memoryCall(forest, ['brannoc-forest'], true, ['brannoc'])).not.toBe('play');
     });

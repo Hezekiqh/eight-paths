@@ -30,6 +30,20 @@ const inStory = (id: CharacterId, world?: string[]) =>
  * saves) everyone. A new save's party lists all eight core companions from the
  * start, but only these are with you, so only these chime in or show up in scenes.
  */
+/**
+ * Who talks among themselves around you (banter, walking banter): the party with you, but never the one
+ * you're walking as. Your character is silent, like Frisk or a Pokémon trainer (author, Oct 7, 2026): they
+ * only think or speak where the author has written it in for them.
+ */
+export function chattersWithYou(
+  party: Record<Dimension, CharacterId>,
+  owned: Owned | null | undefined,
+  world: string[] | undefined,
+  walking: string,
+): CharacterId[] {
+  return partyWithYou(party, owned, world).filter((id) => id !== walking);
+}
+
 export function partyWithYou(
   party: Record<Dimension, CharacterId>,
   owned?: Owned | null,

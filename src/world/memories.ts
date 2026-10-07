@@ -81,7 +81,7 @@ export const MEMORIES: Memory[] = [
       hint: 'They came down off the wall. They go back up in an order.',
     },
     whose: 'brannoc',
-    waiting: ['(Someone should see this. Someone who was here.)'],
+    waiting: ['The paintings hang in order. Nothing happens. The room seems to be waiting for someone who was here.'],
     sets: 'brannoc-flashback',
     lines: [
       'The dust lifts, and the paint is wet again. Somewhere a bell goes for the end of lessons.',
@@ -116,7 +116,7 @@ export const MEMORIES: Memory[] = [
     waiting: [
       'The husk of an old cocoon, split down the middle and gone grey, half sunk into the earth.',
       'Whoever was in it left a long time ago.',
-      '(Someone ran this far. They would remember the rest.)',
+      'Someone ran this far. Whoever it was would remember the rest.',
     ],
     lines: [
       "The dead grass crunches. For a moment it's green, and it's night, and you are running.",

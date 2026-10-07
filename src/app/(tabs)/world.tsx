@@ -120,7 +120,7 @@ import {
   scenePending,
 } from '@/world/felix-maze';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
-import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
+import { chattersWithYou, partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
 import { MARCH_PACE, newMarch, type Actor } from '@/world/march';
 import { SPEED_RATE } from '@/world/speed';
@@ -1970,7 +1970,10 @@ function World({
                             setAjar([]);
                             playSound('slam');
                             setDialogue({
-                              lines: [...ESCORT_LINES.locked, ...(hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell)],
+                              lines: [
+                                ...ESCORT_LINES.locked,
+                                ...(hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell),
+                              ],
                               onLine: cornerCue,
                               then: () => sim.focus.set([]),
                             });
@@ -1991,7 +1994,22 @@ function World({
       }
     }, 450);
     return () => clearTimeout(timer);
-  }, [map, start, guardScene, passageSeen, hero, march, brannocOffer, faints, travel, aloneCue, sim, potholeCue, knockedCue, cornerCue]);
+  }, [
+    map,
+    start,
+    guardScene,
+    passageSeen,
+    hero,
+    march,
+    brannocOffer,
+    faints,
+    travel,
+    aloneCue,
+    sim,
+    potholeCue,
+    knockedCue,
+    cornerCue,
+  ]);
 
   const callFlags = useWorldStore((s) => s.flags);
   useEffect(() => {
@@ -2016,7 +2034,7 @@ function World({
         const game = useGameStore.getState();
         const chat = walkBanterFor(
           map.id,
-          partyWithYou(game.party, game.owned, w.flags),
+          chattersWithYou(game.party, game.owned, w.flags, hero),
           w.flags,
           Math.floor(sim.x.get() / TILE),
           Math.floor((sim.y.get() - 1) / TILE),
@@ -2033,7 +2051,7 @@ function World({
     };
     timer = setTimeout(check, 1500);
     return () => clearTimeout(timer);
-  }, [map, dialogue, cutscene, ringing, paused, bossOn, fightMap, sim]);
+  }, [map, dialogue, cutscene, ringing, paused, bossOn, fightMap, sim, hero]);
 
   return (
     <View style={styles.root}>
@@ -2464,7 +2482,11 @@ function useAct(
   const talk = useCallback(
     (thing: NpcObject, facing: number) => {
       const game = useGameStore.getState();
-      const banter = banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags));
+      const banter = banterFor(
+        map.id,
+        thing.id,
+        chattersWithYou(game.party, game.owned, useWorldStore.getState().flags, hero),
+      );
       // they turn to face you
       sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
       // talking to anyone writes their part of the story on the Story scroll (tale.ts)
@@ -2569,7 +2591,11 @@ function useAct(
       if (memory.sets) w.setFlag(memory.sets);
       playSound('quest');
       haptics.celebrate();
-      const after = banterFor(map.id, memory.id, party);
+      const after = banterFor(
+        map.id,
+        memory.id,
+        party.filter((id) => id !== hero),
+      );
       setDialogue({ lines: memory.lines, then: after.length > 0 ? () => setDialogue({ lines: after }) : undefined });
       return true;
     };
@@ -2621,7 +2647,7 @@ function useAct(
     // party members you have may chime in, after the person's own lines (see banter.ts)
     const game = useGameStore.getState();
     const banter = thing
-      ? banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags))
+      ? banterFor(map.id, thing.id, chattersWithYou(game.party, game.owned, useWorldStore.getState().flags, hero))
       : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const job = thing.job;
@@ -3043,7 +3069,7 @@ function useAct(
     const lines = map.examine[tile];
     // the party can have a word about what you're looking at, too (banter.ts, "tile:<letter>")
     const { party, owned } = useGameStore.getState();
-    const said = banterFor(map.id, `tile:${tile}`, partyWithYou(party, owned, useWorldStore.getState().flags));
+    const said = banterFor(map.id, `tile:${tile}`, chattersWithYou(party, owned, useWorldStore.getState().flags, hero));
     if (lines) setDialogue({ lines: [...lines, ...said] });
   }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
