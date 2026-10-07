@@ -31,7 +31,7 @@ export const TRAVELER_DIRECTIONS: Record<string, string[]> = {
   ],
   'kingdom-town': [
     'This is the Berserker Kingdom! North, up the castle road, is Kaldor himself, on the throne.',
-    "To get in there you'll want the whole town on your side, the whole party with you, and overall Lv 18. Ask Gert, by the lamps.",
+    "To get in there you'll want the whole town on your side, the whole party with you, and overall Lv 15. Ask Gert, by the lamps.",
     "East gate: Kaldorhold, the king's bazaar city. South gate: the Tithe Road, to the Broken Watch and the Field of Banners.",
     'And here in town: the Candle Inn, the forge, the chapel and the hedge maze. The gate out goes back to the March Road.',
   ],
