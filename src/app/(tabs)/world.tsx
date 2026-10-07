@@ -113,7 +113,8 @@ import {
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
-import { newMarch, type Actor } from '@/world/march';
+import { MARCH_PACE, newMarch, type Actor } from '@/world/march';
+import { SPEED_RATE } from '@/world/speed';
 import { BOSS_CUE, bossMoment } from '@/world/moments';
 import { noneLeft, practiceWarning, specialsLeft } from '@/world/specials';
 import { deedId } from '@/world/honor';
@@ -445,6 +446,8 @@ function World({
 }) {
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
+  const speed = useWorldStore((s) => s.speed);
+  const setSpeed = useWorldStore((s) => s.setSpeed);
   const savePosition = useWorldStore((s) => s.savePosition);
   const [start] = useState(() => startFor(useWorldStore.getState().position, hero));
   const xpNow = useWorldProgress();
@@ -719,7 +722,9 @@ function World({
     (actors: Actor[], then: () => void, tilesPerSecond?: number, linger = false) => {
       setCutscene(true);
       marchDone.current = then;
-      sim.march.set(newMarch(actors, tilesPerSecond, linger));
+      // the pause menu's speed hurries (or slows) the walk along with the dialogue
+      const rate = SPEED_RATE[useWorldStore.getState().speed];
+      sim.march.set(newMarch(actors, (tilesPerSecond ?? MARCH_PACE) * rate, linger));
     },
     [sim],
   );
@@ -1781,6 +1786,8 @@ function World({
           mapName={map.name}
           controls={controls}
           onControls={setControls}
+          speed={speed}
+          onSpeed={setSpeed}
           onResume={() => setPaused(false)}
           onOpenMap={() => {
             setYou({ x: sim.x.get(), y: sim.y.get() });

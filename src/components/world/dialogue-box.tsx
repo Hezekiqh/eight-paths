@@ -4,7 +4,7 @@ import { SymbolView, type SFSymbol } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { playSound } from '@/audio';
-import { TypewriterText } from '@/components/typewriter-text';
+import { LETTER_MS, TypewriterText } from '@/components/typewriter-text';
 import { Portrait } from '@/components/world/portrait';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
@@ -12,6 +12,8 @@ import type { Question } from '@/world/maps';
 import { shownQuestions } from '@/world/menu';
 import { portraitFor, splitSpeaker, voiceFor } from '@/world/portraits';
 import { isShouted, rumblesIn } from '@/world/rumbles';
+import { SPEED_RATE } from '@/world/speed';
+import { useWorldStore } from '@/world/store';
 import type { WalkerId } from '@/world/walkers';
 
 export type Dialogue = {
@@ -51,6 +53,7 @@ type Props = {
  */
 export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   const insets = useSafeAreaInsets();
+  const letterMs = LETTER_MS / SPEED_RATE[useWorldStore((s) => s.speed)];
   const [lines, setLines] = useState(dialogue.lines);
   /** Bumped per answer, so the typewriter starts fresh even at line 0. */
   const [round, setRound] = useState(0);
@@ -212,6 +215,7 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
             key={`${round}-${index}`}
             text={line}
             instant={skip}
+            letterMs={letterMs}
             style={styles.text}
             onDone={onTyped}
             onLetter={onLetter}

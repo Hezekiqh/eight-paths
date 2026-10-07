@@ -20,6 +20,7 @@ import { NOT_CONFIRMED, deleteEverything } from '@/store/delete-everything';
 import { useClassInfo, useLearnedReminderTime, usePlayer } from '@/store/hooks';
 import { colors, fonts, spacing, theme, windowStyle } from '@/theme';
 import { useTour } from '@/tutorial/tour';
+import { SPEED_HINTS, SPEEDS } from '@/world/speed';
 import { useWorldStore } from '@/world/store';
 
 /** "7:25 PM", in the phone's own clock style. */
@@ -57,6 +58,8 @@ export function SettingsPanel() {
   const replayTour = useTour((s) => s.replay);
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
+  const speed = useWorldStore((s) => s.speed);
+  const setSpeed = useWorldStore((s) => s.setSpeed);
   const profile = useSocial((s) => s.profile);
   const premium = usePremium((s) => s.premium);
 
@@ -97,6 +100,12 @@ export function SettingsPanel() {
           <Text style={styles.label}>Controls in the Other World</Text>
           <Segmented options={SCHEMES} value={controls} onChange={setControls} color={color} />
           <Text style={styles.hint}>{HINTS[controls]}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.controls}>
+          <Text style={styles.label}>Game speed in the Other World</Text>
+          <Segmented options={SPEEDS} value={speed} onChange={setSpeed} color={color} />
+          <Text style={styles.hint}>{SPEED_HINTS[speed]}</Text>
         </View>
         <View style={styles.divider} />
         <SettingsRow
