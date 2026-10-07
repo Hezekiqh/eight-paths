@@ -810,7 +810,7 @@ export const BANTER: Record<string, Banter[]> = {
       lines: ['YSOLDE: Ambrose and Daughter. Two names on the sign, and not one on a policy. I asked.'],
     },
   ],
-  'wc-bakery:bryony': [
+  'warrior-city:bryony': [
     {
       who: 'brannoc',
       lines: [
@@ -820,7 +820,7 @@ export const BANTER: Record<string, Banter[]> = {
       ],
     },
   ],
-  'wc-bakery:tile:w': [
+  'warrior-city:tile:w': [
     {
       who: 'brannoc',
       lines: [

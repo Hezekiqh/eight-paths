@@ -1139,7 +1139,11 @@ function drawOutdoor(map) {
     for (let tx = 0; tx < W; tx++) {
       const draw = OUTDOOR_ART[map.art?.[at(tx, ty)] ?? at(tx, ty)];
       if (!draw) throw new Error(`No outdoor art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+      // `at` is the letter on the map; `key` is the art it's drawn with (the map's `art` applied), for named keys
+      draw(g, tx * TILE, ty * TILE, {
+        at: (dx, dy) => at(tx + dx, ty + dy),
+        key: (dx, dy) => map.art?.[at(tx + dx, ty + dy)] ?? at(tx + dx, ty + dy),
+      });
     }
   return g;
 }
@@ -3358,7 +3362,6 @@ const MAPS = [
   'wc-barn',
   'wc-bank',
   'wc-vault',
-  'wc-bakery',
   'room-brannoc',
   'room-ysolde',
   'room-quill',
