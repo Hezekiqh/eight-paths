@@ -72,6 +72,7 @@ const REGION: Partial<Record<MapId, MapId>> = {
   forge: 'kingdom-town',
   chapel: 'kingdom-town',
   'old-kings-crypt': 'kingdom-town',
+  graveyard: 'kingdom-town',
   'hedge-maze': 'kingdom-town',
   'the-pit': 'warrior-city',
   'castle-hall': 'castle-grounds',

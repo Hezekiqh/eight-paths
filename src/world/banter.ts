@@ -309,6 +309,35 @@ export const BANTER: Record<string, Banter[]> = {
     { who: 'pip', lines: ['PIP: Five queens and a chandelier with opinions. I smell a ballad.'] },
   ],
   'castle-upper:queen-maren': [{ who: 'wren', lines: ['WREN: She does love him. Somebody ought to.'] }],
+  // ---- the Graveyard of Kings, behind the chapel (author, Oct 7, 2026). Brannoc never says whose stone it is.
+  'graveyard:lost-prince': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Lost in the woods. Never found.',
+        'BRANNOC: …Perhaps he was simply very good at hiding. Some people are. It is a skill.',
+        'BRANNOC: They have kept it very tidy. That is… kind of them. I should like to stand somewhere else now.',
+      ],
+    },
+  ],
+  'graveyard:empty-grave': [
+    {
+      who: 'wren',
+      lines: [
+        'WREN: Dug from the inside. Every one of them.',
+        "WREN: I've said the rites over a great many graves. They're meant to stay shut afterwards. That's rather the point.",
+      ],
+    },
+  ],
+  'graveyard:wardens-grave': [
+    {
+      who: 'moss',
+      lines: [
+        'MOSS: Chain snapped outwards. Whatever was in there pulled.',
+        "MOSS: Grass hasn't grown back over it. Grass grows back over everything. It doesn't want to, here.",
+      ],
+    },
+  ],
 };
 
 /**

@@ -599,7 +599,8 @@ function World({
       ),
     [map, liveFlags],
   );
-  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  // a sign already drawn in the map's picture (the graveyard's tombstones) gets no signpost on top
+  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign' && !o.inArt), [map]);
   const husks = useMemo(() => brokenCocoons(map.id, liveFlags), [map, liveFlags]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
@@ -1326,7 +1327,7 @@ function World({
       facing: FACINGS[sim.facing.get()],
     };
     setDialogue({
-      lines: [
+      lines: map.platesLines ?? [
         'With a clank, all three plates sink at once.',
         'Chains draw taut. Across the yard, the gate grinds up into the dark.',
       ],

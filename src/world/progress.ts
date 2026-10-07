@@ -84,6 +84,9 @@ export const WHOLE_PARTY: Requirement[] = (Object.keys(WHERE) as CharacterId[]).
   hint: WHERE[id],
 }));
 
+/** Set when the graveyard's three stones are back in their sockets: the gate in the crypt's mound opens. */
+export const GRAVEYARD_GATE = 'graveyard-gate';
+
 /** Never locked. */
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
@@ -466,6 +469,59 @@ export const EXITS: Exit[] = [
     label: 'The stair up',
     to: { map: 'chapel', x: 8, y: 5, facing: 'down' },
     needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The Graveyard of Kings, behind the chapel and over the crypt (author, Oct 7, 2026): a back door out
+  // of the chapel, and a second way down to the crypt once the three stones are back in their sockets.
+  {
+    id: 'chapel-graveyard',
+    from: 'chapel',
+    tile: '3',
+    label: 'The back door',
+    to: { map: 'graveyard', x: 15, y: 18, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'graveyard-chapel',
+    from: 'graveyard',
+    tile: '1',
+    label: 'The back door',
+    to: { map: 'chapel', x: 6, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'graveyard-crypt',
+    from: 'graveyard',
+    tile: 'G',
+    label: 'The iron gate in the mound',
+    to: { map: 'old-kings-crypt', x: 7, y: 2, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: GRAVEYARD_GATE,
+      label: 'Open the gate in the mound',
+      hint: 'Three sockets in front of it, and three stones rolled out of them.',
+    },
+    // a side way, like the hidden stair: the story doesn't need it, so the guide doesn't send you here
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'crypt-graveyard',
+    from: 'old-kings-crypt',
+    tile: '3',
+    label: 'The passage up',
+    to: { map: 'graveyard', x: 23, y: 4, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: GRAVEYARD_GATE,
+      label: 'Open the gate at the top',
+      hint: "It's shut fast from outside.",
+    },
     back: true,
     walk: true,
   },

@@ -20,6 +20,8 @@ const DARKER: Partial<Record<MapId, number>> = {
   'lower-barracks': 0.45,
   'sleeping-keep': 0.4,
   chapel: 0.4,
+  // dusk among the graves (author, Oct 7, 2026)
+  graveyard: 0.3,
   // the Kaloseum is open to the sky (author, Oct 6, 2026)
   'the-pit': 0,
   'candle-inn': 0.2,

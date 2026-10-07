@@ -12,6 +12,7 @@ import { cityArt } from './city-art.mjs';
 import { FLOORS, interiorArt } from './interior-art.mjs';
 import { mineArt } from './mine-art.mjs';
 import { ASH, castleArt } from './castle-art.mjs';
+import { graveyardArt } from './graveyard-art.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
 
@@ -1018,6 +1019,12 @@ for (const k of ['D', 'd']) {
     if ('HIu'.includes(m.at(0, -1))) return;
     plain(g, x, y, m);
   };
+}
+
+// The Graveyard of Kings (graveyard-art.mjs): named keys, so they can't clash with anyone's letters.
+for (const [k, v] of Object.entries(graveyardArt({ box, put, ellipse, hash }))) {
+  if (OUTDOOR_ART[k]) throw new Error(`graveyard-art: "${k}" is already drawn`);
+  OUTDOOR_ART[k] = v;
 }
 
 function drawOutdoor(map) {
@@ -2666,6 +2673,19 @@ const WALKERS = {
     hat: 'sun',
     glasses: true,
   },
+  // Mattock, the gravedigger behind the chapel (author, Oct 7, 2026): earth-brown, a flat cap's worth of grey
+  // hair, a spade in his hand. He fills the graves in every evening.
+  mattock: {
+    top: '#6A5A44',
+    shade: '#4E4232',
+    legs: '#3E3428',
+    boots: '#2A1E14',
+    belt: '#2A1E14',
+    skin: '#D0A07C',
+    hair: ['short', '#8A847C'],
+    beard: '#8A847C',
+    spade: true,
+  },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -2817,6 +2837,18 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       b(x, 15 + s, 1, 2, GRIP);
       p(x, 16 + s, skin); // the fist over the grip
     }
+  }
+
+  // a spade held upright at the side, blade down (Mattock)
+  if (w.spade) {
+    const HAFT = '#6A4A2A';
+    const BLADE = '#8A8A96';
+    const x = side ? (step === 0 ? 7 : step === 1 ? 6 : 8) - 2 : back ? 2 : 13;
+    b(x, 6, 1, 11, HAFT);
+    b(x - 1, 6, 3, 1, HAFT);
+    b(x - 1, 17, 3, 3, BLADE);
+    p(x, 20, BLADE);
+    if (!side) p(x, 16, skin);
   }
 
   if (w.beads && dir === 'down') {
@@ -3132,6 +3164,7 @@ const MAPS = [
   'forge',
   'chapel',
   'old-kings-crypt',
+  'graveyard',
   'hedge-maze',
   'the-pit',
   'castle-grounds',

@@ -16,6 +16,7 @@ import candleInnData from './maps/candle-inn.json';
 import forgeData from './maps/forge.json';
 import chapelData from './maps/chapel.json';
 import oldKingsCryptData from './maps/old-kings-crypt.json';
+import graveyardData from './maps/graveyard.json';
 import hedgeMazeData from './maps/hedge-maze.json';
 import thePitData from './maps/the-pit.json';
 import castleGroundsData from './maps/castle-grounds.json';
@@ -171,7 +172,15 @@ export type BoardObject = { id: string; type: 'board'; x: number; y: number };
 export type ChestObject = { id: string; type: 'chest'; x: number; y: number; item: string; lines: string[] };
 
 /** A sign or inscription standing on its own tile: A reads it. */
-export type SignObject = { id: string; type: 'sign'; x: number; y: number; lines: string[] };
+export type SignObject = {
+  id: string;
+  type: 'sign';
+  x: number;
+  y: number;
+  lines: string[];
+  /** Already drawn in the map's picture (a tombstone, say): no signpost on top (author, Oct 7, 2026). */
+  inArt?: boolean;
+};
 
 export type MapObject = NpcObject | BoardObject | ChestObject | SignObject;
 
@@ -188,6 +197,8 @@ type MapData = {
   pushable?: string;
   /** The story flag set when every pressure plate has a boulder on it. */
   platesFlag?: string;
+  /** What's said when they're all covered, if not the Drill Yard's portcullis. */
+  platesLines?: string[];
   /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
   talkThrough?: string[];
   enemies?: { kind: string; x: number; y: number }[];
@@ -219,6 +230,7 @@ export type WorldMap = {
   boulders: number[];
   plates: number[];
   platesFlag?: string;
+  platesLines?: string[];
   /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
   talkThrough?: string[];
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
@@ -282,6 +294,7 @@ function build(data: MapData, image: number, cheer?: number): WorldMap {
     boulders: data.pushable ? letterTiles(data.tiles, data.pushable) : [],
     plates: letterTiles(data.tiles, 'P'),
     platesFlag: data.platesFlag,
+    platesLines: data.platesLines,
     talkThrough: data.talkThrough,
     boss: data.boss,
     ladder: data.ladder,
@@ -399,6 +412,7 @@ export const MAPS = {
   forge: build(forgeData as MapData, require('@/assets/world/forge.png')),
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
+  graveyard: build(graveyardData as MapData, require('@/assets/world/graveyard.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
   'the-pit': build(
     thePitData as MapData,

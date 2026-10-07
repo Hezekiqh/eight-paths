@@ -144,6 +144,7 @@ const FIGHTS: MapId[] = [
   'the-pit',
   'kaldorium-maximus',
   'war-hall',
+  'graveyard',
 ];
 
 describe('fights', () => {
