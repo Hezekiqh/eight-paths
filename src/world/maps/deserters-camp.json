@@ -218,6 +218,19 @@
         "Under a tent peg marked NOT A TREASURE: a Heart Piece.",
         "The deserters are very consistent about their signs."
       ]
+    },
+    {
+      "id": "traveler-deserters-camp",
+      "type": "npc",
+      "x": 8,
+      "y": 5,
+      "sprite": "traveler",
+      "facing": "down",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
     }
   ]
 }

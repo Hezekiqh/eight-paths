@@ -228,6 +228,42 @@
           "Your name's on the wall. In chalk, but on the wall."
         ]
       }
+    },
+    {
+      "id": "traveler-warrior-city",
+      "type": "npc",
+      "x": 36,
+      "y": 24,
+      "sprite": "traveler",
+      "facing": "left",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
+    },
+    {
+      "id": "signpost-west",
+      "type": "sign",
+      "x": 3,
+      "y": 18,
+      "lines": [
+        "A signpost, all arms.",
+        "EAST: THE KALOSEUM. NORTH: THE DESERTERS' CAMP AND THE OLD FORT. SOUTH: THE ROYAL GARDEN, THE OLD MINE.",
+        "WEST: THE COURIER ROAD. Somebody has added, in chalk: MIND THE BOULDERS."
+      ]
+    },
+    {
+      "id": "signpost-plaza",
+      "type": "sign",
+      "x": 26,
+      "y": 23,
+      "lines": [
+        "A signpost outside the Kaloseum.",
+        "NORTH: THE ROAD NORTH, THE DESERTERS' CAMP, THE OLD FORT. (The gate's shut till you're overall Lv 10.)",
+        "SOUTH: THE ROYAL GARDEN, THE OLD MINE. WEST: THE COURIER ROAD.",
+        "EAST: THE BRIDGE TO THE MAGE KINGDOM. Under it, a smaller sign: UNDER CONSTRUCTION. SORRY."
+      ]
     }
   ]
 }

@@ -28,6 +28,7 @@ import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, overallLevelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
 import { advisedBy, brokenCocoons, cocoonAt, COCOON_WALL } from '@/world/cocoons';
+import { isTraveler, TRAVELER_FRIEND, travelerTalk } from '@/world/traveler';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
 import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet } from '@/world/meet';
@@ -1036,6 +1037,12 @@ function World({
   }, [setFlag, travel, hereNow, bridgeDown, sayAs, hero]);
   useEffect(() => {
     specialTalk.current = (thing) => {
+      // the Traveler: hello first, and directions only if you're nice about it (traveler.ts)
+      if (isTraveler(thing)) {
+        const { flags } = useWorldStore.getState();
+        setDialogue(travelerTalk(map.id, flags, () => setFlag(TRAVELER_FRIEND), setDialogue));
+        return true;
+      }
       if (
         map.id === 'castle-grounds' &&
         thing.id === GATE_GUARD &&
@@ -1046,7 +1053,7 @@ function World({
       }
       return false;
     };
-  }, [map, gateScene]);
+  }, [map, gateScene, setFlag]);
   const onWin = useCallback(() => {
     if (!map.boss) return;
     // The prison route (dungeon.ts): Brannoc is out cold on the sand while you fight.

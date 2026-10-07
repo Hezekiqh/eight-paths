@@ -832,6 +832,19 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "traveler-kingdom-town",
+      "type": "npc",
+      "x": 3,
+      "y": 11,
+      "sprite": "traveler",
+      "facing": "right",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
     }
   ],
   "art": {
