@@ -31,8 +31,8 @@
     "TT...............T.....g......g......g.T",
     "TT.....v.w.......T....g......gT.....g..T",
     "TT...............T..........g......g...T",
-    "TT...............T.........g......g..J.T",
-    "TTTTTTTTTTTTTTTTTT........T......g.....T",
+    "TTTT.............T.........g......g..J.T",
+    "TT..TTTTTTTTTTTTTT........T......g.....T",
     "<,,,.....................g......g......T",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT_TTTTTTTTT"
   ],
@@ -95,12 +95,14 @@
     {
       "id": "gate-guard-forest",
       "type": "npc",
-      "x": 18,
+      "x": 2,
       "y": 23,
       "sprite": "raider",
       "facing": "down",
       "name": "Woodguard Tolly",
-      "lines": ["Nobody goes in those woods under Lv 10. Things happen in there. I don't ask what."]
+      "lines": [
+        "Nobody goes in those woods under Lv 10. Things happen in there. I don't ask what."
+      ]
     },
     {
       "id": "garden-stone-1",
