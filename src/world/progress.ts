@@ -744,7 +744,7 @@ export const EXITS: Exit[] = [
     id: 'ring-maximus',
     from: 'ring-ward',
     tile: '8',
-    label: 'The great gate',
+    label: 'The yard gate',
     to: { map: 'kaldorium-maximus', x: 9, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,

@@ -81,7 +81,7 @@
       "name": "Edda",
       "lines": [
         "Tithe fighter. Never held an axe. I held a goose once. It went badly.",
-        "They say you do the ladder. Beat Hroth and the tithe might change. That's what people whisper."
+        "They say you're doing the sparring board. Beat Hroth and the tithe might change. That's what people whisper."
       ],
       "look": true,
       "questions": [
@@ -93,10 +93,10 @@
           ]
         },
         {
-          "ask": "Who whispers about the ladder?",
+          "ask": "Who whispers about the sparring board?",
           "answer": [
             "Joss heard it from a guard. The guard heard it from Tova. Tova hears everything.",
-            "If somebody beats Hroth, the ladder changes. Maybe the tithe too. Maybe it's just a nice thing people say in cells."
+            "If somebody beats Hroth, the yard changes. Maybe the tithe too. Maybe it's just a nice thing people say in cells."
           ]
         },
         {

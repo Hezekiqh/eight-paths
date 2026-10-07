@@ -54,6 +54,12 @@ and Brannoc calls him "Uncle".
   throne" and given five life sentences. That's why, in the Kaloseum, he says "After we were so lenient with your
   sentences…" and "If you thought 5 life sentences were bad, try 500!"
 
+- **Kaldorhold's Training Yard** (the map id is still `kaldorium-maximus`) is where the king's fighters train. It is
+  not an arena, and it has no announcer and no crowd. Yardmaster Holler runs it and does the shouting. The five-rung
+  ladder is now the yard's sparring board: the Twins Ugg, Matron Sorrel, who trains the youngest recruits, Fennick
+  the Unbitten, the Masked Brute (Captain Varga, on her day off), and Hroth, master-at-arms and top of the board for
+  forty years. Tithe fighters train there before the king sends them to the Kaloseum.
+
 ## Getting around
 
 - **The Traveler** (`traveler.ts`) is a running gag. He's a tourist ("a traveler, a tourist, an enthusiast for life")

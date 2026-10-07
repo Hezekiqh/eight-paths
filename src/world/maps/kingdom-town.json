@@ -305,14 +305,14 @@
       "name": "The Cage Guard",
       "lines": [
         "Back off. King's cages, king's prisoners.",
-        "I score their cheering at the Maximus. That one's a three. That one's a two.",
+        "I score their cheering at the Kaloseum. That one's a three. That one's a two.",
         "You? You look like a one."
       ],
       "questions": [
         {
           "ask": "Who's in the cages?",
           "answer": [
-            "People who wouldn't cheer at the Maximus. They'll cheer next time."
+            "People who wouldn't cheer at the Kaloseum. They'll cheer next time."
           ]
         },
         {

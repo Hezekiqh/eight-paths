@@ -71,7 +71,7 @@
       "The way back west, to the old town."
     ],
     "^": [
-      "North, toward the roar of the Kaldorium Maximus."
+      "North, toward the shouting of the Training Yard."
     ],
     ">": [
       "The east road, toward drums and shouting in time."
@@ -229,7 +229,7 @@
         {
           "ask": "What happens if you don't pay?",
           "answer": [
-            "The Kaldorium Maximus. Or the fighters' cells first. Then the Maximus.",
+            "The Training Yard. Or the fighters' cells first. Then the yard.",
             "Joss's whole camp owed a tithe. They sent Joss. He writes about clouds. I felt bad. I wrote it down anyway."
           ]
         },

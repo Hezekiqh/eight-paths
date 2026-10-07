@@ -219,15 +219,15 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
   }
 }
 
-/** Out of the Maximus after a bout, to the Ring Ward: the next rung waits for your next visit. */
+/** Out of the Training Yard after a spar, to the Ring Ward: the next rung waits for your next visit. */
 const RING_GATE = { map: 'ring-ward' as MapId, x: 15, y: 5, facing: 'down' as const };
 
-/** Winning a rung of the Maximus's ladder. Drafts, for the author. */
+/** Winning a rung of the Training Yard's sparring board (author, Oct 7, 2026: a training yard, no announcer). */
 function ladderScene(flag: string): Scene | null {
   const lines: Record<string, string[]> = {
     'maximus-1': [
       'Ugg goes down. Ogg, on the sideline, shouts "GET UP! No, stay down! No, get up!"',
-      'LADY HOLLER: RUNG ONE, CLIMBED! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
+      'YARDMASTER HOLLER: RUNG ONE! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
     ],
     'maximus-2': [
       'Matron Sorrel lowers her rattle, and pats you on the head.',
@@ -242,9 +242,9 @@ function ladderScene(flag: string): Scene | null {
       "CAPTAIN VARGA: …Don't tell the king I do this on my day off.",
     ],
     'maximus-5': [
-      'Grand Champion Hroth sits down in the sand, and laughs, and laughs.',
+      'Hroth, master-at-arms, sits down in the sand, and laughs, and laughs.',
       'HROTH: Forty years. Forty YEARS. Thank you. Thank you. I can retire.',
-      'Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.',
+      'Yardmaster Holler chalks your name at the top of the sparring board. The whole yard stops, and cheers, the real cheer, the one nobody ordered.',
       "HROTH: Find me at Tova's. I'll be the one smiling.",
     ],
   };
