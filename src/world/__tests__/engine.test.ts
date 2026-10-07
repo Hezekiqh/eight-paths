@@ -100,6 +100,17 @@ describe('party follow', () => {
     expect(extendTrail(trail, 10.3, 10.3)).toBe(trail);
   });
 
+  it('keeps the party the same distance back however fast the lead walks', () => {
+    // a pixel a frame up to four and a half (2× game speed): followers stand FOLLOW_GAP pixels back
+    for (const step of [1, 2.3, 4.5]) {
+      let trail = startTrail(0, 0);
+      for (let x = step; x <= 90; x += step) trail = extendTrail(trail, x, 0);
+      const last = trail[trail.length - 2];
+      expect(last - followerAt(trail, 1, RIGHT)[0]).toBeCloseTo(FOLLOW_GAP);
+      expect(last - followerAt(trail, 2, RIGHT)[0]).toBeCloseTo(FOLLOW_GAP * 2);
+    }
+  });
+
   it('steps through the walk cycle only while moving', () => {
     expect(walkFrame(7, false)).toBe(0);
     expect([0, 7, 14, 21].map((d) => walkFrame(d, true))).toEqual([0, 1, 0, 2]);

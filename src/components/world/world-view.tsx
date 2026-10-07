@@ -25,6 +25,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import {
   DOWN,
   PUSH_DELAY,
+  EXPLORE_SPEED,
   SPEED,
   byFeet,
   extendTrail,
@@ -269,6 +270,8 @@ type Props = {
   /** The boss lobs pillows (Baron Plush). */
   throws?: boolean;
   drowsy?: number;
+  /** The game speed (speed.ts): times EXPLORE_SPEED, outside a fight. */
+  pace?: number;
   /** The boss can only be held out against: over once an enemy has taken this many hp (fight.ts). */
   holdOut?: number;
   onWin?: () => void;
@@ -367,6 +370,7 @@ export function WorldView({
   boss = null,
   throws = false,
   drowsy = 0,
+  pace = 1,
   holdOut = 0,
   onWin,
   exit = null,
@@ -568,6 +572,9 @@ export function WorldView({
         iy = 0;
       }
       const push = Math.hypot(ix, iy);
+      // In a fight you walk at the pace the fights are tuned to; otherwise at the game speed.
+      const battling = !fighting.won && fighting.enemies.some((e) => e[E_ALIVE] === 1);
+      const walk = battling ? SPEED : EXPLORE_SPEED * pace;
       let moving = false;
       if (push > 0.25) {
         sim.facing.set(facingFor(ix, iy, sim.facing.get()));
@@ -576,7 +583,7 @@ export function WorldView({
         const against = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get()) !== -1;
         const [nx, ny] = against
           ? [sim.x.get(), sim.y.get()]
-          : move(grid, sim.x.get(), sim.y.get(), (ix / push) * SPEED * dt, (iy / push) * SPEED * dt);
+          : move(grid, sim.x.get(), sim.y.get(), (ix / push) * walk * dt, (iy / push) * walk * dt);
         const d = Math.abs(nx - sim.x.get()) + Math.abs(ny - sim.y.get());
         if (d > 0.001) {
           moving = true;

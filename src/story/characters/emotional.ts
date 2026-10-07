@@ -82,17 +82,16 @@ export const EMOTIONAL = {
     bio: 'A mime with a painted white face and a striped shirt who expresses absolutely everything without a word. Her silent hugs are, by general agreement, the best in the land.',
     quote: "(She mimes a hug. It's a very good one.)",
   },
-  teodor: {
+  silasseen: {
     number: 86,
     rarity: 1,
-    alignment: 'True Neutral',
-    name: 'Teodor',
-    fullName: 'Teodor Grim',
+    alignment: 'Chaotic Neutral',
+    name: 'Silas Seen',
     dimension: 'emotional',
     kind: 'recruit',
     unlockLevel: 23,
-    bio: 'A gravedigger in a long dark coat who whistles while he works and is completely at ease with sadness. People tell him things they have never told anyone.',
-    quote: 'Grief is just love with nowhere to go. I give it somewhere.',
+    bio: 'A pale face under a navy hood, and the calmest man in any cell he has ever been in. Silas left the king on read for twenty minutes and earned fifty life sentences for it. He answers in his own good time, if at all.',
+    quote: '...Touchy.',
   },
   nell: {
     number: 43,

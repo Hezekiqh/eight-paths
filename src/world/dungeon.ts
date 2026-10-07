@@ -46,6 +46,9 @@ export const escortIn = (guard: number): Actor[] => [
   { row: guard, path: [DOOR, [21, 6], [7, 6]], face: 1 },
 ];
 
+/** The door at the top of the guards' stair (tile 3): open while the guards bring you down, then locked behind them. */
+export const STAIR_DOOR = { x: 21, y: 1 };
+
 /** The cell door open (tile 4, at 6, 5): you're shoved in. */
 export const CELL_DOOR = { x: 6, y: 5 };
 export const shovedIn = (guard: number): Actor[] => [
@@ -84,6 +87,8 @@ export const ESCORT_LINES = {
   ],
   // walking as Brannoc himself: nobody in the corner but you
   alone: ['CLANG.', 'Stone walls. Iron bars. Straw that smells of other people.'],
+  // the guards gone back up the stair: they lock the door behind them
+  locked: ['Up the stair, the door slams. A key turns in the lock.'],
 };
 
 /** Brannoc, out of the corner: past you, through the bars, along the corridor and up the ladder. */
@@ -336,19 +341,20 @@ const ALONE_WARDEN = [
   'You have no idea what just happened.',
 ];
 
-// ---- The Maze Ward (author, Oct 3, 2026): three mazes, each with a hole in the wall by its way in
-// that skips it. They look like plain wall; a Mage sees them twinkle, one at Lv 6, two at Lv 8, all
-// three at Lv 10. Brannoc made them, running: they're Brannoc-shaped. Walking as Brannoc yourself,
-// they're just hidden passages (he hasn't run through anything yet).
+// ---- The Maze Ward (author, Oct 3, 2026; reworked Oct 7): three mazes, each harder than the last.
+// The first is the one Brannoc ran through: short, and it has a Brannoc-shaped hole in the wall by its
+// way in that skips it (a Mage of Lv 6 sees it twinkle; walking as Brannoc, it's just a hidden passage).
+// It also has the pothole, three steps in (below): you fall through to the cells, and climb back up.
+// After that the hole stays open, and there's a notch in the wall above it, so you walk round it.
+// The second and third mazes have no way round: you solve them.
 
 export type MazeHole = { tile: string; needs: Requirement; to: Arrival };
 
 const MAGE = (level: number): Requirement => ({ kind: 'path', dimension: 'intellectual', level });
 
+/** The Brannoc-shaped hole: the first maze only, out at the start of the second. */
 export const MAZE_HOLES: MazeHole[] = [
-  { tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 16, y: 6, facing: 'right' } },
-  { tile: '8', needs: MAGE(8), to: { map: 'dungeon-mazes', x: 30, y: 8, facing: 'right' } },
-  { tile: '0', needs: MAGE(10), to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' } },
+  { tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 14, y: 14, facing: 'right' } },
 ];
 
 /** What your hero thinks at a twinkling hole (then "Take it?" is asked plainly, PASSAGE_LINES.ask). */
@@ -358,9 +364,10 @@ export const holeLines = (asBrannoc: boolean) =>
     : ['(What is that shiny thing?)', "(It's a hole in the wall. It is exactly Brannoc-shaped.)"];
 
 // ---- The pothole (author, Episode 11, Oct 6, 2026): three steps into the Maze Ward the floor gives way, and you
-// drop back into the Deep Cells, on your butt, right outside Silas Seen's cell. Once only: after that it's floor.
+// drop back into the Deep Cells, on your butt, right outside Silas Seen's cell. Once only: after that it stays
+// open, and you walk round it (the notch in the wall above it).
 
-/** You've fallen through it: it's just floor now. */
+/** You've fallen through it: it's an open hole now, and you go round. */
 export const FELL_IN = 'maze-pothole-fell';
 /** The Maze Ward's pothole tile, and where it drops you (in front of the third cell). */
 export const POTHOLE = { tile: 'h', landing: { x: 18, y: 6 } };

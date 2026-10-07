@@ -920,9 +920,10 @@ function compile(ep) {
     } else if (step.say || step.narrate || step.you || step.as) {
       const npc = step.say ? map.npcs[step.say] : null;
       // `as`: someone heard but not on the map (Barnaby, announcing from the stands): { name, sprite }
-      const speaker = step.you ? 'You' : npc ? npc.name : step.as?.name;
-      const sprite = step.you ? ep.hero.sprite : npc ? spriteOf(ep, npc) : step.as?.sprite;
-      const voice = step.you ? 3 : voiceFor(speaker, sprite);
+      // your hero's thoughts are a plain box, as in the game: no name, no face
+      const speaker = npc ? npc.name : step.as?.name;
+      const sprite = npc ? spriteOf(ep, npc) : step.as?.sprite;
+      const voice = voiceFor(speaker, sprite);
       // the person turns to face you, as in the game
       if (npc) {
         const [nx, ny] = center(npc.x, npc.y);

@@ -29,6 +29,7 @@ import {
   weeklyObjectives,
   type Boost,
   type Completion,
+  type DayReminders,
   type Dimension,
   type Goal,
   type XpGrant,
@@ -138,6 +139,7 @@ type Actions = {
   /** Picks a set reminder time, which turns off "at my usual time". */
   setNotificationTime: (time: string) => void;
   setSmartReminders: (on: boolean) => void;
+  setDayReminders: (dayReminders: DayReminders) => void;
   setHapticsEnabled: (on: boolean) => void;
   /** Today's quests in the player's own order, or null to go back to their usual order. */
   /** Saves a dragged order (and switches to it), or null to go back to auto ordering. */
@@ -337,6 +339,7 @@ export const useGameStore = create<GameState>()(
             hapticsEnabled: true,
             objectivesLandscape: false,
             smartReminders: true,
+            dayReminders: 'bookends',
           },
           quests: [tutorial, ...quests.map((q) => makeQuest({ ...q, repeatDays: DAILY }))],
           // Nobody yet: Brannoc wakes with the first habit, and the rest of the core eight
@@ -430,6 +433,7 @@ export const useGameStore = create<GameState>()(
         set((s) => (s.player ? { player: { ...s.player, notificationTime, smartReminders: false } } : s)),
       setSmartReminders: (smartReminders) =>
         set((s) => (s.player ? { player: { ...s.player, smartReminders } } : s)),
+      setDayReminders: (dayReminders) => set((s) => (s.player ? { player: { ...s.player, dayReminders } } : s)),
 
       setQuestOrder: (questOrder) =>
         set((s) => ({ questOrder, questSort: { ...s.questSort, by: questOrder ? 'mine' : 'auto' } })),

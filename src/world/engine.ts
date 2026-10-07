@@ -5,8 +5,17 @@
 
 const TILE = 16;
 
-/** Walking speed in art pixels per second: seven tiles a second. */
+/**
+ * Walking speed in a fight, in art pixels per second: seven tiles a second. The fights are tuned to it
+ * (fights.test.ts: every Path wins every fight), so the game speed leaves it be.
+ */
 export const SPEED = 112;
+/**
+ * Walking speed everywhere else at 1×: eight and a half tiles a second, brisk (author, Oct 7, 2026:
+ * 1× should feel like more than enough). The game speed halves or doubles it (speed.ts); a frame's
+ * step stays under a tile even at 2× (the frame callback caps dt at 50 ms).
+ */
+export const EXPLORE_SPEED = 136;
 /** The feet's footprint: 5 pixels either side of centre, 5 pixels deep. */
 const HALF_WIDTH = 5;
 const DEPTH = 5;
@@ -158,15 +167,22 @@ export function startTrail(x: number, y: number): number[] {
   return trail;
 }
 
-/** Adds the lead's new position to the trail if they've moved far enough, dropping the oldest. */
+/**
+ * Adds the lead's new position to the trail, a point every pixel of the way, dropping the oldest.
+ * Whatever's under a pixel waits for the next step, so the party keeps the same spacing however
+ * far a frame goes (a fast game speed, a slow frame).
+ */
 export function extendTrail(trail: number[], x: number, y: number): number[] {
   'worklet';
   const n = trail.length;
   const lx = trail[n - 2];
   const ly = trail[n - 1];
-  if (Math.abs(x - lx) + Math.abs(y - ly) < 1) return trail;
-  const next = trail.slice(2);
-  next.push(x, y);
+  const dist = Math.hypot(x - lx, y - ly);
+  if (dist < 1) return trail;
+  // never more points than the trail holds (a jump across the room)
+  const steps = Math.min(Math.floor(dist), n / 2);
+  const next = trail.slice(steps * 2);
+  for (let i = 1; i <= steps; i++) next.push(lx + ((x - lx) * i) / dist, ly + ((y - ly) * i) / dist);
   return next;
 }
 

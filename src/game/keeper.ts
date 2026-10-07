@@ -13,6 +13,12 @@ export type KeeperGroup =
   | 'personal'
   /** 10:30 PM, a streak about to break (N2). */
   | 'lastCall'
+  /** Noon, with habits still left today. */
+  | 'halfTime'
+  /** Every 1, 2 or 4 hours after noon, with habits still left. */
+  | 'checkIn'
+  /** 9 PM, with habits still left. */
+  | 'nineCall'
   /** The day after a miss that a rest token covered. */
   | 'rested'
   /** The day after a miss that reset the streak. */
@@ -69,6 +75,22 @@ export const KEEPER_LINES: KeeperLine[] = [
     c4: 'An hour and a half until midnight. Your {streak} days are still yours to keep.',
     c5: 'No rest tokens left, {name}. One quest before midnight keeps all {streak} days.',
     c6: 'The lantern is nearly out. So is today. {streak} days, one quest.',
+  }),
+  ...lines('halfTime', {
+    l1: 'Half time, {name}. {left} left today.',
+    l2: "The day's half gone. {left} still on the table.",
+    l3: 'The noon bell just rang. {left} to go before midnight.',
+  }),
+  ...lines('checkIn', {
+    m1: '{left} left today. One at a time.',
+    m2: 'Just checking in. {left} still waiting on you.',
+    m3: "{left} to go, {name}. The day isn't over yet.",
+    m4: 'Still {left} on the board. Start with the smallest.',
+  }),
+  ...lines('nineCall', {
+    n1: 'Last call, {name}. {left} left before midnight.',
+    n2: 'Nine o\'clock. {left} still open, and three hours on the clock.',
+    n3: "The lantern's burning down. {left} left today.",
   }),
   ...lines('rested', {
     d1: 'You rested yesterday. A rest token kept your streak. The party saved you a seat.',

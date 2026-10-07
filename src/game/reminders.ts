@@ -1,7 +1,7 @@
 import { addDays, daysBetween, parseTime } from './dates';
 import { KEEPER_LINES, fillLine, type KeeperGroup, type KeeperVars } from './keeper';
 import { isDueOn } from './schedule';
-import type { Dimension, Quest, RestDay } from './types';
+import type { DayReminders, Dimension, Quest, RestDay } from './types';
 
 /** iOS keeps at most 64 pending notifications per app. */
 export const MAX_PENDING_REMINDERS = 64;
@@ -23,6 +23,30 @@ export const LAST_CALL_GAP_MINUTES = 60;
 
 /** A streak worth a late knock. */
 export const LAST_CALL_MIN_STREAK = 3;
+
+/** Noon: half time, if quests are left. */
+export const HALF_TIME_MINUTES = 12 * 60;
+
+/** 9 PM: the last call about quests left (the streak's own last call is later). */
+export const NINE_CALL_MINUTES = 21 * 60;
+
+/** Daytime calls are planned this many days ahead; every app open re-plans them. */
+export const DAY_CALL_DAYS = 2;
+
+/** A daytime call this close to the usual call is skipped, so they don't knock twice. */
+export const DAY_CALL_GAP_MINUTES = 30;
+
+/** When the daytime calls go out: noon, a check-in every few hours, and 9 PM. */
+export function dayCallSlots(setting: DayReminders): { minutes: number; group: KeeperGroup }[] {
+  if (setting === 'off') return [];
+  const slots: { minutes: number; group: KeeperGroup }[] = [{ minutes: HALF_TIME_MINUTES, group: 'halfTime' }];
+  if (setting !== 'bookends') {
+    const every = Number(setting) * 60;
+    for (let m = HALF_TIME_MINUTES + every; m < NINE_CALL_MINUTES; m += every) slots.push({ minutes: m, group: 'checkIn' });
+  }
+  slots.push({ minutes: NINE_CALL_MINUTES, group: 'nineCall' });
+  return slots;
+}
 
 /** What the Keeper knows about one Path, for the personal calls. */
 export type PathFacts = {
@@ -72,6 +96,8 @@ export type ReminderInput = {
   lineStats?: Record<string, LineRecord>;
   /** Lines sent in the last 10 days, rested before they're used again. */
   recentLines?: string[];
+  /** Daytime calls while quests are left; off when unset. */
+  dayReminders?: DayReminders;
 };
 
 /** A line's track record on this phone. */
@@ -169,6 +195,7 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
       !(k === 0 && playedToday) && alive && tokens === 0 && input.streak >= LAST_CALL_MIN_STREAK && due;
 
     // The usual call.
+    let usualAt: number | null = null;
     let group = groupForMissed(missed);
     if (k === 0 && input.minutesNow >= usualMinutes) group = null;
     if (group !== null && followsSchedule(missed) && !due) group = null;
@@ -196,7 +223,32 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
         // A group whose every line needs something missing (a hero) falls back to a plain call.
         pickLine('usual', daySeed, vars, choice);
       const questIds = followsSchedule(missed) ? doneActions(input, date, k === 0, picked?.body) : [];
-      if (picked) plans.push({ date, hour, minute, missed, ...picked, timeSensitive: false, questIds });
+      if (picked) {
+        plans.push({ date, hour, minute, missed, ...picked, timeSensitive: false, questIds });
+        usualAt = usualMinutes;
+      }
+    }
+
+    // Quests left, during the day: half time, check-ins and the 9 PM call.
+    if (k < DAY_CALL_DAYS) {
+      const left = input.quests.filter((q) => isDueOn(q, date) && !(k === 0 && input.doneToday.includes(q.id)));
+      const slots = left.length > 0 ? dayCallSlots(input.dayReminders ?? 'off') : [];
+      const vars = { name: input.name, left: `${left.length} quest${left.length === 1 ? '' : 's'}` };
+      slots.forEach((slot, i) => {
+        if (k === 0 && slot.minutes <= input.minutesNow) return;
+        if (usualAt !== null && Math.abs(slot.minutes - usualAt) < DAY_CALL_GAP_MINUTES) return;
+        const picked = pickLine(slot.group, daySeed + i, vars, choice);
+        if (!picked) return;
+        plans.push({
+          date,
+          hour: Math.floor(slot.minutes / 60),
+          minute: slot.minutes % 60,
+          missed,
+          ...picked,
+          timeSensitive: false,
+          questIds: doneActions(input, date, k === 0, picked.body),
+        });
+      });
     }
 
     // The last call.

@@ -1160,7 +1160,7 @@ export const EXITS: Exit[] = [
     walk: true,
   },
   // The pothole (dungeon.ts POTHOLE): three steps in, the floor gives way and drops you back into the cells.
-  // Once only: after you've fallen (FELL_IN), the game leaves it out and it's just floor.
+  // Once only: after you've fallen (FELL_IN), the game leaves it out and the hole stays open; you walk round it.
   {
     id: 'maze-pothole',
     from: 'dungeon-mazes',
@@ -1186,7 +1186,7 @@ export const EXITS: Exit[] = [
     from: 'the-pit',
     tile: '3',
     label: 'The ladder down',
-    to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' },
+    to: { map: 'dungeon-mazes', x: 60, y: 6, facing: 'left' },
     needs: OPEN,
     back: true,
     walk: true,
