@@ -2,6 +2,7 @@
   "id": "kaldorium-maximus",
   "name": "The Training Yard",
   "style": "dungeon",
+  "floor": "yard",
   "walkable": [
     ".",
     ","
@@ -11,7 +12,7 @@
   },
   "tiles": [
     "####################",
-    "#WWWcWWWWWWWWWWcWWW#",
+    "#WWlcWWlWWWWlWWclWW#",
     "#W,,,,,,,,,,,,,,,,W#",
     "#W,..............,W#",
     "#W,..............,W#",
@@ -154,6 +155,9 @@
     }
   ],
   "examine": {
+    "l": [
+      "A straw dummy with Kaldor's face on it, leaning on the wall for a rest. It has earned one."
+    ],
     "W": [
       "The yard wall. Straw dummies lean against it, every one with Kaldor's face painted on. They have all been hit a great deal."
     ],

@@ -43,7 +43,7 @@ const ST = {
   bone: '#D8D0B8',
 };
 
-export function castleArt({ box, put, ellipse, hash, wall }) {
+export function castleArt({ box, put, ellipse, hash, wall, tint }) {
   /** A run of black ashlar: courses of blocks, the left edge lit, the right in shade. */
   const masonry = (g, x, y, w, h, seed = 0) => {
     for (let j = 0; j < h; j++)
@@ -780,24 +780,108 @@ export function castleArt({ box, put, ellipse, hash, wall }) {
   };
 
   // The war council's table (author, Oct 7, 2026): a map of the eight kingdoms, the Mage Kingdom's border inked in
-  // red, little carved soldiers pushed up against it, and a dagger stuck in the middle.
+  // red, little carved soldiers pushed up against it, and a dagger stuck in the middle. Drawn once across its block:
+  // heavy black oak with a lit rim, the map pinned flat on it, the table's shadow pooled on the marble beneath.
   inside.T = (g, x, y, m) => {
-    const l = m.at(-1, 0) !== 'T';
-    const r = m.at(1, 0) !== 'T';
-    const t = m.at(0, -1) !== 'T';
-    const b = m.at(0, 1) !== 'T';
-    box(g, x, y, TILE, TILE, '#3A2416');
-    box(g, x + (l ? 2 : 0), y + (t ? 2 : 0), TILE - (l ? 2 : 0) - (r ? 2 : 0), TILE - (t ? 2 : 0) - (b ? 3 : 0), '#D8C898');
-    if (b) box(g, x, y + 13, TILE, 3, '#24160C');
-    for (let k = 0; k < 5; k++)
-      put(g, x + 2 + Math.floor(hash(x, y, k + 60) * 12), y + 3 + Math.floor(hash(y, x, k + 61) * 8), '#8A6A44');
-    if (r) box(g, x + 11, y + 2, 1, 10, '#A82020');
-    for (let k = 0; k < 3; k++) {
-      const px = x + 4 + Math.floor(hash(x, y, k + 62) * 7);
-      const py = y + 4 + Math.floor(hash(y, x, k + 63) * 6);
-      box(g, px, py, 2, 3, '#2A2A30');
-      put(g, px, py, '#6A1216');
+    if (m.at(-1, 0) === 'T' || m.at(0, -1) === 'T') return;
+    const { w, h } = extent(m, 'T');
+    const top = h - 8; // the tabletop; the apron and legs below it
+    // the shadow on the floor, down and to the right
+    for (let j = top; j < h + 3; j++)
+      for (let i = 2; i < w + 3; i++) tint?.(g, x + i, y + j, 0.55 - Math.max(0, j - h) * 0.12);
+    // legs and the apron's front, in shade
+    for (const lx of [2, w - 6]) {
+      box(g, x + lx, y + top, 4, 8, '#1A100A');
+      box(g, x + lx + 1, y + top, 2, 7, '#3A2416');
+      put(g, x + lx + 1, y + top, '#5A3A22');
     }
+    box(g, x, y + top, w, 3, '#24160C');
+    box(g, x, y + top, w, 1, '#3A2416');
+    box(g, x - 1, y + top, 1, 3, ST.outline);
+    box(g, x + w, y + top, 1, 3, ST.outline);
+    // the top: an outline, a lit rim on the top and left, the far right in shade
+    box(g, x - 1, y - 1, w + 2, top + 1, ST.outline);
+    box(g, x, y, w, top, '#3A2416');
+    box(g, x, y, w, 1, '#7A5232');
+    box(g, x, y, 1, top, '#6A4430');
+    box(g, x + w - 1, y + 1, 1, top - 1, '#24160C');
+    box(g, x + 1, y + top - 1, w - 2, 1, '#2A1A0E');
+    for (let i = 2; i < w - 2; i++) if (hash(x + i, y, 64) < 0.25) put(g, x + i, y + 1 + (i % 2), '#4A2E1E');
+    // the map: parchment, the land a shade warmer than the sea, a dark line round every coast
+    const mx = x + 4;
+    const my = y + 3;
+    const mw = w - 8;
+    const mh = top - 6;
+    const cell = 6;
+    const noise = (px, py) => {
+      const gx = px / cell;
+      const gy = py / cell;
+      const ix = Math.floor(gx);
+      const iy = Math.floor(gy);
+      const fx = gx - ix;
+      const fy = gy - iy;
+      const v = (a, b) => hash(a, b, 65);
+      const top2 = v(ix, iy) * (1 - fx) + v(ix + 1, iy) * fx;
+      const bot = v(ix, iy + 1) * (1 - fx) + v(ix + 1, iy + 1) * fx;
+      return top2 * (1 - fy) + bot * fy;
+    };
+    const land = (i, j) => {
+      const dx = (i - mw / 2) / (mw / 2);
+      const dy = (j - mh / 2) / (mh / 2);
+      return 1 - (dx * dx * 0.7 + dy * dy * 0.8) + (noise(i, j) - 0.5) * 1.1 > 0.3;
+    };
+    for (let j = 0; j < mh; j++)
+      for (let i = 0; i < mw; i++) {
+        const on = land(i, j);
+        let c = on ? '#E2D2A2' : '#A8B4A0';
+        if (on && (!land(i - 1, j) || !land(i + 1, j) || !land(i, j - 1) || !land(i, j + 1))) c = '#6A4E30';
+        else if (!on && (i + j * 2) % 7 === 0) c = '#94A08E'; // the sea's little waves
+        else if (on && hash(mx + i, my + j, 66) < 0.04) c = '#C8B888';
+        put(g, mx + i, my + j, c);
+      }
+    // the parchment's edge: a lit top, a curled shaded corner, a pin in each corner
+    box(g, mx, my, mw, 1, '#F0E4C0');
+    box(g, mx + mw - 1, my, 1, mh, '#A89870');
+    box(g, mx, my + mh - 1, mw, 1, '#A89870');
+    for (const [px, py] of [[1, 1], [mw - 2, 1], [1, mh - 2], [mw - 2, mh - 2]]) put(g, mx + px, my + py, '#8A1A1A');
+    // the old borders between the kingdoms, dotted in brown
+    for (const bx of [0.24, 0.45]) {
+      for (let j = 2; j < mh - 2; j++) {
+        const i = Math.round(mw * bx + Math.sin(j * 0.7 + bx * 9) * 2);
+        if (j % 2 === 0 && land(i, j)) put(g, mx + i, my + j, '#7A5A3A');
+      }
+    }
+    for (let i = 2; i < mw * 0.62; i++) {
+      const j = Math.round(mh * 0.55 + Math.sin(i * 0.4) * 1.5);
+      if (i % 2 === 0 && land(i, j)) put(g, mx + i, my + j, '#7A5A3A');
+    }
+    // the Mage Kingdom's border, inked thick in red
+    const redAt = (j) => Math.round(mw * 0.68 + Math.sin(j * 0.35) * 1.5);
+    for (let j = 1; j < mh - 1; j++) {
+      put(g, mx + redAt(j), my + j, '#A82020');
+      put(g, mx + redAt(j) + 1, my + j, '#7A1414');
+    }
+    // little carved soldiers pushed up against it, each with its shadow
+    for (let k = 0; k < 6; k++) {
+      const j = 2 + Math.floor((k * (mh - 6)) / 5);
+      const i = redAt(j) - 3 - (k % 2) * 3;
+      put(g, mx + i + 2, my + j + 3, '#8A7A58');
+      box(g, mx + i, my + j + 1, 2, 2, '#2A2A30');
+      put(g, mx + i, my + j + 1, '#5A5A66');
+      put(g, mx + i, my + j, '#8A1A1A');
+      put(g, mx + i + 1, my + j, '#5A0E10');
+    }
+    // the dagger, stuck point-down in the middle of the map
+    const dx = mx + Math.round(mw * 0.42);
+    const dy = my + Math.round(mh * 0.3);
+    for (let k = 1; k < 4; k++) put(g, dx + k + 1, dy + 3 + k, '#8A7A58');
+    box(g, dx, dy - 4, 1, 7, '#C8C8D4');
+    box(g, dx + 1, dy - 4, 1, 7, '#7A7A88');
+    put(g, dx, dy - 4, '#F4F4FA');
+    box(g, dx - 2, dy - 5, 6, 1, ST.gold);
+    put(g, dx - 2, dy - 5, '#E8C060');
+    box(g, dx, dy - 8, 2, 3, '#4A2E1E');
+    put(g, dx, dy - 9, ST.gold);
   };
   // A hearth in the wall, burning low.
   inside.F = (g, x, y, m) => {
