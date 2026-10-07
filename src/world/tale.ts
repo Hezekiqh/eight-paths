@@ -1,10 +1,10 @@
 import { talkedId, type LoreEntry } from './lore';
 
-// The World menu's Story scroll: how the Mad King nearly plunged the eight
-// kingdoms into war, until the Shadow Monarch took him and set up a puppet king.
-// It's told in hidden blocks, a sentence or two for each person you talk to
-// (lore.ts talkedId), in whatever order you meet them, so the gaps show who's
-// still to be found. All of it is about a minute's read.
+// The World menu's Story scroll (author, Oct 7, 2026): how a grieving king nearly let the eight kingdoms fall into
+// war, how his younger brother Kaldor took the throne with the Shadow Monarch's help, and the one condition that
+// came with it. It's told in hidden blocks, a sentence or two for each person you talk to (lore.ts talkedId), in
+// whatever order you meet them, so the gaps show who's still to be found. The scroll only ever says what people
+// believe; what really happened in the king's bedchamber is the crypt's flashback (old-kings-crypt.json, `L`).
 
 /** A piece of the story, shown once you've heard any one of `from` (lore ids: who, asked what). */
 export type Block = { from: string[]; text: string };
@@ -15,24 +15,24 @@ const told = (speaker: string) => talkedId(speaker);
 
 export const TALE: Chapter[] = [
   {
-    title: 'The Mad King',
+    title: 'The grieving king',
     blocks: [
       { from: [told('The Keeper')], text: 'Long ago there were eight kingdoms, and for a while they kept the peace.' },
       {
         from: [told('Old Wenna')],
-        text: 'The kingdom east of the old fort was ruled by the Hales. The last of them, Osric, was not well.',
+        text: 'The kingdom past Warrior City was ruled by the Hales. The last of them was King Osric.',
       },
       {
         from: [told('Nana Birch')],
-        text: 'He used to ask the cook how the soup was. Then he stopped asking, and began counting swords.',
+        text: 'He used to ask the cook how the soup was. Then the queen went missing, and he stopped asking.',
       },
       {
         from: [told('Madame Oriel')],
-        text: 'He saw enemies in every window, and the Mage Kingdom most of all.',
+        text: 'He shut himself away. People began to whisper that the king had gone mad.',
       },
       {
         from: [told('Lieutenant Arden')],
-        text: 'At every supper he talked of marching on the mages, smiling. His officers stopped smiling back.',
+        text: 'His war council begged him to march on the mages. He never quite gave the order.',
       },
       {
         from: [told('Sergeant Holt')],
@@ -40,21 +40,21 @@ export const TALE: Chapter[] = [
       },
       {
         from: [told('Old Fen')],
-        text: 'The eight kingdoms stood one order away from a war none of them would survive.',
+        text: 'The eight kingdoms stood one order away from a war none of them would survive. The king hesitated.',
       },
     ],
   },
   {
-    title: 'The figure in the dark',
+    title: 'The brother',
     blocks: [
       { from: [told('Private Dunn')], text: 'On the night of the march, the drums never sounded.' },
       {
         from: [told('Sexton Rook')],
-        text: 'A figure walked into the war hall out of the darkness, and the torches threw no shadow of it.',
+        text: 'The king had a younger brother, Kaldor. Second born, and second best, his whole life.',
       },
       {
         from: [told("The Chaplain's Echo")],
-        text: 'By morning the Mad King was gone. No body, no trial, no bells: only an empty throne.',
+        text: 'Something that cast no shadow was listening. It promised Kaldor power over the dead, and youth without end.',
       },
       {
         from: [told('Hugo Thornbeard')],
@@ -67,27 +67,27 @@ export const TALE: Chapter[] = [
     ],
   },
   {
-    title: 'The puppet king',
+    title: 'The king who never ages',
     blocks: [
       {
         from: [told('Barnaby Loudmouth')],
-        text: 'On the empty throne, the Shadow Monarch set a new king: Kaldor, the champion of the pit.',
+        text: 'King Osric named Kaldor his heir. A month later he was dead. A broken heart, they said. People talked.',
       },
       {
         from: [told('Gert')],
-        text: 'Kaldor was strength itself, made king to grow stronger still.',
+        text: 'Kaldor had everything he ever wanted: the gold, the fame, the queens. On one condition.',
       },
       {
         from: [told('Captain Varga')],
-        text: 'He built the army stone by stone, and named every street after himself.',
+        text: 'Build the strongest army in the eight kingdoms, and never march it to war. Defend, and only defend.',
       },
       {
         from: [told('Old Harrow')],
-        text: 'He does not age. He does not fall. People say that he, too, casts no shadow.',
+        text: 'He does not age. He does not fall. People say that he casts no shadow either.',
       },
       {
         from: [told('Sergeant Maelis')],
-        text: 'The horde grew, the pit filled, and the kingdom forgot its old name.',
+        text: 'The horde grew, the Kaloseum filled, and the kingdom forgot its old name.',
       },
     ],
   },
@@ -105,7 +105,7 @@ export const TALE: Chapter[] = [
       { from: [told('Bo Tumble')], text: '“I need to be strong. I need to protect them.”' },
       {
         from: [told('Hesper')],
-        text: 'A hundred years ago the Shadow Monarch fell silent. The puppet king has ruled alone ever since.',
+        text: 'For four hundred years the Shadow Monarch ruled through his kings. Then he began to doubt, and to wither. A hundred years ago he fell silent.',
       },
       {
         from: [told('Felix')],

@@ -142,7 +142,7 @@ export const KEEPER_TALK: {
       lines: [
         "Hundreds of banners, and not one of them ever saw a battle. Did Orrin tell you? 'Nobody came. Strange quiet. Ate lunch.'",
         'His family always did write things down properly.',
-        "Every army in the world was meant to meet on that field. Then one night a king fell in his own hall, and the war simply… didn't happen.",
+        "Every army in the world was meant to meet on that field. Then a king died in his own bed, and the war simply… didn't happen.",
         "People call that luck. I've lived a long time. I've never once met luck. I have met people who wanted something to look like luck.",
       ],
     },

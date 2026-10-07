@@ -52,10 +52,12 @@ describe('the tale of the Kingdom', () => {
     expect(words).toBeLessThan(350);
   });
 
-  it('names the Shadow Monarch, and tells of the Mad King and the puppet king', () => {
+  it('names the Shadow Monarch, and tells of the grieving king, his brother Kaldor, and the one condition', () => {
     const text = blocks.map((b) => b.text).join(' ');
     expect(text).toMatch(/Shadow Monarch/);
-    expect(text).toMatch(/Mad King/);
+    expect(text).toMatch(/King Osric/);
+    expect(text).toMatch(/younger brother, Kaldor/);
+    expect(text).toMatch(/never march it to war/);
     expect(text).toMatch(/I need to be strong\. I need to protect them\./);
   });
 });
