@@ -562,6 +562,15 @@ function tree(g, x, y) {
     put(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 3 + Math.floor(hash(y, x, i) * 7), O.leafLight);
 }
 
+/** Burnt ground, ash grey with charred specks, under the old museum's ruins. */
+function scorched(g, x, y) {
+  for (let j = 0; j < TILE; j++)
+    for (let i = 0; i < TILE; i++) {
+      const h = hash(x + i, y + j, 56);
+      put(g, x + i, y + j, h < 0.12 ? '#2A2622' : h < 0.2 ? '#5A524C' : '#3E3834');
+    }
+}
+
 const OUTDOOR_ART = {
   '.'() {},
   ','() {},
@@ -986,6 +995,42 @@ const OUTDOOR_ART = {
       box(g, x + i - 2, y + j + 1, 5, 2, O.leaf);
       ellipse(g, x + i, y + j, 1, 1, c);
     }
+  },
+  // Kaldorhold's old museum (author, Oct 7, 2026), burned to the ground: soot-black wall stubs, ash and fallen
+  // beams, and the plinths where the old kingdom's things stood, every case empty.
+  2(g, x, y) {
+    scorched(g, x, y);
+    box(g, x + 1, y + 5, 14, 11, '#2A2420');
+    box(g, x + 1, y + 5, 14, 1, '#4A3E36');
+    for (let i = 1; i < 15; i += 3) box(g, x + i, y + 3 + Math.floor(hash(x + i, y, 51) * 3), 2, 3, '#2A2420');
+    for (let j = 7; j < 16; j += 4) box(g, x + 1, y + j, 14, 1, '#1A1612');
+    for (let i = 0; i < 6; i++) put(g, x + 2 + Math.floor(hash(x, y, i + 52) * 12), y + 7 + Math.floor(hash(y, x, i + 53) * 8), '#5A2A1A');
+  },
+  3(g, x, y) {
+    scorched(g, x, y);
+    ellipse(g, x + 8, y + 11, 7, 4, '#3A3430');
+    ellipse(g, x + 8, y + 11, 5, 2, '#5A524C');
+    box(g, x + 1, y + 8, 14, 2, '#2A1A10');
+    box(g, x + 1, y + 8, 14, 1, '#4A2E1A');
+    for (let i = 0; i < 4; i++) put(g, x + 3 + Math.floor(hash(x, y, i + 54) * 10), y + 10 + Math.floor(hash(y, x, i + 55) * 4), '#C8642A');
+  },
+  4(g, x, y) {
+    scorched(g, x, y);
+    box(g, x + 3, y + 8, 10, 8, '#4A4440');
+    box(g, x + 3, y + 8, 10, 1, '#6A625C');
+    box(g, x + 4, y + 2, 8, 6, '#2A2A30');
+    box(g, x + 5, y + 3, 6, 4, '#141418');
+    put(g, x + 6, y + 3, '#8A8A9A');
+    put(g, x + 9, y + 5, '#8A8A9A');
+    box(g, x + 3, y + 14, 10, 2, '#1A1612');
+  },
+  0(g, x, y) {
+    // the king's notice, nailed to a post in front of the ruin
+    box(g, x + 7, y + 6, 2, 10, O.trunk);
+    box(g, x + 2, y + 2, 12, 7, '#E8DCC0');
+    box(g, x + 2, y + 2, 12, 1, '#C8B898');
+    for (let j = 4; j < 8; j += 2) box(g, x + 4, y + j, 8, 1, '#5A4A3A');
+    put(g, x + 7, y + 3, '#8A1A1A');
   },
   Q(g, x, y) {
     // A faceless statue, toppled face-down in the moss.
@@ -2645,6 +2690,11 @@ const WALKERS = {
     hair: ['bald', '#D8B090'],
     beard: '#F0ECE6',
   },
+  // The Long Mess's ghosts (author, Oct 7, 2026): pale and blue like the Chaplain's Echo. Two cooks in aprons, and
+  // Corporal Hobb, who is at both ends of the table.
+  ghostcook: { top: '#9A9AC8', shade: '#7A7AA8', legs: '#6A6A98', boots: '#4A4A7A', skin: '#B8B8E0', hair: ['bald', '#B8B8E0'], apron: '#E0E0F4' },
+  ghostcook2: { top: '#8A8ABA', shade: '#6A6A9A', legs: '#5A5A8A', boots: '#3A3A6A', skin: '#B0B0DC', hair: ['bun', '#9A9AC8'], apron: '#E0E0F4' },
+  ghosthobb: { top: '#7A7AAA', shade: '#5A5A8A', legs: '#4A4A7A', boots: '#3A3A6A', belt: '#A8A8D8', skin: '#A8A8D4', hair: ['short', '#5A5A8A'] },
   // Out of the new cocoons (cocoons.ts, author, Oct 7, 2026). Their own walker ids, so the heroes themselves
   // don't become walkers in your party.
   irisnpc: { top: '#6A7A5A', shade: '#4E5A42', legs: '#4A4038', boots: '#2A2420', hair: ['short', '#3A2A20'], belt: '#B84A3A' },
@@ -3129,6 +3179,7 @@ const MAPS = [
   'barracks-hall',
   'barracks-armoury',
   'officers-mess',
+  'long-mess',
   'barracks-yard',
   'pit-below',
   'lower-barracks',
@@ -3144,6 +3195,7 @@ const MAPS = [
   'castle-grounds',
   'castle-hall',
   'castle-upper',
+  'war-room',
   'war-hall',
   'field-of-banners',
   'tithe-road',

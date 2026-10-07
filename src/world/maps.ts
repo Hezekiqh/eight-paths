@@ -6,6 +6,8 @@ import desertersCampData from './maps/deserters-camp.json';
 import barracksHallData from './maps/barracks-hall.json';
 import barracksArmouryData from './maps/barracks-armoury.json';
 import officersMessData from './maps/officers-mess.json';
+import longMessData from './maps/long-mess.json';
+import warRoomData from './maps/war-room.json';
 import barracksYardData from './maps/barracks-yard.json';
 import pitBelowData from './maps/pit-below.json';
 import lowerBarracksData from './maps/lower-barracks.json';
@@ -389,6 +391,8 @@ export const MAPS = {
   'barracks-hall': build(barracksHallData, require('@/assets/world/barracks-hall.png')),
   'barracks-armoury': build(barracksArmouryData, require('@/assets/world/barracks-armoury.png')),
   'officers-mess': build(officersMessData, require('@/assets/world/officers-mess.png')),
+  'long-mess': build(longMessData as MapData, require('@/assets/world/long-mess.png')),
+  'war-room': build(warRoomData as MapData, require('@/assets/world/war-room.png')),
   'barracks-yard': build(barracksYardData, require('@/assets/world/barracks-yard.png')),
   'pit-below': build(pitBelowData, require('@/assets/world/pit-below.png')),
   'lower-barracks': build(lowerBarracksData, require('@/assets/world/lower-barracks.png')),

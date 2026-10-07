@@ -251,6 +251,27 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The Long Mess (author, Oct 7, 2026): the barracks' dining hall, ghost cooks and a very long table.
+  {
+    id: 'hall-long-mess',
+    from: 'barracks-hall',
+    tile: '2',
+    label: 'The hole in the west wall',
+    to: { map: 'long-mess', x: 2, y: 7, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'long-mess-hall',
+    from: 'long-mess',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'barracks-hall', x: 2, y: 5, facing: 'right' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'armoury-mess',
     from: 'barracks-armoury',
@@ -556,6 +577,27 @@ export const EXITS: Exit[] = [
   },
   // Kaldor's castle (author, Oct 4, 2026; castle.ts): the grounds and the gate guards, the empty
   // hall (straight on to the throne room, or up the winding stair to the king's floor), the throne.
+  // The war council (author, Oct 7, 2026): why the hall is empty. Everyone's in here, planning a march.
+  {
+    id: 'hall-war-room',
+    from: 'castle-hall',
+    tile: '2',
+    label: 'The heavy door',
+    to: { map: 'war-room', x: 6, y: 6, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'war-room-hall',
+    from: 'war-room',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'castle-hall', x: 23, y: 3, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'grounds-town',
     from: 'castle-grounds',

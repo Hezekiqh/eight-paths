@@ -13,7 +13,7 @@
     "#W..............W#",
     "#W.tt...tt...tt.W#",
     "#W.tt...tt...tt.W#",
-    "#W..............1#",
+    "#2..............1#",
     "#W.L.....,,.....W#",
     "#W.....,,,,..k..W#",
     "#W......,,......W#",
@@ -26,6 +26,7 @@
     "facing": "up"
   },
   "examine": {
+    "2": ["A ragged hole in the wall. Somewhere beyond it, someone is clattering pans."],
     "W": [
       "Cold stone, sweating in the dark."
     ],
@@ -100,7 +101,8 @@
     }
   ],
   "art": {
-    "1": "o"
+    "1": "o",
+    "2": "o"
   },
   "enemies": [
     {

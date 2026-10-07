@@ -18,7 +18,7 @@ The players can see this flashback in the old king's crypt, under the chapel: it
 (`old-kings-crypt.json`, tile `L`). The Story scroll (`tale.ts`) only ever tells what people *believe*.
 
 - **What people believe:** the queen went missing, and King Osric shut himself away. Rumours said he'd gone mad. His war
-  council begged him to march on the mages, and he hesitated. He named his brother Kaldor heir, and a month later he
+  court begged him to march on the mages, and he hesitated. He named his brother Kaldor heir, and a month later he
   died of a broken heart. People thought it suspicious that he died so soon after naming a successor.
 - **What really happened:**
   1. Kaldor was the second-born. He believed the throne had been stolen from him, and that he'd make the better king.

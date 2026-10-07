@@ -104,13 +104,16 @@ export const WALKER_ROWS = {
   fitch: 93,
   aske: 94,
   orm: 95,
-  irisnpc: 96,
-  mothnpc: 97,
-  lyranpc: 98,
-  wynnnpc: 99,
-  oonanpc: 100,
-  silasseen: 101,
-  traveler: 102,
+  ghostcook: 96,
+  ghostcook2: 97,
+  ghosthobb: 98,
+  irisnpc: 99,
+  mothnpc: 100,
+  lyranpc: 101,
+  wynnnpc: 102,
+  oonanpc: 103,
+  silasseen: 104,
+  traveler: 105,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

@@ -147,6 +147,31 @@ export function interiorArt({ box, put, ellipse, hash }) {
     if (l) box(g, x + 1, y + 13, 2, 3, '#3A2618');
     if (r) box(g, x + 13, y + 13, 2, 3, '#3A2618');
   };
+  // the Long Mess's table (author, Oct 7, 2026): dark oak, joined along its length, a bowl at every place, and
+  // over every bowl a curl of pale blue ghost steam
+  art['3'] = (g, x, y, m) => {
+    const l = m.at(-1, 0) !== '3';
+    const r = m.at(1, 0) !== '3';
+    box(g, x, y + 4, TILE, 9, '#4A2E1A');
+    box(g, x + (l ? 1 : 0), y + 5, TILE - (l ? 1 : 0) - (r ? 1 : 0), 7, '#6A4428');
+    box(g, x, y + 12, TILE, 1, '#3A2414');
+    if (l) box(g, x + 1, y + 13, 2, 3, '#2E1C10');
+    if (r) box(g, x + 13, y + 13, 2, 3, '#2E1C10');
+    ellipse(g, x + 8, y + 8, 3, 2, '#C8C4BC');
+    ellipse(g, x + 8, y + 8, 2, 1, '#A8D0E0');
+    for (const [i, j] of [[7, 5], [8, 3], [9, 1]]) put(g, x + i, y + j, '#C8E4F0');
+  };
+  // a ghost stove: black iron, a pot on top, and a blue flame under it that gives no heat
+  art['4'] = (g, x, y) => {
+    box(g, x + 1, y + 4, 14, 12, '#2A2A30');
+    box(g, x + 1, y + 4, 14, 1, '#4A4A54');
+    box(g, x + 4, y + 10, 8, 4, '#141418');
+    box(g, x + 5, y + 11, 6, 2, '#6AB0D8');
+    put(g, x + 7, y + 10, '#C8E4F0');
+    ellipse(g, x + 8, y + 3, 5, 3, '#3A3A44');
+    box(g, x + 4, y + 1, 9, 1, '#C8E4F0');
+    for (const [i, j] of [[6, 0], [9, -1], [11, 0]]) put(g, x + i, y + j, '#C8E4F0');
+  };
   // a hospital bed, seen from above: a wooden headboard, a plump pillow, a blanket folded down
   art.b = (g, x, y) => {
     box(g, x + 2, y, 12, 16, '#3A2618');

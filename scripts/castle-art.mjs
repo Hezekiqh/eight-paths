@@ -779,6 +779,26 @@ export function castleArt({ box, put, ellipse, hash, wall }) {
     box(g, x + 12, y + 3, 1, 6, '#E8E8F0');
   };
 
+  // The war council's table (author, Oct 7, 2026): a map of the eight kingdoms, the Mage Kingdom's border inked in
+  // red, little carved soldiers pushed up against it, and a dagger stuck in the middle.
+  inside.T = (g, x, y, m) => {
+    const l = m.at(-1, 0) !== 'T';
+    const r = m.at(1, 0) !== 'T';
+    const t = m.at(0, -1) !== 'T';
+    const b = m.at(0, 1) !== 'T';
+    box(g, x, y, TILE, TILE, '#3A2416');
+    box(g, x + (l ? 2 : 0), y + (t ? 2 : 0), TILE - (l ? 2 : 0) - (r ? 2 : 0), TILE - (t ? 2 : 0) - (b ? 3 : 0), '#D8C898');
+    if (b) box(g, x, y + 13, TILE, 3, '#24160C');
+    for (let k = 0; k < 5; k++)
+      put(g, x + 2 + Math.floor(hash(x, y, k + 60) * 12), y + 3 + Math.floor(hash(y, x, k + 61) * 8), '#8A6A44');
+    if (r) box(g, x + 11, y + 2, 1, 10, '#A82020');
+    for (let k = 0; k < 3; k++) {
+      const px = x + 4 + Math.floor(hash(x, y, k + 62) * 7);
+      const py = y + 4 + Math.floor(hash(y, x, k + 63) * 6);
+      box(g, px, py, 2, 3, '#2A2A30');
+      put(g, px, py, '#6A1216');
+    }
+  };
   // A hearth in the wall, burning low.
   inside.F = (g, x, y, m) => {
     wall?.(g, x, y, m);

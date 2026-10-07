@@ -1,0 +1,96 @@
+{
+  "id": "war-room",
+  "name": "The War Room",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ",",
+    "h"
+  ],
+  "art": {
+    "1": "E"
+  },
+  "floor": "marble",
+  "spawn": {
+    "x": 6,
+    "y": 6,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "Back out to the hall."
+    ],
+    "W": [
+      "Black stone. The door's thick. Nobody outside was meant to hear any of this."
+    ],
+    "B": [
+      "The fist crushing a crown."
+    ],
+    "f": [
+      "A portrait of Kaldor, pointing east. The painter has made the finger very long."
+    ],
+    "T": [
+      "A map of the eight kingdoms. The Mage Kingdom's border is inked in red, and the king's little carved soldiers are pushed right up against it.",
+      "Someone has stuck a dagger in the middle. Right through the mages' capital."
+    ]
+  },
+  "objects": [
+    {
+      "id": "general-vosk",
+      "type": "npc",
+      "x": 3,
+      "y": 5,
+      "sprite": "varga",
+      "facing": "up",
+      "name": "General Vosk",
+      "lines": [
+        "Close the door. This council does not meet.",
+        "The king says the army is for defence. Only defence. Five hundred years of only defence.",
+        "But the wizards are weak. Everyone says so. The French one says so. And an army that never marches is a waste of good bread."
+      ],
+      "goneAfter": "kaldor-beaten"
+    },
+    {
+      "id": "marshal-grenna",
+      "type": "npc",
+      "x": 10,
+      "y": 3,
+      "sprite": "hagga",
+      "facing": "left",
+      "name": "Marshal Grenna",
+      "lines": [
+        "Every tithe fighter. Every champion. Every child on the Kaloseum's sand. Trained harder every year, for a hundred years.",
+        "You don't sharpen a sword for a hundred years to hang it on a wall.",
+        "When the king gives the word, we march on the Mage Kingdom. And if he doesn't...",
+        "* She looks at the empty chair at the head of the table, and doesn't finish."
+      ],
+      "goneAfter": "kaldor-beaten"
+    },
+    {
+      "id": "scribe-tolm",
+      "type": "npc",
+      "x": 2,
+      "y": 3,
+      "sprite": "officer",
+      "facing": "right",
+      "name": "Scribe Tolm",
+      "lines": [
+        "I write down everything this council says. Then I burn it. Orders.",
+        "Strength creates justice. The winners decide justice. I've written that four thousand times.",
+        "I'm starting to wonder who the winners are going to be."
+      ],
+      "goneAfter": "kaldor-beaten"
+    }
+  ],
+  "tiles": [
+    "##############",
+    "#WWBWWfWWBWWW#",
+    "#W..........W#",
+    "#W..TTTTTT..W#",
+    "#W..TTTTTT..W#",
+    "#W..........W#",
+    "#W..........W#",
+    "#WWWWW11WWWWW#",
+    "##############"
+  ]
+}

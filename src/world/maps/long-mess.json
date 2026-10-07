@@ -1,0 +1,106 @@
+{
+  "id": "long-mess",
+  "name": "The Long Mess",
+  "wall": "stone",
+  "floor": "stone",
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 2,
+    "y": 7,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "Back out to the barracks."
+    ],
+    "V": [
+      "Cold stone, and a great deal of it. The room just keeps going."
+    ],
+    "F": [
+      "The kitchen hearth. The fire gives off no heat at all, and somehow still cooks."
+    ],
+    "4": [
+      "A ghost stove, cooking ghost food. It smells the way soup used to."
+    ],
+    "x": [
+      "A barrel stencilled SPECTRAL SPUDS. It's empty. Or it's full of something you can't see."
+    ],
+    "3": [
+      "A table so long it has its own weather.",
+      "Every place is set. Every bowl holds something see-through and gently steaming."
+    ]
+  },
+  "objects": [
+    {
+      "id": "cook-gristle",
+      "type": "npc",
+      "x": 2,
+      "y": 4,
+      "sprite": "ghostcook",
+      "facing": "down",
+      "name": "Cook Gristle",
+      "lines": [
+        "Soup's on! Well. Soup's through. It goes straight through the bowl.",
+        "Five hundred years I've been cooking for this lot. Nobody's ever finished a plate.",
+        "How are we supposed to eat this? Don't ask me. I just cook it."
+      ]
+    },
+    {
+      "id": "cook-wisp",
+      "type": "npc",
+      "x": 4,
+      "y": 4,
+      "sprite": "ghostcook2",
+      "facing": "down",
+      "name": "Cook Wisp",
+      "lines": [
+        "Careful, it's hot. Well. It was hot. Everything down here was something, once.",
+        "Have a roll. Go on. ...This is going to go right through me, isn't it.",
+        "Try the boo-berry pie. It's to die for.",
+        "...Too soon? It's been five hundred years. It's never too soon."
+      ]
+    },
+    {
+      "id": "hobb-west",
+      "type": "npc",
+      "x": 5,
+      "y": 5,
+      "sprite": "ghosthobb",
+      "facing": "right",
+      "name": "Corporal Hobb",
+      "lines": [
+        "Oh, hello! Welcome to the mess. Pull up a bench.",
+        "What is the point of having a table this long? Honestly. You can't pass the salt. Nobody's passed the salt in five hundred years.",
+        "Go on, walk down to the other end. Have a look. I'll wait."
+      ]
+    },
+    {
+      "id": "hobb-east",
+      "type": "npc",
+      "x": 38,
+      "y": 5,
+      "sprite": "ghosthobb",
+      "facing": "left",
+      "name": "Corporal Hobb",
+      "lines": [
+        "Hi. It's me.",
+        "I'm the same ghost from earlier.",
+        "Neat trick, huh?"
+      ]
+    }
+  ],
+  "tiles": [
+    "############################################",
+    "#VVFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV#",
+    "#VVFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV#",
+    "#x44.......................................#",
+    "#..........................................#",
+    "#.....33333333333333333333333333333333.....#",
+    "#..........................................#",
+    "#x........................................x#",
+    "#_11_______________________________________#",
+    "############################################"
+  ]
+}

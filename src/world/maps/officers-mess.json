@@ -30,11 +30,11 @@
     ],
     "t": [
       "A map table. The old kingdom's borders, inked by hand: a much bigger kingdom than the one on today's maps.",
-      "In the margin: \"The council wants the eastern pass readied by spring. For what? Nobody attacks from the east.\""
+      "In the margin: \"The court wants the eastern pass readied by spring. For what? Nobody attacks from the east.\""
     ],
     "L": [
       "An officer's letter, never sent:",
-      "\"The council talks of the Mage Kingdom at every supper now. They say we'll strike before the mages can. They say it smiling. The king doesn't smile at all. He just sends the plans back.\""
+      "\"The court talks of the Mage Kingdom at every supper now. They say we'll strike before the mages can. They say it smiling. The king doesn't smile at all. He just sends the plans back.\""
     ],
     "2": [
       "The way back through the broken wall."
@@ -57,7 +57,7 @@
         {
           "ask": "What's the map for?",
           "answer": [
-            "The council wants the eastern pass readied by spring. I've drawn it nine times.",
+            "The court wants the eastern pass readied by spring. I've drawn it nine times.",
             "Nobody attacks from the east. The king knows that. He keeps sending the plans back, and they keep sending them in again."
           ]
         },

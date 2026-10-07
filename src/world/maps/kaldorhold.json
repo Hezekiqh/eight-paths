@@ -28,10 +28,10 @@
     "M.............ssssssssssss.............M",
     "M...mm..mm..mmsKKssssssKKs.mm..mm......M",
     "M.............sKKssssssKKs.............M",
-    "M.IIIIII......ssssssssssss......IIIIII.M",
-    "M.IIIIII......ssssssssssss......IIIIII.M",
-    "M.IIIIII............s...........IIIIIIJM",
-    "M..n................s...............n..M",
+    "M.232232......ssssssssssss......IIIIII.M",
+    "M.434342......ssssssssssss......IIIIII.M",
+    "M.323323............s...........IIIIIIJM",
+    "M..n.0..............s...............n..M",
     "MMMMMMMMMMMMMMMMMMMM_MMMMMMMMMMMMMMMMMMM"
   ],
   "spawn": {
@@ -82,6 +82,22 @@
     "J": [
       "A cocoon in the corner, where nobody looks.",
       "The silk is silver, and very still. You get the feeling it's looking at you."
+    ],
+    "2": [
+      "What's left of a wall, black with soot. A building stood here once. A big one."
+    ],
+    "3": [
+      "Ash, and a fallen roof beam. Somewhere under it, the ash is still warm. It shouldn't be, after this long."
+    ],
+    "4": [
+      "A stone plinth with an empty glass case on it. A brass label, half melted: THE HALE CROWN, AS WORN BY—",
+      "The rest has run like candle wax."
+    ],
+    "0": [
+      "A notice nailed to a post, in the king's own square hand:",
+      "THE MUSEUM OF THE OLD KINGDOM IS CLOSED. THERE IS NO OLD KINGDOM.",
+      "STRENGTH CREATES JUSTICE. THE WINNERS DECIDE JUSTICE.",
+      "— KALDOR"
     ]
   },
   "objects": [
