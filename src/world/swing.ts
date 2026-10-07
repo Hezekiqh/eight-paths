@@ -7,8 +7,8 @@ import { TILE } from './maps';
 
 /** Set with the hole's x (art pixels) once the warden has gone through the banners: `warden-hole:<x>`. */
 export const WARDEN_HOLE = 'warden-hole:';
-/** How far from the warden Brannoc stops to swing, in tiles (the warden is two tiles wide). */
-export const STAND_OFF = 1.75;
+/** How far from the warden Brannoc stops to swing, in tiles (the warden is two tiles wide, his club wider). */
+export const STAND_OFF = 2.1;
 /**
  * The swing, from when it starts (author, Oct 7, 2026: "a short wind-up"): he raises the blade up and back over his
  * shoulder for SWING_WINDUP, sweeps it over and down for SWING_SWEEP, and it lands at SWING_STRIKE; its trail fades

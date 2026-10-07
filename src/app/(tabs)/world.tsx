@@ -457,9 +457,12 @@ function startFor(
 } {
   if (saved) {
     // A ladder (the Maximus) puts up the next fight not yet won.
-    const map = withLadder(withoutCharacter(MAPS[saved.map], hero), useWorldStore.getState().flags);
+    const flags = useWorldStore.getState().flags;
+    const map = withLadder(withoutCharacter(MAPS[saved.map], hero), flags);
     const tile = Math.floor((saved.y - 1) / TILE) * map.width + Math.floor(saved.x / TILE);
-    if (!map.solid[tile]) return { ...saved, map };
+    // someone who isn't there yet (or any more) doesn't stand in your way: only those who are here now
+    // (Kaldor's spot in the cells, before he's jailed, is where you stand to talk to Brannoc)
+    if (!withoutGone(map, flags).solid[tile]) return { ...saved, map };
   }
   const map = withoutCharacter(MAPS.archive, hero);
   const [x, y] = npcFeet(map.spawn);
@@ -1269,6 +1272,11 @@ function World({
                     );
                     setDialogue({
                       lines: SNOT_SWING_HIT.slice(SWING_LINE),
+                      // up, up, over the banners: the camera stays on the hole he left while that's said
+                      onLine: (_, line) => {
+                        if (/over the banners/.test(line)) sim.focus.set([hx, hy + 40]);
+                        else if (!/SUPER SUPER SWING/.test(line)) sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
+                      },
                       then: () => {
                         // the hole he left in the banners stays (world-view draws it from the swing until now)
                         setFlag(`${WARDEN_HOLE}${banner[0]},${banner[1]}`);
@@ -1571,7 +1579,12 @@ function World({
         return;
       }
       const to = ways.find((e) => e.tile === letter)?.to;
-      if (to) travel(to);
+      // on your way out: you stop there (else, at a run, you're over the next doorway before the fade is done,
+      // as off the Maze Ward's pothole and onto its ladder)
+      if (to) {
+        sim.frozen.set(true);
+        travel(to);
+      }
     },
     [map, ways, travel, setFlag, guardScene, cocoonWall, sim],
   );
