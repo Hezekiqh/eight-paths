@@ -12,6 +12,7 @@ const player = {
   hapticsEnabled: true,
   objectivesLandscape: false,
   smartReminders: true,
+  dayReminders: 'bookends' as const,
 };
 const quest = {
   id: 'q1',
@@ -55,6 +56,15 @@ const valid = {
   traded: {},
   tradeMoves: [],
 };
+
+describe('v13: quests-left calls', () => {
+  it('turns on noon and 9 PM for an older save, and keeps a chosen setting', () => {
+    const { dayReminders: _, ...old } = player;
+    expect(sanitizeSave({ ...valid, player: old }).player?.dayReminders).toBe('bookends');
+    expect(sanitizeSave({ ...valid, player: { ...old, dayReminders: '2' } }).player?.dayReminders).toBe('2');
+    expect(sanitizeSave({ ...valid, player: { ...old, dayReminders: 'often' } }).player?.dayReminders).toBe('bookends');
+  });
+});
 
 describe('v9: usual-time reminders', () => {
   it('learns the time for players who kept the 8 PM default, and keeps a chosen time', () => {

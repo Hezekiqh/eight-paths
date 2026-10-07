@@ -29,7 +29,7 @@ export function Segmented<T extends string>({ options, value, onChange, color }:
             style={styles.segment}>
             <View style={styles.labelRow}>
               {selected && <SymbolView name="heart.fill" tintColor={color} size={11} />}
-              <Text style={[styles.label, selected && { color }]}>{o.label.toUpperCase()}</Text>
+              <Text style={[styles.label, selected && { color }]} numberOfLines={1} adjustsFontSizeToFit>{o.label.toUpperCase()}</Text>
             </View>
           </Pressable>
         );

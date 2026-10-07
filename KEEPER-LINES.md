@@ -6,7 +6,7 @@ Every notification's title is **The Keeper**. Lines go into `src/notifications/k
 
 **Voice:** the ancient skeleton caretaker from the intro. Patient, warm, a little wry. He knows who the player was and won't say it, so there are occasional hints, never reveals. He never shames, never invents stakes, and never mentions Premium.
 
-**Fill-ins:** `{name}` player name · `{streak}` showing-up streak · `{path}` class name (Warrior, Mage…) · `{level}` the next level · `{quest}` a quest title · `{n}` a count · `{quests}` up to 2 quest titles · `{milestone}` the next days-shown-up milestone · `{hero}` / `{hero2}` owned heroes · `{sleeping}` how many of the 200 still sleep.
+**Fill-ins:** `{name}` player name · `{streak}` showing-up streak · `{path}` class name (Warrior, Mage…) · `{level}` the next level · `{quest}` a quest title · `{n}` a count · `{quests}` up to 2 quest titles · `{milestone}` the next days-shown-up milestone · `{hero}` / `{hero2}` owned heroes · `{sleeping}` how many of the 200 still sleep · `{left}` quests left today ("2 quests").
 A line whose fill-ins aren't available (no heroes yet, no quests due) is skipped.
 
 ## A · Usual time (plain)
@@ -57,6 +57,35 @@ Only when the streak is ≥ 3, there's no rest token, and a quest is due. Time-s
 | c4 | An hour and a half until midnight. Your {streak} days are still yours to keep. |
 | c5 | No rest tokens left, {name}. One quest before midnight keeps all {streak} days. |
 | c6 | The lantern is nearly out. So is today. {streak} days, one quest. |
+
+## L · Quests left, during the day
+
+Only when at least one quest is still left that day, and only for today and tomorrow (re-planned every time the app opens or a quest is done). Set in Settings under "Quests left": off, noon and 9 PM, or check-ins every 4, 2 or 1 hours from noon until 9 PM. Skipped within 30 minutes of the usual call. `{left}` is "1 quest" or "3 quests".
+
+**l · Half time, noon**
+
+| id | line |
+|---|---|
+| l1 | Half time, {name}. {left} left today. |
+| l2 | The day's half gone. {left} still on the table. |
+| l3 | The noon bell just rang. {left} to go before midnight. |
+
+**m · Check-ins, every 1, 2 or 4 hours after noon**
+
+| id | line |
+|---|---|
+| m1 | {left} left today. One at a time. |
+| m2 | Just checking in. {left} still waiting on you. |
+| m3 | {left} to go, {name}. The day isn't over yet. |
+| m4 | Still {left} on the board. Start with the smallest. |
+
+**n · Last call, 9 PM**
+
+| id | line |
+|---|---|
+| n1 | Last call, {name}. {left} left before midnight. |
+| n2 | Nine o'clock. {left} still open, and three hours on the clock. |
+| n3 | The lantern's burning down. {left} left today. |
 
 ## D · The day after a miss (+1)
 
@@ -193,7 +222,7 @@ Extra fill-ins: `{best}` best-ever streak · `{now}` the hero on that Path right
 | k24 | after k20–k23 | Swap them in from your collection, whenever you like. No one stays offended for long. |
 | k25 | no bench heroes yet | You've only the eight so far. Good company, mind you. / Keep walking your Paths. Every few levels, someone new wakes up and wants to come along. |
 
-**Count:** 67 notification lines + 3 cards + 25 Archive lines.
+**Count:** 77 notification lines + 3 cards + 25 Archive lines.
 
 ## Questions
 

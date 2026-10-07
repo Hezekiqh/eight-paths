@@ -122,4 +122,5 @@ const playerStub = {
   hapticsEnabled: true,
   objectivesLandscape: false,
   smartReminders: true,
+  dayReminders: 'bookends' as const,
 };
