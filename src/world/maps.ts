@@ -98,6 +98,8 @@ export type NpcObject = {
   character?: CharacterId;
   /** What they say instead once a story flag is set. */
   after?: { flag: string; lines: string[] };
+  /** A story flag set the first time you talk to them: with `after` on it, they only tell you once (Old Morrow). */
+  sets?: string;
   /** A job only one Path can do by talking to them. */
   job?: NpcJob;
   /** Gone from the map once this story flag is set. */

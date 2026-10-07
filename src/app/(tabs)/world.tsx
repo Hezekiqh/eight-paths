@@ -1944,6 +1944,8 @@ function useAct(
         .getState()
         .hear({ id: talkedId(thing.name), speaker: thing.name, ask: TALKED, answer: thing.lines, at: Date.now() });
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
+      // some things are only said once: from now on it's their `after` lines
+      if (thing.sets) useWorldStore.getState().setFlag(thing.sets);
       // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =
         thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;

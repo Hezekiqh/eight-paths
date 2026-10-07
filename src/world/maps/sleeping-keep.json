@@ -55,6 +55,13 @@
         "Boys? Tuck our guest in, would you. Gently."
       ],
       "character": "plush",
+      "after": {
+        "flag": "plush-won",
+        "lines": [
+          "There you are, dear. Still awake? Remarkable.",
+          "The hole behind my sofa goes up and out. Mind the drop. I'll be along, eventually. Probably."
+        ]
+      },
       "goneAfter": "plush-won"
     }
   ],

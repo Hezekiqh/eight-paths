@@ -972,6 +972,21 @@ const OUTDOOR_ART = {
     if (m.at(1, 0) !== '8') box(g, x + 14, y + 4, 2, 12, '#D8BC8A');
     box(g, x + 3, y, 10, 4, '#6A1216');
   },
+  6(g, x, y) {
+    // A rose bed, weeded to the last leaf: red and white roses on dark soil.
+    box(g, x + 1, y + 4, 14, 11, O.soilDark);
+    box(g, x + 1, y + 4, 14, 1, O.soil);
+    for (const [i, j, c] of [
+      [4, 7, '#B0303A'],
+      [11, 6, '#F4F0EA'],
+      [7, 11, '#F4F0EA'],
+      [12, 12, '#B0303A'],
+      [3, 12, '#B0303A'],
+    ]) {
+      box(g, x + i - 2, y + j + 1, 5, 2, O.leaf);
+      ellipse(g, x + i, y + j, 1, 1, c);
+    }
+  },
   Q(g, x, y) {
     // A faceless statue, toppled face-down in the moss.
     box(g, x + 2, y + 7, 12, 6, O.stoneDark);
@@ -2597,6 +2612,15 @@ const WALKERS = {
     beard: '#3A2418',
     sword: true,
     sleepy: true,
+  },
+  // Old Morrow, who tends the Mad King's roses at the deserters' camp: a grey veil, a moss-dark robe.
+  morrow: {
+    robe: true,
+    top: '#3E4A3A',
+    shade: '#2E382C',
+    boots: '#2A2420',
+    skin: '#E0D0C0',
+    hair: ['veil', '#B8B4AC'],
   },
   // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
   silasseen: {

@@ -18,7 +18,7 @@
     "<,,,,,,,,,,,,,,,.............T",
     "<,,,,,,,,,,,,,,,......x......T",
     "T.......................AAA..T",
-    "T..g....AAA.............AAA..T",
+    "T..g....AAA.......66Z66.AAA..T",
     "T..gg...AAA..................T",
     "TTTT...............gg....TTTTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
@@ -57,6 +57,15 @@
     ],
     "<": [
       "The road back west."
+    ],
+    "Z": [
+      "A statue of a king in robes, snapped off at the neck. The plaque has been pried off.",
+      "Somebody has planted roses all round it anyway, and keeps them very well.",
+      "(The Mad King. Out here, somebody still kneels for him.)"
+    ],
+    "6": [
+      "Roses, red and white, weeded to the last leaf.",
+      "Not one of them is facing the Kingdom."
     ]
   },
   "objects": [
@@ -207,6 +216,31 @@
         }
       ],
       "look": true
+    },
+    {
+      "id": "morrow",
+      "type": "npc",
+      "x": 21,
+      "y": 11,
+      "sprite": "morrow",
+      "facing": "up",
+      "name": "Old Morrow",
+      "lines": [
+        "Hm? Oh. A visitor. Mind the roses, dear. They're his.",
+        "My great-grandmother used to tell me a tale, when I was small.",
+        "A prince. Who got lost in the woods.",
+        "Deities, toying with the King's mind. He never stood a chance.",
+        "I wonder if the prince is still out there.",
+        "They never found him, you know.",
+        "* She turns back to the statue, and pats its plinth, the way you'd pat an old friend's knee."
+      ],
+      "sets": "morrow-told",
+      "after": {
+        "flag": "morrow-told",
+        "lines": [
+          "Don't mind me. Just the ramblings of an old person."
+        ]
+      }
     },
     {
       "id": "heart-camp",
