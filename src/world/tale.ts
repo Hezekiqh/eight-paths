@@ -35,7 +35,7 @@ export const TALE: Chapter[] = [
       },
       {
         from: [loreId('Lieutenant Arden', "What's the map for?")],
-        text: 'His court begged him to march on the mages. He never quite gave the order.',
+        text: 'The queen wanted war with the mages. The king listened to her, and made ready.',
       },
       {
         from: [loreId('Sergeant Holt', 'Tell me a camp story.')],

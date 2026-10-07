@@ -17,10 +17,16 @@ how long ago the old king died is five hundred years.
 The players can see this flashback in the old king's crypt, under the chapel: it's the chaplain's sealed account
 (`old-kings-crypt.json`, tile `L`). The Story scroll (`tale.ts`) only ever tells what people *believe*.
 
-- **What people believe:** the queen went missing, and King Osric shut himself away. Rumours said he'd gone mad. His war
-  court begged him to march on the mages, and he hesitated. He named his brother Kaldor heir, and a month later he
-  died of a broken heart. People thought it suspicious that he died so soon after naming a successor.
+- **What people believe:** the queen wanted war on the mages, and King Osric, who listened to her in everything, made
+  ready. Then the queen went missing, and the king shut himself away. Rumours said he'd gone mad. He hesitated over
+  the war she'd wanted. He named his brother Kaldor heir, and a month later he died of a broken heart. People thought it suspicious that he died so soon after naming a successor.
 - **What really happened:**
+  0. The queen wanted war, and she manipulated the king into it; she knew exactly what to say to his doubts. They
+     meant to send their son, Prince Brannoc, to lead it. His art teacher was against it. Brannoc's journal (castle,
+     the old nursery): "I never wanted to be king… Mother and Father want me to go to war… My art teacher disagrees."
+     Then the queen disappeared. The king hesitated, wondering where she could have gone, and whether to go through
+     with her plan, and starting to think his court, who had warned him against the war, might be right.
+     Where she went is still a mystery.
   1. Kaldor was the second-born. He believed the throne had been stolen from him, and that he'd make the better king.
   2. The Shadow Monarch was listening. He promised Kaldor power over the dead and eternal youth.
   3. Using a shadow ability, Kaldor appeared in the king's bedroom. The king, lying awake, recognised his brother.
