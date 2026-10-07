@@ -3174,6 +3174,10 @@ const MAPS = [
   'room-pip',
   'room-tamsin',
   'room-moss',
+  'queens-room',
+  'kings-bedchamber',
+  'mess-hall',
+  'royal-dungeon',
 ];
 mkdirSync('assets/world', { recursive: true });
 for (const id of MAPS) {

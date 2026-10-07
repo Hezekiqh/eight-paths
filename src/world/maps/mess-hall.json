@@ -1,0 +1,174 @@
+{
+  "id": "mess-hall",
+  "name": "The Mess Hall",
+  "style": "dungeon",
+  "walkable": [".", ","],
+  "art": {
+    "1": "E",
+    "5": "R"
+  },
+  "spawn": {
+    "x": 16,
+    "y": 9,
+    "facing": "up"
+  },
+  "firstVisit": ["Noise hits you like a door. Clattering, shouting, chewing.", "So this is where everyone is."],
+  "tiles": [
+    "####################",
+    "#WW5WWFWWRWWWFWWcWW#",
+    "#W..........qq....W#",
+    "#W..mmmm..........W#",
+    "#W................W#",
+    "#W..tttttt..tttt..W#",
+    "#W................W#",
+    "#W..tttttt..tttt..W#",
+    "#Wr...............W#",
+    "#W................W#",
+    "#WWWWWWWWWWWWWWW1WW#",
+    "####################"
+  ],
+  "examine": {
+    "W": ["Stone, with dents in it at fist height. Hundreds of them. Some are fresh."],
+    "1": ["Back to the Great Hall, where it's quiet. Suspiciously quiet, now you know where everyone is."],
+    "5": [
+      "MESS RULES.",
+      "1. The strong eat first.",
+      "2. The strong eat second.",
+      "3. Whatever is left is for the strong.",
+      "4. No singing."
+    ],
+    "R": [
+      "A chalkboard: TODAY'S STRONGEST EATER.",
+      "The same name, chalked in fresh every morning for nine years: BRUNO.",
+      "Underneath, smaller: TODAY'S SECOND STRONGEST EATER: BRUNO'S BROTHER (RETIRED)."
+    ],
+    "F": [
+      "A great hearth, a cauldron of porridge hung over it. It's been bubbling since before you were born.",
+      "It may be the same porridge."
+    ],
+    "c": ["A torch. Somebody has hung a sausage over it to cook. It has been hanging there a very long time."],
+    "m": [
+      "The serving counter, scarred with knife marks. Every soldier gets one ladle. The strong get two.",
+      "Nobody has ever been brave enough to ask for a third."
+    ],
+    "q": [
+      "Two barrels. One says WATER. The other says ALSO WATER.",
+      "The king doesn't hold with ale. The soldiers hold with the second barrel."
+    ],
+    "t": [
+      "A long table, scored with dents the shape of forearms.",
+      "Arm-wrestling isn't allowed at meals. Meals aren't allowed to stop arm-wrestling."
+    ],
+    "r": [
+      "A rack for leaving your weapons at the door. It's empty. Everyone's weapons are at the table, being eaten next to."
+    ]
+  },
+  "objects": [
+    {
+      "id": "cook",
+      "type": "npc",
+      "x": 5,
+      "y": 2,
+      "sprite": "hamm",
+      "facing": "down",
+      "name": "Cook Hulda",
+      "lines": [
+        "Porridge. You want porridge. Everyone wants porridge. There is only porridge.",
+        "Strength porridge. It's the same as the other porridge, but I shout at it."
+      ],
+      "questions": [
+        {
+          "ask": "What's in the porridge?",
+          "answer": [
+            "Oats. Iron filings, for the iron. Raw eggs, for the... eggs.",
+            "And a pinch of salt. I'm not a monster."
+          ]
+        },
+        {
+          "ask": "Who eats the most?",
+          "answer": [
+            "Bruno. Nine years running. Nobody's come close.",
+            "His brother came close, once. We don't talk about it. He's fine. He's mostly fine. He doesn't eat porridge any more."
+          ]
+        },
+        {
+          "ask": "Could I have a bowl?",
+          "answer": [
+            "You? Show me your arms.",
+            "...Half a bowl. And you sit at the end. The end is for arms like those."
+          ]
+        },
+        {
+          "ask": "This smells like a boot.",
+          "answer": ["It IS boot. Tuesday is boot.", "Oh, you meant the smell. Out of my kitchen."],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "dunt",
+      "type": "npc",
+      "x": 13,
+      "y": 4,
+      "sprite": "ox",
+      "facing": "down",
+      "name": "Sergeant Dunt",
+      "lines": ["Not now. Busy. Winning.", "THANE: You're not winning.", "Winning SLOWLY."],
+      "questions": [
+        {
+          "ask": "How long have you two been at it?",
+          "answer": ["Since breakfast.", "THANE: Since Tuesday.", "Since Tuesday's breakfast."]
+        },
+        {
+          "ask": "What are you fighting over?",
+          "answer": [
+            "Strength is everything. The king says so.",
+            "THANE: Whoever wins gets the last bread roll.",
+            "...Strength is everything, and there's a bread roll."
+          ]
+        },
+        {
+          "ask": "Want me to take on the winner?",
+          "answer": [
+            "Ha!",
+            "THANE: Ha!",
+            "...Neither of us can let go. Our hands went to sleep on Wednesday. Could you fetch somebody?"
+          ]
+        },
+        {
+          "ask": "You're both weak.",
+          "answer": [
+            "WHAT.",
+            "THANE: WHAT.",
+            "* They both let go at once to get up and hit you, and both fall straight over. Their arms have been asleep since Wednesday.",
+            "...Best of three."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "thane",
+      "type": "npc",
+      "x": 13,
+      "y": 6,
+      "sprite": "brug",
+      "facing": "up",
+      "name": "Corporal Thane",
+      "lines": ["Don't talk to him. He's losing.", "DUNT: I'm winning."]
+    },
+    {
+      "id": "bruno",
+      "type": "npc",
+      "x": 6,
+      "y": 8,
+      "sprite": "gorm",
+      "facing": "up",
+      "name": "Bruno",
+      "lines": [
+        "Mmf.",
+        "(He holds up one finger: one moment. Forty minutes later, he's still holding it up. He's still eating.)"
+      ]
+    }
+  ]
+}
