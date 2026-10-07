@@ -57,11 +57,13 @@ export const ARCHIVE_DOOR_LEVEL = 6;
 /**
  * After the door, three gates and no more (author, Oct 4, 2026: Season 1 beatable in 30 to 50
  * habits over two or three days; the story's the draw, habits are the fuel): the road north out of
- * Warrior City at Lv 10, the king at Lv 18, and the end of Season 1 at Lv 20. Overall, so any
+ * Warrior City at Lv 10, the king at Lv 15 (author, Oct 7, 2026: lowered from 18), and the end of Season 1 at Lv 20. Overall, so any
  * habit counts. Recruiting the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
  */
 export const NORTH_ROAD_LEVEL = 10;
-export const KING_LEVEL = 18;
+export const KING_LEVEL = 15;
+/** The Royal Forest, west past the garden (author, Oct 7, 2026): Lv 10, like the road north. */
+export const FOREST_LEVEL = 10;
 
 /**
  * To face the king you need the whole party (author, Oct 4, 2026): Brannoc above all (it's his
@@ -1213,14 +1215,14 @@ export const EXITS: Exit[] = [
     walk: true,
   },
   // Brannoc's places (author, Oct 7, 2026): the Royal Forest, west past the garden, and the Painters'
-  // School by its gate. Both open from the start; nothing in the story waits on them.
+  // School by its gate. The school's open from the start; the forest at Lv 10. Nothing in the story waits on them.
   {
     id: 'south-forest',
     from: 'south-road',
     tile: '<',
     label: 'The path into the trees',
     to: { map: 'royal-forest', x: 38, y: 12, facing: 'left' },
-    needs: OPEN,
+    needs: { kind: 'overall', level: FOREST_LEVEL },
     back: true,
     walk: true,
   },
