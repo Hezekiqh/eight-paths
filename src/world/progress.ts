@@ -1178,7 +1178,7 @@ export const EXITS: Exit[] = [
     from: 'the-pit',
     tile: '3',
     label: 'The ladder down',
-    to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' },
+    to: { map: 'dungeon-mazes', x: 60, y: 6, facing: 'left' },
     needs: OPEN,
     back: true,
     walk: true,

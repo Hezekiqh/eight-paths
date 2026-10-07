@@ -1200,6 +1200,17 @@ const DUNGEON_ART = {
     box(g, x + 2, y + 2, 12, 14, DG.earth);
     box(g, x + 1, y + 1, 14, 2, DG.wallLight);
   },
+  N(g, x, y, m) {
+    // A stone archway with its door shut: planks, two iron bands and a lock.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 1, y + 1, 14, 2, DG.wallLight);
+    box(g, x + 2, y + 3, 12, 13, DG.timber);
+    for (let i = 5; i < 14; i += 3) box(g, x + i, y + 3, 1, 13, DG.timberDark);
+    box(g, x + 2, y + 5, 12, 2, DG.iron);
+    box(g, x + 2, y + 12, 12, 2, DG.iron);
+    box(g, x + 10, y + 8, 3, 3, DG.ironLight);
+    put(g, x + 11, y + 9, DG.earth);
+  },
   G(g, x, y, m) {
     // A portcullis, down.
     DUNGEON_ART.W(g, x, y, m);
@@ -1441,7 +1452,7 @@ function drawDungeon(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const c = at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoEN#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;

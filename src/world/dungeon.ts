@@ -46,6 +46,9 @@ export const escortIn = (guard: number): Actor[] => [
   { row: guard, path: [DOOR, [21, 6], [7, 6]], face: 1 },
 ];
 
+/** The door at the top of the guards' stair (tile 3): open while the guards bring you down, then locked behind them. */
+export const STAIR_DOOR = { x: 21, y: 1 };
+
 /** The cell door open (tile 4, at 6, 5): you're shoved in. */
 export const CELL_DOOR = { x: 6, y: 5 };
 export const shovedIn = (guard: number): Actor[] => [
@@ -80,6 +83,8 @@ export const ESCORT_LINES = {
   ],
   // walking as Brannoc himself: nobody in the corner but you
   alone: ['CLANG.', 'Stone walls. Iron bars. Straw that smells of other people.'],
+  // the guards gone back up the stair: they lock the door behind them
+  locked: ['Up the stair, the door slams. A key turns in the lock.'],
 };
 
 /** Brannoc, out of the corner: past you, through the bars, along the corridor and up the ladder. */
@@ -236,19 +241,20 @@ export const ALONE_WARDEN = [
   'You have no idea what just happened.',
 ];
 
-// ---- The Maze Ward (author, Oct 3, 2026): three mazes, each with a hole in the wall by its way in
-// that skips it. They look like plain wall; a Mage sees them twinkle, one at Lv 6, two at Lv 8, all
-// three at Lv 10. Brannoc made them, running: they're Brannoc-shaped. Walking as Brannoc yourself,
-// they're just hidden passages (he hasn't run through anything yet).
+// ---- The Maze Ward (author, Oct 3, 2026; reworked Oct 7): three mazes, each harder than the last.
+// The first is the one Brannoc ran through: short, and it has a Brannoc-shaped hole in the wall by its
+// way in that skips it (a Mage of Lv 6 sees it twinkle; walking as Brannoc, it's just a hidden passage).
+// It also has a hole in the floor, on the straight run at the bottom: you fall through to the cells,
+// by the ladder, and climb back up. After that the hole stays open, and the run is two wide, so you
+// walk round it. The second and third mazes have no way round: you solve them.
 
 export type MazeHole = { tile: string; needs: Requirement; to: Arrival };
 
 const MAGE = (level: number): Requirement => ({ kind: 'path', dimension: 'intellectual', level });
 
+/** The Brannoc-shaped hole: the first maze only, out at the start of the second. */
 export const MAZE_HOLES: MazeHole[] = [
-  { tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 16, y: 6, facing: 'right' } },
-  { tile: '8', needs: MAGE(8), to: { map: 'dungeon-mazes', x: 30, y: 8, facing: 'right' } },
-  { tile: '0', needs: MAGE(10), to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' } },
+  { tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 14, y: 14, facing: 'right' } },
 ];
 
 /** What your hero thinks at a twinkling hole (then "Take it?" is asked plainly, PASSAGE_LINES.ask). */
@@ -256,3 +262,22 @@ export const holeLines = (asBrannoc: boolean) =>
   asBrannoc
     ? ['(What is that shiny thing?)', "(It's a hidden passage!)"]
     : ['(What is that shiny thing?)', "(It's a hole in the wall. It is exactly Brannoc-shaped.)"];
+
+/** The hole in the floor of the first maze: it looks like floor until you've fallen through it. */
+export const PIT_TILE = 'h';
+/** You fell through it: it's open now, drawn as a hole, and you walk round it. */
+export const PIT_FELL = 'maze-pit-fell';
+/** You've come to at the bottom (said once). */
+export const PIT_LANDED = 'maze-pit-landed';
+/** At the foot of the cells' ladder, so climbing back up is one step. */
+export const PIT_LANDING: Arrival = { map: 'kingdom-dungeon', x: 21, y: 7, facing: 'down' };
+/** As the floor goes. */
+export const PIT_FALL = ['CRACK.', 'The floor gives way under you.'];
+/** At the bottom: you're back in the cells, by the ladder. */
+export const pitLanded = (asBrannoc: boolean) => [
+  'You land flat on your back, back in the cells.',
+  'Down the passage, Gary snores on.',
+  ...(asBrannoc
+    ? ['(Who puts a hole in a maze?)', "(At least the ladder's right here.)"]
+    : ['(Brannoc ran straight over that. Of course he did.)', "(At least the ladder's right here.)"]),
+];

@@ -847,9 +847,10 @@ function compile(ep) {
       t += 0.75;
     } else if (step.say || step.narrate || step.you) {
       const npc = step.say ? map.npcs[step.say] : null;
-      const speaker = step.you ? 'You' : npc ? npc.name : undefined;
-      const sprite = step.you ? ep.hero.sprite : npc ? npc.sprite : undefined;
-      const voice = step.you ? 3 : voiceFor(speaker, sprite);
+      // your hero's thoughts are a plain box, as in the game: no name, no face
+      const speaker = npc ? npc.name : undefined;
+      const sprite = npc ? npc.sprite : undefined;
+      const voice = voiceFor(speaker, sprite);
       // the person turns to face you, as in the game
       if (npc) {
         const [nx, ny] = center(npc.x, npc.y);
