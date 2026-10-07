@@ -88,7 +88,11 @@ What the player sees and hears all over the Berserker Kingdom. All of it is Told
 ## Kaldor and his master (Hinted, then Told at the end)
 
 - **Hinted:** Kaldor was given power over the dead. The Warden in the Kaloseum is one of the dead he woke, and so are
-  the shadow soldiers. The graveyard (Season 1 plan) has empty graves, dug from the inside.
+  the shadow soldiers.
+- **The Warden is Aurek the Tall** (author, Oct 7, 2026): the challenger who almost beat Kaldor in the Trial and
+  scarred his face. Kaldor killed him and woke him as the Warden. Brannoc's swing puts him through the Kaloseum's
+  banners; Kaldor wakes him again for the throne-room fight, the fight before the king. Beaten there, he's laid to rest
+  in the Graveyard of Kings under his own name. He doesn't come back, and doesn't join you. The graveyard (Season 1 plan) has empty graves, dug from the inside.
 - **Hinted:** he made a deal with something, and the deal forbade war. He yearned for war anyway. He waited, patiently,
   hoping his master would change its mind; perhaps if the army were strong enough, it would approve. He never knew much
   about his master, only that it must be the greatest power in the universe.

@@ -479,7 +479,8 @@ export function WorldView({
   useEffect(() => {
     sim.hp.set(fight.get().hp);
   }, [sim, fight]);
-  const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k]), []);
+  // Aurek the Tall is the Warden (author, Oct 7, 2026): in the throne room he looks like the Warden too
+  const enemyRows = useMemo(() => ENEMY_KINDS.map((k) => WALKER_ROWS[k === 'aurek' ? 'warden' : k]), []);
   const defeated = useMemo(() => (onDefeat ? onDefeat : () => {}), [onDefeat]);
   const won = useMemo(() => (onWin ? onWin : () => {}), [onWin]);
   const signed = useMemo(() => (onSignature ? onSignature : () => {}), [onSignature]);
@@ -554,9 +555,7 @@ export function WorldView({
   // ...and those with a snot bubble too
   const snorers = useMemo(
     () =>
-      map.npcs
-        .filter((n) => n.snot && dozing(n, talkingTo))
-        .map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+      map.npcs.filter((n) => n.snot && dozing(n, talkingTo)).map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
     [map, talkingTo, sim.npcIds],
   );
   // One more for a party member stepping in for a job (a cameo).
@@ -984,8 +983,7 @@ export function WorldView({
           if (row >= 0) {
             // swinging: he leans back as he raises the blade, then lunges into the blow
             const swingT = sw.length > 0 && sw[SW_RUN] !== 0 && row === sw[SW_ROW] ? sw[SW_T] : -1;
-            const lunge =
-              swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
+            const lunge = swingT < 0 ? 0 : swingT < SWING_WINDUP ? -1 : swingT < SWING_STRIKE + 0.25 ? 4 : 0;
             const lx = facing === 2 ? -lunge : facing === 3 ? lunge : 0;
             const ly = facing === 1 ? -lunge : facing === 0 ? lunge : 0;
             ents.push([row, facing, lunge !== 0 ? 1 : frame, x + lx, y + ly, 0, 1]);

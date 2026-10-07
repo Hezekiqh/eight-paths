@@ -22,7 +22,10 @@ export const BOSS_CUE: Partial<Record<MapId, string[]>> = {
     'KALDOR: Enough. You want single combat, by the old law? Then you shall have it.',
     '* He snaps his fingers. The shadows in the corners of the room peel off the walls, and stand up.',
     'KALDOR: These are me. Every one. The law never said how many of me there would be.',
-    '* Behind them, something tall and stitched unfolds. A tag hangs from its neck: AUREK THE TALL. Almost.',
+    // the Warden, back from the Kaloseum (author, Oct 7, 2026): Aurek the Tall is the Warden, the champion Kaldor
+    // killed and woke again; Brannoc's swing put him through the banners, and Kaldor wakes him once more
+    '* Behind them, something huge climbs in through a high window, picking banner out of its teeth. The Warden.',
+    '* A tag hangs from his neck: AUREK THE TALL. Almost.',
     '* Up by the throne, Felix settles in to watch.',
   ],
 };

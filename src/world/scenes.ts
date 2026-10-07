@@ -98,8 +98,7 @@ export function winScene(
       // He goes to his own cells whatever you choose; the only choice is who rules, and how you put it depends on
       // how you've treated people (honor.ts). Brannoc is always with you by now, and steps out beside you for it.
       const both = [
-        'The horde scatters. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
-        'Aurek joins your collection.',
+        'The horde scatters. The Warden is laid to rest again, in the Graveyard of Kings, under his own name this time: AUREK THE TALL.',
         'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
       ];
       const beaten = ['kaldor-beaten', 'kaldor-dethroned', 'kaldor-jailed', ...(throne.mean ? ['throne-mean'] : [])];
@@ -178,7 +177,7 @@ export function winScene(
         stepOut: brannoc && !asBrannoc ? 'brannoc' : undefined,
         lines: [
           'The last shadow comes apart like smoke in a draught.',
-          'Aurek the Tall sways, and kneels, and stays kneeling. The sword slips out of his grey hands.',
+          'The Warden sways, and kneels, and stays kneeling. The club slips out of his grey hands.',
           ...(brannoc && !asBrannoc
             ? ['Brannoc closes the empty eyes.', 'BRANNOC: Rest now. You almost did it. We shall do the rest.']
             : ['You close the empty eyes. Whatever held him lets go.']),
@@ -215,7 +214,6 @@ export function winScene(
                       // walking as him, there's nobody to catch you up: you're already gone
                       ...(asBrannoc ? [BRANNOC_REJOINED] : []),
                     ],
-                    joins: ['aurek'] as CharacterId[],
                   },
                 },
               ]
@@ -226,7 +224,7 @@ export function winScene(
                 {
                   label: 'Take the throne yourself.',
                   lines: [...youKing, ...both],
-                  outcome: { flags: [...beaten, 'you-king'], joins: ['aurek'] as CharacterId[] },
+                  outcome: { flags: [...beaten, 'you-king'] },
                 },
               ]),
         ],
