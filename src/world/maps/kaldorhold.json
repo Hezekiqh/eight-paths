@@ -30,7 +30,7 @@
     "M.............sKKssssssKKs.............M",
     "M.IIIIII......ssssssssssss......IIIIII.M",
     "M.IIIIII......ssssssssssss......IIIIII.M",
-    "M.IIIIII............s...........IIIIII.M",
+    "M.IIIIII............s...........IIIIIIJM",
     "M..n................s...............n..M",
     "MMMMMMMMMMMMMMMMMMMM_MMMMMMMMMMMMMMMMMMM"
   ],
@@ -78,6 +78,10 @@
     ],
     "_": [
       "The south street, toward the smell of ice and old furs."
+    ],
+    "J": [
+      "A cocoon in the corner, where nobody looks.",
+      "The silk is silver, and very still. You get the feeling it's looking at you."
     ]
   },
   "objects": [
@@ -311,6 +315,25 @@
         "Behind the Hall of Kaldor, in a crate marked RETURNS: a Heart Piece.",
         "Somebody tried to sell it at the bazaar. Nobody could do enough push-ups."
       ]
+    },
+    {
+      "id": "oona-hatched",
+      "type": "npc",
+      "x": 38,
+      "y": 16,
+      "sprite": "oonanpc",
+      "facing": "down",
+      "name": "Oona",
+      "lines": [
+        "* She steps out of the silk, a silver blindfold over her eyes, and turns her face straight to you.",
+        "There you are. You were later than I saw. Only a little.",
+        "The future is shy. Be patient with it.",
+        "Tomorrow it will rain in Warrior City. Bring a cloak. That is all I am going to tell you, and it is quite enough.",
+        "* Oona walks away along the wall without once touching it."
+      ],
+      "comesAfter": "oona-hatched",
+      "sets": "oona-left",
+      "goneAfter": "oona-left"
     }
   ]
 }

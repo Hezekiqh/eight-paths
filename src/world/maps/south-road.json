@@ -31,7 +31,7 @@
     "TT...............T.....g......g......g.T",
     "TT.....v.w.......T....g......gT.....g..T",
     "TT...............T..........g......g...T",
-    "TT...............T.........g......g....T",
+    "TT...............T.........g......g..J.T",
     "TTTTTTTTTTTTTTTTTT........T......g.....T",
     "T........................g......g......T",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
@@ -72,6 +72,10 @@
     ],
     "^": [
       "North: back up to Warrior City."
+    ],
+    "J": [
+      "A cocoon on the hilltop, where the wind is strongest.",
+      "A ring of candle stubs sits round it. Every one has burnt right down."
     ]
   },
   "objects": [
@@ -172,6 +176,25 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "sage-hatched",
+      "type": "npc",
+      "x": 36,
+      "y": 22,
+      "sprite": "sagenpc",
+      "facing": "right",
+      "name": "Mother Sage",
+      "lines": [
+        "Hm. Took you long enough. I've been in there since the stars had other names.",
+        "Sit. The answer walks slower than you.",
+        "...No? Busy? Everyone's busy. The stars are never busy.",
+        "Go on, then. I'll find my own way to that Archive of yours. I've a letter to write to the moon.",
+        "* Mother Sage gathers up her candle stubs, every one, and stumps off down the hill."
+      ],
+      "comesAfter": "sage-hatched",
+      "sets": "sage-left",
+      "goneAfter": "sage-left"
     }
   ]
 }

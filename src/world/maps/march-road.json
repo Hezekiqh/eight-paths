@@ -14,7 +14,7 @@
     "TM.,,,,,,,,,,,,,,,,,,,,,,,,..TTT",
     "T..,,,,,,,,,,,,,,,,,,,,,,,,,,GGT",
     "T..........g.......g......,,,GGT",
-    "T...j.........j.......j...,,.TTT",
+    "T.J.j.........j.......j...,,.TTT",
     "TT.....gg............g.......TTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
@@ -39,6 +39,10 @@
     ],
     "G": [
       "A horde checkpoint: sharpened stakes and a barrier of spears. A painted sign: TURN BACK. OR DON'T. WE'RE BORED."
+    ],
+    "J": [
+      "A cocoon at the roadside.",
+      "Pinned to the silk: a map, very old. This road isn't on it."
     ]
   },
   "objects": [
@@ -212,6 +216,24 @@
         "Beneath the smallest cairn stone, wrapped in a regiment scarf: a Heart Piece.",
         "Somebody meant it for whoever came home. You'll do."
       ]
+    },
+    {
+      "id": "lyra-hatched",
+      "type": "npc",
+      "x": 3,
+      "y": 6,
+      "sprite": "lyranpc",
+      "facing": "left",
+      "name": "Lyra",
+      "lines": [
+        "Out. Finally. Don't tell me how long. Tell me what's changed. Everything? Wonderful.",
+        "This road wasn't here when I went to sleep. It isn't on a single one of my maps. That's a blank space, and I can't abide a blank space.",
+        "If it isn't on the map, go and put it there. I'll start with this road. Then all the others.",
+        "* Lyra unrolls a fresh chart, licks her pencil, and walks off counting her steps."
+      ],
+      "comesAfter": "lyra-hatched",
+      "sets": "lyra-left",
+      "goneAfter": "lyra-left"
     }
   ],
   "art": {

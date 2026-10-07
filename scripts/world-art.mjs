@@ -2634,6 +2634,13 @@ const WALKERS = {
     hair: ['bald', '#D8B090'],
     beard: '#F0ECE6',
   },
+  // Out of the new cocoons (cocoons.ts, author, Oct 7, 2026). Their own walker ids, so the heroes themselves
+  // don't become walkers in your party.
+  irisnpc: { top: '#6A7A5A', shade: '#4E5A42', legs: '#4A4038', boots: '#2A2420', hair: ['short', '#3A2A20'], belt: '#B84A3A' },
+  sagenpc: { robe: true, top: '#5A4A6A', shade: '#42364E', boots: '#3A2A20', hair: ['bun', '#E8E4E0'] },
+  lyranpc: { top: '#3A5A7A', shade: '#2A445E', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['bun', '#8A4A2A'], belt: '#C8963A' },
+  wynnnpc: { top: '#C8A040', shade: '#A07E2A', legs: '#3A4A5A', boots: '#2A2A30', hair: ['spiky', '#6A6A78'] },
+  oonanpc: { robe: true, top: '#2A2A48', shade: '#1E1E36', boots: '#1A1A2A', skin: '#E8D8C8', hair: ['veil', '#D8DCE8'] },
   // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
   silasseen: {
     robe: true,

@@ -21,6 +21,8 @@ export type Cocoon = {
   empty: string[];
 };
 
+const EMPTY = ['The split silk of an empty cocoon. Whoever was inside is long gone.'];
+
 export const COCOONS: Cocoon[] = [
   {
     // The first one you find: open to anyone, to show what cocoons are. Felix Rook,
@@ -32,7 +34,59 @@ export const COCOONS: Cocoon[] = [
     character: 'felix',
     hatched: 'felix-hatched',
     left: 'felix-left',
-    empty: ['The split silk of an empty cocoon. Whoever was inside is long gone.'],
+    empty: EMPTY,
+  },
+  // More sleepers, scattered along the way (author, Oct 7, 2026): two 2-stars, two 3-stars and a 5-star. Each
+  // says their piece once, by the silk, and heads off (their NPC `sets` the left flag).
+  {
+    map: 'deserters-camp',
+    x: 27,
+    y: 11,
+    tile: 'J',
+    character: 'iris',
+    hatched: 'iris-hatched',
+    left: 'iris-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'south-road',
+    x: 37,
+    y: 22,
+    tile: 'J',
+    character: 'sage',
+    hatched: 'sage-hatched',
+    left: 'sage-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'march-road',
+    x: 2,
+    y: 6,
+    tile: 'J',
+    character: 'lyra',
+    hatched: 'lyra-hatched',
+    left: 'lyra-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'frost-ward',
+    x: 32,
+    y: 12,
+    tile: 'J',
+    character: 'wynn',
+    hatched: 'wynn-hatched',
+    left: 'wynn-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'kaldorhold',
+    x: 38,
+    y: 17,
+    tile: 'J',
+    character: 'oona',
+    hatched: 'oona-hatched',
+    left: 'oona-left',
+    empty: EMPTY,
   },
 ];
 

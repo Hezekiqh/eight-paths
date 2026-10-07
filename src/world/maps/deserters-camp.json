@@ -19,7 +19,7 @@
     "<,,,,,,,,,,,,,,,......x......T",
     "T.......................AAA..T",
     "T..g....AAA.......66Z66.AAA..T",
-    "T..gg...AAA..................T",
+    "T..gg...AAA................J.T",
     "TTTT...............gg....TTTTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
@@ -65,6 +65,10 @@
     "6": [
       "Roses, red and white, weeded to the last leaf.",
       "Not one of them is facing the Kingdom."
+    ],
+    "J": [
+      "A cocoon, tucked in between the tents and the trees.",
+      "Someone has wrapped an old soldier's scarf round the silk, to keep it warm."
     ]
   },
   "objects": [
@@ -278,6 +282,24 @@
         "Oh! Hello, hello! Lovely day for it."
       ],
       "goneAfter": "kaldor-beaten"
+    },
+    {
+      "id": "iris-hatched",
+      "type": "npc",
+      "x": 26,
+      "y": 11,
+      "sprite": "irisnpc",
+      "facing": "right",
+      "name": "Iris",
+      "lines": [
+        "Oh. Morning. Is it morning? I slept. I actually slept.",
+        "I was a soldier, once. I remember the drums. I remember deciding I'd had enough of them.",
+        "Some days are heavy. I carry them, and set them down at night. I think I'll set this one down at the Archive.",
+        "* Iris winds her scarf twice round, and walks off toward the Archive, slowly, like someone with nowhere she has to be."
+      ],
+      "comesAfter": "iris-hatched",
+      "sets": "iris-left",
+      "goneAfter": "iris-left"
     }
   ]
 }
