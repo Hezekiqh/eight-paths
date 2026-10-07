@@ -1,0 +1,199 @@
+{
+  "id": "royal-forest",
+  "name": "The Royal Forest",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g",
+    "k",
+    "z"
+  ],
+  "art": {
+    "k": "brush",
+    "o": "brush",
+    "1": "carved",
+    "2": "carved",
+    "3": "carved",
+    "4": "carvedWild",
+    "5": "carvedWild",
+    "z": "deadGrass",
+    "u": "husk",
+    "w": "woodpile"
+  },
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT^TT",
+    "TTTTTTTTTg.....TT......TT......TT..g...T",
+    "TTTTTTTTT.TT...TT......TT......TT......T",
+    "T.g....TT...T..TT...T.gTT...TT.TT.T.TT.T",
+    "T......TT.g....TT......TT......TT......T",
+    "T......kk......ko......kog.....kk......T",
+    "T......TT..g...TT......TT......TT......T",
+    "T.g..5.TT....g.TTg.T..gTT.T....TT......T",
+    "T.....gTT....g.TT......TT....T.TTg...wwT",
+    "T.g....TT......TT.T.T..TT......TT......T",
+    "T.zzz..TT.T...gTT......TT......TT.g....T",
+    "Tz...z.TT...4..TT...3..TT...2..TTg.1..gT",
+    "Tz.u.z.ko......kkg.....ko......ko.g,,,,>",
+    "Tz...z.TT......TT......TT......TT......T",
+    "T.zzz..TTg..TT.TT..TT..TT......TT......T",
+    "T......TT.T....TT..T...TT.g..T.TT..T.T.T",
+    "Tg.....TT.T..g.TTgT..T.TT..T.T.TT.g....T",
+    "T......TT..g...TTg.T.T.TT.T....TT......T",
+    "T......TT.g....TTg.....TT......TT..gg..T",
+    "T......ko.g....ko......kk......ko......T",
+    "T......TT.g...gTT......TT......TT......T",
+    "T......TT..T...TT......TT..T..gTT......T",
+    "TTTTTTTTT...TT.TT......TT......TT...TT.T",
+    "TTTTTTTTT.T.T..TT..T...TT...T..TT......T",
+    "TTTTTTTTT......TT.....gTT.g....TT......T",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 38,
+    "y": 12,
+    "facing": "left"
+  },
+  "firstVisit": [
+    "The trees close in behind you. Every way looks the same.",
+    "Somebody has carved something into that tree."
+  ],
+  "enemies": [
+    {
+      "kind": "shadow",
+      "x": 27,
+      "y": 8
+    },
+    {
+      "kind": "shadow",
+      "x": 18,
+      "y": 6
+    },
+    {
+      "kind": "shadow",
+      "x": 20,
+      "y": 16
+    },
+    {
+      "kind": "shadow",
+      "x": 10,
+      "y": 8
+    },
+    {
+      "kind": "shadow",
+      "x": 12,
+      "y": 16
+    },
+    {
+      "kind": "shadow",
+      "x": 11,
+      "y": 20
+    },
+    {
+      "kind": "shadow",
+      "x": 2,
+      "y": 5
+    },
+    {
+      "kind": "shadow",
+      "x": 5,
+      "y": 17
+    },
+    {
+      "kind": "shadow",
+      "x": 4,
+      "y": 20
+    }
+  ],
+  "examine": {
+    "T": [
+      "Old trees, packed close. Every one of them looks like the last one."
+    ],
+    "g": [
+      "Long grass. Nobody's trodden it down in a long time."
+    ],
+    "k": [
+      "A gap in the undergrowth, just wide enough for a boy."
+    ],
+    "o": [
+      "A gap in the undergrowth, just wide enough for a boy."
+    ],
+    ">": [
+      "East: back out to the South Road."
+    ],
+    "1": [
+      "Scratched into the bark, small and careful: a sparrow, every feather there. It's flying north.",
+      "Under it, smaller still: B."
+    ],
+    "2": [
+      "A horse, cut quick and deep into the trunk. It gallops south.",
+      "The legs are wrong. He didn't stop to fix them."
+    ],
+    "3": [
+      "A boy, running. Fewer lines now, cut hard. He runs west, straight on.",
+      "Behind him the bark's been scored over and over, until it's nearly black."
+    ],
+    "4": [
+      "Not a picture any more. Gouges. Eyes, all down the trunk, dozens of them.",
+      "And through the eyes, one clean arrow, pointing north. Cut with whatever nerve he had left."
+    ],
+    "5": [
+      "A sparrow, half done. One wing, and the start of the other.",
+      "Then nothing."
+    ],
+    "z": [
+      "Dead grass, in a ring. Nothing's grown here in a long, long time.",
+      "The rest of the clearing is green right up to its edge, and not a blade over."
+    ],
+    "u": [
+      "The husk of an old cocoon, split down the middle and gone grey, half sunk into the earth.",
+      "Whoever was in it left a long time ago."
+    ],
+    "w": [
+      "A woodpile, stacked neat. Every log from the first row of trees. None from the second."
+    ],
+    "^": [
+      "A path north between the oaks, lined with white roses gone half wild."
+    ]
+  },
+  "objects": [
+    {
+      "id": "forest-woodcutter",
+      "type": "npc",
+      "x": 36,
+      "y": 8,
+      "sprite": "holt",
+      "facing": "down",
+      "name": "Woodcutter",
+      "lines": [
+        "I cut at the edge. I don't go in.",
+        "Nobody goes in. Not if they want to come out the same day they went."
+      ],
+      "questions": [
+        {
+          "ask": "Why won't you go in?",
+          "answer": [
+            "Paths in there don't stay put. You walk in straight and you walk out where you started, scratching your head.",
+            "My gran said a prince ran in there once, five hundred years back, and the forest shut behind him.",
+            "My gran said a lot of things. I still don't cut past the first row."
+          ]
+        },
+        {
+          "ask": "Is there a way through?",
+          "answer": [
+            "Folk say somebody drew the way. On the trees.",
+            "Follow the pictures. Not your nose. Your nose'll walk you in circles."
+          ]
+        },
+        {
+          "ask": "A woodcutter, scared of trees. Brave.",
+          "answer": [
+            "Aye. Says the one about to walk into them.",
+            "* He goes back to his chopping. He chops a bit harder."
+          ],
+          "deed": "bad"
+        }
+      ]
+    }
+  ]
+}

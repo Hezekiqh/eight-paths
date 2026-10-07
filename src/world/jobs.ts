@@ -120,7 +120,7 @@ export const JOBS: Job[] = [
     done: [
       '{name} traces the worn letters and reads them aloud:',
       '"Any warrior may challenge the crown in single combat, and the court must bear witness."',
-      'Under it, fresher: "The door to the Trial is closed. — K." He closed the Trial because of this.',
+      'Under it, the names of everyone who tried, each one crossed out. The last reads AUREK.',
     ],
     already: ['"Any warrior may challenge the crown in single combat, and the court must bear witness."'],
     cant: ['The old law, carved in stone. The letters are too old to make out.', 'A Mage could read it.'],
@@ -136,6 +136,21 @@ export const JOBS: Job[] = [
     done: ['Something squeaks in the straw, right by your foot.', '{name} yelps and throws themself at the bars. The bars lose.'],
     already: ['Two bars, bent wide apart. Somebody went through here in a hurry.'],
     opens: true,
+  },
+  {
+    // The bank's vault (author, Oct 7, 2026): a Noble reads the ledgers the way a banker does, and just sees it.
+    // Anyone else turns the dials themselves (vault.ts).
+    map: 'wc-bank',
+    tile: 'G',
+    flag: 'bank-vault-open',
+    label: 'The vault door',
+    path: 'financial',
+    done: [
+      '{name} runs an eye down the three ledgers, the way other people glance at the weather.',
+      '"Red ink, in order. Six, two, one. They might as well have painted it on the door."',
+      'The dials click round. Somewhere inside, something very heavy agrees. The vault swings open.',
+    ],
+    already: ['The vault door stands open.'],
   },
 ];
 
@@ -159,5 +174,16 @@ export function openPatches(map: WorldMap, flags: string[]): { x: number; y: num
   ]);
   const out: { x: number; y: number }[] = [];
   map.tiles.forEach((row, y) => [...row].forEach((c, x) => letters.has(c) && out.push({ x, y })));
+  return out;
+}
+
+/**
+ * What a room's pressure plates open once `flag` is set, as tiles: the bridge they bring up out of the river, or the
+ * way through they unbar (a gate, drawn open). Where the camera looks as they go down.
+ */
+export function platesOpen(map: WorldMap, flag: string): { x: number; y: number }[] {
+  if (!map.raises) return openPatches(map, [flag]);
+  const out: { x: number; y: number }[] = [];
+  map.tiles.forEach((row, y) => [...row].forEach((c, x) => c === map.raises && out.push({ x, y })));
   return out;
 }

@@ -25,24 +25,12 @@
     "facing": "up"
   },
   "examine": {
-    "1": [
-      "The door back out to Warrior City."
-    ],
-    "V": [
-      "Plaster walls, hung with ladles."
-    ],
-    "S": [
-      "Shelves of everything: rope, rations, a hat with a feather, one boot."
-    ],
-    "u": [
-      "The counter. A bell on it says RING FOR SERVICE. It has been rung a great deal."
-    ],
-    "k": [
-      "A crate stamped WARRIOR CITY: HANDLE WITH STRENGTH."
-    ],
-    "_": [
-      "The store wall."
-    ]
+    "1": ["The door back out to Warrior City."],
+    "V": ["Plaster walls, hung with ladles."],
+    "S": ["Shelves of everything: rope, rations, a hat with a feather, one boot."],
+    "u": ["The counter. A bell on it says RING FOR SERVICE. It has been rung a great deal."],
+    "k": ["A crate stamped WARRIOR CITY: HANDLE WITH STRENGTH."],
+    "_": ["The store wall."]
   },
   "objects": [
     {
@@ -53,16 +41,11 @@
       "sprite": "jory",
       "facing": "down",
       "name": "Shopkeeper Dunstan",
-      "lines": [
-        "Welcome! Everything you need, mostly. Everything you don't need, definitely."
-      ],
+      "lines": ["Welcome! The shop doesn't actually sell anything.", "It's just here for show."],
       "questions": [
         {
           "ask": "What's for sale?",
-          "answer": [
-            "Rope. Lanterns. A bridge-crossing permit, though the bridge is shut.",
-            "And hats. Always hats."
-          ]
+          "answer": ["Nothing.", "It's just here for show."]
         },
         {
           "ask": "Nobody wants your hats, Dunstan.",

@@ -70,7 +70,7 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     route: '/',
-    line: 'Congratulations. {hero} is awake, and joins you. Only 199 heroes to go.',
+    line: 'Congratulations. {hero} is awake, and joins you. Only {left} heroes to go.',
   },
   {
     route: '/journey',

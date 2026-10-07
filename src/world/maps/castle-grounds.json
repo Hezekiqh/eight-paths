@@ -163,7 +163,7 @@
         {
           "ask": "You're doing it wrong.",
           "answer": [
-            "…Am I? Nobody's ever said. Four hundred years and nobody's ever said.",
+            "…Am I? Nobody's ever said. Five hundred years and nobody's ever said.",
             "* He keeps drilling, slightly differently, and much worse."
           ],
           "deed": "bad"
@@ -229,7 +229,7 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for four hundred years."],
+      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for five hundred years."],
       "questions": [
         {
           "ask": "Why haven't you marched yet?",
@@ -321,7 +321,7 @@
         {
           "ask": "What are the shadows?",
           "answer": [
-            "Came with the French adviser. Or the tall one. Nobody saw them arrive. Nobody saw anything. That's sort of the point of them.",
+            "Nobody knows where they came from. The king just snapped his fingers one night. Nobody saw them arrive. Nobody saw anything. That's sort of the point of them.",
             "Tallow keeps the braziers lit so they know where to stand. They stand there. All night."
           ]
         },
@@ -349,7 +349,7 @@
           "ask": "What's wrong with the cheese?",
           "answer": [
             "It's blue. Bread isn't blue. Swords aren't blue. Why is the cheese blue?",
-            "And he smiled when he gave it. I've lived here four hundred years. Nobody smiles when they give you anything."
+            "And he smiled when he gave it. I've lived here five hundred years. Nobody smiles when they give you anything."
           ]
         },
         {
@@ -379,7 +379,8 @@
           "ask": "Why so many braziers?",
           "answer": [
             "Orders. Light all round, so the king can see who's coming a mile off.",
-            "And so the shadows know where to stand. Don't ask me what that means. I don't ask."
+            "And so the shadows know where to stand. Don't ask me what that means. I don't ask.",
+            "My gran had a name for whatever sends them. Only ever whispered it: the Shadow Monarch."
           ]
         },
         {
@@ -401,6 +402,280 @@
           "answer": [
             "Named after my dad. He was named after candle grease. It's a family trade.",
             "…On you go, then. Tallow'll leave the one by the door unlit. Just for you."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "hobb",
+      "x": 25,
+      "y": 22,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Sentry Hobb",
+      "lines": [
+        "Halt! Who goes— oh, you've gone. Carry on.",
+        "I walk the field. Round and round. If the wizards come, I'll be first to see them. Probably from behind."
+      ],
+      "patrol": [
+        [
+          25,
+          17
+        ],
+        [
+          37,
+          17
+        ],
+        [
+          37,
+          27
+        ],
+        [
+          25,
+          27
+        ]
+      ],
+      "questions": [
+        {
+          "ask": "Are the wizards coming?",
+          "answer": [
+            "No. WE'RE going to THEM. Any day now. The king's said so.",
+            "Properly, this time. He's had the big map out. He's drawn on it. In red."
+          ]
+        },
+        {
+          "ask": "Seen anything on your rounds?",
+          "answer": [
+            "A rabbit. Tuesday. It saw me first.",
+            "Reported it. Captain Orsk said it was the most interesting report he'd had in years. I think that was sarcasm."
+          ]
+        },
+        {
+          "ask": "You'd lose a race to that rabbit.",
+          "answer": [
+            "Everyone would. It was a very fast rabbit.",
+            "* He marches off, pointedly. Then has to come all the way round again."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "nessa",
+      "x": 5,
+      "y": 23,
+      "sprite": "kids",
+      "facing": "right",
+      "name": "Recruit Nessa",
+      "lines": [
+        "HYAH! Got you! Got you again! Odo, you have to block.",
+        "RECRUIT ODO: I AM blocking. With my face."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "How old are you?",
+          "answer": [
+            "Twelve and a week. They took me on my birthday. Mum made a cake. I had to leave before the icing.",
+            "We train day and night. Night's harder. You can't see the sword. You see it afterwards, though. In the mirror."
+          ]
+        },
+        {
+          "ask": "What do you want to be?",
+          "answer": [
+            "A champion! The Kaloseum, at eighteen. Win, and I live by the king and never eat Kaldorbread again.",
+            "And if I lose… I don't lose. That's the plan. It's a short plan."
+          ]
+        },
+        {
+          "ask": "You hit like a sparrow.",
+          "answer": [
+            "Sparrows are VICIOUS.",
+            "* She whacks you on the shin with her wooden sword. It is not very sparrow-like at all."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "odo",
+      "x": 6,
+      "y": 23,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Recruit Odo",
+      "lines": [
+        "Ow. Ow. Ow. She's very good. I'm very good at being hit. That's a skill. Sergeant says so."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Are you all right?",
+          "answer": [
+            "Yes! No. Yes. I'm twelve, and I'm going to be the strongest man in the kingdom.",
+            "Or I'm going to the camp up north. One of those. Ow."
+          ]
+        },
+        {
+          "ask": "What happens at the camp?",
+          "answer": [
+            "That's where the weak ones go. Nobody says what happens after. They just say it in a voice.",
+            "I don't want to find out. So I'm being hit. Every day. Until I'm strong."
+          ]
+        },
+        {
+          "ask": "Keep your guard up.",
+          "answer": [
+            "Up! Right! Up!",
+            "* He raises his sword. Nessa hits him in the knee."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "The camp's the place for you.",
+          "answer": [
+            "…You don't know that.",
+            "* He lifts his wooden sword a little higher, lip wobbling, and goes back to being hit."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "stent",
+      "x": 31,
+      "y": 18,
+      "sprite": "bellow",
+      "facing": "down",
+      "name": "Corporal Stent",
+      "lines": [
+        "SPEARS UP! SPEARS DOWN! SPEARS UP!",
+        "…Brekk. Your spear is sideways. A sideways spear is a stick, Brekk."
+      ],
+      "questions": [
+        {
+          "ask": "What's the drill for?",
+          "answer": [
+            "The march on the wizard kingdom. Any day now. The king's been very clear. He's been clear for some time.",
+            "500 of us took the nearest island in a single day. A whole nation, before lunch. We've the spears for ten islands now."
+          ]
+        },
+        {
+          "ask": "Which island?",
+          "answer": [
+            "The nearest one. We never got its name. Didn't need it, after.",
+            "There's a plaque. 500 SOLDIERS. ONE DAY. Very popular plaque. Lots of people stand near it, looking strong."
+          ]
+        },
+        {
+          "ask": "Your drill is boring.",
+          "answer": [
+            "DRILL IS MEANT TO BE BORING. Boring wins wars.",
+            "SPEARS UP! …That one was for you."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "tunn",
+      "x": 29,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Spearman Tunn",
+      "lines": [
+        "Up. Down. Up. Down.",
+        "I've done it so long I do it in my sleep. My wife's left. She said it was the spear."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "How long have you drilled?",
+          "answer": [
+            "Since I was twelve. They take you at twelve. I cried for a week. Then I stopped crying and got strong.",
+            "Haven't cried since. Haven't laughed much either. Swings and roundabouts."
+          ]
+        },
+        {
+          "ask": "Your arms look tired.",
+          "answer": [
+            "Arms don't get tired. Arms get STRONGER.",
+            "* His spear droops, very slightly. He catches it. He glares."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "brekk",
+      "x": 31,
+      "y": 19,
+      "sprite": "grub",
+      "facing": "up",
+      "name": "Spearman Brekk",
+      "lines": [
+        "My spear's not sideways. It's at an angle. A tactical angle."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What's the tactical angle for?",
+          "answer": [
+            "Confusion. The wizards see a sideways spear and think, 'What's he doing?'",
+            "And then— well. Then I'll think of something."
+          ]
+        },
+        {
+          "ask": "Did you fight in the Kaloseum?",
+          "answer": [
+            "At eighteen, like everyone. The culling games. I came eleventh of twelve. The twelfth was a goat that got in.",
+            "The goat did very well, after. Lives by the king now. Fathered a lot of goats."
+          ]
+        },
+        {
+          "ask": "It's sideways, Brekk.",
+          "answer": [
+            "…It's tactical.",
+            "CORPORAL STENT: IT'S SIDEWAYS, BREKK."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "lisle",
+      "x": 33,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Spearman Lisle",
+      "lines": [
+        "Strength is everything. Strength is everything. Strength is everything.",
+        "We're meant to say it ten thousand times a day. I lose count around four."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Do you believe it?",
+          "answer": [
+            "Course. The strong live near the king. The weak go to the camp. Simple.",
+            "…Simple's not the same as nice. Nobody said nice."
+          ]
+        },
+        {
+          "ask": "You don't look very strong.",
+          "answer": [
+            "Strength is everything. Strength is everything.",
+            "* He says it faster now. And slightly higher."
           ],
           "deed": "bad"
         }

@@ -18,6 +18,8 @@ type Session = {
   heroIntro: string | null;
   /** Someone just hatched from a cocoon in the World: once the hatch closes, they talk to you (an NPC id). */
   talkAfterHatch: string | null;
+  /** Just fell through a trap pit in the Maze Ward (dungeon.ts): which fall it was, for the prisoners' comment. */
+  fell: number | null;
   /** Dev only: the fight bot plays the World's fights (autopilot.ts), for recording footage. */
   autopilot: boolean;
   /**
@@ -41,6 +43,7 @@ export const useSession = create<Session>((set) => ({
   worldPlaying: false,
   heroIntro: null,
   talkAfterHatch: null,
+  fell: null,
   // Dev only; EXPO_PUBLIC_AUTOPILOT=1 starts it on, for recording.
   autopilot: __DEV__ && process.env.EXPO_PUBLIC_AUTOPILOT === '1',
   carry: null,

@@ -13,6 +13,7 @@ export const roomOwner = (map: string): CharacterId | null =>
 
 export const ADVENTURE_ASK = 'How is the adventure going?';
 export const NEXT_ASK = 'What should we do next?';
+export const DREAM_ASK = 'What was your dream?';
 
 /** How each of them talks about it: an opener, then how they hand you the next step. */
 const VOICE: Record<string, { so: string; next: string }> = {
@@ -54,7 +55,7 @@ function soFar(id: CharacterId, a: Adventure): string[] {
   const out = [VOICE[id]?.so ?? 'So far, so good.'];
   const did = (f: string) => a.flags.includes(f);
   if (did('kaldor-beaten')) out.push('We beat the Kingbreaker. I still think about that.');
-  else if (did('pit-champion')) out.push("Your name's on the champions' wall now. The first one not crossed out.");
+  else if (did('pit-champion')) out.push("Your name's on the champions' wall now. The first new one since Kaldor's.");
   else if (did('jailed-with-brannoc')) out.push('We have been to prison, which I did not expect to say.');
   else if (did('felix-framed')) out.push('That Felix fellow is still out there. Somewhere. Plotting.');
   out.push(`${a.places} places walked, and ${a.met} of the eight of us found.`);
@@ -94,13 +95,65 @@ const MEAN: Record<string, { ask: string; answer: string[] }> = {
   moss: { ask: 'Say something for once, Moss.', answer: ['No.', '...Rude.'] },
 };
 
-/** What they say back: how it's going, the guide's next step in their words, and the mean one. */
+// ---- "What was your dream?" (author, Oct 7, 2026): "If you ask a character and it's not their time,
+// they will reveal a little bit, but not much. They will reveal their full dream during their arc."
+// Brannoc's arc is Season 1's: once the Painters' School flashback has played, he tells you all of it
+// (STORY.md, "Brannoc's dream"). The other seven get their arcs later: a teaser each for now, true to
+// their character file and giving nothing away. Their full dreams are the author's to write.
+
+/** Set when the Painters' School flashback plays (Brannoc's arc): from then on he tells you his dream. */
+export const BRANNOC_FLASHBACK = 'brannoc-flashback';
+
+/** Not their time yet: a little, not much. */
+const DREAM_TEASER: Record<string, string[]> = {
+  brannoc: ['Paint, maybe. Somewhere quiet.', '...That is all I shall say. A man must keep some mystery.'],
+  ysolde: [
+    'Mine had no ledger in it. Imagine that.',
+    "...Don't. It's not itemised yet. I'll show you when the numbers are right.",
+  ],
+  quill: [
+    'I wrote it down. Forty pages, with footnotes.',
+    "Footnote one: you may read it when it's finished. It isn't finished.",
+  ],
+  wren: [
+    "I'll tell you when I'm sure of it.",
+    "You'll know. The lantern will be very bright. ...It's fairly dim at the moment.",
+  ],
+  oren: ['* She turns her prayer beads until her thumb finds the gap where one is missing.', 'Another day.'],
+  pip: [
+    "It's a song! I just haven't got the last verse.",
+    'Every time I get close, I change the ending. Ask me later!',
+  ],
+  tamsin: ["Don't have dreams. Have plans.", "...Fine. One. It's on a napkin somewhere. Don't go looking for it."],
+  moss: ['...Tuft knows.', "Tuft isn't telling either."],
+};
+
+/** His arc has reached it: the whole dream, in his own words (STORY.md, "Brannoc's dream"). */
+const BRANNOC_DREAM = [
+  'I have told no one this. Not even Sweetheart.',
+  'I dreamt I lived in the city, alone, in rooms full of books and paint. Nobody bowed. Nobody knew my name.',
+  'I was a teacher. A professor! Boys and girls who argued with me, and thought for themselves, and did what was best for the kingdom, and what was best for themselves.',
+  'I was no prince. There was no war to lead. The kingdom was at peace, and only my students knew me.',
+  'My mother and father were alive. Mother was cross with me: no grandchild yet, and was I even trying?',
+  'Father laughed and told her to stop rushing the boy. Then he took me aside and asked if I needed any advice.',
+  'I laughed. In the dream I laughed and laughed.',
+  'I never wanted the power, you see. Only the freedom. ...There. Now you know. Do not tell Quill. He will want footnotes.',
+];
+
+/** What they tell you of their dream: all of it in their arc, a little before then. */
+export function dreamFor(id: CharacterId, flags: string[]): string[] {
+  if (id === 'brannoc' && flags.includes(BRANNOC_FLASHBACK)) return BRANNOC_DREAM;
+  return DREAM_TEASER[id] ?? ['Ask me another time.'];
+}
+
+/** What they say back: how it's going, the guide's next step in their words, their dream, and the mean one. */
 export function roomQuestions(id: CharacterId, a: Adventure, next: string): Question[] {
   const voice = VOICE[id];
   const mean = MEAN[id];
   return [
     { ask: ADVENTURE_ASK, answer: soFar(id, a) },
     { ask: NEXT_ASK, answer: [`${voice?.next ?? 'Next:'} ${next.charAt(0).toLowerCase()}${next.slice(1)}`] },
+    { ask: DREAM_ASK, answer: dreamFor(id, a.flags) },
     ...(mean ? [{ ...mean, deed: 'bad' as const }] : []),
   ];
 }
@@ -175,6 +228,14 @@ export const HERO_NEWS: Partial<Record<CharacterId, News[]>> = {
       lines: ['I tried the swing. Awake, this time.', 'I felled a bookshelf. Quill is furious. I am overjoyed.'],
     },
     {
+      id: 'brannoc-king',
+      when: { flag: 'kaldor-beaten' },
+      lines: [
+        'We bested the Kingbreaker. Me. Brannoc the Fainter.',
+        'I did not faint once. I very nearly did. Twice. But I did not.',
+      ],
+    },
+    {
       // back from his throne (castle.ts): ruling by raven
       id: 'brannoc-remote',
       when: { flag: 'brannoc-rejoined' },
@@ -182,14 +243,6 @@ export const HERO_NEWS: Partial<Record<CharacterId, News[]>> = {
         'Three ravens this morning. The advisor asks whether building a moat counts as causing a problem.',
         'I replied: it depends on the moat. Then I put a candle in the window so they know I am "in the office".',
         'I do not know what an office is. But I am in it.',
-      ],
-    },
-    {
-      id: 'brannoc-king',
-      when: { flag: 'kaldor-beaten' },
-      lines: [
-        'We bested the Kingbreaker. Me. Brannoc the Fainter.',
-        'I did not faint once. I very nearly did. Twice. But I did not.',
       ],
     },
   ],

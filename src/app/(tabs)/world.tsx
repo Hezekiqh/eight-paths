@@ -20,17 +20,18 @@ import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
 import { HeroSelect } from '@/components/world/hero-select';
 import { VhsOverlay } from '@/components/world/vhs-overlay';
-import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
+import { FOCUS_MARCH, WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { pickData, useGameStore } from '@/store';
 import { selectKeeperFacts } from '@/store/selectors';
 import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, overallLevelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
-import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
+import { advisedBy, brokenCocoons, cocoonAt, COCOON_WALL } from '@/world/cocoons';
+import { isTraveler, TRAVELER_FRIEND, travelerTalk } from '@/world/traveler';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
-import { turnToTalk, whoIsAt } from '@/world/wander';
-import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet } from '@/world/meet';
+import { turnToTalk, W_HX, W_HY, W_T, W_TX, W_TY, W_X, W_Y, whoIsAt } from '@/world/wander';
+import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet, wokeFlag } from '@/world/meet';
 import type { Owned } from '@/store/draws';
 import { COMPANIONS, DEFAULT_PARTY, type CharacterId } from '@/story/companions';
 import {
@@ -43,6 +44,8 @@ import {
   withOpenTiles,
   withoutCharacter,
   withoutGone,
+  withoutShadows,
+  withStoryPoses,
   type MapId,
   type NpcObject,
   type WorldMap,
@@ -57,25 +60,42 @@ import {
   type Requirement,
   type XpTotals,
 } from '@/world/progress';
-import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@/world/scenes';
+import { PORTAL_HOME, SEASON_END, finaleStage, seasonFinale, winScene, type Outcome, type Scene } from '@/world/scenes';
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
+import { FINALE } from '@/world/keeper-talk-lines';
 import { habitMemory } from '@/world/memory';
-import { MEMORIES, SEEN_LINES, memoryAt, notYetLines } from '@/world/memories';
+import {
+  MEMORIES,
+  SHADOWS_RISE,
+  memoryAt,
+  memoryCall,
+  memoryReady,
+  memoryShade,
+  type Memory,
+  type Shade,
+} from '@/world/memories';
+import { HOOK_TILE, PAINTINGS_HUNG, SCHOOL, fallenLines, hookDialogue, paintingsShown } from '@/world/painters-school';
 import { TALKED, loreId, talkedId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
+import { hasWalkBanter, walkBanterFlag, walkBanterFor } from '@/world/walk-banter';
 import { characterQuestions } from '@/world/talk';
 import { PhoneCall } from '@/components/world/phone-call';
+import { GateSheet } from '@/components/world/gate-sheet';
 import { callDue, callFlag, callLines, type KeeperCall } from '@/world/keeper-calls';
 import { dayNumber, pendingNews, roomOwner, roomQuestions, saidFlag, withRoster } from '@/world/hero-rooms';
 import { keeperQuestions } from '@/world/keeper-advice';
-import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
+import { jobAt, openPatches, openedByJobs, platesOpen } from '@/world/jobs';
+import { DIALS, DIAL_LINES, VAULT, opens } from '@/world/vault';
 import {
   ANSWERS,
   ANSWER_LEVEL,
   CLEARED_BOULDERS,
   CLEARING_TILE,
-  FELIX_FOILED,
+  DRINKS,
+  DRINKS_DUE,
+  TAB_UNPAID,
+  TO_THE_BAR,
   CUT_OFF,
   forHero,
   MISTER,
@@ -109,17 +129,32 @@ import {
   SCENE_OPEN,
   mazeCleared,
   scenePending,
+  seizeMarch,
 } from '@/world/felix-maze';
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
-import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
+import { chattersWithYou, partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
-import { newMarch, type Actor } from '@/world/march';
+import { MARCH_PACE, newMarch, walkPath, type Actor } from '@/world/march';
+import { SPEED_RATE } from '@/world/speed';
 import { BOSS_CUE, bossMoment } from '@/world/moments';
 import { noneLeft, practiceWarning, specialsLeft } from '@/world/specials';
-import { deedId } from '@/world/honor';
+import { deedId, honor } from '@/world/honor';
 import keeperWelcome from '@/world/keeper-welcome.json';
 import { TEST_TOOLS } from '@/world/test-tools';
 import { usePremium } from '@/premium/store';
+import { premiumEnabled } from '@/premium/config';
+import {
+  exitOf,
+  gateBlock,
+  gateForExit,
+  gateForGuard,
+  gatePrompt,
+  gatesOn,
+  guardLines,
+  ON_YOU_GO,
+  shouldOfferPremium,
+  type LevelGate,
+} from '@/world/gate-guards';
 import {
   BRIDGE_LOWERS,
   GATE_ANSWERS,
@@ -132,13 +167,35 @@ import {
   BRANNOC_REJOINS,
   REJOIN_MAP,
   brannocAway,
+  BRANNOC_STAND,
+  KALDOR_THRONE,
+  THRONE_FOCUS,
+  THRONE_STAND,
+  guardsForKaldor,
+  kaldorLedOut,
+  kaldorShadows,
+  toTheThrone,
   needsSomeone,
 } from '@/world/castle';
 import { LEAVE_IT_TO, MORE, NEVER_MIND, heroOrder, heroPage } from '@/world/hero-pick';
 import {
   MAZE_HOLES,
+  FUNERAL,
+  STATUE_SURE,
+  STRENGTH_TUNNEL,
+  withRaven,
+  FREED_ENDING,
+  PARDONED,
+  FREED_FLAG,
+  FALLING,
+  FELL_INTO,
+  PIT_TILE,
+  fallLines,
+  fellFlag,
   holeLines,
-  ALONE_WARDEN,
+  aloneWarden,
+  ARENA_FIGHT_AS_BRANNOC,
+  ARENA_VERDICT_AS_BRANNOC,
   BRANNOC_DECLINED,
   BRANNOC_JOINED,
   BRANNOC_NO,
@@ -154,26 +211,63 @@ import {
   SNOT_SWING_HIT,
   WARDEN_SHRUGS,
   brannocShuffles,
-  brannocSleepwalks,
   prisonRoute,
   BARS_BENT,
   BRANNOC_BOLTS,
   CELL_DOOR,
   ESCORT_LINES,
   GARY_STARTLED,
+  ARENA_EXCUSES,
+  ARENA_FIGHT,
+  ARENA_FIGHT_ALONE,
+  ARENA_VERDICT,
+  ARENA_CARRIED,
+  BARNABY_BOX,
+  BRANNOC_BLINKED,
+  BRANNOC_FAINTED,
+  SWING_LINE,
+  ARENA_FAINTED,
+  arenaCarry,
+  arenaRush,
+  CARRIED_TO,
+  ARENA_WELCOME,
+  ARENA_WELCOME_ALONE,
+  CELLS_FREED,
+  CELL_DOORS,
+  prisonersLeave,
+  SAND_MIDDLE,
+  FELL_IN,
+  POTHOLE,
+  POTHOLE_LANDING,
+  POTHOLE_UNSEEN,
+  toTheCells,
   brannocBolts,
   escortIn,
   escortStand,
   guardsLeave,
   shovedIn,
+  STAIR_DOOR,
 } from '@/world/dungeon';
 import { WALKER_ROWS } from '@/world/walkers';
+import {
+  STAND_OFF,
+  SLEEPWALK_PACE,
+  SWING_DELAY,
+  SWING_STRIKE,
+  WARDEN_HOLE,
+  bannerFor,
+  clothOf,
+  holeAt,
+  sleepwalkTo,
+} from '@/world/swing';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import {
   ATTACKS,
   E_ALIVE,
   E_HP,
   E_KIND,
+  E_X,
+  E_Y,
   ENEMIES,
   ENEMY_KINDS,
   attackFor,
@@ -253,9 +347,14 @@ export default function WorldScreen() {
   const origin = useGameStore((s) => s.player?.origin);
   // The hero you woke as is always met in the story, after a restart of the Other World too:
   // their room off the Archive is open, and they walk with you.
-  const originMet = useWorldStore((s) => !origin || s.flags.includes(metFlag(origin)));
+  const originMet = useWorldStore(
+    (s) => !origin || (s.flags.includes(metFlag(origin)) && s.flags.includes(wokeFlag(origin))),
+  );
   useEffect(() => {
-    if (hydrated && origin && !originMet) useWorldStore.getState().setFlag(metFlag(origin));
+    if (!hydrated || !origin || originMet) return;
+    useWorldStore.getState().setFlag(metFlag(origin));
+    // and the Keeper takes their place in Warrior City (meet.ts wokeFlag)
+    useWorldStore.getState().setFlag(wokeFlag(origin));
   }, [hydrated, origin, originMet]);
   const flash = useSharedValue(0);
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
@@ -272,6 +371,7 @@ export default function WorldScreen() {
         useGameStore.getState().chooseOrigin(id);
         useWorldStore.getState().setHero(id);
         useWorldStore.getState().setFlag(metFlag(id));
+        useWorldStore.getState().setFlag(wokeFlag(id));
         useSession.setState({ heroIntro: id });
         // No habit done yet: they sleep until the first one, so it's back to the World menu.
         if (!heroAwake(useGameStore.getState())) setPlaying(false);
@@ -318,6 +418,14 @@ export default function WorldScreen() {
 }
 
 const FADE_MS = 350;
+/** The drawbridge: the camera's glide to it, then its fall (castle.ts). */
+const BRIDGE_PAN_MS = 700;
+const BRIDGE_FALL_MS = 2200;
+/** How far back King Brannoc starts his run to catch you up, in tiles: out of sight across the screen, or up or down it. */
+const REJOIN_RUN_X = 11;
+const REJOIN_RUN_Y = 6;
+/** The camera's glide to what the pressure plates open, before it opens. */
+const PLATES_PAN_MS = 900;
 /** The hero-select flash: quick to white, held while the phone turns sideways, then a slow fade into the Archive. */
 const FLASH_IN_MS = 180;
 const FLASH_HOLD_MS = 700;
@@ -407,14 +515,31 @@ function startFor(
 } {
   if (saved) {
     // A ladder (the Maximus) puts up the next fight not yet won.
-    const map = withLadder(withoutCharacter(MAPS[saved.map], hero), useWorldStore.getState().flags);
+    const flags = useWorldStore.getState().flags;
+    const map = withLadder(withoutCharacter(MAPS[saved.map], hero), flags);
     const tile = Math.floor((saved.y - 1) / TILE) * map.width + Math.floor(saved.x / TILE);
-    if (!map.solid[tile]) return { ...saved, map };
+    // someone who isn't there yet (or any more) doesn't stand in your way: only those who are here now
+    // (Kaldor's spot in the cells, before he's jailed, is where you stand to talk to Brannoc; you, on the throne
+    // he's left)
+    if (!withoutGone(map, flags).solid[tile]) return { ...saved, map };
   }
   const map = withoutCharacter(MAPS.archive, hero);
   const [x, y] = npcFeet(map.spawn);
   return { map, x, y, facing: map.spawn.facing };
 }
+
+/** The Warden, raised (moments.ts BOSS_CUE): the line he comes up out of the floor on, and the heap he climbs out of. */
+const AUREK_KIND = ENEMY_KINDS.indexOf('aurek');
+/** The season finale's line that has King Brannoc standing beside you (keeper-talk-lines.ts FINALE). */
+const KING_BESIDE = /^Beside you, King Brannoc/;
+const RAISED = /The floor cracks/;
+const RISE_HEAP = [
+  [0, 0],
+  [-7, 2],
+  [7, 2],
+  [-4, -6],
+  [4, -9],
+];
 
 function World({
   hero,
@@ -432,21 +557,51 @@ function World({
 }) {
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
+  const speed = useWorldStore((s) => s.speed);
+  const setSpeed = useWorldStore((s) => s.setSpeed);
   const savePosition = useWorldStore((s) => s.savePosition);
   const [start] = useState(() => startFor(useWorldStore.getState().position, hero));
   const xpNow = useWorldProgress();
   // Doorways, holes and road ends you walk through, if they're open to you yet.
   // A boss fight, the first time you come in: the boss has their say, then the fight is on.
-  // Up from the cells into the Kaldorium (dungeon.ts): Brannoc has fainted on the sand, and the warden can't be hurt.
+  // Up from the cells into the Kaloseum (dungeon.ts): Brannoc has fainted on the sand, and the warden can't be hurt.
   const [prison] = useState(() => prisonRoute(start.map.id, xpNow.flags ?? []));
   // Walking as Brannoc there, the warden is no fight: you faint at the sight of him (a scene, on arrival).
   const [faints] = useState(() => prison && hero === 'brannoc' && start.map.boss?.flag === 'pit-champion');
   const [bossOn] = useState(() => !!start.map.boss && !(xpNow.flags ?? []).includes(start.map.boss.flag) && !faints);
   // While it's on, the doorways stay shut (as in Zelda), so backing away never walks you out of it by accident.
-  const [ways] = useState(() =>
+  const [ways, setWays] = useState(() =>
     bossOn
       ? []
-      : EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
+      : EXITS.filter(
+          (e) =>
+            e.from === start.map.id &&
+            e.walk &&
+            e.to !== null &&
+            standing(e.needs, xpNow).met &&
+            // the pothole only gives way once
+            !(e.id === 'maze-pothole' && (xpNow.flags ?? []).includes(FELL_IN)),
+        ),
+  );
+  /** The boss fight's over and its scene played (the throne room): the doorways open again, without coming back in. */
+  const [bossOver, setBossOver] = useState(false);
+  // The level gates still shut to you here (gate-guards.ts): you can walk into one, and its guard turns you back.
+  const shutGates = useMemo(
+    () => (bossOn ? [] : gatesOn(start.map.id).filter((g) => !ways.some((e) => e.id === g.exit))),
+    [start, ways, bossOn],
+  );
+  /** Ways a scene opened while you're here (a gate, a bridge): their letters, walkable from now on. */
+  const [openedLetters, setOpenedLetters] = useState<string[]>([]);
+  // A scene opens a way out (the drawbridge down, the plates' gate, the throne room's doors) there and then: no
+  // coming back into the room, it just becomes a way through. Its flag is saved as ever, so it's open next time too.
+  const openWays = useCallback(
+    (which: (e: (typeof EXITS)[number]) => boolean) => {
+      const more = EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && which(e));
+      if (more.length === 0) return;
+      setWays((w) => [...w, ...more.filter((e) => !w.includes(e))]);
+      setOpenedLetters((l) => [...new Set([...l, ...more.map((e) => e.tile)])]);
+    },
+    [start],
   );
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
@@ -467,26 +622,51 @@ function World({
   useEffect(() => {
     if (resume) useSession.setState({ carry: null });
   }, [resume]);
-  const roomMap = useMemo(
-    () =>
-      withOpenTiles(
-        // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
-        withRoster(start.map, dayNumber(), arrivalFlags),
-        [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
-      ),
-    [start, ways, arrivalFlags],
-  );
+  // The Maze Ward's pothole (dungeon.ts): once you've fallen through it, it stays open, and you walk round it.
+  const [pitOpen] = useState(() => start.map.id === 'dungeon-mazes' && arrivalFlags.includes(FELL_IN));
+  const roomMap = useMemo(() => {
+    const room = withOpenTiles(
+      // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
+      // ...and, once Kaldor's beaten, none of his shadows anywhere (maps.ts)
+      withRoster(withoutShadows(start.map, arrivalFlags), dayNumber(), arrivalFlags),
+      [
+        ...ways.map((e) => e.tile),
+        ...shutGates.map((g) => exitOf(g).tile),
+        ...openedByJobs(start.map.id as MapId, arrivalFlags),
+      ],
+    );
+    if (!pitOpen) return room;
+    const solid = room.solid.slice();
+    for (const t of tilesOf(room, [POTHOLE.tile])) solid[t] = 1;
+    return { ...room, solid };
+  }, [start, ways, shutGates, arrivalFlags, pitOpen]);
   // Someone who leaves for good (Nib, if you're mean to him) is gone as soon as the talk ends, not on the next visit.
   const flagsNow = useWorldStore((s) => s.flags);
-  const map = useMemo(() => withoutGone(roomMap, flagsNow), [roomMap, flagsNow]);
+  // ...and everyone as the story's left them: fainted, carried off (maps.ts)
+  const map = useMemo(() => withStoryPoses(withoutGone(roomMap, flagsNow), flagsNow), [roomMap, flagsNow]);
   /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
   const afterTalk = useRef<string[] | null>(null);
+  /** A flag to set once that narration's been read (Question.after). */
+  const afterRead = useRef<string | null>(null);
   /** Someone to see off once the conversation closes (Question.leaves), and who's leaving now. */
   const leaving = useRef<{ id: string; flag: string } | null>(null);
-  const [exit, setExit] = useState<{ id: string; flag: string } | null>(null);
+  const [exit, setExit] = useState<{ id: string; flag: string; fade?: boolean } | null>(null);
+  /** What a scene does once the one leaving has gone (Felix, fading out at the throne). */
+  const exitThen = useRef<(() => void) | null>(null);
   /** Doors standing open for a moment in a cutscene (the cell door, as you're shoved in). */
   const [ajar, setAjar] = useState<{ x: number; y: number }[]>([]);
-  const patches = useMemo(() => [...openPatches(map, arrivalFlags), ...ajar], [map, arrivalFlags, ajar]);
+  const patches = useMemo(
+    () => [
+      ...openPatches(map, arrivalFlags),
+      // the gate the plates open, swinging open as they go down (not on the next visit)
+      ...(map.platesFlag && !map.raises && flagsNow.includes(map.platesFlag) && !arrivalFlags.includes(map.platesFlag)
+        ? platesOpen(map, map.platesFlag)
+        : []),
+      ...ajar,
+      ...(pitOpen ? tilesOf(map, [POTHOLE.tile]).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) })) : []),
+    ],
+    [map, arrivalFlags, ajar, pitOpen, flagsNow],
+  );
   // The walking character's real level (from their habits): how hard they hit, and in the castle how hard the shadows are.
   const collection = useCollection();
   const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
@@ -528,13 +708,23 @@ function World({
     for (const b of boulders) solid[b] = 1;
     return { ...fightMap, solid };
   }, [map, fightMap, boulders]);
+  const liveFlags = useWorldStore((s) => s.flags);
+  // Felix's cocoon, still whole: the road east is walled off, invisibly, till you've broken it (cocoons.ts)
+  const cocoonWall = map.id === COCOON_WALL.map && !liveFlags.includes(COCOON_WALL.until);
   const stepTiles = useMemo(
-    () => tilesOf(map, [...ways.map((e) => e.tile), ...(map.id === MAZE ? [CLEARING_TILE] : [])]),
-    [map, ways],
+    () => [
+      ...tilesOf(map, [
+        ...ways.map((e) => e.tile),
+        ...shutGates.map((g) => exitOf(g).tile),
+        ...(map.id === MAZE ? [CLEARING_TILE] : []),
+        ...(map.id === 'dungeon-mazes' ? [PIT_TILE] : []),
+      ]),
+      ...(cocoonWall ? map.tiles.map((_, y) => y * map.width + COCOON_WALL.x) : []),
+    ],
+    [map, ways, shutGates, cocoonWall],
   );
   const party = useMemo(() => [hero], [hero]);
   // What stands in the room and how it feels: chests (open once their flag is set), signs, the dark, the flames.
-  const liveFlags = useWorldStore((s) => s.flags);
   const chests = useMemo(
     () =>
       map.objects.flatMap((o) =>
@@ -542,15 +732,43 @@ function World({
       ),
     [map, liveFlags],
   );
-  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign' && !o.inArt), [map]);
+  // (a sign already drawn in the map's picture, the graveyard's tombstones, gets no signpost on top)
+  // A bridge the plates bring up out of the river (the Cull Road's ferry-bridge), up for good once they're down.
+  const raised = useMemo(() => {
+    if (!map.raises || !map.platesFlag || !liveFlags.includes(map.platesFlag)) return [];
+    return tilesOf(map, [map.raises]).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
+  }, [map, liveFlags]);
   const husks = useMemo(() => brokenCocoons(map.id, liveFlags), [map, liveFlags]);
+  // the Painters' School's paintings: on the floor where they fell, or back on their hooks
+  const paintings = useMemo(() => paintingsShown(map, liveFlags), [map, liveFlags]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
   const sealed = useMemo(() => {
-    if (!bossOn) return [];
+    if (!bossOn || bossOver) return [];
     const letters = EXITS.filter((e) => e.from === map.id && e.walk).map((e) => e.tile);
     return tilesOf(map, letters).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
-  }, [bossOn, map]);
+  }, [bossOn, bossOver, map]);
+  // The field of banners: every banner in it (they lift in the finale's wind), and the seal's light
+  const banners = useMemo(
+    () =>
+      map.id === 'field-of-banners'
+        ? // every banner: the field's hundreds ('n'), and the one standing apart with his name on it ('u')
+          tilesOf(map, ['n', 'u']).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }))
+        : [],
+    [map],
+  );
+  const sealGlow = useMemo(() => {
+    const seal = map.id === 'field-of-banners' ? tilesOf(map, ['Q']) : [];
+    if (seal.length === 0) return null;
+    const xs = seal.map((t) => t % map.width);
+    const ys = seal.map((t) => Math.floor(t / map.width));
+    const x = Math.min(...xs) * TILE;
+    const y = Math.min(...ys) * TILE;
+    return { x, y, w: (Math.max(...xs) + 1) * TILE - x, h: (Math.max(...ys) + 1) * TILE - y };
+  }, [map]);
+  // ...and the tiles a scene has opened, for the walls to give way under
+  const openedTiles = useMemo(() => tilesOf(map, openedLetters), [map, openedLetters]);
   const flames = useMemo(() => flamesOn(map), [map]);
   // Hearts for this visit: five, plus one for every four pieces found (the walker's level adds more below).
   const [pieceHearts] = useState(() => maxHearts(arrivalFlags));
@@ -583,6 +801,9 @@ function World({
   }, [testWalk, goal, sim]);
   // Setting foot somewhere puts it on the World map.
   useEffect(() => {
+    // out of the Archive for the first time: the Keeper rings, too soon (keeper-calls.json, author, Oct 7, 2026)
+    if (map.id === 'courier-road' && !useWorldStore.getState().discovered.includes('courier-road'))
+      useWorldStore.getState().setFlag('left-archive');
     discover(map.id as MapId);
     // Felix, hatched and never asked "What now?": once you've left the Courier Road, so has he
     // (else he'd be by his cocoon and in his maze at once, and missing from the throne room)
@@ -593,10 +814,30 @@ function World({
   const prisonIntro =
     bossOn && prison && start.map.boss
       ? PRISON_INTROS[
-          start.map.boss.flag === 'pit-guards' ? (hero === 'brannoc' ? 'pit-guards-alone' : 'pit-guards') : 'pit-warden'
+          start.map.boss.flag === 'pit-guards'
+            ? // the prisoners you freed went up ahead of you, and didn't get far (author, Oct 4, 2026)
+              `pit-guards${arrivalFlags.includes(FREED_FLAG) ? '-freed' : ''}${hero === 'brannoc' ? '-alone' : ''}`
+            : 'pit-warden'
         ]
       : undefined;
-  const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
+  /** The verdict's been read: what comes next (the three's excuses and the carry, if they're here), played below. */
+  const [afterVerdict, setAfterVerdict] = useState<{ fight: string[]; carry: boolean } | null>(null);
+  // The Kaloseum's welcome goes on past your excuse (dungeon.ts): the Warden's answer, once one's been picked.
+  const [verdict, setVerdict] = useState<Dialogue | null>(null);
+  /** The boss's cue, line by line (moments.ts): his shadows step out of the walls on the snap. Set below. */
+  const onCue = useRef<(line: string) => void>(() => {});
+  const cueLine = useCallback((_: number, line: string) => onCue.current(line), []);
+  // The Kaloseum's cues (dungeon.ts): the camera turns up to Barnaby's box while he talks, and back down to the
+  // sand after; Brannoc goes down on the line that says he does.
+  const [arenaCue] = useState(() => (_: number, line: string) => {
+    if (/^BARNABY:/.test(line)) sim.focus.set(BARNABY_BOX);
+    else sim.focus.set([]);
+    if (/Brannoc passes out/.test(line)) {
+      useWorldStore.getState().setFlag(ARENA_FAINTED);
+      playSound('hit');
+    }
+  });
+  const [said, setDialogue] = useState<Dialogue | null>(() =>
     resume
       ? null
       : !bossOn
@@ -608,29 +849,94 @@ function World({
                 then: () => useWorldStore.getState().setFlag(`seen:${start.map.id}`),
               }
             : null))
-        : prisonIntro
-          ? { lines: prisonIntro.lines }
-          : start.map.boss?.intro
-            ? {
-                speaker: start.map.boss.intro.speaker ?? undefined,
-                lines: [
-                  // a line of Felix's only if he's in the room to say it
-                  ...start.map.boss.intro.lines.filter(aboutFelix),
-                  ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
-                  // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
-                  // this, and ends in the fight's cue; already seen, the cue comes straight after
-                  ...(() => {
-                    const m = bossMoment(start.map.id, hero);
-                    const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
-                    if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
-                    return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
-                  })(),
-                ],
-              }
-            : bossNpc
-              ? { speaker: bossNpc.name, lines: bossNpc.lines }
-              : null,
+        : prisonIntro && start.map.boss?.flag === 'pit-guards'
+          ? (() => {
+              // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE. Walking as
+              // Brannoc, the "500!?" is yours, you stay up (your faint is the Warden's), and nobody's carried off.
+              const freed = arrivalFlags.includes(CELLS_FREED);
+              const asBrannoc = hero === 'brannoc';
+              const fight = !freed ? ARENA_FIGHT_ALONE : asBrannoc ? ARENA_FIGHT_AS_BRANNOC : ARENA_FIGHT;
+              const verdictLines = asBrannoc ? ARENA_VERDICT_AS_BRANNOC : ARENA_VERDICT;
+              return {
+                lines: freed ? ARENA_WELCOME : ARENA_WELCOME_ALONE,
+                onLine: arenaCue,
+                choices: ARENA_EXCUSES.map((e) => ({
+                  ...e,
+                  // the verdict, then Brannoc's down; then the three's excuses, and they carry him off (arenaNext)
+                  then: () =>
+                    setVerdict({
+                      lines: verdictLines,
+                      onLine: arenaCue,
+                      then: () => setAfterVerdict({ fight, carry: freed && !asBrannoc }),
+                    }),
+                })),
+              };
+            })()
+          : prisonIntro
+            ? // one with a menu (Barnaby's, the Warden's) is put up just after, below, so its choices can say more
+              prisonIntro.choices
+              ? null
+              : {
+                  speaker: prisonIntro.speaker,
+                  lines: prisonIntro.lines.map((l) => forHero(l, hero)),
+                  onLine: arenaCue,
+                  then: () => sim.focus.set([]),
+                }
+            : start.map.boss?.intro
+              ? {
+                  speaker: start.map.boss.intro.speaker ?? undefined,
+                  onLine: cueLine,
+                  lines: [
+                    // a line of Felix's only if he's in the room to say it
+                    // Silas's raven, if you freed him (dungeon.ts): it takes the place of the king's last line
+                    ...withRaven(start.map.id, start.map.boss.intro.lines.filter(aboutFelix), arrivalFlags),
+                    ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
+                    // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
+                    // this, and ends in the fight's cue; already seen, the cue comes straight after
+                    ...(() => {
+                      const m = bossMoment(start.map.id, hero);
+                      const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
+                      if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
+                      return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
+                    })(),
+                  ],
+                }
+              : bossNpc
+                ? { speaker: bossNpc.name, lines: bossNpc.lines }
+                : null,
   );
+  // Any excuse you like: UNACCEPTABLE. The Warden's answer, once an excuse has been picked, until it's read.
+  const dialogue = useMemo(
+    () =>
+      said ??
+      (verdict
+        ? {
+            ...verdict,
+            then: () => {
+              setVerdict(null);
+              verdict.then?.();
+            },
+          }
+        : null),
+    [said, verdict],
+  );
+  // Barnaby's or the Warden's menu as you come into the Kaloseum (dungeon.ts PRISON_INTROS): ask, and
+  // it's back to the menu; choose, and that's said, then the fight
+  const introMenuShown = useRef(false);
+  useEffect(() => {
+    if (introMenuShown.current || resume || !prisonIntro?.choices) return;
+    introMenuShown.current = true;
+    setDialogue({
+      speaker: prisonIntro.speaker,
+      lines: prisonIntro.lines.map((l) => forHero(l, hero)),
+      questions: prisonIntro.questions,
+      choices: prisonIntro.choices.map((c) => ({
+        label: c.label,
+        deed: c.deed,
+        then: () => setDialogue({ lines: c.lines.map((l) => forHero(l, hero)) }),
+      })),
+    });
+  }, [prisonIntro, resume, hero]);
   const dialogueRef = useRef(dialogue);
   useEffect(() => {
     dialogueRef.current = dialogue;
@@ -671,12 +977,16 @@ function World({
 
   // A march (march.ts) playing out: nobody moves but the people in it.
   const [cutscene, setCutscene] = useState(false);
+  /** Someone stepping out of the party (stepOut), before they speak: the World holds, and its controls stay hidden. */
+  const [stepping, setStepping] = useState(false);
   const marchDone = useRef<(() => void) | null>(null);
   const march = useCallback(
     (actors: Actor[], then: () => void, tilesPerSecond?: number, linger = false) => {
       setCutscene(true);
       marchDone.current = then;
-      sim.march.set(newMarch(actors, tilesPerSecond, linger));
+      // the pause menu's speed hurries (or slows) the walk along with the dialogue
+      const rate = SPEED_RATE[useWorldStore.getState().speed];
+      sim.march.set(newMarch(actors, (tilesPerSecond ?? MARCH_PACE) * rate, linger));
     },
     [sim],
   );
@@ -709,6 +1019,10 @@ function World({
     );
     const [dx, dy] = step[from ?? [1, 0, 3, 2][f]];
     const behind = (k: number): [number, number] => [hx + dx * k, hy + dy * k];
+    // he starts out of sight, as far back along that open ground as it goes (the screen's half as tall as it's wide)
+    const sight = dx !== 0 ? REJOIN_RUN_X : REJOIN_RUN_Y;
+    let far = 4;
+    while (far < sight && open(...behind(far + 1))) far++;
     // he arrives facing you; you turn to face him
     const turned = from ?? [1, 0, 3, 2][f];
     const f2 = [1, 0, 3, 2][turned];
@@ -716,34 +1030,56 @@ function World({
     // (marked once it starts, not before: a cancelled timer, as in a re-run effect, mustn't use it up)
     const timer = setTimeout(() => {
       rejoined.current = true;
-      march(
-        [
-          { row, path: [behind(5), behind(1)], face: f2 },
-          { row: -1, path: [[hx, hy]], face: turned },
-        ],
-        () =>
-          setDialogue({
-            lines: BRANNOC_REJOINS,
-            then: () => {
-              useWorldStore.getState().setFlag(BRANNOC_REJOINED);
-              march(
-                [
-                  { row, path: [behind(1), [hx, hy]] },
-                  { row: -1, path: [[hx, hy]], face: f },
-                ],
-                () => {},
-              );
-            },
-          }),
-        4,
-        true,
-      );
+      // you hear him before you see him; you turn, and he comes pounding in
+      setDialogue({
+        lines: BRANNOC_REJOINS.slice(0, 1),
+        then: () =>
+          march(
+            [
+              { row, path: [behind(far), behind(1)], face: f2 },
+              { row: -1, path: [[hx, hy]], face: turned },
+            ],
+            () =>
+              setDialogue({
+                lines: BRANNOC_REJOINS.slice(1),
+                then: () => {
+                  useWorldStore.getState().setFlag(BRANNOC_REJOINED);
+                  // he falls in behind you (into the party), and you face the road again
+                  march(
+                    [
+                      { row, path: [behind(1), [hx, hy]] },
+                      { row: -1, path: [[hx, hy]], face: f },
+                    ],
+                    () => {},
+                  );
+                },
+              }),
+            // running
+            5,
+            true,
+          ),
+      });
     }, 400);
     return () => clearTimeout(timer);
   }, [map, hero, arrivalFlags, sim, march]);
   // The Keeper's telephone (keeper-calls.ts): it rings once a call is due and you're free to answer.
   const [ringing, setRinging] = useState<KeeperCall | null>(null);
-  const frozen = paused || dialogue !== null || cutscene || ringing !== null;
+  /** The Premium sheet after a guard's turned you back (its text), or null. */
+  const [gateSheet, setGateSheet] = useState<string | null>(null);
+  // (someone fading out is a scene too: Felix, at the throne)
+  const frozen =
+    paused || dialogue !== null || cutscene || ringing !== null || stepping || !!exit?.fade || gateSheet !== null;
+  /** A party member steps out beside you (stepOut), holding the World (and hiding its controls) till they speak. */
+  const stepOutHere = useCallback(
+    (doer: HeroId, said: Dialogue) => {
+      setStepping(true);
+      stepOut(sim, doer, said, (d) => {
+        setStepping(false);
+        setDialogue(d);
+      });
+    },
+    [sim],
+  );
   useEffect(() => {
     sim.frozen.set(frozen);
   }, [frozen, sim]);
@@ -765,10 +1101,80 @@ function World({
   // Someone with a scene of their own instead of a plain talk (the castle's gate captain); set below, once it can be.
   const specialTalk = useRef<(thing: NpcObject) => boolean>(() => false);
   const special = useCallback((thing: NpcObject) => specialTalk.current(thing), []);
-  const { act, talk } = useAct(map, sim, setDialogue, save, xpRef, travel, hero, special);
-  // Back from a cocoon's hatch: whoever came out of it talks to you straight away.
+  /** A level gate's guard has his say (gate-guards.ts): walking into the gate (`bump`, its tile), A on it, or on him. */
+  const gateTalk = useRef<(gate: LevelGate, bump: number | null) => void>(() => {});
+  const atGate = useCallback((exitId: string) => {
+    const gate = gateForExit(exitId);
+    // (strong enough, but the story's not done: the gate's usual hint, not the guard)
+    if (!gate || gateBlock(gate, xpRef.current).kind !== 'level') return false;
+    gateTalk.current(gate, null);
+    return true;
+  }, []);
+  const [memoryShown, setMemoryShown] = useState<Shade>(null);
+  // The season's last seal: your party walks up and hangs back a step behind you (King Brannoc, if he's with you,
+  // comes up beside you), and then it's said. The seal's light shows as it loosens, and every banner in the field
+  // lifts on the line that says so. Nobody says anything new: they just stand there with you.
+  const finale = useCallback(
+    (said: Dialogue) => {
+      const game = useGameStore.getState();
+      const w = useWorldStore.getState();
+      const [hx, hy] = tileOf(sim);
+      const open = (x: number, y: number) =>
+        x >= 0 && y >= 0 && x < map.width && y < map.height && !map.solid[y * map.width + x];
+      const withYou = partyWithYou(game.party, game.owned, w.flags).filter(
+        (id) => id !== hero && id in WALKER_ROWS,
+      ) as HeroId[];
+      // King Brannoc's beside you where the flags say so (the finale's own line for it, seasonFinale); otherwise,
+      // if he's with you, he hangs back with the rest
+      const king = hero !== 'brannoc' && said.lines.some((l) => KING_BESIDE.test(l));
+      const others = king ? withYou.filter((id) => id !== 'brannoc') : withYou;
+      const actors: Actor[] = finaleStage([hx, hy], king, others, open).map(({ id, path, face }) => ({
+        row: WALKER_ROWS[id as HeroId],
+        path,
+        face,
+      }));
+      const lit = (line: string) => {
+        if (/hairline of light/.test(line)) sim.glowing.set(withTiming(0.6, { duration: 700 }));
+        else if (/It loosens|It doesn't break/.test(line)) sim.glowing.set(withTiming(1, { duration: 900 }));
+        if (/every banner in the field lifts/.test(line)) sim.wind.set(1);
+      };
+      const play = () =>
+        setDialogue({
+          ...said,
+          onLine: (i, line) => {
+            lit(line);
+            said.onLine?.(i, line);
+          },
+          then: () => {
+            sim.glowing.set(withTiming(0, { duration: 600 }));
+            said.then?.();
+          },
+        });
+      if (actors.length === 0) return play();
+      march(actors, play, MARCH_PACE, true);
+    },
+    [sim, map, hero, march],
+  );
+  const { act, talk } = useAct(
+    map,
+    sim,
+    setDialogue,
+    save,
+    xpRef,
+    travel,
+    hero,
+    special,
+    setStepping,
+    setMemoryShown,
+    finale,
+    atGate,
+  );
+  // Back from a cocoon's hatch: whoever came out of it talks to you straight away. (Not in the room being left: it
+  // re-renders as the cocoon breaks, still focused, and would use the talk up unseen behind the hatch. The room come
+  // back into talks, once the hatch has closed.)
   useFocusEffect(
     useCallback(() => {
+      if (left.current) return;
       const id = useSession.getState().talkAfterHatch;
       const npc = id ? map.npcs.find((n) => n.id === id) : undefined;
       if (!npc) return;
@@ -807,20 +1213,78 @@ function World({
   const heroAttack = useMemo(() => attackFor(heroPath, heroLevel), [heroPath, heroLevel]);
   const gameParty = useGameStore((s) => s.party);
   const owned = useGameStore((s) => s.owned);
+  // Kaldor's throne room (castle.ts): the camera's on the throne while he talks, and his shadows don't step out of
+  // the walls until he snaps his fingers (moments.ts BOSS_CUE).
+  // The Warden is raised after them: Kaldor lifts a hand, the floor cracks, and he climbs up out of it.
+  const snap = BOSS_CUE['war-hall']?.[1];
+  const [throneIntro] = useState(() => bossOn && !resume && map.id === 'war-hall');
+  useEffect(() => {
+    if (!throneIntro) return;
+    sim.focus.set(THRONE_FOCUS);
+    sim.hideFoes.set(true);
+    sim.hideKind.set(AUREK_KIND);
+  }, [throneIntro, sim]);
+  // out of the dark, in a puff of it: `which` says who; the Warden (heavy) out of a heap of dark earth and smoke
+  const bringOut = useCallback(
+    (which: (kind: number) => boolean, heavy: boolean) => {
+      const f = fightRef.current?.get();
+      const at: number[] = [];
+      for (const e of f?.enemies ?? []) {
+        if (e[E_ALIVE] !== 1 || !which(e[E_KIND])) continue;
+        const heap = e[E_KIND] === AUREK_KIND ? RISE_HEAP : [[0, 0]];
+        for (const [dx, dy] of heap) at.push(e[E_X] + dx, e[E_Y] + dy, 1);
+      }
+      sim.puffs.set([...sim.puffs.get(), ...at]);
+      if (heavy) sim.quake.set(4);
+      playSound('slam');
+      haptics.rumble('crash');
+    },
+    [sim],
+  );
+  const revealFoes = useCallback(() => {
+    const kind = sim.hideKind.get();
+    const shadows = sim.hideFoes.get();
+    if (!shadows && kind < 0) return;
+    sim.hideFoes.set(false);
+    sim.hideKind.set(-1);
+    bringOut((k) => (shadows && k !== kind) || k === kind, kind >= 0);
+  }, [sim, bringOut]);
+  useEffect(() => {
+    onCue.current = (line) => {
+      // his shadows peel off the walls; the Warden waits under the floor until it cracks
+      if (line === snap && sim.hideFoes.get()) {
+        const kind = sim.hideKind.get();
+        sim.hideFoes.set(false);
+        bringOut((k) => k !== kind, false);
+      } else if (RAISED.test(line)) revealFoes();
+    };
+  }, [snap, revealFoes, bringOut, sim]);
   // The moment before this boss fight (moments.ts), once the intro closes: once only, not on every retry.
   const introOver = bossOn && dialogue === null;
+  const introDone = useRef(false);
   useEffect(() => {
-    if (!introOver) return;
+    if (!introOver || introDone.current) return;
+    introDone.current = true;
+    // the camera's been on the throne for his talk (above): back to you, for whoever steps out and for the fight
+    sim.focus.set([]);
     const m = bossMoment(map.id, hero);
     const flag = `moment:${map.id}`;
     const w = useWorldStore.getState();
-    if (!m || w.flags.includes(flag)) return;
+    // no moment to play: the fight's on (and his shadows are out, if the cue somehow wasn't said)
+    if (!m || w.flags.includes(flag)) return revealFoes();
     // walking as them, their lines are part of the intro instead (above)
-    if (!m.stepsOut || !partyWithYou(gameParty, owned, w.flags).includes(m.moment.who)) return;
+    if (!m.stepsOut || !partyWithYou(gameParty, owned, w.flags).includes(m.moment.who)) return revealFoes();
     w.setFlag(flag);
     // (a line about Felix only if he's here: the room's arrival flags decide it, as for the intro)
-    stepOut(sim, m.moment.who as HeroId, { lines: m.moment.lines.filter(aboutFelix) }, setDialogue);
-  }, [introOver, map, hero, gameParty, owned, sim, aboutFelix]);
+    // (next tick: it holds the World, which is state)
+    setTimeout(() =>
+      stepOutHere(m.moment.who as HeroId, {
+        lines: m.moment.lines.filter(aboutFelix),
+        onLine: cueLine,
+        then: revealFoes,
+      }),
+    );
+  }, [introOver, map, hero, gameParty, owned, sim, aboutFelix, cueLine, stepOutHere, revealFoes]);
   // Their own move, if they have one (signatures.ts); else their Path's special at Lv 20.
   const signature = signatureOf(hero);
   const habitToday = useGameStore((s) => s.completions.some((c) => c.date === today));
@@ -916,23 +1380,50 @@ function World({
     (who: HeroId, lines: string[], by: Partial<Record<string, string[]>> | undefined, then?: () => void) => {
       if (who === hero) return setDialogue({ lines, then });
       const said = by?.[who] ?? [`${COMPANIONS[who].name} steps up to do the talking.`, ...lines];
-      stepOut(sim, who, { lines: said, then }, setDialogue);
+      stepOutHere(who, { lines: said, then });
     },
-    [hero, sim],
+    [hero, stepOutHere],
   );
   // The gate captain: leave it to one of the core eight, ask nicely, or be rude about it.
   const gateScene = useCallback(() => {
     const lowerBridge = () => {
-      // the bridge comes down, BOOM, and then it's a way in (this visit's doorways are fixed, so come back in)
+      // The chains rattle; then the camera goes to the gate and the bridge comes down, BOOM, and then it's a way in
+      // (this visit's doorways are fixed, so come back in).
       setFlag(GATE_FLAG);
-      setCutscene(true);
-      bridgeDown.set(withTiming(1, { duration: 2200 }));
-      setTimeout(() => {
-        playSound('slam');
-        haptics.celebrate();
-        setCutscene(false);
-        setDialogue({ lines: BRIDGE_LOWERS, then: () => travel(hereNow()) });
-      }, 2300);
+      setDialogue({
+        lines: BRIDGE_LOWERS.slice(0, 1),
+        then: () => {
+          setCutscene(true);
+          if (drawbridge) {
+            const { x, y, w, h } = drawbridge;
+            sim.focus.set([(x + w / 2) * TILE, (y + h / 2) * TILE]);
+          }
+          // a beat for the camera to get there, then down it comes
+          setTimeout(() => bridgeDown.set(withTiming(1, { duration: BRIDGE_FALL_MS })), BRIDGE_PAN_MS);
+          setTimeout(
+            () => {
+              playSound('slam');
+              haptics.celebrate();
+              // a cloud of dust where it lands
+              if (drawbridge) {
+                const { x, y, w, h } = drawbridge;
+                const at: number[] = [];
+                for (let k = 0; k < w; k++) at.push((x + k) * TILE + TILE / 2, (y + h) * TILE, 0);
+                sim.puffs.set([...sim.puffs.get(), ...at]);
+              }
+              setCutscene(false);
+              setDialogue({
+                lines: BRIDGE_LOWERS.slice(1),
+                then: () => {
+                  sim.focus.set([]);
+                  openWays((e) => needsFlag(e.needs, GATE_FLAG));
+                },
+              });
+            },
+            BRIDGE_PAN_MS + BRIDGE_FALL_MS + 100,
+          );
+        },
+      });
     };
     // "Leave it to..." (author, Oct 4, 2026): one row opens the core eight, each with their own way past
     // (Lv 8 on their Path, and walking with you); the other two rows are the polite one and the mean one.
@@ -961,7 +1452,9 @@ function World({
             deed: a.deed,
             then: () => sayAs(id, a.lines, a.by, lowerBridge),
           })),
-          last ? { label: NEVER_MIND, then: () => ask(['CAPTAIN ORSK: Well?']) } : { label: MORE, then: () => page(n + 1) },
+          last
+            ? { label: NEVER_MIND, then: () => ask(['CAPTAIN ORSK: Well?']) }
+            : { label: MORE, then: () => page(n + 1) },
         ],
       });
     };
@@ -975,16 +1468,93 @@ function World({
             deed: a.deed,
             then: () => {
               // anyone's answer: mostly a no, now and then Orsk is in a good mood
-              if (a.luck && Math.random() < a.luck.chance) return setDialogue({ lines: a.luck.lines, then: lowerBridge });
+              if (a.luck && Math.random() < a.luck.chance)
+                return setDialogue({ lines: a.luck.lines, then: lowerBridge });
               setDialogue({ lines: none ? [...a.lines, GATE_NOT_YET] : a.lines });
             },
           })),
         ],
       });
     ask(GATE_OPEN);
-  }, [setFlag, travel, hereNow, bridgeDown, sayAs, hero]);
+  }, [setFlag, bridgeDown, sayAs, hero, drawbridge, sim, openWays]);
+  // Brannoc's down (dungeon.ts): the three make their excuses, rush over, pick him up and carry him off to the side
+  // of the sand (as in Episode 13), and then: FINISH THEM. Whoever's in a march is drawn by it, so the four of them
+  // step off the map while it plays, and are put down where it leaves them.
+  const arenaPlayed = useRef(false);
+  useEffect(() => {
+    if (!afterVerdict || arenaPlayed.current) return;
+    const { fight, carry } = afterVerdict;
+    const place = (moves: [string, number, number][]) => {
+      const rows = sim.npcWalk.get().map((r) => r.slice());
+      for (const [id, x, y] of moves) {
+        const r = rows[sim.npcIds.indexOf(id)];
+        if (!r) continue;
+        r[W_HX] = r[W_X] = r[W_TX] = x;
+        r[W_HY] = r[W_Y] = r[W_TY] = y;
+        r[W_T] = 0;
+      }
+      sim.npcWalk.set(rows);
+    };
+    setFlag(ARENA_FAINTED);
+    // a beat on him, out cold, before the three speak up (the fight holds off till FINISH THEM)
+    sim.frozen.set(true);
+    const timer = setTimeout(() => {
+      arenaPlayed.current = true;
+      const fightOn = () => sim.focus.set([]);
+      if (!carry) return setDialogue({ lines: fight, onLine: arenaCue, then: fightOn });
+      const rows = {
+        mott: WALKER_ROWS.oldmott,
+        nails: WALKER_ROWS.nails,
+        silas: WALKER_ROWS.silasseen,
+        brannoc: WALKER_ROWS.brannocasleep,
+      };
+      setDialogue({
+        lines: fight.slice(0, -1),
+        onLine: arenaCue,
+        then: () => {
+          place(['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'].map((id) => [id, -10, -10]));
+          // the camera goes with them
+          sim.focus.set([FOCUS_MARCH]);
+          march(
+            arenaRush(rows),
+            () =>
+              march(
+                arenaCarry(rows),
+                () => {
+                  place([
+                    ['arena-mott', ...CARRIED_TO.mott],
+                    ['brannoc-pit', ...CARRIED_TO.brannoc],
+                    ['arena-nails', ...CARRIED_TO.nails],
+                    ['arena-silas', ...CARRIED_TO.silas],
+                  ]);
+                  setFlag(ARENA_CARRIED);
+                  setDialogue({ lines: fight.slice(-1), onLine: arenaCue, then: fightOn });
+                },
+                2,
+              ),
+            4,
+            true,
+          );
+        },
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [afterVerdict, sim, march, setFlag, arenaCue]);
   useEffect(() => {
     specialTalk.current = (thing) => {
+      // a guard at a level gate: why not, or "On you go." (gate-guards.ts)
+      const gate = gateForGuard(map.id, thing.id);
+      if (gate) {
+        sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[sim.facing.get()]));
+        gateTalk.current(gate, null);
+        return true;
+      }
+      // the Traveler: hello first, and directions only if you're nice about it (traveler.ts)
+      if (isTraveler(thing)) {
+        const { flags } = useWorldStore.getState();
+        setDialogue(travelerTalk(map.id, flags, () => setFlag(TRAVELER_FRIEND), setDialogue));
+        return true;
+      }
       if (
         map.id === 'castle-grounds' &&
         thing.id === GATE_GUARD &&
@@ -995,7 +1565,240 @@ function World({
       }
       return false;
     };
-  }, [map, gateScene]);
+  }, [map, gateScene, setFlag, sim]);
+  // Twenty strikes, and the warden hasn't noticed (dungeon.ts, swing.ts): Brannoc gets up asleep, a snot bubble at
+  // his nose, sleepwalks to wherever the warden stands, and swings. The warden goes up, up, over the banners and out
+  // of the Kaloseum, leaving a hole in them. The camera follows it all: Brannoc on the sand, his walk, the swing, the
+  // flight. The win is only saved at the end, so the three who carried him stay on the sand to watch.
+  const snotSwing = useCallback(() => {
+    const warden = fightRef.current?.get().enemies.find((e) => ENEMY_KINDS[e[E_KIND]] === 'warden');
+    const [wx, wy] = warden ? [warden[E_X], warden[E_Y]] : npcFeet(map.boss ?? { x: 15, y: 7 });
+    const row = sim.npcWalk.get()[sim.npcIds.indexOf('brannoc-pit')];
+    const from: [number, number] = row ? [row[W_X], row[W_Y]] : BRANNOC_FAINTED;
+    const [lx, ly] = npcFeet({ x: from[0], y: from[1] });
+    const walk = sleepwalkTo(from, [wx, wy], (x, y) => !map.solid[y * map.width + x] && x >= 0 && y >= 0);
+    const [ex, ey] = npcFeet({ x: walk.end[0], y: walk.end[1] });
+    const banner = bannerFor(wx, wy);
+    const [hx, hy] = clothOf(banner);
+    // The prisoners you freed, on the sand (the-pit.json arena-*): where they stand now, the middle of them, and
+    // their run up the stands and out through the hole in the banners (the camera follows; they're gone at the top).
+    const FREED: [string, number][] = [
+      ['arena-mott', WALKER_ROWS.oldmott],
+      ['arena-nails', WALKER_ROWS.nails],
+      ['arena-silas', WALKER_ROWS.silasseen],
+    ];
+    const freedHere = () =>
+      FREED.flatMap(([id, row]) => {
+        const r = sim.npcWalk.get()[sim.npcIds.indexOf(id)];
+        return r && r[W_X] >= 0 ? [{ id, row, at: [r[W_X], r[W_Y]] as [number, number] }] : [];
+      });
+    const freedCentre = (): [number, number] => {
+      const at = freedHere().map((f) => f.at);
+      const mid = (k: 0 | 1) => at.reduce((n, a) => n + a[k], 0) / at.length;
+      return [mid(0) * TILE + TILE / 2, mid(1) * TILE + TILE / 2 - 8];
+    };
+    const freedRun = () => {
+      const out: [number, number] = [Math.floor(hx / TILE), Math.floor(hy / TILE)];
+      const runners = freedHere();
+      // off the map's people, into the march, which draws them running
+      const rows = sim.npcWalk.get().map((r) => r.slice());
+      for (const f of runners) {
+        const r = rows[sim.npcIds.indexOf(f.id)];
+        r[W_HX] = r[W_X] = r[W_TX] = -10;
+        r[W_HY] = r[W_Y] = r[W_TY] = -10;
+        r[W_T] = 0;
+      }
+      sim.npcWalk.set(rows);
+      sim.focus.set([FOCUS_MARCH]);
+      march(
+        runners.map((f, i) => ({
+          row: f.row,
+          path: [f.at, [f.at[0], 6 - i], [out[0], out[1] + 2], out] as [number, number][],
+        })),
+        () => {},
+        5,
+      );
+    };
+    const asleep = WALKER_ROWS.brannocasleep;
+    // the warden and the player, then a look round at the snore behind you
+    setDialogue({
+      lines: SNOT_SWING.slice(0, -1),
+      then: () => {
+        sim.focus.set([lx, ly - 8]);
+        setDialogue({
+          lines: SNOT_SWING.slice(-1),
+          then: () => {
+            // the one lying on the sand steps off the map; the march draws him up and walking
+            const rows = sim.npcWalk.get().map((r) => r.slice());
+            const r = rows[sim.npcIds.indexOf('brannoc-pit')];
+            if (r) {
+              r[W_HX] = r[W_X] = r[W_TX] = -10;
+              r[W_HY] = r[W_Y] = r[W_TY] = -10;
+              r[W_T] = 0;
+              sim.npcWalk.set(rows);
+            }
+            sim.focus.set([FOCUS_MARCH]);
+            march(
+              [{ row: asleep, path: walk.path, face: walk.face, snot: true }],
+              () => {
+                // Brannoc and the warden, side by side
+                sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
+                setDialogue({
+                  lines: SNOT_SWING_HIT.slice(0, SWING_LINE),
+                  then: () => {
+                    // the blow lands as the line's shouted (it types out in well under a second)
+                    setTimeout(() => {
+                      sim.swing.set([0, asleep, ex, ey, walk.face, wx, wy, hx, hy, 1]);
+                      playSound('swing');
+                      haptics.kill();
+                    }, SWING_DELAY * 1000);
+                    setTimeout(
+                      () => {
+                        playSound('slam');
+                        haptics.rumble('crash');
+                      },
+                      (SWING_DELAY + SWING_STRIKE) * 1000,
+                    );
+                    setDialogue({
+                      // the prisoners you freed come to, and go free too (dungeon.ts)
+                      lines: [...SNOT_SWING_HIT.slice(SWING_LINE), ...(freedNow() ? FREED_ENDING : [])],
+                      // up, up, over the banners: the camera stays on the hole he left while that's said; then
+                      // the prisoners you freed get up and shout, with the camera on them, and run out through it
+                      onLine: (_, line) => {
+                        if (/over the banners/.test(line)) sim.focus.set([hx, hy + 40]);
+                        else if (FREED_ENDING.includes(line) && freedHere().length > 0) {
+                          if (/scramble up the stands/.test(line)) freedRun();
+                          else sim.focus.set(freedCentre());
+                        } else if (!/SUPER SUPER SWING/.test(line))
+                          sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
+                      },
+                      then: () => {
+                        // the hole he left in the banners stays (world-view draws it from the swing until now)
+                        setFlag(`${WARDEN_HOLE}${banner[0]},${banner[1]}`);
+                        if (freedNow()) setFlag(PARDONED);
+                        setFlag('pit-champion');
+                        setFlag('brannoc-swung');
+                        travel(hereNow());
+                      },
+                    });
+                  },
+                });
+              },
+              SLEEPWALK_PACE,
+              true,
+            );
+          },
+        });
+      },
+    });
+  }, [map, sim, march, setFlag, travel, hereNow]);
+  // The throne room's ending, played out in the hall (castle.ts; the words are scenes.ts'): you're walked to the side
+  // of the carpet with the camera on the throne and Brannoc steps out beside you; the shadows pour out of Kaldor and
+  // are gone; two guards come in and lead him out; Felix fades; and whoever takes the throne walks up to it.
+  const playThrone = useCallback(
+    (scene: Scene, done: (o: Outcome, after: () => void) => void) => {
+      const throne = scene.throne!;
+      const after = scene.after ?? [];
+      const beside = scene.stepOut === 'brannoc' && hero !== 'brannoc';
+      const brannoc = WALKER_ROWS.brannoc;
+      const guard = WALKER_ROWS.raider;
+      // Brannoc stays standing beside you in every march from here on (a march draws only who's in it)
+      const stands = (actors: Actor[]): Actor[] =>
+        beside ? [...actors, { row: brannoc, path: [BRANNOC_STAND], face: 1 }] : actors;
+      const say = (lines: string[], then: () => void) => (lines.length > 0 ? setDialogue({ lines, then }) : then());
+      const choices = () =>
+        setDialogue({
+          lines: after.slice(throne.fades >= 0 ? throne.fades : throne.guards + 1),
+          choices: scene.choices?.map((c) => ({
+            label: c.label,
+            deed: c.deed,
+            then: () => {
+              // once it's said: the new ruler stays on the throne, Brannoc beside it or on it, and you're free to go
+              const end = () =>
+                done(c.outcome, () => {
+                  const brannocStays: Actor[] = beside
+                    ? [
+                        {
+                          row: brannoc,
+                          path: [c.toThrone?.who === 'brannoc' ? KALDOR_THRONE : BRANNOC_STAND],
+                          face: c.toThrone?.who === 'brannoc' ? 0 : 1,
+                        },
+                      ]
+                    : [];
+                  if (brannocStays.length > 0) march(brannocStays, () => {}, MARCH_PACE, true);
+                  else sim.march.set([]);
+                });
+              if (!c.toThrone) return setDialogue({ lines: c.lines, then: end });
+              const { who, at } = c.toThrone;
+              say(c.lines.slice(0, at), () =>
+                march(
+                  who === 'you'
+                    ? stands([{ row: -1, path: toTheThrone('you'), face: 0 }])
+                    : [{ row: brannoc, path: toTheThrone('brannoc'), face: 0 }],
+                  () => say(c.lines.slice(at), end),
+                  MARCH_PACE,
+                  true,
+                ),
+              );
+            },
+          })),
+        });
+      // Felix, once Kaldor's gone: he fades out where he stands, and then it's said
+      const felixFades = () => {
+        if (throne.fades < 0) return choices();
+        say(after.slice(throne.guards + 1, throne.fades), () => {
+          exitThen.current = choices;
+          setExit({ id: 'felix', flag: '', fade: true });
+        });
+      };
+      // his own guards come for him, take him by the arms, and lead him out through the doors (the camera with him)
+      const ledAway = () =>
+        say(after.slice(0, throne.guards), () =>
+          march(
+            stands(guardsForKaldor(guard)),
+            () =>
+              say([after[throne.guards]], () => {
+                stepOff(sim, ['kaldor']);
+                sim.focus.set([FOCUS_MARCH]);
+                march(
+                  stands(kaldorLedOut(WALKER_ROWS.kaldor, guard)),
+                  () => {
+                    sim.focus.set(THRONE_FOCUS);
+                    felixFades();
+                  },
+                  MARCH_PACE,
+                  true,
+                );
+              }),
+            4,
+            true,
+          ),
+        );
+      // the shadows go out of him: a dark puff where he stands, and four of them flee to the pillars, and are gone
+      const shadowsGo = () => {
+        const [kx, ky] = npcFeet({ x: KALDOR_THRONE[0], y: KALDOR_THRONE[1] });
+        sim.puffs.set([...sim.puffs.get(), kx, ky, 1]);
+        playSound('slam');
+        haptics.rumble('crash');
+        march(stands(kaldorShadows(WALKER_ROWS.shadow)), ledAway, 4, true);
+      };
+      // you're walked to the foot of the throne (the camera goes to it), and Brannoc steps out of the party beside you
+      sim.focus.set(THRONE_FOCUS);
+      march(
+        [{ row: -1, path: walkPath(map.solid, map.width, map.height, tileOf(sim), THRONE_STAND), face: 1 }],
+        () => {
+          const talk = () => say(scene.lines, shadowsGo);
+          if (!beside) return talk();
+          playSound('select');
+          haptics.select();
+          march([{ row: brannoc, path: [THRONE_STAND, BRANNOC_STAND], face: 1 }], talk, 2, true);
+        },
+        MARCH_PACE,
+        true,
+      );
+    },
+    [hero, map, sim, march],
+  );
   const onWin = useCallback(() => {
     if (!map.boss) return;
     // The prison route (dungeon.ts): Brannoc is out cold on the sand while you fight.
@@ -1004,28 +1807,7 @@ function World({
       return;
     }
     if (prison && hero !== 'brannoc' && map.boss.flag === 'pit-champion') {
-      // twenty strikes, and the warden hasn't noticed; Brannoc gets up, asleep, and swings
-      setDialogue({
-        lines: SNOT_SWING,
-        then: () => {
-          setFlag('pit-champion');
-          // the champion's name goes on Barnaby's bill too
-          setFlag('on-the-bill');
-          march(
-            brannocSleepwalks(WALKER_ROWS.brannoc),
-            () =>
-              setDialogue({
-                lines: SNOT_SWING_HIT,
-                then: () => {
-                  setFlag('brannoc-swung');
-                  travel(hereNow());
-                },
-              }),
-            4,
-            true,
-          );
-        },
-      });
+      snotSwing();
       return;
     }
     const scene = winScene(
@@ -1034,6 +1816,12 @@ function World({
       partyWithYou(gameParty, owned, useWorldStore.getState().flags).includes('brannoc'),
       map.npcs.some((n) => n.id === 'felix'),
       hero === 'brannoc',
+      useWorldStore.getState().flags.includes(CELLS_FREED),
+      // at the throne: more mean answers than kind ones changes how you put it, and Brannoc asks your name
+      {
+        mean: honor(useWorldStore.getState().deeds) < 0,
+        name: useGameStore.getState().player?.name?.trim() || undefined,
+      },
     );
     if (!scene) return;
     // whoever stepped out for it steps back in as the scene ends, however it ends
@@ -1041,8 +1829,8 @@ function World({
       sim.cameo.set([]);
       finish(o);
     };
-    const said: Dialogue = {
-      lines: scene.lines,
+    const ending: Dialogue = {
+      lines: scene.after ?? [],
       then: scene.outcome ? () => done(scene.outcome!) : undefined,
       choices: scene.choices?.map((c) => ({
         label: c.label,
@@ -1050,13 +1838,71 @@ function World({
         then: () => setDialogue({ lines: c.lines, then: () => done(c.outcome) }),
       })),
     };
-    if (scene.stepOut && scene.stepOut !== hero) stepOut(sim, scene.stepOut as HeroId, said, setDialogue);
+    if (scene.throne)
+      return playThrone(scene, (o, after) => {
+        sim.cameo.set([]);
+        for (const f of o.flags) setFlag(f);
+        if (o.joins) giftCharacters(o.joins);
+        setBossOver(true);
+        // the doors are a way out again; the camera back on you; whoever rules where they sat
+        openWays((e) => standing(e.needs, xpRef.current).met);
+        sim.focus.set([]);
+        after();
+      });
+    // Kaldor's shadows leave him (castle.ts): his lines, then they pour out across the hall, then the rest
+    const said: Dialogue = scene.shadows
+      ? { lines: scene.lines, then: () => march(kaldorShadows(WALKER_ROWS.shadow), () => setDialogue(ending), 5) }
+      : { ...ending, lines: [...scene.lines, ...ending.lines] };
+    if (scene.stepOut && scene.stepOut !== hero) stepOutHere(scene.stepOut as HeroId, said);
     else setDialogue(said);
-  }, [map, gameParty, owned, finish, prison, hero, setFlag, march, travel, hereNow, sim]);
+  }, [
+    map,
+    gameParty,
+    owned,
+    finish,
+    prison,
+    hero,
+    sim,
+    march,
+    snotSwing,
+    playThrone,
+    stepOutHere,
+    setFlag,
+    giftCharacters,
+    openWays,
+  ]);
   // Brannoc wakes after his swing: will you pair up? (Asked again each time you come in, until you answer.)
   const brannocOffer = useCallback(() => {
+    // he shuffles off to the trapdoor, very slowly, as the line says so; the camera goes with him
+    let shuffled = false;
+    const shuffleOff = () => {
+      if (shuffled) return;
+      shuffled = true;
+      setFlag(BRANNOC_WOKE);
+      setFlag(BRANNOC_DECLINED);
+      sim.focus.set([FOCUS_MARCH]);
+      march(
+        brannocShuffles(
+          WALKER_ROWS.brannoc,
+          [Math.floor(sim.x.get() / TILE), Math.floor((sim.y.get() - 1) / TILE)],
+          (x, y) => !map.solid[y * map.width + x],
+        ),
+        () => sim.focus.set([]),
+        1.2,
+      );
+    };
+    const onShuffle = (_: number, line: string) => {
+      if (/shuffles off/.test(line)) shuffleOff();
+    };
     setDialogue({
       lines: BRANNOC_OFFER,
+      // the bubble pops on the first line (he's asleep on his feet till then); he looks up at the hole he made
+      onLine: (i, line) => {
+        if (i === 1) setFlag(BRANNOC_BLINKED);
+        const hole = holeAt(useWorldStore.getState().flags);
+        if (/hole in the banners/.test(line) && hole) sim.focus.set(clothOf(hole));
+        else sim.focus.set([]);
+      },
       choices: [
         {
           label: 'Yes.',
@@ -1068,54 +1914,40 @@ function World({
                 speaker: 'Brannoc',
                 sprite: 'brannoc',
                 lines: NOT_YET.brannoc ?? [],
-                then: () => {
-                  setFlag(BRANNOC_WOKE);
-                  setFlag(BRANNOC_DECLINED);
-                  march(brannocShuffles(WALKER_ROWS.brannoc), () => {}, 1.2);
-                },
+                then: shuffleOff,
               });
               return;
             }
-            const { owned: have } = useGameStore.getState();
-            setFlag(BRANNOC_WOKE);
-            setFlag(BRANNOC_JOINED);
-            setFlag(metFlag('brannoc'));
-            // he hatches for you, the way new heroes do (unless he's already yours)
-            if (!(have?.brannoc ?? 0)) useGameStore.getState().giftCopies(['brannoc']);
-            haptics.celebrate();
-            playSound('levelUp');
-            setDialogue({ lines: BRANNOC_YES });
+            // he steps in behind you on "Brannoc joins you." (till then he's standing there, saying yes)
+            setDialogue({
+              lines: BRANNOC_YES,
+              onLine: (_, line) => {
+                if (!/joins you/.test(line)) return;
+                const { owned: have } = useGameStore.getState();
+                setFlag(BRANNOC_WOKE);
+                setFlag(BRANNOC_JOINED);
+                setFlag(metFlag('brannoc'));
+                // he hatches for you, the way new heroes do (unless he's already yours)
+                if (!(have?.brannoc ?? 0)) useGameStore.getState().giftCopies(['brannoc']);
+                haptics.celebrate();
+                playSound('levelUp');
+              },
+            });
           },
         },
         {
           label: 'No.',
-          then: () =>
-            setDialogue({
-              lines: BRANNOC_NO,
-              then: () => {
-                setFlag(BRANNOC_WOKE);
-                setFlag(BRANNOC_DECLINED);
-                march(brannocShuffles(WALKER_ROWS.brannoc), () => {}, 1.2);
-              },
-            }),
+          then: () => setDialogue({ lines: BRANNOC_NO, onLine: onShuffle, then: shuffleOff }),
         },
         {
           // the mean one (honor.ts): it hurts him, and he waits in his cell all the same
           label: BRANNOC_MEAN_ASK,
           deed: 'bad',
-          then: () =>
-            setDialogue({
-              lines: BRANNOC_MEAN,
-              then: () => {
-                setFlag(BRANNOC_WOKE);
-                setFlag(BRANNOC_DECLINED);
-                march(brannocShuffles(WALKER_ROWS.brannoc), () => {}, 1.2);
-              },
-            }),
+          then: () => setDialogue({ lines: BRANNOC_MEAN, onLine: onShuffle, then: shuffleOff }),
         },
       ],
     });
-  }, [setFlag, march, xpRef]);
+  }, [setFlag, march, xpRef, sim, map]);
   const onDefeat = useCallback(() => {
     if (map.boss) useWorldStore.getState().notice(fightNotice(map.id as MapId));
     useWorldStore.getState().setFlag('fallen');
@@ -1138,27 +1970,65 @@ function World({
   const setHero = useWorldStore((s) => s.setHero);
   const gone = useLeft();
   const walkers = useMemo(() => walkersFor(gameParty, owned, gone, flagsNow), [gameParty, owned, gone, flagsNow]);
+  // The plates go down (a clank), the camera goes to what they open, and it opens as the second line says so: the
+  // gate (drawn open from the flag, live), or the bridge up out of the river in a splash. Then the room's come back
+  // into, so the way through is open.
   const onPlates = useCallback(() => {
-    if (!map.platesFlag) return;
-    setFlag(map.platesFlag);
-    const here: Arrival = {
-      map: map.id as MapId,
-      x: Math.floor(sim.x.get() / TILE),
-      y: Math.floor((sim.y.get() - 1) / TILE),
-      facing: FACINGS[sim.facing.get()],
-    };
+    const flag = map.platesFlag;
+    if (!flag) return;
+    const [first, ...rest] = map.platesLines ?? [
+      'With a clank, all three plates sink at once.',
+      'Chains draw taut. Across the yard, the gate grinds up into the dark.',
+    ];
+    const opened = platesOpen(map, flag);
+    playSound('slam');
     setDialogue({
-      lines: [
-        'With a clank, all three plates sink at once.',
-        'Chains draw taut. Across the yard, the gate grinds up into the dark.',
-      ],
-      then: () => travel(here),
+      lines: [first],
+      then: () => {
+        if (opened.length > 0) {
+          const xs = opened.map((t) => t.x);
+          const ys = opened.map((t) => t.y);
+          sim.focus.set([
+            ((Math.min(...xs) + Math.max(...xs) + 1) / 2) * TILE,
+            ((Math.min(...ys) + Math.max(...ys) + 1) / 2) * TILE,
+          ]);
+        }
+        setCutscene(true);
+        setTimeout(() => {
+          setFlag(flag);
+          playSound('slam');
+          haptics.rumble('crash');
+          sim.puffs.set([...sim.puffs.get(), ...opened.flatMap((t) => [t.x * TILE + TILE / 2, t.y * TILE + TILE, 0])]);
+          setCutscene(false);
+          setDialogue({
+            lines: rest,
+            then: () => {
+              sim.focus.set([]);
+              openWays((e) => needsFlag(e.needs, flag));
+            },
+          });
+        }, PLATES_PAN_MS);
+      },
     });
-  }, [map, setFlag, sim, travel]);
-  // Felix frames you to the king's guards (felix-maze.ts): you answer, and either walk free while he
-  // laughs and dashes off, or (a wrong answer) wake in the dungeon next to Brannoc. First he gives his
+  }, [map, setFlag, sim, openWays]);
+  // Felix frames you to the king's guards (felix-maze.ts): you answer, and however you answer, you end
+  // up in the dungeon next to Brannoc (the drink goes by way of the tavern). First he gives his
   // name, you try "Mr. Himothy", and he cuts you off.
   const guardScene = useCallback(() => {
+    // Felix laughs (and the guards close in, or not), then he's off east, lightning fast; then `then`. The three are
+    // drawn by the march from here (FRAMED takes them off the room's own drawing as it's set).
+    const felixGoes = (close: boolean, then: () => void) => {
+      setFlag(FRAMED);
+      const open = (x: number, y: number) =>
+        x >= 0 && y >= 0 && x < map.width && y < map.height && map.walkable.includes(map.tiles[y][x]);
+      playSound('laugh');
+      march(
+        seizeMarch(tileOf(sim), open, { felix: WALKER_ROWS.felix, guard: WALKER_ROWS.raider }, close),
+        then,
+        2.5,
+        true,
+      );
+    };
     const ask = (lines: string[]): void =>
       setDialogue({
         lines,
@@ -1179,66 +2049,47 @@ function World({
                 setDialogue({
                   lines: a.lines,
                   then: () => {
-                    setFlag(FRAMED);
-                    playSound('laugh');
-                    travel(KNOCKED_IN);
+                    // the blow lands (a puff where you stood, a thud), and it's black at once (and only then are
+                    // Felix and the guards gone from the road)
+                    sim.puffs.set([...sim.puffs.get(), sim.x.get(), sim.y.get(), 0]);
+                    playSound('slam');
+                    haptics.rumble('crash');
+                    setTimeout(() => {
+                      setTimeout(() => setFlag(FRAMED), FADE_MS - 50);
+                      playSound('laugh');
+                      travel(KNOCKED_IN);
+                    }, 250);
                   },
                 });
                 return;
               }
-              if (a.jailed) {
-                // "Seize him!" (or her): they only want you
-                const seize = a.lines.map((l) => forHero(l, hero));
-                setDialogue({
-                  lines: seize,
-                  then: () => {
-                    // the guards close in on you from either side while Felix laughs (march.ts stands in
-                    // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
-                    setFlag(FRAMED);
-                    const hx = Math.floor(sim.x.get() / TILE);
-                    const hy = Math.floor((sim.y.get() - 1) / TILE);
-                    playSound('laugh');
-                    march(
-                      [
-                        { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
-                        {
-                          row: WALKER_ROWS.raider,
-                          path: [
-                            [25, 3],
-                            [hx, hy - 1],
-                          ],
-                          face: 0,
-                        },
-                        {
-                          row: WALKER_ROWS.raider,
-                          path: [
-                            [26, 4],
-                            [26, hy + 1],
-                            [hx, hy + 1],
-                          ],
-                          face: 1,
-                        },
-                        { row: -1, path: [[hx, hy]], face: 3 },
-                      ],
-                      () => travel(INTO_THE_CELL),
-                      2.5,
-                      true,
-                    );
-                  },
-                });
+              if (a.drinks) {
+                // "Let me buy you a drink" (author, Oct 7, 2026): they thank you, you answer, and it's off to the
+                // tavern there and then. The bar (TO_THE_BAR, on arrival) is where it goes wrong.
+                sayAs(can.who!, a.lines, a.by, () =>
+                  setDialogue({
+                    lines: DRINKS.thanks,
+                    choices: DRINKS.replies.map((label) => ({
+                      label,
+                      then: () =>
+                        setDialogue({
+                          lines: DRINKS.off,
+                          // Felix has a laugh at that, and he's off; then the tavern
+                          then: () => felixGoes(false, () => travel(TO_THE_BAR)),
+                        }),
+                    })),
+                  }),
+                );
                 return;
               }
-              // Let go: once the talk closes, Felix laughs and dashes off, and the guards go with him.
-              if (can.who === hero) {
-                leaving.current = { id: 'felix-maze', flag: FRAMED };
-                setDialogue({ lines: [...a.lines, ...FELIX_FOILED] });
-                return;
-              }
-              // a party member said it: they step back in, then Felix has his say and goes
-              sayAs(can.who!, a.lines, a.by, () => {
-                leaving.current = { id: 'felix-maze', flag: FRAMED };
-                setDialogue({ lines: FELIX_FOILED });
-              });
+              // "Seize him!" (or her): they only want you. Every other answer ends here (author, Oct 7, 2026).
+              const seize = a.lines.map((l) => forHero(l, hero));
+              const by =
+                a.by &&
+                Object.fromEntries(Object.entries(a.by).map(([id, ls]) => [id, ls!.map((l) => forHero(l, hero))]));
+              // the guards close in on you from either side while Felix laughs, he's off, and it goes black as they
+              // reach you (author, Oct 4, 2026: no sack)
+              sayAs(can.who!, seize, by, () => felixGoes(true, () => travel(INTO_THE_CELL)));
             },
           };
         }),
@@ -1247,10 +2098,26 @@ function World({
       lines: SCENE_OPEN.map((l) => forHero(l, hero)),
       choices: [{ label: MISTER, then: () => ask(CUT_OFF) }],
     });
-  }, [setFlag, travel, hero, sim, march, canSay, sayAs]);
+  }, [setFlag, travel, hero, sim, march, canSay, sayAs, map]);
+  const wallTries = useRef(0);
   const onStep = useCallback(
     (tile: number) => {
       const letter = map.tiles[Math.floor(tile / map.width)][tile % map.width];
+      // walking on past Felix's cocoon: back you go, and a thought each try (the last one for good)
+      if (cocoonWall && tile % map.width === COCOON_WALL.x) {
+        sim.x.set(COCOON_WALL.x * TILE - TILE / 2);
+        const lines = COCOON_WALL.lines;
+        if (dialogueRef.current === null)
+          setDialogue({ lines: [lines[Math.min(wallTries.current, lines.length - 1)]] });
+        wallTries.current++;
+        return;
+      }
+      // A level gate still shut: its guard turns you back (gate-guards.ts)
+      const gate = shutGates.find((g) => exitOf(g).tile === letter);
+      if (gate) {
+        gateTalk.current(gate, tile);
+        return;
+      }
       // Past Felix's maze: it stays solved, and if Felix is waiting with the guards, here they are.
       if (map.id === MAZE && letter === CLEARING_TILE) {
         const { flags } = useWorldStore.getState();
@@ -1258,17 +2125,130 @@ function World({
         if (scenePending(flags) && dialogueRef.current === null) guardScene();
         return;
       }
+      // The Test of Strength: the statue asks if you're sure, the first time (dungeon.ts)
+      if (
+        map.id === 'dungeon-fork' &&
+        letter === STRENGTH_TUNNEL &&
+        !useWorldStore.getState().flags.includes('might-shadows')
+      ) {
+        const to = ways.find((e) => e.tile === letter)?.to;
+        if (!to) return;
+        const go = () => setDialogue({ lines: FUNERAL, then: () => travel(to) });
+        setDialogue({
+          lines: STATUE_SURE,
+          choices: [
+            { label: 'Yes', then: go },
+            { label: 'No', then: () => {} },
+            { label: 'Mind your own business.', deed: 'bad', then: go },
+          ],
+        });
+        return;
+      }
+      // A trap pit in the Maze Ward (dungeon.ts): down you go, back to the cells, and they've seen it all.
+      if (map.id === 'dungeon-mazes' && letter === PIT_TILE) {
+        const { flags } = useWorldStore.getState();
+        const n = [1, 2, 3].filter((i) => flags.includes(fellFlag(i))).length + 1;
+        if (n <= 3) setFlag(fellFlag(n));
+        playSound('slam');
+        haptics.rumble('crash');
+        useSession.setState({ fell: n });
+        setDialogue({ lines: FALLING, then: () => travel(FELL_INTO) });
+        return;
+      }
       const to = ways.find((e) => e.tile === letter)?.to;
-      if (to) travel(to);
+      // on your way out: you stop there (else, at a run, you're over the next doorway before the fade is done,
+      // as off the Maze Ward's pothole and onto its ladder)
+      if (to) {
+        sim.frozen.set(true);
+        travel(to);
+      }
     },
-    [map, ways, travel, setFlag, guardScene],
+    [map, ways, shutGates, travel, setFlag, guardScene, cocoonWall, sim],
   );
+  // Never over a scene, a cutscene, a boss fight or a phone call (read as the guard's lines close).
+  const busyRef = useRef(false);
+  const busy =
+    cutscene || ringing !== null || (bossOn && !bossOver) || stepping || paused || !!exit || memoryShown !== null;
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
+  useEffect(() => {
+    gateTalk.current = (gate, bump) => {
+      const exit = exitOf(gate);
+      const block = gateBlock(gate, xpRef.current);
+      const guard = map.npcs.find((n) => n.id === gate.guard);
+      // Open now (Premium bought, or a level gained, since you came in): straight through.
+      if (block.kind === 'open' && exit.to) {
+        if (bump !== null) {
+          sim.frozen.set(true);
+          travel(exit.to);
+        } else if (dialogueRef.current === null) setDialogue({ speaker: guard?.name, lines: [ON_YOU_GO] });
+        return;
+      }
+      if (bump !== null) {
+        // back the way you came, a tile, like the cocoon wall
+        const gx = bump % map.width;
+        const gy = Math.floor(bump / map.width);
+        const steps = [
+          [0, 1],
+          [0, -1],
+          [-1, 0],
+          [1, 0],
+        ];
+        const open = (x: number, y: number) =>
+          x >= 0 &&
+          y >= 0 &&
+          x < map.width &&
+          y < map.height &&
+          !map.solid[y * map.width + x] &&
+          map.tiles[y][x] !== exit.tile;
+        const back = [OPPOSITE[sim.facing.get()], UP, DOWN, LEFT, RIGHT]
+          .map((d) => [gx + steps[d][0], gy + steps[d][1]] as const)
+          .find(([x, y]) => open(x, y));
+        if (back) {
+          sim.x.set(back[0] * TILE + TILE / 2);
+          sim.y.set(back[1] * TILE + TILE - 4);
+        }
+      }
+      if (dialogueRef.current !== null) return;
+      useWorldStore.getState().notice(exitNotice(exit.id));
+      // Strong enough, but the story isn't done (the castle road): at the gate, the usual hint; from him, his word too.
+      if (block.kind === 'flags') {
+        setDialogue(
+          bump === null && guard
+            ? { speaker: guard.name, lines: guardLines(gate, block) }
+            : { lines: [`${exit.label}. It won't budge.`, ...(block.all.hint ? [block.all.hint] : [])] },
+        );
+        return;
+      }
+      setDialogue({
+        speaker: guard?.name,
+        lines: guardLines(gate, block),
+        then: () => {
+          const today = toDateKey(new Date());
+          const { premium, gateOffers } = usePremium.getState();
+          const offer = shouldOfferPremium({
+            gate: gate.exit,
+            block: block.kind,
+            history: gateOffers ?? [],
+            today,
+            premium,
+            enabled: premiumEnabled,
+            busy: busyRef.current,
+          });
+          if (!offer) return;
+          usePremium.setState({ gateOffers: [...(gateOffers ?? []), { gate: gate.exit, day: today }] });
+          setGateSheet(gatePrompt(gate, block));
+        },
+      });
+    };
+  }, [map, sim, travel]);
   const board = map.objects.find((o) => o.type === 'board');
   // A Mage of Lv 6 sees the hidden passage by Felix's maze twinkle.
   const passageSeen = map.id === MAZE && standing(PASSAGE, xp).met;
   // The Maze Ward's holes (dungeon.ts): each twinkles once you're Mage enough to notice it.
   const holesSeen = useMemo(
-    () => MAZE_HOLES.filter((h) => map.id === 'dungeon-mazes' && standing(h.needs, xp).met).map((h) => h.tile),
+    () => MAZE_HOLES.filter((h) => h.map === map.id && standing(h.needs, xp).met).map((h) => h.tile),
     [map, xp],
   );
   // A hero's room off the Archive: its door twinkles once it's open, until you've been in (hero-rooms.ts).
@@ -1304,29 +2284,181 @@ function World({
   const remembered = useWorldStore((s) => s.memories);
   const memorySpots = useMemo(
     () =>
-      MEMORIES.filter((m) => m.map === map.id && !remembered.includes(m.id) && standing(m.needs, xp).met).map(
-        (m) => ({ x: m.x, y: m.y }),
-      ),
-    [map, remembered, xp],
+      MEMORIES.filter(
+        // someone's own (Brannoc's) only shimmers with them in your party (memories.ts)
+        (m) =>
+          m.map === map.id &&
+          memoryReady(m, remembered, standing(m.needs, xp).met, partyWithYou(gameParty, owned, liveFlags)),
+      ).map((m) => ({
+        x: m.x,
+        y: m.y,
+      })),
+    [map, remembered, xp, gameParty, owned, liveFlags],
   );
   const twinkles = useMemo(
-    () =>
-      [
-        ...memorySpots,
-        ...tilesOf(map, [
+    () => [
+      ...memorySpots,
+      ...tilesOf(map, [
         ...(passageSeen ? [PASSAGE_TILE] : []),
         ...holesSeen,
         ...newRooms,
         ...(map.id === 'archive' && greenLit(liveFlags) ? [GREEN_CANDLE] : []),
-        ]).map((t) => ({
-          x: t % map.width,
-          y: Math.floor(t / map.width),
-        })),
-      ],
+      ]).map((t) => ({
+        x: t % map.width,
+        y: Math.floor(t / map.width),
+      })),
+    ],
     [map, passageSeen, holesSeen, newRooms, liveFlags, memorySpots],
   );
   // On arrival: past the maze with Felix waiting, the guard scene; at its road end, a Mage who's never
   // been through the passage wonders about the twinkle; thrown in the cell, you come to.
+  // Walking as Brannoc, the warden is no fight (dungeon.ts ALONE_WARDEN): the floor shakes, Barnaby announces him,
+  // he lands right in front of you, you faint, and get up fast asleep and swing (swing.ts), and come to with a hole
+  // in the banners. Each beat on the line that says so.
+  const aloneCue = useCallback(() => {
+    const tx = Math.floor(sim.x.get() / TILE);
+    const ty = Math.floor((sim.y.get() - 1) / TILE);
+    const [px, py] = npcFeet({ x: tx, y: ty });
+    const right = !map.solid[ty * map.width + tx + 2];
+    const wx = px + (right ? 1 : -1) * STAND_OFF * TILE;
+    const wy = py;
+    const face = right ? 3 : 2;
+    const banner = bannerFor(wx, wy);
+    const [hx, hy] = clothOf(banner);
+    const asleep = WALKER_ROWS.brannocasleep;
+    const lie = () => march([{ row: asleep, path: [[tx, ty]], face: 4, snot: true }], () => {}, 3, true);
+    return (i: number, line: string) => {
+      if (/floor shakes/.test(line)) {
+        sim.quake.set(3);
+        playSound('slam');
+        setTimeout(() => {
+          sim.quake.set(3);
+          playSound('slam');
+        }, 700);
+      }
+      if (/^BARNABY:/.test(line)) sim.focus.set(BARNABY_BOX);
+      else sim.focus.set([(px + wx) / 2, py - 12]);
+      if (/He is enormous/.test(line)) {
+        // he lands beside you, and you're face to face
+        sim.facing.set(face);
+        sim.swing.set([0, asleep, px, py, face, wx, wy, hx, hy, 0]);
+        sim.quake.set(4);
+        playSound('slam');
+      }
+      if (line === '...' && i < 5) {
+        // out cold, flat on your back, a snot bubble at your nose
+        sim.hideLead.set(true);
+        playSound('hit');
+        lie();
+      }
+      if (/SUPER SUPER SWING/.test(line)) {
+        // up, fast asleep, and swing
+        march([{ row: asleep, path: [[tx, ty]], face, snot: true }], () => {}, 3, true);
+        setTimeout(() => {
+          sim.swing.set([0, asleep, px, py, face, wx, wy, hx, hy, 1]);
+          playSound('swing');
+          haptics.kill();
+        }, SWING_DELAY * 1000);
+        setTimeout(
+          () => {
+            playSound('slam');
+            haptics.rumble('crash');
+          },
+          (SWING_DELAY + SWING_STRIKE) * 1000,
+        );
+      }
+      // and down again, till you come to
+      if (line === '...' && i >= 5) lie();
+      // you come to, still flat out, and there's the hole in the banners; you're up as the guard speaks
+      if (/You wake up/.test(line)) {
+        setFlag(`${WARDEN_HOLE}${banner[0]},${banner[1]}`);
+        sim.swing.set([]);
+        sim.focus.set([hx, hy + 30]);
+      }
+      if (/^GUARD:/.test(line)) {
+        sim.march.set([]);
+        sim.hideLead.set(false);
+      }
+    };
+  }, [sim, map, march, setFlag]);
+  // Gary's keys (dungeon.ts): the three doors swing open, the three come out and go up the ladder confessing, and
+  // when you turn back, Gary's chair is empty. Each on its line.
+  const keysCue = useCallback(() => {
+    let out = false;
+    return (_: number, line: string) => {
+      if (/You unlock the cells/.test(line)) {
+        setAjar(CELL_DOORS);
+        playSound('clang');
+      }
+      if (/^NAILS:/.test(line) && !out) {
+        out = true;
+        putNpcs(sim, [
+          ['prisoner-1', -10, -10],
+          ['prisoner-2', -10, -10],
+          ['prisoner-3', -10, -10],
+        ]);
+        march(
+          prisonersLeave({ mott: WALKER_ROWS.oldmott, nails: WALKER_ROWS.nails, silas: WALKER_ROWS.silasseen }),
+          () => {},
+          3,
+        );
+      }
+      if (/Gary is gone/.test(line)) {
+        const gary = map.npcs.find((n) => n.id === 'jailer');
+        putNpcs(sim, [['jailer', -10, -10]]);
+        sim.facing.set(2);
+        if (gary) sim.focus.set(npcFeet(gary));
+      }
+    };
+  }, [sim, march, map]);
+  // Down the pothole (dungeon.ts): THUD, flat on your back in front of the three, who laugh; up again as they do.
+  // Gary's snores are his: the camera looks over at him.
+  const potholeCue = useCallback(() => {
+    const tx = Math.floor(sim.x.get() / TILE);
+    const ty = Math.floor((sim.y.get() - 1) / TILE);
+    const gary = map.npcs.find((n) => n.id === 'jailer');
+    const flat = party[0];
+    return (i: number, line: string) => {
+      if (line === 'THUD.') {
+        sim.hideLead.set(true);
+        march([{ row: WALKER_ROWS[flat], path: [[tx, ty]], face: 4 }], () => {}, 3, true);
+        sim.quake.set(3);
+        playSound('slam');
+        haptics.rumble('crash');
+      }
+      if (/laugh/.test(line) || i >= 3) {
+        sim.hideLead.set(false);
+        sim.march.set([]);
+      }
+      if (/^GARY:/.test(line) && gary) sim.focus.set(npcFeet(gary));
+      else sim.focus.set([]);
+    };
+  }, [sim, march, map, party]);
+  // Your first look round the cell: "In the corner, someone..." turns the camera to Brannoc, cowering there.
+  const cornerCue = useCallback(
+    (_: number, line: string) => {
+      const b = map.npcs.find((n) => n.id === 'brannoc-cell');
+      if (/^In the corner/.test(line) && b) sim.focus.set(npcFeet(b));
+      else sim.focus.set([]);
+    },
+    [map, sim],
+  );
+  // Knocked out by Himothy: you come to flat on the straw, and sit up on the second line.
+  const knockedCue = useCallback(() => {
+    const tx = Math.floor(sim.x.get() / TILE);
+    const ty = Math.floor((sim.y.get() - 1) / TILE);
+    const flat = party[0];
+    return (i: number, line: string) => {
+      cornerCue(i, line);
+      if (i === 0) {
+        sim.hideLead.set(true);
+        march([{ row: WALKER_ROWS[flat], path: [[tx, ty]], face: 4 }], () => {}, 3, true);
+      } else {
+        sim.hideLead.set(false);
+        sim.march.set([]);
+      }
+    };
+  }, [sim, march, party, cornerCue]);
   const arrivedRef = useRef(false);
   useEffect(() => {
     // Once the fade in is done, so the room is seen before anyone speaks.
@@ -1335,9 +2467,14 @@ function World({
       arrivedRef.current = true;
       const w = useWorldStore.getState();
       const tx = Math.floor(start.x / TILE);
-      if (map.id === MAZE && tx >= 20 && scenePending(w.flags)) guardScene();
+      const fell = useSession.getState().fell;
+      if (fell && map.id === FELL_INTO.map) {
+        // dropped back into the cells through a trap pit: the prisoners have seen it all
+        useSession.setState({ fell: null });
+        setDialogue({ lines: fallLines(fell, w.flags.includes(FREED_FLAG), !w.flags.includes(CELLS_FREED)) });
+      } else if (map.id === MAZE && tx >= 20 && scenePending(w.flags)) guardScene();
       else if (map.id === MAZE && tx < 5 && passageSeen && !w.flags.includes(PASSAGE_TAKEN) && !dialogueRef.current)
-        setDialogue({ speaker: COMPANIONS[hero].name, sprite: hero, lines: PASSAGE_LINES.notice });
+        setDialogue({ lines: PASSAGE_LINES.notice });
       else if (map.id === 'archive' && greenLit(w.flags) && !w.flags.includes('keeper:welcome-back')) {
         w.setFlag('keeper:welcome-back');
         // Cards or not, he tells you where you are and how you got here (you ask both), then
@@ -1348,8 +2485,6 @@ function World({
           if (left.length === 0) {
             // you're left wondering, then he points you at the candle
             setDialogue({
-              speaker: COMPANIONS[hero].name,
-              sprite: hero,
               lines: KEEPER_AFTERTHOUGHTS,
               then: () =>
                 setDialogue({
@@ -1400,19 +2535,22 @@ function World({
         brannocOffer();
       else if (faints)
         setDialogue({
-          lines: ALONE_WARDEN,
+          lines: aloneWarden(w.flags.includes(CELLS_FREED)),
+          onLine: aloneCue(),
           then: () => {
+            if (freedNow()) w.setFlag(PARDONED);
+            sim.hideLead.set(false);
+            sim.march.set([]);
+            sim.focus.set([]);
             w.setFlag('pit-champion');
-            w.setFlag('on-the-bill');
+            // the Keeper's first proper call, yours instead of 'brannoc-joined' (keeper-calls.json)
+            w.setFlag('brannoc-free');
             // confused, you walk out into the town
             march(
               [
                 {
                   row: -1,
-                  path: [
-                    [Math.floor(start.x / TILE), 9],
-                    [10, 9],
-                  ],
+                  path: [[Math.floor(start.x / TILE), SAND_MIDDLE[1]], SAND_MIDDLE],
                   face: 0,
                 },
               ],
@@ -1420,12 +2558,50 @@ function World({
             );
           },
         });
-      else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
+      else if (
+        map.id === 'kingdom-dungeon' &&
+        tx === POTHOLE.landing.x &&
+        Math.floor(start.y / TILE) === POTHOLE.landing.y &&
+        !w.flags.includes(FELL_IN)
+      ) {
+        // Down through the Maze Ward's floor, outside Silas Seen's cell (dungeon.ts). If you've already let
+        // everyone out, there's nobody left to see it.
+        w.setFlag(FELL_IN);
+        setDialogue({
+          lines: w.flags.includes(CELLS_FREED) ? POTHOLE_UNSEEN : POTHOLE_LANDING,
+          onLine: potholeCue(),
+          then: () => {
+            sim.hideLead.set(false);
+            sim.march.set([]);
+            sim.focus.set([]);
+          },
+        });
+      } else if (map.id === 'wc-tavern' && w.flags.includes(DRINKS_DUE) && !w.flags.includes(TAB_UNPAID)) {
+        // The guards' drink (felix-maze.ts): you order, Rolla asks for the money, and you haven't got any.
+        // Then it's black, and the guards march you down to the cells from their stair.
+        setDialogue({
+          lines: DRINKS.bar,
+          choices: DRINKS.menu.map((d) => ({
+            label: d.label,
+            then: () =>
+              setDialogue({
+                lines: DRINKS.noMoney.map((l) => forHero(l.replace('{drink}', d.drink), hero)),
+                then: () => {
+                  w.setFlag(TAB_UNPAID);
+                  w.setFlag(JAILED);
+                  travel(INTO_THE_CELL);
+                },
+              }),
+          })),
+        });
+      } else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
         w.setFlag(JAIL_WOKE);
         // Knocked out by Himothy: you come to already in the cell, no guards, no march.
         if (w.flags.includes(KNOCKED_OUT)) {
           setDialogue({
-            lines: [...KNOCKED_WAKE, ...(hero === 'brannoc' ? [] : ESCORT_LINES.cell.slice(2))],
+            lines: [...KNOCKED_WAKE, ...(hero === 'brannoc' ? [] : ESCORT_LINES.cell.slice(1))],
+            onLine: knockedCue(),
+            then: () => sim.focus.set([]),
           });
           return;
         }
@@ -1439,14 +2615,31 @@ function World({
               setDialogue({
                 lines: ESCORT_LINES.door,
                 then: () => {
-                  setAjar([CELL_DOOR]);
+                  setAjar([STAIR_DOOR, CELL_DOOR]);
                   march(
                     shovedIn(guard),
                     () => {
-                      setAjar([]);
-                      march(guardsLeave(guard), () =>
-                        setDialogue({ lines: hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell }),
-                      );
+                      // the cell door swings shut on you: CLANG, there and then
+                      setAjar([STAIR_DOOR]);
+                      playSound('clang');
+                      haptics.rumble('crash');
+                      setDialogue({
+                        lines: ESCORT_LINES.clang,
+                        // back up the stair, and they lock the door behind them: no way out up there
+                        then: () =>
+                          march(guardsLeave(guard), () => {
+                            setAjar([]);
+                            playSound('slam');
+                            setDialogue({
+                              lines: [
+                                ...ESCORT_LINES.locked,
+                                ...(hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell),
+                              ],
+                              onLine: cornerCue,
+                              then: () => sim.focus.set([]),
+                            });
+                          }),
+                      });
                     },
                     5,
                     true,
@@ -1456,22 +2649,70 @@ function World({
             3,
             true,
           );
-        // the guards stand you up at the foot of the stair, then march you down (dungeon.ts)
+        // the guards stand you up at the foot of the stair, the door open behind them, then march you down (dungeon.ts)
+        setAjar([STAIR_DOOR]);
         march(escortStand(guard), () => setDialogue({ lines: ESCORT_LINES.start, then: marchIn }), 3, true);
       }
     }, 450);
     return () => clearTimeout(timer);
-  }, [map, start, guardScene, passageSeen, hero, march, brannocOffer, faints, travel]);
+  }, [
+    map,
+    start,
+    guardScene,
+    passageSeen,
+    hero,
+    march,
+    brannocOffer,
+    faints,
+    travel,
+    aloneCue,
+    sim,
+    potholeCue,
+    knockedCue,
+    cornerCue,
+  ]);
 
   const callFlags = useWorldStore((s) => s.flags);
   useEffect(() => {
-    if (dialogue || cutscene || ringing || paused || bossOn) return;
+    if (dialogue || cutscene || ringing || paused || bossOn || stepping || exit || gateSheet) return;
     const call = callDue(callFlags);
     if (!call) return;
     // a moment's quiet after whatever just happened, then your pocket rings
     const timer = setTimeout(() => setRinging(call), 1200);
     return () => clearTimeout(timer);
-  }, [callFlags, dialogue, cutscene, ringing, paused, bossOn]);
+  }, [callFlags, dialogue, cutscene, ringing, paused, bossOn, stepping, exit, gateSheet]);
+
+  // Walking banter (walk-banter.ts, author, Oct 7, 2026): the party talks among themselves as you arrive
+  // or pass a spot, once each, after any arrival scene and only while nothing else is going on.
+  const arrivalBanter = useRef(false);
+  useEffect(() => {
+    if (dialogue || cutscene || ringing || paused || bossOn || stepping || exit || fightMap.enemies.length > 0) return;
+    if (!hasWalkBanter(map.id)) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const check = () => {
+      if (sim.march.get().length === 0 && sim.cameo.get().length === 0 && !dialogueRef.current) {
+        const w = useWorldStore.getState();
+        const game = useGameStore.getState();
+        const chat = walkBanterFor(
+          map.id,
+          chattersWithYou(game.party, game.owned, w.flags, hero),
+          w.flags,
+          Math.floor(sim.x.get() / TILE),
+          Math.floor((sim.y.get() - 1) / TILE),
+          arrivalBanter.current,
+        );
+        if (chat) {
+          if (!chat.area) arrivalBanter.current = true;
+          w.setFlag(walkBanterFlag(chat));
+          setDialogue({ lines: chat.lines });
+          return;
+        }
+      }
+      timer = setTimeout(check, 500);
+    };
+    timer = setTimeout(check, 1500);
+    return () => clearTimeout(timer);
+  }, [map, dialogue, cutscene, ringing, paused, bossOn, stepping, exit, fightMap, sim, hero]);
 
   return (
     <View style={styles.root}>
@@ -1483,6 +2724,7 @@ function World({
         height={height}
         scale={scale}
         active={focused}
+        pace={SPEED_RATE[speed]}
         marks={[...(unclaimed > 0 && board ? [board] : []), ...newsMarks]}
         twinkles={twinkles}
         stepTiles={stepTiles}
@@ -1505,11 +2747,19 @@ function World({
         hearts={hearts}
         chests={chests}
         husks={husks}
+        talker={dialogue?.speaker}
+        paintings={paintings}
         onMarched={onMarched}
         exit={exit}
+        talkingTo={dialogue?.speaker ?? null}
         onExited={() => {
-          if (exit) useWorldStore.getState().setFlag(exit.flag);
+          if (exit?.flag) useWorldStore.getState().setFlag(exit.flag);
+          // faded out (no flag to take them off the map): off it all the same, before they're drawn again
+          if (exit?.fade) stepOff(sim, [exit.id]);
           setExit(null);
+          const after = exitThen.current;
+          exitThen.current = null;
+          after?.();
           // Felix gone from the maze: a blink, and the guards have marched off too.
           if (exit?.flag === FRAMED)
             travel({
@@ -1523,8 +2773,13 @@ function World({
         ambience={ambience}
         flames={flames}
         drawbridge={drawbridge}
+        raised={raised}
         resume={resumeFight}
         fightRef={fightRef}
+        breach={map.id === 'the-pit' ? holeAt(liveFlags) : null}
+        opened={openedTiles}
+        banners={banners}
+        glow={sealGlow}
         sealed={sealed}
         autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}
@@ -1535,6 +2790,7 @@ function World({
         onWin={onWin}
       />
       <VhsOverlay width={width} height={height} warm={map.id === 'archive'} />
+      <MemoryWash shade={memoryShown} />
       {!frozen && (
         <WorldControls
           scheme={controls}
@@ -1571,7 +2827,7 @@ function World({
             dialogue.then?.();
             // "We need to break out": a squeak in the straw, and Brannoc goes straight through the bars.
             const w = useWorldStore.getState();
-            // Already the Kaldorium's champion (you came down from the top, and maybe bent the bars yourself
+            // Already the Kaloseum's champion (you came down from the top, and maybe bent the bars yourself
             // to get in): no mouse, he just asks to come along.
             if (
               map.id === 'kingdom-dungeon' &&
@@ -1626,21 +2882,35 @@ function World({
               });
               return;
             }
-            if (map.id === 'kingdom-dungeon' && w.flags.includes(BRANNOC_BOLTS) && !w.flags.includes(BARS_BENT)) {
+            // (not as the squeak itself closes: it hands on to Brannoc's scream, and would only squeak again)
+            if (
+              map.id === 'kingdom-dungeon' &&
+              w.flags.includes(BRANNOC_BOLTS) &&
+              !w.flags.includes(BARS_BENT) &&
+              dialogue.lines[0] !== SQUEAK
+            ) {
               setDialogue({
-                lines: ['*squeak*'],
+                lines: [SQUEAK],
                 then: () =>
                   setDialogue({
                     speaker: 'Brannoc',
                     sprite: 'brannocbare',
                     lines: ['AAAAAAH!'],
                     then: () => {
-                      // he's gone from his corner, and running
+                      // he's gone from his corner, and running: the camera runs with him, then looks to Gary
                       w.setFlag(BARS_BENT);
+                      sim.focus.set([FOCUS_MARCH]);
                       march(
-                        brannocBolts(WALKER_ROWS.brannocbare),
-                        () =>
+                        brannocBolts(WALKER_ROWS.brannocbare, [
+                          Math.floor(sim.x.get() / TILE),
+                          Math.floor((sim.y.get() - 1) / TILE),
+                        ]),
+                        () => {
+                          const gary = map.npcs.find((n) => n.id === 'jailer');
+                          if (gary) sim.focus.set(npcFeet(gary));
                           setDialogue({
+                            // Gary's awake for it (he's the one talking)
+                            speaker: 'Gary',
                             lines: GARY_STARTLED,
                             then: () =>
                               travel({
@@ -1649,7 +2919,8 @@ function World({
                                 y: Math.floor((sim.y.get() - 1) / TILE),
                                 facing: FACINGS[sim.facing.get()],
                               }),
-                          }),
+                          });
+                        },
                         9,
                       );
                     },
@@ -1658,8 +2929,27 @@ function World({
               return;
             }
             const narration = afterTalk.current;
+            const flag = afterRead.current;
             afterTalk.current = null;
-            if (narration) setDialogue({ lines: narration });
+            afterRead.current = null;
+            const tell = () => {
+              if (narration)
+                setDialogue({
+                  lines: narration,
+                  onLine: flag === CELLS_FREED ? keysCue() : undefined,
+                  then: flag
+                    ? () => {
+                        sim.focus.set([]);
+                        useWorldStore.getState().setFlag(flag);
+                      }
+                    : undefined,
+                });
+              else if (flag) useWorldStore.getState().setFlag(flag);
+            };
+            // "Sure. Why not." Keys in hand, you go straight along the cells unlocking them (dungeon.ts), then they empty.
+            if (flag === CELLS_FREED)
+              march(toTheCells(Math.floor(sim.x.get() / TILE), Math.floor(sim.y.get() / TILE)), tell);
+            else tell();
             if (leaving.current) {
               // they laugh (out loud), then they're gone
               playSound('laugh');
@@ -1676,6 +2966,7 @@ function World({
               haptics.celebrate();
             }
             if (q.then) afterTalk.current = q.then;
+            if (q.after) afterRead.current = q.after;
             // a kind or mean thing to say counts once (honor.ts)
             if (q.deed)
               useWorldStore
@@ -1687,6 +2978,19 @@ function World({
             const speaker = dialogue.speaker;
             if (speaker) hear({ id: loreId(speaker, q.ask), speaker, ask: q.ask, answer: q.answer, at: Date.now() });
           }}
+        />
+      )}
+      {gateSheet && !dialogue && (
+        <GateSheet
+          text={gateSheet}
+          onPremium={() => {
+            setGateSheet(null);
+            save();
+            // over the World, as the quest board is: back at the gate after, still sideways
+            keepSideways = true;
+            router.push('/paywall');
+          }}
+          onClose={() => setGateSheet(null)}
         />
       )}
       {ringing && !dialogue && (
@@ -1716,6 +3020,8 @@ function World({
           mapName={map.name}
           controls={controls}
           onControls={setControls}
+          speed={speed}
+          onSpeed={setSpeed}
           onResume={() => setPaused(false)}
           onOpenMap={() => {
             setYou({ x: sim.x.get(), y: sim.y.get() });
@@ -1799,6 +3105,44 @@ function World({
 
 const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
 
+/** A memory playing (memories.ts): the World washed out, old-photograph warm, or gone black where the memory does. */
+function MemoryWash({ shade }: { shade: Shade }) {
+  const past = useSharedValue(0);
+  const dark = useSharedValue(0);
+  useEffect(() => {
+    past.set(withTiming(shade === 'past' || shade === 'dark' ? 1 : 0, { duration: 700 }));
+    dark.set(withTiming(shade === 'dark' ? 1 : 0, { duration: 450 }));
+  }, [shade, past, dark]);
+  // an old photograph, not a filter: a light warm wash
+  const pastStyle = useAnimatedStyle(() => ({ opacity: past.value * 0.25 }));
+  const darkStyle = useAnimatedStyle(() => ({ opacity: dark.value * 0.94 }));
+  return (
+    <>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.past, pastStyle]} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.fade, darkStyle]} />
+    </>
+  );
+}
+
+/** Takes people out of the room's own drawing (off the map), so a march can draw them walking instead, or they're gone. */
+function stepOff(sim: WorldSim, ids: string[]) {
+  const rows = sim.npcWalk.get().map((r) => r.slice());
+  for (const id of ids) {
+    const r = rows[sim.npcIds.indexOf(id)];
+    if (!r) continue;
+    r[W_HX] = r[W_X] = r[W_TX] = -10;
+    r[W_HY] = r[W_Y] = r[W_TY] = -10;
+    r[W_T] = 0;
+  }
+  sim.npcWalk.set(rows);
+}
+
+/** Where you stand, in tiles. */
+const tileOf = (sim: WorldSim): [number, number] => [
+  Math.floor(sim.x.get() / TILE),
+  Math.floor((sim.y.get() - 1) / TILE),
+];
+
 /**
  * What A (or a tap) does: talk to whoever's in front, open the quest board, or examine the tile.
  * Also hands back `talk`, to start a conversation with someone without pressing A (a fresh hatch).
@@ -1808,6 +3152,22 @@ const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
  * one of their own big moments (moments.ts); `said` plays with them standing there, and they step
  * back in when it closes (or when the caller clears sim.cameo, for a scene that ends in a choice).
  */
+/** The mouse in the straw that sends Brannoc through the bars. */
+const SQUEAK = '*squeak*';
+
+/** Stands NPCs (by id) at tiles there and then: off the map (-10, -10) while a march draws them, say. */
+function putNpcs(sim: WorldSim, moves: [string, number, number][]) {
+  const rows = sim.npcWalk.get().map((r) => r.slice());
+  for (const [id, x, y] of moves) {
+    const r = rows[sim.npcIds.indexOf(id)];
+    if (!r) continue;
+    r[W_HX] = r[W_X] = r[W_TX] = x;
+    r[W_HY] = r[W_Y] = r[W_TY] = y;
+    r[W_T] = 0;
+  }
+  sim.npcWalk.set(rows);
+}
+
 function stepOut(sim: WorldSim, doer: HeroId, said: Dialogue, show: (d: Dialogue) => void) {
   sim.frozen.set(true);
   sim.cameo.set(newCameo(WALKER_ROWS[doer], sim.x.get(), sim.y.get(), sim.facing.get()));
@@ -1838,13 +3198,25 @@ function useAct(
   hero: HeroId,
   /** Someone with a scene of their own: true if it took over the talk. */
   special: (thing: NpcObject) => boolean = () => false,
+  /** A party member is stepping out (stepOut): hold the World till they speak. */
+  hold: (on: boolean) => void = () => {},
+  /** A memory playing (memories.ts): how the World looks under it. */
+  shade: (s: Shade) => void = () => {},
+  /** The season's last seal (castle.ts finaleStage): the party walks up behind you, then `said` plays. */
+  finale: (said: Dialogue) => void = (said) => setDialogue(said),
+  /** A level gate, still shut: its guard has his say (gate-guards.ts). True if it took over. */
+  atGate: (exitId: string) => boolean = () => false,
 ) {
   const busy = useRef(false);
   /** Talking to someone in the room: they turn to face you, say their piece, and the party chimes in. */
   const talk = useCallback(
     (thing: NpcObject, facing: number) => {
       const game = useGameStore.getState();
-      const banter = banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags));
+      const banter = banterFor(
+        map.id,
+        thing.id,
+        chattersWithYou(game.party, game.owned, useWorldStore.getState().flags, hero),
+      );
       // they turn to face you
       sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[facing]));
       // talking to anyone writes their part of the story on the Story scroll (tale.ts)
@@ -1852,6 +3224,8 @@ function useAct(
         .getState()
         .hear({ id: talkedId(thing.name), speaker: thing.name, ask: TALKED, answer: thing.lines, at: Date.now() });
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
+      // some things are only said once: from now on it's their `after` lines
+      if (thing.sets) useWorldStore.getState().setFlag(thing.sets);
       // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =
         thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
@@ -1875,7 +3249,8 @@ function useAct(
               ...(general ?? []),
             ]
           : general;
-      const questions = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      const asked = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
+      const questions = asked;
       // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
       if (thing.id === 'keeper' && map.id === 'archive') {
         const w = useWorldStore.getState();
@@ -1887,6 +3262,7 @@ function useAct(
             heartPieces: heartPieces(w.flags),
             memory: habitMemory(useGameStore.getState(), toDateKey(new Date())),
             day: Math.floor(Date.now() / 86400000),
+            hero,
           });
           if (news.said) w.setFlag(news.said);
           setDialogue({
@@ -1912,7 +3288,7 @@ function useAct(
         farewell: thing.farewell,
       });
     },
-    [map, sim, setDialogue, xp],
+    [map, sim, setDialogue, xp, hero],
   );
   const act = useCallback(() => {
     if (busy.current) return;
@@ -1921,38 +3297,106 @@ function useAct(
     const fieldMove = (doer: HeroId, said: Dialogue) => {
       if (doer === hero) return setDialogue(said);
       busy.current = true;
+      hold(true);
       stepOut(sim, doer, said, (d) => {
         busy.current = false;
+        hold(false);
         setDialogue(d);
       });
     };
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
     // A hidden memory (memories.ts): once your habits have earned it, it plays, and goes in the scroll.
-    const memory = memoryAt(map.id, tx, ty);
-    if (memory) {
+    // Someone's own (Brannoc's) waits for them to be with you, and afterwards whoever came has their say.
+    const recall = (memory: Memory): boolean => {
       const w = useWorldStore.getState();
-      if (w.memories.includes(memory.id)) {
-        setDialogue({ lines: SEEN_LINES });
-      } else if (!standing(memory.needs, xp.current).met) {
-        setDialogue({ lines: notYetLines(describeRequirement(memory.needs)) });
-      } else {
-        w.remember(memory.id);
-        playSound('quest');
-        haptics.celebrate();
-        setDialogue({ lines: memory.lines });
+      const game = useGameStore.getState();
+      const party = partyWithYou(game.party, game.owned, w.flags);
+      const call = memoryCall(memory, w.memories, standing(memory.needs, xp.current).met, party);
+      if (call === null) return false;
+      // seen before a restart of the story: the scroll keeps it, so whatever it opened stays open
+      if (memory.sets && w.memories.includes(memory.id) && !w.flags.includes(memory.sets)) w.setFlag(memory.sets);
+      if (call !== 'play') {
+        setDialogue({ lines: call });
+        return true;
       }
-      return;
+      w.remember(memory.id);
+      if (memory.sets) w.setFlag(memory.sets);
+      playSound('quest');
+      haptics.celebrate();
+      const after = banterFor(
+        map.id,
+        memory.id,
+        party.filter((id) => id !== hero),
+      );
+      // the World washes out into the past while it plays, goes black where it does, and comes back for the last line
+      setDialogue({
+        lines: memory.lines,
+        onLine: (i, line) => {
+          shade(memoryShade(memory, i));
+          // the forest: the shadows rise out of the ground on every side of you
+          if (SHADOWS_RISE.test(line)) {
+            const [x, y] = [sim.x.get(), sim.y.get()];
+            const ring = [-20, 0, 20].flatMap((dx) => [-14, 14].flatMap((dy) => [x + dx, y + dy, 1]));
+            sim.puffs.set([...sim.puffs.get(), ...ring]);
+          }
+        },
+        then: () => {
+          shade(null);
+          if (after.length > 0) setDialogue({ lines: after });
+        },
+      });
+      return true;
+    };
+    const memory = memoryAt(map.id, tx, ty);
+    if (memory && recall(memory)) return;
+    // The Painters' School (painters-school.ts): hang the paintings back, and the memory there is waiting.
+    if (map.id === SCHOOL) {
+      const tile = tileAt(map, tx, ty);
+      const flags = useWorldStore.getState().flags;
+      if (tile === HOOK_TILE) {
+        const theirs = MEMORIES.find((m) => m.map === SCHOOL);
+        setDialogue(
+          hookDialogue(
+            flags,
+            {
+              say: setDialogue,
+              hang: () => useWorldStore.getState().setFlag(PAINTINGS_HUNG),
+              after: () => {
+                if (theirs && !useWorldStore.getState().memories.includes(theirs.id)) recall(theirs);
+              },
+            },
+            map.examine[tile] ?? [],
+          ),
+        );
+        return;
+      }
+      const lain = fallenLines(tile, flags);
+      if (lain) {
+        setDialogue({ lines: lain });
+        return;
+      }
     }
     // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
+    // Through bars (map.talkThrough), whoever's just the other side.
+    const [dx, dy] = [
+      [0, 1],
+      [0, -1],
+      [-1, 0],
+      [1, 0],
+    ][facing];
+    const across = map.talkThrough?.includes(map.tiles[ty]?.[tx] ?? '')
+      ? whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx + dx, ty + dy)
+      : undefined;
     const thing =
       whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
+      across ??
       map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
     if (thing?.type === 'npc' && special(thing)) return;
     // party members you have may chime in, after the person's own lines (see banter.ts)
     const game = useGameStore.getState();
     const banter = thing
-      ? banterFor(map.id, thing.id, partyWithYou(game.party, game.owned, useWorldStore.getState().flags))
+      ? banterFor(map.id, thing.id, chattersWithYou(game.party, game.owned, useWorldStore.getState().flags, hero))
       : [];
     if (thing?.type === 'npc' && thing.job && !useWorldStore.getState().flags.includes(thing.job.flag)) {
       const job = thing.job;
@@ -1963,7 +3407,7 @@ function useAct(
         const who = COMPANIONS[doer];
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
-        // A way out of here that this opens (the checkpoint, the Kaldorium) opens now, not next visit.
+        // A way out of here that this opens (the checkpoint, the Kaloseum) opens now, not next visit.
         const opens = EXITS.some((e) => e.from === map.id && e.walk && needsFlag(e.needs, job.flag));
         const here: Arrival = {
           map: map.id as MapId,
@@ -2163,10 +3607,20 @@ function useAct(
       const s = standing(FINAL_GOAL, xp.current);
       if (s.met) {
         const { flags, setFlag } = useWorldStore.getState();
+        // through the seal: a white flash, like the green candle's, and the Archive
         const home = [
-          { label: 'Go home.', then: () => onTravel(PORTAL_HOME.to) },
+          { label: 'Go home.', then: () => onTravel(PORTAL_HOME.to, 'flash') },
           { label: 'Not yet.', then: () => {} },
         ];
+        // the seal stirs as you touch it: a shimmer off each of its stones
+        sim.puffs.set([
+          ...sim.puffs.get(),
+          ...tilesOf(map, ['Q']).flatMap((t) => [
+            (t % map.width) * TILE + TILE / 2,
+            Math.floor(t / map.width) * TILE + TILE,
+            0,
+          ]),
+        ]);
         if (flags.includes(SEASON_FLAG)) setDialogue({ lines: [...SEASON_END, ...PORTAL_HOME.lines], choices: home });
         else {
           // The last seal: your real record, the king you left, and the first memory, kept in your Satchel.
@@ -2177,12 +3631,18 @@ function useAct(
           playSound('levelUp');
           // All eight stay with you through the first story; the party splits at the start of Season 2
           // (author, Oct 4, 2026: partySplit in scenes.ts, kept for then).
-          setDialogue({
+          finale({
             lines: [
-              ...seasonFinale(memory, flags),
+              ...seasonFinale(memory, flags, hero === 'brannoc'),
               `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
               ...PORTAL_HOME.lines,
             ],
+            // the first memory back: the World washes into the past for it, as the hidden memories do
+            onLine: (_, line) =>
+              shade(
+                FINALE.memory.indexOf(line) >= 0 && line !== FINALE.memory[FINALE.memory.length - 1] ? 'past' : null,
+              ),
+            then: () => shade(null),
             choices: home,
           });
         }
@@ -2193,15 +3653,14 @@ function useAct(
       return;
     }
     // The Maze Ward: a hole that skips a maze, if you're Mage enough to see it (dungeon.ts).
-    const hole = map.id === 'dungeon-mazes' ? MAZE_HOLES.find((h) => h.tile === tile) : undefined;
+    const hole = MAZE_HOLES.find((h) => h.map === map.id && h.tile === tile);
     if (hole) {
       if (!standing(hole.needs, xp.current).met) {
         setDialogue({ lines: map.examine[tile] ?? [] });
         return;
       }
+      // your hero thinks it: a plain box, with no one's face on it
       setDialogue({
-        speaker: COMPANIONS[hero].name,
-        sprite: hero,
         lines: holeLines(hero === 'brannoc'),
         then: () =>
           setDialogue({
@@ -2220,11 +3679,9 @@ function useAct(
         setDialogue({ lines: PASSAGE_LINES.plain });
         return;
       }
+      // your hero thinks it, then the question is put: both plainly, with no one's face on them
       setDialogue({
-        speaker: COMPANIONS[hero].name,
-        sprite: hero,
         lines: PASSAGE_LINES.found,
-        // your hero thinks it; the question is put plainly, with no one's face on it
         then: () =>
           setDialogue({
             lines: PASSAGE_LINES.ask,
@@ -2264,6 +3721,40 @@ function useAct(
           { label: 'Go back the way I came', then: () => onTravel(PASSAGE_RETURN) },
         ],
       });
+      return;
+    }
+    // The bank's vault, shut, and no Noble with you to just see the numbers (vault.ts): turn the dials yourself.
+    if (
+      map.id === VAULT.map &&
+      tile === VAULT.tile &&
+      !useWorldStore.getState().flags.includes(VAULT.flag) &&
+      COMPANIONS[hero].dimension !== 'financial' &&
+      !stepsIn('financial', hero)
+    ) {
+      const here: Arrival = {
+        map: map.id as MapId,
+        x: Math.floor(sim.x.get() / TILE),
+        y: Math.floor((sim.y.get() - 1) / TILE),
+        facing: FACINGS[facing],
+      };
+      const dial = (turned: number[]) => {
+        const k = turned.length;
+        if (k === DIALS.length) {
+          if (!opens(turned)) {
+            setDialogue({ lines: DIAL_LINES.wrong });
+            return;
+          }
+          useWorldStore.getState().setFlag(VAULT.flag);
+          // re-entered, so the door's drawn open
+          setDialogue({ lines: DIAL_LINES.right, then: () => onTravel(here) });
+          return;
+        }
+        setDialogue({
+          lines: k === 0 ? [...DIAL_LINES.start, DIAL_LINES.dial[0]] : [DIAL_LINES.dial[k]],
+          choices: DIALS[k].map((n) => ({ label: `Turn it to ${n}`, then: () => dial([...turned, n]) })),
+        });
+      };
+      dial([]);
       return;
     }
     // A job: pull a lever, break a wall. Doing one changes the room, so it's re-entered afterwards.
@@ -2326,6 +3817,7 @@ function useAct(
         } else onTravel(to);
         return;
       }
+      if (!s.met && atGate(exit.id)) return;
       useWorldStore.getState().notice(exitNotice(exit.id));
       setDialogue({
         lines: s.met
@@ -2341,8 +3833,11 @@ function useAct(
       return;
     }
     const lines = map.examine[tile];
-    if (lines) setDialogue({ lines });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special]);
+    // the party can have a word about what you're looking at, too (banter.ts, "tile:<letter>")
+    const { party, owned } = useGameStore.getState();
+    const said = banterFor(map.id, `tile:${tile}`, chattersWithYou(party, owned, useWorldStore.getState().flags, hero));
+    if (lines) setDialogue({ lines: [...lines, ...said] });
+  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special, hold, shade, finale, atGate]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
   const safeAct = useCallback(() => {
     try {
@@ -2362,10 +3857,11 @@ function needsFlag(needs: Requirement, flag: string): boolean {
   return false;
 }
 
-/**
- * Who steps in for a job only `path` can do, like a field move: a party
- * member of that Path you've met who can walk the World. Undefined if none.
- */
+/** You let the prisoners out of their cells (read live: it can change mid-visit). */
+function freedNow(): boolean {
+  return useWorldStore.getState().flags.includes(FREED_FLAG);
+}
+
 /** Whether one of the core eight is you, or walking with you right now. */
 function withYou(id: CharacterId, hero: HeroId): boolean {
   if (id === hero) return true;
@@ -2374,6 +3870,10 @@ function withYou(id: CharacterId, hero: HeroId): boolean {
   return walkersFor(party, owned, flags, flags).includes(id as HeroId);
 }
 
+/**
+ * Who steps in for a job only `path` can do, like a field move: a party
+ * member of that Path you've met who can walk the World. Undefined if none.
+ */
 function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
   const { party, owned } = useGameStore.getState();
   const flags = useWorldStore.getState().flags;
@@ -2416,6 +3916,7 @@ const styles = StyleSheet.create({
   hearts: { position: 'absolute', flexDirection: 'row', gap: 4 },
   fade: { backgroundColor: '#000000' },
   flash: { backgroundColor: '#FFFFFF' },
+  past: { backgroundColor: '#C9A46A' },
   root: { flex: 1, backgroundColor: '#0C0806' },
 });
 

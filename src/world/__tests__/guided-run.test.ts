@@ -106,6 +106,12 @@ function guidedRun(): { steps: Step[]; flags: string[]; stuck?: string } {
       continue;
     }
 
+    // Felix's cocoon on the Courier Road: broken open (the road east is walled off till it is)
+    if (goal.mark.tag === 'The cocoon') {
+      flags.push('felix-hatched');
+      steps.push({ map: here, did: 'broke the cocoon' });
+      continue;
+    }
     if (goal.mark.tag === 'The portal') {
       flags.push('season-1');
       steps.push({ map: here, did: 'touched the portal' });
@@ -158,7 +164,7 @@ describe('Season 1, following only the guide', () => {
 
   it('walks the whole Berserker kingdom in order', () => {
     const did = run.steps.map((s) => s.did).join('\n');
-    for (const flag of ['checkpoint', 'on-the-bill', 'old-law', 'cages-open', 'varga-witness', 'forge-fixed']) {
+    for (const flag of ['checkpoint', 'old-law', 'cages-open', 'varga-witness', 'forge-fixed']) {
       expect(did).toContain(`(${flag})`);
     }
   });

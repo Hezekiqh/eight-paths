@@ -16,7 +16,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TypewriterText } from '@/components/typewriter-text';
 import { TUTORIAL_QUEST_ID } from '@/game/quests';
 import { haptics } from '@/haptics';
-import { COMPANIONS, DEFAULT_PARTY } from '@/story/companions';
+import { premiumEnabled } from '@/premium/config';
+import { usePremium } from '@/premium/store';
+import { COMPANIONS, DEFAULT_PARTY, ROSTER } from '@/story/companions';
 import { useGameStore } from '@/store';
 import { useSession } from '@/store/session';
 import { fonts } from '@/theme';
@@ -30,6 +32,8 @@ const TAB_BAR_H = 76;
 const SETTLE_MS = 600;
 /** After the first hero's hatch, a breath before the Keeper speaks again. */
 const RESUME_MS = 900;
+/** Once the tour's overlay has faded away, the Premium offer slides up. */
+const OFFER_MS = 700;
 const WHITE = '#FFFFFF';
 /** A chunky pixel arrow pointing down: rows of blocks narrowing to the tip, under a stem. */
 const ARROW_ROWS = [6, 6, 6, 22, 18, 14, 10, 6, 2];
@@ -54,6 +58,7 @@ function PixelArrow({ dir }: { dir: 'up' | 'down' }) {
  * steps aside while it lands and the first hero hatches. The last line is at the
  * Other World's door; the player steps in when they like. Lives above the tabs;
  * Today starts it once, right after onboarding, until replayed from Settings.
+ * When it ends the first time, the Premium offer is shown.
  *
  * The habit creator is a sheet that covers any Modal, so while the tour is
  * there it's drawn inside the sheet instead (`inside`), as a plain overlay.
@@ -93,7 +98,8 @@ export function KeeperTour({ inside = false }: { inside?: boolean }) {
   const first = player ? (player.origin ?? DEFAULT_PARTY[player.classDimension]) : null;
   const line = step.line
     .replace('{name}', player?.name ?? 'friend')
-    .replace('{hero}', first ? COMPANIONS[first].name : 'Your first hero');
+    .replace('{hero}', first ? COMPANIONS[first].name : 'Your first hero')
+    .replace('{left}', String(ROSTER.length - 1));
 
   // Open this step's screen (only the tabs' copy does, so it happens once).
   useEffect(() => {
@@ -146,12 +152,17 @@ export function KeeperTour({ inside = false }: { inside?: boolean }) {
     setInstant(false);
   };
 
-  /** Ends the tour (the last line, or Skip). The player steps into the Other World when they choose. */
+  /**
+   * Ends the tour (the last line, or Skip). The player steps into the Other World when they choose.
+   * The first time, the Premium offer follows; replays from Settings don't show it again.
+   */
   const end = () => {
     haptics.tap();
     goTo(0);
     setPaused(false);
     finish();
+    const { premium, offerSeen } = usePremium.getState();
+    if (premiumEnabled && !premium && !offerSeen) setTimeout(() => router.push('/paywall'), OFFER_MS);
   };
   const skip = () => end();
 

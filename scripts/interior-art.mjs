@@ -7,21 +7,38 @@ const TILE = 16;
 /** Floors other than the Archive's planks: stone flags, clean white tile, straw over boards. */
 export const FLOORS = {
   stone: (x, y, hash) => {
-    const fx = Math.floor(x / 8) + (Math.floor(y / 8) % 2) * 4;
-    const base = ['#5A5450', '#544E4A', '#605A56'][Math.floor(hash(Math.floor(fx / 1), Math.floor(y / 8), 21) * 3)];
-    return x % 8 === 0 || y % 8 === 0 ? '#3A3432' : base;
+    // flags in staggered courses, each its own shade, lit on its upper-left edges and shaded on the lower-right
+    const row = Math.floor(y / 8);
+    const sx = x + (row % 2) * 5;
+    const ix = sx % 10;
+    const jy = y % 8;
+    if (ix === 0 || jy === 0) return '#3A3432';
+    const h = hash(Math.floor(sx / 10), row, 21);
+    if (jy === 1 || ix === 1) return h < 0.5 ? '#6A6460' : '#66605C';
+    if (jy === 7 || ix === 9) return '#4A4442';
+    if (hash(x, y, 22) < 0.04) return '#4A4442';
+    return ['#5A5450', '#544E4A', '#605A56'][Math.floor(h * 3)];
   },
   tile: (x, y) => ((Math.floor(x / 8) + Math.floor(y / 8)) % 2 ? '#E0DCD4' : '#D0CCC4'),
   hay: (x, y, hash) => (hash(x, y, 23) < 0.35 ? '#C8A84A' : hash(x, y, 24) < 0.5 ? '#B8963A' : '#8A6A3A'),
+  // the bank's marble: big polished squares, cream and green, a gold seam between (author, Oct 7, 2026)
+  marble: (x, y, hash) => {
+    if (x % 16 === 0 || y % 16 === 0) return '#B8963A';
+    const green = (Math.floor(x / 16) + Math.floor(y / 16)) % 2;
+    const vein = hash(Math.floor(x / 2), Math.floor(y / 3), 25) < 0.06;
+    if (green) return vein ? '#5A7A6A' : '#3A5A4A';
+    return vein ? '#C8C0B0' : '#E8E2D4';
+  },
 };
 
-export function interiorArt({ box, put, ellipse, hash }) {
+export function interiorArt({ box, put, ellipse, hash, tint }) {
   const WALLS = {
     stone: ['#6A6260', '#585250', '#8A8280'],
     plaster: ['#D8CCB0', '#C0B498', '#E8DCC0'],
     wood: ['#6A4A2E', '#523A22', '#8A6440'],
     white: ['#E8E4DC', '#D0CCC4', '#F4F0EA'],
     plank: ['#8A3A2A', '#6A2A1E', '#AA5A4A'],
+    marble: ['#E0D8C8', '#B8963A', '#F4EEE2'],
   };
   /** A plain wall, two tiles tall: the top tile has the cornice, the bottom a skirting board. */
   const wall = (g, x, y, m, kind) => {
@@ -29,17 +46,58 @@ export function interiorArt({ box, put, ellipse, hash }) {
     const upper = m.at(0, -1) === '#';
     box(g, x, y, TILE, TILE, c);
     if (kind === 'stone')
-      for (let j = 0; j < TILE; j += 5) {
-        box(g, x, y + j, TILE, 1, d);
-        box(g, x + ((j / 5) % 2 ? 4 : 11), y + j, 1, 5, d);
+      // dressed stone in courses, worked out from where it sits so the two tiles of the wall run on: each block
+      // its own shade, its top edge lit, its right end in shade (lit from the upper left)
+      for (let j = 0; j < TILE; j++)
+        for (let i = 0; i < TILE; i++) {
+          const py = y + j;
+          const course = Math.floor(py / 5);
+          const bx = x + i + (course % 2 ? 5 : 0);
+          const ii = bx % 10;
+          if (py % 5 === 0 || ii === 0) {
+            put(g, x + i, py, d);
+            continue;
+          }
+          const h = hash(Math.floor(bx / 10), course, 25);
+          if (h < 0.3) tint?.(g, x + i, py, 0.12, '#0A0608', false);
+          else if (h > 0.8) tint?.(g, x + i, py, 0.12, l, false);
+          if (py % 5 === 1) tint?.(g, x + i, py, 0.4, l, false);
+          else if (ii === 9) tint?.(g, x + i, py, 0.25, '#0A0608', false);
+          else if (hash(x + i, py, 26) < 0.05) tint?.(g, x + i, py, 0.3, '#0A0608', false);
+        }
+    if (kind === 'wood' || kind === 'plank')
+      // boards, each its own shade, lit down its left edge, a knot here and there
+      for (let i = 0; i < TILE; i++) {
+        const board = Math.floor((x + i) / 4);
+        const h = hash(board, 0, 27);
+        for (let j = 0; j < TILE; j++) {
+          if (i % 4 === 0) {
+            put(g, x + i, y + j, d);
+            continue;
+          }
+          if (h < 0.35) tint?.(g, x + i, y + j, 0.15, '#0A0608', false);
+          if (i % 4 === 1) tint?.(g, x + i, y + j, 0.3, l, false);
+          if (hash(x + i, y + j, 28) < 0.03) tint?.(g, x + i, y + j, 0.35, '#0A0608', false);
+        }
       }
-    if (kind === 'wood' || kind === 'plank') for (let i = 0; i < TILE; i += 4) box(g, x + i, y, 1, TILE, d);
+    if (kind === 'plaster' || kind === 'white')
+      // limewash, never quite even, with a timber rail along the top of the wainscot
+      for (let j = 0; j < TILE; j++)
+        for (let i = 0; i < TILE; i++) {
+          const n = hash(Math.floor((x + i) / 3), Math.floor((y + j) / 2), 29);
+          if (n < 0.25) tint?.(g, x + i, y + j, 0.08, '#0A0608', false);
+          else if (n > 0.85) tint?.(g, x + i, y + j, 0.1, l, false);
+        }
     if (upper) {
-      box(g, x, y, TILE, 3, d);
+      box(g, x, y, TILE, 1, '#1A120C');
+      box(g, x, y + 1, TILE, 2, d);
       box(g, x, y + 3, TILE, 1, l);
+      for (let i = 0; i < TILE; i++) tint?.(g, x + i, y + 4, 0.25, '#0A0608', false);
     } else {
       box(g, x, y + 12, TILE, 4, d);
       box(g, x, y + 12, TILE, 1, l);
+      box(g, x, y + 15, TILE, 1, '#1A120C');
+      for (let i = 0; i < TILE; i++) tint?.(g, x + i, y + 11, 0.2, '#0A0608', false);
     }
   };
   const art = {};
@@ -70,15 +128,44 @@ export function interiorArt({ box, put, ellipse, hash }) {
   // a fireplace in the wall, burning
   art.F = (g, x, y, m) => {
     wall(g, x, y, m, kindOf(m));
+    // the chimney breast: dressed stone blocks, lit on the left, the right in shade, an outline round it
+    const stones = (top, h) => {
+      box(g, x, top, 16, h, '#2A2220');
+      for (let j = 0; j < h; j++)
+        for (let i = 1; i < 15; i++) {
+          const py = top + j;
+          const course = Math.floor((py - y + 32) / 4);
+          const joint = py % 4 === 0 || (i + (course % 2) * 3) % 6 === 0;
+          let c = joint ? '#4A3E3A' : hash(Math.floor((i + (course % 2) * 3) / 6), course, 30) < 0.5 ? '#7A6A64' : '#726260';
+          if (!joint && i < 3) c = '#8A7C76';
+          if (!joint && i > 12) c = '#5E504C';
+          put(g, x + i, py, c);
+        }
+    };
     if (m.at(0, -1) === '#') {
-      box(g, x + 1, y + 6, 14, 10, '#7A6A64');
+      stones(y + 4, 12);
+      box(g, x + 1, y + 3, 14, 1, '#2A2220');
       return;
     }
-    box(g, x + 1, y, 14, 14, '#7A6A64');
-    box(g, x + 3, y + 3, 10, 11, '#1E1816');
-    ellipse(g, x + 8, y + 11, 4, 3, '#E8742A');
-    ellipse(g, x + 8, y + 10, 2, 3, '#FFD060');
+    stones(y, 14);
+    // the mantel shelf, then the firebox: soot-black, the fire on a bed of embers, its glow on the stone
+    box(g, x, y + 1, 16, 2, '#5A3A22');
+    box(g, x, y + 1, 16, 1, '#7A5232');
+    box(g, x + 3, y + 4, 10, 10, '#2A2220');
+    box(g, x + 4, y + 5, 8, 9, '#140E0C');
+    box(g, x + 4, y + 5, 8, 1, '#0A0606');
+    box(g, x + 4, y + 12, 8, 2, '#8A2A10');
+    box(g, x + 5, y + 11, 6, 1, '#4A2A1A');
+    for (let i = 5; i < 11; i += 2) put(g, x + i, y + 12, '#F0A040');
+    ellipse(g, x + 8, y + 10, 3, 2, '#E8742A');
+    ellipse(g, x + 8, y + 9, 2, 2, '#FFB04A');
+    put(g, x + 8, y + 9, '#FFF0C0');
+    put(g, x + 7, y + 7, '#FFD060');
+    put(g, x + 9, y + 6, '#E8742A');
+    for (const i of [2, 13]) put(g, x + i, y + 11, '#C87040');
+    // the hearthstone
     box(g, x, y + 14, 16, 2, '#5A4A44');
+    box(g, x, y + 14, 16, 1, '#7A6A64');
   };
   // the guild's notice board, crowded with jobs: papers of every size, pinned at angles
   art.N = (g, x, y, m) => {
@@ -96,7 +183,13 @@ export function interiorArt({ box, put, ellipse, hash }) {
     box(g, x + 9, y + 1, 5, 6, '#E8DCC0');
     box(g, x + 3, y + 6, 5, 5, '#E0D4B8');
     box(g, x + 10, y + 8, 4, 3, '#F0E6CC');
-    for (const [px, py] of [[4, 1], [11, 1], [5, 6], [12, 8]]) put(g, x + px, y + py, '#B04030');
+    for (const [px, py] of [
+      [4, 1],
+      [11, 1],
+      [5, 6],
+      [12, 8],
+    ])
+      put(g, x + px, y + py, '#B04030');
     for (let k = 0; k < 6; k++) put(g, x + 3 + (k % 3) * 2, y + 3 + Math.floor(k / 3) * 5, '#8A7A64');
   };
   // a pew: a long wooden bench, joined to its neighbours
@@ -143,9 +236,103 @@ export function interiorArt({ box, put, ellipse, hash }) {
     const r = m.at(1, 0) !== 'n';
     box(g, x, y + 3, TILE, 10, '#5A3A20');
     box(g, x + (l ? 1 : 0), y + 4, TILE - (l ? 1 : 0) - (r ? 1 : 0), 8, '#D8C898');
-    for (let k = 0; k < 4; k++) put(g, x + 2 + Math.floor(hash(x, y, k) * 12), y + 5 + Math.floor(hash(y, x, k) * 6), '#8A6A44');
+    for (let k = 0; k < 4; k++)
+      put(g, x + 2 + Math.floor(hash(x, y, k) * 12), y + 5 + Math.floor(hash(y, x, k) * 6), '#8A6A44');
     if (l) box(g, x + 1, y + 13, 2, 3, '#3A2618');
     if (r) box(g, x + 13, y + 13, 2, 3, '#3A2618');
+  };
+  // the Long Mess's table (author, Oct 7, 2026): dark oak, joined along its length, a bowl at every place, and
+  // over every bowl a curl of pale blue ghost steam. Benches run along both sides, nobody on them.
+  art['3'] = (g, x, y, m) => {
+    const l = m.at(-1, 0) !== '3';
+    const r = m.at(1, 0) !== '3';
+    const x0 = x + (l ? 1 : 0);
+    const w = TILE - (l ? 1 : 0) - (r ? 1 : 0);
+    const n = Math.round(x / TILE);
+    // the far bench, mostly hidden behind the table
+    box(g, x0, y, w, 2, '#3A2414');
+    box(g, x0, y, w, 1, '#5A3A22');
+    // the table's shadow on the flags, and the near bench's
+    for (let i = 0; i < TILE; i++) {
+      tint?.(g, x + i, y + 12, 0.5);
+      tint?.(g, x + i, y + 15, 0.45);
+    }
+    // the top: two long boards, lit along the near edge of each, an outline round it all
+    box(g, x, y + 2, TILE, 1, '#1E120A');
+    box(g, x0, y + 3, w, 7, '#5A3820');
+    box(g, x0, y + 3, w, 1, '#7A5232');
+    box(g, x0, y + 6, w, 1, '#3A2414');
+    box(g, x0, y + 7, w, 1, '#6A4428');
+    for (let i = 0; i < TILE; i++) if (hash(x + i, y, 40) < 0.18) put(g, x + i, y + 4 + Math.floor(hash(x + i, y, 41) * 2) * 4, '#4A2E1A');
+    if (n % 4 === 0) box(g, x + 15, y + 3, 1, 7, '#3A2414'); // where one length of table meets the next
+    box(g, x, y + 10, TILE, 2, '#2E1C10');
+    if (l) box(g, x, y + 2, 1, 10, '#1E120A');
+    if (r) box(g, x + 15, y + 2, 1, 10, '#1E120A');
+    // legs at the ends and every few feet
+    if (l || n % 4 === 0) box(g, x + (r ? 12 : 2), y + 11, 2, 2, '#1E120A');
+    // the near bench
+    box(g, x0, y + 12, w, 1, '#1E120A');
+    box(g, x0, y + 13, w, 2, '#5A3A22');
+    box(g, x0, y + 13, w, 1, '#7A5232');
+    if (l) box(g, x + 2, y + 15, 2, 1, '#1E120A');
+    if (r || n % 3 === 0) box(g, x + 11, y + 15, 2, 1, '#1E120A');
+    // a bowl at every place, a spoon beside some, a cup beside others
+    box(g, x + 5, y + 4, 7, 4, '#2A2420');
+    box(g, x + 4, y + 5, 9, 2, '#2A2420');
+    box(g, x + 5, y + 5, 7, 2, '#D8D4CC');
+    box(g, x + 6, y + 4, 5, 1, '#F4F0EA');
+    box(g, x + 6, y + 5, 5, 1, '#8AB8D0');
+    put(g, x + 7, y + 5, '#C8E4F0');
+    box(g, x + 6, y + 7, 5, 1, '#A8A49C');
+    const side = hash(x, y, 42);
+    if (side < 0.45) {
+      box(g, x + 12, y + 5, 1, 3, '#B8B8C0');
+      put(g, x + 12, y + 4, '#E8E8F0');
+    } else if (side < 0.75) {
+      box(g, x + 2, y + 4, 2, 3, '#8A6A44');
+      put(g, x + 2, y + 4, '#C8A070');
+    }
+    // and over every bowl, a curl of ghost steam rising
+    for (const [i, j] of [[7, 3], [8, 2], [8, 1], [9, 0], [8, -1]]) put(g, x + i, y + j, j < 1 ? '#8AB8D0' : '#C8E4F0');
+  };
+  // a ghost stove: black iron, a pot on top, and a blue flame under it that gives no heat
+  art['4'] = (g, x, y, m) => {
+    const l = m.at(-1, 0) !== '4';
+    const r = m.at(1, 0) !== '4';
+    // the cold blue light it gives off, on the floor round its foot
+    for (let j = 12; j < 22; j++)
+      for (let i = -4; i < 20; i++) {
+        const d = Math.hypot(i - 8, (j - 14) * 1.6) / 12;
+        if (d < 1) tint?.(g, x + i, y + j, 0.22 * (1 - d), '#6AB0D8');
+      }
+    for (let i = 0; i < TILE; i++) tint?.(g, x + i, y + 16, 0.45);
+    // the body: an outline, black iron lit on its top and left, rivets
+    box(g, x + (l ? 0 : 0), y + 3, TILE, 13, '#0E0E12');
+    box(g, x + (l ? 1 : 0), y + 4, TILE - (l ? 1 : 0) - (r ? 1 : 0), 11, '#2A2A30');
+    box(g, x + (l ? 1 : 0), y + 4, TILE - (l ? 1 : 0) - (r ? 1 : 0), 1, '#5A5A66');
+    if (l) box(g, x + 1, y + 4, 1, 11, '#44444E');
+    box(g, x, y + 7, TILE, 1, '#1A1A20');
+    for (const i of [3, 12]) put(g, x + i, y + 6, '#6A6A78');
+    // the oven door, the ghost flame inside
+    box(g, x + 3, y + 9, 10, 5, '#0E0E12');
+    box(g, x + 4, y + 10, 8, 3, '#14202A');
+    box(g, x + 5, y + 11, 6, 2, '#3A7AA8');
+    for (let i = 5; i < 11; i += 2) put(g, x + i, y + 10, '#6AB0D8');
+    put(g, x + 7, y + 11, '#C8E4F0');
+    put(g, x + 8, y + 11, '#E8F4FA');
+    box(g, x + 3, y + 8, 10, 1, '#5A5A66');
+    // the feet
+    if (l) box(g, x + 1, y + 15, 2, 1, '#0E0E12');
+    if (r) box(g, x + 13, y + 15, 2, 1, '#0E0E12');
+    // a pot on the hob, lit on its left, a lid, and the steam that never warms anything
+    box(g, x + 3, y, 10, 4, '#0E0E12');
+    box(g, x + 4, y, 8, 4, '#3A3A44');
+    box(g, x + 4, y, 2, 4, '#5A5A66');
+    box(g, x + 3, y - 1, 10, 1, '#2A2A30');
+    put(g, x + 8, y - 2, '#5A5A66');
+    put(g, x + 2, y + 1, '#2A2A30');
+    put(g, x + 13, y + 1, '#2A2A30');
+    for (const [i, j] of [[6, -3], [7, -4], [9, -3], [10, -5], [8, -6], [11, -4]]) put(g, x + i, y + j, '#C8E4F0');
   };
   // a hospital bed, seen from above: a wooden headboard, a plump pillow, a blanket folded down
   art.b = (g, x, y) => {
@@ -184,10 +371,18 @@ export function interiorArt({ box, put, ellipse, hash }) {
   };
   // a barrel
   art.x = (g, x, y) => {
+    // staves lit on the left, shaded on the right, two iron hoops, a lid
+    ellipse(g, x + 8, y + 9, 7, 6, '#2A1A10');
     ellipse(g, x + 8, y + 9, 6, 6, '#7A4A2A');
-    box(g, x + 2, y + 6, 12, 1, '#3A2618');
-    box(g, x + 2, y + 12, 12, 1, '#3A2618');
-    ellipse(g, x + 8, y + 4, 5, 2, '#9A6A3A');
+    box(g, x + 3, y + 5, 2, 9, '#9A6A3A');
+    box(g, x + 11, y + 5, 3, 9, '#5A3820');
+    box(g, x + 8, y + 4, 1, 10, '#5A3820');
+    box(g, x + 2, y + 6, 12, 1, '#3A2E2A');
+    box(g, x + 2, y + 12, 12, 1, '#3A2E2A');
+    put(g, x + 3, y + 6, '#7A6A64');
+    put(g, x + 3, y + 12, '#7A6A64');
+    ellipse(g, x + 8, y + 4, 5, 2, '#5A3820');
+    ellipse(g, x + 8, y + 4, 4, 1, '#B07A48');
   };
   // shelves of goods for sale
   art.S = (g, x, y) => {
@@ -224,7 +419,161 @@ export function interiorArt({ box, put, ellipse, hash }) {
   art.h = (g, x, y) => {
     ellipse(g, x + 8, y + 10, 7, 5, '#C8A84A');
     ellipse(g, x + 8, y + 8, 5, 4, '#D8B85A');
-    for (let k = 0; k < 8; k++) put(g, x + 3 + Math.floor(hash(x, y, k) * 10), y + 5 + Math.floor(hash(y, x, k) * 8), '#E8C86A');
+    for (let k = 0; k < 8; k++)
+      put(g, x + 3 + Math.floor(hash(x, y, k) * 10), y + 5 + Math.floor(hash(y, x, k) * 8), '#E8C86A');
+  };
+  // ---- the Bank of Warrior City (author, Oct 7, 2026)
+  // the vault door: a 2x2 block of the back wall, a great round door of steel with a wheel and three brass dials.
+  // Each of its four tiles draws the whole door (centred on the block), so the last one drawn leaves it whole.
+  art.G = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    const cx = m.at(-1, 0) === 'G' ? x : x + TILE;
+    const cy = m.at(0, -1) === '#' ? y + TILE : y;
+    ellipse(g, cx, cy, 15, 15, '#2A2A30');
+    ellipse(g, cx, cy, 14, 14, '#7A7A84');
+    ellipse(g, cx, cy, 12, 12, '#9A9AA4');
+    ellipse(g, cx, cy, 10, 10, '#6A6A74');
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2;
+      put(g, Math.round(cx + Math.cos(a) * 13), Math.round(cy + Math.sin(a) * 13), '#4A4A54');
+    }
+    // the wheel: four spokes and a hub
+    box(g, cx - 7, cy, 15, 1, '#C8963A');
+    box(g, cx, cy - 7, 1, 15, '#C8963A');
+    for (let i = -5; i <= 5; i++) {
+      put(g, cx + i, cy + i, '#C8963A');
+      put(g, cx + i, cy - i, '#C8963A');
+    }
+    ellipse(g, cx, cy, 2, 2, '#E8C86A');
+    // three brass dials across the top
+    for (const dx of [-6, 0, 6]) {
+      ellipse(g, cx + dx, cy - 9, 2, 2, '#E8C86A');
+      put(g, cx + dx, cy - 10, '#3A2618');
+    }
+  };
+  // a wall of deposit boxes, two tiles tall: rows of little brass-handled drawers
+  art.K = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    const upper = m.at(0, -1) === '#';
+    const top = upper ? y + 5 : y;
+    const h = upper ? 11 : 12;
+    box(g, x, top, TILE, h, '#5A3A20');
+    for (let j = 0; j + 4 <= h; j += 4)
+      for (let i = 0; i < TILE; i += 4) {
+        box(g, x + i + 1, top + j + 1, 3, 3, '#8A6440');
+        put(g, x + i + 2, top + j + 2, '#E8C86A');
+      }
+  };
+  // the tellers' counter: dark wood, joined along its length, with a brass grille above it
+  art.U = (g, x, y, m) => {
+    const l = m.at(-1, 0) !== 'U';
+    const r = m.at(1, 0) !== 'U';
+    box(g, x, y + 6, TILE, 9, '#4A2A18');
+    box(g, x, y + 6, TILE, 2, '#7A5230');
+    for (let i = 3; i < TILE; i += 6) box(g, x + i, y + 9, 1, 6, '#2A1C12');
+    box(g, x, y, TILE, 1, '#C8963A');
+    for (let i = 1; i < TILE; i += 3) box(g, x + i, y, 1, 6, '#B8963A');
+    if (l) box(g, x, y, 1, 15, '#2A1C12');
+    if (r) box(g, x + 15, y, 1, 15, '#2A1C12');
+    box(g, x, y + 15, TILE, 1, '#1A1210');
+  };
+  // a clerk's high desk with a ledger open on it: columns of figures, and a line in red ink
+  art.E = (g, x, y) => {
+    box(g, x + 2, y + 12, 2, 4, '#3A2618');
+    box(g, x + 12, y + 12, 2, 4, '#3A2618');
+    box(g, x + 1, y + 3, 14, 10, '#5A3A20');
+    box(g, x + 1, y + 3, 14, 1, '#7A5230');
+    box(g, x + 3, y + 4, 5, 7, '#F0E6CC');
+    box(g, x + 8, y + 4, 5, 7, '#E8DCC0');
+    box(g, x + 8, y + 4, 1, 7, '#B8A888');
+    for (let j = 5; j < 10; j += 2) {
+      box(g, x + 4, y + j, 3, 1, '#8A7A64');
+      box(g, x + 9, y + j, 3, 1, '#8A7A64');
+    }
+    box(g, x + 9, y + 9, 3, 1, '#B04030');
+    put(g, x + 13, y + 2, '#1E1816');
+    box(g, x + 13, y, 1, 2, '#F4F0EA');
+  };
+  // heaps of gold coin on the vault floor
+  art.Z = (g, x, y) => {
+    ellipse(g, x + 8, y + 11, 7, 4, '#8A6420');
+    ellipse(g, x + 8, y + 9, 6, 4, '#C8963A');
+    ellipse(g, x + 8, y + 7, 4, 3, '#E8C86A');
+    for (let k = 0; k < 7; k++)
+      put(g, x + 3 + Math.floor(hash(x, y, k) * 10), y + 5 + Math.floor(hash(y, x, k) * 7), '#FFF0A0');
+  };
+  // an iron-bound strongbox, stamped with a fist: the war chest, one of very many
+  art.R = (g, x, y) => {
+    box(g, x + 1, y + 4, 14, 11, '#5A3A20');
+    box(g, x + 1, y + 4, 14, 3, '#7A5230');
+    box(g, x + 1, y + 7, 14, 1, '#2A2A30');
+    box(g, x + 3, y + 4, 2, 11, '#4A4A54');
+    box(g, x + 11, y + 4, 2, 11, '#4A4A54');
+    box(g, x + 7, y + 8, 2, 3, '#C8963A');
+    box(g, x + 1, y + 15, 14, 1, '#1A1210');
+  };
+  // The Painters' School (author, Oct 7, 2026): boarded up five hundred years. Drawn by name (a map's
+  // `art` points a letter at them).
+  // a window, boarded over from outside: light through the cracks
+  art.boarded = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    if (m.at(0, -1) === '#') return;
+    box(g, x + 3, y + 1, 10, 10, '#3A2618');
+    box(g, x + 4, y + 2, 8, 8, '#E8D8A8');
+    for (const by of [y + 2, y + 5, y + 8]) box(g, x + 3, by, 10, 2, '#6A4428');
+  };
+  // four bare hooks over clean squares where the paintings hung, and a brass plate under each
+  art.hooks = (g, x, y, m) => {
+    wall(g, x, y, m, kindOf(m));
+    if (m.at(0, -1) === '#') {
+      box(g, x + 7, y + 6, 2, 2, '#2A1C12');
+      box(g, x + 3, y + 9, 10, 7, '#E8DEC4');
+      return;
+    }
+    box(g, x + 3, y, 10, 8, '#E8DEC4');
+    box(g, x + 5, y + 9, 6, 2, '#C8963A');
+    put(g, x + 6, y + 9, '#F0D07A');
+  };
+  // an easel with a canvas never finished: a sky, and a pencil line for the ground
+  art.easel = (g, x, y) => {
+    box(g, x + 4, y + 4, 1, 12, '#5A3A20');
+    box(g, x + 11, y + 4, 1, 12, '#5A3A20');
+    box(g, x + 7, y + 2, 2, 13, '#4A3020');
+    box(g, x + 3, y + 2, 10, 9, '#F0E6CC');
+    box(g, x + 3, y + 2, 10, 5, '#8AAAD0');
+    box(g, x + 3, y + 8, 10, 1, '#8A8280');
+    box(g, x + 2, y + 11, 12, 1, '#5A3A20');
+  };
+  // the master, in stone: an old man, a brush behind his ear, one arm a little longer than the other
+  art.statue = (g, x, y) => {
+    box(g, x + 3, y + 12, 10, 4, '#6A6260');
+    box(g, x + 3, y + 12, 10, 1, '#8A8280');
+    box(g, x + 5, y + 5, 6, 7, '#9A928C');
+    ellipse(g, x + 8, y + 3, 3, 3, '#ACA5A0');
+    box(g, x + 4, y + 6, 1, 6, '#8A8280');
+    box(g, x + 11, y + 6, 1, 5, '#8A8280');
+    box(g, x + 10, y + 1, 3, 1, '#C8963A');
+  };
+  // the master's stool, paint on the seat
+  art.stool = (g, x, y) => {
+    ellipse(g, x + 8, y + 7, 5, 3, '#7A5230');
+    box(g, x + 4, y + 8, 1, 7, '#4A3020');
+    box(g, x + 11, y + 8, 1, 7, '#4A3020');
+    box(g, x + 7, y + 9, 2, 6, '#4A3020');
+    put(g, x + 6, y + 6, '#B04030');
+    put(g, x + 9, y + 7, '#4A6AA0');
+  };
+  // a student's desk, a sketchbook open on it
+  art.desk = (g, x, y) => {
+    box(g, x + 1, y + 4, 14, 9, '#6A4428');
+    box(g, x + 1, y + 4, 14, 1, '#8A6440');
+    box(g, x + 2, y + 13, 2, 3, '#3A2618');
+    box(g, x + 12, y + 13, 2, 3, '#3A2618');
+    box(g, x + 4, y + 6, 4, 5, '#F0E6CC');
+    box(g, x + 8, y + 6, 4, 5, '#E8DCC0');
+    put(g, x + 5, y + 8, '#3A2618');
+    put(g, x + 6, y + 7, '#3A2618');
+    put(g, x + 10, y + 9, '#3A2618');
   };
   return art;
 }

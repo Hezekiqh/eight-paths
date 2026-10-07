@@ -43,7 +43,7 @@ const ST = {
   bone: '#D8D0B8',
 };
 
-export function castleArt({ box, put, ellipse, hash, wall }) {
+export function castleArt({ box, put, ellipse, hash, wall, tint }) {
   /** A run of black ashlar: courses of blocks, the left edge lit, the right in shade. */
   const masonry = (g, x, y, w, h, seed = 0) => {
     for (let j = 0; j < h; j++)
@@ -779,6 +779,117 @@ export function castleArt({ box, put, ellipse, hash, wall }) {
     box(g, x + 12, y + 3, 1, 6, '#E8E8F0');
   };
 
+  // The war council's table (author, Oct 7, 2026): a map of the eight kingdoms, the Mage Kingdom's border inked in
+  // red, little carved soldiers pushed up against it, and a dagger stuck in the middle. Drawn once across its block:
+  // heavy black oak with a lit rim, the map pinned flat on it, the table's shadow pooled on the marble beneath.
+  inside.T = (g, x, y, m) => {
+    if (m.at(-1, 0) === 'T' || m.at(0, -1) === 'T') return;
+    const { w, h } = extent(m, 'T');
+    const top = h - 8; // the tabletop; the apron and legs below it
+    // the shadow on the floor, down and to the right
+    for (let j = top; j < h + 3; j++)
+      for (let i = 2; i < w + 3; i++) tint?.(g, x + i, y + j, 0.55 - Math.max(0, j - h) * 0.12);
+    // legs and the apron's front, in shade
+    for (const lx of [2, w - 6]) {
+      box(g, x + lx, y + top, 4, 8, '#1A100A');
+      box(g, x + lx + 1, y + top, 2, 7, '#3A2416');
+      put(g, x + lx + 1, y + top, '#5A3A22');
+    }
+    box(g, x, y + top, w, 3, '#24160C');
+    box(g, x, y + top, w, 1, '#3A2416');
+    box(g, x - 1, y + top, 1, 3, ST.outline);
+    box(g, x + w, y + top, 1, 3, ST.outline);
+    // the top: an outline, a lit rim on the top and left, the far right in shade
+    box(g, x - 1, y - 1, w + 2, top + 1, ST.outline);
+    box(g, x, y, w, top, '#3A2416');
+    box(g, x, y, w, 1, '#7A5232');
+    box(g, x, y, 1, top, '#6A4430');
+    box(g, x + w - 1, y + 1, 1, top - 1, '#24160C');
+    box(g, x + 1, y + top - 1, w - 2, 1, '#2A1A0E');
+    for (let i = 2; i < w - 2; i++) if (hash(x + i, y, 64) < 0.25) put(g, x + i, y + 1 + (i % 2), '#4A2E1E');
+    // the map: parchment, the land a shade warmer than the sea, a dark line round every coast
+    const mx = x + 4;
+    const my = y + 3;
+    const mw = w - 8;
+    const mh = top - 6;
+    const cell = 6;
+    const noise = (px, py) => {
+      const gx = px / cell;
+      const gy = py / cell;
+      const ix = Math.floor(gx);
+      const iy = Math.floor(gy);
+      const fx = gx - ix;
+      const fy = gy - iy;
+      const v = (a, b) => hash(a, b, 65);
+      const top2 = v(ix, iy) * (1 - fx) + v(ix + 1, iy) * fx;
+      const bot = v(ix, iy + 1) * (1 - fx) + v(ix + 1, iy + 1) * fx;
+      return top2 * (1 - fy) + bot * fy;
+    };
+    const land = (i, j) => {
+      const dx = (i - mw / 2) / (mw / 2);
+      const dy = (j - mh / 2) / (mh / 2);
+      return 1 - (dx * dx * 0.7 + dy * dy * 0.8) + (noise(i, j) - 0.5) * 1.1 > 0.3;
+    };
+    for (let j = 0; j < mh; j++)
+      for (let i = 0; i < mw; i++) {
+        const on = land(i, j);
+        let c = on ? '#E2D2A2' : '#A8B4A0';
+        if (on && (!land(i - 1, j) || !land(i + 1, j) || !land(i, j - 1) || !land(i, j + 1))) c = '#6A4E30';
+        else if (!on && (i + j * 2) % 7 === 0)
+          c = '#94A08E'; // the sea's little waves
+        else if (on && hash(mx + i, my + j, 66) < 0.04) c = '#C8B888';
+        put(g, mx + i, my + j, c);
+      }
+    // the parchment's edge: a lit top, a curled shaded corner, a pin in each corner
+    box(g, mx, my, mw, 1, '#F0E4C0');
+    box(g, mx + mw - 1, my, 1, mh, '#A89870');
+    box(g, mx, my + mh - 1, mw, 1, '#A89870');
+    for (const [px, py] of [
+      [1, 1],
+      [mw - 2, 1],
+      [1, mh - 2],
+      [mw - 2, mh - 2],
+    ])
+      put(g, mx + px, my + py, '#8A1A1A');
+    // the old borders between the kingdoms, dotted in brown
+    for (const bx of [0.24, 0.45]) {
+      for (let j = 2; j < mh - 2; j++) {
+        const i = Math.round(mw * bx + Math.sin(j * 0.7 + bx * 9) * 2);
+        if (j % 2 === 0 && land(i, j)) put(g, mx + i, my + j, '#7A5A3A');
+      }
+    }
+    for (let i = 2; i < mw * 0.62; i++) {
+      const j = Math.round(mh * 0.55 + Math.sin(i * 0.4) * 1.5);
+      if (i % 2 === 0 && land(i, j)) put(g, mx + i, my + j, '#7A5A3A');
+    }
+    // the Mage Kingdom's border, inked thick in red
+    const redAt = (j) => Math.round(mw * 0.68 + Math.sin(j * 0.35) * 1.5);
+    for (let j = 1; j < mh - 1; j++) {
+      put(g, mx + redAt(j), my + j, '#A82020');
+      put(g, mx + redAt(j) + 1, my + j, '#7A1414');
+    }
+    // little carved soldiers pushed up against it, each with its shadow
+    for (let k = 0; k < 6; k++) {
+      const j = 2 + Math.floor((k * (mh - 6)) / 5);
+      const i = redAt(j) - 3 - (k % 2) * 3;
+      put(g, mx + i + 2, my + j + 3, '#8A7A58');
+      box(g, mx + i, my + j + 1, 2, 2, '#2A2A30');
+      put(g, mx + i, my + j + 1, '#5A5A66');
+      put(g, mx + i, my + j, '#8A1A1A');
+      put(g, mx + i + 1, my + j, '#5A0E10');
+    }
+    // the dagger, stuck point-down in the middle of the map
+    const dx = mx + Math.round(mw * 0.42);
+    const dy = my + Math.round(mh * 0.3);
+    for (let k = 1; k < 4; k++) put(g, dx + k + 1, dy + 3 + k, '#8A7A58');
+    box(g, dx, dy - 4, 1, 7, '#C8C8D4');
+    box(g, dx + 1, dy - 4, 1, 7, '#7A7A88');
+    put(g, dx, dy - 4, '#F4F4FA');
+    box(g, dx - 2, dy - 5, 6, 1, ST.gold);
+    put(g, dx - 2, dy - 5, '#E8C060');
+    box(g, dx, dy - 8, 2, 3, '#4A2E1E');
+    put(g, dx, dy - 9, ST.gold);
+  };
   // A hearth in the wall, burning low.
   inside.F = (g, x, y, m) => {
     wall?.(g, x, y, m);
@@ -787,6 +898,64 @@ export function castleArt({ box, put, ellipse, hash, wall }) {
     box(g, x + 3, y + 5, 10, 11, '#0C0A0E');
     box(g, x + 4, y + 12, 8, 3, ST.ember);
     box(g, x + 6, y + 10, 4, 2, ST.glow);
+  };
+
+  // ---- the castle's new rooms (author, Oct 7, 2026): the queen's room, the king's bedchamber, the royal dungeon
+
+  // A portrait painted over: a gold frame round a flat, careful grey, brush strokes and all.
+  inside.p = (g, x, y, m) => {
+    wall?.(g, x, y, m);
+    box(g, x + 2, y + 1, 12, 12, ST.gold);
+    box(g, x + 3, y + 2, 10, 10, '#6A6670');
+    for (let j = 3; j < 12; j += 2) box(g, x + 3 + (j % 4 ? 1 : 0), y + j, 8, 1, '#76727C');
+  };
+
+  // A tall mirror on the wall, gone grey with dust.
+  inside.M = (g, x, y, m) => {
+    wall?.(g, x, y, m);
+    ellipse(g, x + 8, y + 7, 5, 7, ST.gold);
+    ellipse(g, x + 8, y + 7, 4, 6, '#8A8C94');
+    ellipse(g, x + 7, y + 6, 2, 3, '#9A9CA4');
+    put(g, x + 6, y + 3, '#B8BAC2');
+  };
+
+  // Roses in a vase on a little stand, dried on the stem (a named key: 'T' is the war council's table).
+  inside['castle-roses'] = (g, x, y) => {
+    ellipse(g, x + 9, y + 15, 5, 1, '#100C0E');
+    box(g, x + 6, y + 11, 4, 4, '#4A2E1E');
+    ellipse(g, x + 8, y + 9, 3, 3, '#C8C0B0');
+    for (const [dx, dy] of [
+      [5, 3],
+      [8, 2],
+      [11, 3],
+      [6, 6],
+      [10, 5],
+    ]) {
+      box(g, x + dx, y + dy + 2, 1, 3, '#4A5A3A');
+      box(g, x + dx - 1, y + dy, 3, 2, '#7A2A34');
+      put(g, x + dx, y + dy, '#9A3A44');
+    }
+  };
+
+  // A high-backed chair, seen from behind (a named key: the small rooms draw 'g'): it faces the wall, kept for someone.
+  inside['castle-chair'] = (g, x, y) => {
+    ellipse(g, x + 9, y + 15, 6, 1, '#100C0E');
+    box(g, x + 3, y + 1, 10, 13, '#3A2418');
+    box(g, x + 4, y + 2, 8, 11, '#6A1416');
+    box(g, x + 3, y + 1, 10, 1, ST.gold);
+    box(g, x + 3, y + 13, 1, 3, '#2A1810');
+    box(g, x + 12, y + 13, 1, 3, '#2A1810');
+  };
+
+  // A rack in the royal dungeon (a named key: the small rooms draw 'X'): an iron frame with a bar and a hook, for something that doesn't need a coat.
+  inside['castle-rack'] = (g, x, y) => {
+    ellipse(g, x + 8, y + 15, 7, 1, '#0A080C');
+    box(g, x + 2, y + 1, 2, 15, ST.iron);
+    box(g, x + 12, y + 1, 2, 15, ST.iron);
+    box(g, x + 2, y + 1, 12, 2, '#5A5A66');
+    box(g, x + 7, y + 3, 2, 3, '#5A5A66');
+    put(g, x + 8, y + 6, '#5A5A66');
+    for (let j = 7; j < 14; j++) box(g, x + 6, y + j, 4, 1, j % 2 ? '#141018' : '#1E1A22');
   };
 
   return { outdoor, inside };

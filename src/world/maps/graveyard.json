@@ -1,0 +1,218 @@
+{
+  "id": "graveyard",
+  "name": "The Graveyard of Kings",
+  "style": "outdoor",
+  "walkable": [".", ",", "g", "P"],
+  "tiles": [
+    "##############################",
+    "#T......T....T....T.MMMMMMM.T#",
+    "#.........K..Q..R...MMMMMMM..#",
+    "#..gg.....,,,,,,,...MMMGMMM..#",
+    "#..........g...,,,,,,,,,.....#",
+    "#..............,.....P...P...#",
+    "#.u.u.u.u.u.e..,.......P....T#",
+    "#..............,.....u...u...#",
+    "#..............,......ouo....#",
+    "#.u.u.u.u.u....,.............#",
+    "#..............,..g....o.....#",
+    "#..............,.............#",
+    "#.u.u.u.u.u....,...........u.#",
+    "#..............,....u.g......#",
+    "#..............,.............#",
+    "#...VV......g..,..........u..#",
+    "#.e......g.....,...T....g....#",
+    "#..gg.....g....,.c.......g...#",
+    "#T.............,............T#",
+    "###############1##############"
+  ],
+  "spawn": {
+    "x": 15,
+    "y": 18,
+    "facing": "up"
+  },
+  "firstVisit": [
+    "Behind the chapel: the graveyard of the old kings, and of the soldiers who served them.",
+    "Every soldier's grave is open. Something is standing among them."
+  ],
+  "examine": {
+    "#": ["The graveyard wall. Low enough to climb, if you wanted to be on the other side of it. Nobody does."],
+    "T": ["A yew. They plant them in graveyards because they live for ever. Somebody thought that would be a comfort."],
+    "u": [
+      "A soldier's grave, empty. The earth isn't sunken in. It's thrown out, all round the edge.",
+      "Somebody dug this from the inside."
+    ],
+    "e": ["A heap of earth with a spade standing in it. Tomorrow's filling-in."],
+    "M": ["A grassy mound, too neat to be a hill. Something is buried under it, on purpose, with a door."],
+    "G": [
+      "An iron gate, set into the mound and shut fast. No keyhole. No handle on this side.",
+      "Carved over it: PUT BACK WHAT THE NIGHT KNOCKED OVER, AND THE DEAD MAY HAVE VISITORS.",
+      "In the ground in front of it, three empty sockets."
+    ],
+    "P": [
+      "A square socket cut into a flagstone, worn round in the middle. A stone stood here once. It's somewhere else now."
+    ],
+    "o": ["A round grave-marker, knocked out of its socket. Heavy, but it would roll if you leaned on it."],
+    "c": [
+      "A candle in an iron lantern, by the chapel door. Somebody keeps it lit for the dead. It does just as well for the living."
+    ],
+    "1": ["The chapel's back door."],
+    "V": ["The Warden's grave, empty. The chain round it has snapped, and the links are bent outwards."]
+  },
+  "objects": [
+    {
+      "id": "mad-king",
+      "type": "sign",
+      "x": 10,
+      "y": 2,
+      "inArt": true,
+      "lines": [
+        "THE MAD KING, OR SO THEY SAY. REST IN PEACE.",
+        "Osric Hale. When the queen went missing, he shut himself away, and people said he'd lost his mind.",
+        "He named his brother heir, and a month later died of a broken heart. Someone has scratched a small question mark after \"heart\"."
+      ]
+    },
+    {
+      "id": "beautiful-queen",
+      "type": "sign",
+      "x": 13,
+      "y": 2,
+      "inArt": true,
+      "lines": [
+        "THE BEAUTIFUL QUEEN, OR SO THEY SAY. REST IN PEACE.",
+        "No name. The mason left a space for one, and nobody could remember it.",
+        "She went missing. They dug her a grave anyway. The earth in front of the stone has never been turned."
+      ]
+    },
+    {
+      "id": "lost-prince",
+      "type": "sign",
+      "x": 16,
+      "y": 2,
+      "inArt": true,
+      "lines": [
+        "THE LOST PRINCE, OR SO THEY SAY. REST IN PEACE.",
+        "Lost in the woods. Never found. The stone is smaller than his father's, and kept much tidier."
+      ]
+    },
+    {
+      "id": "wardens-grave",
+      "type": "sign",
+      "x": 4,
+      "y": 15,
+      "inArt": true,
+      "lines": [
+        "A great grave, twice as long as the others, and twice as deep. It's empty.",
+        "A chain was wound round and round it. The chain has snapped, and the broken links are bent outwards.",
+        "The stone says BERTRAND, THE WARDEN. FELL OUT OF THE SKY ONTO A BAKERY. Under it, smaller and in a hurry, someone has carved STAY.",
+        "Under that, an older name, scratched out but not quite: AUREK THE TALL."
+      ]
+    },
+    {
+      "id": "empty-grave",
+      "type": "sign",
+      "x": 10,
+      "y": 9,
+      "inArt": true,
+      "lines": [
+        "A SOLDIER OF THE CROWN. The grave below it is open, and empty.",
+        "The spade marks go down. The finger marks go up."
+      ]
+    },
+    {
+      "id": "mattock",
+      "type": "npc",
+      "x": 13,
+      "y": 6,
+      "sprite": "mattock",
+      "facing": "left",
+      "name": "Mattock",
+      "lines": ["Morning. Mind the holes. I filled them in yesterday.", "And the day before. And the day before that."],
+      "questions": [
+        {
+          "ask": "Who digs them up again?",
+          "answer": [
+            "Couldn't say. I don't ask.",
+            "I fill them in at dusk. I come back at dawn, they're open. The spade's where I left it. What's under it is none of my business."
+          ]
+        },
+        {
+          "ask": "Have you ever seen what climbs out?",
+          "answer": [
+            "No. I'm in bed by then. I make very sure of it.",
+            "Some nights there's a fair bit of walking about. I put the pillow over my head. A man doesn't have to know everything."
+          ]
+        },
+        {
+          "ask": "Whose graves are they?",
+          "answer": [
+            "Soldiers of the old king's. The crown paid for the stones.",
+            "Nobody's paid for the filling-in since. But somebody's got to do it, and I've got the spade."
+          ]
+        },
+        {
+          "ask": "What's behind the iron gate?",
+          "answer": [
+            "The old king's crypt. It's been shut since the stones got knocked out of their sockets.",
+            "Put them back, if you like. I'm paid for holes, not stones."
+          ]
+        },
+        {
+          "ask": "Maybe you're just bad at digging.",
+          "answer": [
+            "...",
+            "I'm very good at digging. It's the staying dug I've no say in.",
+            "Off you go, then. Mind the holes."
+          ],
+          "deed": "bad"
+        }
+      ]
+    }
+  ],
+  "pushable": "o",
+  "platesFlag": "graveyard-gate",
+  "platesLines": [
+    "With a grind of stone on stone, all three markers settle into their sockets.",
+    "In the mound, the iron gate swings inwards on the dark, as if someone down there had been waiting for visitors."
+  ],
+  "enemies": [
+    {
+      "kind": "shadow",
+      "x": 3,
+      "y": 7
+    },
+    {
+      "kind": "shadow",
+      "x": 7,
+      "y": 7
+    },
+    {
+      "kind": "shadow",
+      "x": 5,
+      "y": 10
+    },
+    {
+      "kind": "shadow",
+      "x": 9,
+      "y": 11
+    },
+    {
+      "kind": "shadow",
+      "x": 7,
+      "y": 13
+    }
+  ],
+  "art": {
+    "#": "gy-wall",
+    "1": "gy-door",
+    "u": "gy-dug",
+    "V": "gy-warden",
+    "M": "gy-mound",
+    "G": "gy-gate",
+    "K": "gy-king",
+    "Q": "gy-queen",
+    "R": "gy-prince",
+    "P": "gy-socket",
+    "e": "gy-heap",
+    "o": "."
+  }
+}

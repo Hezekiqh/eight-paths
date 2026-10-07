@@ -4,6 +4,7 @@ import {
   MAX_PENDING_REMINDERS,
   STORY_DAYS,
   WEEKLY_FROM,
+  dayCallSlots,
   groupForMissed,
   lineWeight,
   planReminders,
@@ -327,6 +328,60 @@ describe('"Done" buttons (N6)', () => {
     const plans = planReminders(input({ streak: 9, restTokens: 0 }));
     expect(plans.find((p) => p.group === 'lastCall')?.questIds).toEqual(['q1']);
     expect(plans.filter((p) => p.missed >= 7).every((p) => p.questIds.length === 0)).toBe(true);
+  });
+});
+
+describe('quests left, during the day', () => {
+  const dayGroups = ['halfTime', 'checkIn', 'nineCall'];
+  const dayCalls = (plans: ReturnType<typeof planReminders>) => plans.filter((p) => dayGroups.includes(p.group));
+  const at = (plans: ReturnType<typeof planReminders>) => plans.map((p) => `${p.date} ${p.hour}:${p.minute}`);
+  const morning = 9 * 60;
+  const twoQuests = [quest(), quest({ id: 'q2', title: 'Read 10 pages', dimension: 'intellectual' })];
+
+  it('goes out at noon, every few hours, and 9 PM', () => {
+    const hours = (s: Parameters<typeof dayCallSlots>[0]) => dayCallSlots(s).map((x) => x.minutes / 60);
+    expect(hours('off')).toEqual([]);
+    expect(hours('bookends')).toEqual([12, 21]);
+    expect(hours('4')).toEqual([12, 16, 20, 21]);
+    expect(hours('2')).toEqual([12, 14, 16, 18, 20, 21]);
+    expect(hours('1')).toEqual([12, 13, 14, 15, 16, 17, 18, 19, 20, 21]);
+  });
+
+  it('is off unless chosen', () => {
+    expect(dayCalls(planReminders(input({ minutesNow: morning })))).toHaveLength(0);
+  });
+
+  it('counts the quests still left today, at half time and the 9 PM last call', () => {
+    const plans = dayCalls(
+      planReminders(input({ minutesNow: morning, dayReminders: 'bookends', quests: twoQuests, doneToday: ['q1'], lastActive: today })),
+    );
+    const todays = plans.filter((p) => p.date === today);
+    expect(todays.map((p) => [p.group, p.hour])).toEqual([['halfTime', 12], ['nineCall', 21]]);
+    for (const p of todays) {
+      expect(p.body).toContain('1 quest ');
+      expect(p.questIds).toEqual(['q2']);
+    }
+    // Tomorrow nothing is done yet.
+    expect(plans.filter((p) => p.date === addDays(today, 1)).every((p) => p.body.includes('2 quests'))).toBe(true);
+  });
+
+  it('stays quiet on a day with every quest done, and only plans today and tomorrow', () => {
+    const plans = dayCalls(
+      planReminders(input({ minutesNow: morning, dayReminders: '1', doneToday: ['q1'], lastActive: today })),
+    );
+    expect(plans.length).toBeGreaterThan(0);
+    expect(plans.every((p) => p.date === addDays(today, 1))).toBe(true);
+  });
+
+  it('skips the times already past', () => {
+    const plans = dayCalls(planReminders(input({ minutesNow: 16 * 60, dayReminders: '2', notificationTime: '08:00' })));
+    expect(at(plans.filter((p) => p.date === today))).toEqual([`${today} 18:0`, `${today} 20:0`, `${today} 21:0`]);
+  });
+
+  it("doesn't knock twice around the usual call", () => {
+    const plans = planReminders(input({ minutesNow: morning, dayReminders: '4', notificationTime: '16:15' }));
+    const todays = plans.filter((p) => p.date === today);
+    expect(todays.map((p) => p.hour)).toEqual([16, 12, 20, 21]);
   });
 });
 

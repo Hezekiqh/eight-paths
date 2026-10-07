@@ -4,7 +4,9 @@
   "style": "dungeon",
   "walkable": [
     ".",
-    ",",
+    ","
+  ],
+  "talkThrough": [
     "p"
   ],
   "tiles": [
@@ -13,7 +15,7 @@
     "#Wb...,kW,.bW.b,W,.bW.W#",
     "#W,.....W...W...W...W.W#",
     "#W,,....W...W...W...W.W#",
-    "#WGGG24GWGpGWGpGWGpGW.W#",
+    "#WGpG24GWGpGWGpGWGpGW.W#",
     "#W....................W#",
     "#Wt...................W#",
     "#W...................1W#",
@@ -58,10 +60,11 @@
       "A torch in a bracket, guttering."
     ],
     "3": [
-      "The guards' stair, up to the town. Locked from the other side. Of course it is."
+      "(The door at the top of the guards' stair. Locked. They locked it behind them.)",
+      "(No way out up there. I'll have to find another way.)"
     ],
     "4": [
-      "The cell door. Locked, and the key is upstairs with somebody who doesn't like you."
+      "The cell door. Locked, and the key is on Gary's belt. Gary is asleep."
     ]
   },
   "objects": [
@@ -116,7 +119,7 @@
         {
           "ask": "Some prince. Beaten by an apple cart.",
           "answer": [
-            "...By the saints. That is unkind, good sir.",
+            "...By the saints. That is unkind, friend.",
             "True, I grant you. It was a very large cart. But unkind.",
             "* Brannoc turns back to his corner, and guards it a little harder."
           ],
@@ -126,34 +129,29 @@
       "farewell": [
         "Go on, then. I shall hold this corner. Someone must."
       ],
-      "goneAfter": "brannoc-bolts"
+      "goneAfter": "cell-bars-bent"
     },
     {
       "id": "prisoner-1",
       "type": "npc",
       "x": 10,
-      "y": 5,
-      "sprite": "raider",
+      "y": 4,
+      "sprite": "oldmott",
       "facing": "down",
-      "name": "Nails",
+      "goneAfter": "cells-freed",
+      "name": "Old Mott",
       "lines": [
-        "Don't look at me like that.",
-        "I only stole the king's spoon.",
-        "Then the king's other spoon. Then I got greedy."
+        "The king sneezed.",
+        "I didn't say bless you.",
+        "Twenty life sentences."
       ],
       "questions": [
         {
-          "ask": "Why the spoons?",
+          "ask": "Should've said bless you, then.",
           "answer": [
-            "Soup.",
-            "You wouldn't understand. You've never had the king's soup."
-          ]
-        },
-        {
-          "ask": "Spoons? What a pathetic little crime.",
-          "answer": [
-            "Two spoons. Get it right.",
-            "Next time I'm going for the ladle. Then we'll see who's pathetic."
+            "I know.",
+            "Five years I've had to think about it. I'd say it now.",
+            "He hasn't sneezed since."
           ],
           "deed": "bad"
         }
@@ -163,27 +161,29 @@
       "id": "prisoner-2",
       "type": "npc",
       "x": 14,
-      "y": 5,
-      "sprite": "raider",
+      "y": 4,
+      "sprite": "nails",
       "facing": "down",
-      "name": "Old Mott",
+      "goneAfter": "cells-freed",
+      "name": "Nails",
       "lines": [
-        "Five hundred years I've been in here.",
-        "...No, wait. Five. Five years. It feels like five hundred."
+        "The king asked for ice water.",
+        "I gave him one ice cube.",
+        "One life sentence."
       ],
       "questions": [
         {
-          "ask": "What did you do?",
+          "ask": "Why only one ice cube?",
           "answer": [
-            "Said the statue in the square looked like a potato.",
-            "It does, though. Look at it. Potato."
+            "Ice is expensive.",
+            "I'm not made of ice."
           ]
         },
         {
-          "ask": "You look a bit like a potato yourself.",
+          "ask": "One ice cube? You deserve it.",
           "answer": [
             "I know.",
-            "Why do you think the statue bothered me so much?"
+            "Next time it's half a cube. Then we'll see who deserves what."
           ],
           "deed": "bad"
         }
@@ -193,29 +193,32 @@
       "id": "prisoner-3",
       "type": "npc",
       "x": 18,
-      "y": 5,
-      "sprite": "raider",
+      "y": 4,
+      "sprite": "silasseen",
       "facing": "down",
-      "name": "The Quiet One",
+      "goneAfter": "cells-freed",
+      "name": "Silas Seen",
       "lines": [
+        "I left the king on read for twenty minutes.",
+        "Fifty life sentences.",
+        ".",
         "...",
-        "...",
-        "Gary's asleep again, isn't he."
+        "...Touchy."
       ],
       "questions": [
         {
           "ask": "Are you the worst prisoner?",
           "answer": [
-            "Yes.",
-            "I return library books late. On purpose."
+            "Fifty life sentences.",
+            "Do the maths."
           ]
         },
         {
-          "ask": "Shh. You're the Quiet One. Act like it.",
+          "ask": "Twenty minutes? I'd have left him on read for a week.",
           "answer": [
+            ".",
             "...",
-            "...",
-            "Rude."
+            "Show-off."
           ],
           "deed": "bad"
         }
@@ -226,8 +229,10 @@
       "type": "npc",
       "x": 3,
       "y": 7,
-      "sprite": "raider",
+      "sprite": "gary",
       "facing": "right",
+      "asleep": true,
+      "goneAfter": "cells-freed",
       "name": "Gary",
       "lines": [
         "Zzz.",
@@ -235,6 +240,26 @@
         "I'm not going to stop you. I don't get paid enough for this."
       ],
       "questions": [
+        {
+          "ask": "Could I please have the keys?",
+          "answer": [
+            "...",
+            "* Gary thinks about it. Then he shrugs.",
+            "Sure. Why not.",
+            "* You received Gary's Cell Keys!"
+          ],
+          "sets": "keepsake:gary-keys",
+          "then": [
+            "You unlock the cells. One, two, three.",
+            "NAILS: I STOLE THE OTHER ICE CUBES!",
+            "OLD MOTT: I PUT PEPPER IN THE KING'S SANDWICH!",
+            "SILAS SEEN: I REGRET NOTHING!!!!",
+            "They're up the ladder and gone.",
+            "You turn back to Gary. Gary is gone too."
+          ],
+          "after": "cells-freed",
+          "deed": "good"
+        },
         {
           "ask": "Who are you?",
           "answer": [
@@ -259,7 +284,7 @@
         {
           "ask": "Where are the other guards?",
           "answer": [
-            "At the Colosseum. Big fight tonight.",
+            "At the Kaloseum. Big fight tonight.",
             "Somebody had to stay. Somebody is always Gary."
           ]
         },
@@ -339,13 +364,56 @@
       ],
       "comesAfter": "brannoc-declined",
       "goneAfter": "brannoc-joined"
+    },
+    {
+      "id": "kaldor-jailed",
+      "type": "npc",
+      "x": 3,
+      "y": 4,
+      "sprite": "kaldor",
+      "facing": "down",
+      "name": "Kaldor",
+      "lines": [
+        "...",
+        "Five hundred years, and not one grey hair. And now look at me.",
+        "They took my shadows. My master never even said goodbye."
+      ],
+      "questions": [
+        {
+          "ask": "Who was your master?",
+          "answer": [
+            "I never knew. Something in the dark that knew my name.",
+            "It gave me everything I ever wanted. It asked for one thing: build the army, and never use it for war.",
+            "I waited a hundred years for it to change its mind. Then I stopped waiting."
+          ]
+        },
+        {
+          "ask": "Why war?",
+          "answer": [
+            "What is an army for, if not war?",
+            "I built the strongest army the world has ever seen. It seemed a shame to waste it."
+          ]
+        },
+        {
+          "ask": "Enjoy the straw, old man.",
+          "answer": [
+            "...",
+            "The guard tells me the straw is the best part. I think he's lying. I think he likes to watch."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "farewell": [
+        "This was my nephew's cell, once. Or so they say."
+      ],
+      "comesAfter": "kaldor-jailed"
     }
   ],
   "art": {
     "2": "G",
     "p": "G",
     "1": "H",
-    "3": "E",
+    "3": "N",
     "4": "G"
   }
 }

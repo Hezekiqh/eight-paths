@@ -1,0 +1,131 @@
+{
+  "id": "royal-dungeon",
+  "name": "The Royal Dungeon",
+  "style": "dungeon",
+  "walkable": [".", ","],
+  "art": {
+    "X": "castle-rack",
+    "1": "E"
+  },
+  "spawn": {
+    "x": 20,
+    "y": 2,
+    "facing": "down"
+  },
+  "firstVisit": [
+    "Rows. Rows and rows of them, in the dark, all facing the same way.",
+    "Nothing down here breathes. Something turns its head anyway."
+  ],
+  "tiles": [
+    "########################",
+    "#WWWcWWWWWcWWWWWcWWW1WW#",
+    "#W....................W#",
+    "#W.X.X.X.X.X.X.X......W#",
+    "#W..,.................W#",
+    "#W.X.X.X.X.X.X.X......W#",
+    "#W..........,.........W#",
+    "#W.X.X.X.X.X.X.X...k..W#",
+    "#W....................W#",
+    "#W.X.X.X.X.X.X.X......W#",
+    "#W......,.............W#",
+    "#WWWWWWWWWWWWWWWWWWWWWW#",
+    "########################"
+  ],
+  "examine": {
+    "W": ["Old stone, older than the castle on top of it. Cold enough to take the skin off your hand."],
+    "1": ["The steps back up to the Great Hall. Up there, it's only empty. Down here, it's full."],
+    "c": ["A torch, burning low and blue. It gives off light, and no heat at all."],
+    "k": ["A candle on an iron stand, set down by the Rackwarden for himself. Rest here."],
+    "X": [
+      "An iron rack, cold enough to burn. A bar across the top, and a hook at about the height of a man's collar.",
+      "Like a coat stand, for something that doesn't need a coat."
+    ]
+  },
+  "enemies": [
+    { "kind": "shadow", "x": 4, "y": 3 },
+    { "kind": "shadow", "x": 10, "y": 3 },
+    { "kind": "shadow", "x": 14, "y": 5 },
+    { "kind": "shadow", "x": 6, "y": 7 },
+    { "kind": "shadow", "x": 12, "y": 7 },
+    { "kind": "shadow", "x": 8, "y": 9 }
+  ],
+  "objects": [
+    {
+      "id": "rackwarden",
+      "type": "npc",
+      "x": 19,
+      "y": 4,
+      "sprite": "haskel",
+      "facing": "left",
+      "name": "Mabb the Rackwarden",
+      "lines": [
+        "Mind the rows. They don't like the rows being minded. Mind them anyway.",
+        "I count them every morning. Same number every morning. Never fewer. I don't know where he gets them."
+      ],
+      "questions": [
+        {
+          "ask": "What are they?",
+          "answer": [
+            "Soldiers. The king's best. They never eat, never sleep, never ask for a day off.",
+            "Never ask for anything. Never say anything. Fifteen years I've said 'good morning' to them. Nothing."
+          ]
+        },
+        {
+          "ask": "Where does he get them?",
+          "answer": [
+            "He brings them down himself. At night, a few at a time.",
+            "I asked him once. He said 'from the ground', and laughed, so I laughed. You do.",
+            "Some of them, I'd swear, I went to school with."
+          ]
+        },
+        {
+          "ask": "Why the racks?",
+          "answer": [
+            "Tidy. The king likes things tidy. Rows. Ranks. Everything facing the same way.",
+            "Hang them up at night and they're good as new by morning. Like coats. Like very cold coats that hate you."
+          ]
+        },
+        {
+          "ask": "So you're a cloakroom attendant for nightmares.",
+          "answer": [
+            "...I am a RACKWARDEN.",
+            "It's on my door. It's on my badge. My mother had it stitched on a cushion.",
+            "Cloakroom. Honestly."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "Gone. All of them. All at once, the night the king fell.",
+          "They didn't fight it. They didn't make a sound. They just went out, row by row. Like candles.",
+          "Fifteen years of 'good morning'. One of them nodded back, at the very end. I'm choosing to believe that."
+        ]
+      }
+    },
+    {
+      "id": "rack-tag",
+      "type": "sign",
+      "x": 17,
+      "y": 9,
+      "goneAfter": "kaldor-beaten",
+      "lines": [
+        "A board of tags, in the Rackwarden's neat capitals.",
+        "ROW ONE: STANDING. ROW TWO: STANDING. ROW THREE: STANDING. ROW FOUR: STANDING.",
+        "Underneath: LIGHTS OUT: NEVER. LIGHTS ON: ALSO NEVER."
+      ]
+    },
+    {
+      "id": "racks-empty",
+      "type": "sign",
+      "x": 17,
+      "y": 9,
+      "comesAfter": "kaldor-beaten",
+      "lines": [
+        "The board of tags. Every row has been crossed out, and one word written underneath: GONE.",
+        "Empty racks, all down the dark. A smell like a snuffed candle."
+      ]
+    }
+  ]
+}

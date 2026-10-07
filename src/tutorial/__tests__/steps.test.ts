@@ -74,6 +74,6 @@ describe('TOUR_STEPS', () => {
     const at = TOUR_STEPS.findIndex((s) => s.complete === 'first-quest');
     expect(TOUR_STEPS[at].target).toBe('first-quest');
     expect(TOUR_STEPS[at + 1].line).toContain('{hero}');
-    expect(TOUR_STEPS[at + 1].line).toContain('199');
+    expect(TOUR_STEPS[at + 1].line).toContain('{left} heroes to go');
   });
 });

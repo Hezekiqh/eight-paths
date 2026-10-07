@@ -1,0 +1,162 @@
+{
+  "id": "root-cellar",
+  "name": "The Root Cellar",
+  "style": "dungeon",
+  "walkable": [
+    ".",
+    ","
+  ],
+  "spawn": {
+    "x": 4,
+    "y": 4,
+    "facing": "up"
+  },
+  "examine": {
+    "W": [
+      "Earth walls, shored up with old fence posts. Somebody dug this by hand, a spoonful a night."
+    ],
+    "B": [
+      "The open-hand banner of the Hales, hung where no guard will ever see it. It has been mended with turnip sacking, very carefully."
+    ],
+    "t": [
+      "A map of Kaldorhold, weighted down with turnips. Pebbles mark the guard posts. In the corner, in a careful hand: WHEN HE COMES BACK."
+    ],
+    "L": [
+      "A list of names, the rebellion's, written in code. The code is very simple. It's mostly turnips."
+    ],
+    "2": [
+      "The ladder back up to the weaver's cottage."
+    ]
+  },
+  "tiles": [
+    "##########",
+    "#WWBWWBWW#",
+    "#W..tt.LW#",
+    "#W..tt..W#",
+    "#W......W#",
+    "#WWW2WWWW#",
+    "##########"
+  ],
+  "art": {
+    "2": "o"
+  },
+  "objects": [
+    {
+      "id": "mira",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "mira",
+      "facing": "right",
+      "name": "Mira",
+      "lines": [
+        "Shut the trapdoor. Quick.",
+        "...You're not a guard. Fen sent you down, didn't he. Fen trusts everybody. It's his worst quality and his best one."
+      ],
+      "questions": [
+        {
+          "ask": "What is this place?",
+          "answer": [
+            "The only room in Osric's Rest the king's guards don't know about.",
+            "Upstairs, we farm and we pray. Down here, we plan."
+          ]
+        },
+        {
+          "ask": "Plan what?",
+          "answer": [
+            "The day the prince comes home. Brannoc. Osric's boy.",
+            "Everyone up there believes he's coming back. Somebody has to have a plan for when he does. That's us."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The king doesn't age. Five hundred years. The horde says he casts no shadow.",
+            "Everybody casts a shadow. Somebody's lying."
+          ]
+        },
+        {
+          "ask": "Why the bow?",
+          "answer": [
+            "Because I'm small, and the horde isn't.",
+            "You don't have to be the biggest. You have to practise every day until you're the steadiest."
+          ]
+        },
+        {
+          "ask": "A rebellion of turnip farmers? He'll crush you.",
+          "answer": [
+            "He might.",
+            "But he'd have to come down here to do it, and the ceiling's very low. We've thought about this."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "You did it. I'm going home.",
+          "Today. It's finally today."
+        ]
+      },
+      "wander": 2
+    },
+    {
+      "id": "holt",
+      "type": "npc",
+      "x": 6,
+      "y": 3,
+      "sprite": "holt",
+      "facing": "left",
+      "name": "Sergeant Holt",
+      "lines": [
+        "We didn't run. We relocated. Bravely.",
+        "Now we're planning to relocate the king. Same principle. Longer way round."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you?",
+          "answer": [
+            "Sergeant Holt. My great-great-great-grandfather served in the Lecrest Second, the prince's own regiment.",
+            "When the shadow came, they walked out of the war rather than fight it. They got as far as here, and stopped."
+          ]
+        },
+        {
+          "ask": "What's on the map?",
+          "answer": [
+            "Kaldorhold. Every guard post, every gate, every place the drawbridge chain could slip.",
+            "Five hundred years of notes. The pebbles are guards. The turnip is the king. It's a big turnip."
+          ]
+        },
+        {
+          "ask": "Why does strength matter?",
+          "answer": [
+            "Because one day you'll have to stand your ground, and it'll be too late to start training then.",
+            "Ask me how I know."
+          ]
+        },
+        {
+          "ask": "Tell me a camp story.",
+          "answer": [
+            "The old war, the one that never was. Every forge in the land beat out blades for the old king, and the other seven kingdoms sharpened theirs.",
+            "Then nobody marched. Soldiers, waiting for the right moment. Sound familiar?"
+          ]
+        },
+        {
+          "ask": "Relocated? You ran, you old coward.",
+          "answer": [
+            "We ran with purpose.",
+            "...The purpose was not being there. But it was a purpose."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "after": {
+        "flag": "kaldor-beaten",
+        "lines": [
+          "We're going back. Bravely. Slightly behind everyone else, but bravely.",
+          "Somebody take down the sign. It's a deserters' camp now. Was. Ex-deserters'."
+        ]
+      }
+    }
+  ]
+}

@@ -37,19 +37,19 @@
       "Trees, every one with a wooden sword stuck in it by a child."
     ],
     "U": [
-      "The Kaldorium Maximus. The old pit wasn't loud enough, so Kaldor built this. You can hear it breathing."
+      "Kaldor's Training Yard. Every soldier the king owns learns to fight in there. You can hear it grunting."
     ],
     "8": [
-      "The great gate of the Maximus. Every time you go in, the next champion on the ladder is waiting."
+      "The yard gate. Every time you go in, the next name on the sparring board is waiting."
     ],
     "I": [
-      "The fighters' entrance: a squat stone hut against the arena wall."
+      "The fighters' entrance: a squat stone hut against the yard wall."
     ],
     "4": [
       "THE FIGHTERS' DOOR. TITHE FIGHTERS REPORT HERE. BRING YOUR OWN COURAGE."
     ],
     "q": [
-      "A barrel of sand for the arena floor. Somebody has written HELP in it with a finger."
+      "A barrel of sand for the yard floor. Somebody has written HELP in it with a finger."
     ],
     "n": [
       "The fist crushing the crown."
@@ -68,7 +68,7 @@
       "facing": "right",
       "name": "Even Bett",
       "lines": [
-        "Bets on the ladder! Five champions, five bouts, odds chalked fresh every morning.",
+        "Bets on the sparring board! Five names, five spars, odds chalked fresh every morning.",
         "My cousin Odd Bett does the street brawls. I do the proper fights. We don't speak."
       ],
       "questions": [
@@ -82,8 +82,8 @@
         {
           "ask": "Why don't you speak to Odd Bett?",
           "answer": [
-            "She took bets on Durn and Haskel. Eleven days. Paid out on day seven. Day SEVEN.",
-            "A bet's a bet. You don't pay till the bread's eaten. Everybody knows that."
+            "She took bets on Durn and Haskel. Eleven days. Same odds every single day. ELEVEN DAYS.",
+            "Odds move, love. That's what makes them odds. Otherwise it's just a number on a wall."
           ]
         },
         {
@@ -105,7 +105,7 @@
       "facing": "right",
       "name": "Tilda",
       "lines": [
-        "I'm Hroth! I'm the champion! You have to fall over!",
+        "I'm Hroth! I'm top of the board! You have to fall over!",
         "BRAM: I don't want to fall over. I'm Fennick. I run away."
       ],
       "wander": 2,
@@ -114,7 +114,7 @@
           "ask": "Who do you want to be?",
           "answer": [
             "Hroth. Biggest. Oldest. Never loses.",
-            "Or Lady Holler. She gets to SHOUT. Indoors."
+            "Or Yardmaster Holler. She gets to SHOUT at soldiers."
           ]
         },
         {
@@ -196,9 +196,9 @@
       "x": 18,
       "y": 6,
       "lines": [
-        "THE LADDER OF THE MAXIMUS:",
+        "THE TRAINING YARD'S SPARRING BOARD:",
         "1. THE TWINS UGG.  2. MATRON SORREL.  3. FENNICK THE UNBITTEN.",
-        "4. THE MASKED BRUTE (DEFINITELY NOT CAPTAIN VARGA).  5. GRAND CHAMPION HROTH."
+        "4. THE MASKED BRUTE (DEFINITELY NOT CAPTAIN VARGA).  5. MASTER-AT-ARMS HROTH."
       ]
     },
     {
@@ -208,7 +208,7 @@
       "y": 4,
       "item": "heart-piece",
       "lines": [
-        "Under the arena's outer stairs, where the children hide their wooden swords: a Heart Piece."
+        "Under the yard's outer stairs, where the children hide their wooden swords: a Heart Piece."
       ]
     }
   ]

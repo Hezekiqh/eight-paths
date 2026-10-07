@@ -1,24 +1,31 @@
 {
   "id": "the-pit",
-  "name": "The Colosseum",
+  "name": "The Kaloseum",
   "style": "dungeon",
   "walkable": [
     ".",
     ","
   ],
   "tiles": [
-    "######################",
-    "#WWWcWWWBWWWWBWWWcWWW#",
-    "#W,,,,,,,,,,,,,,,,,,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,................,W#",
-    "#W,,,,,,,,,,,,,,,,,,W#",
-    "#W3...k........r....W#",
-    "#WWWWWWWWW11WWWWWWWWW#",
-    "######################"
+    "TTTTTTTTTTTTTT$$$$TTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTT$$$$TTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTT$$$$TTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTT$..$TTTTTTTTTTTTTT",
+    "TTTTTTTTTT,,,,,++,,,,,TTTTTTTTTT",
+    "TTTTTTT,,,............,,,TTTTTTT",
+    "TTTTT,,..................,,TTTTT",
+    "TTTT,,....................,,TTTT",
+    "TTT,,......................,,TTT",
+    "TTT,........................,TTT",
+    "TT,,........................,,TT",
+    "TTT,........................,TTT",
+    "TTT,,......................,,TTT",
+    "TTTT,r....................k,TTTT",
+    "TTTTT,,3.................,,TTTTT",
+    "TTTTTTT,,,............,,,TTTTTTT",
+    "TTTTTTTTTT,,,,,,,,,,,,TTTTTTTTTT",
+    "TTTTTTTTTTTTTTT11TTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "spawn": {
     "x": 10,
@@ -26,9 +33,6 @@
     "facing": "up"
   },
   "examine": {
-    "B": [
-      "The champions' wall: three hundred years of names, each crossed out when they fell. The newest line is blank."
-    ],
     "1": [
       "The way out, into Warrior City."
     ],
@@ -37,58 +41,38 @@
     ],
     "r": [
       "A rack of clubs. Each one has a name burned into the handle. One just says 'CLUB'."
+    ],
+    "T": [
+      "The stands, packed to the top tier. Somebody's selling roast nuts. Somebody's always selling roast nuts."
+    ],
+    "+": [
+      "Barnaby's desk: a speaking trumpet, a bell, and the champions' list.",
+      "Centuries of names, each crossed out when they fell. Then one name, KALDOR, chalked fresh every year for five hundred years. The line under it is blank."
+    ],
+    "$": [
+      "The commentator's box. Velvet, varnish, and a cushion that says LOUD."
     ]
   },
   "objects": [
     {
-      "id": "maelis",
+      "id": "barnaby-box",
       "type": "npc",
-      "x": 17,
-      "y": 9,
-      "sprite": "maelis",
-      "facing": "left",
-      "name": "Sergeant Maelis",
+      "passable": true,
+      "x": 15,
+      "y": 3,
+      "sprite": "barnaby",
+      "facing": "down",
+      "name": "Barnaby Loudmouth",
       "lines": [
-        "Broken Guard. We rake the sand, we carry the fallen out, we mind the drains.",
-        "Our great-great-grandmothers guarded a prince. We guard a sandbox with seats. Family tradition, of a sort."
-      ],
-      "questions": [
-        {
-          "ask": "What's the champions' wall?",
-          "answer": [
-            "Three hundred years of names. We cross them out when they fall. It's the only writing we're allowed.",
-            "The newest line's blank. Try not to make me cross you out. I've a steady hand, but I'd rather not."
-          ]
-        },
-        {
-          "ask": "Tell me about the prince.",
-          "answer": [
-            "His captain wrote him down as lost in action. Not deserter. Lost.",
-            "My family's kept that word for five hundred years. Lost things can be found."
-          ]
-        },
-        {
-          "ask": "Tell me about the drains.",
-          "answer": [
-            "Oh, now you've done it.",
-            "The north drain runs under the wall toward the maze. Hugo found something in it once. He won't say what. Gardeners."
-          ]
-        },
-        {
-          "ask": "Some guard. You rake sand for a living.",
-          "answer": [
-            "I do. In very straight lines. Nobody ever notices the lines.",
-            "I'll notice you, though. Long memory. Short rake."
-          ],
-          "deed": "bad"
-        }
+        "CHEERING IS COMPULSORY!",
+        "...You too. Especially you."
       ]
     },
     {
       "id": "fight-card",
       "type": "sign",
-      "x": 2,
-      "y": 2,
+      "x": 11,
+      "y": 4,
       "lines": [
         "The fight card, chalked fresh every day: BRING A FIGHTER OR BRING IRON.",
         "A smaller line at the bottom: CHEERING IS COMPULSORY.",
@@ -98,8 +82,8 @@
     {
       "id": "crowd-1",
       "type": "npc",
-      "x": 5,
-      "y": 2,
+      "x": 9,
+      "y": 5,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -110,7 +94,7 @@
         "flag": "brannoc-declined",
         "lines": [
           "Hey. We're not gonna mess with you.",
-          "Your big friend's down on level three, if you want to talk to him. Crying about an apple cart."
+          "Your friend's back down in the cells. Holding his corner, he says."
         ]
       },
       "questions": [
@@ -129,13 +113,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-2",
       "type": "npc",
-      "x": 8,
-      "y": 2,
+      "x": 13,
+      "y": 4,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -158,13 +143,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-3",
       "type": "npc",
-      "x": 12,
-      "y": 2,
+      "x": 18,
+      "y": 4,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -187,13 +173,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-4",
       "type": "npc",
-      "x": 16,
-      "y": 2,
+      "x": 20,
+      "y": 4,
       "sprite": "raider",
       "facing": "down",
       "name": "Guard",
@@ -216,13 +203,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-5",
       "type": "npc",
-      "x": 2,
-      "y": 5,
+      "x": 4,
+      "y": 8,
       "sprite": "raider",
       "facing": "right",
       "name": "Guard",
@@ -245,13 +233,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-6",
       "type": "npc",
-      "x": 19,
-      "y": 5,
+      "x": 27,
+      "y": 8,
       "sprite": "raider",
       "facing": "left",
       "name": "Guard",
@@ -262,7 +251,7 @@
         {
           "ask": "Who are you shushing?",
           "answer": [
-            "Him. Me. Everyone. Barnaby can't be heard over a sneeze.",
+            "Him. Me. Everyone. Barnaby's about to start, and when Barnaby starts, you can hear him in the next kingdom.",
             "If you miss the first line you miss the joke. There's always a joke. It's always about Kaldor's chin."
           ]
         },
@@ -274,13 +263,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-7",
       "type": "npc",
-      "x": 19,
-      "y": 7,
+      "x": 27,
+      "y": 12,
       "sprite": "raider",
       "facing": "left",
       "name": "Guard",
@@ -303,13 +293,14 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
     },
     {
       "id": "crowd-8",
       "type": "npc",
-      "x": 2,
-      "y": 7,
+      "x": 4,
+      "y": 11,
       "sprite": "raider",
       "facing": "right",
       "name": "Guard",
@@ -332,13 +323,74 @@
           ],
           "deed": "bad"
         }
-      ]
+      ],
+      "passable": true
+    },
+    {
+      "id": "arena-mott",
+      "type": "npc",
+      "passable": true,
+      "x": 6,
+      "y": 12,
+      "sprite": "oldmott",
+      "facing": "down",
+      "name": "Old Mott",
+      "comesAfter": "cells-freed",
+      "goneAfter": "pit-champion",
+      "lines": [
+        "You wouldn't want an old man fighting. I'll let you have at it!"
+      ],
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 20,
+        "y": 14
+      }
+    },
+    {
+      "id": "arena-nails",
+      "type": "npc",
+      "passable": true,
+      "x": 7,
+      "y": 12,
+      "sprite": "nails",
+      "facing": "down",
+      "name": "Nails",
+      "comesAfter": "cells-freed",
+      "goneAfter": "pit-champion",
+      "lines": [
+        "My ice cubes melted."
+      ],
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 22,
+        "y": 14
+      }
+    },
+    {
+      "id": "arena-silas",
+      "type": "npc",
+      "passable": true,
+      "x": 8,
+      "y": 12,
+      "sprite": "silasseen",
+      "facing": "down",
+      "name": "Silas Seen",
+      "comesAfter": "cells-freed",
+      "goneAfter": "pit-champion",
+      "lines": [
+        "You're the strong silent type. You got this."
+      ],
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 23,
+        "y": 13
+      }
     },
     {
       "id": "brannoc-pit",
       "type": "npc",
-      "x": 4,
-      "y": 9,
+      "x": 11,
+      "y": 14,
       "sprite": "brannoc",
       "facing": "up",
       "name": "Brannoc",
@@ -349,13 +401,20 @@
       ],
       "questions": [],
       "comesAfter": "cell-bars-bent",
-      "goneAfter": "pit-champion"
+      "goneAfter": "pit-champion",
+      "snot": true,
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 21,
+        "y": 14
+      },
+      "faintsAfter": "arena-fainted"
     },
     {
       "id": "brannoc-awake",
       "type": "npc",
-      "x": 10,
-      "y": 6,
+      "x": 15,
+      "y": 10,
       "sprite": "brannoc",
       "facing": "down",
       "name": "Brannoc",
@@ -365,7 +424,9 @@
       ],
       "questions": [],
       "comesAfter": "brannoc-swung",
-      "goneAfter": "brannoc-woke"
+      "goneAfter": "brannoc-woke",
+      "snot": true,
+      "dozesUntil": "brannoc-blinked"
     }
   ],
   "art": {
@@ -375,29 +436,29 @@
   "ladder": [
     {
       "flag": "pit-guards",
-      "x": 10,
-      "y": 3,
+      "x": 15,
+      "y": 7,
       "kind": "raider",
       "bearers": [
         [
-          6,
-          4
+          11,
+          8
         ],
         [
-          14,
-          4
+          19,
+          8
         ],
         [
-          8,
-          5
+          13,
+          9
         ],
         [
-          12,
-          5
+          17,
+          9
         ],
         [
-          10,
-          4
+          15,
+          8
         ]
       ],
       "intro": {
@@ -410,13 +471,13 @@
     },
     {
       "flag": "pit-champion",
-      "x": 10,
-      "y": 3,
+      "x": 15,
+      "y": 7,
       "kind": "warden",
       "bearers": [
         [
-          10,
-          4
+          15,
+          8
         ]
       ],
       "intro": {
@@ -427,5 +488,9 @@
         ]
       }
     }
+  ],
+  "floor": "sand",
+  "talkThrough": [
+    "+"
   ]
 }

@@ -10,9 +10,9 @@
   ],
   "tiles": [
     "TTTTTTTTTTTTTTTTTTT^^TTTTTTTTTTTTTTTTTTT",
-    "T..................,,..................T",
-    "T..................,,..................T",
-    "T..................,,.......MMMMMMMMMMMT",
+    "T...IIIII..........,,..................T",
+    "T...IIIII..........,,..................T",
+    "T...IIDII..........,,.......MMMMMMMMMMMT",
     "T..................,,.......MMMMMMMMMMMT",
     "TTTTTTTTTTTTTTTTTT.,,.......MMMMMMMMMMMT",
     "TT...............T.,,.......MMMMMMMMMMMT",
@@ -31,10 +31,10 @@
     "TT...............T.....g......g......g.T",
     "TT.....v.w.......T....g......gT.....g..T",
     "TT...............T..........g......g...T",
-    "TT...............T.........g......g....T",
-    "TTTTTTTTTTTTTTTTTT........T......g.....T",
-    "T........................g......g......T",
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+    "TTTT.............T.........g......g..J.T",
+    "TT..TTTTTTTTTTTTTT........T......g.....T",
+    "<,,,.....................g......g......T",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT_TTTTTTTTT"
   ],
   "spawn": {
     "x": 19,
@@ -72,9 +72,38 @@
     ],
     "^": [
       "North: back up to Warrior City."
+    ],
+    "J": [
+      "A cocoon on the hilltop, where the wind is strongest.",
+      "A ring of candle stubs sits round it. Every one has burnt right down."
+    ],
+    "<": [
+      "West, a path into old woods. Nobody's walked it in a long while."
+    ],
+    "I": [
+      "An old school, boarded up. Over the door, under the moss: THE PAINTERS' SCHOOL.",
+      "The boards have been up five hundred years. They'd come away in your hand."
+    ],
+    "D": [
+      "The school's door, boarded over. The boards are rotten through."
+    ],
+    "_": [
+      "South: a farm track, down to Osric's Rest."
     ]
   },
   "objects": [
+    {
+      "id": "gate-guard-forest",
+      "type": "npc",
+      "x": 2,
+      "y": 23,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Woodguard Tolly",
+      "lines": [
+        "Nobody goes in those woods under Lv 10. Things happen in there. I don't ask what."
+      ]
+    },
     {
       "id": "garden-stone-1",
       "type": "sign",
@@ -92,7 +121,7 @@
       "y": 11,
       "lines": [
         "The king trained his army hard, but only so his people would be safe.",
-        "His advisors began to whisper that his heart had turned to war. Some say a shadow had crept into theirs."
+        "His advisors began to whisper that an army that never marches is a waste of good bread. Some say a shadow had crept into their hearts."
       ]
     },
     {
@@ -131,8 +160,8 @@
       "x": 12,
       "y": 20,
       "lines": [
-        "Five years on, the royal army was the strongest force in all the land. The king listened to no one but his queen.",
-        "And the queen said: strike first. And so the kingdom readied itself for war.",
+        "Five years on, the royal army was the strongest force in all the land. The queen wanted it used.",
+        "Strike the mages first, she said. And the king, who listened to her in everything, made ready.",
         "The rest of the stone has broken away."
       ]
     },
@@ -172,6 +201,25 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "moth-hatched",
+      "type": "npc",
+      "x": 36,
+      "y": 22,
+      "sprite": "mothnpc",
+      "facing": "right",
+      "name": "Moth",
+      "lines": [
+        "Shh. Listen to the quiet.",
+        "...Oh. You broke the silk. That's all right. I was only listening.",
+        "The candles went out one by one while I slept. I counted them. Every one.",
+        "I'll go and find some more light. Somewhere there's always a candle someone's left burning.",
+        "* Moth pulls up a grey hood and pads off down the hill, following something you can't see."
+      ],
+      "comesAfter": "moth-hatched",
+      "sets": "moth-left",
+      "goneAfter": "moth-left"
     }
   ]
 }

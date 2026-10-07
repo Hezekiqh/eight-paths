@@ -15,15 +15,24 @@ const BY_STYLE: Record<WorldMap['style'], Ambience> = {
 /** Places darker (or lighter) than their style. */
 const DARKER: Partial<Record<MapId, number>> = {
   'war-hall': 0.45,
+  // the castle's new rooms (author, Oct 7, 2026): the dust, and the dark under it all
+  'queens-room': 0.4,
+  'royal-dungeon': 0.55,
   'old-kings-crypt': 0.6,
   'pit-below': 0.55,
   'lower-barracks': 0.45,
   'sleeping-keep': 0.4,
   chapel: 0.4,
-  'the-pit': 0.2,
+  // dusk among the graves (author, Oct 7, 2026)
+  graveyard: 0.3,
+  // the Kaloseum is open to the sky (author, Oct 6, 2026)
+  'the-pit': 0,
   'candle-inn': 0.2,
   forge: 0.25,
   waystation: 0.1,
+  // the Royal Forest's canopy, and the Painters' School, boarded up (author, Oct 7, 2026)
+  'royal-forest': 0.22,
+  'painters-school': 0.3,
 };
 
 export function ambienceOf(map: WorldMap): Ambience {

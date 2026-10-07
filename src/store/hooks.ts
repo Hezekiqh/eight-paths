@@ -3,7 +3,15 @@ import { router } from 'expo-router';
 import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
-import { msUntilNextMidnight, stats, toDateKey, usualReminderTime, type RadarFilter, type StatsPeriod } from '@/game';
+import {
+  habitStats,
+  msUntilNextMidnight,
+  stats,
+  toDateKey,
+  usualReminderTime,
+  type RadarFilter,
+  type StatsPeriod,
+} from '@/game';
 import { syncReminders } from '@/notifications';
 import { usePremium } from '@/premium/store';
 import { useTradeNotices } from '@/social/notices';
@@ -118,6 +126,15 @@ export function useMonthComparison(today: string) {
 export function useCalendar(month: string, today: string) {
   const data = useGameData();
   return useMemo(() => selectCalendar(data, month, today), [data, month, today]);
+}
+
+/** One habit's stats sheet, with `month` as its calendar (game/habit-stats); null if the quest is gone. */
+export function useHabitStats(id: string | undefined, month: string, today: string) {
+  const data = useGameData();
+  return useMemo(() => {
+    const quest = selectQuest(data, id);
+    return quest ? { quest, stats: habitStats(quest, data.completions, data.restDays, today, month) } : null;
+  }, [data, id, month, today]);
 }
 
 /** Everything on the Stats tab for a week, a month or a year (game/stats). */

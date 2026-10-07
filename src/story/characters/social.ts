@@ -84,17 +84,16 @@ export const SOCIAL = {
     bio: "A shaggy dog in a red bandana who adopts people rather than the other way around. He has never met anyone he didn't like, and he checks on everyone twice a day.",
     quote: "Woof. (Translation: you're family now.)",
   },
-  ruth: {
+  oldmott: {
     number: 53,
     rarity: 1,
     alignment: 'Lawful Good',
-    name: 'Ruth',
-    fullName: 'Ruth Letterly',
+    name: 'Old Mott',
     dimension: 'social',
     kind: 'recruit',
     unlockLevel: 23,
-    bio: 'A postmistress with a heavy mailbag and a wonderful memory for handwriting. She has delivered every love letter in the valley and never read a single one.',
-    quote: "Write to someone today. I'll carry it.",
+    bio: 'The oldest prisoner in the Deep Cells: bald but for a white tuft, with a white beard and an old brown tunic. The king sneezed, and Old Mott did not say bless you. He has had a long time to think about manners, and has decided he was right.',
+    quote: "Twenty life sentences. Should've said bless you, really.",
   },
   bastian: {
     number: 67,
@@ -150,7 +149,7 @@ export const SOCIAL = {
     dimension: 'social',
     kind: 'recruit',
     unlockLevel: 18,
-    bio: "A widow of the Berserker Kingdom whose family has hidden the old king's portrait under her floorboards for five hundred years. She remembers everything her grandmothers told her, and tells it, at length, to anyone who sits still.",
-    quote: 'My family kept his portrait for five hundred years. It was worth it.',
+    bio: 'A widow of the Berserker Kingdom who remembers everything her grandmothers told her, and their grandmothers before them, and tells it, at length, to anyone who sits still.',
+    quote: 'Sit down, dear. This one is a long one. They are all long ones.',
   },
 } satisfies Record<string, CharacterData>;

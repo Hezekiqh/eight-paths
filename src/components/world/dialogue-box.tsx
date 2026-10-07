@@ -4,7 +4,7 @@ import { SymbolView, type SFSymbol } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { playSound } from '@/audio';
-import { TypewriterText } from '@/components/typewriter-text';
+import { LETTER_MS, TypewriterText } from '@/components/typewriter-text';
 import { Portrait } from '@/components/world/portrait';
 import { haptics } from '@/haptics';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
@@ -12,6 +12,8 @@ import type { Question } from '@/world/maps';
 import { shownQuestions } from '@/world/menu';
 import { portraitFor, splitSpeaker, voiceFor } from '@/world/portraits';
 import { isShouted, rumblesIn } from '@/world/rumbles';
+import { SPEED_RATE } from '@/world/speed';
+import { useWorldStore } from '@/world/store';
 import type { WalkerId } from '@/world/walkers';
 
 export type Dialogue = {
@@ -22,6 +24,11 @@ export type Dialogue = {
   questions?: Question[];
   /** Said back when the player picks Goodbye, before the conversation closes. */
   farewell?: string[];
+  /**
+   * Cutscene cues: runs as each line starts, with its index and text (the camera turning to whoever speaks,
+   * someone fainting on the line that says so). Only for the conversation's own lines, not answers.
+   */
+  onLine?: (index: number, line: string) => void;
   /** Runs once the conversation closes (e.g. stepping through a door). */
   then?: () => void;
   /**
@@ -51,6 +58,7 @@ type Props = {
  */
 export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   const insets = useSafeAreaInsets();
+  const letterMs = LETTER_MS / SPEED_RATE[useWorldStore((s) => s.speed)];
   const [lines, setLines] = useState(dialogue.lines);
   /** Bumped per answer, so the typewriter starts fresh even at line 0. */
   const [round, setRound] = useState(0);
@@ -77,6 +85,11 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   useEffect(() => {
     felt.current = 0;
   }, [round, index]);
+  // The line's cue, as it starts (its own lines only: an answer restarts the count)
+  const onLine = dialogue.onLine;
+  useEffect(() => {
+    if (round === 0 && lines[index] !== undefined) onLine?.(index, lines[index]);
+  }, [round, index, lines, onLine]);
   const feelRumbles = useCallback(
     (upTo: number) => {
       // One step at a time: a ref bumped mid-expression (`rumbles[felt.current++]`) can be
@@ -172,6 +185,8 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
               onPress={() => {
                 playSound('select');
                 haptics.select();
+                // locked: it says what it needs, and the menu comes back (author, Oct 7, 2026)
+                if (c.locked) return say([lockedWhy(c.locked)]);
                 onChoice?.(c);
                 onClose();
                 c.then();
@@ -212,6 +227,7 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
             key={`${round}-${index}`}
             text={line}
             instant={skip}
+            letterMs={letterMs}
             style={styles.text}
             onDone={onTyped}
             onLetter={onLetter}
@@ -222,6 +238,16 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
       </View>
     </Pressable>
   );
+}
+
+/**
+ * Why a locked option can't be picked yet, said when it's tapped: "Mage Lv 10" is the party member of that Path
+ * needing a higher level; "a Mage with you" (or "Pip with you") is someone missing from the party.
+ */
+export function lockedWhy(locked: string): string {
+  const lv = /^(.+) Lv (\d+)$/.exec(locked);
+  if (lv) return `Your ${lv[1]} needs to be a higher level to say that: Lv ${lv[2]}. Every habit on their Path counts.`;
+  return `You need ${locked} to say that.`;
 }
 
 /** One thing to say, with the heart cursor from the tab bar beside it while pressed. */
@@ -241,16 +267,17 @@ function Choice({
   );
   if (locked)
     return (
-      <View
-        accessible
+      <Pressable
         accessibilityRole="button"
-        accessibilityState={{ disabled: true }}
         accessibilityLabel={`${label}. Locked: needs ${locked}`}
+        accessibilityHint="Says what it needs"
+        onPress={onPress}
+        hitSlop={4}
         style={styles.choice}>
         {/* just the Path's icon, greyed, where the heart would be (a padlock if it has none) */}
         {mark ?? <Text style={[styles.cursor, styles.cursorIdle]}>🔒</Text>}
         <Text style={[styles.text, styles.choiceLocked]}>{label}</Text>
-      </View>
+      </Pressable>
     );
   return (
     <Pressable accessibilityRole="button" onPress={onPress} hitSlop={4} style={styles.choice}>

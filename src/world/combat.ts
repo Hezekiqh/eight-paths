@@ -380,7 +380,7 @@ export function stepEnemies(
       const P = PATTERNS.slam;
       if (e[E_MODE] === CHASE) {
         chase();
-        // the Colosseum's warden takes thirty strikes whatever your level, so he slams less often
+        // the Kaloseum's warden takes thirty strikes whatever your level, so he slams less often
         if (dist < P.range && e[E_MT] >= (stats.fixedHits ? WARDEN_REST : slamRest)) to(WINDUP);
       } else if (e[E_MODE] === WINDUP && e[E_MT] >= (hurtLow ? P.windupHurt : P.windup)) {
         slams.push(e[E_X], e[E_Y]);

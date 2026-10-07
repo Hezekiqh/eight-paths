@@ -8,7 +8,7 @@
   ],
   "tiles": [
     "############",
-    "#WWBWWWWBWW#",
+    "#WWBWW3WBWW#",
     "#W........W#",
     "#W.t.t.t..W#",
     "#W......4.W#",
@@ -33,6 +33,9 @@
     ],
     "1": [
       "The door back to the street."
+    ],
+    "3": [
+      "The back door. A draught comes under it, and the smell of turned earth."
     ]
   },
   "objects": [
@@ -71,6 +74,13 @@
           ]
         },
         {
+          "ask": "Who was the old king?",
+          "answer": [
+            "Osric. Last of the Hales. The king we've got now was his younger brother, Kaldor.",
+            "Second born, and second best, his whole life, folk said. They said it quietly then. They say it quieter now."
+          ]
+        },
+        {
           "ask": "You say good morning to soot? That's sad.",
           "answer": [
             "The soot doesn't interrupt, dear. Or say things like that.",
@@ -83,6 +93,7 @@
   ],
   "art": {
     "1": "E",
+    "3": "N",
     "4": "x"
   }
 }

@@ -24,7 +24,7 @@
     "Q": [
       "The notice board. Year 500's news, pinned in layers:",
       "\"BY ORDER OF THE KING: all iron to be surrendered.\" Underneath, in pencil: \"generous.\"",
-      "\"LOST: one goose. Answers to Duchess. Do not approach.\"",
+      "\"LOST: one duck. Answers to Duchess. Do not approach.\"",
       "\"COURIERS WANTED. Must be fast. Must not read the post.\"",
       "A newer notice, printed, not written. Nobody here owns a press:",
       "\"THE EIGHT THANK YOU FOR YOUR REST. NOTHING FURTHER IS REQUIRED OF YOU.\" Underneath, in pencil: \"noted.\""
@@ -68,13 +68,14 @@
           "ask": "Heard any gossip?",
           "answer": [
             "The king in the east names everything after himself. Kaldor Square. Kaldor Street. I hear there's a Kaldor Street that crosses Kaldor Street.",
+            "The old couriers told a darker one. A shadow ruled through the kings for four hundred years, then got to doubting, and withered, and went quiet a hundred years back.",
             "I hear a lot of things. The soup's quiet, so I listen."
           ]
         },
         {
           "ask": "What's east?",
           "answer": [
-            "The old fort in the hill first, then the Kingdom. The fort's the only way past the king's checkpoints these days.",
+            "Warrior City first, past Felix's boulders. Then north to the old fort in the hill, then the Kingdom. The fort's the only way past the king's checkpoints these days.",
             "Mind the fort. And mind the Kingdom. And mind your manners. That's three minds; you'll need them."
           ]
         },

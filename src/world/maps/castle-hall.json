@@ -2,7 +2,11 @@
   "id": "castle-hall",
   "name": "The Great Hall",
   "style": "dungeon",
-  "walkable": [".", ",", "="],
+  "walkable": [
+    ".",
+    ",",
+    "="
+  ],
   "art": {
     "1": "E",
     "4": "E",
@@ -12,7 +16,10 @@
     "8": "f",
     "9": "R",
     "0": "A",
-    "%": "."
+    "%": ".",
+    "H": "N",
+    "2": "E",
+    "3": "E"
   },
   "spawn": {
     "x": 12,
@@ -27,7 +34,7 @@
   "tiles": [
     "##########################",
     "#WW5W6W7WBfc44cfBW8W9W0WW#",
-    "#W..........==..........W#",
+    "#W..........==..........H#",
     "#W..........==..........W#",
     "#WZ......I..==..I......AW#",
     "#W..........==..........W#",
@@ -40,23 +47,43 @@
     "#W..........==.........AW#",
     "#W.......I..==..I.......W#",
     "#W...Z......==......Z...W#",
-    "#WWWWWWWWWWW11WWWWWWWWWWW#",
+    "#WWWWW3WWWWW11WWWWW2WWWWW#",
     "##########################"
   ],
   "examine": {
-    "=": ["A red carpet, all the way to the throne room. Nobody walks on it. You can tell."],
+    "=": [
+      "A red carpet, all the way to the throne room. Nobody walks on it. You can tell."
+    ],
     "I": [
       "A pillar of black stone, fluted, banded in gold. Somebody has carved a tally into the back of it. Days. Thousands of them."
     ],
-    "4": ["The throne room. The doors stand open, as if you're expected."],
-    "1": ["The way back out to the grounds."],
-    "%": ["The foot of the winding stair. Up to the king's floor."],
-    "B": ["The fist crushing a crown. Underneath it, older stitching shows through: a different crest."],
-    "f": ["A portrait of Kaldor. Then you notice the one opposite. Each is more flattering than the last."],
-    "c": ["A torch in an iron bracket. The only warm thing in here."],
-    "A": ["An empty suit of armour on a stand. It's facing the door. They all are."],
-    "Z": ["A statue of Kaldor. A small one. By his standards."],
-    "W": ["Black stone, cold to the touch."],
+    "4": [
+      "The throne room. The doors stand open, as if you're expected."
+    ],
+    "1": [
+      "The way back out to the grounds."
+    ],
+    "%": [
+      "The foot of the winding stair. Up to the king's floor."
+    ],
+    "B": [
+      "The fist crushing a crown. Underneath it, older stitching shows through: a different crest."
+    ],
+    "f": [
+      "A portrait of Kaldor. Then you notice the one opposite. Each is more flattering than the last."
+    ],
+    "c": [
+      "A torch in an iron bracket. The only warm thing in here."
+    ],
+    "A": [
+      "An empty suit of armour on a stand. It's facing the door. They all are."
+    ],
+    "Z": [
+      "A statue of Kaldor. A small one. By his standards."
+    ],
+    "W": [
+      "Black stone, cold to the touch."
+    ],
     "5": [
       "A portrait of a king, the face scratched out, very thoroughly.",
       "The plaque reads OSRIC HALE. Somebody has added a word underneath, very neatly: MAD."
@@ -64,7 +91,9 @@
     "6": [
       "An old banner, almost hidden under the new one: an open hand, holding a sword by the blade. The crest of Halecrest, before it was the Berserker Kingdom."
     ],
-    "7": ["A suit of armour, child-sized. Somebody has scratched a letter inside the collar: B."],
+    "7": [
+      "A suit of armour, child-sized. Somebody has scratched a letter inside the collar: B."
+    ],
     "8": [
       "A portrait of the old queen. Her face has been painted over.",
       "Not scratched out, like the king's. Painted, carefully. As if someone wanted her forgotten, but politely."
@@ -73,9 +102,20 @@
       "A muster roll of the king's army. Ten thousand names.",
       "Every one is crossed out, and written in again underneath, in different ink. Beside each, one word: RAISED."
     ],
-    "0": ["A wizard's staff, snapped in three and mounted like a trophy. Under it, a plaque: SOON."],
+    "0": [
+      "A wizard's staff, snapped in three and mounted like a trophy. Under it, a plaque: SOON."
+    ],
     "U": [
       "The winding stair: a round stone well of steps, turning up and up into the dark around a single black post. Somewhere above, people are laughing."
+    ],
+    "2": [
+      "A doorway. Through it: clattering, shouting, and a smell of porridge. So that's where everyone is."
+    ],
+    "3": [
+      "Steps going down, into the cold. Down there, something is standing very still. A lot of somethings."
+    ],
+    "H": [
+      "A heavy door, shut. Behind it, low voices, and the scrape of something being pushed across a table."
     ]
   },
   "objects": [],

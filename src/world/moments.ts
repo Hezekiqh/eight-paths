@@ -22,7 +22,11 @@ export const BOSS_CUE: Partial<Record<MapId, string[]>> = {
     'KALDOR: Enough. You want single combat, by the old law? Then you shall have it.',
     '* He snaps his fingers. The shadows in the corners of the room peel off the walls, and stand up.',
     'KALDOR: These are me. Every one. The law never said how many of me there would be.',
-    '* Behind them, something tall and stitched unfolds. A tag hangs from its neck: AUREK THE TALL. Almost.',
+    // the Warden, raised from the dead (author, Oct 7, 2026): Brannoc's swing killed him in the Kaloseum; he was
+    // buried in the Graveyard of Kings, and Kaldor raises him for the fight before the king
+    '* Kaldor lifts a hand. The floor cracks, and something huge climbs up out of it, earth sliding off its shoulders.',
+    '* Bertrand, the Warden. Dead, and up again. His eyes are empty.',
+    '* A tag hangs from his neck: AUREK THE TALL. Almost.',
     '* Up by the throne, Felix settles in to watch.',
   ],
 };
@@ -35,22 +39,28 @@ export const BOSS_MOMENTS: Partial<Record<MapId, Moment>> = {
     lines: [
       'Kaldor stops. He is looking past you.',
       'KALDOR: ...That beard.',
-      "KALDOR: Well, well. The Mad King's son. They told me you died in your bed.",
-      'BRANNOC: I did not die. I slept. For rather a long while.',
+      "KALDOR: Well, well. My brother's boy. They told me you were dead.",
+      'BRANNOC: I did not die, Uncle. I slept. For rather a long while.',
       'BRANNOC: And my father was not mad! ...He was loud. There is a difference.',
       'BRANNOC: (Stay close to me. Or I shall stay close to you. One of us should be close.)',
-      "BRANNOC: Kaldor! You sit upon my father's throne. I have come to have a very firm word with you about it.",
+      "BRANNOC: Uncle Kaldor! You sit upon my father's throne. I have come to have a very firm word with you about it.",
       'KALDOR: A firm word. Your knees are knocking, boy.',
       'BRANNOC: That is a war drum. Of my people.',
       ...(BOSS_CUE['war-hall'] ?? []),
       'BRANNOC: That is NOT single combat!',
       'KALDOR: Take it up with the court.',
     ],
+    // walking as Brannoc (author, Oct 7, 2026): the same words, said to his face
     asThem: [
       '* Kaldor stops. He leans forward on his throne.',
       'KALDOR: ...That beard.',
-      "KALDOR: Well, well. The Mad King's son. They told me you died in your bed.",
-      "* (Mad? Father was loud. That's not the same thing.)",
+      "KALDOR: Well, well. My brother's boy. They told me you were dead.",
+      "* (Uncle Kaldor. He hasn't aged a day.)",
+      'BRANNOC: I did not die, Uncle. I slept. For rather a long while.',
+      'BRANNOC: And my father was not mad! ...He was loud. There is a difference.',
+      "BRANNOC: Uncle Kaldor! You sit upon my father's throne. I have come to have a very firm word with you about it.",
+      'KALDOR: A firm word. Your knees are knocking, boy.',
+      'BRANNOC: That is a war drum. Of my people.',
     ],
   },
 };

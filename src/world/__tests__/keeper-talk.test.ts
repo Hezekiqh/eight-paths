@@ -54,6 +54,15 @@ describe('the Keeper', () => {
   });
 });
 
+describe('the Keeper, talking to King Brannoc himself', () => {
+  it('says "you", not "he", about the throne when you are Brannoc', () => {
+    for (const flags of [['kaldor-dethroned'], ['kaldor-dethroned', 'you-king']]) {
+      const said = keeperTalk(ctx({ flags, hero: 'brannoc' })).lines.join(' ');
+      expect(said).not.toMatch(/Brannoc tells|Tell Brannoc|He ran from/);
+    }
+  });
+});
+
 describe('the last seal', () => {
   it('recalls your record and the king you left', () => {
     const allowed = seasonFinale(memory({ habits: 35 }), ['kaldor-allowed']);
@@ -61,6 +70,12 @@ describe('the last seal', () => {
     expect(allowed).toEqual(expect.arrayContaining(FINALE.allowed));
     expect(seasonFinale(memory(), ['kaldor-dethroned'])).toEqual(expect.arrayContaining(FINALE.dethroned));
     expect(allowed.slice(-FINALE.end.length)).toEqual(FINALE.end);
+  });
+
+  it("doesn't put King Brannoc beside you when you are Brannoc", () => {
+    const lines = seasonFinale(memory(), ['kaldor-dethroned'], true).join(' ');
+    expect(lines).not.toContain('King Brannoc');
+    expect(lines).toContain('your empty throne');
   });
 
   it('leaves out the comeback line when there was none', () => {

@@ -52,4 +52,10 @@ describe("narration in a speaker's box", () => {
     expect(splitSpeaker('* He snaps his fingers.')).toEqual({ text: 'He snaps his fingers.', narration: true });
     expect(splitSpeaker('*squeak*').narration).toBeUndefined();
   });
+  it('a line in brackets is a thought: a plain box, no name, no face', () => {
+    const { splitSpeaker } = jest.requireActual('../portraits') as typeof import('../portraits');
+    expect(splitSpeaker("(It's locked.)")).toEqual({ text: "(It's locked.)", narration: true });
+    // a stage direction before someone's words is still them talking
+    expect(splitSpeaker('(whispering) Tithe camp.').narration).toBeUndefined();
+  });
 });

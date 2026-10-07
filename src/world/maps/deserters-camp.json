@@ -18,8 +18,8 @@
     "<,,,,,,,,,,,,,,,.............T",
     "<,,,,,,,,,,,,,,,......x......T",
     "T.......................AAA..T",
-    "T..g....AAA.............AAA..T",
-    "T..gg...AAA..................T",
+    "T..g....AAA.......66Z66.AAA..T",
+    "T..gg...AAA................J.T",
     "TTTT...............gg....TTTTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
@@ -42,7 +42,7 @@
       "Carved above, half gone: \"…LECREST SECOND REGIMENT…\""
     ],
     "A": [
-      "A tent, patched more than it's tent. A plank by the flap reads NOT A DESERTERS' CAMP."
+      "A tent, more patch than tent. A plank by the flap reads NOT A DESERTERS' CAMP."
     ],
     "x": [
       "A campfire. Someone's roasting something that might once have been a turnip."
@@ -52,117 +52,26 @@
       "Too heavy to move. It would take real strength to shift it."
     ],
     "Y": [
-      "A child's wooden sword, worn smooth where a small hand held it.",
-      "Carved into the grip: T."
+      "A child's wooden sword, worn smooth where a small hand held it."
     ],
     "<": [
       "The road back west."
+    ],
+    "Z": [
+      "A statue of a king in robes, snapped off at the neck. The plaque has been pried off.",
+      "Somebody has planted roses all round it anyway, and keeps them very well.",
+      "(The Mad King. Out here, somebody still kneels for him.)"
+    ],
+    "6": [
+      "Roses, red and white, weeded to the last leaf.",
+      "Not one of them is facing the Kingdom."
+    ],
+    "J": [
+      "A cocoon, tucked in between the tents and the trees.",
+      "Someone has wrapped an old soldier's scarf round the silk, to keep it warm."
     ]
   },
   "objects": [
-    {
-      "id": "holt",
-      "type": "npc",
-      "x": 11,
-      "y": 9,
-      "sprite": "holt",
-      "facing": "down",
-      "name": "Sergeant Holt",
-      "lines": [
-        "We didn't run. We relocated. Bravely.",
-        "The horde took the Kingdom. We took the long way round. It's still the long way round."
-      ],
-      "questions": [
-        {
-          "ask": "What is this camp?",
-          "answer": [
-            "Soldiers who wouldn't fight for the barbarian king. Or against him, if we're honest.",
-            "We tell ourselves we're waiting for the right moment. It's been a very long moment."
-          ]
-        },
-        {
-          "ask": "Heard any gossip?",
-          "answer": [
-            "That fort in the hill is the way into the Kingdom, now the horde holds the roads.",
-            "Nobody goes in. Nobody comes out. Except Fen's nephew, and he salutes the cat."
-          ]
-        },
-        {
-          "ask": "Why does strength matter?",
-          "answer": [
-            "Because one day you'll have to stand your ground, and it'll be too late to start training then.",
-            "Ask me how I know."
-          ]
-        },
-        {
-          "ask": "Relocated? You ran, you old coward.",
-          "answer": [
-            "We ran with purpose.",
-            "...The purpose was not being there. But it was a purpose."
-          ],
-          "deed": "bad"
-        }
-      ],
-      "after": {
-        "flag": "kaldor-beaten",
-        "lines": [
-          "We're going back. Bravely. Slightly behind everyone else, but bravely.",
-          "Somebody take down the sign. It's a deserters' camp now. Was. Ex-deserters'."
-        ]
-      }
-    },
-    {
-      "id": "mira",
-      "type": "npc",
-      "x": 18,
-      "y": 7,
-      "sprite": "mira",
-      "facing": "left",
-      "name": "Mira",
-      "lines": [
-        "I'm going back. Not today. But I'm going back.",
-        "Somebody has to."
-      ],
-      "questions": [
-        {
-          "ask": "Going back where?",
-          "answer": [
-            "The Kingdom. My family's still there, cheering at the pit because the horde tells them to.",
-            "If you ever get inside, I'll follow you. I mean it."
-          ]
-        },
-        {
-          "ask": "Heard any gossip?",
-          "answer": [
-            "The king doesn't age. Five hundred years. The horde says he casts no shadow.",
-            "Everybody casts a shadow. Somebody's lying."
-          ]
-        },
-        {
-          "ask": "Why the bow?",
-          "answer": [
-            "Because I'm small, and the horde isn't.",
-            "You don't have to be the biggest. You have to practise every day until you're the steadiest."
-          ]
-        },
-        {
-          "ask": "You? Take on the horde? You're tiny.",
-          "answer": [
-            "I've heard that before. From the horde.",
-            "They stopped laughing once I'd practised. You'll stop too."
-          ],
-          "deed": "bad"
-        }
-      ],
-      "after": {
-        "flag": "kaldor-beaten",
-        "lines": [
-          "You did it. I'm going home.",
-          "Today. It's finally today."
-        ]
-      },
-      "wander": 2
-    },
     {
       "id": "fen",
       "type": "npc",
@@ -198,6 +107,13 @@
           ]
         },
         {
+          "ask": "Tell me an old story.",
+          "answer": [
+            "The old riddle round this fire: why would a shadow make a king?",
+            "Some say to rule. Some say to stop the war. I say don't ask it after dark."
+          ]
+        },
+        {
           "ask": "You smell worse than the haunted mess.",
           "answer": [
             "That's not me. That's the mess.",
@@ -209,6 +125,31 @@
       "look": true
     },
     {
+      "id": "mags",
+      "type": "npc",
+      "x": 21,
+      "y": 11,
+      "sprite": "mags",
+      "facing": "up",
+      "name": "Old Mags",
+      "lines": [
+        "Hm? Oh. A visitor. Mind the roses, dear. They're his.",
+        "My great-grandmother used to tell me a tale, when I was small.",
+        "A prince. Who got lost in the woods.",
+        "Deities, toying with the King's mind. He never stood a chance.",
+        "I wonder if the prince is still out there.",
+        "They never found him, you know.",
+        "* She turns back to the statue, and pats its plinth, the way you'd pat an old friend's knee."
+      ],
+      "sets": "morrow-told",
+      "after": {
+        "flag": "morrow-told",
+        "lines": [
+          "Don't mind me. Just the ramblings of an old person."
+        ]
+      }
+    },
+    {
       "id": "heart-camp",
       "type": "chest",
       "x": 28,
@@ -218,6 +159,37 @@
         "Under a tent peg marked NOT A TREASURE: a Heart Piece.",
         "The deserters are very consistent about their signs."
       ]
+    },
+    {
+      "id": "traveler-deserters-camp",
+      "type": "npc",
+      "x": 8,
+      "y": 5,
+      "sprite": "traveler",
+      "facing": "down",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
+    },
+    {
+      "id": "iris-hatched",
+      "type": "npc",
+      "x": 26,
+      "y": 11,
+      "sprite": "irisnpc",
+      "facing": "right",
+      "name": "Iris",
+      "lines": [
+        "Oh. Morning. Is it morning? I slept. I actually slept.",
+        "I was a soldier, once. I remember the drums. I remember deciding I'd had enough of them.",
+        "Some days are heavy. I carry them, and set them down at night. I think I'll set this one down at the Archive.",
+        "* Iris winds her scarf twice round, and walks off toward the Archive, slowly, like someone with nowhere she has to be."
+      ],
+      "comesAfter": "iris-hatched",
+      "sets": "iris-left",
+      "goneAfter": "iris-left"
     }
   ]
 }

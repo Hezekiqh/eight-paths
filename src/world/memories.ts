@@ -1,8 +1,11 @@
-import type { MapId } from './maps';
-import type { Requirement } from './progress';
+import type { CharacterId } from '@/story/companions';
 
-// Hidden memories (author, Oct 4, 2026): one a season, tucked somewhere out of
-// the way, each a flashback to the three friends as children. A spot shimmers
+import type { MapId } from './maps';
+import { describeRequirement, type Requirement } from './progress';
+
+// Hidden memories (author, Oct 4, 2026): four a season, tucked somewhere out of
+// the way, each a flashback to the three friends growing up. In Season 1 they're
+// about five years old; each season they're older, and so is what they think. A spot shimmers
 // once your real habits have earned it, and what you see there is written in
 // the World menu's Memories scroll. They're never needed to finish anything.
 //
@@ -22,10 +25,21 @@ export type Memory = {
   needs: Requirement;
   /** The flashback, a box each; "NAME: words" for speech, everything else is narration. */
   lines: string[];
+  /**
+   * Someone's own memory, not the season's hidden one (author, Oct 7, 2026): Brannoc's, in the places he
+   * ran through. It only comes back with them in your party, it never shimmers or says what it needs before
+   * then, and it isn't one of the season's eight in the scroll.
+   */
+  whose?: CharacterId;
+  /** Said at the spot once it's earned but they aren't with you: a thought. */
+  waiting?: string[];
+  /** A story flag set once it has played (Brannoc's dream waits on his school). */
+  sets?: string;
 };
 
-/** One memory a season, eight seasons in all. */
+/** Eight seasons, four memories each (author, Oct 4, 2026). */
 export const SEASONS = 8;
+export const PER_SEASON = 4;
 
 export const MEMORIES: Memory[] = [
   {
@@ -52,7 +66,172 @@ export const MEMORIES: Memory[] = [
       'The memory fades, and you are back in the dark of the mine.',
     ],
   },
+  // Warrior City (author, Oct 4, 2026: the pranks, the food fight, and the first sign she's bored)
+  {
+    id: 'pranks',
+    season: 1,
+    title: 'The beetles',
+    // between the library's last shelves
+    map: 'wc-library',
+    x: 15,
+    y: 4,
+    needs: { kind: 'path', dimension: 'intellectual', level: 6 },
+    lines: [
+      'Dust drifts down from the shelves. For a moment you are somewhere else.',
+      'A classroom of floating glass. A tall teacher writes stars across the air.',
+      "Little Kairos, five years old, is under the teacher's desk with a jar of glowing beetles.",
+      'YOUNG KAIROS: Shh. Watch.',
+      'The teacher sits down. The jar tips over. The stars on the board start to crawl.',
+      'The whole class shrieks. The shy boy hides behind his slate.',
+      'TEACHER: Who did this?',
+      'Everyone looks at Kairos. The quiet boy stands up.',
+      'QUIET BOY: Me.',
+      "Kairos stares at him. He doesn't look back.",
+      'The memory fades, and you are back among the shelves.',
+    ],
+  },
+  {
+    id: 'food-fight',
+    season: 1,
+    title: 'The long hall',
+    // behind the tavern's barrels
+    map: 'wc-tavern',
+    x: 15,
+    y: 3,
+    needs: { kind: 'path', dimension: 'social', level: 6 },
+    lines: [
+      'The smell of stew, and for a moment you are somewhere else.',
+      'A long hall of long tables. Rows of children eat in silence. Nobody talks at lunch.',
+      'YOUNG KAIROS: This is so boring.',
+      'She flicks a spoonful of something purple at the shy boy.',
+      'SHY BOY: Hey!',
+      'He flicks it back. It hits the quiet boy instead.',
+      'For a moment nothing happens. Then the quiet boy picks up his whole bowl.',
+      "The hall erupts. Kairos is laughing so hard she can't stand up.",
+      'For once, the quiet boy is laughing too.',
+      'The memory fades, and you are back in the tavern.',
+    ],
+  },
+  {
+    id: 'same-day',
+    season: 1,
+    title: 'The same sky',
+    // at the end of the chapel's pews
+    map: 'wc-chapel',
+    x: 16,
+    y: 5,
+    needs: { kind: 'path', dimension: 'spiritual', level: 6 },
+    lines: [
+      'The candles flicker, and for a moment you are somewhere else.',
+      'Three small children lie on a hill of glass grass, under a sky that never changes.',
+      'YOUNG KAIROS: Do you ever think every day is the same day?',
+      'SHY BOY: ...I like it the same.',
+      'QUIET BOY: Same is safe.',
+      'YOUNG KAIROS: Same is boring.',
+      'She rolls over and looks at the quiet boy.',
+      "YOUNG KAIROS: Promise you'll never be boring.",
+      "He doesn't answer. The shy boy watches them both.",
+      'The memory fades, and you are back in the chapel.',
+    ],
+  },
+  // Brannoc's (author, Oct 7, 2026): the school first, then the forest he ran into. Told, every word, and no
+  // further: the shadows closing round him are all he remembers.
+  {
+    id: 'brannoc-school',
+    season: 1,
+    title: "The painters' school",
+    // the master's stool, facing the wall the paintings hang on (painters-school.ts)
+    map: 'painters-school',
+    x: 8,
+    y: 5,
+    needs: {
+      kind: 'flag',
+      flag: 'paintings-hung',
+      label: 'Hang the paintings back',
+      hint: 'They came down off the wall. They go back up in an order.',
+    },
+    whose: 'brannoc',
+    waiting: ['The paintings hang in order. Nothing happens. The room seems to be waiting for someone who was here.'],
+    sets: 'brannoc-flashback',
+    lines: [
+      'The dust lifts, and the paint is wet again. Somewhere a bell goes for the end of lessons.',
+      'A boy sits at the back of the room with charcoal on his fingers. The other students have gone home.',
+      'BRANNOC: Master? Can I tell you something?',
+      'THE MASTER: You can tell me anything. I may not agree with it.',
+      "BRANNOC: I'm not a great warrior. I'm not any sort of warrior. I faint at nosebleeds. Mostly my own.",
+      'THE MASTER: You are a great warrior.',
+      'BRANNOC: …Have you seen me with a sword?',
+      "THE MASTER: Yearning for battle doesn't make one a great warrior.",
+      "The boy frowns at that for a long time. He doesn't understand it. Not yet.",
+      'BRANNOC: My father and mother want me to lead their army. Into battle. Soon, they say.',
+      'The old man smiles, and goes on cleaning his brush.',
+      'THE MASTER: The responsibilities of the crown are heavy.',
+      '…',
+      'Black.',
+      'A board nailed across the school door. CLOSED.',
+      'The master, on the floor of this room. Someone came in the night. He is still breathing. Only just.',
+      "The memory lets go, and you're back in the dust.",
+    ],
+  },
+  {
+    id: 'brannoc-forest',
+    season: 1,
+    title: 'The forest',
+    // the old husk in the ring of dead grass, at the forest's heart (royal-forest.json)
+    map: 'royal-forest',
+    x: 3,
+    y: 12,
+    needs: { kind: 'overall', level: 0 },
+    whose: 'brannoc',
+    waiting: [
+      'The husk of an old cocoon, split down the middle and gone grey, half sunk into the earth.',
+      'Whoever was in it left a long time ago.',
+      'Someone ran this far. Whoever it was would remember the rest.',
+    ],
+    lines: [
+      "The dead grass crunches. For a moment it's green, and it's night, and you are running.",
+      'Branches in your face. Your lungs on fire. Behind you, the school, and the master on the floor.',
+      'You cut a picture into a tree as you pass, and another, and another, so someone could follow. So you could find your way back.',
+      'The trees open. A clearing. You stop.',
+      'Shadows. In front. Behind. On every side, rising out of the ground like smoke, and closing.',
+      'BRANNOC: …Please.',
+      'They close.',
+      "And that's all. That's all there is.",
+      "The grass is dead again, and it's day, and you're you.",
+    ],
+  },
 ];
+
+/** The season's hidden memories (up to PER_SEASON of the scroll's), not anybody's own. */
+export const seasonMemories = (season: number) => MEMORIES.filter((m) => m.season === season && !m.whose);
+
+/** The season's first hidden memory. */
+export const seasonMemory = (season: number): Memory | undefined => seasonMemories(season)[0];
+
+/** Someone's own memories (Brannoc's), in the order they're listed. */
+export const ownMemories = () => MEMORIES.filter((m) => m.whose);
+
+/**
+ * What pressing A at a memory's spot does: 'play' it, say these lines, or nothing (null: the spot is just
+ * whatever's there). `met`: its `needs` are met; `party`: who's with you (see partyWithYou).
+ */
+export function memoryCall(
+  m: Memory,
+  seen: readonly string[],
+  met: boolean,
+  party: readonly string[],
+): 'play' | string[] | null {
+  if (seen.includes(m.id)) return SEEN_LINES;
+  if (m.whose) {
+    if (!met) return null;
+    return party.includes(m.whose) ? 'play' : (m.waiting ?? null);
+  }
+  return met ? 'play' : notYetLines(describeRequirement(m.needs));
+}
+
+/** True if its spot should shimmer: earned, not yet seen, and (someone's own) they're with you. */
+export const memoryReady = (m: Memory, seen: readonly string[], met: boolean, party: readonly string[]) =>
+  memoryCall(m, seen, met, party) === 'play';
 
 /** The memory hidden at this tile, if any. */
 export function memoryAt(map: string, x: number, y: number): Memory | undefined {
@@ -66,3 +245,21 @@ export function notYetLines(needed: string): string[] {
 
 /** Said at a memory's spot once it's been seen: it lives in the scroll now. */
 export const SEEN_LINES = ['Nothing stirs here now. What you saw is written in your Memories scroll.'];
+
+/** How the World looks under a memory's line: washed out in the past, gone dark for a moment, or back to now. */
+export type Shade = 'past' | 'dark' | null;
+
+/** Lines where the memory goes black (the school shut up; the shadows closing on the boy in the forest). */
+const DARK = ['…', 'Black.', 'They close.', "And that's all. That's all there is."];
+
+/**
+ * The shade under line `index` of a memory as it plays: the past, washed out, from its first line; dark for a moment
+ * where it says so; and the room as it is for the last line, which brings you back.
+ */
+export function memoryShade(m: Memory, index: number): Shade {
+  if (index >= m.lines.length - 1) return null;
+  return DARK.includes(m.lines[index]) ? 'dark' : 'past';
+}
+
+/** The forest's line where the shadows rise all round you (a dark puff on every side). */
+export const SHADOWS_RISE = /^Shadows\. In front\./;

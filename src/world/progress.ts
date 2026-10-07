@@ -55,20 +55,24 @@ export type Exit = {
 export const ARCHIVE_DOOR_LEVEL = 6;
 
 /**
- * After the door, three gates and no more (author, Oct 4, 2026: Season 1 beatable in 30 to 50
- * habits over two or three days; the story's the draw, habits are the fuel): the road north out of
- * Warrior City at Lv 10, the king at Lv 18, and the end of Season 1 at Lv 20. Overall, so any
- * habit counts. Recruiting the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
+ * After the door, the level gates and no more (author, Oct 4, 2026: Season 1 beatable over two or
+ * three days; the story's the draw, habits are the fuel): the road north out of Warrior City and the
+ * Royal Forest at Lv 10, and the king at Lv 15 (author, Oct 7, 2026: lowered from 18). The end of
+ * Season 1 is at Lv 15 too (FINAL_GOAL; author, Oct 7, 2026: lowered from 20), about 20 habits from
+ * the start. Overall, so any habit counts. A guard stands at each gate (gate-guards.ts). Recruiting
+ * the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
  */
 export const NORTH_ROAD_LEVEL = 10;
-export const KING_LEVEL = 18;
+export const KING_LEVEL = 15;
+/** The Royal Forest, west past the garden (author, Oct 7, 2026): Lv 10, like the road north. */
+export const FOREST_LEVEL = 10;
 
 /**
  * To face the king you need the whole party (author, Oct 4, 2026): Brannoc above all (it's his
  * father's throne), and the other seven. Each is the `met:` flag of meet.ts, set when they join.
  */
 const WHERE: Record<string, string> = {
-  brannoc: 'He is in a cell under the Colosseum, in Warrior City.',
+  brannoc: 'He is in a cell under the Kaloseum, in Warrior City.',
   ysolde: "She is in Warrior City's adventurers' guild.",
   quill: "He is in Warrior City's library.",
   wren: "She is in Warrior City's chapel.",
@@ -84,14 +88,19 @@ export const WHOLE_PARTY: Requirement[] = (Object.keys(WHERE) as CharacterId[]).
   hint: WHERE[id],
 }));
 
+/** Set once a boulder sits on each plate by the Cull Road's river: the ferry-bridge is up for good. */
+export const CULL_FERRY = 'cull-ferry';
+/** Set when the graveyard's three stones are back in their sockets: the gate in the crypt's mound opens. */
+export const GRAVEYARD_GATE = 'graveyard-gate';
+
 /** Never locked. */
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
 /**
- * Season 1 ends at this overall level (author, Sep 29, 2026): 35 habits
+ * Season 1 ends at this overall level (author, Oct 7, 2026: lowered from 20 to the castle's Lv 15): 20 habits
  * of any kind. Later kingdoms arrive as new seasons, each with its own finish.
  */
-export const FINAL_GOAL = { kind: 'overall', level: 20 } as const satisfies Requirement;
+export const FINAL_GOAL = { kind: 'overall', level: 15 } as const satisfies Requirement;
 
 export const EXITS: Exit[] = [
   {
@@ -178,12 +187,46 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The Cull Road (author, Oct 7, 2026), between Warrior City and the deserters' camp: the road the
+  // unfit children are walked down at twelve. Tithe-takers on it, shadows at the camp's broken gate,
+  // and a ferry-bridge sunk in the river that only rises with a boulder on each plate in the bank.
+  // Listed before the camp's own ways, so the guide asks for the bridge before the fort in the hill.
+  {
+    id: 'cull-camp',
+    from: 'cull-road',
+    tile: '=',
+    label: 'The ferry-bridge',
+    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    needs: {
+      // in an "all" so the bridge isn't drawn as a hole once it's up: the game draws it raised (maps.ts raises)
+      kind: 'all',
+      of: [
+        {
+          kind: 'flag',
+          flag: CULL_FERRY,
+          label: 'Raise the ferry-bridge',
+          hint: 'Two plates in the bank, chained to it. Something heavy on each.',
+        },
+      ],
+    },
+    walk: true,
+  },
+  {
+    id: 'cull-city',
+    from: 'cull-road',
+    tile: '<',
+    label: 'The road back to the city',
+    to: { map: 'warrior-city', x: 31, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'camp-road',
     from: 'deserters-camp',
     tile: '<',
     label: 'The road west',
-    to: { map: 'warrior-city', x: 31, y: 2, facing: 'down' },
+    to: { map: 'cull-road', x: 31, y: 6, facing: 'left' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -247,6 +290,27 @@ export const EXITS: Exit[] = [
     tile: 'E',
     label: 'The way back',
     to: { map: 'barracks-hall', x: 8, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The Long Mess (author, Oct 7, 2026): the barracks' dining hall, ghost cooks and a very long table.
+  {
+    id: 'hall-long-mess',
+    from: 'barracks-hall',
+    tile: '2',
+    label: 'The hole in the west wall',
+    to: { map: 'long-mess', x: 2, y: 7, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'long-mess-hall',
+    from: 'long-mess',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'barracks-hall', x: 2, y: 5, facing: 'right' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -469,6 +533,59 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The Graveyard of Kings, behind the chapel and over the crypt (author, Oct 7, 2026): a back door out
+  // of the chapel, and a second way down to the crypt once the three stones are back in their sockets.
+  {
+    id: 'chapel-graveyard',
+    from: 'chapel',
+    tile: '3',
+    label: 'The back door',
+    to: { map: 'graveyard', x: 15, y: 18, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'graveyard-chapel',
+    from: 'graveyard',
+    tile: '1',
+    label: 'The back door',
+    to: { map: 'chapel', x: 6, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'graveyard-crypt',
+    from: 'graveyard',
+    tile: 'G',
+    label: 'The iron gate in the mound',
+    to: { map: 'old-kings-crypt', x: 7, y: 2, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: GRAVEYARD_GATE,
+      label: 'Open the gate in the mound',
+      hint: 'Three sockets in front of it, and three stones rolled out of them.',
+    },
+    // a side way, like the hidden stair: the story doesn't need it, so the guide doesn't send you here
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'crypt-graveyard',
+    from: 'old-kings-crypt',
+    tile: '3',
+    label: 'The passage up',
+    to: { map: 'graveyard', x: 23, y: 4, facing: 'down' },
+    needs: {
+      kind: 'flag',
+      flag: GRAVEYARD_GATE,
+      label: 'Open the gate at the top',
+      hint: "It's shut fast from outside.",
+    },
+    back: true,
+    walk: true,
+  },
   {
     id: 'town-maze',
     from: 'kingdom-town',
@@ -493,14 +610,10 @@ export const EXITS: Exit[] = [
     id: 'town-pit',
     from: 'warrior-city',
     tile: '1',
-    label: 'The Colosseum',
-    to: { map: 'the-pit', x: 10, y: 9, facing: 'up' },
-    needs: {
-      kind: 'flag',
-      flag: 'on-the-bill',
-      label: 'Get on the bill',
-      hint: 'Barnaby does the bills. He loves a good story.',
-    },
+    label: 'The Kaloseum',
+    to: { map: 'the-pit', x: 15, y: 15, facing: 'up' },
+    // every player reaches Warrior City as the Kaloseum's champion (the prison break), so it's open
+    needs: OPEN,
     walk: true,
   },
   {
@@ -525,8 +638,8 @@ export const EXITS: Exit[] = [
         {
           kind: 'flag',
           flag: 'pit-champion',
-          label: 'Win at the Colosseum',
-          hint: 'Get on the bill, then beat five guards and the warden.',
+          label: 'Win at the Kaloseum',
+          hint: 'Beat five guards and the warden at the Kaloseum.',
         },
         {
           kind: 'flag',
@@ -560,6 +673,27 @@ export const EXITS: Exit[] = [
   },
   // Kaldor's castle (author, Oct 4, 2026; castle.ts): the grounds and the gate guards, the empty
   // hall (straight on to the throne room, or up the winding stair to the king's floor), the throne.
+  // The war council (author, Oct 7, 2026): why the hall is empty. Everyone's in here, planning a march.
+  {
+    id: 'hall-war-room',
+    from: 'castle-hall',
+    tile: 'H',
+    label: 'The heavy door',
+    to: { map: 'war-room', x: 6, y: 6, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'war-room-hall',
+    from: 'war-room',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'castle-hall', x: 23, y: 3, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'grounds-town',
     from: 'castle-grounds',
@@ -616,6 +750,86 @@ export const EXITS: Exit[] = [
     tile: '%',
     label: 'The winding stair',
     to: { map: 'castle-hall', x: 3, y: 12, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The castle's new rooms (author, Oct 7, 2026): the mess hall and the royal dungeon off the Great Hall, the old
+  // queen's room and the king's bedchamber off the King's Floor.
+  {
+    id: 'hall-mess',
+    from: 'castle-hall',
+    tile: '2',
+    label: 'The noisy doorway',
+    to: { map: 'mess-hall', x: 16, y: 9, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'mess-back',
+    from: 'mess-hall',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'castle-hall', x: 19, y: 14, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'hall-dungeon',
+    from: 'castle-hall',
+    tile: '3',
+    label: 'The steps down',
+    to: { map: 'royal-dungeon', x: 20, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'dungeon-hall',
+    from: 'royal-dungeon',
+    tile: '1',
+    label: 'The steps up',
+    to: { map: 'castle-hall', x: 6, y: 14, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'upper-queen',
+    from: 'castle-upper',
+    tile: '2',
+    label: 'The grey door',
+    to: { map: 'queens-room', x: 6, y: 6, facing: 'up' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'queen-upper',
+    from: 'queens-room',
+    tile: '1',
+    label: 'The door',
+    to: { map: 'castle-upper', x: 6, y: 11, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'upper-king',
+    from: 'castle-upper',
+    tile: '3',
+    label: 'The gold doors',
+    to: { map: 'kings-bedchamber', x: 8, y: 7, facing: 'up' },
+    needs: OPEN,
+    back: true,
+  },
+  {
+    id: 'king-upper',
+    from: 'kings-bedchamber',
+    tile: '1',
+    label: 'The doors',
+    to: { map: 'castle-upper', x: 14, y: 11, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -744,7 +958,7 @@ export const EXITS: Exit[] = [
     id: 'ring-maximus',
     from: 'ring-ward',
     tile: '8',
-    label: 'The great gate',
+    label: 'The yard gate',
     to: { map: 'kaldorium-maximus', x: 9, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -931,9 +1145,9 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Colosseum at its heart, the
-  // castle road north (through the camp, the barracks and on to Kaldor), a bridge east to the Mage
-  // kingdom and a road south to the old mines (both still being built).
+  // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Kaloseum at its heart, the
+  // castle road north (down the Cull Road, through the camp, the barracks and on to Kaldor), a
+  // bridge east to the Mage kingdom and a road south to the old mines (both still being built).
   {
     id: 'city-maze',
     from: 'warrior-city',
@@ -949,7 +1163,7 @@ export const EXITS: Exit[] = [
     from: 'warrior-city',
     tile: '^',
     label: 'The road north',
-    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    to: { map: 'cull-road', x: 1, y: 6, facing: 'right' },
     needs: { kind: 'overall', level: NORTH_ROAD_LEVEL },
     walk: true,
   },
@@ -982,6 +1196,48 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // Osric's Rest (author, Oct 6, 2026): down the South Road's farm track, the faithful, who farm and pray for the
+  // prince to come home; under the weaver's cottage, the rebels' cellar.
+  {
+    id: 'south-rest',
+    from: 'south-road',
+    tile: '_',
+    label: "The farm track to Osric's Rest",
+    to: { map: 'osrics-rest', x: 20, y: 1, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'rest-south',
+    from: 'osrics-rest',
+    tile: '^',
+    label: 'The farm track north',
+    to: { map: 'south-road', x: 30, y: 24, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'rest-cellar',
+    from: 'osrics-rest',
+    tile: 'd',
+    label: "The weaver's cottage",
+    to: { map: 'root-cellar', x: 4, y: 4, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'cellar-rest',
+    from: 'root-cellar',
+    tile: '2',
+    label: 'The ladder up',
+    to: { map: 'osrics-rest', x: 33, y: 9, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'south-mine',
     from: 'south-road',
@@ -998,6 +1254,82 @@ export const EXITS: Exit[] = [
     tile: '1',
     label: 'Out to the South Road',
     to: { map: 'south-road', x: 32, y: 12, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // Brannoc's places (author, Oct 7, 2026): the Royal Forest, west past the garden, and the Painters'
+  // School by its gate. The school's open from the start; the forest at Lv 10. Nothing in the story waits on them.
+  {
+    id: 'south-forest',
+    from: 'south-road',
+    tile: '<',
+    label: 'The path into the trees',
+    to: { map: 'royal-forest', x: 38, y: 12, facing: 'left' },
+    needs: { kind: 'overall', level: FOREST_LEVEL },
+    back: true,
+    walk: true,
+  },
+  // The Queen's Clearing (author, Oct 6, 2026): the old queen's fountain and her roses, up a path off the forest's
+  // open ground by the east way in.
+  {
+    id: 'forest-clearing',
+    from: 'royal-forest',
+    tile: '^',
+    label: "The path to the queen's clearing",
+    to: { map: 'queens-clearing', x: 11, y: 18, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'clearing-forest',
+    from: 'queens-clearing',
+    tile: '_',
+    label: 'Back into the forest',
+    to: { map: 'royal-forest', x: 37, y: 1, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'forest-south',
+    from: 'royal-forest',
+    tile: '>',
+    label: 'Out to the South Road',
+    to: { map: 'south-road', x: 1, y: 24, facing: 'right' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    // The wrong way through the forest: it turns you round and walks you back out where you came in
+    // (royal-forest.ts). Every wrong gap is the same letter, so they all go to the same place.
+    id: 'forest-loop',
+    from: 'royal-forest',
+    tile: 'o',
+    label: 'A gap in the undergrowth',
+    to: { map: 'royal-forest', x: 38, y: 12, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'south-school',
+    from: 'south-road',
+    tile: 'D',
+    label: 'The boarded-up door',
+    to: { map: 'painters-school', x: 8, y: 9, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'school-south',
+    from: 'painters-school',
+    tile: '1',
+    label: 'Out to the South Road',
+    to: { map: 'south-road', x: 6, y: 4, facing: 'down' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -1142,7 +1474,52 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // The Kingdom Dungeon, under Warrior City's Colosseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
+  // The Bank of Warrior City (author, Oct 7, 2026), and its vault: the combination is in the ledgers (vault.ts).
+  {
+    id: 'city-bank',
+    from: 'warrior-city',
+    tile: '9',
+    label: 'The bank',
+    to: { map: 'wc-bank', x: 8, y: 9, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'bank-city',
+    from: 'wc-bank',
+    tile: '1',
+    label: 'Out to Warrior City',
+    to: { map: 'warrior-city', x: 24, y: 35, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'bank-vault',
+    from: 'wc-bank',
+    tile: 'G',
+    label: 'The vault door',
+    to: { map: 'wc-vault', x: 5, y: 6, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'bank-vault-open',
+      label: 'Open the vault',
+      hint: 'The combination is in the ledgers, if you read them as a banker would.',
+    },
+    back: true,
+  },
+  {
+    id: 'vault-bank',
+    from: 'wc-vault',
+    tile: '1',
+    label: 'Back out to the bank',
+    to: { map: 'wc-bank', x: 8, y: 3, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The Kingdom Dungeon, under Warrior City's Kaloseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
   {
     id: 'cells-mazes',
     from: 'kingdom-dungeon',
@@ -1163,22 +1540,142 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The pothole (dungeon.ts POTHOLE): three steps in, the floor gives way and drops you back into the cells.
+  // Once only: after you've fallen (FELL_IN), the game leaves it out and the hole stays open; you walk round it.
   {
-    id: 'mazes-ring',
+    id: 'maze-pothole',
     from: 'dungeon-mazes',
-    tile: '2',
-    label: 'The ladder up',
-    to: { map: 'the-pit', x: 3, y: 9, facing: 'right' },
+    tile: 'h',
+    label: 'The floor',
+    to: { map: 'kingdom-dungeon', x: 18, y: 6, facing: 'up' },
     needs: OPEN,
     back: true,
     walk: true,
   },
   {
-    id: 'pit-mazes',
+    id: 'mazes-fork',
+    from: 'dungeon-mazes',
+    tile: '2',
+    label: 'The ladder up',
+    to: { map: 'dungeon-fork', x: 9, y: 5, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'pit-lore',
     from: 'the-pit',
     tile: '3',
     label: 'The ladder down',
-    to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' },
+    to: { map: 'dungeon-lore', x: 8, y: 5, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The Two Tunnels (author, Oct 4, 2026): past the Maze Ward, a test of the mind (a plate puzzle) or of
+  // strength (five shadows); either way, the Hall of Champions and the ladder up into the Kaloseum.
+  {
+    id: 'fork-mazes',
+    from: 'dungeon-fork',
+    tile: '2',
+    label: 'The ladder down',
+    to: { map: 'dungeon-mazes', x: 60, y: 6, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'fork-might',
+    from: 'dungeon-fork',
+    tile: 'b',
+    label: 'The Test of Strength',
+    to: { map: 'dungeon-might', x: 7, y: 8, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'fork-mind',
+    from: 'dungeon-fork',
+    tile: 'a',
+    label: 'The Test of the Mind',
+    to: { map: 'dungeon-mind', x: 7, y: 8, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'mind-fork',
+    from: 'dungeon-mind',
+    tile: '1',
+    label: 'Back to the fork',
+    to: { map: 'dungeon-fork', x: 5, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'might-fork',
+    from: 'dungeon-might',
+    tile: '1',
+    label: 'Back to the fork',
+    to: { map: 'dungeon-fork', x: 12, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'mind-lore',
+    from: 'dungeon-mind',
+    tile: 'G',
+    label: 'The gate',
+    to: { map: 'dungeon-lore', x: 3, y: 5, facing: 'up' },
+    needs: {
+      kind: 'flag',
+      flag: 'mind-plates',
+      label: 'Open the gate',
+      hint: 'Three plates, three boulders: something heavy on every plate.',
+    },
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'might-lore',
+    from: 'dungeon-might',
+    tile: 'G',
+    label: 'The gate',
+    to: { map: 'dungeon-lore', x: 12, y: 5, facing: 'up' },
+    needs: { kind: 'flag', flag: 'might-shadows', label: 'Open the gate', hint: 'Beat the five shadows.' },
+    // the guide's way through (anyone can win the fight); the Test of the Mind is the other way
+    back: false,
+    walk: true,
+  },
+  {
+    id: 'lore-mind',
+    from: 'dungeon-lore',
+    tile: '1',
+    label: 'Back to the Test of the Mind',
+    to: { map: 'dungeon-mind', x: 7, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'lore-might',
+    from: 'dungeon-lore',
+    tile: '3',
+    label: 'Back to the Test of Strength',
+    to: { map: 'dungeon-might', x: 7, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'lore-pit',
+    from: 'dungeon-lore',
+    tile: '2',
+    label: 'The ladder up',
+    to: { map: 'the-pit', x: 8, y: 14, facing: 'right' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -1360,7 +1857,13 @@ export const EXITS: Exit[] = [
   },
 ];
 
-export type XpTotals = { total: number; byPath: Record<Dimension, number>; flags?: string[] };
+export type XpTotals = {
+  total: number;
+  byPath: Record<Dimension, number>;
+  flags?: string[];
+  /** Premium (author, Oct 7, 2026): no level barriers, so every level requirement counts as met. Story flags still apply. */
+  unlocked?: boolean;
+};
 
 export type Standing = {
   met: boolean;
@@ -1404,7 +1907,7 @@ export function standing(needs: Requirement, xp: XpTotals): Standing {
   const left = xpToReach(progress.level, progress.xpIntoLevel, needs.level, xpFor);
   const whole = xpToReach(overallLevelFromXp(0).level, 0, needs.level, xpFor);
   return {
-    met: progress.level >= needs.level,
+    met: xp.unlocked === true || progress.level >= needs.level,
     have: progress.level,
     need: needs.level,
     habitsLeft: Math.ceil(left / BASE_XP),
@@ -1423,7 +1926,7 @@ export function describeRequirement(needs: Requirement): string {
 }
 
 /** The level part of a requirement, if it has one (an "all" counts its first level part). */
-function levelPart(needs: Requirement): Requirement | null {
+export function levelPart(needs: Requirement): Requirement | null {
   if (needs.kind === 'flag') return null;
   if (needs.kind === 'all') return needs.of.map(levelPart).find((r) => r !== null) ?? null;
   return needs;

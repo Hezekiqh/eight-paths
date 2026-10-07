@@ -1,0 +1,69 @@
+{
+  "id": "wc-vault",
+  "name": "The Vault",
+  "wall": "stone",
+  "tiles": [
+    "############",
+    "#VVVVVVVVVV#",
+    "#VVVVVVVVVV#",
+    "#RRZR..RZRR#",
+    "#R........R#",
+    "#Z........Z#",
+    "#RR......RR#",
+    "#____11____#",
+    "############"
+  ],
+  "art": {
+    "1": "="
+  },
+  "spawn": {
+    "x": 5,
+    "y": 6,
+    "facing": "up"
+  },
+  "firstVisit": [
+    "Gold. Heaps of it, and iron-bound boxes stamped with a fist, nearly to the ceiling.",
+    "The air smells of metal, and of nobody ever having been poor in here."
+  ],
+  "examine": {
+    "1": [
+      "The vault door, open. Back out to the bank."
+    ],
+    "V": [
+      "Stone, a yard thick."
+    ],
+    "R": [
+      "Strongboxes, iron-bound, stamped with a fist. THE WAR CHEST, every one of them."
+    ],
+    "Z": [
+      "Gold, in heaps on the floor. They ran out of boxes."
+    ],
+    "_": [
+      "The vault wall."
+    ]
+  },
+  "objects": [
+    {
+      "id": "war-chest",
+      "type": "sign",
+      "x": 5,
+      "y": 3,
+      "lines": [
+        "A brass plate on a post: THE WAR CHEST. PROPERTY OF THE CROWN. FOR THE MARCH ON THE MAGES.",
+        "Under it, a tally scratched by somebody counting the boxes: rows and rows of little lines.",
+        "The last line just says: GAVE UP."
+      ]
+    },
+    {
+      "id": "vault-chest",
+      "type": "chest",
+      "x": 6,
+      "y": 3,
+      "item": "unlisted-coin",
+      "lines": [
+        "A small plain chest in the corner. Not stamped, not numbered, in no ledger at all."
+      ]
+    }
+  ],
+  "floor": "stone"
+}

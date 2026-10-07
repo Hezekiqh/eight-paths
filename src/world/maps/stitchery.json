@@ -11,10 +11,10 @@
   },
   "tiles": [
     "##############",
-    "#WWWcWWWWWWWW#",
+    "#WWWcWWWWWgWW#",
     "#Wb.b.b.b..LW#",
     "#W..........W#",
-    "#W..........W#",
+    "#W.........eW#",
     "#WWWWW11WWWWW#",
     "##############"
   ],
@@ -24,6 +24,12 @@
     "facing": "up"
   },
   "examine": {
+    "g": [
+      "A chart: DAYS SINCE ANYONE FAINTED. The number has been rubbed out and written again a great many times."
+    ],
+    "e": [
+      "A bucket of cold water. Doctor Mog's cure for everything, applied from a height."
+    ],
     "b": [
       "A cot. The blanket is embroidered: WALKED IT OFF."
     ],

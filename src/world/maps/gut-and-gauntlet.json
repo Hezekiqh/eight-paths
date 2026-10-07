@@ -75,7 +75,7 @@
         {
           "ask": "Heard any gossip?",
           "answer": [
-            "The Maximus has a new ladder. Five champions. Hroth's been top for forty years.",
+            "The Training Yard's got a sparring board. Five names. Hroth's been top for forty years.",
             "He's sick of it, between you and me. Drinks here every night. Wants somebody to beat him so he can retire."
           ]
         },
@@ -151,8 +151,8 @@
         {
           "ask": "What was this city before Kaldor?",
           "answer": [
-            "A city. Nicer roofs. Fewer statues of one man.",
-            "He built his right on top of it. My old house is under the Gut. I drink above my own kitchen."
+            "Before my time. Before my great-gran's great-gran's time. A city, they say. Nicer roofs. Fewer statues of one man.",
+            "He built his right on top of it. Our family house is under the Gut. I drink above my ancestors' kitchen."
           ]
         },
         {
@@ -244,7 +244,7 @@
         {
           "ask": "Who's Bett, then?",
           "answer": [
-            "Even Bett. Runs the odds in the Ring Ward. She had us at four to one by day three.",
+            "Odd Bett. Runs the odds on Kaldor Street. Same odds every day, eleven days running.",
             "Made a fortune off us. Bought us a round. Fair's fair."
           ]
         },
@@ -307,7 +307,7 @@
         {
           "ask": "Why'd you start running?",
           "answer": [
-            "First fight. Big man. I ran. Crowd loved it.",
+            "First spar. Big man. I ran. The whole yard loved it.",
             "Nine years of running in a circle. I've never been hit. I've never been anywhere, either."
           ]
         },
@@ -330,17 +330,17 @@
       "facing": "up",
       "name": "Hroth",
       "lines": [
-        "Forty years, champion. Then you.",
+        "Forty years, top of the board. Then you.",
         "I'm retiring. A little house. A garden. I'm going to grow one turnip and look at it.",
         "Thank you. Truly. Buy you a drink? Tova says I can't. She says it's on the house."
       ],
       "comesAfter": "maximus-5",
       "questions": [
         {
-          "ask": "Why'd you stay champion so long?",
+          "ask": "Why'd you stay top so long?",
           "answer": [
-            "Nobody beat me. You can't retire from a ladder. You can only fall off it.",
-            "The king likes his champions where he put them. Forty years, I waited for a pair of hands."
+            "Nobody beat me. You can't retire from the top of the board. You can only get knocked off it.",
+            "The king likes his master-at-arms where he put him. Forty years, I waited for a pair of hands."
           ]
         },
         {

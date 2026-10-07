@@ -1152,16 +1152,19 @@ const SPECS = {
     boots: C.skin1,
     scarf: C.white,
   },
-  sable: {
-    skin: 'skin3',
-    hair: ['short', 'hairBlack'],
-    hat: ['mask', 'black'],
-    top: C.black,
-    shade: C.black,
-    cape: C.black,
-    legs: C.black,
-    boots: C.black,
-    held: [['rapier']],
+  // Kaldor the Kingbreaker: a crown over a grey hood, a red beard, a crimson cloak and a sword
+  kaldor: {
+    size: 'tall',
+    skin: '#D8A880',
+    hat: ['hood', '#8A8A9A'],
+    beard: ['#C4442A', 2],
+    top: '#3A2A2A',
+    shade: '#6A1216',
+    cape: '#6A1216',
+    legs: '#2A1A1A',
+    boots: '#1A1010',
+    belt: C.gold,
+    held: [['sword']],
   },
   nana: {
     size: 'kid',
@@ -1271,15 +1274,16 @@ const SPECS = {
     shade: C.orange,
     held: [['abacus']],
   },
-  aubrey: {
-    skin: 'skin1',
-    hair: ['curly', 'hairBlond'],
-    top: C.navy,
-    shade: C.navy,
-    legs: C.cream,
-    boots: C.black,
-    scarf: C.crimson,
-    held: [['book', 'green']],
+  // The Quartermaster, the stores' ghost: grey-white, spectacles, and a ledger to sign
+  quartermaster: {
+    skin: '#D8E0E8',
+    hair: ['bald', '#C8D0D8'],
+    eyes: 'glasses',
+    outfit: 'robe',
+    top: '#B8C0C8',
+    shade: '#8A94A0',
+    boots: '#8A94A0',
+    held: [['book', C.tan]],
   },
   gus: {
     size: 'big',
@@ -1387,19 +1391,16 @@ const SPECS = {
       [7, 45, C.gold],
     ],
   },
-  // Intellectual
+  // Nib, the kid on the Courier Road who wants a duel: as in the World, a brown tunic and spiky dark hair
   nib: {
     size: 'kid',
     skin: 'skin2',
-    hair: ['short', 'hairBrown'],
-    top: C.sky,
-    shade: C.sky,
-    legs: C.brown,
-    dots: [
-      [15, 26, C.navy],
-      [16, 26, C.navy],
-    ],
-    left: [['mailbag']],
+    hair: ['spiky', '#2A1A12'],
+    top: '#8A7A5A',
+    shade: '#6A5A40',
+    legs: '#4A3A2A',
+    boots: '#3A2A1A',
+    held: [['sword']],
   },
   ottilie: {
     skin: 'skin3',
@@ -1595,17 +1596,16 @@ const SPECS = {
     shade: C.moss,
     pet: 'bird',
   },
-  sage: {
-    skin: 'skin3',
-    hair: ['long', 'hairWhite'],
+  // The Chaplain's Echo, the crypt's ghost: pale blue all over, a white collar, a lantern
+  chaplain: {
+    skin: '#C8D0E8',
+    hair: ['bald', '#B8C0D8'],
     outfit: 'robe',
-    top: C.violet,
-    shade: C.violet,
-    dots: [
-      [13, 30, C.gold],
-      [18, 36, C.gold],
-    ],
-    held: [['candle']],
+    top: '#8A94B8',
+    shade: '#6A7498',
+    boots: '#6A7498',
+    scarf: '#E8ECF8',
+    held: [['lantern']],
   },
   ilse: {
     size: 'tall',
@@ -1695,15 +1695,14 @@ const SPECS = {
     ],
     held: [['sword']],
   },
-  teodor: {
-    size: 'tall',
-    skin: 'skin1',
-    hair: ['short', 'hairBlack'],
-    top: C.black,
-    shade: C.black,
-    legs: C.black,
-    boots: C.black,
-    held: [['paddle']],
+  // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
+  silasseen: {
+    skin: '#E8D8C8',
+    hat: ['hood', '#2E3C50'],
+    outfit: 'robe',
+    top: '#2E3C50',
+    shade: '#243040',
+    boots: '#1A2230',
   },
   nell: {
     skin: 'skin3',
@@ -1815,15 +1814,16 @@ const SPECS = {
     legs: C.tan,
     held: [['spoon']],
   },
-  ruth: {
-    skin: 'skin4',
-    hair: ['bun', 'hairGrey'],
-    hat: ['cap', 'navy'],
-    top: C.navy,
-    shade: C.navy,
-    legs: C.navy,
-    left: [['mailbag']],
-    held: [['scroll']],
+  // Old Mott, from the Deep Cells: bald, a white tuft and beard, an old brown tunic (as in the World)
+  oldmott: {
+    skin: '#E0B498',
+    hair: ['bald', '#ECE8DC'],
+    beard: ['#ECE8DC', 2],
+    top: '#7A6A48',
+    shade: '#5C4E34',
+    legs: '#3E3428',
+    boots: '#2A2018',
+    belt: '#3E3020',
   },
   bastian: {
     skin: 'skin5',
@@ -1896,15 +1896,15 @@ const SPECS = {
     boots: C.brown,
     held: [['crook']],
   },
-  babette: {
-    skin: 'skin1',
-    hair: ['bob', 'hairBrown'],
-    hat: ['toque'],
-    top: C.white,
-    apron: C.cream,
-    shade: C.white,
-    legs: C.black,
-    held: [['spoon']],
+  // Nails: spiky orange hair, a white shirt under a black jacket. One ice cube.
+  nails: {
+    skin: 'skin2',
+    hair: ['spiky', '#C4642A'],
+    top: '#E4DCC8',
+    shade: '#2E2430',
+    legs: '#2E2430',
+    boots: '#1A1418',
+    scarf: '#2E2430',
   },
   greta: {
     size: 'big',
@@ -1929,15 +1929,18 @@ const SPECS = {
     ],
     held: [['saw']],
   },
-  oskar: {
-    skin: 'skin2',
-    hair: ['short', 'hairBlack'],
-    eyes: 'glasses',
-    outfit: 'robe',
-    top: C.brown,
-    shade: C.brown,
-    gloves: C.navy,
-    held: [['candle']],
+  // The Kaldorium's Warden: the biggest guard in the kingdom, bald and black-bearded, belted in gold
+  kaldoriumwarden: {
+    size: 'big',
+    skin: '#C8956C',
+    hair: ['bald', '#C8956C'],
+    beard: ['#2A1810', 2],
+    top: '#5A3A2E',
+    shade: '#3E2820',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: C.gold,
+    held: [['sword']],
   },
   rosa: {
     skin: 'skin4',
@@ -2152,6 +2155,12 @@ const FLOATS = new Set(['lumen']);
 
 // Drawn after the person: Bastian's drum sits over his chest; Aurek's stitches.
 function extras(f, id) {
+  // Kaldor's crown sits on his hood, and his red beard shows under it, as in the World
+  if (id === 'kaldor') {
+    const L = LAYOUT.tall;
+    HATS.crown(f, L);
+    f.rect(13, L.h + 5, 6, 2, '#C4442A').rect(14, L.h + 7, 4, 1, '#C4442A');
+  }
   // Aurek's seams: down the chest and across the brow, as in the World
   if (id === 'aurek') {
     const L = LAYOUT.tall;

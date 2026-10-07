@@ -11,6 +11,7 @@ import type { HeroId } from '@/world/hero';
 import type { MapId } from '@/world/maps';
 import type { ControlScheme } from '@/world/store';
 import { PIECES_PER_HEART } from '@/world/items';
+import { SPEED_HINTS, SPEEDS, type GameSpeed } from '@/world/speed';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 
 /** The two ways to walk, shared with the World menu's Settings. */
@@ -29,6 +30,9 @@ type Props = {
   mapName: string;
   controls: ControlScheme;
   onControls: (controls: ControlScheme) => void;
+  /** How fast dialogue types and cutscenes play (speed.ts). */
+  speed: GameSpeed;
+  onSpeed: (speed: GameSpeed) => void;
   onResume: () => void;
   onOpenMap: () => void;
   onOpenBoard: () => void;
@@ -50,17 +54,17 @@ type Props = {
   testTools?: { levels: boolean; walk: boolean; toggleLevels: () => void; toggleWalk: () => void };
 };
 
-type Tab = 'goals' | 'party' | 'controls';
+type Tab = 'goals' | 'party' | 'settings';
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'goals', label: 'Goals' },
   { value: 'party', label: 'Party' },
-  { value: 'controls', label: 'Controls' },
+  { value: 'settings', label: 'Settings' },
 ];
 
 /**
  * The World's pause menu. Left: one page at a time (what it takes to go on,
- * then the party and satchel, then controls), so the goals get the room. Right,
+ * then the party and satchel, then controls and game speed), so the goals get the room. Right,
  * always in view: resume, the map, the Other World menu, and back to habits.
  */
 export function PauseMenu({
@@ -68,6 +72,8 @@ export function PauseMenu({
   mapName,
   controls,
   onControls,
+  speed,
+  onSpeed,
   onResume,
   onOpenMap,
   onOpenBoard,
@@ -173,10 +179,14 @@ export function PauseMenu({
                 )}
               </>
             )}
-            {tab === 'controls' && (
+            {tab === 'settings' && (
               <>
+                <Text style={styles.section}>CONTROLS</Text>
                 <Segmented options={SCHEMES} value={controls} onChange={onControls} color={colors.accent} />
                 <Text style={styles.hint}>{HINTS[controls]}</Text>
+                <Text style={styles.section}>GAME SPEED</Text>
+                <Segmented options={SPEEDS} value={speed} onChange={onSpeed} color={colors.accent} />
+                <Text style={styles.hint}>{SPEED_HINTS[speed]}</Text>
                 {testTools && (
                   <MenuItem
                     label={`Test levels (Lv 20): ${testTools.levels ? 'on' : 'off'}`}

@@ -6,15 +6,17 @@
     "#WWWWWWWWWW#",
     "#WWWWWWWWWW#",
     "#p..p..p..p#",
-    "#..........#",
-    "#p........p#",
+    "#..rrrrrr..#",
+    "#p.rrrrrr.p#",
     "#..p....p..#",
     "#____11____#",
     "############"
   ],
   "art": {
-    "1": "="
+    "1": "=",
+    "p": "f"
   },
+  "rug": "green",
   "spawn": {
     "x": 5,
     "y": 7,
@@ -42,7 +44,7 @@
       "name": "Moss",
       "character": "moss",
       "lines": [
-        "Hey."
+        "Hey. Tuft's asleep on the windowsill. Come in quiet."
       ],
       "comesAfter": "met:moss",
       "goneAfter": "left:moss"

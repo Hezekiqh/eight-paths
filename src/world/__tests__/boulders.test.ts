@@ -1,7 +1,17 @@
-import { PUSH_DELAY, SPEED, facingFor, leaningOn, move, platesCovered, pushBoulder, type Grid } from '../engine';
+import {
+  EXPLORE_SPEED,
+  PUSH_DELAY,
+  facingFor,
+  leaningOn,
+  move,
+  platesCovered,
+  pushBoulder,
+  type Grid,
+} from '../engine';
 import { CLEARED_BOULDERS } from '../felix-maze';
 import { MAPS, withOpenTiles } from '../maps';
 import { EXITS } from '../progress';
+import { SPEED_RATE } from '../speed';
 
 describe('the Drill Yard puzzle', () => {
   const yard = MAPS['barracks-yard'];
@@ -67,12 +77,128 @@ describe('the Drill Yard puzzle', () => {
   });
 });
 
+describe('the Test of the Mind', () => {
+  const room = MAPS['dungeon-mind'];
+  const at = (x: number, y: number) => y * room.width + x;
+
+  it('can be solved by pushing each boulder onto a plate, from the tunnel in', () => {
+    let solid = room.solid;
+    let boulders = room.boulders;
+    const arrival = EXITS.find((e) => e.to?.map === 'dungeon-mind' && e.from === 'dungeon-fork')!.to!;
+    const canReach = (x: number, y: number) => {
+      const seen = new Set<number>();
+      const queue = [at(arrival.x, arrival.y)];
+      while (queue.length > 0) {
+        const t = queue.pop()!;
+        if (seen.has(t) || solid[t]) continue;
+        seen.add(t);
+        const tx = t % room.width;
+        const ty = Math.floor(t / room.width);
+        if (tx > 0) queue.push(t - 1);
+        if (tx < room.width - 1) queue.push(t + 1);
+        if (ty > 0) queue.push(t - room.width);
+        if (ty < room.height - 1) queue.push(t + room.width);
+      }
+      return seen.has(at(x, y));
+    };
+    const push = (from: [number, number], dx: number, dy: number) => {
+      const i = boulders.indexOf(at(...from));
+      expect(i).not.toBe(-1);
+      expect([from, dx, dy, canReach(from[0] - dx, from[1] - dy)]).toEqual([from, dx, dy, true]);
+      const next = pushBoulder(solid, room.width, room.height, boulders, i, dx, dy);
+      expect(next).not.toBeNull();
+      solid = next!.solid;
+      boulders = next!.boulders;
+    };
+    expect([room.boulders.length, room.plates.length]).toEqual([3, 3]);
+    // left boulder: right once, down twice
+    push([4, 4], 1, 0);
+    push([5, 4], 0, 1);
+    push([5, 5], 0, 1);
+    // right boulder: left once, down twice
+    push([8, 4], -1, 0);
+    push([7, 4], 0, 1);
+    push([7, 5], 0, 1);
+    // bottom boulder: left three times, up once into the middle
+    push([9, 7], -1, 0);
+    push([8, 7], -1, 0);
+    push([7, 7], -1, 0);
+    push([6, 7], 0, -1);
+    expect(platesCovered(room.plates, boulders)).toBe(true);
+  });
+});
+
+// The Cull Road's ferry-bridge (author, Oct 7, 2026): a boulder on each plate in the bank brings it up.
+describe("the Cull Road's ferry-bridge", () => {
+  const road = MAPS['cull-road'];
+  const at = (x: number, y: number) => y * road.width + x;
+
+  it('has two boulders and two plates, and the bridge needs the plates down', () => {
+    expect(road.boulders).toHaveLength(2);
+    expect(road.plates).toHaveLength(2);
+    const bridge = EXITS.find((e) => e.id === 'cull-camp')!;
+    expect(JSON.stringify(bridge.needs)).toContain(road.platesFlag!);
+    expect(bridge.tile).toBe(road.raises);
+  });
+
+  it.each(['city-north', 'camp-road'])('can be solved coming in by %s', (way) => {
+    let solid = road.solid;
+    let boulders = road.boulders;
+    const arrival = EXITS.find((e) => e.id === way)!.to!;
+    expect(arrival.map).toBe('cull-road');
+    const canReach = (x: number, y: number) => {
+      const seen = new Set<number>();
+      const queue = [at(arrival.x, arrival.y)];
+      while (queue.length > 0) {
+        const t = queue.pop()!;
+        if (seen.has(t) || solid[t]) continue;
+        seen.add(t);
+        const tx = t % road.width;
+        if (tx > 0) queue.push(t - 1);
+        if (tx < road.width - 1) queue.push(t + 1);
+        if (t >= road.width) queue.push(t - road.width);
+        if (t < road.width * (road.height - 1)) queue.push(t + road.width);
+      }
+      return seen.has(at(x, y));
+    };
+    const push = (from: [number, number], dx: number, dy: number) => {
+      const i = boulders.indexOf(at(...from));
+      expect(i).not.toBe(-1);
+      expect([from, dx, dy, canReach(from[0] - dx, from[1] - dy)]).toEqual([from, dx, dy, true]);
+      const next = pushBoulder(solid, road.width, road.height, boulders, i, dx, dy);
+      expect(next).not.toBeNull();
+      solid = next!.solid;
+      boulders = next!.boulders;
+    };
+    // The north boulder: down twice, then right three times onto the north plate.
+    push([29, 2], 0, 1);
+    push([29, 3], 0, 1);
+    for (let x = 29; x < 32; x++) push([x, 4], 1, 0);
+    // The south boulder: up once, then right four times onto the south plate.
+    push([28, 10], 0, -1);
+    for (let x = 28; x < 32; x++) push([x, 9], 1, 0);
+    expect(platesCovered(road.plates, boulders)).toBe(true);
+    // ...and the road to the bridge is still clear, with the boulders where they rest once solved.
+    expect(canReach(32, 6)).toBe(true);
+  });
+
+  it('keeps the road clear once solved, with each boulder sat on its plate', () => {
+    const solid = road.solid.slice();
+    for (const b of road.boulders) solid[b] = 0;
+    for (const p of road.plates) solid[p] = 1;
+    for (let x = 1; x <= 32; x++) expect([x, solid[at(x, 6)] + solid[at(x, 7)]]).toEqual([x, 0]);
+  });
+});
+
 describe('pushing a boulder by walking into it', () => {
   const yard = MAPS['barracks-yard'];
   const at = (x: number, y: number) => y * yard.width + x;
 
-  /** Holds the stick one way for `seconds`, the way the World's frame loop does. Returns where the boulders end up. */
-  function hold(x: number, y: number, ix: number, iy: number, seconds: number) {
+  /**
+   * Holds the stick one way for `seconds`, the way the World's frame loop does, at a game speed's walk.
+   * Returns where the boulders end up.
+   */
+  function hold(x: number, y: number, ix: number, iy: number, seconds: number, rate = 1) {
     let solid = yard.solid;
     let boulders = yard.boulders;
     let facing = 0;
@@ -83,7 +209,7 @@ describe('pushing a boulder by walking into it', () => {
       facing = facingFor(ix, iy, facing);
       const against = leaningOn(grid, boulders, x, y, facing);
       if (against === -1) {
-        [x, y] = move(grid, x, y, ix * SPEED * dt, iy * SPEED * dt);
+        [x, y] = move(grid, x, y, ix * EXPLORE_SPEED * rate * dt, iy * EXPLORE_SPEED * rate * dt);
         lean = 0;
       } else if ((lean += dt) >= PUSH_DELAY) {
         lean = 0;
@@ -94,17 +220,22 @@ describe('pushing a boulder by walking into it', () => {
     return boulders;
   }
 
-  // Walking up to the top-left boulder (5, 4) from the left, feet anywhere in its row.
-  it.each([65, 70, 74, 78])('moves it when you walk into it from the left (feet at y %i)', (y) => {
-    const after = hold(3 * 16 + 8, y, 1, 0, 1.2);
-    expect(after).not.toContain(at(5, 4));
-    expect(after.some((b) => b === at(6, 4) || b === at(7, 4))).toBe(true);
-  });
+  // Walking up to the top-left boulder (5, 4) from the left, feet anywhere in its row, at every game
+  // speed: it goes a tile or more along (further the faster you walk back up to it), never off its row.
+  const RATES = Object.values(SPEED_RATE);
+  it.each(RATES.flatMap((rate) => [65, 70, 74, 78].map((y) => ({ rate, y }))))(
+    'moves it when you walk into it from the left (feet at y $y, $rate×)',
+    ({ rate, y }) => {
+      const after = hold(3 * 16 + 8, y, 1, 0, 1.2, rate);
+      expect(after).not.toContain(at(5, 4));
+      expect(after.some((b) => b >= at(6, 4) && b <= at(8, 4))).toBe(true);
+    },
+  );
 
-  it('moves it when you walk into it from above', () => {
-    const after = hold(5 * 16 + 6, 2 * 16 + 14, 0, 1, 1.2);
+  it.each(RATES)('moves it when you walk into it from above (%d×)', (rate) => {
+    const after = hold(5 * 16 + 6, 2 * 16 + 14, 0, 1, 1.2, rate);
     expect(after).not.toContain(at(5, 4));
-    expect(after.some((b) => b === at(5, 5) || b === at(5, 6))).toBe(true);
+    expect(after.some((b) => [at(5, 5), at(5, 6), at(5, 7)].includes(b))).toBe(true);
   });
 });
 
@@ -149,7 +280,12 @@ describe("Felix's boulder maze", () => {
       const here = states.get(key(s, walk(s.solid, s.you)))!;
       if (here.seen.has(end)) continue;
       for (const t of here.seen) {
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        for (const [dx, dy] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ]) {
           const i = s.boulders.indexOf(t + dx + dy * width);
           if (i === -1 || (dx === 1 && t % width === width - 1) || (dx === -1 && t % width === 0)) continue;
           const pushed = pushBoulder(s.solid, width, height, s.boulders, i, dx, dy);

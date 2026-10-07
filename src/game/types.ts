@@ -31,7 +31,13 @@ export type Player = {
   objectivesLandscape: boolean;
   /** The Keeper calls at the player's usual time, learned from their quests, instead of `notificationTime`. */
   smartReminders: boolean;
+  /** Calls during the day while habits are left: noon and 9 PM, plus check-ins every few hours, or off. */
+  dayReminders: DayReminders;
 };
+
+/** "bookends" is noon and 9 PM only; a number adds a check-in that many hours apart in between. */
+export const DAY_REMINDERS = ['off', 'bookends', '4', '2', '1'] as const;
+export type DayReminders = (typeof DAY_REMINDERS)[number];
 
 export type Quest = {
   id: string;

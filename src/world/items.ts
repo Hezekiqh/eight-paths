@@ -13,6 +13,14 @@ export const PIECES_PER_HEART = 4;
 export const ITEMS: Record<string, { name: string; text: string[] }> = {
   // The first memory, from the last seal of Season 1 (see keeper-talk-lines.ts).
   'first-memory': { name: FINALE.keepsake.name, text: FINALE.keepsake.text },
+  // Gary's, handed over with a shrug (author, Episode 12, Oct 6, 2026): you unlock the cells with them.
+  'gary-keys': {
+    name: "Gary's Cell Keys",
+    text: [
+      'A ring of iron keys, warm from a pocket.',
+      "A tag on the ring, in Gary's handwriting: CELLS. Under it, smaller: (sure, why not)",
+    ],
+  },
   'dessa-letter': {
     name: "Dessa's letter",
     // The outside only: what's inside is for later.
@@ -23,6 +31,14 @@ export const ITEMS: Record<string, { name: string; text: string[] }> = {
       'On the back, in hurried pencil: "Carried by D. Quickstep. Do not open. I mean it."',
       'Fainter, as if added at a run: "If found, keep it moving."',
       "The seal has never been broken. You don't break it either.",
+    ],
+  },
+  // From the small chest in the bank's vault (author, Oct 7, 2026): in no ledger, so nobody can say it's missing.
+  'unlisted-coin': {
+    name: 'The Unlisted Coin',
+    text: [
+      "One gold coin. Kaldor's face on one side, a fist on the other.",
+      "It isn't in any ledger, so nobody can say it's missing. A banker would find that very upsetting.",
     ],
   },
 };

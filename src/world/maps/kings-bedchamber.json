@@ -1,0 +1,131 @@
+{
+  "id": "kings-bedchamber",
+  "name": "The King's Bedchamber",
+  "style": "dungeon",
+  "walkable": [".", ",", "h"],
+  "art": {
+    "g": "castle-chair",
+    "1": "E",
+    "8": "q",
+    "9": "t"
+  },
+  "spawn": {
+    "x": 8,
+    "y": 7,
+    "facing": "up"
+  },
+  "firstVisit": ["It's very red in here. It's very gold. It's very him."],
+  "tiles": [
+    "################",
+    "#WWcWffffffWcWW#",
+    "#Wg.....hh..yQW#",
+    "#W......hh...ZW#",
+    "#W..99..hh....W#",
+    "#W......hh..w.W#",
+    "#W88....hh....W#",
+    "#W8.....hh....W#",
+    "#WWWWWWW1WWWWWW#",
+    "################"
+  ],
+  "examine": {
+    "W": [
+      "Black stone, hung with red velvet. The velvet is embroidered with his face, small and repeating, like a wallpaper. It's him. It's all him."
+    ],
+    "1": ["The corridor, and his wives' laughter, very faintly, from the far end."],
+    "c": ["A torch. The only thing in here he hasn't put his face on."],
+    "f": [
+      "Portraits of Kaldor, one for every twenty years or so. Five hundred years of them, all down the wall.",
+      "He doesn't age a day in any of them. The painters do. You can tell by the brushwork: steady, then shaky, then somebody new."
+    ],
+    "g": [
+      "The best chair in the room, turned to face the wall.",
+      "There's no dust on the seat, and no dent in the cushion. It's kept ready for someone.",
+      "Whoever it's for has never come. It's kept ready anyway."
+    ],
+    "y": [
+      "His vanity. Forty pots of something for the face, a comb for the beard, and a smaller comb for the comb.",
+      "The mirror's been polished so hard there's a dip in the middle."
+    ],
+    "Q": [
+      "The king's bed. Enormous. Black velvet, gold tassels, a hundred pillows.",
+      "Not one of them has a dent in it. The sheets have never been turned down.",
+      "Either the maids are very, very good, or he doesn't sleep."
+    ],
+    "Z": ["A statue of Kaldor, life-size, at his bedside. In case he wants company."],
+    "9": [
+      "A war map, weighted at the corners with daggers.",
+      "The wizard kingdom is circled. Then circled again. Then circled so hard the pen's gone through the table.",
+      "Across the top, in a big square hand: THE MARCH. TOMORROW.",
+      "'Tomorrow' has been crossed out and written in again so many times the paper's gone soft. The last one's in fresh ink."
+    ],
+    "8": [
+      "A barrel, full to the brim with gold coin. Then another. Then another.",
+      "He ran out of chests a long time ago."
+    ],
+    "w": [
+      "Forty identical fur cloaks, and one that's slightly different. He wears that one on special occasions. It's identical."
+    ],
+    "h": ["A bearskin rug. Somebody has stitched his face onto the bear. Somebody had to, apparently."]
+  },
+  "objects": [
+    {
+      "id": "pellam",
+      "type": "npc",
+      "x": 11,
+      "y": 6,
+      "sprite": "lamplighter",
+      "facing": "left",
+      "name": "Pellam the Valet",
+      "lines": [
+        "You're not supposed to be in here. I'm not supposed to be in here either. Well, I am. That's the whole job.",
+        "I turn the bed down every night. Every morning I turn it back up. Nobody's been in it."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Does the king ever sleep?",
+          "answer": [
+            "Not that I've seen. Thirty years I've been his valet.",
+            "Some nights he sits up here. Not in that chair. Never in that chair. On the little stool, facing it.",
+            "He talks to it a while. Then he waits. Then he says 'tomorrow', and goes back downstairs."
+          ]
+        },
+        {
+          "ask": "Who's the chair for?",
+          "answer": [
+            "I asked him once.",
+            "He said 'my master', and then he looked at me for a very long time, and I've not asked him anything since.",
+            "I've barely said anything since. This is the most I've said in years. It's quite nice, actually."
+          ]
+        },
+        {
+          "ask": "Is the march really tomorrow?",
+          "answer": [
+            "It's always tomorrow. I've packed his campaign trunk eleven thousand times. I've stopped unpacking it.",
+            "...This time he had me polish the good helmet, though.",
+            "He's never asked for the good helmet."
+          ]
+        },
+        {
+          "ask": "Thirty years folding sheets for a man who doesn't sleep? Sad.",
+          "answer": [
+            "I prefer to think of it as thirty years of very well-folded sheets.",
+            "Would you like to see the corners? ...No. No, you wouldn't. Nobody ever does."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "type": "sign",
+      "x": 3,
+      "y": 7,
+      "lines": [
+        "A ledger on a stand, beside the barrels. Every page has one word on it: MORE.",
+        "The last page says: MORE (TOMORROW)."
+      ]
+    }
+  ],
+  "floor": "marble"
+}

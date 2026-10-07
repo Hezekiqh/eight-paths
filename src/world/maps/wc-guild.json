@@ -25,30 +25,14 @@
     "facing": "up"
   },
   "examine": {
-    "1": [
-      "The door back out to Warrior City."
-    ],
-    "V": [
-      "Timber walls, hung with old shields."
-    ],
-    "N": [
-      "The notice board: GOATS RECOVERED. RAT IN CELLAR (BIG). ESCORT WANTED TO THE BRIDGE (WELL PAID)."
-    ],
-    "F": [
-      "A fire, and a cat asleep exactly as close to it as is safe."
-    ],
-    "n": [
-      "A great map of the eight kingdoms in a ring, joined by bridges. Beyond the ring, the map is blank."
-    ],
-    "t": [
-      "A table, sticky with someone's victory."
-    ],
-    "x": [
-      "A barrel of something the guild calls 'courage'."
-    ],
-    "_": [
-      "The guild wall."
-    ]
+    "1": ["The door back out to Warrior City."],
+    "V": ["Timber walls, hung with old shields."],
+    "N": ["The notice board: GOATS RECOVERED. RAT IN CELLAR (BIG). ESCORT WANTED TO THE BRIDGE (WELL PAID)."],
+    "F": ["A fire, and a cat asleep exactly as close to it as is safe."],
+    "n": ["A great map of the eight kingdoms in a ring, joined by bridges. Beyond the ring, the map is blank."],
+    "t": ["A table, sticky with someone's victory."],
+    "x": ["A barrel of something the guild calls 'courage'."],
+    "_": ["The guild wall."]
   },
   "objects": [
     {
@@ -60,7 +44,7 @@
       "facing": "down",
       "name": "Ysolde",
       "lines": [
-        "A paying customer, at last. The deserters here owe me five centuries of rent.",
+        "A paying customer, at last. Half this guild owes me five centuries of rent.",
         "Ysolde. Noble, banker, collector of debts. You look like you'd be good for it. I'm joking. Mostly."
       ],
       "character": "ysolde",
@@ -75,9 +59,7 @@
       "sprite": "holt",
       "facing": "down",
       "name": "Guildmaster Garrow",
-      "lines": [
-        "Adventurers' Guild. Jobs on the board, pay at the desk, bleeding outside, please."
-      ],
+      "lines": ["Adventurers' Guild. Jobs on the board, pay at the desk, bleeding outside, please."],
       "questions": [
         {
           "ask": "Any work?",
@@ -95,6 +77,17 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "keeper-wc-guild",
+      "type": "npc",
+      "x": 6,
+      "y": 6,
+      "sprite": "keeper",
+      "facing": "down",
+      "name": "The Keeper",
+      "comesAfter": "woke-as:ysolde",
+      "lines": ["What? You thought I couldn't leave that place?", "I have a life outside of you."]
     }
   ]
 }

@@ -25,27 +25,13 @@
     "facing": "up"
   },
   "examine": {
-    "1": [
-      "The door back out to Warrior City."
-    ],
-    "V": [
-      "Cold stone, and the smell of old candles."
-    ],
-    "y": [
-      "Stained glass: eight figures holding hands in a ring. One of the faces has been scratched out."
-    ],
-    "A": [
-      "The altar. A white cloth, two candles, and a small bell."
-    ],
-    "P": [
-      "A pew, polished by a great many knees."
-    ],
-    "c": [
-      "A candle, burning low."
-    ],
-    "_": [
-      "The chapel wall."
-    ]
+    "1": ["The door back out to Warrior City."],
+    "V": ["Cold stone, and the smell of old candles."],
+    "y": ["Stained glass: eight figures holding hands in a ring. One of the faces has been scratched out."],
+    "A": ["The altar. A white cloth, two candles, and a small bell."],
+    "P": ["A pew, polished by a great many knees."],
+    "c": ["A candle, burning low."],
+    "_": ["The chapel wall."]
   },
   "objects": [
     {
@@ -57,8 +43,8 @@
       "facing": "down",
       "name": "Wren",
       "lines": [
-        "Welcome. Take it slowly. The first steps are always the strangest.",
-        "Wren. I keep the old lights. There's something under this chapel. I can feel it, like a draught from a door nobody's opened."
+        "Welcome. Sit a while. The city's loud. In here it isn't.",
+        "Wren. I keep the old lights. Somebody has to, in a city that only lights torches for fights."
       ],
       "character": "wren",
       "meets": true,
@@ -72,10 +58,7 @@
       "sprite": "fen",
       "facing": "down",
       "name": "Old Bell-Ringer",
-      "lines": [
-        "I ring the bell at dawn and dusk. Nobody wakes up for it any more.",
-        "Well. You did."
-      ],
+      "lines": ["I ring the bell at dawn and dusk. Nobody wakes up for it any more.", "Well. You did."],
       "questions": [
         {
           "ask": "Who's in the window?",
@@ -86,13 +69,21 @@
         },
         {
           "ask": "Ring it quieter. Some of us were asleep.",
-          "answer": [
-            "Five hundred years, some of you.",
-            "I'll ring it twice tomorrow. Just for you."
-          ],
+          "answer": ["Five hundred years, some of you.", "I'll ring it twice tomorrow. Just for you."],
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "keeper-wc-chapel",
+      "type": "npc",
+      "x": 8,
+      "y": 4,
+      "sprite": "keeper",
+      "facing": "down",
+      "name": "The Keeper",
+      "comesAfter": "woke-as:wren",
+      "lines": ["What? You thought I couldn't leave that place?", "I have a life outside of you."]
     }
   ],
   "floor": "stone"
