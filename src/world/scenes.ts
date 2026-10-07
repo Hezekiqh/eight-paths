@@ -87,7 +87,7 @@ export function winScene(
       // then the throne is yours to settle, three ways. Brannoc is always with you by now (the
       // castle road needs the whole party), and steps out beside you for it (moments.ts).
       const prince = asBrannoc ? 'you' : 'Brannoc';
-      return {
+      const scene: Scene = {
         // Brannoc's father's throne: he steps out beside you for it
         stepOut: brannoc && !asBrannoc ? 'brannoc' : undefined,
         lines: [
@@ -101,13 +101,6 @@ export function winScene(
             ? `KALDOR: So. My brother's boy, and ${asBrannoc ? 'his little band of friends' : 'whoever this is'}. My best, and you went through them like a door.`
             : 'KALDOR: So. My best, and you went through them like a door.',
           "KALDOR: The law is the law, and the court is watching. Beat the king's champions, and the throne is yours to settle. So. Settle it.",
-          // Felix, gone the moment the fight turned (author): only a note where he stood
-          ...(felix
-            ? [
-                'Where Felix stood, there is only a chess piece, and a note pinned under it:',
-                '"Wish I could have stayed, but I need to prepare the next surprise. F :b"',
-              ]
-            : []),
         ],
         choices: [
           ...(brannoc
@@ -219,6 +212,10 @@ export function winScene(
           },
         ],
       };
+      // Felix watches it all from by the throne, and once you've decided, he goes (author, Oct 7, 2026)
+      return felix
+        ? { ...scene, choices: scene.choices!.map((c) => ({ ...c, lines: [...c.lines, ...FELIX_LEAVES] })) }
+        : scene;
     }
     case 'kaldorium-maximus':
       return ladderScene(flag);
@@ -226,6 +223,12 @@ export function winScene(
       return null;
   }
 }
+
+/** Felix, by the throne, once the throne's decided: then he fades. */
+export const FELIX_LEAVES = [
+  'FELIX: This is getting interesting. I look forward to what you decide next.',
+  '* Felix fades away, like he was never there.',
+];
 
 /** Out of the Training Yard after a spar, to the Ring Ward: the next rung waits for your next visit. */
 const RING_GATE = { map: 'ring-ward' as MapId, x: 15, y: 5, facing: 'down' as const };

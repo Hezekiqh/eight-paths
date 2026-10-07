@@ -113,10 +113,6 @@ export const TALE: Chapter[] = [
         from: [loreId('Hesper', 'Heard any gossip?')],
         text: 'For four hundred years the Shadow Monarch ruled through his kings. Then he began to doubt, and to wither. A hundred years ago he fell silent.',
       },
-      {
-        from: [loreId('Felix', 'What now?')],
-        text: 'A king with all that strength, and no one left to answer to. What could be more fun?',
-      },
     ],
   },
 ];
