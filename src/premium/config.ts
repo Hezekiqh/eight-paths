@@ -34,6 +34,7 @@ export const PERKS: Perk[] = [
   { title: 'Level barriers', free: 'Level-gated', premium: 'Go anywhere' },
   { title: 'Dopamine Regulator', free: '—', premium: 'Included' },
   { title: 'Themes', free: 'The default', premium: 'Every theme' },
+  { title: 'Double XP', free: '10 XP a habit', premium: '20 XP a habit' },
 ];
 
 /** The rest, under "Everything in Premium" on the paywall. */
@@ -41,6 +42,5 @@ export const MORE_PERKS: Perk[] = [
   { title: '5★ odds', free: 'Standard', premium: 'About twice as likely' },
   { title: 'Redo a drop', free: '—', premium: 'Once per drop' },
   { title: 'Special moves', free: 'One a day', premium: 'Three a day' },
-  { title: 'XP per habit', free: '10 XP, up to 30 a Path a day', premium: '20 XP, up to 60 a Path a day' },
   { title: 'Habits', free: 'Up to 10', premium: 'Unlimited' },
 ];
