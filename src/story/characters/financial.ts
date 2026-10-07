@@ -38,17 +38,16 @@ export const FINANCIAL = {
     bio: 'Dripping in jewels, she carries a set of golden scales and owns the Counting House. Elegant and charming, she never raises her voice, and she has a price for everything.',
     quote: 'Nothing is free, darling. Least of all hope.',
   },
-  aubrey: {
+  quartermaster: {
     number: 46,
     rarity: 2,
-    alignment: 'Lawful Good',
-    name: 'Lord Aubrey',
-    fullName: 'Lord Aubrey Finch',
+    alignment: 'Lawful Neutral',
+    name: 'The Quartermaster',
     dimension: 'financial',
     kind: 'recruit',
     unlockLevel: 20,
-    bio: 'A nervous minor lord who inherited a crumbling estate and a very long list of debts. He is learning to budget from a book he could not really afford.',
-    quote: "I've made a ledger. It's terrifying.",
+    bio: 'The ghost of the Lower Barracks stores, spectacles on his nose and a ledger he will not close. Everything must be signed for, even the end of the world, especially the end of the world. Somebody still owes the stores one spoon, and he knows who.',
+    quote: 'HALT. Everything must be signed for.',
   },
   wendel: {
     number: 41,
