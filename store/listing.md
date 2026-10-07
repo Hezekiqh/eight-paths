@@ -33,7 +33,7 @@ The world is asleep, dreaming it already did everything. You're the first one aw
 ### Description (4000)
 
 ```
-The world is asleep. Everyone is dreaming the same comfortable dream: that they already did it. They ran the race, wrote the book, saved the money, made the call. Nothing is left to do, so nobody walks the Eight Paths any more.
+The world is asleep, dreaming the same comfortable dream: that they already did it. They ran the race, wrote the book, made the call. So nobody walks the Eight Paths any more.
 
 Then one heart starts beating. Yours.
 
@@ -53,20 +53,23 @@ Each part of a whole life has its own Path and its own pixel-art companion who w
 
 Every companion has their own story, typed out letter by letter like an old RPG, and levels up as you keep their Path.
 
+AN ADVENTURE YOUR HABITS UNLOCK
+A pixel kingdom with a full first season. Break out of prison with a knight who only wins in his sleep, explore a city where strength is everything, a haunted graveyard and the king's castle. Solve puzzles, fight shadows and uncover what happened to the old king. Every level you earn opens more of the map.
+
 TURN HABITS INTO QUESTS
-Write your own quests or start with ready-made ones. Set them daily, on weekdays or on the days you choose. Tap to complete and watch your companion's XP bar fill. Every task is worth the same XP, up to 30 XP a Path each day, so your progress always means something real.
+Write your own quests or start with ready-made ones, daily, on weekdays or on the days you choose. Tap to complete and watch your companion's XP bar fill. Every task is worth the same XP, up to 30 a Path each day.
 
 LEVEL UP FAST, THEN FOR LIFE
-Your first quests level you up almost every time. Keep going and you can reach Level 100 in about three months of steady play, and then a second climb begins. Every tenth level is a milestone worth celebrating.
+Your first quests level you up almost every time. Reach Level 100 in about three months of steady play, then a second climb begins.
 
 WAKE 100 CHARACTERS
-Keep a Path strong and new characters join your collection: recruits, rivals who think the world is better left asleep, and legends waiting at the end of each Path. Over 100 in all, each with their own lore. Swap anyone into your party and level them up.
+Keep a Path strong and new characters join your collection: recruits, rivals and legends. Over 100 in all, each with their own lore. Swap anyone into your party.
 
 OBJECTIVES AND REWARDS
-Fresh daily and weekly objectives built from your own quests. Claim random drops, grace days that protect a streak and double-XP boosts. Add personal goals like "Run a 5K" and earn XP when you finish them.
+Daily and weekly objectives built from your own quests. Claim drops, grace days and double-XP boosts. Add goals like "Run a 5K" and earn XP when you finish them.
 
 SEE YOUR PROGRESS HONESTLY
-A radar shows how balanced your life is this week, this month or all time. A calendar glows brighter on the days you did more. Consistency is measured against the days you planned, never against a perfect week.
+A radar shows how balanced your life is. A calendar glows brighter on the days you did more. Consistency is measured against the days you planned, never a perfect week.
 
 MAKE IT YOURS
 Crisp pixel art in an aged parchment scroll theme. Premium unlocks four more, up to a glowing blue status window.
@@ -77,13 +80,15 @@ GENTLE BY DESIGN
 • One supportive evening reminder, skipped on days you've already played
 
 JOIN THE SECOND 100 (OPTIONAL)
-Sign in with Apple or Google to add friends, see each other's heroes and find out how rare each character is. The first 100 players get a founder number, forever. Your habits never leave your phone: only your username, level, party and collection are shared.
+Sign in with Apple or Google to add friends and see each other's heroes. The first 100 players get a founder number, forever. Your habits never leave your phone: only your username, level, party and collection are shared.
 
 EIGHT PATHS PREMIUM (OPTIONAL)
-Support the game and lore by upgrading to Premium, a monthly subscription:
+Support the game with Premium, a yearly or monthly subscription:
+• No level barriers in the Other World: go anywhere, at any level
 • 20 XP per habit, up to 60 a Path each day
 • Unlimited habits (free players keep up to 10)
-• 1★ characters twice as likely, and one redo per drop
+• 5★ characters twice as likely, and one redo per drop
+• Three special moves a day instead of one
 • Every theme
 The habit tracker itself is always free. Drop odds are shown in the app.
 
@@ -92,7 +97,7 @@ Play without an account and everything stays on your iPhone.
 
 Eight Paths is a habit game, not a medical or mental health service. If you're struggling, the app links to the 988 Suicide & Crisis Lifeline (US).
 
-Premium is an auto-renewing monthly subscription, charged to your Apple ID. It renews unless you cancel at least 24 hours before the end of the period, in your App Store account settings.
+Premium is an auto-renewing yearly or monthly subscription, charged to your Apple ID. It renews unless you cancel at least 24 hours before the end of the period, in your App Store account settings.
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://hezekiqh.github.io/eight-paths/privacy.html
 ```
