@@ -1,7 +1,7 @@
 import { router, useIsFocused } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
@@ -36,7 +36,6 @@ export default function TodayScreen() {
   const quests = useTodayQuests(today);
   const summary = useProgressSummary(today);
   const toggleQuest = useGameStore((s) => s.toggleQuest);
-  const skipQuest = useGameStore((s) => s.skipQuest);
   const completeTutorial = useGameStore((s) => s.completeTutorial);
   const setKeeperHold = useSession((s) => s.setKeeperHold);
 
@@ -93,25 +92,6 @@ export default function TodayScreen() {
       haptics.select();
       setBanner(null);
     }
-  };
-
-  // Only an unfinished quest can be skipped; a skip can't be taken back.
-  const onSkip = (questId: string, title: string) => {
-    haptics.tap();
-    Alert.alert(
-      `Skip "${title}" today?`,
-      "It's erased from today: no XP, and your streak is left alone. This can't be undone.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip for today',
-          style: 'destructive',
-          onPress: () => {
-            if (skipQuest(questId, today)) haptics.select();
-          },
-        },
-      ],
-    );
   };
 
   const closeLevelUp = useCallback(() => setLevelUp(null), []);
@@ -212,12 +192,15 @@ export default function TodayScreen() {
                 view={view}
                 showPath
                 onPress={() => onToggle(view.quest.id)}
-                onSkip={view.done ? undefined : () => onSkip(view.quest.id, view.quest.title)}
+                onHold={() => {
+                  haptics.tap();
+                  router.push({ pathname: '/habit/[id]', params: { id: view.quest.id } });
+                }}
               />
             </View>
           ))}
-        {!tutorial && quests.some((v) => !v.done) && (
-          <Text style={styles.skipHint}>{"Can't get to one today? Hold it to skip it."}</Text>
+        {!tutorial && quests.length > 0 && (
+          <Text style={styles.skipHint}>Hold a quest to see its stats, or to skip it today.</Text>
         )}
         {!tutorial && (
           <View style={styles.manage}>

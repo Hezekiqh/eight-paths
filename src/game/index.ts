@@ -17,3 +17,4 @@ export * from './objectives';
 export * from './calendar';
 export * from './habit-order';
 export * from './stats';
+export * from './habit-stats';
