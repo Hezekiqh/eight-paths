@@ -20,8 +20,23 @@ export type Scene = {
   lines: string[];
   /** Done when the scene ends, unless it ends in a choice. */
   outcome?: Outcome;
-  /** A decision at the end: each option has its own words and its own outcome. */
-  choices?: { label: string; lines: string[]; outcome: Outcome; deed?: 'good' | 'bad' }[];
+  /**
+   * A decision at the end: each option has its own words and its own outcome. `toThrone`: whoever takes the throne
+   * walks up to it (castle.ts toTheThrone) once the first `at` lines are said, and the rest follow.
+   */
+  choices?: {
+    label: string;
+    lines: string[];
+    outcome: Outcome;
+    deed?: 'good' | 'bad';
+    toThrone?: { who: 'you' | 'brannoc'; at: number };
+  }[];
+  /**
+   * The throne room's ending, played out in the hall (castle.ts): before line `guards` of `after` his guards come
+   * for Kaldor, and after it they lead him out; before line `fades`, Felix fades out where he stands (-1: he's not
+   * here to).
+   */
+  throne?: { guards: number; fades: number };
   /** A special moment (moments.ts): this party member steps out and stands beside you for it. */
   stepOut?: CharacterId;
   /**
@@ -53,12 +68,16 @@ export function winScene(
   switch (map) {
     case 'sleeping-keep':
       return {
+        // Brannoc has his say beside you (the room shows him, not just the text box)
+        stepOut: brannoc && !asBrannoc ? 'brannoc' : undefined,
         lines: [
-          'The last bearer slumps to the floor, snoring happily. Baron Plush blinks, and sits down on the rug beside them.',
+          'The last bearer slumps over, snoring happily, and goes in a puff of stuffing. Baron Plush blinks.',
           "BARON PLUSH: Oh. Oh, you really don't want to rest, do you?",
           ...(brannoc
             ? [
-                'Brannoc sits down heavily on the sofa. For a long moment, he says nothing.',
+                asBrannoc
+                  ? 'You look at the sofa for a long moment. You say nothing.'
+                  : 'Brannoc steps up beside you, and looks at the sofa for a long moment. He says nothing.',
                 "BRANNOC: Can I tell you something? I've been afraid my whole life. Every drill. Every fight. I thought if I slept long enough, it'd stop.",
                 'BARON PLUSH: And did it?',
                 'BRANNOC: No. It was just waiting for me when I woke up.',
@@ -102,8 +121,10 @@ export function winScene(
         'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
       ];
       const beaten = ['kaldor-beaten', 'kaldor-dethroned', 'kaldor-jailed', ...(throne.mean ? ['throne-mean'] : [])];
+      // the guards come for him before the first line, and lead him out after it (castle.ts)
       const jailed = [
-        'Two of his own guards take him by the arms. Neither of them is getting paid for it. They march him out, down to his own cells.',
+        'Two of his own guards take him by the arms. Neither of them is getting paid for it.',
+        'They march him out, down to his own cells.',
         'Far below, a cell door clangs.',
         // Gary left with the prisoners (dungeon.ts, CELLS_FREED): nobody's down there to see it
         ...(cellsEmpty
@@ -172,6 +193,19 @@ export function winScene(
             'By the old law, the warrior who beat the king takes the crown. You walk up the steps.',
             'You sit. The throne is cold, and far too big, and a hundred tagged weapons dig into your back.',
           ];
+      const after = [
+        'They pour from his sleeves and his collar and his eyes, out across the floor and up the pillars, and they are gone.',
+        'What is left is an old man. Just an old man, in a crown far too big for him.',
+        ...jailed,
+        ...felixGoes,
+        ...(brannoc && !asBrannoc
+          ? [
+              "BRANNOC: I can't believe you actually defeated him.",
+              "BRANNOC: The kingdom was a night's sleep from going to war. And now the nation is without a king.",
+              'BRANNOC: What do we do?',
+            ]
+          : ['The throne stands empty. The court is watching.']),
+      ];
       return {
         // Brannoc's father's throne: he steps out beside you for it
         stepOut: brannoc && !asBrannoc ? 'brannoc' : undefined,
@@ -188,25 +222,22 @@ export function winScene(
           'Then the shadows go out of him.',
         ],
         shadows: true,
-        after: [
-          'They pour from his sleeves and his collar and his eyes, out across the floor and up the pillars, and they are gone.',
-          'What is left is an old man. Just an old man, in a crown far too big for him.',
-          ...jailed,
-          ...felixGoes,
-          ...(brannoc && !asBrannoc
-            ? [
-                "BRANNOC: I can't believe you actually defeated him.",
-                "BRANNOC: The kingdom was a night's sleep from going to war. And now the nation is without a king.",
-                'BRANNOC: What do we do?',
-              ]
-            : ['The throne stands empty. The court is watching.']),
-        ],
+        after,
+        throne: {
+          guards: after.indexOf(jailed[0]),
+          fades: felix ? after.indexOf(felixGoes[felixGoes.length - 1]) : -1,
+        },
         choices: [
           ...(brannoc
             ? [
                 {
                   label: asBrannoc ? "Take back your father's throne." : 'Brannoc takes the throne.',
                   lines: [...brannocKing, ...both],
+                  // he walks up to it (you, walking as him) as the line says so
+                  toThrone: {
+                    who: asBrannoc ? ('you' as const) : ('brannoc' as const),
+                    at: brannocKing.findIndex((l) => /father's throne/.test(l)),
+                  },
                   outcome: {
                     flags: [
                       ...beaten,
@@ -224,6 +255,8 @@ export function winScene(
                 {
                   label: 'Take the throne yourself.',
                   lines: [...youKing, ...both],
+                  // up the steps, once you've said so
+                  toThrone: { who: 'you' as const, at: youKing.findIndex((l) => /You walk up the steps/.test(l)) + 1 },
                   outcome: { flags: [...beaten, 'you-king'] },
                 },
               ]),
@@ -368,4 +401,41 @@ export function partySplit(flags: string[]): { lines: string[]; leaving: Charact
     ],
     leaving: going.map((p) => p.id),
   };
+}
+
+/** How far below their places the party starts their walk up to the seal, in tiles. */
+const FINALE_WALK = 3;
+
+/**
+ * Who stands where at the last seal (author, Oct 7, 2026: "Your party hangs back a step, and lets you go first"):
+ * King Brannoc, if he's with you, beside you; everyone else (four at most) in a row a step behind, each walking up
+ * from further back, all facing the seal. You're at `you`, facing it; `open` says a tile is floor.
+ */
+export function finaleStage(
+  you: [number, number],
+  king: boolean,
+  others: readonly string[],
+  open: (x: number, y: number) => boolean,
+): { id: string; path: [number, number][]; face: number }[] {
+  const [x, y] = you;
+  const out: { id: string; path: [number, number][]; face: number }[] = [];
+  const taken = new Set([`${x},${y}`]);
+  const place = (id: string, spots: [number, number][]) => {
+    const at = spots.find(([sx, sy]) => open(sx, sy) && !taken.has(`${sx},${sy}`));
+    if (!at) return;
+    taken.add(at.join());
+    // up from behind, straight
+    let from = at[1];
+    while (from < at[1] + FINALE_WALK && open(at[0], from + 1)) from++;
+    out.push({ id, path: from === at[1] ? [at] : [[at[0], from], at], face: 1 });
+  };
+  if (king)
+    place('brannoc', [
+      [x + 1, y],
+      [x - 1, y],
+    ]);
+  // a step back, and out to either side
+  const row: [number, number][] = [0, 1, -1, 2, -2, 3].map((dx) => [x + dx, y + 2]);
+  for (const id of others.slice(0, 4)) place(id, row);
+  return out;
 }

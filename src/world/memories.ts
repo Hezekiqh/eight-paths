@@ -172,3 +172,21 @@ export function notYetLines(needed: string): string[] {
 
 /** Said at a memory's spot once it's been seen: it lives in the scroll now. */
 export const SEEN_LINES = ['Nothing stirs here now. What you saw is written in your Memories scroll.'];
+
+/** How the World looks under a memory's line: washed out in the past, gone dark for a moment, or back to now. */
+export type Shade = 'past' | 'dark' | null;
+
+/** Lines where the memory goes black (the school shut up; the shadows closing on the boy in the forest). */
+const DARK = ['…', 'Black.', 'They close.', "And that's all. That's all there is."];
+
+/**
+ * The shade under line `index` of a memory as it plays: the past, washed out, from its first line; dark for a moment
+ * where it says so; and the room as it is for the last line, which brings you back.
+ */
+export function memoryShade(m: Memory, index: number): Shade {
+  if (index >= m.lines.length - 1) return null;
+  return DARK.includes(m.lines[index]) ? 'dark' : 'past';
+}
+
+/** The forest's line where the shadows rise all round you (a dark puff on every side). */
+export const SHADOWS_RISE = /^Shadows\. In front\./;

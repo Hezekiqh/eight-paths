@@ -71,7 +71,7 @@ import { haptics } from '@/haptics';
 import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/world/maps';
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 import { cameoAt } from '@/world/step-aside';
-import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
+import { MARCH_ACTORS, MARCH_HEAD, fadeShown, marchPoses, marchVanished } from '@/world/march';
 import {
   BREACH_AT,
   FLASH_PEAK,
@@ -192,10 +192,23 @@ export type WorldSim = {
   focus: SharedValue<number[]>;
   /** Brannoc's Super Super Swing playing out (swing.ts SW_*). Empty: none. */
   swing: SharedValue<number[]>;
+  /**
+   * Puffs a cutscene asks for, [x, y, dark (0/1), …] in art pixels at the feet: the frame loop takes them. A dark one
+   * is a shadow coming or going (Kaldor's, castle.ts).
+   */
+  puffs: SharedValue<number[]>;
+  /** The fight's enemies aren't drawn yet: they haven't stepped out of the walls (the war hall's cue, moments.ts). */
+  hideFoes: SharedValue<boolean>;
+  /** One kind of enemy (ENEMY_KINDS index) not drawn yet, after the rest are out: -1 for none (the raised Warden). */
+  hideKind: SharedValue<number>;
   /** A cutscene draws you some other way (out cold on the sand, say): the lead isn't drawn. */
   hideLead: SharedValue<boolean>;
   /** A cutscene shakes the screen: how hard, in art pixels (the frame loop takes it, and sets it back to 0). */
   quake: SharedValue<number>;
+  /** A wind through the room (the finale's banners all lifting at once): 0 still, up to 1; it dies away by itself. */
+  wind: SharedValue<number>;
+  /** Light out of the `glow` rect (the last seal loosening): 0 none, up to 1. */
+  glowing: SharedValue<number>;
 };
 
 /** sim.focus: follow whoever leads the march. */
@@ -238,8 +251,13 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     walkTo: useSharedValue<number[]>([]),
     focus: useSharedValue<number[]>([]),
     swing: useSharedValue<number[]>([]),
+    puffs: useSharedValue<number[]>([]),
+    hideFoes: useSharedValue(false),
+    hideKind: useSharedValue(-1),
     hideLead: useSharedValue(false),
     quake: useSharedValue(0),
+    wind: useSharedValue(0),
+    glowing: useSharedValue(0),
   };
 }
 
@@ -320,9 +338,10 @@ type Props = {
   onWin?: () => void;
   /**
    * Someone leaving with a flourish (Felix): they laugh, shoulders shaking, then dash
-   * east off the map, lightning fast. `onExited` runs once they're gone.
+   * east off the map, lightning fast. `onExited` runs once they're gone. `fade`: instead they flicker
+   * out where they stand, into nothing at all (Felix, once Kaldor's beaten).
    */
-  exit?: { id: string } | null;
+  exit?: { id: string; fade?: boolean } | null;
   /** Who you're talking to, by name: someone asleep at their post (Gary) is awake for it. */
   talkingTo?: string | null;
   onExited?: () => void;
@@ -341,6 +360,12 @@ type Props = {
   breach?: [number, number] | null;
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
+  /** Tiles (y * width + x) a scene has just opened (a gate, a bridge): walkable from now, without coming back in. */
+  opened?: number[];
+  /** Banners standing in the room (tiles): they lift and stream in a wind (sim.wind). */
+  banners?: { x: number; y: number }[];
+  /** Where light comes from when sim.glowing is up (art pixels): the last seal. */
+  glow?: { x: number; y: number; w: number; h: number } | null;
 };
 
 /** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
@@ -370,6 +395,14 @@ function sleeperAt([x, y]: [number, number], lying: boolean, what: 'zs' | 'snot'
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
 const EXIT_LAUGH = 1.4;
 const EXIT_SPEED = 520;
+/** A fade out (seconds), and the time an exit is set to once it's over, so they stay gone. */
+const EXIT_FADE = 1.6;
+const EXIT_GONE = 999;
+/** A shadow's puff (seconds): slower and bigger than a fallen enemy's. */
+const DARK_PUFF = 0.7;
+/** Where a field banner's painted flag ends (its free edge) and its top, in art pixels within its tile. */
+const BANNER_EDGE_X = 13;
+const BANNER_TOP_Y = 3;
 /** "HA" in a 3×5 pixel font, as [x, y] cells. */
 const HA = [
   ...['X.X', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : []))),
@@ -442,6 +475,9 @@ export function WorldView({
   raised = [],
   resume = null,
   breach = null,
+  opened = [],
+  banners = [],
+  glow = null,
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
@@ -450,6 +486,15 @@ export function WorldView({
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.
   const solid = useSharedValue<number[]>(map.solid);
+  const openedKey = opened.join(',');
+  useEffect(() => {
+    if (opened.length === 0) return;
+    const next = solid.get().slice();
+    for (const t of opened) next[t] = 0;
+    solid.set(next);
+    // only when the set of tiles changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openedKey, solid]);
   const mapWidth = map.width;
   const mapHeight = map.height;
   const rocks = useSharedValue<number[]>(boulders);
@@ -512,6 +557,8 @@ export function WorldView({
   const whiteFor = useSharedValue<number[]>(map.enemies.map(() => 0));
   /** Puffs where enemies fell: [x, y, time left]. */
   const puffs = useSharedValue<number[][]>([]);
+  /** Dark ones, where a shadow came or went (a cutscene's): [x, y, time left]. */
+  const darkPuffs = useSharedValue<number[][]>([]);
   /** A blow shrugged off (Kaldor, guarded): a spark [x, y, time left]. */
   const sparks = useSharedValue<number[]>([0, 0, 0]);
   /** A torch guttering: the room dims for a moment (seconds left); and how many have gone out for good (war hall). */
@@ -523,10 +570,13 @@ export function WorldView({
   const exitRow = useSharedValue(-1);
   const exitT = useSharedValue(-1);
   const exitAt = useSharedValue<number[]>([0, 0, 0]);
+  const exitFades = !!exit?.fade;
   useEffect(() => {
     exitRow.set(exit ? sim.npcIds.indexOf(exit.id) : -1);
     exitT.set(exit ? 0 : -1);
   }, [exit, sim.npcIds, exitRow, exitT]);
+  /** A march actor laughing (march.ts MF_LAUGH): [x, y, seconds in], for the HAs; t < 0: nobody. */
+  const marchLaugh = useSharedValue<number[]>([0, 0, -1]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   // [sprite row, row in sim.npcWalk] for everyone still here.
   // someone asleep at their post is drawn eyes shut (their "asleep" walker), unless you're talking to them
@@ -829,6 +879,27 @@ export function WorldView({
             .filter((p) => p[2] > 0),
         );
       }
+      if (darkPuffs.get().length > 0) {
+        darkPuffs.set(
+          darkPuffs
+            .get()
+            .map((p) => [p[0], p[1], p[2] - realDt])
+            .filter((p) => p[2] > 0),
+        );
+      }
+      // puffs a cutscene asked for
+      const asked = sim.puffs.get();
+      if (asked.length >= 3) {
+        const light = puffs.get().slice();
+        const dark = darkPuffs.get().slice();
+        for (let k = 0; k + 2 < asked.length; k += 3) {
+          if (asked[k + 2] === 1) dark.push([asked[k], asked[k + 1], DARK_PUFF]);
+          else light.push([asked[k], asked[k + 1], FEEL.puff]);
+        }
+        puffs.set(light.slice(-8));
+        darkPuffs.set(dark.slice(-8));
+        sim.puffs.set([]);
+      }
 
       // Boulders slide toward their tiles.
       const rp = rockPos.get();
@@ -890,6 +961,8 @@ export function WorldView({
       }
       bob.set(Math.floor(info.timestamp / 350) % 2);
       clock.set(clock.get() + realDt);
+      // a wind dies away slowly; the seal's light holds while a scene keeps it up
+      if (sim.wind.get() > 0) sim.wind.set(Math.max(0, sim.wind.get() - realDt * 0.05));
       if (exitT.get() >= 0) exitT.set(exitT.get() + realDt);
 
       // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
@@ -902,6 +975,20 @@ export function WorldView({
         const [fx, fy] = wandererFeet(w);
         // the one leaving: a laugh (a shake and a hop, facing you), then a dash east
         const et = npcs[i][1] === exitRow.get() ? exitT.get() : -1;
+        // fading out where they stand: a flicker, fewer frames shown the further it goes, then a soft puff
+        if (et >= 0 && exitFades) {
+          // gone: not drawn again (the room moves them off for good once it hears)
+          if (et >= EXIT_GONE) continue;
+          if (et >= EXIT_FADE) {
+            exitT.set(EXIT_GONE);
+            sim.puffs.set([...sim.puffs.get(), fx, fy, 0]);
+            scheduleOnRN(exited);
+            continue;
+          }
+          if (fadeShown(et / EXIT_FADE, Math.floor(et * 30)))
+            ents.push([npcs[i][0], w[W_FACING], 0, fx, fy, 0, npcs[i][2]]);
+          continue;
+        }
         if (et >= 0 && et < EXIT_LAUGH) {
           const beat = Math.floor(et * 12);
           const lx = fx + (beat % 2 === 1 ? 1 : -1);
@@ -926,9 +1013,12 @@ export function WorldView({
       const now = fight.get();
       const all = now.enemies;
       const shadows: number[] = [];
+      // not out of the walls yet (a cutscene's cue brings them in)
+      const foesHidden = sim.hideFoes.get();
+      const kindHidden = sim.hideKind.get();
       for (let i = 0; i < all.length; i++) {
         const e = all[i];
-        if (e[E_ALIVE] === 0) continue;
+        if (e[E_ALIVE] === 0 || foesHidden || e[E_KIND] === kindHidden) continue;
         // the warden in Brannoc's swing is drawn by it (below), flying
         if (sw.length > 0 && e[E_KIND] === WARDEN_KIND) continue;
         // after the fight, in a cutscene pointing the camera somewhere (Brannoc beside the warden), they look there
@@ -968,11 +1058,20 @@ export function WorldView({
       let leadWalking = false;
       let marchLead: number[] | null = null;
       const asleep: number[] = [];
+      let laughAt: number[] = [0, 0, -1];
       if (march.length > MARCH_HEAD) {
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
-        for (const [row, facing, frame, x, y, walking, snot, gone] of poses) {
+        // anyone who's gone in a puff at the end of their path (Kaldor's shadows)
+        const vanished = marchVanished(march, march[0], t);
+        if (vanished.length > 0) {
+          const dark = darkPuffs.get().slice();
+          for (let k = 0; k + 1 < vanished.length; k += 2) dark.push([vanished[k], vanished[k + 1], DARK_PUFF]);
+          darkPuffs.set(dark.slice(-8));
+        }
+        for (const [row, facing, frame, x, y, walking, snot, gone, laughing] of poses) {
           if (gone === 1) continue;
+          if (laughing === 1 && laughAt[2] < 0) laughAt = [x, y, t];
           if (row >= 0 && marchLead === null) marchLead = [x, y];
           // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
           if (row >= 0 && facing >= LYING) {
@@ -1013,6 +1112,7 @@ export function WorldView({
         }
       }
       if (asleep.length > 0 || marchSleep.get().length > 0) marchSleep.set(asleep);
+      if (laughAt[2] >= 0 || marchLaugh.get()[2] >= 0) marchLaugh.set(laughAt);
       // The camera follows the lead and stops at the map's edges (or centres a small map). In a cutscene it glides
       // to what the scene points at (sim.focus): someone on the ground, the march's lead, a warden in flight.
       const focus = sim.focus.get();
@@ -1062,8 +1162,9 @@ export function WorldView({
         if (pose[6] === 1) ents.push([cameo[0], cameo[7], pose[5], pose[3], pose[4], 0, 1]);
       }
       // the lead goes last so they're drawn on top of a follower standing in the same spot;
-      // just hurt, they blink until they can be hurt again; striking, they lean into the blow
-      const blink = now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
+      // just hurt, they blink until they can be hurt again; striking, they lean into the blow. (Not once the fight's
+      // won, or held for a scene: frozen mid-blink, they'd vanish for the whole of it.)
+      const blink = !frozen && !now.won && now.mercy > 0 && now.roll === 0 && Math.floor(now.mercy * 14) % 2 === 0;
       if (!blink && !sim.hideLead.get()) {
         const lean = now.flash[3] > 0 && attack?.kind === 'melee' ? 2 : 0;
         const f = sim.facing.get();
@@ -1121,6 +1222,71 @@ export function WorldView({
         const r = 3 + 11 * p;
         path.addRect(
           Skia.XYWHRect(Math.round(x + Math.cos(a) * r), Math.round(y - 8 + Math.sin(a) * r * 0.8), size, size),
+        );
+      }
+    }
+    return path;
+  });
+  // Banners in a wind: from the top of each pole a cloth lifts and streams out sideways, rippling, as long as it
+  // blows (sim.wind), and hangs again as it dies.
+  const streamers = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.wind.get();
+    if (w <= 0.02) return path;
+    const t = clock.get();
+    for (let i = 0; i < banners.length; i++) {
+      const { x, y } = banners[i];
+      // on from the flag's free edge (the painted flag hangs from x+5 to x+13, y+3 to y+14)
+      const px = x * TILE + BANNER_EDGE_X;
+      const py = y * TILE + BANNER_TOP_Y;
+      const len = Math.round(3 + 9 * w);
+      for (let k = 0; k < len; k++) {
+        const wave = Math.round(Math.sin(t * 9 - k * 0.8 + i) * (0.5 + w * 1.5));
+        // the cloth rises with the wind: from hanging down to straight out
+        const sag = Math.round((1 - w) * k * 0.8);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave, 1, Math.max(2, 10 - k)));
+      }
+    }
+    return path;
+  });
+  const streamerShade = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.wind.get();
+    if (w <= 0.02) return path;
+    const t = clock.get();
+    for (let i = 0; i < banners.length; i++) {
+      const { x, y } = banners[i];
+      const px = x * TILE + BANNER_EDGE_X;
+      const py = y * TILE + BANNER_TOP_Y;
+      const len = Math.round(3 + 9 * w);
+      // a fold along the bottom, and a darker hem
+      for (let k = 0; k < len; k++) {
+        const wave = Math.round(Math.sin(t * 9 - k * 0.8 + i) * (0.5 + w * 1.5));
+        const sag = Math.round((1 - w) * k * 0.8);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave + Math.max(2, 10 - k) - 1, 1, 1));
+        if (k % 3 === 1) path.addRect(Skia.XYWHRect(px + k, py + sag + wave + 2, 1, Math.max(1, 5 - k)));
+      }
+    }
+    return path;
+  });
+
+  // A shadow coming or going: a dark smoke, swelling and rising, blobs thinning as it spreads.
+  const darkPuffPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const [x, y, t] of darkPuffs.get()) {
+      const p = 1 - t / DARK_PUFF;
+      const size = Math.max(1, Math.round(5 * (1 - p)));
+      if (p < 0.35) path.addRect(Skia.XYWHRect(Math.round(x - 5), Math.round(y - 16 + p * 10), 10, 14));
+      for (let k = 0; k < 12; k++) {
+        const a = (k * Math.PI) / 6 + (k % 2) * 0.3;
+        const r = (k % 2 === 0 ? 4 : 7) + 14 * p;
+        path.addRect(
+          Skia.XYWHRect(
+            Math.round(x + Math.cos(a) * r - size / 2),
+            Math.round(y - 10 - 8 * p + Math.sin(a) * r * 0.7 - size / 2),
+            size,
+            size,
+          ),
         );
       }
     }
@@ -1247,17 +1413,23 @@ export function WorldView({
   // A laugh's HA popping out over the head, then the dash's dust and speed streaks.
   const exitPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
-    const t = exitT.get();
-    if (t < 0) return path;
-    const [x, y, d] = exitAt.get();
-    if (t < EXIT_LAUGH) {
+    const ha = (x: number, y: number, t: number, loop: boolean) => {
       for (let k = 0; k < 3; k++) {
-        const age = t - k * 0.35;
+        const age = (loop ? t % 1.05 : t) - k * 0.35;
         if (age < 0 || age > 0.9) continue;
         const ox = Math.round(x + (k % 2 === 1 ? 6 : -10));
         const oy = Math.round(y - 30 - age * 10);
         for (let r = 0; r < HA.length; r++) path.addRect(Skia.XYWHRect(ox + HA[r][0], oy + HA[r][1], 1, 1));
       }
+    };
+    // someone in a march laughing while they wait to go (Felix, as the guards close in)
+    const ml = marchLaugh.get();
+    if (ml[2] >= 0) ha(ml[0], ml[1], ml[2], true);
+    const t = exitT.get();
+    if (t < 0 || exitFades) return path;
+    const [x, y, d] = exitAt.get();
+    if (t < EXIT_LAUGH) {
+      ha(x, y, t, false);
       return path;
     }
     // dust where they set off, for a moment
@@ -1495,7 +1667,7 @@ export function WorldView({
             <Rect x={p.x * TILE + 10} y={p.y * TILE + TILE - 3} width={4} height={3} color="#5A524C" />
           </Group>
         ))}
-        {drawbridge && <Drawbridge {...drawbridge} />}
+        {drawbridge && mapImage && <Drawbridge {...drawbridge} />}
         {raised.map((p) => (
           <RaisedPlanks key={`r${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
         ))}
@@ -1577,6 +1749,10 @@ export function WorldView({
         {ambience.motes && (
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
+        <Path path={darkPuffPath} color="#160C20" opacity={0.85} />
+        {banners.length > 0 && <Path path={streamers} color="#B8322A" />}
+        {banners.length > 0 && <Path path={streamerShade} color="#7A1E1A" />}
+        {glow && <Glow glow={glow} glowing={sim.glowing} clock={clock} />}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         <Path path={zPath} color="#DCE8FF" opacity={0.85} />
         <Path path={rimPath} color="#4E9A6A" />
@@ -1733,6 +1909,32 @@ function Boulder({ index, positions }: { index: number; positions: SharedValue<n
       <Oval x={1} y={2} width={13} height={11} color="#4A4440" />
       <Oval x={3} y={4} width={5} height={3} color="#625A54" />
     </Group>
+  );
+}
+
+/**
+ * Light out of the last seal as it loosens: a hairline crack of white down its middle, and a soft gold glow that
+ * breathes around it, as strong as `glowing` says.
+ */
+function Glow({
+  glow,
+  glowing,
+  clock,
+}: {
+  glow: { x: number; y: number; w: number; h: number };
+  glowing: SharedValue<number>;
+  clock: SharedValue<number>;
+}) {
+  const halo = useDerivedValue(() => glowing.get() * (0.35 + 0.1 * Math.sin(clock.get() * 3)));
+  const crack = useDerivedValue(() => Math.min(1, glowing.get() * 1.4));
+  const r = useDerivedValue(() => Math.max(glow.w, glow.h) * (0.6 + 0.25 * glowing.get()));
+  const cx = glow.x + glow.w / 2;
+  const cy = glow.y + glow.h / 2;
+  return (
+    <>
+      <Circle cx={cx} cy={cy} r={r} color="#FFE9A8" opacity={halo} />
+      <Rect x={Math.round(cx)} y={glow.y + 2} width={1} height={glow.h - 4} color="#FFFFFF" opacity={crack} />
+    </>
   );
 }
 

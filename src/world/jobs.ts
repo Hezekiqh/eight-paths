@@ -176,3 +176,14 @@ export function openPatches(map: WorldMap, flags: string[]): { x: number; y: num
   map.tiles.forEach((row, y) => [...row].forEach((c, x) => letters.has(c) && out.push({ x, y })));
   return out;
 }
+
+/**
+ * What a room's pressure plates open once `flag` is set, as tiles: the bridge they bring up out of the river, or the
+ * way through they unbar (a gate, drawn open). Where the camera looks as they go down.
+ */
+export function platesOpen(map: WorldMap, flag: string): { x: number; y: number }[] {
+  if (!map.raises) return openPatches(map, [flag]);
+  const out: { x: number; y: number }[] = [];
+  map.tiles.forEach((row, y) => [...row].forEach((c, x) => c === map.raises && out.push({ x, y })));
+  return out;
+}
