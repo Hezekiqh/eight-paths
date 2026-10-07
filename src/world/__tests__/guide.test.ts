@@ -24,7 +24,7 @@ describe('the next goal', () => {
   it('points a new player at the Archive door', () => {
     const goal = nextGoal('archive', [], { total: 0, byPath: emptyDimensionRecord(0), flags: [] });
     expect(goal.mark?.exitId).toBe('archive-door');
-    expect(goal.line).toBe('Go through the great door');
+    expect(goal.line).toMatch(/^Level up once: /);
   });
 
   it('marks Barnaby in Warrior City until you are on the bill', () => {
