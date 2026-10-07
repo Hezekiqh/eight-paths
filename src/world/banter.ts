@@ -82,6 +82,34 @@ export const BANTER: Record<string, Banter[]> = {
   'millbrook:jory': [{ who: 'moss', lines: ['MOSS: Tuft likes it here. Tuft likes anywhere with turnips.'] }],
   'millbrook:hoot': [{ who: 'oren', lines: ["OREN: He's right.", 'OREN: …Drink some water.'] }],
 
+  // ---- the Cull Road (author, Oct 7, 2026): the road the unfit children are walked down at twelve.
+  // Pip and Moss on the children, Ysolde on the ledger of it, and Brannoc, for once, says very little.
+  'cull-road:heights': [
+    {
+      who: 'pip',
+      with: 'moss',
+      lines: [
+        'PIP: Hal, twelve and a half. He made them write the half.',
+        'MOSS: They measured them like calves at market.',
+        "PIP: …I'm writing Hal a song. A tall one.",
+        'MOSS: Tuft was the runt of his litter. I kept him anyway.',
+      ],
+    },
+    { who: 'pip', lines: ["PIP: Hal, twelve and a half. He made them write the half. I'm writing Hal a song. A tall one."] },
+    { who: 'moss', lines: ['MOSS: They measured them like calves at market.', 'MOSS: Tuft was the runt. I kept him anyway.'] },
+  ],
+  'cull-road:mile-post': [{ who: 'brannoc', lines: ['BRANNOC: …Let us walk on.'] }],
+  'cull-road:orders': [
+    {
+      who: 'ysolde',
+      lines: [
+        'YSOLDE: Fed, housed, family moved to the city. Against it: no rations, no coin, no coming back.',
+        "YSOLDE: That isn't a law. It's a ledger. Strong children in one column, everyone else written off.",
+        "YSOLDE: I've seen smugglers keep kinder books.",
+      ],
+    },
+  ],
+
   // ---- the Deserters' Camp and the Buried Barracks
   'deserters-camp:holt': [
     {

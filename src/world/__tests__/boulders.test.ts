@@ -68,6 +68,68 @@ describe('the Drill Yard puzzle', () => {
   });
 });
 
+// The Cull Road's ferry-bridge (author, Oct 7, 2026): a boulder on each plate in the bank brings it up.
+describe("the Cull Road's ferry-bridge", () => {
+  const road = MAPS['cull-road'];
+  const at = (x: number, y: number) => y * road.width + x;
+
+  it('has two boulders and two plates, and the bridge needs the plates down', () => {
+    expect(road.boulders).toHaveLength(2);
+    expect(road.plates).toHaveLength(2);
+    const bridge = EXITS.find((e) => e.id === 'cull-camp')!;
+    expect(JSON.stringify(bridge.needs)).toContain(road.platesFlag!);
+    expect(bridge.tile).toBe(road.raises);
+  });
+
+  it.each(['city-north', 'camp-road'])('can be solved coming in by %s', (way) => {
+    let solid = road.solid;
+    let boulders = road.boulders;
+    const arrival = EXITS.find((e) => e.id === way)!.to!;
+    expect(arrival.map).toBe('cull-road');
+    const canReach = (x: number, y: number) => {
+      const seen = new Set<number>();
+      const queue = [at(arrival.x, arrival.y)];
+      while (queue.length > 0) {
+        const t = queue.pop()!;
+        if (seen.has(t) || solid[t]) continue;
+        seen.add(t);
+        const tx = t % road.width;
+        if (tx > 0) queue.push(t - 1);
+        if (tx < road.width - 1) queue.push(t + 1);
+        if (t >= road.width) queue.push(t - road.width);
+        if (t < road.width * (road.height - 1)) queue.push(t + road.width);
+      }
+      return seen.has(at(x, y));
+    };
+    const push = (from: [number, number], dx: number, dy: number) => {
+      const i = boulders.indexOf(at(...from));
+      expect(i).not.toBe(-1);
+      expect([from, dx, dy, canReach(from[0] - dx, from[1] - dy)]).toEqual([from, dx, dy, true]);
+      const next = pushBoulder(solid, road.width, road.height, boulders, i, dx, dy);
+      expect(next).not.toBeNull();
+      solid = next!.solid;
+      boulders = next!.boulders;
+    };
+    // The north boulder: down twice, then right three times onto the north plate.
+    push([29, 2], 0, 1);
+    push([29, 3], 0, 1);
+    for (let x = 29; x < 32; x++) push([x, 4], 1, 0);
+    // The south boulder: up once, then right four times onto the south plate.
+    push([28, 10], 0, -1);
+    for (let x = 28; x < 32; x++) push([x, 9], 1, 0);
+    expect(platesCovered(road.plates, boulders)).toBe(true);
+    // ...and the road to the bridge is still clear, with the boulders where they rest once solved.
+    expect(canReach(32, 6)).toBe(true);
+  });
+
+  it('keeps the road clear once solved, with each boulder sat on its plate', () => {
+    const solid = road.solid.slice();
+    for (const b of road.boulders) solid[b] = 0;
+    for (const p of road.plates) solid[p] = 1;
+    for (let x = 1; x <= 32; x++) expect([x, solid[at(x, 6)] + solid[at(x, 7)]]).toEqual([x, 0]);
+  });
+});
+
 describe('pushing a boulder by walking into it', () => {
   const yard = MAPS['barracks-yard'];
   const at = (x: number, y: number) => y * yard.width + x;

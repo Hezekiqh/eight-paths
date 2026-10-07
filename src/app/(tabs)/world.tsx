@@ -604,6 +604,11 @@ function World({
     [map, liveFlags],
   );
   const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  // A bridge the plates bring up out of the river (the Cull Road's ferry-bridge), up for good once they're down.
+  const raised = useMemo(() => {
+    if (!map.raises || !map.platesFlag || !liveFlags.includes(map.platesFlag)) return [];
+    return tilesOf(map, [map.raises]).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
+  }, [map, liveFlags]);
   const husks = useMemo(() => brokenCocoons(map.id, liveFlags), [map, liveFlags]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
@@ -1330,7 +1335,7 @@ function World({
       facing: FACINGS[sim.facing.get()],
     };
     setDialogue({
-      lines: [
+      lines: map.platesLines ?? [
         'With a clank, all three plates sink at once.',
         'Chains draw taut. Across the yard, the gate grinds up into the dark.',
       ],
@@ -1788,6 +1793,7 @@ function World({
         ambience={ambience}
         flames={flames}
         drawbridge={drawbridge}
+        raised={raised}
         resume={resumeFight}
         fightRef={fightRef}
         sealed={sealed}

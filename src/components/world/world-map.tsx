@@ -51,6 +51,8 @@ const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
   'barracks-hall': { x: 0.88, y: 0.4 },
   'broken-watch': { x: 0.1, y: 0.56 },
   'deserters-camp': { x: 0.88, y: 0.56 },
+  // the Cull Road (author, Oct 7, 2026): out of Warrior City and round to the camp
+  'cull-road': { x: 0.88, y: 0.72 },
   'field-of-banners': { x: 0.1, y: 0.72 },
   'courier-road': { x: 0.3, y: 0.72 },
   'felix-maze': { x: 0.5, y: 0.72 },

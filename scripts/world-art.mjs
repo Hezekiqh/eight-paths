@@ -1420,6 +1420,102 @@ Object.assign(DUNGEON_ART, mineArt({ box, put, ellipse, hash, wall: (g, x, y, m)
     }
 }
 
+// The Cull Road (author, Oct 7, 2026): a fast brown river, the ferry-bridge sunk in it on its chains,
+// two plates in the bank, the deserters' palisade with its gate smashed in, reeds, milestones and a
+// child's shoe. Named keys (the map's `art` points its letters at them), so no letter is taken.
+{
+  const RIVER = ['#5A4E3A', '#544834', '#605440'];
+  const isWater = (c) => c === '~' || c === '=';
+  const river = (g, x, y, m) => {
+    for (let j = 0; j < TILE; j++)
+      for (let i = 0; i < TILE; i++) {
+        let c = RIVER[Math.floor(hash(Math.floor((x + i) / 4), Math.floor((y + j) / 6), 91) * 3)];
+        // streaks running downstream (south), fast
+        if ((x + i * 3 + (y + j)) % 19 === 0 || hash(x + i, Math.floor((y + j) / 4), 92) < 0.03) c = '#8A7C60';
+        put(g, x + i, y + j, c);
+      }
+    // muddy banks
+    if (!isWater(m.at(-1, 0))) {
+      box(g, x, y, 3, TILE, O.soilDark);
+      box(g, x + 3, y, 1, TILE, '#3A3024');
+    }
+    if (!isWater(m.at(1, 0))) {
+      box(g, x + 13, y, 3, TILE, O.soilDark);
+      box(g, x + 12, y, 1, TILE, '#3A3024');
+    }
+  };
+  Object.assign(OUTDOOR_ART, {
+    'cull-river': river,
+    'cull-ferry'(g, x, y, m) {
+      // The ferry-bridge, sunk just under the water: dim planks, and the broken pilings sticking up.
+      river(g, x, y, m);
+      for (let i = 1; i < TILE; i += 4) box(g, x + i, y + 1, 2, 14, '#4A3E2C');
+      if (m.at(0, -1) !== '=') {
+        box(g, x + 6, y, 3, 4, O.trunkDark);
+        box(g, x + 6, y, 3, 1, O.trunk);
+      }
+      if (m.at(0, 1) !== '=') {
+        box(g, x + 6, y + 12, 3, 4, O.trunkDark);
+        box(g, x + 6, y + 12, 3, 1, O.trunk);
+      }
+      // a chain, slack, running back to the bank
+      if (m.at(-1, 0) !== '=') for (let i = 0; i < 6; i += 2) put(g, x + i, y + 7 + (i % 4 ? 1 : 0), '#7A7A80');
+    },
+    'cull-plate'(g, x, y) {
+      // An iron plate set in the mud, a chain running off it to the river.
+      box(g, x + 1, y + 2, 14, 12, O.soilDark);
+      box(g, x + 3, y + 4, 10, 8, '#4A4A50');
+      box(g, x + 3, y + 4, 10, 1, '#6A6A72');
+      box(g, x + 7, y + 7, 2, 2, '#2A2A30');
+      for (let i = 13; i < TILE; i += 2) put(g, x + i, y + 8, '#7A7A80');
+    },
+    'cull-palisade'(g, x, y) {
+      // Sharpened stakes, side by side, lashed to a crossbeam.
+      for (let i = 1; i < TILE; i += 5) {
+        box(g, x + i, y + 3, 4, 13, O.trunk);
+        box(g, x + i + 3, y + 3, 1, 13, O.trunkDark);
+        box(g, x + i + 1, y + 1, 2, 2, O.trunk);
+        put(g, x + i + 1, y, O.rail);
+      }
+      box(g, x, y + 8, TILE, 2, O.trunkDark);
+    },
+    'cull-gatepost'(g, x, y, m) {
+      // A thick gatepost, and the gate hanging off it by one hinge, its planks splintered.
+      box(g, x + 5, y, 6, TILE, O.trunk);
+      box(g, x + 10, y, 1, TILE, O.trunkDark);
+      box(g, x + 6, y, 4, 1, O.rail);
+      const down = m.at(0, 1) === ',';
+      for (let k = 0; k < 4; k++) box(g, x + 1 + k * 3, down ? y + 10 + k : y + 2 + k, 2, 5, '#6A5034');
+    },
+    'cull-reeds'(g, x, y) {
+      for (let i = 0; i < 9; i++) {
+        const bx = x + 1 + Math.floor(hash(x, y, i + 60) * 14);
+        const h = 8 + Math.floor(hash(x, y, i + 61) * 6);
+        box(g, bx, y + 15 - h, 1, h, i % 3 ? O.blade : '#A8904A');
+        if (i % 3 === 0) box(g, bx, y + 15 - h, 1, 3, '#6A4A2A');
+      }
+    },
+    'cull-milestone'(g, x, y) {
+      // A squat milestone, rounded on top, with a line of small carving.
+      ellipse(g, x + 8, y + 14, 6, 2, O.grassDark);
+      box(g, x + 4, y + 5, 8, 10, O.stone);
+      ellipse(g, x + 8, y + 5, 4, 3, O.stone);
+      box(g, x + 4, y + 5, 2, 10, O.stoneLight);
+      box(g, x + 6, y + 7, 4, 1, O.stoneDark);
+      box(g, x + 6, y + 10, 3, 1, O.stoneDark);
+      box(g, x + 6, y + 12, 4, 1, O.stoneDark);
+    },
+    'cull-shoe'(g, x, y) {
+      // One small shoe, laces still tied.
+      box(g, x + 4, y + 10, 8, 3, '#6A4428');
+      box(g, x + 4, y + 8, 4, 2, '#6A4428');
+      box(g, x + 4, y + 13, 9, 1, O.trunkDark);
+      put(g, x + 6, y + 8, '#E8E0D0');
+      put(g, x + 7, y + 9, '#E8E0D0');
+    },
+  });
+}
+
 /** Kaldor's floors: big squares of black and dark grey marble, veined, with a soft sheen. */
 function marbleAt(x, y) {
   const sq = (Math.floor(x / 16) + Math.floor(y / 16)) % 2;
@@ -3119,6 +3215,7 @@ const MAPS = [
   'millbrook',
   'waystation',
   'deserters-camp',
+  'cull-road',
   'barracks-hall',
   'barracks-armoury',
   'officers-mess',

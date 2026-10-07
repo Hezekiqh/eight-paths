@@ -84,6 +84,9 @@ export const WHOLE_PARTY: Requirement[] = (Object.keys(WHERE) as CharacterId[]).
   hint: WHERE[id],
 }));
 
+/** Set once a boulder sits on each plate by the Cull Road's river: the ferry-bridge is up for good. */
+export const CULL_FERRY = 'cull-ferry';
+
 /** Never locked. */
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
@@ -178,12 +181,46 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
+  // The Cull Road (author, Oct 7, 2026), between Warrior City and the deserters' camp: the road the
+  // unfit children are walked down at twelve. Tithe-takers on it, shadows at the camp's broken gate,
+  // and a ferry-bridge sunk in the river that only rises with a boulder on each plate in the bank.
+  // Listed before the camp's own ways, so the guide asks for the bridge before the fort in the hill.
+  {
+    id: 'cull-camp',
+    from: 'cull-road',
+    tile: '=',
+    label: 'The ferry-bridge',
+    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    needs: {
+      // in an "all" so the bridge isn't drawn as a hole once it's up: the game draws it raised (maps.ts raises)
+      kind: 'all',
+      of: [
+        {
+          kind: 'flag',
+          flag: CULL_FERRY,
+          label: 'Raise the ferry-bridge',
+          hint: 'Two plates in the bank, chained to it. Something heavy on each.',
+        },
+      ],
+    },
+    walk: true,
+  },
+  {
+    id: 'cull-city',
+    from: 'cull-road',
+    tile: '<',
+    label: 'The road back to the city',
+    to: { map: 'warrior-city', x: 31, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'camp-road',
     from: 'deserters-camp',
     tile: '<',
     label: 'The road west',
-    to: { map: 'warrior-city', x: 31, y: 2, facing: 'down' },
+    to: { map: 'cull-road', x: 31, y: 6, facing: 'left' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -1008,8 +1045,8 @@ export const EXITS: Exit[] = [
     walk: true,
   },
   // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Kaloseum at its heart, the
-  // castle road north (through the camp, the barracks and on to Kaldor), a bridge east to the Mage
-  // kingdom and a road south to the old mines (both still being built).
+  // castle road north (down the Cull Road, through the camp, the barracks and on to Kaldor), a
+  // bridge east to the Mage kingdom and a road south to the old mines (both still being built).
   {
     id: 'city-maze',
     from: 'warrior-city',
@@ -1025,7 +1062,7 @@ export const EXITS: Exit[] = [
     from: 'warrior-city',
     tile: '^',
     label: 'The road north',
-    to: { map: 'deserters-camp', x: 1, y: 7, facing: 'right' },
+    to: { map: 'cull-road', x: 1, y: 6, facing: 'right' },
     needs: { kind: 'overall', level: NORTH_ROAD_LEVEL },
     walk: true,
   },
