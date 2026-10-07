@@ -1,6 +1,6 @@
 // How fast the Other World plays (author, Oct 7, 2026: fast readers shouldn't wait on the
-// dialogue). Scales how fast lines type out and how fast the scripted walks go; fights and
-// walking about keep their own pace.
+// dialogue). Scales how fast lines type out, how fast you walk about (Oct 7: 2× a little absurd,
+// but still easy to steer) and how fast the scripted walks go. Fights keep the pace they're tuned to.
 
 export type GameSpeed = 'slow' | 'normal' | 'fast';
 
@@ -15,9 +15,9 @@ export const SPEEDS = [
 export const SPEED_RATE: Record<GameSpeed, number> = { slow: 0.5, normal: 1, fast: 2 };
 
 export const SPEED_HINTS: Record<GameSpeed, string> = {
-  slow: 'Lines type out at half speed, and cutscenes take their time.',
-  normal: 'Lines type out at the usual pace.',
-  fast: 'Lines type out twice as fast, and cutscenes hurry along. Tap to finish a line at any speed.',
+  slow: 'Half speed: you stroll, lines type out slowly, and cutscenes take their time. Fights keep their usual pace.',
+  normal: 'The usual pace.',
+  fast: 'Double speed: you dash, lines type out twice as fast, and cutscenes hurry along. Fights keep their usual pace.',
 };
 
 export function isGameSpeed(value: unknown): value is GameSpeed {

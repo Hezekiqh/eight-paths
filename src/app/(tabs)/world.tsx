@@ -1541,6 +1541,7 @@ function World({
         height={height}
         scale={scale}
         active={focused}
+        pace={SPEED_RATE[speed]}
         marks={[...(unclaimed > 0 && board ? [board] : []), ...newsMarks]}
         twinkles={twinkles}
         stepTiles={stepTiles}
