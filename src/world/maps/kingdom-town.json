@@ -58,7 +58,7 @@
       "The chapel, dark and quiet."
     ],
     "3": [
-      "The old Kaldorium, boarded up. A painted sign: THE PIT IS CLOSED. FOR FIGHTS: THE COLOSSEUM, IN WARRIOR CITY, OR THE MAXIMUS, BY THE EAST GATE. Under it: (BOTH HAVE STATUES. OF COURSE BOTH HAVE STATUES.)"
+      "An old fighting ring, boarded up. A painted sign: CLOSED. FOR FIGHTS: THE KALOSEUM, IN WARRIOR CITY. Under it: (IT HAS A STATUE. OF COURSE IT HAS A STATUE.)"
     ],
     "d": [
       "You knock. A woman's voice, very close to the door: \"Go away. Unless you're the prince. Are you the prince?\""
@@ -128,7 +128,7 @@
         {
           "ask": "How do I reach the king?",
           "answer": [
-            "Get yourself billed at the Colosseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
+            "Get yourself billed at the Kaloseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
             "Or buy a lamp. Lamps are nice."
           ]
         },

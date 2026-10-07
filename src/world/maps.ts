@@ -91,7 +91,7 @@ export type NpcObject = {
   movesAfter?: { flag: string; x: number; y: number };
   /**
    * Watching from the edge, never in the way: nothing bumps into them, so a fight goes exactly as it would
-   * without them (the Kaldorium's Warden, and the three you let out, at the side of the sand).
+   * without them (the Kaloseum's Warden, and the three you let out, at the side of the sand).
    */
   passable?: boolean;
   /** Drawn this many times bigger (the Warden, standing at the head of the sand, as big as when he fights). */
@@ -227,7 +227,7 @@ export type WorldMap = {
   ladder?: Boss[];
   /** The baked picture from scripts/world-art.mjs, one pixel per art pixel. */
   image: number;
-  /** A second picture to flick to and back, a few times a second: the Colosseum's crowd, on its feet, cheering. */
+  /** A second picture to flick to and back, a few times a second: the Kaloseum's crowd, on its feet, cheering. */
   cheer?: number;
   /** Where a new game starts, in tiles. */
   spawn: { x: number; y: number; facing: Facing };

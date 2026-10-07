@@ -20,7 +20,7 @@ const DARKER: Partial<Record<MapId, number>> = {
   'lower-barracks': 0.45,
   'sleeping-keep': 0.4,
   chapel: 0.4,
-  // the Colosseum is open to the sky (author, Oct 6, 2026)
+  // the Kaloseum is open to the sky (author, Oct 6, 2026)
   'the-pit': 0,
   'candle-inn': 0.2,
   forge: 0.25,

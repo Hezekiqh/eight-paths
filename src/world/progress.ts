@@ -68,7 +68,7 @@ export const KING_LEVEL = 18;
  * father's throne), and the other seven. Each is the `met:` flag of meet.ts, set when they join.
  */
 const WHERE: Record<string, string> = {
-  brannoc: 'He is in a cell under the Colosseum, in Warrior City.',
+  brannoc: 'He is in a cell under the Kaloseum, in Warrior City.',
   ysolde: "She is in Warrior City's adventurers' guild.",
   quill: "He is in Warrior City's library.",
   wren: "She is in Warrior City's chapel.",
@@ -493,7 +493,7 @@ export const EXITS: Exit[] = [
     id: 'town-pit',
     from: 'warrior-city',
     tile: '1',
-    label: 'The Colosseum',
+    label: 'The Kaloseum',
     to: { map: 'the-pit', x: 15, y: 15, facing: 'up' },
     needs: {
       kind: 'flag',
@@ -525,7 +525,7 @@ export const EXITS: Exit[] = [
         {
           kind: 'flag',
           flag: 'pit-champion',
-          label: 'Win at the Colosseum',
+          label: 'Win at the Kaloseum',
           hint: 'Get on the bill, then beat five guards and the warden.',
         },
         {
@@ -931,7 +931,7 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Colosseum at its heart, the
+  // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Kaloseum at its heart, the
   // castle road north (through the camp, the barracks and on to Kaldor), a bridge east to the Mage
   // kingdom and a road south to the old mines (both still being built).
   {
@@ -1142,7 +1142,7 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // The Kingdom Dungeon, under Warrior City's Colosseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
+  // The Kingdom Dungeon, under Warrior City's Kaloseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
   {
     id: 'cells-mazes',
     from: 'kingdom-dungeon',

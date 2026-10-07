@@ -53,7 +53,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
         outcome: { flags: [flag], joins: ['plush'] },
       };
     case 'the-pit':
-      // The Kaldorium (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
+      // The Kaloseum (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
       if (flag === 'pit-guards')
         return {
           lines: [
@@ -66,7 +66,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
       return {
         lines: [
           'The warden sways, and sits down in the sand with a thump that rattles the banners.',
-          'For a heartbeat the Colosseum is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
+          'For a heartbeat the Kaloseum is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
           ...(brannoc ? ["BRANNOC: I… I didn't run. Did you see? I didn't run!"] : []),
           "GUARD: Strength is valued more than anything here. You're free to explore the prison.",
           "GUARD: We don't get paid enough for this.",
@@ -195,7 +195,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
             deed: 'bad' as const,
             lines: [
               'You point at Kaldor. Then at the floor. Then, for clarity, down.',
-              'KALDOR: ...The cells? Under my own Colosseum?',
+              'KALDOR: ...The cells? Under my own Kaloseum?',
               'Two of his own guards march him out. Neither of them is getting paid for it.',
               ...(brannoc && !asBrannoc ? ['BRANNOC: That was... very cold, friend. Effective. But cold.'] : []),
               'You sit. The throne is cold, and far too big, and it suits you a little too well.',

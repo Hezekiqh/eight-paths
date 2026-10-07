@@ -1,6 +1,6 @@
 {
   "id": "the-pit",
-  "name": "The Colosseum",
+  "name": "The Kaloseum",
   "style": "dungeon",
   "walkable": [
     ".",
@@ -294,7 +294,7 @@
         {
           "ask": "Who are you shushing?",
           "answer": [
-            "Him. Me. Everyone. Barnaby can't be heard over a sneeze.",
+            "Him. Me. Everyone. Barnaby's about to start, and when Barnaby starts, you can hear him in the next kingdom.",
             "If you miss the first line you miss the joke. There's always a joke. It's always about Kaldor's chin."
           ]
         },

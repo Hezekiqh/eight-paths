@@ -68,7 +68,7 @@ export const KEEPER_TALK: {
       id: 'kaldor-dethroned-2',
       when: 'kaldor-dethroned',
       lines: [
-        "The horde's scattered, I hear, and the pit's an arena again. Children will be climbing the walls by spring.",
+        "The horde's scattered, I hear, and the Kaloseum's just an arena again. Children will be climbing the walls by spring.",
         "You gave them back the right to get things wrong. It's a heavy gift. It's the only kind worth giving.",
         "Tell Brannoc the crown suits him. He won't believe you. Tell him anyway.",
       ],

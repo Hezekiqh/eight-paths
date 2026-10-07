@@ -174,7 +174,7 @@
       "facing": "left",
       "name": "Lady Holler",
       "lines": [
-        "I'm the announcer of the Maximus. Barnaby does the old pit. Barnaby is SMALL TIME.",
+        "I'm the announcer of the Maximus. Barnaby has the Kaloseum, over in Warrior City. Barnaby is SMALL TIME.",
         "Come back any time. The next rung's always waiting."
       ],
       "after": {
@@ -188,7 +188,7 @@
         {
           "ask": "What's wrong with Barnaby?",
           "answer": [
-            "He announces with a TINY VOICE. He says 'ladies and gentlemen' like he's apologising.",
+            "He's LOUD, I'll give him that. Loud and small. A trumpet in a top hat.",
             "I say 'LADIES. GENTLEMEN. AND WHATEVER BRUG BROUGHT.' That's craft."
           ]
         },

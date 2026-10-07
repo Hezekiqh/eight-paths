@@ -1410,7 +1410,7 @@ function marbleAt(x, y) {
 }
 
 /**
- * The Colosseum from the inside (author, Oct 6, 2026: "look at the arena outside looking in"): the same great oval
+ * The Kaloseum from the inside (author, Oct 6, 2026: "look at the arena outside looking in"): the same great oval
  * as Warrior City shows from without. Sand in the middle, a low stone wall round it, grey tiers climbing away
  * packed with the crowd, the Crown's red banners with the gold fist along the top, the great gate at the bottom,
  * open to the sky. The sand's oval sits just inside the walkable tiles (`.` and `,`); everything else is the stands.
@@ -1593,7 +1593,7 @@ function drawArena(map, cheer = false) {
     }
     for (let y = gy + 1; y < gy + TILE + 5; y += 5) box(g, gx, y, gw, 1, '#4A4442');
   }
-  // the commentator's box, part of the Colosseum's own ring and down at the level of the sand (author, Oct 6, 2026:
+  // the commentator's box, part of the Kaloseum's own ring and down at the level of the sand (author, Oct 6, 2026:
   // the crowd is scenery, far off, and a character among them looks like a giant; Barnaby stands where everyone else
   // stands). A wedge of the ring at the head of the sand, following the same oval as the tiers: the box opens in the
   // arena wall at ground level, dark under a red curtain and an arch, solid stone above it to the top of the stands
@@ -1968,7 +1968,7 @@ const WALKERS = {
     hair: ['bun', '#8A4A2A'],
     apron: '#F4F0EA',
   },
-  // Barnaby Loudmouth, the Colosseum's announcer (author, Oct 6, 2026: "a crowd announcer type"): a ringmaster's
+  // Barnaby Loudmouth, the Kaloseum's announcer (author, Oct 6, 2026: "a crowd announcer type"): a ringmaster's
   // red tailcoat with gold, a white collar, a big moustache, and a tall black top hat with a red band.
   barnaby: {
     top: '#B02A22',
@@ -3145,7 +3145,7 @@ for (const id of MAPS) {
             : drawMap(map),
     ),
   );
-  // the Colosseum's crowd, on its feet: a second picture the game and the episodes switch to and back
+  // the Kaloseum's crowd, on its feet: a second picture the game and the episodes switch to and back
   if (map.floor === 'sand') writeFileSync(`assets/world/${id}-cheer.png`, toPng(drawArena(map, true)));
 }
 const { g, ids } = drawWalkers();

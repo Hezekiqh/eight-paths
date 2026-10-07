@@ -38,7 +38,7 @@ const feet = (x: number, y: number): [number, number] => [x * TILE + TILE / 2, y
 type Result = { won: boolean; hearts: number; seconds: number; lost?: 'died' | 'slept' | 'time' };
 
 export function fight(id: MapId, path: Dimension, level: number, won: string[] = []): Result {
-  // a ladder of fights (the Colosseum, the Maximus) puts up its next rung each visit: `won` so far
+  // a ladder of fights (the Kaloseum, the Maximus) puts up its next rung each visit: `won` so far
   const map = withLadder(MAPS[id], won);
   const grid: Grid = { solid: map.solid, width: map.width, height: map.height };
   const arrival = EXITS.find((e) => e.to?.map === id)?.to ?? map.spawn;

@@ -41,7 +41,7 @@ export function sleepZs(t: number, x: number, y: number): number[][] {
 export const BUBBLE_EVERY = 1.6;
 
 /**
- * A snot bubble at the nose of a sleeper whose feet are at (x, y) (Brannoc, out cold in the Kaldorium): it swells
+ * A snot bubble at the nose of a sleeper whose feet are at (x, y) (Brannoc, out cold in the Kaloseum): it swells
  * from nothing to a big round bubble and shrinks again, over and over. Its pixels, as [x, y] pairs, and its
  * highlight, a pixel of shine on the upper left.
  */

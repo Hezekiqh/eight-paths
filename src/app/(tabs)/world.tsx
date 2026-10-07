@@ -457,7 +457,7 @@ function World({
   const xpNow = useWorldProgress();
   // Doorways, holes and road ends you walk through, if they're open to you yet.
   // A boss fight, the first time you come in: the boss has their say, then the fight is on.
-  // Up from the cells into the Kaldorium (dungeon.ts): Brannoc has fainted on the sand, and the warden can't be hurt.
+  // Up from the cells into the Kaloseum (dungeon.ts): Brannoc has fainted on the sand, and the warden can't be hurt.
   const [prison] = useState(() => prisonRoute(start.map.id, xpNow.flags ?? []));
   // Walking as Brannoc there, the warden is no fight: you faint at the sight of him (a scene, on arrival).
   const [faints] = useState(() => prison && hero === 'brannoc' && start.map.boss?.flag === 'pit-champion');
@@ -637,7 +637,7 @@ function World({
       : undefined;
   /** The verdict's been read: what comes next (the three's excuses and the carry, if they're here), played below. */
   const [afterVerdict, setAfterVerdict] = useState<{ fight: string[]; carry: boolean } | null>(null);
-  // The Kaldorium's welcome goes on past your excuse (dungeon.ts): the Warden's answer, once one's been picked.
+  // The Kaloseum's welcome goes on past your excuse (dungeon.ts): the Warden's answer, once one's been picked.
   const [verdict, setVerdict] = useState<Dialogue | null>(null);
   const [said, setDialogue] = useState<Dialogue | null>(() =>
     resume
@@ -1730,7 +1730,7 @@ function World({
             dialogue.then?.();
             // "We need to break out": a squeak in the straw, and Brannoc goes straight through the bars.
             const w = useWorldStore.getState();
-            // Already the Kaldorium's champion (you came down from the top, and maybe bent the bars yourself
+            // Already the Kaloseum's champion (you came down from the top, and maybe bent the bars yourself
             // to get in): no mouse, he just asks to come along.
             if (
               map.id === 'kingdom-dungeon' &&
@@ -2147,7 +2147,7 @@ function useAct(
         const who = COMPANIONS[doer];
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
-        // A way out of here that this opens (the checkpoint, the Kaldorium) opens now, not next visit.
+        // A way out of here that this opens (the checkpoint, the Kaloseum) opens now, not next visit.
         const opens = EXITS.some((e) => e.from === map.id && e.walk && needsFlag(e.needs, job.flag));
         const here: Arrival = {
           map: map.id as MapId,

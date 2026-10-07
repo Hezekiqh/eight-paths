@@ -385,7 +385,7 @@ export function WorldView({
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
-  // the crowd on its feet and back down again (the Colosseum): the second picture shows on every other beat
+  // the crowd on its feet and back down again (the Kaloseum): the second picture shows on every other beat
   const cheerImage = useImage(map.cheer ?? null);
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.

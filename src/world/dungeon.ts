@@ -1,10 +1,10 @@
 import type { Actor } from './march';
 import type { Arrival, Requirement } from './progress';
 
-// The Kingdom Dungeon (author, Oct 3, 2026), under the Kaldorium: thrown in by Felix's guards,
+// The Kingdom Dungeon (author, Oct 3, 2026), under the Kaloseum: thrown in by Felix's guards,
 // you're marched down to a cell where Brannoc is cowering in the corner. Ask him to break out
 // and a mouse squeaks: he bolts straight through the bars and up the ladder. Gary, the one guard
-// left (the rest are at the Kaldorium for the big fight), sees it and decides he didn't.
+// left (the rest are at the Kaloseum for the big fight), sees it and decides he didn't.
 
 /** He's gone through the bars: they're bent open (also a job anyone can do at the bars, see jobs.ts). */
 export const BARS_BENT = 'cell-bars-bent';
@@ -109,7 +109,7 @@ export const GARY_STARTLED = [
   'GARY: ... I do not get paid enough to have seen that.',
 ];
 
-// ---- Up the ladder, into the Kaldorium (author, Oct 3, 2026). Brannoc got there first, and the guards
+// ---- Up the ladder, into the Kaloseum (author, Oct 3, 2026). Brannoc got there first, and the guards
 // have him. He faints. Five guards, then the warden, who can't be hurt: twenty strikes and he hasn't
 // noticed. Then Brannoc gets up, fast asleep, a snot bubble swelling and shrinking, and swings.
 // Walking as Brannoc yourself, you faint at the sight of the warden, and you do the swing.
@@ -127,11 +127,11 @@ export const BRANNOC_DECLINED = 'brannoc-declined';
 /** You said yes (here, or back in the cell later). */
 export const BRANNOC_JOINED = 'brannoc-joined';
 
-/** Where you meet Brannoc and he can join you (said yes to): the cell, the Kaldorium sand, his cell again. */
+/** Where you meet Brannoc and he can join you (said yes to): the cell, the Kaloseum sand, his cell again. */
 export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 
 /** Where Brannoc lies, fainted, just off the ladder; and where he walks to swing. */
-// (the Colosseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
+// (the Kaloseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
 // and Brannoc is three tiles on, room enough to faint without landing on you)
 export const BRANNOC_FAINTED: [number, number] = [11, 14];
 const UNDER_WARDEN: [number, number] = [15, 10];
@@ -139,7 +139,7 @@ const UNDER_WARDEN: [number, number] = [15, 10];
 export const SAND_MIDDLE: [number, number] = [15, 14];
 const TRAPDOOR: [number, number] = [7, 14];
 
-// ---- Up into the Kaldorium after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
+// ---- Up into the Kaloseum after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
 // here first and lost, and Barnaby, up in his announcer's box, has been expecting whoever let them out. He has his
 // say, you make your excuse (any excuse: it's UNACCEPTABLE), Brannoc faints, Barnaby is not impressed, and the three
 // make their excuses for losing. The Warden stays out of sight until the five guards are down.
@@ -259,7 +259,7 @@ export const SNOT_SWING_HIT = [
   'He lifts his sword.',
   'BRANNOC: Zzz... five more minutes, mother...',
   'BRANNOC SUPER SUPER SWING!',
-  'The warden goes up, up, over the banners, and out of the Colosseum. Somewhere in town, a roof gives way.',
+  'The warden goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
   'Silence.',
   "GUARD: Whoa. Whoa, whoa, whoa. Okay. You're good. You're good to go.",
   "GUARD: We won't bother you any more. Strength is valued more than anything here.",
@@ -275,7 +275,7 @@ export const BRANNOC_OFFER = [
   'BRANNOC: I know not what is happening in this strange land. But if I kept to your side, I might yet live through it.',
   'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
 ];
-/** Coming down from the top as the Kaldorium's champion: Brannoc's heard. No mouse needed. */
+/** Coming down from the top as the Kaloseum's champion: Brannoc's heard. No mouse needed. */
 export const CHAMPION_IN_CELL = [
   'BRANNOC: Hold. You are the one who felled the Warden?',
   'BRANNOC: The whole gaol speaks of it. Even Gary woke for it.',
