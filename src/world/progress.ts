@@ -1518,7 +1518,13 @@ export const EXITS: Exit[] = [
   },
 ];
 
-export type XpTotals = { total: number; byPath: Record<Dimension, number>; flags?: string[] };
+export type XpTotals = {
+  total: number;
+  byPath: Record<Dimension, number>;
+  flags?: string[];
+  /** Premium (author, Oct 7, 2026): no level barriers, so every level requirement counts as met. Story flags still apply. */
+  unlocked?: boolean;
+};
 
 export type Standing = {
   met: boolean;
@@ -1562,7 +1568,7 @@ export function standing(needs: Requirement, xp: XpTotals): Standing {
   const left = xpToReach(progress.level, progress.xpIntoLevel, needs.level, xpFor);
   const whole = xpToReach(overallLevelFromXp(0).level, 0, needs.level, xpFor);
   return {
-    met: progress.level >= needs.level,
+    met: xp.unlocked === true || progress.level >= needs.level,
     have: progress.level,
     need: needs.level,
     habitsLeft: Math.ceil(left / BASE_XP),

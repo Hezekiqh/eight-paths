@@ -13,6 +13,17 @@ function overallXpFor(level: number) {
 }
 
 describe('standing', () => {
+  it('lifts every level barrier for Premium, but not what must be done in the World', () => {
+    const premium: XpTotals = { ...noXp, unlocked: true };
+    expect(standing({ kind: 'overall', level: 20 }, premium).met).toBe(true);
+    expect(standing({ kind: 'path', dimension: 'physical', level: 8 }, premium).met).toBe(true);
+    expect(standing({ kind: 'anyPath', level: ARCHIVE_DOOR_LEVEL }, premium).met).toBe(true);
+    const winch = { kind: 'flag', flag: 'winch', label: 'Pull the winch', hint: 'Pull it.' } as const;
+    expect(standing(winch, premium).met).toBe(false);
+    expect(standing({ kind: 'all', of: [{ kind: 'overall', level: 20 }, winch] }, premium).met).toBe(false);
+    expect(standing(winch, { ...premium, flags: ['winch'] }).met).toBe(true);
+  });
+
   it('opens the Archive door after the first level-up on any Path', () => {
     const door = { kind: 'anyPath', level: ARCHIVE_DOOR_LEVEL } as const;
     const fresh = standing(door, noXp);
