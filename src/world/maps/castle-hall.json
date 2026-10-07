@@ -5,6 +5,8 @@
   "walkable": [".", ",", "="],
   "art": {
     "1": "E",
+    "2": "E",
+    "3": "E",
     "4": "E",
     "5": "f",
     "6": "B",
@@ -40,7 +42,7 @@
     "#W..........==.........AW#",
     "#W.......I..==..I.......W#",
     "#W...Z......==......Z...W#",
-    "#WWWWWWWWWWW11WWWWWWWWWWW#",
+    "#WWWWW3WWWWW11WWWWW2WWWWW#",
     "##########################"
   ],
   "examine": {
@@ -50,6 +52,8 @@
     ],
     "4": ["The throne room. The doors stand open, as if you're expected."],
     "1": ["The way back out to the grounds."],
+    "2": ["A doorway. Through it: clattering, shouting, and a smell of porridge. So that's where everyone is."],
+    "3": ["Steps going down, into the cold. Down there, something is standing very still. A lot of somethings."],
     "%": ["The foot of the winding stair. Up to the king's floor."],
     "B": ["The fist crushing a crown. Underneath it, older stitching shows through: a different crest."],
     "f": ["A portrait of Kaldor. Then you notice the one opposite. Each is more flattering than the last."],

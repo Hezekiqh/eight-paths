@@ -15,6 +15,9 @@ const BY_STYLE: Record<WorldMap['style'], Ambience> = {
 /** Places darker (or lighter) than their style. */
 const DARKER: Partial<Record<MapId, number>> = {
   'war-hall': 0.45,
+  // the castle's new rooms (author, Oct 7, 2026): the dust, and the dark under it all
+  'queens-room': 0.4,
+  'royal-dungeon': 0.55,
   'old-kings-crypt': 0.6,
   'pit-below': 0.55,
   'lower-barracks': 0.45,

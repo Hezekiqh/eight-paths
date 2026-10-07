@@ -309,6 +309,66 @@ export const BANTER: Record<string, Banter[]> = {
     { who: 'pip', lines: ['PIP: Five queens and a chandelier with opinions. I smell a ballad.'] },
   ],
   'castle-upper:queen-maren': [{ who: 'wren', lines: ['WREN: She does love him. Somebody ought to.'] }],
+  // ---- the castle's new rooms (author, Oct 7, 2026)
+  'queens-room:dorrit': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: ...',
+        'BRANNOC: There were always roses in here. Fresh ones, every morning, whether anyone was here to see them or not.',
+        'BRANNOC: I used to hide under that desk. I was found every single time. I was not, it turns out, very good at hiding.',
+        'BRANNOC: Forgive me. The dust. It gets in the eyes.',
+      ],
+    },
+  ],
+  'kings-bedchamber:ledger': [
+    {
+      who: 'ysolde',
+      lines: [
+        'YSOLDE: No columns. No dates. No totals. Just a number, and then a bigger number.',
+        'YSOLDE: I have never been so offended by a book.',
+        "YSOLDE: ...Those barrels. Do you think he'd notice one missing?",
+        "YSOLDE: I'm joking. I'm mostly joking. I'd leave a receipt.",
+      ],
+    },
+  ],
+  'kings-bedchamber:pellam': [
+    { who: 'pip', lines: ["PIP: Eleven thousand times packed and never gone. That's not a trunk, that's a ballad."] },
+  ],
+  'mess-hall:bruno': [
+    {
+      who: 'pip',
+      lines: [
+        "PIP: Nine years champion! What's the secret?",
+        'BRUNO: Mmf.',
+        'PIP: "Mmf." Mmf! That\'s a chorus. That\'s a whole chorus.',
+        "PIP: Verse one: he ate. Verse two: he ate. Bridge: he's still eating.",
+        'PIP: Rule four says no singing. Rule four has never heard me hum.',
+      ],
+    },
+  ],
+  'mess-hall:dunt': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Arm-wrestling! I was champion of this very hall, as a boy.',
+        "BRANNOC: ...Of the little table. In the corner. Against the cook's daughter.",
+        'BRANNOC: She was very strong.',
+      ],
+    },
+    {
+      who: 'tamsin',
+      lines: [
+        'TAMSIN: Give me ten minutes and I could build a machine that settles this.',
+        'SERGEANT DUNT: NO MACHINES.',
+        'CORPORAL THANE: NO MACHINES.',
+        'TAMSIN: ...Wednesday it is, then.',
+      ],
+    },
+  ],
+  'royal-dungeon:rackwarden': [
+    { who: 'wren', lines: ['WREN: Rows and rows of them. And nobody has said the words over a single one.'] },
+  ],
 };
 
 /**

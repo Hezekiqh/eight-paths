@@ -58,6 +58,10 @@ import roomOrenData from './maps/room-oren.json';
 import roomPipData from './maps/room-pip.json';
 import roomTamsinData from './maps/room-tamsin.json';
 import roomMossData from './maps/room-moss.json';
+import queensRoomData from './maps/queens-room.json';
+import kingsBedchamberData from './maps/kings-bedchamber.json';
+import messHallData from './maps/mess-hall.json';
+import royalDungeonData from './maps/royal-dungeon.json';
 import type { CharacterId } from '@/story/companions';
 
 import { ENEMY_KINDS, type EnemyKind } from './combat';
@@ -170,8 +174,19 @@ export type BoardObject = { id: string; type: 'board'; x: number; y: number };
 /** A chest: opening it once gives its item (see items.ts), with a line or two about the spot. */
 export type ChestObject = { id: string; type: 'chest'; x: number; y: number; item: string; lines: string[] };
 
-/** A sign or inscription standing on its own tile: A reads it. */
-export type SignObject = { id: string; type: 'sign'; x: number; y: number; lines: string[] };
+/**
+ * A sign or inscription standing on its own tile: A reads it. Like people, it can be gone once a story flag
+ * is set (`goneAfter`), or only there once one is (`comesAfter`): the royal dungeon's board, after Kaldor.
+ */
+export type SignObject = {
+  id: string;
+  type: 'sign';
+  x: number;
+  y: number;
+  lines: string[];
+  goneAfter?: string;
+  comesAfter?: string;
+};
 
 export type MapObject = NpcObject | BoardObject | ChestObject | SignObject;
 
@@ -331,16 +346,17 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
-const away = (n: NpcObject, flags: string[]) =>
+const away = (n: { goneAfter?: string; comesAfter?: string }, flags: string[]) =>
   (!!n.goneAfter && flags.includes(n.goneAfter)) || (!!n.comesAfter && !flags.includes(n.comesAfter));
+const comesAndGoes = (o: MapObject): o is NpcObject | SignObject => o.type === 'npc' || o.type === 'sign';
 
 /**
- * The map without anyone who isn't here: who has left for good (NpcObject.goneAfter)
+ * The map without anyone (or any sign) who isn't here: who has left for good (NpcObject.goneAfter)
  * or hasn't come yet (comesAfter). The same map if everybody's here.
  */
 export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
-  if (!map.npcs.some((n) => away(n, flags))) return map;
-  const objects = map.objects.filter((o) => o.type !== 'npc' || !away(o, flags));
+  if (!map.objects.some((o) => comesAndGoes(o) && away(o, flags))) return map;
+  const objects = map.objects.filter((o) => !comesAndGoes(o) || !away(o, flags));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
@@ -371,6 +387,19 @@ export function withoutNpcs(map: WorldMap, ids: string[]): WorldMap {
   const objects = map.objects.filter((o) => o.type !== 'npc' || !ids.includes(o.id));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
+/** The story flag that ends Kaldor's power (author, Oct 7, 2026): once he's beaten, his shadows are gone everywhere. */
+export const SHADOWS_FADE = 'kaldor-beaten';
+
+/**
+ * The map without its shadow soldiers once Kaldor is beaten (author, Oct 7, 2026): his power leaves him, and every
+ * shadow in every room (the barracks, the royal dungeon) fades with it. Everything else still fights. The same map
+ * if nothing changes.
+ */
+export function withoutShadows(map: WorldMap, flags: string[]): WorldMap {
+  if (!flags.includes(SHADOWS_FADE) || !map.enemies.some((e) => e.kind === 'shadow')) return map;
+  return { ...map, enemies: map.enemies.filter((e) => e.kind !== 'shadow') };
 }
 
 /** A ladder's fight for this visit: the first not yet won (the last, already won, once you've climbed it). */
@@ -445,6 +474,11 @@ export const MAPS = {
   'room-pip': build(roomPipData as MapData, require('@/assets/world/room-pip.png')),
   'room-tamsin': build(roomTamsinData as MapData, require('@/assets/world/room-tamsin.png')),
   'room-moss': build(roomMossData as MapData, require('@/assets/world/room-moss.png')),
+  // the castle's new rooms (author, Oct 7, 2026)
+  'queens-room': build(queensRoomData as MapData, require('@/assets/world/queens-room.png')),
+  'kings-bedchamber': build(kingsBedchamberData as MapData, require('@/assets/world/kings-bedchamber.png')),
+  'mess-hall': build(messHallData as MapData, require('@/assets/world/mess-hall.png')),
+  'royal-dungeon': build(royalDungeonData as MapData, require('@/assets/world/royal-dungeon.png')),
 } satisfies Record<string, WorldMap>;
 
 export type MapId = keyof typeof MAPS;

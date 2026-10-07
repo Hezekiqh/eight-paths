@@ -1,0 +1,115 @@
+{
+  "id": "queens-room",
+  "name": "The Queen's Room",
+  "style": "dungeon",
+  "walkable": [".", ",", "h"],
+  "art": {
+    "1": "E",
+    "5": "p",
+    "6": "B",
+    "7": "D"
+  },
+  "spawn": {
+    "x": 6,
+    "y": 6,
+    "facing": "up"
+  },
+  "firstVisit": [
+    "Dust, everywhere, lying flat and even. Nobody has walked in here for a very long time.",
+    "It's cold. Colder than the corridor. Colder than it has any right to be."
+  ],
+  "tiles": [
+    "##############",
+    "#WW5WWMWW6WWW#",
+    "#Wy...hhh..QW#",
+    "#W....hhh...W#",
+    "#WT...hhh..7W#",
+    "#W..........W#",
+    "#Ww.........W#",
+    "#WWWWW1WWWWWW#",
+    "##############"
+  ],
+  "examine": {
+    "W": ["Pale stone, not black. This room was finished before the castle got its new colour scheme."],
+    "1": ["The corridor. It's warmer out there. Noticeably."],
+    "5": [
+      "A portrait of the old queen, painted over, like the one in the hall.",
+      "Here someone has painted over the whole thing, frame and all, and then hung a small picture of a bowl of fruit in front of it.",
+      "It's a very nice bowl of fruit. Nobody has ever looked at it."
+    ],
+    "M": ["A tall mirror, gone grey with dust.", "You don't wipe it. You couldn't say why. You just don't."],
+    "6": [
+      "The open hand, holding a sword by the blade: the old crest.",
+      "Everywhere else in the castle it's been covered by a fist. In here, nobody bothered. Or nobody dared."
+    ],
+    "y": [
+      "A vanity table, its drawers shut. A pot of rouge gone hard as a stone. A ribbon, faded to no colour at all."
+    ],
+    "Q": [
+      "A great bed, made five hundred years ago and not slept in since. The dust has settled into the exact shape of the blankets.",
+      "It's a very good bed. Nobody wants it."
+    ],
+    "T": [
+      "Roses in a vase, dried on the stem. Five hundred years, and they still haven't quite fallen apart.",
+      "They smell, very faintly, of roses. That's the worst part."
+    ],
+    "7": [
+      "A writing desk. Ink dried to a crust in the well, and a quill put down in the middle of a sentence.",
+      "The sentence is gone. The quill is still waiting."
+    ],
+    "w": ["A wardrobe. Locked, with the key left in the lock. You leave it there."],
+    "h": ["A pale rug, patterned with roses. The only rug in the castle that wasn't brought back from a war."]
+  },
+  "objects": [
+    {
+      "id": "dorrit",
+      "type": "npc",
+      "x": 8,
+      "y": 6,
+      "sprite": "gudrun",
+      "facing": "left",
+      "name": "Maid Dorrit",
+      "lines": [
+        "Oh! You can't— well. You can. Nobody says you can't. Nobody comes in, is all.",
+        "I dust the doorway. Just the doorway. Forty years, and I've never got further than this tile."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why is it so cold in here?",
+          "answer": [
+            "Always has been. Summer, winter. Light every fire in the castle and it'd still be cold in here.",
+            "The old housekeeper said it was the stone. The one before her said it was the queen.",
+            "The one before HER didn't say anything. She just stopped coming upstairs."
+          ]
+        },
+        {
+          "ask": "Whose room was it?",
+          "answer": [
+            "The old queen's. Before the king. The king before this king, I mean.",
+            "Beautiful, they say. Too beautiful, my nan said, but my nan said that about bread.",
+            "She went missing, and the old king went strange, and then there was a new king. That's all anybody knows. That's all anybody's allowed to know."
+          ]
+        },
+        {
+          "ask": "Do the king's queens ever come in?",
+          "answer": [
+            "Never. Queen Brunhilt put her head round the door once, her first week.",
+            "She came straight back out and asked for a different room. Any room. She said the mirror looked at her funny.",
+            "She's got the second-worst room now, and she's never once complained. Well. Never about that."
+          ]
+        },
+        {
+          "ask": "Forty years dusting one doorway? Pathetic.",
+          "answer": [
+            "...It's a very clean doorway.",
+            "You can see yourself in it. Not in the mirror. In the doorway. That's how clean.",
+            "Mind it on your way out. I've just done it."
+          ],
+          "deed": "bad"
+        }
+      ]
+    }
+  ],
+  "floor": "marble"
+}

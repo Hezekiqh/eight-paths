@@ -36,6 +36,9 @@ export type GateAnswer = {
 /** The captain, before you've said anything. */
 export const GATE_OPEN = [
   'CAPTAIN ORSK: Halt. Nobody crosses. King says.',
+  // (author, Oct 7, 2026)
+  "CAPTAIN ORSK: And you don't look like you have an appointment with the king.",
+  "CAPTAIN ORSK: Nobody has an appointment with the king. That's how he likes it.",
   'CAPTAIN ORSK: Not merchants. Not priests. Not his own mother, and she asked very nicely.',
   'CAPTAIN ORSK: So. What makes you special?',
 ];

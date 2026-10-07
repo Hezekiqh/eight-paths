@@ -44,6 +44,7 @@ import {
   withOpenTiles,
   withoutCharacter,
   withoutGone,
+  withoutShadows,
   withStoryPoses,
   type MapId,
   type NpcObject,
@@ -510,7 +511,8 @@ function World({
   const roomMap = useMemo(() => {
     const room = withOpenTiles(
       // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
-      withRoster(start.map, dayNumber(), arrivalFlags),
+      // ...and, once Kaldor's beaten, none of his shadows anywhere (maps.ts)
+      withRoster(withoutShadows(start.map, arrivalFlags), dayNumber(), arrivalFlags),
       [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
     );
     if (!pitOpen) return room;
