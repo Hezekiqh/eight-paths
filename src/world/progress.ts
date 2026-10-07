@@ -495,12 +495,8 @@ export const EXITS: Exit[] = [
     tile: '1',
     label: 'The Kaloseum',
     to: { map: 'the-pit', x: 15, y: 15, facing: 'up' },
-    needs: {
-      kind: 'flag',
-      flag: 'on-the-bill',
-      label: 'Get on the bill',
-      hint: 'Barnaby does the bills. He loves a good story.',
-    },
+    // every player reaches Warrior City as the Kaloseum's champion (the prison break), so it's open
+    needs: OPEN,
     walk: true,
   },
   {
@@ -526,7 +522,7 @@ export const EXITS: Exit[] = [
           kind: 'flag',
           flag: 'pit-champion',
           label: 'Win at the Kaloseum',
-          hint: 'Get on the bill, then beat five guards and the warden.',
+          hint: 'Beat five guards and the warden at the Kaloseum.',
         },
         {
           kind: 'flag',

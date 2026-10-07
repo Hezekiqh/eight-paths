@@ -187,12 +187,6 @@
       ],
       "questions": [
         {
-          "ask": "Can you put me on the bill?",
-          "answer": [
-            "At the Kaloseum? Nobody new's fought there in years. They'd need a very good reason."
-          ]
-        },
-        {
           "ask": "Heard any gossip?",
           "answer": [
             "The Trial closed after the challenger called Aurek. Aurek the Tall. Almost won. Scarred the king's face.",
@@ -208,19 +202,6 @@
           "deed": "bad"
         }
       ],
-      "job": {
-        "flag": "on-the-bill",
-        "path": "social",
-        "done": [
-          "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
-          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE KALOSEUM!",
-          "You're on the bill."
-        ],
-        "cant": [
-          "BARNABY: A new champion? On what grounds? Give me a story, stranger, a story!",
-          "(Someone with a way with words might talk him into it.)"
-        ]
-      },
       "after": {
         "flag": "pit-champion",
         "lines": [

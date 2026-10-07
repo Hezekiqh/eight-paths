@@ -27,16 +27,8 @@ describe('the next goal', () => {
     expect(goal.line).toMatch(/^Level up once: /);
   });
 
-  it('marks Barnaby in Warrior City until you are on the bill', () => {
-    const goal = nextGoal('warrior-city', ALL.filter((m) => m !== 'the-pit'), strong(UP_TO_TOWN));
-    expect(goal.mark).toMatchObject({ tag: 'Barnaby Loudmouth' });
-    expect(goal.mark?.exitId).toBeUndefined();
-    expect(goal.line).toMatch(/^Talk to Barnaby Loudmouth \(an? \w+ can do it\)$/);
-    expect(goal.path).toBe('social');
-  });
-
-  it("then marks the Kaloseum's gate, and the fight once inside", () => {
-    const flags = [...UP_TO_TOWN, 'on-the-bill'];
+  it("marks the Kaloseum's gate, and the fight once inside", () => {
+    const flags = [...UP_TO_TOWN];
     expect(nextGoal('warrior-city', ALL.filter((m) => m !== 'the-pit'), strong(flags)).mark?.exitId).toBe('town-pit');
     // Been in, not yet won: the city still points at the gate, the arena at the fight.
     expect(nextGoal('warrior-city', ALL, strong(flags))).toMatchObject({

@@ -42,7 +42,7 @@ describe('notices', () => {
   });
 
   it("names someone's job by them, and the Path it needs", () => {
-    const n = describeNotice(npcNotice('warrior-city', 'barnaby'), ctx(['met:pip']))!;
+    const n = describeNotice(npcNotice('march-road', 'wim'), ctx(['met:pip']))!;
     expect(n.hint).toMatch(/^A Bard can do this: \w+ will step up\.$/);
   });
 

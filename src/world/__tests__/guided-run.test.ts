@@ -164,7 +164,7 @@ describe('Season 1, following only the guide', () => {
 
   it('walks the whole Berserker kingdom in order', () => {
     const did = run.steps.map((s) => s.did).join('\n');
-    for (const flag of ['checkpoint', 'on-the-bill', 'old-law', 'cages-open', 'varga-witness', 'forge-fixed']) {
+    for (const flag of ['checkpoint', 'old-law', 'cages-open', 'varga-witness', 'forge-fixed']) {
       expect(did).toContain(`(${flag})`);
     }
   });

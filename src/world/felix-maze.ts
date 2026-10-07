@@ -22,7 +22,7 @@ export const MAZE_SOLVED = 'felix-maze-solved';
 export const FRAMED = 'felix-framed';
 /** You promised the guards a drink. They'll remember. (Old saves only: now you buy it on the spot, DRINKS_DUE.) */
 export const OWES_GUARDS = 'owes-guards-a-drink';
-/** You offered the guards a drink: they take you straight to the Candle Inn to collect (AT_THE_BAR). */
+/** You offered the guards a drink: they take you straight to Warrior City's tavern to collect (TO_THE_BAR). */
 export const DRINKS_DUE = 'guards-drinks-due';
 /** You ordered, and couldn't pay: off to the cells. */
 export const TAB_UNPAID = 'guards-tab-unpaid';
@@ -54,8 +54,8 @@ export const PASSAGE_RETURN: Arrival = { map: 'felix-maze', x: 2, y: 2, facing: 
 export const INTO_THE_ARCHIVE: Arrival = { map: 'archive', x: 20, y: 6, facing: 'up' };
 /** Out of the green candle: in front of Felix and the guards, one tile between you and him. */
 export const PAST_THE_MAZE: Arrival = { map: 'felix-maze', x: 22, y: 4, facing: 'right' };
-/** At the Candle Inn's bar, Nana Birch on your right: where the guards collect their drink. */
-export const TO_THE_BAR: Arrival = { map: 'candle-inn', x: 5, y: 4, facing: 'right' };
+/** At the bar in Warrior City's tavern, Barkeep Rolla across it, a guard on either side: where they collect their drink. */
+export const TO_THE_BAR: Arrival = { map: 'wc-tavern', x: 6, y: 5, facing: 'up' };
 /** Under the guards' stair: the guards march you down to the cell from here (dungeon.ts). */
 export const INTO_THE_CELL: Arrival = { map: 'kingdom-dungeon', x: 21, y: 3, facing: 'down' };
 /** Knocked out: you come to on the straw, inside the cell (where shovedIn leaves you). */
@@ -156,30 +156,30 @@ const SEIZE_ANYWAY = [
   `${HIMOTHY}: Seize {them}!`,
 ];
 
-// The drink (author, Oct 7, 2026): they take you up on it there and then, straight to the Candle Inn.
-// You order, Nana Birch asks for the money, you haven't got any, and the guards walk you to the cells.
+// The drink (author, Oct 7, 2026): they take you up on it there and then, straight to Warrior City's tavern.
+// You order, Barkeep Rolla asks for the money, you haven't got any, and the guards walk you to the cells.
 export const DRINKS = {
   thanks: [`${HIMOTHY}: Hey, buddy. Thanks for offering to buy us drinks. It's been a long day.`],
   /** What you say back: either way, they're thirsty now. */
   replies: ['"No problem."', '"Anytime."'],
   /** The guards hold you to it on the spot (the fade to the inn follows). */
-  off: [`${HIMOTHY}: Then what are we standing here for? The Candle Inn. Your treat.`],
-  /** At the bar: Nana pours, and asks. */
+  off: [`${HIMOTHY}: Then what are we standing here for? The tavern. Your treat.`],
+  /** At the bar: Rolla pours, and asks. */
   bar: [
-    'The Candle Inn. Sir Himothy and his guard have the best stools, and their elbows on the bar already.',
-    "NANA BIRCH: Two of the king's own, and somebody else paying? That's a first. What'll it be?",
+    "The tavern in Warrior City. Sir Himothy and his guard have the best stools, and their elbows on the bar already.",
+    "BARKEEP ROLLA: Two of the king's own, and somebody else paying? That's a first. What'll it be?",
   ],
   /** Every drink in the house is named after the king. */
   menu: [
     { label: 'A Kaldor (1 coin)', drink: 'a Kaldor' },
-    { label: "Kaldor's Reserve (2 coins)", drink: "two Kaldor's Reserves" },
+    { label: "Kaldor's Reserve (2 coins)", drink: "a Kaldor's Reserve" },
     { label: 'Kaldor the Undying (100 coins)', drink: 'a round of Kaldor the Undying' },
     { label: 'Kaldor, Forever (1,000 coins)', drink: "the bottle of Kaldor, Forever, from the top shelf" },
   ],
   /** `{drink}`: what you ordered. Then it's the cells: the fade, and the guards march you down. */
   noMoney: [
-    'You order {drink}. Nana Birch reaches for it, and stops.',
-    "NANA BIRCH: Hey. You don't have any money, do you?",
+    'You order {drink}. Barkeep Rolla reaches for it, and stops.',
+    "BARKEEP ROLLA: Hey. You don't have any money, do you?",
     '(You check your pockets. Lint. Half a button.)',
     `${HIMOTHY}: ...No money.`,
     "GUARD: We left a perfectly good arrest for this, sir.",
@@ -212,7 +212,7 @@ export type Answer = {
   jailed?: boolean;
   /** Knocked out instead of marched off: you wake in the cell (KNOCKED_IN). */
   knockout?: boolean;
-  /** Off to the Candle Inn with the guards first (DRINKS): you can't pay, and it's the cells from there. */
+  /** Off to the tavern with the guards first (DRINKS): you can't pay, and it's the cells from there. */
   drinks?: boolean;
   /** Kind or mean (honor.ts). */
   deed?: 'good' | 'bad';
@@ -231,7 +231,7 @@ export const forHero = (line: string, hero: string) => {
  * The guards' question, four answers at most like every menu (author, Oct 4, 2026): two clever ones
  * (Lv 10 in their Path, greyed out with just the Path's icon until then), and two anyone can say: the
  * plea he's heard a thousand times, and the mean one, which gets you knocked out. Every one of them
- * ends in the cells (author, Oct 7, 2026); the drink just takes the long way, through the Candle Inn.
+ * ends in the cells (author, Oct 7, 2026); the drink just takes the long way, through the tavern.
  */
 export const ANSWERS: Answer[] = [
   {

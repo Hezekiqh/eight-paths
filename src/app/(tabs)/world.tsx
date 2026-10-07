@@ -1153,8 +1153,6 @@ function World({
         lines: SNOT_SWING,
         then: () => {
           setFlag('pit-champion');
-          // the champion's name goes on Barnaby's bill too
-          setFlag('on-the-bill');
           march(
             brannocSleepwalks(WALKER_ROWS.brannoc, useWorldStore.getState().flags.includes(ARENA_CARRIED)),
             () =>
@@ -1301,7 +1299,7 @@ function World({
     });
   }, [map, setFlag, sim, travel]);
   // Felix frames you to the king's guards (felix-maze.ts): you answer, and however you answer, you end
-  // up in the dungeon next to Brannoc (the drink goes by way of the Candle Inn). First he gives his
+  // up in the dungeon next to Brannoc (the drink goes by way of the tavern). First he gives his
   // name, you try "Mr. Himothy", and he cuts you off.
   const guardScene = useCallback(() => {
     const ask = (lines: string[]): void =>
@@ -1333,7 +1331,7 @@ function World({
               }
               if (a.drinks) {
                 // "Let me buy you a drink" (author, Oct 7, 2026): they thank you, you answer, and it's off to the
-                // Candle Inn there and then. The bar (TO_THE_BAR, on arrival) is where it goes wrong.
+                // tavern there and then. The bar (TO_THE_BAR, on arrival) is where it goes wrong.
                 sayAs(can.who!, a.lines, a.by, () =>
                   setDialogue({
                     lines: DRINKS.thanks,
@@ -1563,7 +1561,6 @@ function World({
           lines: ALONE_WARDEN,
           then: () => {
             w.setFlag('pit-champion');
-            w.setFlag('on-the-bill');
             // confused, you walk out into the town
             march(
               [
@@ -1587,8 +1584,8 @@ function World({
         // everyone out, there's nobody left to see it.
         w.setFlag(FELL_IN);
         setDialogue({ lines: w.flags.includes(CELLS_FREED) ? POTHOLE_UNSEEN : POTHOLE_LANDING });
-      } else if (map.id === 'candle-inn' && w.flags.includes(DRINKS_DUE) && !w.flags.includes(TAB_UNPAID)) {
-        // The guards' drink (felix-maze.ts): you order, Nana asks for the money, and you haven't got any.
+      } else if (map.id === 'wc-tavern' && w.flags.includes(DRINKS_DUE) && !w.flags.includes(TAB_UNPAID)) {
+        // The guards' drink (felix-maze.ts): you order, Rolla asks for the money, and you haven't got any.
         // Then it's black, and the guards march you down to the cells from their stair.
         setDialogue({
           lines: DRINKS.bar,
