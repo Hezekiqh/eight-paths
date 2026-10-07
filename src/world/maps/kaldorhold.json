@@ -444,7 +444,7 @@
           "ask": "Why Vorn?",
           "answer": [
             "He came out of the culling games top of his year, and he still has both his ears.",
-            "Marry a champion, bear a champion, and they treat you like a goddess. Statues. Chairs carried about. People bow at your soup."
+            "Be seen on a champion's arm, and they treat you like nobility. Statues. Chairs carried about. People bow at your soup."
           ]
         },
         {
@@ -482,7 +482,7 @@
           "ask": "What happened to the other ten?",
           "answer": [
             "Didn't make it. That's what the games are for, small one. Only the strongest go on.",
-            "Now I live by the king, and I'm to father as many children as I like. Strong ones. The kingdom needs them, the king says. I've nine."
+            "Now I live by the king, in a house with a statue of me outside it. I polish it myself. Nobody else gets the chin right."
           ]
         },
         {
@@ -500,10 +500,10 @@
           ]
         },
         {
-          "ask": "Nine children? Name them.",
+          "ask": "Polishing your own statue? That's a bit sad.",
           "answer": [
-            "…Strong. Little Strong. Strong Two. Big Strong.",
-            "* He counts on his fingers, gets to five, and starts flexing instead."
+            "Sad? It's twice a day. Once for the morning light, once for the evening light.",
+            "* He flexes at the statue. The statue does not flex back. He looks hurt, mostly by you."
           ],
           "deed": "bad"
         }

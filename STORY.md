@@ -94,8 +94,9 @@ What the player sees and hears all over the Berserker Kingdom. All of it is Told
   better roads and houses, better food, a better life.
 - **The main city is cutthroat.** Everybody is out to get everybody; only the strongest survive; strength matters most.
 - **Kaldor looks after strong soldiers.** At 18 they go into the Kaloseum for **the culling games**. The strongest live
-  on as champions in the city and father as many children as they like, to breed stronger soldiers. The women who bear
-  them are treated like goddesses.
+  on as champions in the city: houses by the king, pensions, statues. Their mothers are honoured like goddesses.
+  (Age rating, author, Oct 7, 2026: champions "breeding" stronger soldiers stays out of the game's text; it's
+  shown as status and wealth, and as mothers honoured for raising champions.)
 - **The island:** "500 soldiers. One day." Told as a boast (a plaque, a banner, a veteran), never as Kaldor's test.
 
 ## Kaldor and his master (Hinted, then Told at the end)

@@ -188,7 +188,21 @@ Then click **Save**. Once build 6 is attached and the pages below are done, clic
 | Secondary category | Lifestyle |
 | Content rights | No, it does not contain, show or access third-party content |
 
-**Age Rating:** answer **None** / **No** to every item. The fantasy theme has no violence or mature content. Expected rating: **4+**.
+**Age Rating** (updated Oct 7, 2026: the World now has fights, the dead rising and a harsh kingdom). Answer:
+
+| Question | Answer | Why |
+| --- | --- | --- |
+| Cartoon or Fantasy Violence | **Infrequent/Mild** | Pixel-art sword fights against guards, shadows and raiders; nobody bleeds |
+| Horror/Fear Themes | **Infrequent/Mild** | Graves dug from the inside, shadow soldiers, a king murdered long ago (told, not shown) |
+| Mature/Suggestive Themes | **Infrequent/Mild** | A cruel kingdom: children sent to train at 12, the unfit sent away, arena "culling games". Nothing sexual |
+| Alcohol, Tobacco or Drug Use or References | **Infrequent/Mild** | A tavern, drinks ordered (none shown being drunk to excess) |
+| Realistic Violence, Prolonged Graphic or Sadistic Violence, Profanity, Sexual Content or Nudity, Graphic Sexual Content, Medical/Treatment Info, Contests | **None** | |
+| Simulated Gambling / real-money Gambling | **No** | |
+| Loot boxes / paid random items | Answer **truthfully** for the current build: character draws are earned with habits, not bought; Premium doubles 5-star odds and adds a redo per drop. Say so in the review notes. Drop odds are shown in the app (Drop odds screen) |
+| User-generated content / messaging | **Yes**: usernames on the optional Friends feature, with Report and Block | |
+| Unrestricted Web Access | **No** | |
+
+App Store Connect computes the rating from these answers; expect **9+** (possibly 13+ for the mature themes).
 
 ### App Privacy (Trust & Safety)
 

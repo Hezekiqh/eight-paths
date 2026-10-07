@@ -223,7 +223,9 @@
       "sprite": "raider",
       "facing": "down",
       "name": "Sergeant Brask",
-      "lines": ["Nobody goes north under Lv 10. King's orders. The road eats the weak."]
+      "lines": [
+        "Nobody goes north under Lv 10. King's orders. The road eats the weak."
+      ]
     },
     {
       "id": "barnaby",
@@ -579,7 +581,7 @@
           "ask": "What's the number?",
           "answer": [
             "Nineteen. Nineteen and a half if she's feeling kind. Twenty if I pay.",
-            "Twenty gets you looked at in the plaza. Twenty-two gets you a wife. Twenty-five gets you a statue."
+            "Twenty gets you looked at in the plaza. Twenty-two gets you a parade. Twenty-five gets you a statue."
           ]
         },
         {
@@ -592,7 +594,7 @@
         {
           "ask": "All that muscle and nothing upstairs.",
           "answer": [
-            "Upstairs? I'm not allowed upstairs. I'm not ranked high enough.",
+            "Upstairs? Upstairs is for champions. I live in the cellar.",
             "* He keeps flexing. His ears go whiter."
           ],
           "deed": "bad"
@@ -617,7 +619,7 @@
           "ask": "What are you ranking?",
           "answer": [
             "Men. By Kaloseum standing first, then arms, then whether they still have their own teeth.",
-            "Every woman in the city wants the strongest man. The mother of a champion lives like a goddess. Nobody ever tells her no."
+            "Everyone in this city wants to be near the strongest. A champion's family lives like nobility. Nobody ever tells them no."
           ]
         },
         {
@@ -655,7 +657,7 @@
           "ask": "What's the Kaloseum got to do with love?",
           "answer": [
             "Everything! At eighteen they go in. Only the strongest come out champions.",
-            "A champion lives by the king and fathers as many children as he likes, all of them strong. That's not love. That's an investment."
+            "A champion lives by the king, with a house, a pension and a statue outside. That's not love. That's an investment."
           ]
         },
         {

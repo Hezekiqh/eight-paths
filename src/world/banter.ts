@@ -535,11 +535,11 @@ export const BANTER: Record<string, Banter[]> = {
     {
       who: 'ysolde',
       lines: [
-        "YSOLDE: Nine children, a stipend for each, and a house by the king. He's not a champion. He's an asset.",
-        "YSOLDE: …A poorly managed one. He can't count to nine.",
+        "YSOLDE: A stipend, a house by the king, and a statue he polishes himself. He's not a champion. He's an asset.",
+        "YSOLDE: …A poorly managed one. He's paying someone to polish the polish.",
       ],
     },
-    { who: 'oren', lines: ['OREN: Strong. Little Strong. Strong Two.', 'OREN: …Poor Strong Two.'] },
+    { who: 'oren', lines: ['OREN: He loves that statue.', 'OREN: …Somebody should.'] },
   ],
   'kaldorhold:krag': [
     {
