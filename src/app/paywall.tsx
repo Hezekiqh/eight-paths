@@ -1,43 +1,51 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { PurchasesStoreProduct } from 'react-native-purchases';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { close } from '@/components/modal-header';
 import { haptics } from '@/haptics';
-import { FOUNDER_PRICE, PERKS, PREMIUM_PRICE, PRIVACY_URL, TERMS_URL } from '@/premium/config';
-import { buy, loadProducts, purchasesEnabled, restore, type ProductKind } from '@/premium/purchases';
+import { FALLBACK_PRICES, PERKS, PRIVACY_URL, TERMS_URL } from '@/premium/config';
+import { buy, loadProducts, purchasesEnabled, restore, type Offer, type ProductKind } from '@/premium/purchases';
 import { usePremium } from '@/premium/store';
 import { useSocial } from '@/social/store';
 import { founderLabel } from '@/social/username';
 import { useClassInfo } from '@/store/hooks';
-import { colors, fonts, spacing, windowStyle } from '@/theme';
+import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
+
+const dollars = (n: number) => `$${n.toFixed(2)}`;
+const PERIOD: Record<ProductKind, 'month' | 'year'> = { regular: 'month', yearly: 'year', founder: 'month' };
 
 /**
  * Eight Paths Premium. Founders (the Second 100) are offered the founder price;
- * everyone else the regular one. Shown once after sign-up, and from Settings.
+ * everyone else chooses yearly (picked by default) or monthly. Shown once after
+ * the Keeper's tour or sign-up, whichever comes first, and from Settings.
  */
 export default function Paywall() {
   const color = useClassInfo()?.color ?? colors.accent;
   const founderNumber = useSocial((s) => s.profile?.founderNumber ?? null);
   const premium = usePremium((s) => s.premium);
   const founder = founderNumber !== null;
-  const kind: ProductKind = founder ? 'founder' : 'regular';
-  const [products, setProducts] = useState<Partial<Record<ProductKind, PurchasesStoreProduct>> | null>(
-    purchasesEnabled ? null : {},
-  );
+  const [chosen, setChosen] = useState<ProductKind>('yearly');
+  const kind: ProductKind = founder ? 'founder' : chosen;
+  const [offers, setOffers] = useState<Partial<Record<ProductKind, Offer>> | null>(purchasesEnabled ? null : {});
   const [busy, setBusy] = useState(false);
-  const product = products?.[kind];
-  // The App Store's localized price when it has loaded; ours until then.
-  const price = product?.priceString ?? (founder ? FOUNDER_PRICE : PREMIUM_PRICE);
+  const offer = offers?.[kind];
+
+  // The App Store's localized prices when they have loaded; ours until then.
+  const amount = (k: ProductKind) => offers?.[k]?.product.price ?? FALLBACK_PRICES[k];
+  const price = (k: ProductKind) => offers?.[k]?.product.priceString ?? dollars(FALLBACK_PRICES[k]);
+  const yearlyPerMonth = offers?.yearly?.product.pricePerMonthString ?? dollars(FALLBACK_PRICES.yearly / 12);
+  const saving = Math.round((1 - amount('yearly') / (amount('regular') * 12)) * 100);
+  const period = PERIOD[kind];
+  const trial = offer?.freeTrial ?? null;
   // With RevenueCat on, the button waits for a real product to sell.
-  const canBuy = purchasesEnabled ? product !== undefined : true;
+  const canBuy = purchasesEnabled ? offer !== undefined : true;
 
   useEffect(() => {
     usePremium.setState({ offerSeen: true });
-    if (purchasesEnabled) loadProducts().then(setProducts);
+    if (purchasesEnabled) loadProducts().then(setOffers);
   }, []);
 
   const subscribe = async () => {
@@ -47,9 +55,9 @@ export default function Paywall() {
       haptics.celebrate();
       return close();
     }
-    if (!product) return;
+    if (!offer) return;
     setBusy(true);
-    const result = await buy(product);
+    const result = await buy(offer.product);
     setBusy(false);
     if (result === 'bought') {
       haptics.celebrate();
@@ -75,6 +83,34 @@ export default function Paywall() {
     }
   };
 
+  const plan = (k: 'yearly' | 'regular', label: string, sub: string, badge?: string) => {
+    const selected = chosen === k;
+    return (
+      <Pressable
+        key={k}
+        accessibilityRole="radio"
+        accessibilityState={{ selected }}
+        onPress={() => {
+          haptics.select();
+          setChosen(k);
+        }}
+        style={[styles.plan, selected && { borderColor: color, backgroundColor: colors.card }]}>
+        <View style={[styles.radio, { borderColor: selected ? color : colors.border }]}>
+          {selected && <View style={[styles.dot, { backgroundColor: color }]} />}
+        </View>
+        <View style={styles.flex}>
+          <Text style={styles.planLabel}>{label}</Text>
+          <Text style={styles.planSub}>{sub}</Text>
+        </View>
+        {badge && (
+          <View style={[styles.badge, { backgroundColor: color }]}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
+      </Pressable>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.bar}>
@@ -84,21 +120,11 @@ export default function Paywall() {
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.kicker, { color }]}>EIGHT PATHS PREMIUM</Text>
-        <Text style={styles.title}>Upgrade to Premium</Text>
+        <Text style={styles.title}>Wake the legends faster</Text>
         <Text style={styles.body}>
-          Support the game and lore by upgrading to Premium. Your habits, levels and heroes stay free, always.
+          Twice the XP, twice the chance of a 5★ hero, and a redo on every drop. Your habits, levels and heroes stay
+          free, always.
         </Text>
-
-        {founder && (
-          <View style={[styles.founder, { borderColor: color }]}>
-            <Text style={[styles.founderLabel, { color }]}>SECOND 100 · {founderLabel(founderNumber)}</Text>
-            <Text style={styles.founderPrice}>{price} / month</Text>
-            <Text style={styles.body}>
-              Only the first 100 players get this price, and it&apos;s yours for as long as you stay subscribed. If you
-              cancel, it&apos;s gone for good.
-            </Text>
-          </View>
-        )}
 
         <View style={styles.table}>
           <View style={styles.row}>
@@ -127,17 +153,47 @@ export default function Paywall() {
               />
             )}
           </>
-        ) : busy || products === null ? (
-          <ActivityIndicator color={color} />
-        ) : canBuy ? (
-          <Button title={`Subscribe · ${price} / month`} onPress={subscribe} color={color} />
         ) : (
-          <Text style={styles.fine}>Couldn&apos;t reach the App Store. Close this and try again in a moment.</Text>
+          <>
+            {founder ? (
+              <View style={[styles.founder, { borderColor: color }]}>
+                <Text style={[styles.founderLabel, { color }]}>SECOND 100 · {founderLabel(founderNumber)}</Text>
+                <Text style={styles.founderPrice}>{price('founder')} / month</Text>
+                <Text style={styles.body}>
+                  Only the first 100 players get this price, and it&apos;s yours for as long as you stay subscribed. If
+                  you cancel, it&apos;s gone for good.
+                </Text>
+              </View>
+            ) : (
+              <View accessibilityRole="radiogroup" style={styles.plans}>
+                {plan(
+                  'yearly',
+                  `Yearly · ${price('yearly')}`,
+                  `Just ${yearlyPerMonth} a month`,
+                  saving > 0 ? `SAVE ${saving}%` : undefined,
+                )}
+                {plan('regular', `Monthly · ${price('regular')}`, 'Cancel anytime')}
+              </View>
+            )}
+
+            {busy || offers === null ? (
+              <ActivityIndicator color={color} />
+            ) : canBuy ? (
+              <Button
+                title={trial ? `Start ${trial} free` : `Subscribe · ${price(kind)} / ${period}`}
+                onPress={subscribe}
+                color={color}
+              />
+            ) : (
+              <Text style={styles.fine}>Couldn&apos;t reach the App Store. Close this and try again in a moment.</Text>
+            )}
+          </>
         )}
 
         <Text style={styles.fine}>
-          {price} a month, billed to your Apple ID. Renews monthly until you cancel, at least 24 hours before the period
-          ends, in your App Store settings.
+          {trial ? `${trial} free, then ` : ''}
+          {price(kind)} a {period}, billed to your Apple ID. Renews every {period} until you cancel, at least 24 hours
+          before the period ends, in your App Store settings.
         </Text>
         <View style={styles.links}>
           <Pressable accessibilityRole="button" onPress={restorePurchases} hitSlop={8}>
@@ -170,6 +226,23 @@ const styles = StyleSheet.create({
   founderLabel: { fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
   founderPrice: { color: colors.text, fontFamily: fonts.bold, fontSize: 34 },
   table: { ...windowStyle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  plans: { gap: spacing.md },
+  plan: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderWidth: 3,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+  },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  flex: { flex: 1 },
+  planLabel: { color: colors.text, fontFamily: fonts.bold, fontSize: 20 },
+  planSub: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 14 },
+  badge: { borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2 },
+  badgeText: { color: colors.background, fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1 },
   row: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
   rowLine: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   cell: { flex: 1, fontFamily: fonts.regular, fontSize: 13, lineHeight: 17 },

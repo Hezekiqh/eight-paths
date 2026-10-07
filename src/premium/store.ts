@@ -7,7 +7,7 @@ import type { Tier } from '@/game';
 type PremiumState = {
   /** Whether this player has Premium. For now only the dev toggle sets it; later, the App Store. */
   premium: boolean;
-  /** The post-sign-up paywall has been shown, so it isn't pushed again. */
+  /** The paywall has been shown (after the tour, sign-up or from Settings), so it isn't pushed again. */
   offerSeen: boolean;
 };
 

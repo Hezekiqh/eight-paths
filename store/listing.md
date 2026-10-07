@@ -159,7 +159,7 @@ To see the full flow: enter a name (optional), choose a class, keep the default 
 
 OPTIONAL ACCOUNT (Friends, "the Second 100"): Character tab > Friends. Sign in with Apple or Google, then choose a username. Only the username, level, party and collection are shared; habits never leave the device. Players can report and block others from a friend's page (Report / Block). Delete account is at the bottom of the Friends screen: it deletes the server account and revokes Sign in with Apple.
 
-PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once after choosing a username, and any time from Character tab > Settings > Eight Paths Premium. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99); everyone else premium_monthly ($2.99). Premium never locks the habit tracker: it raises XP per habit and the daily XP cap, removes the 10-habit limit, doubles 1-star character odds, adds one redo per character drop, and unlocks every theme.
+PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once when the Keeper's tour ends (or after choosing a username, if that comes first), and any time from Character tab > Settings > Eight Paths Premium. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99/month); everyone else chooses premium_yearly ($24.99/year, selected by default) or premium_monthly ($3.99/month). Premium never locks the habit tracker: it raises XP per habit and the daily XP cap, removes the 10-habit limit, doubles 5-star character odds, adds one redo per character drop, and unlocks every theme.
 
 CHARACTER DROPS: every few levels a Path awards a random character from its roster (no purchase can buy a drop directly). The exact odds per Path, free and Premium, are on the Drop odds sheet (link at the bottom of the paywall).
 
@@ -214,11 +214,13 @@ Then click **Publish**. Apple shows the new label once 1.1 is live.
 
 ### Subscriptions (Monetization → Subscriptions)
 
-Both subscriptions are already created in the group **Eight Paths Premium**: `premium_monthly` ($2.99/month) and `premium_founder_monthly` ($0.99/month), all 175 countries, with display names and descriptions. Before submitting:
+Already created in the group **Eight Paths Premium**: `premium_monthly` and `premium_founder_monthly` ($0.99/month), all 175 countries, with display names and descriptions. Before submitting:
+
+0. **Yearly plan and new monthly price:** create `premium_yearly` in the same group (Auto-Renewable, 1 year, $24.99), and optionally a free-trial Introductory Offer on it (the paywall shows "Start 7 days free" only to Apple IDs still eligible). Change `premium_monthly` to $3.99/month. In RevenueCat, add `premium_yearly` to the app's products and attach it to the `premium` entitlement. Keep `FALLBACK_PRICES` in `src/premium/config.ts` matching these.
 
 1. **Group display name:** open the group, **App Store Localization → Add** English (U.S.): Subscription Group Display Name `Eight Paths Premium`, App Name Display Options: use the app name.
 2. **Review screenshot** on each subscription: a screenshot of the paywall (Review Information → Screenshot).
-3. On the 1.1 version page, under **In-App Purchases and Subscriptions**, select both subscriptions so they are reviewed with the build. The first subscriptions must go in with a new app version.
+3. On the 1.1 version page, under **In-App Purchases and Subscriptions**, select all three subscriptions so they are reviewed with the build. The first subscriptions must go in with a new app version.
 
 ### Pricing and Availability (Monetization)
 

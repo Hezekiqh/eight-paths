@@ -11,9 +11,11 @@ import { purchasesEnabled } from './purchases';
  */
 export const premiumEnabled = purchasesEnabled || __DEV__;
 
-/** Shown until the App Store supplies the localized prices. */
-export const PREMIUM_PRICE = '$2.99';
-export const FOUNDER_PRICE = '$0.99';
+/**
+ * Shown until the App Store supplies the localized prices (and in development, where it never does).
+ * The real prices are set in App Store Connect; keep these matching them.
+ */
+export const FALLBACK_PRICES = { regular: 3.99, yearly: 24.99, founder: 0.99 } as const;
 
 export const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 export const PRIVACY_URL = 'https://hezekiqh.github.io/eight-paths/privacy.html';
@@ -22,9 +24,9 @@ export type Perk = { title: string; free: string; premium: string };
 
 /** What the paywall lists, free next to Premium. */
 export const PERKS: Perk[] = [
-  { title: 'XP per habit', free: '10 XP, up to 30 a Path a day', premium: '20 XP, up to 60 a Path a day' },
-  { title: 'Habits', free: 'Up to 10', premium: 'Unlimited' },
   { title: '5★ odds', free: 'Standard', premium: 'About twice as likely' },
   { title: 'Redo a drop', free: '—', premium: 'Once per drop' },
+  { title: 'XP per habit', free: '10 XP, up to 30 a Path a day', premium: '20 XP, up to 60 a Path a day' },
+  { title: 'Habits', free: 'Up to 10', premium: 'Unlimited' },
   { title: 'Themes', free: 'The default', premium: 'Every theme' },
 ];
