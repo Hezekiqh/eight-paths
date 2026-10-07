@@ -59,6 +59,16 @@ export function winScene(
         ],
         outcome: { flags: [flag], joins: ['plush'] },
       };
+    case 'dungeon-might':
+      // The Test of Strength (author, Oct 4, 2026): five shadows, and the gate to the Hall of Champions.
+      return {
+        lines: [
+          "STATUE: Wow. I can't believe you actually survived.",
+          'STATUE: I really need to stop gambling.',
+          'The gate opens.',
+        ],
+        outcome: { flags: [flag] },
+      };
     case 'the-pit':
       // The Kaloseum (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
       if (flag === 'pit-guards')

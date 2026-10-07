@@ -107,6 +107,29 @@ const rim = (g, x, y, w, h, c) => {
   box(g, x, y + h, w, 1, c);
 };
 
+/**
+ * Light (or shade) laid over what's there in fine steps, eighths not quarters, so a pool of candlelight
+ * fades out smoothly instead of breaking into a coarse speckle at its edge.
+ */
+function glow(g, x, y, a, to) {
+  if (y < 0 || y >= g.h || x < 0 || x >= g.w || !g[y][x] || a <= 0) return;
+  g[y][x] = mix(g[y][x], typeof to === 'string' ? hex(to) : to, dither(a, x, y, 8));
+}
+
+/**
+ * A light source's pool: strongest at (lx, ly), falling off with the square of the distance, a little
+ * flattened (the floor is seen from above at a slant). `skip(x, y)` keeps it off what it can't reach.
+ */
+function lightPool(g, lx, ly, R, a, col, skip = () => false, squash = 1.2) {
+  const c = hex(col);
+  for (let y = Math.floor(ly - R); y < ly + R; y++)
+    for (let x = Math.floor(lx - R); x < lx + R; x++) {
+      if (y < 0 || x < 0 || y >= g.h || x >= g.w || skip(x, y)) continue;
+      const d = Math.hypot(x - lx, (y - ly) * squash) / R;
+      if (d < 1) glow(g, x, y, a * (1 - d) ** 2, c);
+    }
+}
+
 function toPng(g) {
   const png = new PNG({ width: g.w, height: g.h });
   for (let y = 0; y < g.h; y++)
@@ -157,17 +180,406 @@ const P = {
   silkBright: '#FFF7DC',
 };
 
-/** A row of scroll ends lying on a shelf whose board is at `y`. */
+/** Wood for the Archive's furniture: an outline, then lit from the upper left, shaded to the lower right. */
+const WD = {
+  out: '#140C08',
+  hi: '#8A6040',
+  lit: '#6A4630',
+  shade: '#2E1C12',
+  recess: '#1A100A',
+};
+
+/** A row of scroll ends lying on a shelf whose board is at `y`: each a rolled end, lit on its upper left. */
 function scrollRow(g, x0, x1, y, seed) {
-  box(g, x0, y, x1 - x0, 1, P.trim);
-  box(g, x0, y + 1, x1 - x0, 1, P.woodDark);
+  // the shelf above casts its shadow into the back of the bay
+  box(g, x0, y - 4, x1 - x0, 1, WD.recess);
   for (let x = x0 + 1; x < x1 - 2; x += 3) {
     if (hash(x, y, seed) < 0.18) continue;
-    const c = P.scroll[Math.floor(hash(x, y, seed + 1) * 3)];
-    box(g, x, y - 3, 3, 3, c);
+    const k = Math.floor(hash(x, y, seed + 1) * 3);
+    const c = hex(P.scroll[k]);
+    const top = y - 3;
+    box(g, x, top, 3, 3, c);
+    put(g, x, top, mix(c, [255, 250, 235], 0.3));
+    box(g, x + 2, top + 1, 1, 2, mix(c, hex(WD.shade), 0.25));
     put(g, x + 1, y - 2, P.scrollEnd);
     if (hash(x, y, seed + 2) < 0.15) box(g, x, y - 1, 3, 1, P.ribbon);
   }
+  // the board: its top face catches the light, its front edge is darker, its underside darker still
+  box(g, x0, y, x1 - x0, 1, P.trim);
+  box(g, x0, y + 1, x1 - x0, 1, P.wood);
+  for (let x = x0; x < x1; x++) if (hash(x, y, seed + 4) < 0.12) put(g, x, y, '#8A5E3C');
+}
+
+/** The Archive's candelabra: an iron stand lit on its left, three candles, flames of `flame` (outer, mid, core). */
+function candelabra(g, x, y, flame) {
+  dropShadow(g, x + 8, y + 15, 6, 1, 0.6);
+  // the foot and stem, outlined, lit down the left
+  box(g, x + 4, y + 13, 8, 3, WD.out);
+  box(g, x + 5, y + 14, 6, 1, P.iron);
+  box(g, x + 5, y + 14, 3, 1, '#5A4E58');
+  box(g, x + 6, y + 6, 4, 8, WD.out);
+  box(g, x + 7, y + 6, 2, 8, P.iron);
+  box(g, x + 7, y + 6, 1, 8, '#5A4E58');
+  put(g, x + 7, y + 10, '#7A6E78');
+  // the arms and their drip cups
+  box(g, x + 3, y + 7, 10, 2, WD.out);
+  box(g, x + 4, y + 7, 8, 1, P.iron);
+  box(g, x + 4, y + 7, 3, 1, '#5A4E58');
+  for (const cx of [4, 11]) {
+    box(g, x + cx - 1, y + 6, 3, 1, P.iron);
+    put(g, x + cx - 1, y + 6, '#6A5E68');
+  }
+  // the candles, lit on the left, a drip of wax down one side
+  for (const cx of [4, 7, 11]) {
+    const wide = cx === 7 ? 2 : 1;
+    const top = cx === 7 ? 1 : 3;
+    box(g, x + cx, y + top, wide, 6 - top, P.wax);
+    put(g, x + cx + wide - 1, y + top + 1, '#C8BCA8');
+    if (wide === 2) box(g, x + cx + 1, y + top + 1, 1, 6 - top - 1, '#D8CCB8');
+    put(g, x + cx + wide, y + top + 2, '#E8E0CC');
+    // the flame: a hot core, a bright body, a tip; a faint halo round it
+    for (let j = -3; j <= 1; j++)
+      for (let i = -2; i <= wide + 1; i++) glow(g, x + cx + i, y + top - 2 + j, 0.32 * (1 - (Math.abs(i - wide / 2 + 0.5) + Math.abs(j)) / 4), flame[1]);
+    put(g, x + cx, y + top - 1, flame[0]);
+    put(g, x + cx, y + top - 2, flame[2]);
+    put(g, x + cx, y + top - 3, flame[1]);
+    if (wide === 2) put(g, x + cx + 1, y + top - 1, flame[1]);
+  }
+}
+
+/** A pot, outlined and lit from the left: terracotta, glass, or Tamsin's brass. Its rim at `top`, `w` wide, standing on `foot`. */
+function pot(g, cx, top, w, kind = 'clay', foot = top + 5) {
+  const [c, l, d, rimC] =
+    kind === 'brass'
+      ? ['#A88A3A', '#E0C060', '#6A5420', '#C8A848']
+      : kind === 'glass'
+        ? ['#8AA8B8', '#D8E8F0', '#5A7888', '#B8D0DC']
+        : ['#A4542E', '#D07A4A', '#6E3218', '#B8643A'];
+  const h = foot - top;
+  for (let j = 0; j < h; j++) {
+    const hw = Math.round(w / 2 - (j / h) * 1.5);
+    box(g, cx - hw - 1, top + j, hw * 2 + 3, 1, WD.out);
+    box(g, cx - hw, top + j, hw * 2 + 1, 1, c);
+    put(g, cx - hw, top + j, l);
+    if (kind !== 'glass') put(g, cx - hw + 1, top + j, mix(hex(c), hex(l), 0.5));
+    box(g, cx + hw - 1, top + j, 2, 1, d);
+  }
+  box(g, cx - Math.round(w / 2) - 1, foot, Math.round(w / 2) * 2 + 3, 1, WD.out);
+  // the rim, a band wider than the pot
+  box(g, cx - Math.round(w / 2) - 2, top - 1, Math.round(w / 2) * 2 + 5, 3, WD.out);
+  box(g, cx - Math.round(w / 2) - 1, top, Math.round(w / 2) * 2 + 3, 1, rimC);
+  put(g, cx - Math.round(w / 2) - 1, top, l);
+  box(g, cx + Math.round(w / 2), top, 2, 1, d);
+}
+
+/** A cluster of leaves: each a small lit-and-shaded blob. */
+function leaf(g, x, y, rx, ry, [d, m, l]) {
+  ellipse(g, x, y, rx + 1, ry + 1, '#0E1A0C');
+  ellipse(g, x, y, rx, ry, d);
+  ellipse(g, x - (rx > 1 ? 1 : 0), y - (ry > 1 ? 1 : 0), Math.max(0, rx - 1), Math.max(0, ry - 1), m);
+  put(g, x - rx + 1, y - ry + 1, l);
+}
+
+const GREENS = {
+  fern: ['#2E5A2A', '#4A8A3A', '#7AB858'],
+  deep: ['#1E4226', '#2E6A3A', '#5A9A5A'],
+  sage: ['#3A5A3A', '#5A7A52', '#8AA878'],
+  pale: ['#3A6A2E', '#5A9A3E', '#9AD06A'],
+};
+
+/** The heroes' plants, each the one their room's examine line talks about. */
+function plant(g, x, y, m) {
+  const id = m.id ?? '';
+  const kinds = ['leafy', 'fern', 'round', 'spiky', 'trail'];
+  let kind = { 'room-brannoc': 'fern', 'room-ysolde': 'round', 'room-wren': 'jar', 'room-pip': 'hat', 'room-tamsin': 'brass' }[id];
+  if (!kind) kind = kinds[Math.floor(hash(x, y, 51) * kinds.length)];
+  dropShadow(g, x + 9, y + 15, 6, 1, 0.6);
+  if (kind === 'jar') {
+    // white flowers in a jar of water, the water catching the light
+    pot(g, x + 8, y + 9, 6, 'glass', y + 14);
+    box(g, x + 6, y + 11, 5, 3, '#6A90A8');
+    put(g, x + 6, y + 11, '#C8E0F0');
+    for (const [sx, top] of [[6, 3], [8, 1], [10, 4], [7, 5], [9, 3]]) box(g, x + sx, y + top + 2, 1, 9 - top, '#3A6A2E');
+    for (const [fx, fy] of [[6, 4], [8, 2], [10, 5], [7, 6], [9, 4]]) {
+      box(g, x + fx - 1, y + fy - 1, 3, 3, '#3A3430');
+      put(g, x + fx - 1, y + fy, '#E8E4DC');
+      put(g, x + fx + 1, y + fy, '#C8C4BC');
+      put(g, x + fx, y + fy - 1, '#FFFFFF');
+      put(g, x + fx, y + fy + 1, '#D8D4CC');
+      put(g, x + fx, y + fy, '#E8C850');
+    }
+    return;
+  }
+  if (kind === 'brass') {
+    // the pot Tamsin built, which waters the plant: a brass pot, a little tank and a pipe; the plant leans away
+    pot(g, x + 7, y + 10, 8, 'brass', y + 14);
+    box(g, x + 12, y + 4, 3, 5, WD.out);
+    box(g, x + 13, y + 5, 1, 3, '#C8A848');
+    box(g, x + 10, y + 4, 3, 1, '#8A6E2A');
+    put(g, x + 10, y + 5, '#6AB0D8');
+    for (const [i, j] of [[3, 12], [11, 12]]) put(g, x + i, y + j, '#E0C060');
+    leaf(g, x + 5, y + 6, 2, 1, GREENS.sage);
+    leaf(g, x + 3, y + 4, 2, 1, GREENS.sage);
+    leaf(g, x + 7, y + 4, 1, 2, GREENS.sage);
+    box(g, x + 6, y + 6, 1, 4, '#3A5A3A');
+    return;
+  }
+  pot(g, x + 8, y + 10, 8, 'clay', y + 14);
+  if (kind === 'fern' || kind === 'hat') {
+    // fronds arching up and out from the middle, each lined with leaflets, darker at the heart
+    const G = kind === 'fern' ? GREENS.fern : GREENS.pale;
+    const fronds = [-2.5, -2.1, -1.75, -1.4, -1.05, -0.65];
+    for (const ang of fronds) {
+      const len = 7 - Math.abs(ang + 1.57) * 1.2;
+      const dx = Math.cos(ang);
+      const dy = Math.sin(ang);
+      for (let s = 0; s <= len; s += 0.5) {
+        const px = x + 8 + dx * s;
+        const py = y + 10 + dy * s + (s * s * Math.abs(dx)) / 7;
+        put(g, px, py, s < 2 ? G[0] : G[1]);
+        if (s >= 1.5 && Math.round(s * 2) % 2 === 0) {
+          // leaflets, perpendicular, lit on the upper side
+          put(g, px - dy, py + dx * 0.5 - 1, s > len - 2 ? G[2] : G[1]);
+          put(g, px + dy, py - dx * 0.5 + 1, G[0]);
+        }
+      }
+    }
+    put(g, x + 8, y + 9, G[0]);
+    if (kind === 'hat') {
+      // a tiny hat, with a feather in it
+      box(g, x + 5, y + 2, 7, 1, WD.out);
+      box(g, x + 6, y + 1, 5, 1, '#8A1A20');
+      box(g, x + 7, y - 1, 3, 2, '#B3261E');
+      box(g, x + 6, y - 2, 5, 1, WD.out);
+      put(g, x + 7, y - 1, '#D85A50');
+      box(g, x + 10, y - 3, 1, 3, '#E8D8B0');
+      put(g, x + 11, y - 4, '#E8D8B0');
+    }
+    return;
+  }
+  if (kind === 'round') {
+    // clipped into a neat ball, with a tag on a string: its watering, logged
+    ellipse(g, x + 8, y + 5, 6, 5, '#0E1A0C');
+    ellipse(g, x + 8, y + 5, 5, 4, GREENS.deep[0]);
+    ellipse(g, x + 7, y + 4, 4, 3, GREENS.deep[1]);
+    ellipse(g, x + 6, y + 3, 2, 1, GREENS.deep[2]);
+    for (let k = 0; k < 6; k++) put(g, x + 4 + Math.floor(hash(x, y, k + 60) * 9), y + 2 + Math.floor(hash(y, x, k + 60) * 6), GREENS.deep[k % 2 ? 0 : 2]);
+    if (id !== 'room-ysolde') return;
+    box(g, x + 8, y + 9, 1, 1, '#4A3020');
+    box(g, x + 11, y + 9, 3, 3, P.paper);
+    put(g, x + 12, y + 10, '#8A7A60');
+    put(g, x + 10, y + 9, '#C8B890');
+    return;
+  }
+  if (kind === 'spiky') {
+    for (const [lx, top] of [[5, 3], [7, 1], [9, 2], [11, 4], [6, 5], [10, 5]]) {
+      box(g, x + lx, y + top, 1, 10 - top, GREENS.pale[1]);
+      put(g, x + lx, y + top, GREENS.pale[2]);
+      put(g, x + lx + 1, y + top + 3, GREENS.pale[0]);
+    }
+    return;
+  }
+  if (kind === 'trail') {
+    leaf(g, x + 8, y + 7, 4, 2, GREENS.fern);
+    for (const s of [-1, 1])
+      for (let k = 0; k < 5; k++) put(g, x + 8 + s * (4 + Math.floor(k / 2)), y + 8 + k, GREENS.fern[k % 2 ? 1 : 2]);
+    return;
+  }
+  // broad leaves, overlapping, the near ones brighter
+  leaf(g, x + 5, y + 6, 2, 2, GREENS.deep);
+  leaf(g, x + 11, y + 6, 2, 2, GREENS.deep);
+  leaf(g, x + 8, y + 3, 2, 3, GREENS.fern);
+  leaf(g, x + 6, y + 8, 2, 1, GREENS.fern);
+  leaf(g, x + 10, y + 8, 2, 1, GREENS.fern);
+}
+
+/** A desk or table's top: a run of tiles (`l`/`r` its ends), outlined, lit along its back edge and left end. */
+function tableTop(g, x, y, l, r, top, front, light = P.woodLight, dark = P.wood) {
+  const t = y + top;
+  const f = y + front;
+  box(g, x, t - 1, TILE, 1, WD.out);
+  box(g, x, t, TILE, f - t, light);
+  box(g, x, t, TILE, 1, WD.hi);
+  // planks along its length, a little grain
+  box(g, x, t + 3, TILE, 1, mix(hex(light), hex(WD.shade), 0.35));
+  for (let i = 0; i < TILE; i++)
+    if (hash(x + i, y, 52) < 0.2) put(g, x + i, t + 1 + Math.floor(hash(x + i, y, 53) * (f - t - 1)), mix(hex(light), hex(WD.shade), 0.2));
+  // the front edge, then the apron below it, in shade
+  box(g, x, f, TILE, 1, P.trim);
+  box(g, x, f + 1, TILE, 2, dark);
+  box(g, x, f + 3, TILE, 1, WD.out);
+  if (l) {
+    box(g, x, t - 1, 1, f - t + 5, WD.out);
+    box(g, x + 1, t, 1, f - t, WD.hi);
+  }
+  if (r) {
+    box(g, x + 15, t - 1, 1, f - t + 5, WD.out);
+    box(g, x + 14, t, 1, f - t, mix(hex(light), hex(WD.shade), 0.4));
+  }
+}
+
+/** A gear, seen flat: brass, toothed, a hole in the middle. */
+function gear(g, cx, cy, r) {
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2;
+    put(g, cx + Math.round(Math.cos(a) * (r + 1)), cy + Math.round(Math.sin(a) * (r + 1)), '#8A6E2A');
+  }
+  ellipse(g, cx, cy, r, r, '#A88A3A');
+  put(g, cx - r + 1, cy - r + 1, '#E0C060');
+  put(g, cx - 1, cy - 1, '#E0C060');
+  put(g, cx, cy, '#2A1C10');
+}
+
+/** What lies on a desk, by whose room it is. `left`: the desk's left tile. */
+function deskThings(g, x, y, left, id) {
+  if (id === 'room-quill') {
+    // drowned in notes, and a teacup grown a little forest
+    if (left) {
+      for (const [px, py, w, h] of [[2, 3, 6, 5], [6, 4, 6, 5], [9, 2, 5, 4]]) {
+        box(g, x + px + 1, y + py + 1, w, h, WD.shade);
+        box(g, x + px, y + py, w, h, P.paper);
+        box(g, x + px, y + py, w, 1, '#FFF6DC');
+        for (let r = 2; r < h; r += 2) box(g, x + px + 1, y + py + r, w - 2 - (r % 4 ? 1 : 0), 1, '#9A8A70');
+      }
+    } else {
+      box(g, x + 1, y + 5, 5, 4, P.paper);
+      box(g, x + 2, y + 6, 3, 1, '#9A8A70');
+      ellipse(g, x + 10, y + 6, 3, 2, WD.out);
+      ellipse(g, x + 10, y + 6, 2, 1, '#F0ECE4');
+      box(g, x + 9, y + 6, 3, 1, '#3A2A1A');
+      put(g, x + 13, y + 6, '#F0ECE4');
+      for (const [i, j] of [[9, 4], [10, 3], [11, 4], [10, 5]]) put(g, x + i, y + j, j < 4 ? '#7AB858' : '#3A6A2E');
+    }
+    return;
+  }
+  if (id === 'room-tamsin') {
+    // a workbench: gears, a spring, and a clock that runs backwards on purpose
+    if (left) {
+      gear(g, x + 5, y + 6, 2);
+      gear(g, x + 10, y + 5, 1);
+      for (let k = 0; k < 4; k++) put(g, x + 12 + (k % 2), y + 7 + k, '#B8B8C0');
+      box(g, x + 2, y + 9, 4, 1, '#6A6A78');
+      put(g, x + 2, y + 9, '#B8B8C0');
+    } else {
+      ellipse(g, x + 8, y + 5, 4, 3, WD.out);
+      ellipse(g, x + 8, y + 5, 3, 2, '#F0E6CC');
+      put(g, x + 8, y + 5, '#2A1C10');
+      put(g, x + 7, y + 4, '#2A1C10');
+      put(g, x + 9, y + 5, '#B3261E');
+      put(g, x + 6, y + 4, '#FFFFFF');
+      gear(g, x + 3, y + 8, 1);
+    }
+    return;
+  }
+  if (left) {
+    // the open ledger, the gutter in shade
+    box(g, x + 6, y + 5, 10, 6, WD.shade);
+    box(g, x + 5, y + 4, 10, 6, P.paper);
+    box(g, x + 5, y + 4, 10, 1, '#FFF6DC');
+    box(g, x + 10, y + 4, 1, 6, '#B8A888');
+    for (let r = 6; r < 10; r += 2) {
+      box(g, x + 6, y + r, 3, 1, '#9A8A70');
+      box(g, x + 11, y + r, 3, 1, '#9A8A70');
+    }
+    if (id === 'room-ysolde') for (const [cx, n] of [[2, 3], [3, 2]]) for (let k = 0; k < n; k++) box(g, x + cx - 1, y + 9 - k, 2, 1, k % 2 ? '#E8C860' : '#C8963A');
+    return;
+  }
+  // a closed ledger, the ink pot and the quill
+  box(g, x + 1, y + 5, 7, 5, WD.out);
+  box(g, x + 1, y + 4, 7, 5, '#6A1A20');
+  box(g, x + 1, y + 4, 7, 1, '#8A2A2E');
+  box(g, x + 1, y + 8, 7, 1, P.paper);
+  box(g, x + 10, y + 5, 3, 3, '#1A1426');
+  put(g, x + 10, y + 5, '#4A4060');
+  put(g, x + 11, y + 4, '#3A3050');
+  box(g, x + 12, y + 1, 1, 4, P.wax);
+  put(g, x + 13, y, P.wax);
+  put(g, x + 13, y + 1, '#D8CCB8');
+}
+
+/** A hero's table (`T` drawn as `j`): two tiles, legs showing, and what the examine line says is on it. */
+function heroTable(g, x, y, m) {
+  const l = m.at(-1, 0) !== 'j';
+  const r = m.at(1, 0) !== 'j';
+  // the shadow under it, and the legs
+  for (let i = l ? 1 : 0; i < (r ? 15 : 16); i++) for (let j = 12; j < 16; j++) tint(g, x + i, y + j, 0.55 - (j - 12) * 0.1);
+  if (l) {
+    box(g, x + 1, y + 11, 3, 5, WD.out);
+    box(g, x + 2, y + 11, 1, 4, P.wood);
+  }
+  if (r) {
+    box(g, x + 12, y + 11, 3, 5, WD.out);
+    box(g, x + 13, y + 11, 1, 4, WD.shade);
+  }
+  tableTop(g, x, y, l, r, 3, 8);
+  const id = m.id ?? '';
+  if (id === 'room-brannoc') {
+    // a sword, polished to a mirror, laid along the table; beside it, the list
+    if (l) {
+      box(g, x + 3, y + 4, 1, 4, '#C8963A');
+      put(g, x + 3, y + 4, '#E8C860');
+      box(g, x + 4, y + 5, 3, 2, '#5A3A22');
+      box(g, x + 1, y + 5, 2, 2, '#C8963A');
+      box(g, x + 7, y + 5, 9, 2, '#9A9AAA');
+      box(g, x + 7, y + 5, 9, 1, '#E8E8F4');
+      box(g, x + 7, y + 7, 9, 1, WD.shade);
+    } else {
+      box(g, x, y + 5, 6, 2, '#9A9AAA');
+      box(g, x, y + 5, 6, 1, '#E8E8F4');
+      put(g, x + 6, y + 6, '#9A9AAA');
+      put(g, x + 6, y + 5, '#FFFFFF');
+      box(g, x, y + 7, 6, 1, WD.shade);
+      box(g, x + 9, y + 3, 5, 6, WD.shade);
+      box(g, x + 8, y + 2, 5, 6, P.paper);
+      box(g, x + 8, y + 2, 5, 1, '#FFF6DC');
+      box(g, x + 9, y + 3, 3, 1, '#2A1C10');
+      put(g, x + 9, y + 6, '#8A7A60');
+    }
+    return;
+  }
+  if (id === 'room-pip') {
+    // song sheets every which way, and a lute
+    if (l) {
+      for (const [px, py] of [[2, 3], [7, 4]]) {
+        box(g, x + px + 1, y + py + 1, 5, 5, WD.shade);
+        box(g, x + px, y + py, 5, 5, P.paper);
+        for (let r = 1; r < 5; r += 2) box(g, x + px + 1, y + py + r, 3, 1, '#9A8A70');
+        put(g, x + px + 2, y + py + 1, '#2A1C10');
+        put(g, x + px + 3, y + py + 3, '#2A1C10');
+      }
+    } else {
+      ellipse(g, x + 6, y + 5, 4, 3, WD.out);
+      ellipse(g, x + 6, y + 5, 3, 2, '#C8843A');
+      put(g, x + 5, y + 4, '#E8A860');
+      put(g, x + 6, y + 5, '#2A1C10');
+      box(g, x + 9, y + 4, 6, 2, WD.out);
+      box(g, x + 9, y + 4, 5, 1, '#8A5A2A');
+      for (let k = 0; k < 3; k++) put(g, x + 10 + k * 2, y + 5, '#E8E0CC');
+    }
+    return;
+  }
+  if (id === 'room-tamsin') {
+    // half a crossbow, or half a teapot: a pot with a spout at one end and a bow's limb out of the other
+    if (l) {
+      box(g, x + 3, y + 5, 13, 1, '#5A3A22');
+      box(g, x + 3, y + 4, 1, 3, '#B8B8C0');
+      put(g, x + 2, y + 3, '#B8B8C0');
+      put(g, x + 2, y + 7, '#B8B8C0');
+      put(g, x + 1, y + 2, '#6A6A78');
+      put(g, x + 1, y + 8, '#6A6A78');
+      box(g, x + 1, y + 3, 1, 5, '#C8C0A8');
+    } else {
+      ellipse(g, x + 4, y + 5, 4, 3, WD.out);
+      ellipse(g, x + 4, y + 5, 3, 2, '#E8E4DC');
+      put(g, x + 2, y + 4, '#FFFFFF');
+      box(g, x + 3, y + 2, 3, 1, '#C8C4BC');
+      box(g, x + 8, y + 4, 3, 1, '#C8C4BC');
+      put(g, x + 11, y + 3, '#C8C4BC');
+      gear(g, x + 12, y + 7, 1);
+    }
+    return;
+  }
+  if (l) box(g, x + 4, y + 4, 6, 4, P.paper);
 }
 
 const TILE_ART = {
@@ -180,28 +592,51 @@ const TILE_ART = {
     const upper = m.at(0, -1) === '#';
     box(g, x, y, TILE, TILE, P.woodDark);
     if (upper) {
-      box(g, x, y, TILE, 3, P.trim);
+      // the cornice: an outline, a lit moulding, then the first board
+      box(g, x, y, TILE, 1, WD.out);
+      box(g, x, y + 1, TILE, 1, WD.hi);
+      box(g, x, y + 2, TILE, 1, P.trim);
       box(g, x, y + 3, TILE, 1, P.wood);
+      box(g, x, y + 4, TILE, 1, WD.recess);
       scrollRow(g, x, x + TILE, y + 9, 1);
       scrollRow(g, x, x + TILE, y + 15, 2);
     } else {
       scrollRow(g, x, x + TILE, y + 5, 3);
-      box(g, x, y + 11, TILE, 5, P.wood);
-      box(g, x, y + 11, TILE, 1, P.trim);
+      // the cupboards below the shelves, panelled, and the skirting
+      box(g, x, y + 7, TILE, 1, WD.recess);
+      box(g, x, y + 8, TILE, 7, P.wood);
+      box(g, x, y + 8, TILE, 1, P.trim);
+      box(g, x + 2, y + 10, 5, 3, WD.shade);
+      box(g, x + 9, y + 10, 5, 3, WD.shade);
+      box(g, x + 2, y + 10, 5, 1, WD.lit);
+      box(g, x + 9, y + 10, 5, 1, WD.lit);
+      box(g, x, y + 15, TILE, 1, WD.out);
     }
-    // uprights between bays
-    if ((x / TILE) % 3 === 0) box(g, x, y + (upper ? 3 : 0), 2, upper ? 13 : 11, P.wood);
+    // uprights between bays, lit down their left edge
+    if ((x / TILE) % 3 === 0) {
+      const top = upper ? 3 : 0;
+      const h = upper ? 13 : 8;
+      box(g, x, y + top, 2, h, P.wood);
+      box(g, x, y + top, 1, h, WD.lit);
+      box(g, x + 2, y + top, 1, h, WD.recess);
+    }
   },
   Q(g, x, y) {
     TILE_ART.W(g, x, y, { at: () => 'W' });
+    box(g, x, y - 7, 16, 17, WD.out);
     box(g, x + 1, y - 6, 14, 15, P.woodLight);
+    box(g, x + 1, y - 6, 14, 1, WD.hi);
+    box(g, x + 1, y - 6, 1, 15, WD.hi);
     box(g, x + 2, y - 5, 12, 13, P.cork);
+    box(g, x + 2, y - 5, 12, 1, '#5A3A20');
+    for (let j = 0; j < 13; j++) for (let i = 0; i < 12; i++) if (hash(x + i, y + j, 54) < 0.12) put(g, x + 2 + i, y - 5 + j, '#9A7048');
     for (const [px, py, w, h] of [
       [3, -4, 4, 5],
       [8, -3, 5, 4],
       [4, 2, 5, 5],
       [10, 2, 3, 4],
     ]) {
+      box(g, x + px + 1, y + py + 1, w, h, '#5A3A20');
       box(g, x + px, y + py, w, h, P.paper);
       box(g, x + px + 1, y + py + 2, w - 2, 1, '#B8A888');
       put(g, x + px + Math.floor(w / 2), y + py, P.ribbon);
@@ -212,17 +647,27 @@ const TILE_ART = {
     const left = m.at(-1, 0) !== 'M';
     box(g, x, y, TILE, TILE, P.woodDark);
     if (upper) {
-      box(g, x, y, TILE, 3, P.trim);
-      box(g, x + (left ? 3 : 0), y + 4, left ? 13 : 13, 12, P.sky);
+      box(g, x, y, TILE, 1, WD.out);
+      box(g, x, y + 1, TILE, 1, WD.hi);
+      box(g, x, y + 2, TILE, 1, P.trim);
+      box(g, x + (left ? 3 : 0), y + 4, 13, 12, P.sky);
       for (let i = 0; i < 6; i++) put(g, x + 4 + hash(x, i) * 10, y + 5 + hash(i, x) * 9, P.skyLight);
+      if (left) box(g, x + 3, y + 4, 1, 12, '#3A4A78');
     } else {
       box(g, x + (left ? 3 : 0), y, 13, 9, P.sky);
-      box(g, x, y + 9, TILE, 2, P.trim);
-      box(g, x, y + 11, TILE, 5, P.wood);
-      box(g, x, y + 11, TILE, 1, P.trim);
+      if (left) box(g, x + 3, y, 1, 9, '#3A4A78');
+      // the sill, lit, and the panelling under it
+      box(g, x, y + 9, TILE, 1, WD.hi);
+      box(g, x, y + 10, TILE, 1, P.trim);
+      box(g, x, y + 11, TILE, 4, P.wood);
+      box(g, x, y + 11, TILE, 1, WD.shade);
+      box(g, x, y + 15, TILE, 1, WD.out);
     }
     // the mullion down the middle of the pair, and the crossbar
-    if (!left) box(g, x - 1, y + (upper ? 4 : 0), 2, upper ? 12 : 9, P.woodDark);
+    if (!left) {
+      box(g, x - 1, y + (upper ? 4 : 0), 2, upper ? 12 : 9, P.woodDark);
+      box(g, x - 1, y + (upper ? 4 : 0), 1, upper ? 12 : 9, WD.lit);
+    }
     if (!upper) box(g, x + (left ? 3 : 0), y + 2, 13, 1, P.woodDark);
   },
   T(g, x, y, m) {
@@ -232,40 +677,33 @@ const TILE_ART = {
     bookcase(g, x, y, m, false);
   },
   c(g, x, y) {
-    ellipse(g, x + 8, y + 14, 4, 1, '#1A1210');
-    box(g, x + 7, y + 6, 2, 8, P.iron);
-    box(g, x + 4, y + 7, 8, 1, P.iron);
-    box(g, x + 5, y + 13, 6, 1, P.iron);
-    for (const cx of [4, 7, 11]) {
-      const top = cx === 7 ? 1 : 3;
-      box(g, x + cx, y + top, 1 + (cx === 7 ? 1 : 0), 7 - top, P.wax);
-      put(g, x + cx, y + top - 1, P.flame2);
-      put(g, x + cx, y + top - 2, P.flame);
-    }
+    candelabra(g, x, y, ['#FFB04A', '#FFD060', '#FFF4C8']);
   },
   D(g, x, y, m) {
     const left = m.at(-1, 0) !== 'D';
-    box(g, x, y + 3, TILE, 9, P.woodLight);
-    box(g, x, y + 12, TILE, 4, P.wood);
-    box(g, x, y + 3, TILE, 1, P.trim);
+    const right = m.at(1, 0) !== 'D';
+    tableTop(g, x, y, left, right, 3, 10);
+    // the desk's front: a drawer each side, brass pulls, the kneehole between
+    box(g, x, y + 11, TILE, 4, P.wood);
+    box(g, x, y + 11, TILE, 1, WD.shade);
+    box(g, x, y + 15, TILE, 1, WD.out);
     if (left) {
-      box(g, x, y + 3, 1, 13, P.woodDark);
-      // the open ledger
-      box(g, x + 6, y + 4, 10, 7, P.paper);
-      box(g, x + 15, y + 4, 1, 7, '#B8A888');
-      for (let r = 5; r < 10; r += 2) box(g, x + 7, y + r, 7, 1, '#9A8A70');
+      box(g, x, y + 3, 1, 13, WD.out);
+      box(g, x + 2, y + 12, 9, 2, WD.shade);
+      box(g, x + 2, y + 12, 9, 1, WD.lit);
+      put(g, x + 6, y + 13, '#C8963A');
+      box(g, x + 12, y + 11, 4, 5, WD.recess);
     } else {
-      box(g, x + 15, y + 3, 1, 13, P.woodDark);
-      box(g, x, y + 4, 7, 7, P.paper);
-      for (let r = 5; r < 10; r += 2) box(g, x + 2, y + r, 4, 1, '#9A8A70');
-      box(g, x + 10, y + 5, 3, 3, '#1A1426'); // ink pot
-      put(g, x + 11, y + 4, '#3A3050');
-      box(g, x + 13, y + 2, 1, 5, P.wax); // quill
-      put(g, x + 12, y + 1, P.wax);
+      box(g, x + 15, y + 3, 1, 13, WD.out);
+      box(g, x, y + 11, 4, 5, WD.recess);
+      box(g, x + 5, y + 12, 9, 2, WD.shade);
+      box(g, x + 5, y + 12, 9, 1, WD.lit);
+      put(g, x + 9, y + 13, '#C8963A');
     }
+    deskThings(g, x, y, left, m.id);
   },
   p(g, x, y) {
-    ellipse(g, x + 8, y + 13, 6, 2, '#2A1A12');
+    dropShadow(g, x + 9, y + 14, 7, 2, 0.6);
     for (const [px, py] of [
       [2, 9],
       [7, 9],
@@ -273,19 +711,31 @@ const TILE_ART = {
       [9, 6],
       [6, 2],
     ]) {
-      box(g, x + px, y + py, 5, 4, P.scroll[(px + py) % 3]);
-      box(g, x + px, y + py, 1, 4, P.scrollEnd);
-      box(g, x + px + 4, y + py, 1, 4, P.scroll[1]);
+      const c = hex(P.scroll[(px + py) % 3]);
+      box(g, x + px - 1, y + py - 1, 7, 6, WD.out);
+      box(g, x + px, y + py, 5, 4, c);
+      box(g, x + px, y + py, 5, 1, mix(c, [255, 250, 235], 0.4));
+      box(g, x + px, y + py + 3, 5, 1, mix(c, hex(WD.shade), 0.3));
+      // each end rolled: the dark spiral, and a lit lip
+      box(g, x + px, y + py + 1, 1, 2, P.scrollEnd);
+      put(g, x + px, y + py, mix(c, [255, 250, 235], 0.6));
+      box(g, x + px + 4, y + py + 1, 1, 2, mix(c, hex(P.scrollEnd), 0.5));
+      if ((px * 7 + py) % 4 === 0) box(g, x + px + 2, y + py, 1, 4, P.ribbon);
     }
   },
+  f: plant,
+  j: heroTable,
   O(g, x, y, m) {
     // The cocoon covers a 2×2 block; draw it once, from its top-left tile.
     if (m.at(-1, 0) === 'O' || m.at(0, -1) === 'O') return;
     const cx = x + 16;
+    dropShadow(g, cx + 1, y + 29, 15, 3, 0.55);
+    ellipse(g, cx, y + 26, 14, 5, '#1A1210');
     ellipse(g, cx, y + 26, 13, 4, P.stoneLight);
     ellipse(g, cx, y + 27, 12, 3, P.stone);
     box(g, cx - 12, y + 26, 25, 2, P.stone);
     ellipse(g, cx, y + 28, 12, 2, '#2A221E');
+    for (let i = -9; i < -2; i++) put(g, cx + i, y + 23, '#6A5A50');
     // the husk, split down the front: the same egg as every cocoon
     const rows = egg(g, cx, y + 27, 15, 25);
     rows.forEach((hw, j) => {
@@ -301,10 +751,26 @@ const TILE_ART = {
       box(g, cx + sx, y + sy, 3, 1, P.silk);
   },
   _(g, x, y) {
+    // the south wall's top, dressed stone in two courses, each block lit along its top and left
     box(g, x, y, TILE, TILE, P.stone);
-    box(g, x, y, TILE, 2, P.stoneLight);
-    box(g, x, y + 2, TILE, 1, '#1A1210');
-    for (let i = 0; i < TILE; i += 8) box(g, x + i + ((y / TILE) % 2) * 4, y + 3, 1, 13, '#2A221E');
+    box(g, x, y, TILE, 1, '#1A1210');
+    box(g, x, y + 1, TILE, 1, P.stoneLight);
+    box(g, x, y + 2, TILE, 1, '#7A6A5E');
+    box(g, x, y + 3, TILE, 1, '#1A1210');
+    for (let j = 4; j < TILE; j++)
+      for (let i = 0; i < TILE; i++) {
+        const course = Math.floor((j - 4) / 6);
+        const bx = x + i + (course % 2) * 5;
+        const jj = (j - 4) % 6;
+        const ii = bx % 10;
+        const h = hash(Math.floor(bx / 10), course + y, 55);
+        let c = h < 0.5 ? P.stone : '#40352F';
+        if (jj === 5 || ii === 0) c = '#241C18';
+        else if (jj === 0 || ii === 1) c = P.stoneLight;
+        else if (ii === 9) c = '#2E2622';
+        else if (hash(x + i, y + j, 56) < 0.05) c = '#2E2622';
+        put(g, x + i, y + j, c);
+      }
   },
   m(g, x, y, m) {
     // The Mirror Room's great mirror, a 2×2 block of wall: drawn once, from its top-left tile.
@@ -332,26 +798,29 @@ const TILE_ART = {
   },
   g(g, x, y) {
     // The green candle: the same candelabra, but its flames burn green.
-    ellipse(g, x + 8, y + 14, 4, 1, '#1A1210');
-    box(g, x + 7, y + 6, 2, 8, P.iron);
-    box(g, x + 4, y + 7, 8, 1, P.iron);
-    box(g, x + 5, y + 13, 6, 1, P.iron);
-    for (const cx of [4, 7, 11]) {
-      const top = cx === 7 ? 1 : 3;
-      box(g, x + cx, y + top, 1 + (cx === 7 ? 1 : 0), 7 - top, P.wax);
-      put(g, x + cx, y + top - 1, '#3AC85A');
-      put(g, x + cx, y + top - 2, '#9AF0A0');
-    }
+    candelabra(g, x, y, ['#3AC85A', '#9AF0A0', '#E8FFE8']);
   },
   '='(g, x, y, m) {
+    // the great door, in the stone: an outline, planks lit on their left, iron straps, ring handles
     const left = m.at(-1, 0) !== '=';
-    box(g, x, y, TILE, TILE, P.woodDark);
+    box(g, x, y, TILE, TILE, WD.out);
     box(g, x, y, TILE, 2, P.stoneLight);
-    box(g, x + (left ? 1 : 0), y + 2, 15, 14, P.wood);
-    for (let i = 4; i < 16; i += 4) box(g, x + (left ? 1 : 0), y + i, 15, 1, P.woodDark);
-    box(g, x + (left ? 1 : 0), y + 6, 15, 1, P.iron);
-    box(g, x + (left ? 1 : 0), y + 12, 15, 1, P.iron);
-    box(g, x + (left ? 14 : 1), y + 8, 1, 3, P.rugGold); // ring handles
+    box(g, x, y + 2, TILE, 1, '#1A1210');
+    const x0 = x + (left ? 1 : 0);
+    box(g, x0, y + 3, 15, 13, P.wood);
+    for (let i = 0; i < 15; i++) {
+      const k = (i + (left ? 1 : 0)) % 4;
+      if (k === 0) box(g, x0 + i, y + 3, 1, 13, P.woodDark);
+      else if (k === 1) box(g, x0 + i, y + 3, 1, 13, WD.lit);
+    }
+    for (const sy of [6, 12]) {
+      box(g, x0, y + sy, 15, 1, P.iron);
+      box(g, x0, y + sy - 1, 15, 1, '#4A4048');
+      for (let i = 2; i < 15; i += 5) put(g, x0 + i, y + sy, '#6A5E68');
+    }
+    box(g, x + (left ? 13 : 1), y + 8, 2, 3, WD.out);
+    box(g, x + (left ? 14 : 1), y + 8, 1, 3, P.rugGold);
+    put(g, x + (left ? 14 : 1), y + 8, '#F0C860');
   },
 };
 
@@ -362,18 +831,78 @@ function bookcase(g, x, y, m, top) {
   const right = m.at(1, 0) !== run;
   box(g, x, y, TILE, TILE, P.woodDark);
   if (top) {
-    box(g, x, y, TILE, 3, P.woodLight);
+    // the top, seen a little from above: an outline, a lit cap, a moulding in shade
+    box(g, x, y, TILE, 1, WD.out);
+    box(g, x, y + 1, TILE, 1, WD.hi);
+    box(g, x, y + 2, TILE, 1, P.woodLight);
     box(g, x, y + 3, TILE, 1, P.wood);
+    box(g, x, y + 4, TILE, 1, WD.recess);
     scrollRow(g, x, x + TILE, y + 10, 4);
   } else {
     scrollRow(g, x, x + TILE, y + 3, 5);
     scrollRow(g, x, x + TILE, y + 10, 6);
     box(g, x, y + 12, TILE, 3, P.wood);
-    box(g, x, y + 15, TILE, 1, '#1A1210');
+    box(g, x, y + 12, TILE, 1, P.trim);
+    box(g, x, y + 15, TILE, 1, WD.out);
   }
-  if (left) box(g, x, y, 2, TILE, P.wood);
-  if (right) box(g, x + 14, y, 2, TILE, P.wood);
+  // end panels: the left lit, the right in shade, each outlined
+  if (left) {
+    box(g, x, y, 1, TILE, WD.out);
+    box(g, x + 1, y + (top ? 1 : 0), 1, TILE - (top ? 1 : 1), WD.lit);
+    box(g, x + 2, y + (top ? 2 : 0), 1, TILE - (top ? 3 : 1), P.wood);
+  }
+  if (right) {
+    box(g, x + 15, y, 1, TILE, WD.out);
+    box(g, x + 13, y + (top ? 2 : 0), 2, TILE - (top ? 3 : 1), WD.shade);
+  }
 }
+
+/** The rugs: a runner's ground, its pattern, its gold border. Rooms can lay one in another colour. */
+const RUGS = {
+  crimson: ['#6E1A20', '#561218', '#C8963A'],
+  blue: ['#2C3A62', '#1E2848', '#B8904A'],
+  green: ['#34503A', '#243A2A', '#B8964A'],
+  plum: ['#4A2A50', '#341C3A', '#B8904A'],
+  ochre: ['#7A5228', '#5A3A1A', '#D8C08A'],
+  dove: ['#5A5E68', '#44464E', '#D8D0C0'],
+  sage: ['#4A5E44', '#384A34', '#C8B880'],
+  teal: ['#24504E', '#183A3A', '#B8904A'],
+};
+
+/** The Archive's floorboards: four art pixels a board, lit along the top, a seam below, grain, knots and nails. */
+function plankAt(x, y) {
+  const row = Math.floor(y / 4);
+  const jy = y % 4;
+  const joint = (row * 7) % 24;
+  const sx = x + joint;
+  const seg = Math.floor(sx / 24);
+  const ix = sx % 24;
+  if (jy === 3 || ix === 0) return hex(P.seam);
+  let c = hex(P.plank[Math.floor(hash(seg, row, 9) * 3)]);
+  const dark = hex(P.seam);
+  const light = hex('#8A6040');
+  // grain: long streaks along the board, a few lighter
+  const gr = hash(Math.floor((sx + hash(seg, row, 30) * 5) / 5), y, 31);
+  if (gr < 0.22) c = mix(c, dark, 0.2);
+  else if (gr > 0.9) c = mix(c, light, 0.14);
+  // the board's upper edge catches the light; its lower edge is in shade; its left end lit, its right end dark
+  if (jy === 0) c = mix(c, light, 0.22);
+  else if (jy === 2) c = mix(c, dark, 0.14);
+  if (ix === 1) c = mix(c, light, 0.18);
+  else if (ix === 23) c = mix(c, dark, 0.3);
+  // a nail at each end
+  if (jy === 1 && (ix === 2 || ix === 21)) return mix(dark, hex('#1A100A'), 0.5);
+  // a knot here and there
+  if (hash(seg, row, 33) < 0.14) {
+    const kx = 6 + Math.floor(hash(seg, row, 34) * 12);
+    if (jy === 1 && (ix === kx || ix === kx + 1)) c = mix(c, dark, 0.65);
+    else if ((jy === 1 && (ix === kx - 1 || ix === kx + 2)) || (jy === 2 && ix >= kx - 1 && ix <= kx + 2)) c = mix(c, dark, 0.3);
+  }
+  return c;
+}
+
+/** Things that stand clear of the floor round them and cast their own small shadow. */
+const SMALL = 'cgpf';
 
 function drawMap(map) {
   const rows = map.tiles;
@@ -381,23 +910,18 @@ function drawMap(map) {
   const W = rows[0].length;
   const g = canvas(W * TILE, H * TILE);
   const at = (tx, ty) => rows[ty]?.[tx] ?? '#';
+  const look = (c) => map.art?.[c] ?? c;
   const walkable = (c) => c === '.' || c === 'r';
 
   // Floorboards run under everything, continuous from tile to tile.
   for (let y = 0; y < g.h; y++)
-    for (let x = 0; x < g.w; x++) {
-      const row = Math.floor(y / 4);
-      const joint = (row * 7) % 24;
-      const seg = Math.floor((x + joint) / 24);
-      let c = hex(P.plank[Math.floor(hash(seg, row, 9) * 3)]);
-      if (y % 4 === 3 || (x + joint) % 24 === 0) c = hex(P.seam);
-      else if (hash(x, y, 3) < 0.04) c = mix(c, hex(P.seam), 0.5);
+    for (let x = 0; x < g.w; x++)
       // a room can lay another floor: stone flags, white tile, straw (interior-art.mjs)
-      if (map.floor && FLOORS[map.floor]) c = hex(FLOORS[map.floor](x, y, hash));
-      g[y][x] = c;
-    }
+      g[y][x] = map.floor && FLOORS[map.floor] ? hex(FLOORS[map.floor](x, y, hash)) : plankAt(x, y);
 
-  // The rug: a crimson runner with a gold border, wherever `r` or the cocoon's dais sits.
+  // The rug: a runner with a gold border and a fringe at its ends, wherever `r` or the cocoon's dais sits.
+  const [rugC, rugD, rugG] = (RUGS[map.rug] ?? RUGS.crimson).map(hex);
+  const fringe = mix(rugG, [255, 250, 235], 0.4);
   const onRug = (tx, ty) => at(tx, ty) === 'r' || at(tx, ty) === 'O';
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
@@ -406,42 +930,44 @@ function drawMap(map) {
         for (let i = 0; i < TILE; i++) {
           const px = tx * TILE + i;
           const py = ty * TILE + j;
-          const edge =
-            (i < 3 && !onRug(tx - 1, ty)) ||
-            (i > 12 && !onRug(tx + 1, ty)) ||
-            (j < 3 && !onRug(tx, ty - 1)) ||
-            (j > 12 && !onRug(tx, ty + 1));
-          const rim =
-            (i === 1 && !onRug(tx - 1, ty)) ||
-            (i === 14 && !onRug(tx + 1, ty)) ||
-            (j === 1 && !onRug(tx, ty - 1)) ||
-            (j === 14 && !onRug(tx, ty + 1));
-          let c = P.rug;
-          if (edge) c = rim ? P.rugDark : P.rugGold;
-          else if (Math.abs((px % 8) - 4) + Math.abs((py % 8) - 4) === 3) c = P.rugDark;
-          g[py][px] = hex(c);
+          const L = !onRug(tx - 1, ty);
+          const R = !onRug(tx + 1, ty);
+          const T = !onRug(tx, ty - 1);
+          const B = !onRug(tx, ty + 1);
+          // the fringe, at the runner's two ends
+          if ((T && j === 0) || (B && j === 15)) {
+            if (i % 2 === 0 && !(L && i < 2) && !(R && i > 13)) g[py][px] = mix(g[py][px], fringe, 0.85);
+            continue;
+          }
+          const edge = (i < 3 && L) || (i > 12 && R) || (j < 4 && T) || (j > 11 && B);
+          const rimLine = (i === 1 && L) || (i === 14 && R) || (j === 2 && T) || (j === 13 && B);
+          let c = rugC;
+          if (edge) c = rimLine ? rugD : rugG;
+          else if (Math.abs((px % 8) - 4) + Math.abs((py % 8) - 4) === 3) c = rugD;
+          else if (px % 8 === 4 && py % 8 === 4) c = mix(rugC, rugG, 0.6);
+          // the outer edge of the gold, worn darker toward the lower right
+          if (edge && !rimLine && ((i === 0 && L) || (j === 1 && T))) c = mix(c, [255, 240, 200], 0.2);
+          if (edge && !rimLine && ((i === 15 && R) || (j === 14 && B))) c = mix(c, [10, 6, 8], 0.35);
+          // and the rug's weave, a whisper of texture
+          if (!edge && hash(px, py, 35) < 0.06) c = mix(c, rugD, 0.5);
+          g[py][px] = c;
         }
     }
 
-  // Soft shadows under walls and furniture, on the floor tile below them.
+  // Soft shadows under walls and furniture, on the floor tile below them (small things cast their own).
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
-      if (!walkable(at(tx, ty)) || walkable(at(tx, ty - 1))) continue;
-      for (let j = 0; j < 4; j++)
-        for (let i = 0; i < TILE; i++) {
-          const px = tx * TILE + i;
-          const py = ty * TILE + j;
-          g[py][px] = mix(g[py][px], hex('#100A08'), dither(0.55 - j * 0.14, px, py));
-        }
+      if (!walkable(at(tx, ty)) || walkable(at(tx, ty - 1)) || SMALL.includes(look(at(tx, ty - 1)))) continue;
+      for (let j = 0; j < 6; j++)
+        for (let i = 0; i < TILE; i++) glow(g, tx * TILE + i, ty * TILE + j, 0.6 - j * 0.1, '#100A08');
     }
 
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
-      // `art` draws a letter as another (a hidden door as the wall it hides in)
-      const look = (c) => map.art?.[c] ?? c;
+      // `art` draws a letter as another (a hidden door as the wall it hides in, a hero's plant as a plant)
       const draw = TILE_ART[look(at(tx, ty))];
       if (!draw) throw new Error(`No art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => look(at(tx + dx, ty + dy)), wall: map.wall });
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => look(at(tx + dx, ty + dy)), wall: map.wall, id: map.id });
     }
 
   // Moonlight from the high window falls onto the cocoon.
@@ -455,26 +981,22 @@ function drawMap(map) {
         const half = 17 + (y - y0) * 0.1;
         const d = Math.abs(x - cx) / half;
         const fade = 1 - (y - y0) / (TILE * 6);
-        if (d < 1) g[y][x] = mix(g[y][x], hex('#C8C8F0'), dither(0.24 * (1 - d) * fade, x, y));
+        if (d < 1) glow(g, x, y, 0.24 * (1 - d) * fade, '#C8C8F0');
       }
   }
 
-  // Candlelight pools around every candelabra.
+  // Candlelight pools around every candelabra: a warm wash, and a brighter heart nearest the flames.
   rows.forEach((r, ty) =>
     [...r].forEach((c, tx) => {
       // (a hearth lights the floor in front of it, from the fire low in its lower tile)
       const hearth = c === 'F' && at(tx, ty + 1) !== 'F';
       if (c !== 'c' && c !== 'g' && !hearth) return;
       const lx = tx * TILE + 8;
-      const ly = ty * TILE + (hearth ? 12 : 3);
-      const R = 44;
-      for (let y = ly - R; y < ly + R; y++)
-        for (let x = lx - R; x < lx + R; x++) {
-          if (y < 0 || x < 0 || y >= g.h || x >= g.w) continue;
-          if (at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#') continue;
-          const d = Math.hypot(x - lx, (y - ly) * 1.2) / R;
-          if (d < 1) g[y][x] = mix(g[y][x], hex(c === 'g' ? '#4AE070' : '#FFB04A'), dither(0.3 * (1 - d) ** 2, x, y));
-        }
+      const ly = ty * TILE + (hearth ? 12 : 4);
+      const skip = (x, y) => at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#';
+      const col = c === 'g' ? '#4AE070' : '#FFB04A';
+      lightPool(g, lx, ly, 48, 0.3, col, skip);
+      lightPool(g, lx, ly, 20, 0.22, c === 'g' ? '#B8FFC0' : '#FFE0A0', skip);
     }),
   );
   return g;
@@ -835,7 +1357,7 @@ const OUTDOOR_ART = {
     for (let j = -10; j < 24; j++)
       for (let i = -14; i < 30; i++) {
         const d = Math.hypot(i - 8, (j - 11) * 1.4) / 20;
-        if (d < 1) tint(g, x + i, y + j, 0.3 * (1 - d) ** 1.5, '#FFB04A');
+        if (d < 1) glow(g, x + i, y + j, 0.3 * (1 - d) ** 1.5, '#FFB04A');
       }
     ellipse(g, x + 8, y + 12, 7, 3, '#2A2220');
     ellipse(g, x + 8, y + 12, 5, 2, '#3A2A20');
@@ -872,6 +1394,65 @@ const OUTDOOR_ART = {
     const openBelow = !rock(m.at(0, 1));
     const openLeft = !rock(m.at(-1, 0));
     const openRight = !rock(m.at(1, 0));
+    // A big block (a hill, not a wall) is grass on top: rock shows only on its faces, the lowest two rows
+    // and a strip down any open side.
+    const hilltop = (dx, dy) =>
+      rock(m.at(dx, dy)) &&
+      rock(m.at(dx, dy + 1)) &&
+      rock(m.at(dx, dy + 2)) &&
+      ((rock(m.at(dx - 1, dy)) && rock(m.at(dx + 1, dy))) ||
+        (rock(m.at(dx - 1, dy)) && rock(m.at(dx - 2, dy))) ||
+        (rock(m.at(dx + 1, dy)) && rock(m.at(dx + 2, dy))));
+    if (m.at(0, 0) === 'M' && hilltop(0, 0)) {
+      const ground = m.ground ?? O;
+      for (let j = 0; j < TILE; j++)
+        for (let i = 0; i < TILE; i++) {
+          const px = x + i;
+          const py = y + j;
+          let c = hex(ground.grass[Math.floor(hash(Math.floor(px / 6), Math.floor(py / 5), 4) * 3)]);
+          c = mix(c, hex('#B8D070'), 0.12); // raised, it catches a little more light
+          if (hash(px, py, 106) < 0.06) c = hex(ground.blade);
+          else if (hash(px, py, 107) < 0.05) c = hex(ground.grassDark);
+          put(g, px, py, c);
+        }
+      // the odd boulder breaking through the turf, with its shadow
+      if (hash(x, y, 108) < 0.14) {
+        const sx = x + 4 + Math.floor(hash(x, y, 109) * 7);
+        const sy = y + 4 + Math.floor(hash(y, x, 109) * 7);
+        for (let i = -1; i < 5; i++) tint(g, sx + i + 1, sy + 3, 0.4);
+        box(g, sx + 1, sy - 1, 3, 1, O.stoneDark);
+        box(g, sx, sy, 5, 3, O.stoneDark);
+        box(g, sx + 1, sy, 3, 2, O.stone);
+        box(g, sx + 1, sy, 2, 1, O.stoneLight);
+      }
+      // the back of the hill: the turf rolls away from you, darker toward the edge
+      if (openAbove)
+        for (let i = 0; i < TILE; i++) {
+          for (let j = 0; j < 4; j++) tint(g, x + i, y + j, 0.3 - j * 0.07);
+        }
+      // the hill's open sides: a ragged strip of rock face, lit on the west and shaded on the east, turf hanging over
+      for (const [open, lit] of [
+        [openLeft, true],
+        [openRight, false],
+      ]) {
+        if (!open) continue;
+        for (let j = 0; j < TILE; j++) {
+          const w = 4 + Math.floor(hash(x, y + j, lit ? 111 : 112) * 2 + hash(x, Math.floor((y + j) / 3), 113) * 2);
+          for (let i = 0; i < w; i++) {
+            const px = lit ? x + i : x + 15 - i;
+            let c = hex(rockAt(px, y + j, 1));
+            if (i === 0) c = hex(lit ? O.stoneDark : '#2A2422');
+            if (lit && i === 1) c = hex(O.stoneLight);
+            if (!lit) c = mix(c, [10, 6, 8], 0.25);
+            put(g, px, y + j, c);
+          }
+          const lip = lit ? x + w : x + 15 - w;
+          put(g, lip, y + j, O.leafDark);
+          put(g, lit ? lip + 1 : lip - 1, y + j, lit ? O.leafLight : O.leaf);
+        }
+      }
+      return;
+    }
     for (let j = 0; j < TILE; j++)
       for (let i = 0; i < TILE; i++) {
         let c = rockAt(x + i, y + j);
@@ -879,7 +1460,7 @@ const OUTDOOR_ART = {
         if (openRight && i === 15) c = O.stoneDark;
         put(g, x + i, y + j, c);
       }
-    if (openAbove) {
+    if (openAbove || (m.at(0, 0) === 'M' && hilltop(0, -1) && m.at(0, -1) === 'M')) {
       // a grassy lip, ragged where it hangs over the edge
       for (let i = 0; i < TILE; i++) {
         const hang = 2 + Math.floor(hash(x + i, y, 105) * 3);
@@ -1452,7 +2033,7 @@ function drawOutdoor(map) {
     for (let tx = 0; tx < W; tx++) {
       const draw = OUTDOOR_ART[map.art?.[at(tx, ty)] ?? at(tx, ty)];
       if (!draw) throw new Error(`No outdoor art for tile "${at(tx, ty)}" in ${map.id}`);
-      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy) });
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => at(tx + dx, ty + dy), ground });
     }
   return g;
 }
@@ -1495,6 +2076,11 @@ const DUNGEON_ART = {
     box(g, x, y, TILE, TILE, DG.earth);
   },
   '.'() {},
+  v(g, x, y) {
+    // A trap pit (author, Oct 4, 2026): floor like any other, bar a hairline crack, if you look.
+    for (const [i, j] of [[4, 6], [5, 7], [6, 7], [7, 8], [8, 9], [9, 9], [10, 10], [11, 10]])
+      put(g, x + i, y + j, DG.floorLine);
+  },
   ','(g, x, y) {
     for (let i = 0; i < 6; i++)
       put(g, x + 2 + Math.floor(hash(x, y, i) * 12), y + 2 + Math.floor(hash(y, x, i) * 12), DG.rubble);
@@ -2024,6 +2610,133 @@ Object.assign(DUNGEON_ART, mineArt({ box, put, ellipse, hash, wall: (g, x, y, m)
     }
 }
 
+// A few things for the small rooms off the Kaldari drill yard and the Frost Ward, which stood nearly empty.
+const SMALL_ROOMS = {
+  a(g, x, y, m) {
+    // The Fury Hall's war banner: red, two pale stripes like the drums', ragged at the foot, its shadow on the stone.
+    DUNGEON_ART.W(g, x, y, m);
+    for (let j = 2; j < 16; j++) tint(g, x + 14, y + j, 0.45);
+    box(g, x + 1, y, 14, 1, '#1E1C22');
+    box(g, x + 2, y, 12, 1, DG.iron);
+    put(g, x + 2, y, DG.ironLight);
+    const foot = (i) => 12 + Math.floor(hash(x + i, y, 120) * 3);
+    for (let i = 2; i < 14; i++) {
+      const f = foot(i);
+      box(g, x + i, y + 1, 1, f, i === 2 || i === 13 ? '#2A0A0C' : '#8A1A1A');
+      put(g, x + i, y + 1 + f, '#2A0A0C');
+    }
+    box(g, x + 3, y + 1, 1, 11, '#B03030');
+    box(g, x + 11, y + 1, 2, 11, '#5A0E10');
+    for (const sy of [4, 8]) {
+      box(g, x + 3, y + sy, 10, 1, '#E8E0D0');
+      box(g, x + 11, y + sy, 2, 1, '#B8B0A0');
+    }
+    // a red hand, pressed on in the middle of it all
+    box(g, x + 6, y + 9, 3, 2, '#C8282A');
+    for (const i of [6, 7, 8]) put(g, x + i, y + 6 + (i === 7 ? 0 : 1), '#C8282A');
+    put(g, x + 9, y + 8, '#C8282A');
+  },
+  e(g, x, y) {
+    // A wooden bucket of water, iron-hooped, staves lit on the left, a ladle in it.
+    dropShadow(g, x + 9, y + 15, 6, 1, 0.6);
+    for (let j = 0; j < 8; j++) {
+      const hw = 5 - Math.floor(j / 3);
+      const py = y + 7 + j;
+      box(g, x + 8 - hw - 1, py, hw * 2 + 3, 1, '#1E140C');
+      box(g, x + 8 - hw, py, hw * 2 + 1, 1, DG.timber);
+      put(g, x + 8 - hw, py, '#8A6A48');
+      put(g, x + 8 - hw + 1, py, '#7A5A3C');
+      box(g, x + 8 + hw - 1, py, 2, 1, DG.timberDark);
+      for (let i = -hw + 3; i < hw; i += 3) put(g, x + 8 + i, py, '#4E3622');
+    }
+    box(g, x + 2, y + 15, 13, 1, '#1E140C');
+    for (const hy of [9, 13]) {
+      box(g, x + 2, y + hy, 13, 1, DG.iron);
+      put(g, x + 3, y + hy, DG.ironLight);
+    }
+    ellipse(g, x + 8, y + 7, 6, 2, '#1E140C');
+    ellipse(g, x + 8, y + 7, 5, 1, '#5A3E28');
+    box(g, x + 4, y + 7, 9, 1, '#2A5A7A');
+    box(g, x + 5, y + 7, 3, 1, '#6AA0C0');
+    // the ladle, leaning on the rim
+    for (let k = 0; k < 6; k++) put(g, x + 10 + Math.floor(k * 0.7), y + 6 - k, k < 5 ? '#9A7A52' : '#C8A070');
+    put(g, x + 11, y + 6, '#6A4C32');
+  },
+  s(g, x, y) {
+    // Sacks of sawdust for packing round the ice, slumped together, a little of it spilt.
+    dropShadow(g, x + 9, y + 15, 7, 2, 0.6);
+    for (const [cx, cy, rx, ry] of [
+      [5, 10, 4, 5],
+      [11, 11, 4, 4],
+    ]) {
+      ellipse(g, x + cx, y + cy, rx + 1, ry + 1, '#2A2014');
+      ellipse(g, x + cx, y + cy, rx, ry, '#8A7448');
+      ellipse(g, x + cx - 1, y + cy - 1, rx - 1, ry - 2, '#A89060');
+      put(g, x + cx - rx + 1, y + cy - 2, '#C8B078');
+      box(g, x + cx + rx - 1, y + cy - 1, 1, 3, '#5A4A2A');
+      // the tied neck
+      box(g, x + cx - 1, y + cy - ry - 2, 3, 2, '#6A5A34');
+      put(g, x + cx, y + cy - ry - 3, '#A89060');
+      box(g, x + cx - 1, y + cy - ry, 3, 1, '#4A3A20');
+    }
+    for (let k = 0; k < 7; k++) put(g, x + 2 + Math.floor(hash(x, y, k + 121) * 13), y + 14 + Math.floor(hash(y, x, k + 121) * 2), '#C8A870');
+  },
+  X(g, x, y, m) {
+    // Ice tongs and a saw on hooks, polished, never used.
+    DUNGEON_ART.W(g, x, y, m);
+    for (const hx of [4, 11]) {
+      put(g, x + hx, y + 1, DG.ironLight);
+      put(g, x + hx, y + 2, DG.iron);
+    }
+    // the tongs: two arms crossed at a rivet, their points curled in, outlined, a shadow to the right
+    const arm = (k, dir) => [x + (dir > 0 ? 3 : 7) + dir * Math.floor(k / 2), y + 3 + k];
+    for (let k = 0; k < 10; k++)
+      for (const dir of [1, -1]) {
+        const [ax, ay] = arm(k, dir);
+        tint(g, ax + 2, ay + 1, 0.45);
+        put(g, ax - 1, ay, '#1E1C22');
+        put(g, ax + 1, ay, '#1E1C22');
+      }
+    for (let k = 0; k < 10; k++)
+      for (const dir of [1, -1]) {
+        const [ax, ay] = arm(k, dir);
+        put(g, ax, ay, dir > 0 ? (k < 5 ? '#D8D8E4' : '#9A9AAA') : '#7A7A8A');
+      }
+    put(g, x + 5, y + 7, '#E8C860');
+    put(g, x + 2, y + 13, '#1E1C22');
+    put(g, x + 8, y + 13, '#1E1C22');
+    // the saw: a long blade, teeth along its edge, a wooden grip at the top, outlined
+    for (let j = 3; j < 15; j++) tint(g, x + 14, y + j, 0.45);
+    box(g, x + 9, y + 1, 5, 14, '#1E1C22');
+    box(g, x + 10, y + 2, 3, 3, DG.timber);
+    box(g, x + 10, y + 2, 1, 3, '#9A7A52');
+    box(g, x + 10, y + 5, 3, 9, '#9A9AAA');
+    box(g, x + 10, y + 5, 1, 9, '#E8E8F4');
+    for (let j = 6; j < 14; j += 2) put(g, x + 13, y + j, '#9A9AAA');
+  },
+  g(g, x, y, m) {
+    // The Stitchery's chart: DAYS SINCE ANYONE FAINTED, the number rubbed out and written again, many times.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 3, y + 2, 12, 12, '#1E1A18');
+    box(g, x + 2, y + 1, 12, 12, P.paper);
+    box(g, x + 2, y + 1, 12, 1, '#FFF6DC');
+    box(g, x + 13, y + 2, 1, 11, '#C8B890');
+    box(g, x + 3, y + 3, 10, 1, '#8A7A60');
+    box(g, x + 4, y + 5, 8, 6, '#D8CCAE');
+    for (let k = 0; k < 10; k++) put(g, x + 4 + Math.floor(hash(x, y, k + 122) * 8), y + 5 + Math.floor(hash(y, x, k + 122) * 6), '#B8AC90');
+    // today's number: nought, in red
+    box(g, x + 7, y + 6, 2, 1, '#B3261E');
+    box(g, x + 7, y + 9, 2, 1, '#B3261E');
+    box(g, x + 6, y + 7, 1, 2, '#B3261E');
+    box(g, x + 9, y + 7, 1, 2, '#B3261E');
+    put(g, x + 8, y + 1, DG.iron);
+  },
+};
+for (const [k, v] of Object.entries(SMALL_ROOMS)) {
+  if (DUNGEON_ART[k]) throw new Error(`small rooms: "${k}" is already drawn`);
+  DUNGEON_ART[k] = v;
+}
+
 /** Kaldor's floors: big squares of black and dark grey marble, veined, with a soft sheen. */
 function marbleAt(x, y) {
   const sq = (Math.floor(x / 16) + Math.floor(y / 16)) % 2;
@@ -2391,12 +3104,12 @@ function drawDungeon(map) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const c = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P') && 'WBCcRGoEN#fl'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      if ((c === '.' || c === ',' || c === 'P' || c === 'v') && 'WBCcRGoEN#flaXg'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;
             const py = ty * TILE + j;
-            g[py][px] = mix(g[py][px], hex('#000000'), dither(0.5 - j * 0.1, px, py));
+            glow(g, px, py, 0.5 - j * 0.1, '#000000');
           }
     }
   rows.forEach((r, ty) =>
@@ -2410,7 +3123,7 @@ function drawDungeon(map) {
           if (y < 0 || x < 0 || y >= g.h || x >= g.w || at(Math.floor(x / TILE), Math.floor(y / TILE)) === '#')
             continue;
           const d = Math.hypot(x - lx, (y - ly) * 1.1) / R;
-          if (d < 1) g[y][x] = mix(g[y][x], hex('#FFA040'), dither(0.28 * (1 - d) ** 2, x, y));
+          if (d < 1) glow(g, x, y, 0.28 * (1 - d) ** 2, '#FFA040');
         }
     }),
   );
@@ -2634,6 +3347,16 @@ const WALKERS = {
     boots: '#2A2020',
     hair: ['spiky', '#FFC940'],
     patchwork: ['#E84A4A', '#FFC940', '#3A3A8A', '#E84A4A'],
+  },
+  // the statue at the Two Tunnels (author, Oct 4, 2026): grey stone, robed and bearded, and it talks
+  statue: {
+    robe: true,
+    top: '#8A8A92',
+    shade: '#6E6E78',
+    boots: '#5E5E66',
+    skin: '#A2A2AA',
+    hair: ['bald', '#A2A2AA'],
+    beard: '#7E7E88',
   },
   raider: {
     top: '#6A4A3A',
@@ -3342,6 +4065,92 @@ const WALKERS = {
   },
 };
 
+// The walkers' light, as the castle's: from the upper left. Lit edges warm toward candlelight, shade cools toward
+// dusk violet, so every palette gets the same three-step ramp without a hand-picked colour per character.
+const WALKER_LIGHT = hex('#FFF2D0');
+const WALKER_DUSK = hex('#1C1030');
+const HAT_COLOURS = { wizard: '#8B5CF6', sun: '#E8D08A', top: '#1A161E' };
+const lum = (c) => (c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11) / 255;
+/** One step up the ramp: a modest sheen on dark colours (black hair stays black), more on mid and pale ones. */
+const walkerLit = (c) => mix(c, WALKER_LIGHT, 0.2 + 0.12 * lum(c));
+/** One step down (half a step for `k` = 0.5): darker and a touch violet, never melting into the outline. */
+const walkerShade = (c, k = 1) => mix(c, WALKER_DUSK, (0.42 - 0.14 * (1 - lum(c))) * k);
+
+/**
+ * The shading pass over a flat walker frame. Only the spec's own colours (cloth, skin, hair, beard, apron...)
+ * are shaded; eyes, blades, lanterns and other small details are left exactly as drawn, and a run of cloth
+ * is measured straight across them (an eye doesn't split a face in two). In each run of one colour, the
+ * leftmost pixel catches the light and the rightmost falls into shade; a one-pixel run (an arm seen from
+ * the front, a hand) is lit or shaded by which side of the body it is on. Top edges on the lit half catch
+ * the light too, so hair and shoulders get their highlight in the upper left.
+ */
+function shadeWalker(f, w) {
+  const key = (c) => (c ? `${c[0]},${c[1]},${c[2]}` : '');
+  const mats = new Set();
+  const add = (c) => c && mats.add(key(hex(c)));
+  for (const k of ['top', 'shade', 'legs', 'boots', 'belt', 'beard', 'apron', 'cloak', 'collar', 'mustache', 'villain'])
+    add(w[k]);
+  add(w.skin ?? SKIN);
+  add(w.hair[1]);
+  for (const c of w.patchwork ?? []) add(c);
+  if (HAT_COLOURS[w.hat]) add(HAT_COLOURS[w.hat]);
+  const at = (x, y) => (x >= 0 && y >= 0 && x < FW && y < FH ? f[y][x] : null);
+  const mat = (c) => c && mats.has(key(c));
+  // the first pixel that isn't a detail, stepping from (x, y) by dx
+  const edge = (x, y, dx) => {
+    let i = x + dx;
+    while (at(i, y) && !mat(at(i, y))) i += dx;
+    return at(i, y);
+  };
+  const out = f.map((r) => r.slice());
+  for (let y = 0; y < FH; y++)
+    for (let x = 0; x < FW; x++) {
+      const c = f[y][x];
+      if (!mat(c)) continue;
+      const k = key(c);
+      const lc = edge(x, y, -1);
+      const rc = edge(x, y, 1);
+      const leftEdge = key(lc) !== k;
+      const rightEdge = key(rc) !== k;
+      // the whole run this pixel belongs to, details included, to tell a sleeve from a chest
+      let a = x;
+      let b = x;
+      if (!leftEdge) while (at(a - 1, y) && (key(at(a - 1, y)) === k || !mat(at(a - 1, y)))) a--;
+      if (!rightEdge) while (at(b + 1, y) && (key(at(b + 1, y)) === k || !mat(at(b + 1, y)))) b++;
+      const width = b - a + 1;
+      // the middle of the figure on this row, so an edge in the shaded half is never lit (and vice versa)
+      let sa = 0;
+      let sb = FW - 1;
+      while (sa < FW && !f[y][sa]) sa++;
+      while (sb >= 0 && !f[y][sb]) sb--;
+      const mid = (sa + sb) / 2;
+      const darker = (n) => !n || !mat(n) || lum(n) < lum(c) - 0.04;
+      const above = at(x, y - 1);
+      const topEdge = key(above) !== k && (!above || mat(above) || above === OUT);
+      let lit = false;
+      let dark = false;
+      if (width === 1) {
+        if (x < mid) lit = true;
+        else dark = true;
+      } else {
+        if (leftEdge && x < mid && darker(lc)) lit = true;
+        else if (rightEdge && (width >= 3 || x > mid)) dark = true;
+        else if (topEdge && !above && x < mid) lit = true;
+      }
+      // broad cloth turns away from the light over two pixels, not one
+      const nearRight =
+        !lit && !dark && width >= 6 && x > mid && key(at(x + 1, y)) === k && key(edge(x + 1, y, 1)) !== k;
+      // tucked under something else (the forehead under a fringe, the neck under the chin, legs under the
+      // tunic): a half step of shade along the top
+      const below = at(x, y + 1);
+      const tucked = !lit && above && mat(above) && key(above) !== k && lum(above) < lum(c) + 0.1 && key(below) === k;
+      if (lit) out[y][x] = walkerLit(c);
+      else if (dark) out[y][x] = walkerShade(c);
+      else if (nearRight || tucked) out[y][x] = walkerShade(c, 0.5);
+    }
+  for (let y = 0; y < FH; y++) f[y] = out[y];
+}
+
 /** Draws one frame of a walker into `g` at (ox, oy). */
 function drawWalker(g, ox, oy, w, dir, frame) {
   const f = canvas(FW, FH);
@@ -3776,6 +4585,11 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     }
   }
 
+  // right-facing frames are drawn left-facing, then mirrored, before the light goes on, so the light always
+  // comes from the upper left of the finished picture
+  if (dir === 'right') for (let y = 0; y < FH; y++) f[y].reverse();
+  shadeWalker(f, w);
+
   // a dark outline around the whole silhouette, then a soft shadow at the feet
   const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
   const outline = [];
@@ -3798,10 +4612,9 @@ function drawWalker(g, ox, oy, w, dir, frame) {
       if (d <= 1 && !f[y][x]) f[y][x] = [16, 10, 8, 90];
     }
 
-  const mirror = dir === 'right';
   for (let y = 0; y < FH; y++)
     for (let x = 0; x < FW; x++) {
-      const c = f[y][mirror ? FW - 1 - x : x];
+      const c = f[y][x];
       if (c) g[oy + y][ox + x] = c;
     }
 }
@@ -3867,6 +4680,10 @@ const MAPS = [
   'felix-maze',
   'kingdom-dungeon',
   'dungeon-mazes',
+  'dungeon-fork',
+  'dungeon-mind',
+  'dungeon-might',
+  'dungeon-lore',
   'warrior-city',
   'south-road',
   'old-mine',

@@ -1,7 +1,7 @@
 import { emptyDimensionRecord, xpToNextLevel } from '@/game';
 
 import { MAPS, objectAt, withBouldersMoved, type MapId, type WorldMap } from '../maps';
-import { MEMORIES, SEASONS, memoryAt, notYetLines } from '../memories';
+import { MEMORIES, PER_SEASON, SEASONS, memoryAt, notYetLines } from '../memories';
 import { EXITS, describeRequirement, standing, type XpTotals } from '../progress';
 import { FRESH_WORLD, useWorldStore } from '../store';
 
@@ -23,9 +23,11 @@ function reachable(map: WorldMap, start: [number, number]): Set<string> {
 const physical = (xp: number): XpTotals => ({ total: xp, byPath: { ...emptyDimensionRecord(0), physical: xp } });
 
 describe('hidden memories', () => {
-  it('holds at most one a season, each with its own id', () => {
+  it('holds at most four a season, each with its own id and its own spot', () => {
     expect(new Set(MEMORIES.map((m) => m.id)).size).toBe(MEMORIES.length);
-    expect(new Set(MEMORIES.map((m) => m.season)).size).toBe(MEMORIES.length);
+    expect(new Set(MEMORIES.map((m) => `${m.map}:${m.x},${m.y}`)).size).toBe(MEMORIES.length);
+    for (let season = 1; season <= SEASONS; season++)
+      expect(MEMORIES.filter((m) => m.season === season).length).toBeLessThanOrEqual(PER_SEASON);
     for (const m of MEMORIES) expect(m.season).toBeGreaterThanOrEqual(1);
     for (const m of MEMORIES) expect(m.season).toBeLessThanOrEqual(SEASONS);
   });

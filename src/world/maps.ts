@@ -42,6 +42,10 @@ import iceHouseData from './maps/ice-house.json';
 import felixMazeData from './maps/felix-maze.json';
 import kingdomDungeonData from './maps/kingdom-dungeon.json';
 import dungeonMazesData from './maps/dungeon-mazes.json';
+import dungeonForkData from './maps/dungeon-fork.json';
+import dungeonMindData from './maps/dungeon-mind.json';
+import dungeonMightData from './maps/dungeon-might.json';
+import dungeonLoreData from './maps/dungeon-lore.json';
 import warriorCityData from './maps/warrior-city.json';
 import southRoadData from './maps/south-road.json';
 import oldMineData from './maps/old-mine.json';
@@ -431,6 +435,10 @@ export const MAPS = {
   'felix-maze': build(felixMazeData as MapData, require('@/assets/world/felix-maze.png')),
   'kingdom-dungeon': build(kingdomDungeonData as MapData, require('@/assets/world/kingdom-dungeon.png')),
   'dungeon-mazes': build(dungeonMazesData as MapData, require('@/assets/world/dungeon-mazes.png')),
+  'dungeon-fork': build(dungeonForkData as MapData, require('@/assets/world/dungeon-fork.png')),
+  'dungeon-mind': build(dungeonMindData as MapData, require('@/assets/world/dungeon-mind.png')),
+  'dungeon-might': build(dungeonMightData as MapData, require('@/assets/world/dungeon-might.png')),
+  'dungeon-lore': build(dungeonLoreData as MapData, require('@/assets/world/dungeon-lore.png')),
   'warrior-city': build(warriorCityData as MapData, require('@/assets/world/warrior-city.png')),
   'south-road': build(southRoadData as MapData, require('@/assets/world/south-road.png')),
   'old-mine': build(oldMineData as MapData, require('@/assets/world/old-mine.png')),

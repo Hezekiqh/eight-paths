@@ -190,7 +190,35 @@ export const ARENA_FIGHT_AS_BRANNOC = [
   'BARNABY: FINISH THEM!',
 ];
 
-export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }> = {
+/**
+ * What's said as you come up into the Kaloseum, and as the Warden comes out (author, Oct 4, 2026). An
+ * intro can end on a menu: `questions` (asked, then back to the menu) and `choices` (said, then the fight).
+ * `{his}` is whoever you're walking as (felix-maze.ts forHero).
+ */
+export type PrisonIntro = {
+  speaker?: string;
+  lines: string[];
+  questions?: { ask: string; answer: string[] }[];
+  choices?: { label: string; lines: string[]; deed?: 'good' | 'bad' }[];
+};
+const LAST_FIGHT = [
+  'BARNABY: Enough idle chat.',
+  'BARNABY: Guards! Last fight before we go to the tavern! Free drinks for whoever brings me {his} head!',
+  'The guards roar.',
+];
+const BARNABY_MENU = [
+  {
+    label: 'Who are you?',
+    lines: [
+      'BARNABY: I am the assistant warden and part-time announcer for the Kaloseum!',
+      "BARNABY: Sponsored by Bettor. There's no better way to bet than Bettor.",
+      ...LAST_FIGHT,
+    ],
+  },
+  { label: "You're too loud.", deed: 'bad' as const, lines: ['BARNABY: ...', ...LAST_FIGHT] },
+];
+const REALLY = "BARNABY: Really? You haven't been here twenty minutes, and you're causing this much trouble?";
+export const PRISON_INTROS: Record<string, PrisonIntro> = {
   'pit-guards': {
     lines: [
       'GUARD: STOP RIGHT THERE!',
@@ -199,12 +227,49 @@ export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
   },
+  // the Warden, Bertrand (author, Oct 4, 2026), back early (the prison route: freed prisoners or not)
   'pit-warden': {
+    speaker: 'Bertrand',
     lines: [
-      'The floor shakes. Then it shakes again.',
-      'BARNABY: Oh, you have done it now. Everybody, please welcome... THE WARDEN!',
-      "BARNABY: Nobody's ever hurt him. Nobody's ever hurt his feelings either. Mostly because he hasn't got any. FIGHT!",
+      'BERTRAND: Having trouble, Barnaby?',
+      "BARNABY: Wa... Bertrand! I didn't think you'd be back from your vacation so soon.",
     ],
+    questions: [
+      {
+        ask: 'Who are you?',
+        answer: [
+          'BERTRAND: I have never lost a match.',
+          'BERTRAND: The king trusts me to maintain order among the troublemakers.',
+        ],
+      },
+    ],
+    choices: [
+      {
+        label: 'Any chance you could let me go?',
+        lines: [
+          'BERTRAND: Of course.',
+          'BERTRAND: I will let you go... to the other side of existence.',
+          "BERTRAND: You've already broken out of prison. There's no point in putting you back.",
+        ],
+      },
+      {
+        label: 'Your poor mother.',
+        deed: 'bad',
+        lines: [
+          'BERTRAND: My mother is fine. We have tea every Wednesday.',
+          'BERTRAND: You will pay for that comment.',
+        ],
+      },
+    ],
+  },
+  // the prisoners went up ahead of you (author, Oct 4, 2026): they didn't get far, and neither did Brannoc
+  'pit-guards-freed': {
+    lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.', REALLY],
+    choices: BARNABY_MENU,
+  },
+  'pit-guards-freed-alone': {
+    lines: ['Nails, Old Mott and Silas lie in the sand, beaten.', REALLY],
+    choices: BARNABY_MENU,
   },
   // walking as Brannoc: nobody on the sand but you
   'pit-guards-alone': {
@@ -225,9 +290,9 @@ export const PRISON_GUARDS_DOWN = [
 
 /** Twenty strikes in: the warden yawns, raises his club, and Brannoc gets up. */
 export const SNOT_SWING = [
-  "Twenty strikes. The warden hasn't noticed a single one.",
-  'He yawns. He raises his club.',
-  'Behind you: a snore. A big one.',
+  'Twenty strikes.',
+  'BERTRAND: That is enough. It is time I put an end to this.',
+  "Behind you, Brannoc stands up. He's still asleep.",
 ];
 /** Brannoc walks to the warden, asleep, then swings (from the side of the sand, if the three carried him there). */
 export const brannocSleepwalks = (brannoc: number, carried = false): Actor[] => [
@@ -272,22 +337,41 @@ export const arenaCarry = (r: Carriers): Actor[] => [
   { row: r.silas, path: [[13, 13], CARRIED_TO.silas], face: 2 },
 ];
 export const SNOT_SWING_HIT = [
-  'Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
-  'He lifts his sword.',
-  'BRANNOC: Zzz... five more minutes, mother...',
   'BRANNOC SUPER SUPER SWING!',
-  'The warden goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
-  'Silence.',
-  "GUARD: Whoa. Whoa, whoa, whoa. Okay. You're good. You're good to go.",
-  "GUARD: We won't bother you any more. Strength is valued more than anything here.",
-  "GUARD: We don't get paid enough for this.",
+  'The Warden goes straight through the side of the Kaloseum.',
+];
+
+/**
+ * The end of the warden fight (author, Oct 4, 2026), if you freed the prisoners: they get up, yell
+ * FREEDOM, and run out through the hole Brannoc's swing made (they're at the Warrior City tavern after).
+ */
+export const PARDONED = 'prisoners-pardoned';
+
+/**
+ * Kaldor, at the end (author, Oct 4, 2026): if you freed Silas, he finally answered the king's raven:
+ * they're going golfing. These take the place of the king's last line.
+ */
+export const SILAS_RAVEN = [
+  'A raven came for me this morning. From a Silas.',
+  "He finally replied. We're going golfing at four tomorrow.",
+  'Unfortunately for you, you are still a threat to my rule.',
+];
+/** Kaldor's speech, with Silas's raven in it if you freed him. */
+export const withRaven = (map: string, lines: string[], flags: string[]) =>
+  map === 'war-hall' && flags.includes(FREED_FLAG) ? [...lines.slice(0, -1), ...SILAS_RAVEN] : lines;
+export const FREED_ENDING = [
+  'The prisoners get up.',
+  'NAILS: FREEDOM!',
+  'OLD MOTT: FREEDOM!',
+  'SILAS: FREEDOM!',
+  'They run out through the hole in the wall.',
 ];
 
 /** Brannoc wakes: will you pair up? */
 export const BRANNOC_OFFER = [
-  'The snot bubble pops. Brannoc blinks.',
-  'BRANNOC: Wha... where am I? Is it morning? Did I miss the battle?',
-  'He looks at the crowd. At the hole in the banners. At you.',
+  'Brannoc wakes up.',
+  'BRANNOC: Where am I!? What happened?',
+  'He looks at the crowd. At the hole in the wall. At you.',
   'BRANNOC: Did YOU do that? By the saints, you are mighty.',
   'BRANNOC: I know not what is happening in this strange land. But if I kept to your side, I might yet live through it.',
   'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
@@ -295,7 +379,7 @@ export const BRANNOC_OFFER = [
 /** Coming down from the top as the Kaloseum's champion: Brannoc's heard. No mouse needed. */
 export const CHAMPION_IN_CELL = [
   'BRANNOC: Hold. You are the one who felled the Warden?',
-  'BRANNOC: The whole gaol speaks of it. Even Gary woke for it.',
+  'BRANNOC: The whole gaol speaks of it. Even Gary looked up for it.',
   'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
 ];
 export const BRANNOC_YES = [
@@ -348,14 +432,132 @@ const ALONE_WARDEN = [
 // After that the hole stays open, and there's a notch in the wall above it, so you walk round it.
 // The second and third mazes have no way round: you solve them.
 
-export type MazeHole = { tile: string; needs: Requirement; to: Arrival };
+export type MazeHole = { map: string; tile: string; needs: Requirement; to: Arrival };
 
 const MAGE = (level: number): Requirement => ({ kind: 'path', dimension: 'intellectual', level });
 
 /** The Brannoc-shaped hole: the first maze only, out at the start of the second. */
 export const MAZE_HOLES: MazeHole[] = [
-  { tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 14, y: 14, facing: 'right' } },
+  { map: 'dungeon-mazes', tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 14, y: 14, facing: 'right' } },
+  // the Test of the Mind's shortcut (author, Oct 4, 2026): Brannoc went through the wall, not the puzzle
+  { map: 'dungeon-mind', tile: '7', needs: MAGE(8), to: { map: 'dungeon-lore', x: 3, y: 5, facing: 'up' } },
 ];
+
+// ---- The statue at the Two Tunnels (author, Oct 4, 2026): it explains the two ways, and doubts you.
+export const STRENGTH_TUNNEL = 'b';
+export const STATUE_SURE = ["STATUE: Are you sure? You don't look very strong."];
+export const FUNERAL = ["STATUE: ...Well. It's your funeral."];
+
+// ---- Gary's keys and the jailbreak (author, Oct 4, 2026): once you've talked to all three prisoners,
+// Gary will hand over the cell keys if you ask, and wander off. Unlock the cells and the three of them
+// bolt for the ladder, up through the Maze Ward ahead of you, and walk straight into the Kaloseum.
+
+/** The three in the cells, by name (what talking to them is filed under in the lore journal). */
+export const PRISONERS = ['Nails', 'Old Mott', 'Silas Seen'];
+export const KEYS_FLAG = 'gary-keys';
+/** Same as CELLS_FREED below (both sides of a merge built the jailbreak; GitHub's Episode 12 version won). */
+export const FREED_FLAG = 'cells-freed';
+export const KEYS_ASK = {
+  ask: 'Can I have the cell keys?',
+  answer: [
+    '...',
+    'Sure.',
+    'Gary unhooks the ring of keys from his belt, drops it in your hand, and wanders off toward the ladder.',
+  ],
+};
+/** What you think, watching him go. */
+export const CHILL = ['(What a chill guy.)'];
+/** Gary, wandering off: from his desk along the corridor to the ladder. */
+export const garyWanders = (row: number): Actor[] => [
+  {
+    row,
+    path: [
+      [3, 7],
+      [3, 8],
+      [20, 8],
+    ],
+  },
+];
+/** With the keys, at any of their cells. */
+export const UNLOCK = {
+  ask: ['Use the keys?'],
+  yes: 'Unlock the cells',
+  no: 'Not yet',
+  mean: 'You can all rot.',
+  rot: ['NAILS: ...', 'OLD MOTT: ...', 'SILAS: ...'],
+  freed: ['Click. Click. Click.', 'The three of them bolt for the ladder.'],
+};
+/** The three of them, out of their cells and up the ladder. */
+/** The three of them, out of their cells and up the ladder: Nails, Old Mott and Silas, by walker row. */
+export const prisonersBolt = (rows: [number, number, number]): Actor[] => [
+  {
+    row: rows[0],
+    path: [
+      [10, 6],
+      [20, 6],
+      [20, 8],
+    ],
+  },
+  {
+    row: rows[1],
+    path: [
+      [14, 6],
+      [20, 6],
+      [20, 8],
+    ],
+  },
+  {
+    row: rows[2],
+    path: [
+      [18, 6],
+      [20, 6],
+      [20, 8],
+    ],
+  },
+];
+
+// ---- Trap pits (author, Oct 4, 2026): a few spots on the Maze Ward's wrong turns (never on the way
+// through) look like any other floor, bar a hairline crack. Step on one and you fall back down to the
+// cells, where the prisoners have something to say about it: Nails the first time, Old Mott the second,
+// and the third time Silas, who never answers anyone, says something.
+
+export const PIT_TILE = 'v';
+/** One flag per fall, for the first three (the comments change); after that it's whoever. */
+export const fellFlag = (n: number) => `maze-fell-${n}`;
+/** Where you land: the corridor in front of the cells, between Nails and Old Mott. */
+export const FELL_INTO: Arrival = { map: 'kingdom-dungeon', x: 12, y: 7, facing: 'up' };
+export const FALLING = ['The floor gives way!'];
+
+/** What the cells say when you drop back in, by fall. */
+export function fallLines(n: number, freed = false, garyHere = true): string[] {
+  const landed = 'THUD.';
+  if (freed) return [landed, 'The cells are empty. Even Gary has gone.', 'Somewhere far above, a crowd is roaring.'];
+  if (n === 1) return [landed, 'NAILS: Back already?', 'NAILS: Most people take a week to miss us.'];
+  if (n === 2)
+    return [
+      landed,
+      "OLD MOTT: That's twice.",
+      "OLD MOTT: Four years I've been in here, and I've never once come in through the ceiling.",
+      "OLD MOTT: Mind you, I've never once got out either. So. Swings and roundabouts.",
+    ];
+  if (n === 3)
+    return [
+      landed,
+      'SILAS: ...',
+      'SILAS: The floor with the crack in it.',
+      "SILAS: Don't step on the floor with the crack in it.",
+      '...',
+      'NAILS: He talks!',
+      'OLD MOTT: Four years. Four years, and THAT is what he says.',
+    ];
+  const again = [
+    [landed, 'NAILS: Again?', "NAILS: We're going to start charging you rent."],
+    [landed, "OLD MOTT: I'm putting the kettle on. You might as well stay."],
+    [landed, 'SILAS: ...', 'SILAS: Seen.'],
+    ...(garyHere ? [[landed, "GARY: I'm not writing that down."]] : []),
+  ];
+  return again[n % again.length];
+}
 
 /** What your hero thinks at a twinkling hole (then "Take it?" is asked plainly, PASSAGE_LINES.ask). */
 export const holeLines = (asBrannoc: boolean) =>

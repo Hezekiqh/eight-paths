@@ -4,13 +4,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Roll } from '@/components/world/lore-scroll';
 import { haptics } from '@/haptics';
 import { FRAME, colors, fonts, spacing } from '@/theme';
-import { MEMORIES, SEASONS, type Memory } from '@/world/memories';
+import { MEMORIES, PER_SEASON, SEASONS, type Memory } from '@/world/memories';
 import { requirementLabel } from '@/world/progress';
 import { useWorldProgress } from '@/world/use-progress';
 
 /**
  * The World menu's second scroll: the hidden memories you've found, to read
- * again. One a season; those still hidden say what your habits need to reach
+ * again. Four a season; those still hidden say what your habits need to reach
  * to remember them, but never where they are.
  */
 export function MemoryScroll({ seen }: { seen: string[] }) {
@@ -22,7 +22,7 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={`Scroll 2, memories, ${found} of ${SEASONS} found`}
+        accessibilityLabel={`Scroll 2, memories, ${found} of ${SEASONS * PER_SEASON} found`}
         onPress={() => {
           haptics.tap();
           setOpen((o) => !o);
@@ -31,7 +31,7 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
           <Roll style={pressed && { opacity: 0.8 }}>
             <Text style={styles.number}>2</Text>
             <Text style={styles.caption}>
-              Memories · {found} of {SEASONS}
+              Memories · {found} of {SEASONS * PER_SEASON}
             </Text>
             <Text style={styles.toggle}>{open ? 'roll up ▴' : 'unroll ▾'}</Text>
           </Roll>
@@ -41,11 +41,12 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
         <>
           <View style={styles.sheet}>
             <Text style={styles.how}>
-              Memories hide in quiet corners of the Other World, one each season. They only shimmer once your habits
+              Memories hide in quiet corners of the Other World, four each season. They only shimmer once your habits
               are strong enough to remember them.
             </Text>
-            {Array.from({ length: SEASONS }, (_, i) => {
-              const memory = MEMORIES.find((m) => m.season === i + 1);
+            {Array.from({ length: SEASONS * PER_SEASON }, (_, i) => {
+              const season = Math.floor(i / PER_SEASON) + 1;
+              const memory = MEMORIES.filter((m) => m.season === season)[i % PER_SEASON];
               if (memory && seen.includes(memory.id)) return <Remembered key={i} memory={memory} />;
               return (
                 <View key={i} style={styles.entry}>
@@ -53,7 +54,7 @@ export function MemoryScroll({ seen }: { seen: string[] }) {
                   <Text style={styles.hint}>
                     {memory
                       ? `Season ${memory.season} · ${requirementLabel(memory.needs, xp)}`
-                      : `Season ${i + 1} · not yet in the World`}
+                      : `Season ${season} · not yet in the World`}
                   </Text>
                 </View>
               );

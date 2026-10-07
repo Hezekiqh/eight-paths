@@ -4,7 +4,7 @@ import { useTour } from '@/tutorial/tour';
 import { useWorldStore } from '@/world/store';
 
 import { initialData, useGameStore } from '../index';
-import { deleteEverything } from '../delete-everything';
+import { deleteAccountOnly, deleteEverything } from '../delete-everything';
 
 // A saved sign-in on this phone, unless a test says otherwise.
 let mockSignedIn = false;
@@ -86,5 +86,23 @@ describe('deleting the account', () => {
     expect(await deleteEverything()).toBe('canceled');
     expect(useGameStore.getState().player).not.toBeNull();
     mockSignedIn = false;
+  });
+
+  it('deleting only the account keeps the game, so the sign-in screen shows instead of onboarding', async () => {
+    (deleteAccount as jest.Mock).mockClear();
+    (forgetAccountHere as jest.Mock).mockClear();
+    expect(await deleteAccountOnly()).toBe('deleted');
+    expect(deleteAccount).toHaveBeenCalled();
+    expect(forgetAccountHere).toHaveBeenCalled();
+    expect(useGameStore.getState().player).not.toBeNull();
+    expect(useWorldStore.getState().hero).toBe('brannoc');
+    expect(useTour.getState().done).toBe(true);
+  });
+
+  it('keeps the sign-in when the player backs out of deleting only the account', async () => {
+    (forgetAccountHere as jest.Mock).mockClear();
+    (deleteAccount as jest.Mock).mockResolvedValueOnce('canceled');
+    expect(await deleteAccountOnly()).toBe('canceled');
+    expect(forgetAccountHere).not.toHaveBeenCalled();
   });
 });
