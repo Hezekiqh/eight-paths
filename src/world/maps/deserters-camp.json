@@ -231,13 +231,13 @@
       "look": true
     },
     {
-      "id": "morrow",
+      "id": "mags",
       "type": "npc",
       "x": 21,
       "y": 11,
-      "sprite": "morrow",
+      "sprite": "mags",
       "facing": "up",
-      "name": "Old Morrow",
+      "name": "Old Mags",
       "lines": [
         "Hm? Oh. A visitor. Mind the roses, dear. They're his.",
         "My great-grandmother used to tell me a tale, when I was small.",

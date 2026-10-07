@@ -63,7 +63,7 @@ export const TALE: Chapter[] = [
         text: "The king's chaplain sealed away what he saw. Some say a shadow promised Kaldor power over the dead, and endless youth.",
       },
       {
-        from: [told('Old Morrow')],
+        from: [told('Old Mags')],
         text: 'The little prince was gone too, though no one could ever say where.',
       },
       {

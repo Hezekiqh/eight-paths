@@ -835,13 +835,13 @@
       ]
     },
     {
-      "id": "wick",
+      "id": "fitch",
       "type": "npc",
       "x": 24,
       "y": 14,
-      "sprite": "wick",
+      "sprite": "fitch",
       "facing": "down",
-      "name": "Wick",
+      "name": "Fitch",
       "lines": [
         "Have you heard of the Lost Prince? He got lost in the woods, and he's STILL lost, and one day he comes back with a sword THIS big.",
         "My brother says it's a baby story. My brother says everything's a baby story.",
