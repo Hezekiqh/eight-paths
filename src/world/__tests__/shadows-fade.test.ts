@@ -2,7 +2,7 @@ import { MAPS, SHADOWS_FADE, withoutGone, withoutShadows, type MapId } from '../
 
 // Kaldor beaten (author, Oct 7, 2026): his power leaves him, and his shadow soldiers fade everywhere with it.
 
-const SHADOW_ROOMS: MapId[] = ['barracks-yard', 'barracks-hall', 'lower-barracks', 'royal-dungeon', 'cull-road', 'graveyard'];
+const SHADOW_ROOMS: MapId[] = ['barracks-yard', 'barracks-hall', 'lower-barracks', 'royal-dungeon', 'cull-road', 'graveyard', 'royal-forest'];
 
 describe('when Kaldor falls, his shadows fade', () => {
   it.each(SHADOW_ROOMS)('%s has shadows to fight before', (id) => {

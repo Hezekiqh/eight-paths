@@ -64,7 +64,8 @@ import { PORTAL_HOME, SEASON_END, seasonFinale, winScene, type Outcome } from '@
 import { SEASON_FLAG, nextGoal } from '@/world/guide';
 import { keeperTalk } from '@/world/keeper-talk';
 import { habitMemory } from '@/world/memory';
-import { MEMORIES, SEEN_LINES, memoryAt, notYetLines } from '@/world/memories';
+import { MEMORIES, memoryAt, memoryCall, memoryReady, type Memory } from '@/world/memories';
+import { HOOK_TILE, PAINTINGS_HUNG, SCHOOL, fallenLines, hookDialogue, paintingsShown } from '@/world/painters-school';
 import { TALKED, loreId, talkedId } from '@/world/lore';
 import { banterFor } from '@/world/banter';
 import { hasWalkBanter, walkBanterFlag, walkBanterFor } from '@/world/walk-banter';
@@ -611,6 +612,8 @@ function World({
     return tilesOf(map, [map.raises]).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }));
   }, [map, liveFlags]);
   const husks = useMemo(() => brokenCocoons(map.id, liveFlags), [map, liveFlags]);
+  // the Painters' School's paintings: on the floor where they fell, or back on their hooks
+  const paintings = useMemo(() => paintingsShown(map, liveFlags), [map, liveFlags]);
   const ambience = useMemo(() => ambienceOf(map), [map]);
   // The doorways shut for a boss fight, drawn barred.
   const sealed = useMemo(() => {
@@ -1509,11 +1512,16 @@ function World({
   const remembered = useWorldStore((s) => s.memories);
   const memorySpots = useMemo(
     () =>
-      MEMORIES.filter((m) => m.map === map.id && !remembered.includes(m.id) && standing(m.needs, xp).met).map((m) => ({
+      MEMORIES.filter(
+        // someone's own (Brannoc's) only shimmers with them in your party (memories.ts)
+        (m) =>
+          m.map === map.id &&
+          memoryReady(m, remembered, standing(m.needs, xp).met, partyWithYou(gameParty, owned, liveFlags)),
+      ).map((m) => ({
         x: m.x,
         y: m.y,
       })),
-    [map, remembered, xp],
+    [map, remembered, xp, gameParty, owned, liveFlags],
   );
   const twinkles = useMemo(
     () => [
@@ -1775,6 +1783,7 @@ function World({
         hearts={hearts}
         chests={chests}
         husks={husks}
+        paintings={paintings}
         onMarched={onMarched}
         exit={exit}
         talkingTo={dialogue?.speaker ?? null}
@@ -2220,20 +2229,55 @@ function useAct(
     const facing = sim.facing.get();
     const [tx, ty] = tileAhead(sim.x.get(), sim.y.get(), facing);
     // A hidden memory (memories.ts): once your habits have earned it, it plays, and goes in the scroll.
-    const memory = memoryAt(map.id, tx, ty);
-    if (memory) {
+    // Someone's own (Brannoc's) waits for them to be with you, and afterwards whoever came has their say.
+    const recall = (memory: Memory): boolean => {
       const w = useWorldStore.getState();
-      if (w.memories.includes(memory.id)) {
-        setDialogue({ lines: SEEN_LINES });
-      } else if (!standing(memory.needs, xp.current).met) {
-        setDialogue({ lines: notYetLines(describeRequirement(memory.needs)) });
-      } else {
-        w.remember(memory.id);
-        playSound('quest');
-        haptics.celebrate();
-        setDialogue({ lines: memory.lines });
+      const game = useGameStore.getState();
+      const party = partyWithYou(game.party, game.owned, w.flags);
+      const call = memoryCall(memory, w.memories, standing(memory.needs, xp.current).met, party);
+      if (call === null) return false;
+      // seen before a restart of the story: the scroll keeps it, so whatever it opened stays open
+      if (memory.sets && w.memories.includes(memory.id) && !w.flags.includes(memory.sets)) w.setFlag(memory.sets);
+      if (call !== 'play') {
+        setDialogue({ lines: call });
+        return true;
       }
-      return;
+      w.remember(memory.id);
+      if (memory.sets) w.setFlag(memory.sets);
+      playSound('quest');
+      haptics.celebrate();
+      const after = banterFor(map.id, memory.id, party);
+      setDialogue({ lines: memory.lines, then: after.length > 0 ? () => setDialogue({ lines: after }) : undefined });
+      return true;
+    };
+    const memory = memoryAt(map.id, tx, ty);
+    if (memory && recall(memory)) return;
+    // The Painters' School (painters-school.ts): hang the paintings back, and the memory there is waiting.
+    if (map.id === SCHOOL) {
+      const tile = tileAt(map, tx, ty);
+      const flags = useWorldStore.getState().flags;
+      if (tile === HOOK_TILE) {
+        const theirs = MEMORIES.find((m) => m.map === SCHOOL);
+        setDialogue(
+          hookDialogue(
+            flags,
+            {
+              say: setDialogue,
+              hang: () => useWorldStore.getState().setFlag(PAINTINGS_HUNG),
+              after: () => {
+                if (theirs && !useWorldStore.getState().memories.includes(theirs.id)) recall(theirs);
+              },
+            },
+            map.examine[tile] ?? [],
+          ),
+        );
+        return;
+      }
+      const lain = fallenLines(tile, flags);
+      if (lain) {
+        setDialogue({ lines: lain });
+        return;
+      }
     }
     // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
     // Through bars (map.talkThrough), whoever's just the other side.
@@ -2674,7 +2718,10 @@ function useAct(
       return;
     }
     const lines = map.examine[tile];
-    if (lines) setDialogue({ lines });
+    // the party can have a word about what you're looking at, too (banter.ts, "tile:<letter>")
+    const { party, owned } = useGameStore.getState();
+    const said = banterFor(map.id, `tile:${tile}`, partyWithYou(party, owned, useWorldStore.getState().flags));
+    if (lines) setDialogue({ lines: [...lines, ...said] });
   }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
   const safeAct = useCallback(() => {

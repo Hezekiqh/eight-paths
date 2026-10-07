@@ -1,0 +1,100 @@
+{
+  "id": "painters-school",
+  "name": "The Painters' School",
+  "wall": "plaster",
+  "walkable": [
+    ".",
+    "w",
+    "x",
+    "y",
+    "z"
+  ],
+  "tiles": [
+    "##################",
+    "#VVBVVHHHHVVVVBVV#",
+    "#VVBVVHHHHVVVVBVV#",
+    "#ee............ee#",
+    "#.....w.........S#",
+    "#.......C........#",
+    "#..x.........y...#",
+    "#.k..............#",
+    "#.........z......#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "=",
+    "B": "boarded",
+    "H": "hooks",
+    "e": "easel",
+    "S": "statue",
+    "C": "stool",
+    "k": "desk",
+    "w": ".",
+    "x": ".",
+    "y": ".",
+    "z": "."
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "firstVisit": [
+    "Dust, and the smell of old linseed. Nobody's been in here for a very long time.",
+    "The paintings have come down off the far wall. All of them."
+  ],
+  "examine": {
+    "1": [
+      "The door back out to the South Road. The boards you pulled off are lying in the grass."
+    ],
+    "V": [
+      "Plaster, flaking. Someone's tested colours on it in little squares: twelve greens, nine blues, one red."
+    ],
+    "B": [
+      "A window, boarded over from outside. Daylight comes through the cracks in stripes."
+    ],
+    "_": [
+      "The school wall."
+    ],
+    "H": [
+      "Four bare hooks in a row, and under each a clean square on the plaster where a painting hung.",
+      "Under the squares, four little brass plates: I. WONDER. II. DUTY. III. DOUBT. IV. PEACE."
+    ],
+    "e": [
+      "An easel, and on it a canvas that was never finished: a sky, and a pencil line where the ground should be."
+    ],
+    "S": [
+      "A statue of an old man, a brush tucked behind his ear and his sleeves rolled up. His students made it; you can tell. One arm's longer than the other.",
+      "The plaque says: OUR MASTER, WHO TAUGHT US TO LOOK.",
+      "Somebody's left a paintbrush at his feet. It's been there a long time."
+    ],
+    "C": [
+      "The master's stool, facing the wall where the paintings hung. There's paint on the seat. He sat in it anyway."
+    ],
+    "k": [
+      "A student's desk. On it, a sketchbook, left open.",
+      "Sparrows, mostly. Horses with the legs not quite right. A man in a crown, laughing, the crown on crooked. An old man cleaning a brush, again and again.",
+      "Every page is signed in the corner, small: B."
+    ],
+    "w": [
+      "A painting, fallen face up in the dust: a field at morning. A sword stands planted in the earth, and a sparrow sits on its hilt.",
+      "There's no boy in this one. A corner's still in pencil."
+    ],
+    "x": [
+      "A painting, fallen face up in the dust: a boy kneeling on a studio floor in front of an old man with paint on his hands.",
+      "A sword lies on the boards between them. Neither of them is looking at it."
+    ],
+    "y": [
+      "A painting, fallen face up in the dust: a small boy at a window, drawing the birds outside.",
+      "Behind him, in the corner, a sword leans against the wall, much too big for him. He hasn't noticed it."
+    ],
+    "z": [
+      "A painting, fallen face up in the dust: the boy, older, holding up a sword with both arms. It's heavier than he is.",
+      "A king and a queen watch from a balcony, very pleased."
+    ]
+  },
+  "objects": [],
+  "floor": "stone"
+}

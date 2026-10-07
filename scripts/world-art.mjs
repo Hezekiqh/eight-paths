@@ -995,6 +995,64 @@ const OUTDOOR_ART = {
     ellipse(g, x + 12, y + 8, 3, 3, O.stoneLight);
     for (let i = 0; i < 5; i++) put(g, x + 3 + i * 2, y + 11, O.leaf);
   },
+  // The Royal Forest (author, Oct 7, 2026), where Brannoc ran. Drawn by name (a map's `art` points a
+  // letter at them), so they never take a letter another place uses.
+  brush(g, x, y) {
+    // A gap in the undergrowth: trodden earth between two walls of bracken. Every gap looks the same,
+    // the ones that go somewhere and the ones the forest turns you round in.
+    box(g, x + 3, y, 10, TILE, O.dirtDark);
+    box(g, x + 4, y, 8, TILE, O.dirt[0]);
+    for (const side of [0, 12])
+      for (let j = 0; j < TILE; j += 3) ellipse(g, x + side + 2, y + j + 1, 2, 2, j % 2 ? O.leaf : O.leafDark);
+    for (let i = 0; i < 4; i++) put(g, x + 5 + Math.floor(hash(x, y, i + 40) * 6), y + 2 + i * 4, O.leafLight);
+  },
+  carved(g, x, y) {
+    // A tree with a picture scratched into its trunk: pale cuts in the bark.
+    tree(g, x, y);
+    box(g, x + 5, y + 9, 6, 7, O.trunk);
+    box(g, x + 6, y + 10, 4, 4, '#C8A878');
+    put(g, x + 7, y + 11, O.trunkDark);
+    put(g, x + 8, y + 12, O.trunkDark);
+    put(g, x + 9, y + 11, O.trunkDark);
+  },
+  carvedWild(g, x, y) {
+    // The same, cut harder: gouges all down the trunk.
+    tree(g, x, y);
+    box(g, x + 5, y + 8, 6, 8, O.trunk);
+    for (let j = 0; j < 4; j++) {
+      box(g, x + 5 + (j % 2), y + 9 + j * 2, 4, 1, '#D8B888');
+      put(g, x + 9 - (j % 2), y + 9 + j * 2, '#E8D0A0');
+    }
+  },
+  deadGrass(g, x, y) {
+    // Grass gone grey and flat, in a ring.
+    box(g, x, y, TILE, TILE, '#7A7458');
+    for (let i = 0; i < 14; i++) {
+      const bx = x + Math.floor(hash(x, y, i + 50) * 15);
+      const by = y + Math.floor(hash(y, x, i + 50) * 15);
+      put(g, bx, by, i % 3 ? '#5E5844' : '#9A9278');
+    }
+  },
+  husk(g, x, y) {
+    // An old cocoon, split down the front and gone grey, sunk into the ground.
+    box(g, x, y, TILE, TILE, '#7A7458');
+    ellipse(g, x + 8, y + 12, 7, 3, '#4A4636');
+    ellipse(g, x + 8, y + 9, 6, 6, '#9A968A');
+    ellipse(g, x + 6, y + 8, 3, 4, '#B0AC9E');
+    box(g, x + 8, y + 3, 2, 11, '#2A2620');
+    put(g, x + 7, y + 6, '#2A2620');
+    put(g, x + 10, y + 10, '#2A2620');
+  },
+  woodpile(g, x, y) {
+    // Logs stacked neat, ends out.
+    for (let r = 0; r < 3; r++)
+      for (let c = 0; c < 3 - (r === 2 ? 1 : 0); c++) {
+        const cx = x + 3 + c * 5 + (r === 2 ? 2 : 0);
+        const cy = y + 13 - r * 4;
+        ellipse(g, cx, cy, 2, 2, O.trunk);
+        put(g, cx, cy, '#C8A878');
+      }
+  },
 };
 
 /** The bottom row of a cottage: plaster between timber beams, sitting on a stone footing. */
@@ -3289,6 +3347,8 @@ const MAPS = [
   'warrior-city',
   'south-road',
   'old-mine',
+  'royal-forest',
+  'painters-school',
   'wc-chapel',
   'wc-library',
   'wc-guild',

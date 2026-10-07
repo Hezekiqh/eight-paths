@@ -10,9 +10,9 @@
   ],
   "tiles": [
     "TTTTTTTTTTTTTTTTTTT^^TTTTTTTTTTTTTTTTTTT",
-    "T..................,,..................T",
-    "T..................,,..................T",
-    "T..................,,.......MMMMMMMMMMMT",
+    "T...IIIII..........,,..................T",
+    "T...IIIII..........,,..................T",
+    "T...IIDII..........,,.......MMMMMMMMMMMT",
     "T..................,,.......MMMMMMMMMMMT",
     "TTTTTTTTTTTTTTTTTT.,,.......MMMMMMMMMMMT",
     "TT...............T.,,.......MMMMMMMMMMMT",
@@ -33,7 +33,7 @@
     "TT...............T..........g......g...T",
     "TT...............T.........g......g....T",
     "TTTTTTTTTTTTTTTTTT........T......g.....T",
-    "T........................g......g......T",
+    "<,,,.....................g......g......T",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "spawn": {
@@ -72,6 +72,16 @@
     ],
     "^": [
       "North: back up to Warrior City."
+    ],
+    "<": [
+      "West, a path into old woods. Nobody's walked it in a long while."
+    ],
+    "I": [
+      "An old school, boarded up. Over the door, under the moss: THE PAINTERS' SCHOOL.",
+      "The boards have been up five hundred years. They'd come away in your hand."
+    ],
+    "D": [
+      "The school's door, boarded over. The boards are rotten through."
     ]
   },
   "objects": [

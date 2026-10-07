@@ -95,6 +95,8 @@ const REGION: Partial<Record<MapId, MapId>> = {
   'kingdom-dungeon': 'warrior-city',
   'dungeon-mazes': 'warrior-city',
   'old-mine': 'south-road',
+  'royal-forest': 'south-road',
+  'painters-school': 'south-road',
   'wc-chapel': 'warrior-city',
   'wc-library': 'warrior-city',
   'wc-guild': 'warrior-city',

@@ -261,6 +261,8 @@ type Props = {
   signs?: { x: number; y: number }[];
   /** Cocoons broken open (see cocoons.ts): split silk drawn over the whole one in the map's art. */
   husks?: { x: number; y: number }[];
+  /** The Painters' School's paintings (painters-school.ts): fallen on the floor, or hung on their hooks. */
+  paintings?: { x: number; y: number; hung: boolean; scene: number }[];
   /** How dark it is here and what drifts in the air; every flame [x, y, light reach] (see ambience.ts). */
   ambience?: Ambience;
   flames?: number[][];
@@ -383,6 +385,7 @@ export function WorldView({
   chests = [],
   signs = [],
   husks = [],
+  paintings = [],
   sealed = [],
   ambience = { darkness: 0, motes: null },
   flames = [],
@@ -1256,6 +1259,9 @@ export function WorldView({
         {husks.map((p) => (
           <Husk key={`h${p.x},${p.y}`} x={p.x * TILE} y={p.y * TILE} />
         ))}
+        {paintings.map((p) => (
+          <Painting key={`p${p.scene}`} x={p.x * TILE} y={p.y * TILE} hung={p.hung} scene={p.scene} />
+        ))}
         {flames.length > 0 && (
           <>
             <Path path={snuffed} color="#1A1410" />
@@ -1524,6 +1530,33 @@ function Husk({ x, y }: { x: number; y: number }) {
       <Rect x={x + 0} y={y + 13} width={4} height={2} color="#EDE6D6" />
       <Rect x={x + 0} y={y + 15} width={4} height={1} color="#A69C8C" />
       <Rect x={x + 13} y={y + 12} width={3} height={3} color="#C9BFAE" />
+    </Group>
+  );
+}
+
+/** Each painting's colours, in story order: the window, the balcony, the old man, the field. */
+const SCENES = [
+  { sky: '#8AAAD0', ground: '#C8A878', mark: '#4A3020' },
+  { sky: '#C8963A', ground: '#8A3A2A', mark: '#ACA5A0' },
+  { sky: '#6A4428', ground: '#B8884A', mark: '#E8DCC0' },
+  { sky: '#C8D8F0', ground: '#5A8A4A', mark: '#8A8280' },
+];
+
+/**
+ * A painting in the Painters' School: lying on the floor, a little crooked, where it fell; or hung, straight,
+ * on its hook (over the clean square the art leaves on the wall).
+ */
+function Painting({ x, y, hung, scene }: { x: number; y: number; hung: boolean; scene: number }) {
+  const c = SCENES[scene % SCENES.length];
+  const [px, py] = hung ? [x + 2, y - 7] : [x + 1, y + 4];
+  return (
+    <Group>
+      {!hung && <Rect x={px + 1} y={py + 10} width={14} height={2} color="#10080A" opacity={0.4} />}
+      <Rect x={px} y={py} width={12} height={hung ? 12 : 10} color="#5A3A20" />
+      <Rect x={px + 1} y={py + 1} width={10} height={hung ? 6 : 5} color={c.sky} />
+      <Rect x={px + 1} y={py + (hung ? 7 : 6)} width={10} height={hung ? 4 : 3} color={c.ground} />
+      <Rect x={px + 5} y={py + 3} width={2} height={hung ? 6 : 5} color={c.mark} />
+      {hung && <Rect x={px + 5} y={py - 2} width={2} height={2} color="#2A1C12" />}
     </Group>
   );
 }
