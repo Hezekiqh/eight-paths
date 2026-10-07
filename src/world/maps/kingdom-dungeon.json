@@ -60,7 +60,8 @@
       "A torch in a bracket, guttering."
     ],
     "3": [
-      "The guards' stair, up to the town. Locked from the other side. Of course it is."
+      "(The door at the top of the guards' stair. Locked. They locked it behind them.)",
+      "(No way out up there. I'll have to find another way.)"
     ],
     "4": [
       "The cell door. Locked, and the key is on Gary's belt. Gary is asleep."
@@ -369,7 +370,7 @@
     "2": "G",
     "p": "G",
     "1": "H",
-    "3": "E",
+    "3": "N",
     "4": "G"
   }
 }

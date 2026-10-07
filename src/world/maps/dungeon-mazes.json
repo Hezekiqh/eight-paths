@@ -11,22 +11,26 @@
     "1": "H",
     "2": "H",
     "6": "W",
-    "8": "W",
-    "0": "W",
     "h": "."
   },
   "tiles": [
-    "#############################################",
-    "#W6WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
-    "#1..h..W.......W.W...........W...W...W...W.2#",
-    "#WWWWW.W.WWWWW.W.W.WWWWWWWWW.WWW.W.W.W.W.W.W#",
-    "#W...W.W.W.....W.W.W...W...W.W...W.W...W.W.W#",
-    "#W.W.W.W.W.WWWWW.W.W.W.W.W.W.W.W.W.WWWWW.W.R#",
-    "#W.W...W.W...W...8.....W.W...W...W.....W.W.W#",
-    "#W.WWWWW.WW..W.W.WWWWW.W.WWWWWWW.WWWWW.W.W.W#",
-    "#W.......W.....W.......W...............W...W#",
-    "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWW0WWWWWWWWWWWWW#",
-    "#############################################"
+    "###############################################################",
+    "#W6...WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
+    "#1..h......W.W...W.........W...W.....W.......W...W.......W...W#",
+    "#WWWWWWWWW.W.WWW.WWW.WWW.W.W.W.W.WWW.W.WWWWW.W.W.W.WWWWW.W.W.W#",
+    "#W.......W.W.W.W...W.W...W...W...W.W.W.W.W...W.W...W.......W.W#",
+    "#W.WWWWW.W.W.W.WWW.WWW.WWWWWWWWW.W.W.W.W.W.WWW.WWW.WWWWWWWWW.W#",
+    "#W.W...W...W.W...W.....W.....W...W...W.W.W.W...W...W...W...W.2#",
+    "#W.W.W.WWWWW.W.WWWWWWWWW.WWW.W.WWW.WWW.W.W.WWW.WWW.W.W.W.W.WWW#",
+    "#W.W.W.W.....W.........W.W...W...W.W...W.....W...W.W.W...W...W#",
+    "#W.W.W.WWWWW.W.W.WWWWWWW.W.WWWWW.W.WWW.WWWWW.W.W.WWW.WWWWW.W.W#",
+    "#W...W.......W.W.W.......W.....W.W...W...W.W.W.W.....W...W.W.W#",
+    "#W.WWWWWWWWWWW.W.W.WWWWWWWWW.W.W.WWW.W.W.W.W.WWW.WWWWW.W.WWW.W#",
+    "#W.WWWWWWWWWWW.W...W.W.......W.W.W...W.W.W.W...W.W.....W.W...W#",
+    "#W.W.........W.WWWWW.W.WWWWWWWWW.W.WWWWW.W.WWW.WWW.WWWWW.W.W.W#",
+    "#W...................W...........W.......W.........W.......W.R#",
+    "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW#",
+    "###############################################################"
   ],
   "spawn": {
     "x": 2,
@@ -42,12 +46,6 @@
       "Damp stone. Someone has drawn an arrow on it, pointing at another arrow."
     ],
     "6": [
-      "Damp stone."
-    ],
-    "8": [
-      "Damp stone."
-    ],
-    "0": [
       "Damp stone."
     ],
     "1": [

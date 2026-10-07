@@ -42,6 +42,8 @@ export function splitSpeaker(line: string): {
 } {
   // "* text": narration, even in a box someone's speaking in (a boss's intro: what you see, not what he says)
   if (line.startsWith('* ')) return { text: line.slice(2), narration: true };
+  // "(text)": a thought, even in a box someone's speaking in: a plain box, with no one's face or name on it
+  if (/^\(.*\)$/s.test(line)) return { text: line, narration: true };
   const m = line.match(/^([A-Z][A-Z' ]{1,30}): (.+)$/s);
   if (!m) return { text: line };
   const sprite = portraitFor(m[1]);

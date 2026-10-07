@@ -192,6 +192,7 @@ import {
   escortStand,
   guardsLeave,
   shovedIn,
+  STAIR_DOOR,
 } from '@/world/dungeon';
 import { WALKER_ROWS } from '@/world/walkers';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
@@ -503,15 +504,19 @@ function World({
   useEffect(() => {
     if (resume) useSession.setState({ carry: null });
   }, [resume]);
-  const roomMap = useMemo(
-    () =>
-      withOpenTiles(
-        // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
-        withRoster(start.map, dayNumber(), arrivalFlags),
-        [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
-      ),
-    [start, ways, arrivalFlags],
-  );
+  // The Maze Ward's pothole (dungeon.ts): once you've fallen through it, it stays open, and you walk round it.
+  const [pitOpen] = useState(() => start.map.id === 'dungeon-mazes' && arrivalFlags.includes(FELL_IN));
+  const roomMap = useMemo(() => {
+    const room = withOpenTiles(
+      // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
+      withRoster(start.map, dayNumber(), arrivalFlags),
+      [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
+    );
+    if (!pitOpen) return room;
+    const solid = room.solid.slice();
+    for (const t of tilesOf(room, [POTHOLE.tile])) solid[t] = 1;
+    return { ...room, solid };
+  }, [start, ways, arrivalFlags, pitOpen]);
   // Someone who leaves for good (Nib, if you're mean to him) is gone as soon as the talk ends, not on the next visit.
   const flagsNow = useWorldStore((s) => s.flags);
   // ...and everyone as the story's left them: fainted, carried off (maps.ts)
@@ -525,7 +530,14 @@ function World({
   const [exit, setExit] = useState<{ id: string; flag: string } | null>(null);
   /** Doors standing open for a moment in a cutscene (the cell door, as you're shoved in). */
   const [ajar, setAjar] = useState<{ x: number; y: number }[]>([]);
-  const patches = useMemo(() => [...openPatches(map, arrivalFlags), ...ajar], [map, arrivalFlags, ajar]);
+  const patches = useMemo(
+    () => [
+      ...openPatches(map, arrivalFlags),
+      ...ajar,
+      ...(pitOpen ? tilesOf(map, [POTHOLE.tile]).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) })) : []),
+    ],
+    [map, arrivalFlags, ajar, pitOpen],
+  );
   // The walking character's real level (from their habits): how hard they hit, and in the castle how hard the shadows are.
   const collection = useCollection();
   const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
@@ -1508,7 +1520,7 @@ function World({
       const tx = Math.floor(start.x / TILE);
       if (map.id === MAZE && tx >= 20 && scenePending(w.flags)) guardScene();
       else if (map.id === MAZE && tx < 5 && passageSeen && !w.flags.includes(PASSAGE_TAKEN) && !dialogueRef.current)
-        setDialogue({ speaker: COMPANIONS[hero].name, sprite: hero, lines: PASSAGE_LINES.notice });
+        setDialogue({ lines: PASSAGE_LINES.notice });
       else if (map.id === 'archive' && greenLit(w.flags) && !w.flags.includes('keeper:welcome-back')) {
         w.setFlag('keeper:welcome-back');
         // Cards or not, he tells you where you are and how you got here (you ask both), then
@@ -1519,8 +1531,6 @@ function World({
           if (left.length === 0) {
             // you're left wondering, then he points you at the candle
             setDialogue({
-              speaker: COMPANIONS[hero].name,
-              sprite: hero,
               lines: KEEPER_AFTERTHOUGHTS,
               then: () =>
                 setDialogue({
@@ -1636,14 +1646,21 @@ function World({
               setDialogue({
                 lines: ESCORT_LINES.door,
                 then: () => {
-                  setAjar([CELL_DOOR]);
+                  setAjar([STAIR_DOOR, CELL_DOOR]);
                   march(
                     shovedIn(guard),
                     () => {
-                      setAjar([]);
-                      march(guardsLeave(guard), () =>
-                        setDialogue({ lines: hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell }),
-                      );
+                      setAjar([STAIR_DOOR]);
+                      // back up the stair, and they lock the door behind them: no way out up there
+                      march(guardsLeave(guard), () => {
+                        setAjar([]);
+                        setDialogue({
+                          lines: [
+                            ...(hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell),
+                            ...ESCORT_LINES.locked,
+                          ],
+                        });
+                      });
                     },
                     5,
                     true,
@@ -1653,7 +1670,8 @@ function World({
             3,
             true,
           );
-        // the guards stand you up at the foot of the stair, then march you down (dungeon.ts)
+        // the guards stand you up at the foot of the stair, the door open behind them, then march you down (dungeon.ts)
+        setAjar([STAIR_DOOR]);
         march(escortStand(guard), () => setDialogue({ lines: ESCORT_LINES.start, then: marchIn }), 3, true);
       }
     }, 450);
@@ -2428,9 +2446,8 @@ function useAct(
         setDialogue({ lines: map.examine[tile] ?? [] });
         return;
       }
+      // your hero thinks it: a plain box, with no one's face on it
       setDialogue({
-        speaker: COMPANIONS[hero].name,
-        sprite: hero,
         lines: holeLines(hero === 'brannoc'),
         then: () =>
           setDialogue({
@@ -2449,11 +2466,9 @@ function useAct(
         setDialogue({ lines: PASSAGE_LINES.plain });
         return;
       }
+      // your hero thinks it, then the question is put: both plainly, with no one's face on them
       setDialogue({
-        speaker: COMPANIONS[hero].name,
-        sprite: hero,
         lines: PASSAGE_LINES.found,
-        // your hero thinks it; the question is put plainly, with no one's face on it
         then: () =>
           setDialogue({
             lines: PASSAGE_LINES.ask,
