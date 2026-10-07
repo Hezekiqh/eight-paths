@@ -382,7 +382,12 @@
       "goneAfter": "pit-champion",
       "lines": [
         "You wouldn't want an old man fighting. I'll let you have at it!"
-      ]
+      ],
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 20,
+        "y": 14
+      }
     },
     {
       "id": "arena-nails",
@@ -397,7 +402,12 @@
       "goneAfter": "pit-champion",
       "lines": [
         "My ice cubes melted."
-      ]
+      ],
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 22,
+        "y": 14
+      }
     },
     {
       "id": "arena-silas",
@@ -412,7 +422,12 @@
       "goneAfter": "pit-champion",
       "lines": [
         "You're the strong silent type. You got this."
-      ]
+      ],
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 23,
+        "y": 13
+      }
     },
     {
       "id": "brannoc-pit",
@@ -430,8 +445,13 @@
       "questions": [],
       "comesAfter": "cell-bars-bent",
       "goneAfter": "pit-champion",
-      "asleep": true,
-      "snot": true
+      "snot": true,
+      "movesAfter": {
+        "flag": "arena-carried",
+        "x": 21,
+        "y": 14
+      },
+      "faintsAfter": "arena-fainted"
     },
     {
       "id": "brannoc-awake",

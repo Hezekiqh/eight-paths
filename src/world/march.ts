@@ -23,7 +23,10 @@ export type Actor = {
   row: number;
   /** Tiles to walk through, in order; one tile to stand still. */
   path: [number, number][];
-  /** 0 down, 1 up, 2 left, 3 right: which way to face once there. */
+  /**
+   * 0 down, 1 up, 2 left, 3 right: which way to face once there. 4: out cold, flat on their back the whole way
+   * (Brannoc); 5: the same, carried, held up off the ground.
+   */
   face?: number;
 };
 
@@ -74,7 +77,7 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
       const seg = Math.hypot(bx - ax, by - ay);
       length += seg;
       if (left <= 0) continue;
-      facing = facingOf(bx - ax, by - ay, facing);
+      if (face < 4) facing = facingOf(bx - ax, by - ay, facing);
       if (left >= seg) {
         x = bx;
         y = by;

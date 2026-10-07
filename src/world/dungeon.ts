@@ -212,9 +212,47 @@ export const SNOT_SWING = [
   'He yawns. He raises his club.',
   'Behind you: a snore. A big one.',
 ];
-/** Brannoc walks to the warden, asleep, then swings. */
-export const brannocSleepwalks = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN], face: 1 },
+/** Brannoc walks to the warden, asleep, then swings (from the side of the sand, if the three carried him there). */
+export const brannocSleepwalks = (brannoc: number, carried = false): Actor[] => [
+  {
+    row: brannoc,
+    path: carried
+      ? [CARRIED_TO.brannoc, [CARRIED_TO.brannoc[0], 15], [SAND_MIDDLE[0], 15], SAND_MIDDLE, UNDER_WARDEN]
+      : [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN],
+    face: 1,
+  },
+];
+
+// ---- Carried off (author, Oct 7, 2026, as in Episode 13): Brannoc faints, and once the three have made their
+// excuses they rush over, pick him up (Old Mott at his feet, Nails at his head, Silas Seen leading the way), and
+// carry him off to the side of the sand, out of the way of the fight.
+
+/** Set once he's fainted (the verdict's been read): he lies flat on his back from then on (`faintsAfter`). */
+export const ARENA_FAINTED = 'arena-fainted';
+/** Set once they've carried him off: everyone stands where they put him down (`movesAfter`). */
+export const ARENA_CARRIED = 'arena-carried';
+/** Where they put him down, on the right of the sand: Old Mott at his feet, Nails at his head, Silas ahead. */
+export const CARRIED_TO: Record<'mott' | 'brannoc' | 'nails' | 'silas', [number, number]> = {
+  mott: [20, 14],
+  brannoc: [21, 14],
+  nails: [22, 14],
+  silas: [23, 13],
+};
+/** The walker rows of the three, and Brannoc's. */
+type Carriers = { mott: number; nails: number; silas: number; brannoc: number };
+/** The rush: round you and over to him (Old Mott below, Nails up and over, Silas ahead), Brannoc out cold. */
+export const arenaRush = (r: Carriers): Actor[] => [
+  { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4 },
+  { row: r.mott, path: [[6, 12], [10, 12], [10, 14]], face: 3 },
+  { row: r.nails, path: [[7, 12], [7, 11], [12, 11], [12, 14]], face: 2 },
+  { row: r.silas, path: [[8, 12], [13, 12], [13, 13]], face: 3 },
+];
+/** ...and off they go with him, held up between them, to the side of the sand. */
+export const arenaCarry = (r: Carriers): Actor[] => [
+  { row: r.mott, path: [[10, 14], CARRIED_TO.mott], face: 3 },
+  { row: r.brannoc, path: [BRANNOC_FAINTED, CARRIED_TO.brannoc], face: 5 },
+  { row: r.nails, path: [[12, 14], CARRIED_TO.nails], face: 2 },
+  { row: r.silas, path: [[13, 13], CARRIED_TO.silas], face: 2 },
 ];
 export const SNOT_SWING_HIT = [
   'Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
