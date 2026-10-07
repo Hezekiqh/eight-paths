@@ -82,7 +82,7 @@ const WALKER_ROWS = Object.fromEntries(
 const NEAREST = { filter: CK.FilterMode.Nearest, mipmap: CK.MipmapMode.None };
 
 // ---- maps: the baked picture, the people, the candles (ambience.ts)
-// (`arena`: the Colosseum, drawn like a dungeon but open to the sky, ambience.ts)
+// (`arena`: the Kaloseum, drawn like a dungeon but open to the sky, ambience.ts)
 const AMBIENCE = { rooms: { darkness: 0.18 }, outdoor: { darkness: 0 }, dungeon: { darkness: 0.32 }, arena: { darkness: 0 } };
 const FLAMES = {
   rooms: {
@@ -117,7 +117,7 @@ function loadMap(id, style) {
     boulders,
     style,
     image: image(join(ROOT, `assets/world/${id}.png`)),
-    // the Colosseum's crowd on its feet, flicked to and back as the game does (world-view.tsx)
+    // the Kaloseum's crowd on its feet, flicked to and back as the game does (world-view.tsx)
     cheer: existsSync(join(ROOT, `assets/world/${id}-cheer.png`)) ? image(join(ROOT, `assets/world/${id}-cheer.png`)) : null,
     flames,
     npcs,

@@ -1,6 +1,6 @@
 {
   "id": "kaldorium-maximus",
-  "name": "The Kaldorium Maximus",
+  "name": "The Training Yard",
   "style": "dungeon",
   "walkable": [
     ".",
@@ -41,10 +41,10 @@
         ]
       ],
       "intro": {
-        "speaker": "Lady Holler",
+        "speaker": "Yardmaster Holler",
         "lines": [
-          "LADIES! GENTLEMEN! BABIES! Rung one of the ladder: THE TWINS UGG!",
-          "One of them fights. The other one shouts advice. The advice is bad. FIGHT!"
+          "RIGHT! NEW RECRUIT! Sparring board, rung one: THE TWINS UGG!",
+          "One of them spars. The other one shouts advice. The advice is bad. GO!"
         ]
       }
     },
@@ -64,10 +64,10 @@
         ]
       ],
       "intro": {
-        "speaker": "Lady Holler",
+        "speaker": "Yardmaster Holler",
         "lines": [
-          "Rung two! She raised the Little Crushers! She fights with a RATTLE! MATRON SORREL!",
-          "And two of her biggest babies, all grown up! FIGHT!"
+          "Rung two! She trains the Little Crushers, our youngest! She spars with a RATTLE! MATRON SORREL!",
+          "And two of her biggest babies, all grown up. GO!"
         ]
       }
     },
@@ -87,10 +87,10 @@
         ]
       ],
       "intro": {
-        "speaker": "Lady Holler",
+        "speaker": "Yardmaster Holler",
         "lines": [
-          "Rung three! Nine years, never once hit! FENNICK THE UNBITTEN!",
-          "He's brought friends to do the hitting. He's going to run. FIGHT!"
+          "Rung three! Nine years in this yard, never once hit! FENNICK THE UNBITTEN!",
+          "He's brought friends to do the hitting. He's going to run. GO!"
         ]
       }
     },
@@ -114,10 +114,10 @@
         ]
       ],
       "intro": {
-        "speaker": "Lady Holler",
+        "speaker": "Yardmaster Holler",
         "lines": [
           "Rung four! Nobody knows who he is! THE MASKED BRUTE!",
-          "(It's Captain Varga. Everybody knows. She's got her cloak on.) FIGHT!"
+          "(It's Captain Varga. Everybody knows. She trains here on her day off.) GO!"
         ]
       }
     },
@@ -145,23 +145,23 @@
         ]
       ],
       "intro": {
-        "speaker": "Lady Holler",
+        "speaker": "Yardmaster Holler",
         "lines": [
-          "THE TOP OF THE LADDER! Forty years undefeated! GRAND CHAMPION HROTH!",
-          "He looks tired. He looks hopeful, actually. And here come three young bloods who want his crown. FIGHT!"
+          "THE TOP OF THE BOARD! Forty years, never knocked off it! MASTER-AT-ARMS HROTH!",
+          "He looks tired. He looks hopeful, actually. And three of his best recruits, who want his spot. GO!"
         ]
       }
     }
   ],
   "examine": {
     "W": [
-      "Ten thousand seats, every one carved KALDOR'S SEAT. In the royal box, a cardboard Kaldor watches. The real one never comes."
+      "The yard wall. Straw dummies lean against it, every one with Kaldor's face painted on. They have all been hit a great deal."
     ],
     "c": [
-      "A torch in an iron cage. The sand smells of it."
+      "A torch in an iron cage. The sand smells of it, and of sweat."
     ],
     "1": [
-      "The way out, to the Ring Ward."
+      "The yard gate, out to the Ring Ward."
     ]
   },
   "objects": [
@@ -172,31 +172,31 @@
       "y": 3,
       "sprite": "holler",
       "facing": "left",
-      "name": "Lady Holler",
+      "name": "Yardmaster Holler",
       "lines": [
-        "I'm the announcer of the Maximus. Barnaby does the old pit. Barnaby is SMALL TIME.",
-        "Come back any time. The next rung's always waiting."
+        "I'm the Yardmaster. Every fighter the king owns learns to fight in this yard. Tithe fighters too, before he sends them to the Kaloseum.",
+        "The sparring board's on the gate. Five names. Beat the next one, and come back for the one after."
       ],
       "after": {
         "flag": "maximus-5",
         "lines": [
-          "You've climbed the whole ladder. Your name's at the top of the board.",
-          "I've announced forty years of Hroth. I've got to learn to say a new name. Give me a minute."
+          "Your name's at the top of the sparring board. I chalked it myself.",
+          "Forty years I've been shouting 'HROTH WINS'. I've got to learn to shout a new name. Give me a minute."
         ]
       },
       "questions": [
         {
-          "ask": "What's wrong with Barnaby?",
+          "ask": "What is this place?",
           "answer": [
-            "He announces with a TINY VOICE. He says 'ladies and gentlemen' like he's apologising.",
-            "I say 'LADIES. GENTLEMEN. AND WHATEVER BRUG BROUGHT.' That's craft."
+            "The king's Training Yard. Recruits, tithe fighters, captains on their day off. Everyone spars, and the board says who's best.",
+            "Whoever's top of the board is master-at-arms. That's been Hroth for forty years."
           ]
         },
         {
-          "ask": "Does the king watch?",
+          "ask": "Does the king come down?",
           "answer": [
-            "From the high seat. Every bout. He never claps.",
-            "Once, he nodded. Hroth's first fight. Forty years ago. People still talk about the nod."
+            "Never. He watches from the castle wall with a spyglass. He has never once clapped.",
+            "Once, he nodded. Hroth's first spar. Forty years ago. The recruits still talk about the nod."
           ]
         },
         {
@@ -219,7 +219,7 @@
       "name": "Ogg Ugg",
       "lines": [
         "Advice! Duck when they swing! No, the other way! No, jump! Not like that!",
-        "I'm the twin who shouts. Ugg's the twin who fights. We swap on Thursdays. It goes badly."
+        "I'm the twin who shouts. Ugg's the twin who spars. We swap on Thursdays. It goes badly."
       ],
       "after": {
         "flag": "maximus-1",

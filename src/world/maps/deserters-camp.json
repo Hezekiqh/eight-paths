@@ -136,7 +136,7 @@
         {
           "ask": "Going back where?",
           "answer": [
-            "The Kingdom. My family's still there, cheering at the pit because the horde tells them to.",
+            "The Kingdom. My family's still there, cheering at the Kaloseum because the horde tells them to.",
             "If you ever get inside, I'll follow you. I mean it."
           ]
         },
@@ -252,6 +252,19 @@
         "Under a tent peg marked NOT A TREASURE: a Heart Piece.",
         "The deserters are very consistent about their signs."
       ]
+    },
+    {
+      "id": "traveler-deserters-camp",
+      "type": "npc",
+      "x": 8,
+      "y": 5,
+      "sprite": "traveler",
+      "facing": "down",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
     }
   ]
 }

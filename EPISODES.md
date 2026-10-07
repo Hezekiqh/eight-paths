@@ -66,7 +66,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
 - **Episode 13, "Unacceptable"** (`node scripts/episode-video.mjs 13`, 15.0 s: allowed up to about twenty, author,
   "its dialogue is too fast"; `read: 1.45`). Two fixed shots, cut between, never panned (author: "camera angles are
   video game like"): the ring (you in the middle, your three side by side on your left, Brannoc a few tiles off on your
-  right) and Barnaby in his commentator's box, a wedge of the Colosseum's own ring at the head of the sand, following the
+  right) and Barnaby in his commentator's box, a wedge of the Kaloseum's own ring at the head of the sand, following the
   same oval as the tiers (author: "the circle that is the colosseum should include the box"), opening onto the sand at
   ground level under a red curtain and an arch, his desk a low stone wall on the sand's edge, solid stone above. The
   crowd is small, scenery far off behind the action; Barnaby stands at the level of the sand, where everyone else
@@ -83,7 +83,7 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   asleep with a snot bubble (`snot`, `sleep.ts`; standing, in the game), then the five guards and the Warden, who
   comes up the tunnel. If you never let the three out, Barnaby welcomes "our troublemaking runaways" and they aren't there.
   Barnaby is a ringmaster now (top hat, red tailcoat, moustache), and a small guy (`short`: stubby legs), here and in Warrior City.
-- **The Colosseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
+- **The Kaloseum** (author, Oct 6, 2026: "look at the arena outside looking in"): the arena (`the-pit`) is drawn as the
   inside of the oval Warrior City shows from without, wider (32×19, two rows of stands over the box), open to the sky: sand, a low stone wall, tiers
   packed with the crowd (small pixel people, scenery far off behind the action, author: the regular-sized crowd looked
   bad and made Barnaby look like a giant;

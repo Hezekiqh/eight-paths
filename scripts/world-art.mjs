@@ -1425,7 +1425,7 @@ function marbleAt(x, y) {
 }
 
 /**
- * The Colosseum from the inside (author, Oct 6, 2026: "look at the arena outside looking in"): the same great oval
+ * The Kaloseum from the inside (author, Oct 6, 2026: "look at the arena outside looking in"): the same great oval
  * as Warrior City shows from without. Sand in the middle, a low stone wall round it, grey tiers climbing away
  * packed with the crowd, the Crown's red banners with the gold fist along the top, the great gate at the bottom,
  * open to the sky. The sand's oval sits just inside the walkable tiles (`.` and `,`); everything else is the stands.
@@ -1608,7 +1608,7 @@ function drawArena(map, cheer = false) {
     }
     for (let y = gy + 1; y < gy + TILE + 5; y += 5) box(g, gx, y, gw, 1, '#4A4442');
   }
-  // the commentator's box, part of the Colosseum's own ring and down at the level of the sand (author, Oct 6, 2026:
+  // the commentator's box, part of the Kaloseum's own ring and down at the level of the sand (author, Oct 6, 2026:
   // the crowd is scenery, far off, and a character among them looks like a giant; Barnaby stands where everyone else
   // stands). A wedge of the ring at the head of the sand, following the same oval as the tiers: the box opens in the
   // arena wall at ground level, dark under a red curtain and an arch, solid stone above it to the top of the stands
@@ -1983,7 +1983,7 @@ const WALKERS = {
     hair: ['bun', '#8A4A2A'],
     apron: '#F4F0EA',
   },
-  // Barnaby Loudmouth, the Colosseum's announcer (author, Oct 6, 2026: "a crowd announcer type"): a ringmaster's
+  // Barnaby Loudmouth, the Kaloseum's announcer (author, Oct 6, 2026: "a crowd announcer type"): a ringmaster's
   // red tailcoat with gold, a white collar, a big moustache, and a tall black top hat with a red band.
   barnaby: {
     top: '#B02A22',
@@ -2643,6 +2643,18 @@ const WALKERS = {
     skin: '#E8D8C8',
     hair: ['hood', '#2E3C50'],
   },
+  // The Traveler (author, Oct 7, 2026): a tourist, everywhere you go. A loud yellow holiday shirt, khaki shorts, a
+  // straw sun hat with a red band, round glasses.
+  traveler: {
+    top: '#F2C14E',
+    shade: '#D8963A',
+    legs: '#C8B07A',
+    boots: '#6A4028',
+    belt: '#6A4028',
+    hair: ['short', '#7A4A2A'],
+    hat: 'sun',
+    glasses: true,
+  },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -2999,6 +3011,15 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     }
   }
 
+  if (w.hat === 'sun') {
+    // a tourist's straw sun hat: a wide flat brim, a low crown, a red band
+    const straw = '#E8D08A';
+    b(2, 4, 12, 1, straw);
+    b(5, 2, 6, 2, straw);
+    b(5, 3, 6, 1, '#C4442A');
+    if (!back) p(6, 2, '#F6E6B0');
+  }
+
   if (w.hat === 'top') {
     // a ringmaster's top hat: a wide brim, a tall black crown, a red band
     const hat = '#1A161E';
@@ -3160,7 +3181,7 @@ for (const id of MAPS) {
             : drawMap(map),
     ),
   );
-  // the Colosseum's crowd, on its feet: a second picture the game and the episodes switch to and back
+  // the Kaloseum's crowd, on its feet: a second picture the game and the episodes switch to and back
   if (map.floor === 'sand') writeFileSync(`assets/world/${id}-cheer.png`, toPng(drawArena(map, true)));
 }
 const { g, ids } = drawWalkers();

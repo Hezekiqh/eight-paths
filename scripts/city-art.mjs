@@ -131,7 +131,7 @@ export function cityArt({ box, put, ellipse, hash }) {
 
   const art = {};
 
-  // The Colosseum: a great oval of tiered stone, sand in the middle, arches round its front wall,
+  // The Kaloseum: a great oval of tiered stone, sand in the middle, arches round its front wall,
   // and the Crown's banners on the rim.
   art.C = (g, x, y, m) => {
     if (m.at(-1, 0) === 'C' || m.at(0, -1) === 'C') return;

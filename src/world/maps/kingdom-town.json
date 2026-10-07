@@ -58,14 +58,14 @@
       "The chapel, dark and quiet."
     ],
     "3": [
-      "The old Kaldorium, boarded up. A painted sign: THE PIT IS CLOSED. FOR FIGHTS: THE COLOSSEUM, IN WARRIOR CITY, OR THE MAXIMUS, BY THE EAST GATE. Under it: (BOTH HAVE STATUES. OF COURSE BOTH HAVE STATUES.)"
+      "An old fighting ring, boarded up. A painted sign: CLOSED. FOR FIGHTS: THE KALOSEUM, IN WARRIOR CITY. Under it: (IT HAS A STATUE. OF COURSE IT HAS A STATUE.)"
     ],
     "d": [
       "You knock. A woman's voice, very close to the door: \"Go away. Unless you're the prince. Are you the prince?\""
     ],
     "K": [
       "The statue of Kaldor, colossal, one boot on a broken crown.",
-      "The plaque: KALDOR THE KINGBREAKER. He struck down the Mad King and saved the world from war. First of the Eight. Undying.",
+      "The plaque: KALDOR THE KINGBREAKER. Brother of King Osric, named his heir, and king when Osric's heart gave out. He kept the world from war. First of the Eight. Undying.",
       "Its eyes are two lenses of old-world glass. They follow you round the square. They probably don't."
     ],
     "Z": [
@@ -128,7 +128,7 @@
         {
           "ask": "How do I reach the king?",
           "answer": [
-            "Get yourself billed at the Colosseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
+            "Get yourself billed at the Kaloseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
             "Or buy a lamp. Lamps are nice."
           ]
         },
@@ -305,14 +305,14 @@
       "name": "The Cage Guard",
       "lines": [
         "Back off. King's cages, king's prisoners.",
-        "I score their cheering at the Maximus. That one's a three. That one's a two.",
+        "I score their cheering at the Kaloseum. That one's a three. That one's a two.",
         "You? You look like a one."
       ],
       "questions": [
         {
           "ask": "Who's in the cages?",
           "answer": [
-            "People who wouldn't cheer at the Maximus. They'll cheer next time."
+            "People who wouldn't cheer at the Kaloseum. They'll cheer next time."
           ]
         },
         {
@@ -923,6 +923,19 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "traveler-kingdom-town",
+      "type": "npc",
+      "x": 3,
+      "y": 11,
+      "sprite": "traveler",
+      "facing": "right",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
     }
   ],
   "art": {

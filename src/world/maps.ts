@@ -83,9 +83,15 @@ export type NpcObject = {
   asleep?: boolean;
   /** Asleep with a snot bubble swelling and shrinking at their nose (sleep.ts): Brannoc, out cold. */
   snot?: boolean;
+  /** Drawn flat on their back (head to the right) while asleep: out cold, not dozing where they stand. */
+  lying?: boolean;
+  /** Awake and on their feet until this story flag is set; then out cold, flat on their back (Brannoc, fainting). */
+  faintsAfter?: string;
+  /** Standing somewhere else once this story flag is set (carried off to the side of the sand, say). */
+  movesAfter?: { flag: string; x: number; y: number };
   /**
    * Watching from the edge, never in the way: nothing bumps into them, so a fight goes exactly as it would
-   * without them (the Kaldorium's Warden, and the three you let out, at the side of the sand).
+   * without them (the Kaloseum's Warden, and the three you let out, at the side of the sand).
    */
   passable?: boolean;
   /** Drawn this many times bigger (the Warden, standing at the head of the sand, as big as when he fights). */
@@ -223,7 +229,7 @@ export type WorldMap = {
   ladder?: Boss[];
   /** The baked picture from scripts/world-art.mjs, one pixel per art pixel. */
   image: number;
-  /** A second picture to flick to and back, a few times a second: the Colosseum's crowd, on its feet, cheering. */
+  /** A second picture to flick to and back, a few times a second: the Kaloseum's crowd, on its feet, cheering. */
   cheer?: number;
   /** Where a new game starts, in tiles. */
   spawn: { x: number; y: number; facing: Facing };
@@ -335,6 +341,26 @@ const away = (n: NpcObject, flags: string[]) =>
 export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
   if (!map.npcs.some((n) => away(n, flags))) return map;
   const objects = map.objects.filter((o) => o.type !== 'npc' || !away(o, flags));
+  const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
+  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
+/**
+ * Everyone as the story has left them: out cold once they've fainted (`faintsAfter`), and wherever they were
+ * moved to (`movesAfter`).
+ */
+export function withStoryPoses(map: WorldMap, flags: string[]): WorldMap {
+  if (!map.npcs.some((n) => n.faintsAfter || n.movesAfter)) return map;
+  const pose = (n: NpcObject): NpcObject => {
+    let out = n;
+    if (n.faintsAfter) {
+      const fainted = flags.includes(n.faintsAfter);
+      out = { ...out, asleep: fainted, lying: fainted };
+    }
+    if (n.movesAfter && flags.includes(n.movesAfter.flag)) out = { ...out, x: n.movesAfter.x, y: n.movesAfter.y };
+    return out;
+  };
+  const objects = map.objects.map((o) => (o.type === 'npc' ? pose(o) : o));
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }

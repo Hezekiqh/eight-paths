@@ -78,7 +78,7 @@
       "A cottage. The garden is mostly practice dummies."
     ],
     "1": [
-      "The Colosseum's great gate. Carved over the arch: HERE WE TEST OURSELVES."
+      "The Kaloseum's great gate. Carved over the arch: HERE WE TEST OURSELVES."
     ],
     "2": [
       "The chapel. A lantern burns in the window."
@@ -129,7 +129,7 @@
       "South: down toward the old mines, and an overgrown garden."
     ],
     "C": [
-      "The Colosseum. Thousands of seats, and every one of them has seen a fight."
+      "The Kaloseum. Thousands of seats, and every one of them has seen a fight."
     ],
     "K": [
       "The statue of Kaldor, colossal, one boot on a broken crown.",
@@ -182,14 +182,14 @@
       "facing": "down",
       "name": "Barnaby Loudmouth",
       "lines": [
-        "HEAR YE! Welcome to Warrior City, home of the COLOSSEUM!",
+        "HEAR YE! Welcome to Warrior City, home of the KALOSEUM!",
         "Fights every night. Glory every fight. Seats... mostly every seat."
       ],
       "questions": [
         {
           "ask": "Can you put me on the bill?",
           "answer": [
-            "At the Colosseum? Nobody new's fought there in years. They'd need a very good reason."
+            "At the Kaloseum? Nobody new's fought there in years. They'd need a very good reason."
           ]
         },
         {
@@ -213,7 +213,7 @@
         "path": "social",
         "done": [
           "{name} leans in and spins Barnaby a tale about a giant who ran from a war and came back to face it.",
-          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE COLOSSEUM!",
+          "BARNABY: …That's the best story I've heard in three hundred years. HEAR YE! A NEW CHAMPION FIGHTS AT THE KALOSEUM!",
           "You're on the bill."
         ],
         "cant": [
@@ -228,6 +228,42 @@
           "Your name's on the wall. In chalk, but on the wall."
         ]
       }
+    },
+    {
+      "id": "traveler-warrior-city",
+      "type": "npc",
+      "x": 36,
+      "y": 24,
+      "sprite": "traveler",
+      "facing": "left",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
+    },
+    {
+      "id": "signpost-west",
+      "type": "sign",
+      "x": 3,
+      "y": 18,
+      "lines": [
+        "A signpost, all arms.",
+        "EAST: THE KALOSEUM. NORTH: THE DESERTERS' CAMP AND THE OLD FORT. SOUTH: THE ROYAL GARDEN, THE OLD MINE.",
+        "WEST: THE COURIER ROAD. Somebody has added, in chalk: MIND THE BOULDERS."
+      ]
+    },
+    {
+      "id": "signpost-plaza",
+      "type": "sign",
+      "x": 26,
+      "y": 23,
+      "lines": [
+        "A signpost outside the Kaloseum.",
+        "NORTH: THE ROAD NORTH, THE DESERTERS' CAMP, THE OLD FORT. (The gate's shut till you're overall Lv 10.)",
+        "SOUTH: THE ROYAL GARDEN, THE OLD MINE. WEST: THE COURIER ROAD.",
+        "EAST: THE BRIDGE TO THE MAGE KINGDOM. Under it, a smaller sign: UNDER CONSTRUCTION. SORRY."
+      ]
     }
   ]
 }

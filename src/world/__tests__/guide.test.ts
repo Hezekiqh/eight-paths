@@ -35,13 +35,13 @@ describe('the next goal', () => {
     expect(goal.path).toBe('social');
   });
 
-  it("then marks the Colosseum's gate, and the fight once inside", () => {
+  it("then marks the Kaloseum's gate, and the fight once inside", () => {
     const flags = [...UP_TO_TOWN, 'on-the-bill'];
     expect(nextGoal('warrior-city', ALL.filter((m) => m !== 'the-pit'), strong(flags)).mark?.exitId).toBe('town-pit');
     // Been in, not yet won: the city still points at the gate, the arena at the fight.
     expect(nextGoal('warrior-city', ALL, strong(flags))).toMatchObject({
       mark: { exitId: 'town-pit' },
-      line: 'Win at the Colosseum',
+      line: 'Win at the Kaloseum',
     });
     expect(nextGoal('the-pit', ALL, strong(flags)).mark).toMatchObject({ tag: 'The fight' });
   });

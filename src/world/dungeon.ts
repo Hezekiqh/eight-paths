@@ -1,10 +1,10 @@
 import type { Actor } from './march';
 import type { Arrival, Requirement } from './progress';
 
-// The Kingdom Dungeon (author, Oct 3, 2026), under the Kaldorium: thrown in by Felix's guards,
+// The Kingdom Dungeon (author, Oct 3, 2026), under the Kaloseum: thrown in by Felix's guards,
 // you're marched down to a cell where Brannoc is cowering in the corner. Ask him to break out
 // and a mouse squeaks: he bolts straight through the bars and up the ladder. Gary, the one guard
-// left (the rest are at the Kaldorium for the big fight), sees it and decides he didn't.
+// left (the rest are at the Kaloseum for the big fight), sees it and decides he didn't.
 
 /** He's gone through the bars: they're bent open (also a job anyone can do at the bars, see jobs.ts). */
 export const BARS_BENT = 'cell-bars-bent';
@@ -71,7 +71,11 @@ export const guardsLeave = (guard: number): Actor[] => [
 export const ESCORT_LINES = {
   // at the foot of the guards' stair, before they march you down
   start: ['GUARD: Walk. And no plotting.'],
-  door: ['GUARD: In you go.'],
+  // the sentence (author, Oct 7, 2026): Barnaby hands them out, at the king's bidding
+  door: [
+    'GUARD: Plotting to overtake the throne, huh? Five life sentences will teach you.',
+    "GUARD: Barnaby's sentence, by order of the king. In you go.",
+  ],
   // after the door slams and the guards have gone
   cell: [
     'CLANG.',
@@ -105,7 +109,7 @@ export const GARY_STARTLED = [
   'GARY: ... I do not get paid enough to have seen that.',
 ];
 
-// ---- Up the ladder, into the Kaldorium (author, Oct 3, 2026). Brannoc got there first, and the guards
+// ---- Up the ladder, into the Kaloseum (author, Oct 3, 2026). Brannoc got there first, and the guards
 // have him. He faints. Five guards, then the warden, who can't be hurt: twenty strikes and he hasn't
 // noticed. Then Brannoc gets up, fast asleep, a snot bubble swelling and shrinking, and swings.
 // Walking as Brannoc yourself, you faint at the sight of the warden, and you do the swing.
@@ -123,11 +127,11 @@ export const BRANNOC_DECLINED = 'brannoc-declined';
 /** You said yes (here, or back in the cell later). */
 export const BRANNOC_JOINED = 'brannoc-joined';
 
-/** Where you meet Brannoc and he can join you (said yes to): the cell, the Kaldorium sand, his cell again. */
+/** Where you meet Brannoc and he can join you (said yes to): the cell, the Kaloseum sand, his cell again. */
 export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 
 /** Where Brannoc lies, fainted, just off the ladder; and where he walks to swing. */
-// (the Colosseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
+// (the Kaloseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
 // and Brannoc is three tiles on, room enough to faint without landing on you)
 export const BRANNOC_FAINTED: [number, number] = [11, 14];
 const UNDER_WARDEN: [number, number] = [15, 10];
@@ -135,7 +139,7 @@ const UNDER_WARDEN: [number, number] = [15, 10];
 export const SAND_MIDDLE: [number, number] = [15, 14];
 const TRAPDOOR: [number, number] = [7, 14];
 
-// ---- Up into the Kaldorium after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
+// ---- Up into the Kaloseum after the prison break (author, Episode 13, Oct 6, 2026): the three you let out got
 // here first and lost, and Barnaby, up in his announcer's box, has been expecting whoever let them out. He has his
 // say, you make your excuse (any excuse: it's UNACCEPTABLE), Brannoc faints, Barnaby is not impressed, and the three
 // make their excuses for losing. The Warden stays out of sight until the five guards are down.
@@ -208,16 +212,54 @@ export const SNOT_SWING = [
   'He yawns. He raises his club.',
   'Behind you: a snore. A big one.',
 ];
-/** Brannoc walks to the warden, asleep, then swings. */
-export const brannocSleepwalks = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN], face: 1 },
+/** Brannoc walks to the warden, asleep, then swings (from the side of the sand, if the three carried him there). */
+export const brannocSleepwalks = (brannoc: number, carried = false): Actor[] => [
+  {
+    row: brannoc,
+    path: carried
+      ? [CARRIED_TO.brannoc, [CARRIED_TO.brannoc[0], 15], [SAND_MIDDLE[0], 15], SAND_MIDDLE, UNDER_WARDEN]
+      : [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN],
+    face: 1,
+  },
+];
+
+// ---- Carried off (author, Oct 7, 2026, as in Episode 13): Brannoc faints, and once the three have made their
+// excuses they rush over, pick him up (Old Mott at his feet, Nails at his head, Silas Seen leading the way), and
+// carry him off to the side of the sand, out of the way of the fight.
+
+/** Set once he's fainted (the verdict's been read): he lies flat on his back from then on (`faintsAfter`). */
+export const ARENA_FAINTED = 'arena-fainted';
+/** Set once they've carried him off: everyone stands where they put him down (`movesAfter`). */
+export const ARENA_CARRIED = 'arena-carried';
+/** Where they put him down, on the right of the sand: Old Mott at his feet, Nails at his head, Silas ahead. */
+export const CARRIED_TO: Record<'mott' | 'brannoc' | 'nails' | 'silas', [number, number]> = {
+  mott: [20, 14],
+  brannoc: [21, 14],
+  nails: [22, 14],
+  silas: [23, 13],
+};
+/** The walker rows of the three, and Brannoc's. */
+type Carriers = { mott: number; nails: number; silas: number; brannoc: number };
+/** The rush: round you and over to him (Old Mott below, Nails up and over, Silas ahead), Brannoc out cold. */
+export const arenaRush = (r: Carriers): Actor[] => [
+  { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4 },
+  { row: r.mott, path: [[6, 12], [10, 12], [10, 14]], face: 3 },
+  { row: r.nails, path: [[7, 12], [7, 11], [12, 11], [12, 14]], face: 2 },
+  { row: r.silas, path: [[8, 12], [13, 12], [13, 13]], face: 3 },
+];
+/** ...and off they go with him, held up between them, to the side of the sand. */
+export const arenaCarry = (r: Carriers): Actor[] => [
+  { row: r.mott, path: [[10, 14], CARRIED_TO.mott], face: 3 },
+  { row: r.brannoc, path: [BRANNOC_FAINTED, CARRIED_TO.brannoc], face: 5 },
+  { row: r.nails, path: [[12, 14], CARRIED_TO.nails], face: 2 },
+  { row: r.silas, path: [[13, 13], CARRIED_TO.silas], face: 2 },
 ];
 export const SNOT_SWING_HIT = [
   'Brannoc is on his feet. His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
   'He lifts his sword.',
   'BRANNOC: Zzz... five more minutes, mother...',
   'BRANNOC SUPER SUPER SWING!',
-  'The warden goes up, up, over the banners, and out of the Colosseum. Somewhere in town, a roof gives way.',
+  'The warden goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
   'Silence.',
   "GUARD: Whoa. Whoa, whoa, whoa. Okay. You're good. You're good to go.",
   "GUARD: We won't bother you any more. Strength is valued more than anything here.",
@@ -233,7 +275,7 @@ export const BRANNOC_OFFER = [
   'BRANNOC: I know not what is happening in this strange land. But if I kept to your side, I might yet live through it.',
   'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',
 ];
-/** Coming down from the top as the Kaldorium's champion: Brannoc's heard. No mouse needed. */
+/** Coming down from the top as the Kaloseum's champion: Brannoc's heard. No mouse needed. */
 export const CHAMPION_IN_CELL = [
   'BRANNOC: Hold. You are the one who felled the Warden?',
   'BRANNOC: The whole gaol speaks of it. Even Gary woke for it.',

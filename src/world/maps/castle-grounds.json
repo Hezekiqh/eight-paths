@@ -163,7 +163,7 @@
         {
           "ask": "You're doing it wrong.",
           "answer": [
-            "…Am I? Nobody's ever said. Four hundred years and nobody's ever said.",
+            "…Am I? Nobody's ever said. Five hundred years and nobody's ever said.",
             "* He keeps drilling, slightly differently, and much worse."
           ],
           "deed": "bad"
@@ -229,7 +229,7 @@
       "sprite": "raider",
       "facing": "up",
       "name": "Soldier",
-      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for four hundred years."],
+      "lines": ["We march on the wizards tomorrow.", "We've been marching tomorrow for five hundred years."],
       "questions": [
         {
           "ask": "Why haven't you marched yet?",
@@ -349,7 +349,7 @@
           "ask": "What's wrong with the cheese?",
           "answer": [
             "It's blue. Bread isn't blue. Swords aren't blue. Why is the cheese blue?",
-            "And he smiled when he gave it. I've lived here four hundred years. Nobody smiles when they give you anything."
+            "And he smiled when he gave it. I've lived here five hundred years. Nobody smiles when they give you anything."
           ]
         },
         {

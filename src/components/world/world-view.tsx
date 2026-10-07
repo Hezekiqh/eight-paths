@@ -296,6 +296,21 @@ type Props = {
 /** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
 const dozing = (n: { asleep?: boolean; name: string }, talkingTo: string | null) => !!n.asleep && n.name !== talkingTo;
 
+/** A march actor's "facing" for someone out cold on the ground (march.ts), and for someone carried. */
+const LYING = 4;
+/** How high someone carried is held off the ground, in art pixels. */
+const CARRIED = 8;
+
+/**
+ * Where to put a sleeper's Zs or snot bubble (sleep.ts takes the feet of someone standing): for someone lying flat,
+ * a point that puts them at the head, on the right, with the bubble at the nose, facing up.
+ */
+function sleeperAt([x, y]: [number, number], lying: boolean, what: 'zs' | 'snot'): [number, number] {
+  'worklet';
+  if (!lying) return [x, y];
+  return what === 'zs' ? [x - 2, y + 8] : [x - 1, y - 2];
+}
+
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
 const EXIT_LAUGH = 1.4;
 const EXIT_SPEED = 520;
@@ -370,7 +385,7 @@ export function WorldView({
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
-  // the crowd on its feet and back down again (the Colosseum): the second picture shows on every other beat
+  // the crowd on its feet and back down again (the Kaloseum): the second picture shows on every other beat
   const cheerImage = useImage(map.cheer ?? null);
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.
@@ -463,24 +478,26 @@ export function WorldView({
               ? (WALKER_ROWS[`${n.sprite}asleep` as WalkerId] ?? WALKER_ROWS[n.sprite])
               : WALKER_ROWS[n.sprite],
             sim.npcIds.indexOf(n.id),
-            n.size ?? 1,
+            // flat on their back while out cold (size -1: see the sprite list below)
+            n.lying && dozing(n, talkingTo) ? -1 : (n.size ?? 1),
           ] as [number, number, number],
       ),
     [map, sim.npcIds, talkingTo],
   );
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
   // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
+  // (each as [row in sim.npcWalk, lying flat]: wherever they are now, carried off, say)
   const sleepers = useMemo(
-    () => map.npcs.filter((n) => dozing(n, talkingTo)).map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
-    [map, talkingTo],
+    () => map.npcs.filter((n) => dozing(n, talkingTo)).map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+    [map, talkingTo, sim.npcIds],
   );
   // ...and those with a snot bubble too
   const snorers = useMemo(
     () =>
       map.npcs
         .filter((n) => n.snot && dozing(n, talkingTo))
-        .map((n) => [n.x * TILE + TILE / 2, n.y * TILE + TILE - 2]),
-    [map, talkingTo],
+        .map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+    [map, talkingTo, sim.npcIds],
   );
   // One more for a party member stepping in for a job (a cameo).
   // And room for a march's actors.
@@ -858,6 +875,11 @@ export function WorldView({
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
         for (const [row, facing, frame, x, y, walking] of poses) {
+          // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
+          if (row >= 0 && facing >= LYING) {
+            ents.push([row, 0, 0, x, y + 0.5, 0, facing === LYING ? -1 : -2]);
+            continue;
+          }
           if (row >= 0) {
             ents.push([row, facing, frame, x, y, 0, 1]);
             continue;
@@ -920,7 +942,11 @@ export function WorldView({
       const lit: number[] = [];
       const red: number[] = [];
       for (const [row, facing, f, x, y, tint, size] of ents) {
-        const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size];
+        // size -1: flat on their back, head to the right, along the ground; -2: the same, held up off it
+        const item =
+          size < 0
+            ? [(facing * 3 + f) * FW, row * FH, round(x + FH / 2), round(y - FW + 2 - (size < -1 ? CARRIED : 0)), -1]
+            : [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size];
         list.push(...item);
         if (tint === 1 && lit.length < FLASHES * 5) lit.push(...item);
         if (tint === 2 && red.length < FLASHES * 5) red.push(...item);
@@ -1106,8 +1132,12 @@ export function WorldView({
   const zPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     const t = clock.get();
+    const walkers = sim.npcWalk.get();
     for (let i = 0; i < sleepers.length; i++) {
-      const zs = sleepZs(t + i * 0.37, sleepers[i][0], sleepers[i][1]);
+      const w = walkers[sleepers[i][0]];
+      if (!w) continue;
+      const [x, y] = sleeperAt(wandererFeet(w), sleepers[i][1] === 1, 'zs');
+      const zs = sleepZs(t + i * 0.37, x, y);
       for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
     }
     return path;
@@ -1115,8 +1145,12 @@ export function WorldView({
   const bubblePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     const t = clock.get();
+    const walkers = sim.npcWalk.get();
     for (let i = 0; i < snorers.length; i++) {
-      const b = snotBubble(t + i * 0.5, snorers[i][0], snorers[i][1]);
+      const w = walkers[snorers[i][0]];
+      if (!w) continue;
+      const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
+      const b = snotBubble(t + i * 0.5, x, y);
       for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
     }
     return path;
@@ -1124,8 +1158,12 @@ export function WorldView({
   const shinePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     const t = clock.get();
+    const walkers = sim.npcWalk.get();
     for (let i = 0; i < snorers.length; i++) {
-      const s = snotBubble(t + i * 0.5, snorers[i][0], snorers[i][1]).shine;
+      const w = walkers[snorers[i][0]];
+      if (!w) continue;
+      const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
+      const s = snotBubble(t + i * 0.5, x, y).shine;
       if (s) path.addRect(Skia.XYWHRect(s[0], s[1], 1, 1));
     }
     return path;
@@ -1318,6 +1356,8 @@ function useSpriteBuffers(list: SharedValue<number[]>, count: number) {
     'worklet';
     const l = list.get();
     if (l.length < (i + 1) * 5) xf.set(1, 0, -999, -999);
+    // lying flat: turned a quarter clockwise, so the head points right and the feet left
+    else if (l[i * 5 + 4] < 0) xf.set(0, 1, l[i * 5 + 2], l[i * 5 + 3]);
     else xf.set(l[i * 5 + 4], 0, l[i * 5 + 2], l[i * 5 + 3]);
   });
   return [sprites, transforms] as const;
