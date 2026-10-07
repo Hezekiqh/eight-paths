@@ -2622,6 +2622,18 @@ const WALKERS = {
     skin: '#E0D0C0',
     hair: ['veil', '#B8B4AC'],
   },
+  // Kingdom Town's keepers of the Lost Prince (author, Oct 7, 2026): Wick, who loves the story;
+  // Old Aske, who believes it; Old Orm, who watches the king take the young ones.
+  wick: { top: '#4E7A9A', shade: '#3A5E7A', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['spiky', '#C87A3A'] },
+  aske: { robe: true, top: '#7A5A6A', shade: '#5E4452', boots: '#3A2A20', hair: ['bun', '#F0ECE6'] },
+  orm: {
+    robe: true,
+    top: '#5A6A5A',
+    shade: '#445044',
+    boots: '#3A2A20',
+    hair: ['bald', '#D8B090'],
+    beard: '#F0ECE6',
+  },
   // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
   silasseen: {
     robe: true,

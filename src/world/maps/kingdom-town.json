@@ -832,6 +832,97 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "wick",
+      "type": "npc",
+      "x": 24,
+      "y": 14,
+      "sprite": "wick",
+      "facing": "down",
+      "name": "Wick",
+      "lines": [
+        "Have you heard of the Lost Prince? He got lost in the woods, and he's STILL lost, and one day he comes back with a sword THIS big.",
+        "My brother says it's a baby story. My brother says everything's a baby story.",
+        "I'm going to find him first. I've got a stick."
+      ]
+    },
+    {
+      "id": "aske",
+      "type": "npc",
+      "x": 20,
+      "y": 11,
+      "sprite": "aske",
+      "facing": "left",
+      "name": "Old Aske",
+      "lines": [
+        "The Lost Prince. My grandmother had it from hers, and hers from hers. Small, he was. Frightened of horses.",
+        "The young ones laugh at it. A fairytale, they say. The king says there was never any prince, and the king is never wrong.",
+        "But we know. He'll return one day."
+      ],
+      "questions": [
+        {
+          "ask": "Why don't the young ones believe it?",
+          "answer": [
+            "Five hundred years of one king. You'd think he was the sky, if he was all you'd ever had over you.",
+            "They believe what he tells them. They're frightened not to. He likes it that way."
+          ]
+        },
+        {
+          "ask": "Why do you still believe it?",
+          "answer": [
+            "Because some of us still tell it. A story that's told isn't over.",
+            "And because the old king's statue lost its head, and nobody's ever found that either."
+          ]
+        },
+        {
+          "ask": "It's a fairytale, grandma.",
+          "answer": [
+            "That's what they all say. Mind you don't say it twice.",
+            "* She turns back to the statue. You've been dismissed."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "orm",
+      "type": "npc",
+      "x": 30,
+      "y": 12,
+      "sprite": "orm",
+      "facing": "down",
+      "name": "Old Orm",
+      "lines": [
+        "Kaldor takes the youth now. Twelve years old, some of them. Off to the Kaldorium, and back with eyes like nails.",
+        "Over the last hundred years the training's got more aggressive. Every decade, a little meaner.",
+        "It's like he wants to make war machines out of men.",
+        "I get the feeling something horrible might happen soon."
+      ],
+      "questions": [
+        {
+          "ask": "What could happen?",
+          "answer": [
+            "You don't build a war machine to leave it in the shed.",
+            "Whatever he's training them for, it's bigger than the pit."
+          ]
+        },
+        {
+          "ask": "Do you believe in the Lost Prince?",
+          "answer": [
+            "Aske does. I want to.",
+            "If he's coming back, he'd best hurry."
+          ]
+        },
+        {
+          "ask": "Sounds like you're just scared.",
+          "answer": [
+            "I am. Anyone with sense is.",
+            "* He goes back to watching the road to the Kaldorium."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ],
   "art": {

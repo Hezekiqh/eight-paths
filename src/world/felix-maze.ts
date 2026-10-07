@@ -149,9 +149,9 @@ export const SCENE_OPEN = [
 export const MISTER = '"Mr. Himothy, I..."';
 export const CUT_OFF = [`${HIMOTHY}: SAY. THE WHOLE. THING.`];
 
-/** The clever answer lands, and it doesn't matter: Felix pointed, and the king's word is the king's word. */
+/** The clever answer lands, and it doesn't matter: Felix's mustache is more convincing (author, Oct 7, 2026). */
 const SEIZE_ANYWAY = [
-  `${HIMOTHY}: But the king says you're guilty. And the king has never once been wrong.`,
+  `${HIMOTHY}: But how am I supposed to believe you? Besides, this guy's mustache is very convincing.`,
   `${HIMOTHY}: Seize {them}!`,
 ];
 
