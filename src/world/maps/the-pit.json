@@ -46,7 +46,8 @@
       "The stands, packed to the top tier. Somebody's selling roast nuts. Somebody's always selling roast nuts."
     ],
     "+": [
-      "Barnaby's desk: a speaking trumpet, a bell, and a list of names, most of them crossed out."
+      "Barnaby's desk: a speaking trumpet, a bell, and the champions' list.",
+      "Centuries of names, each crossed out when they fell. Then one name, KALDOR, chalked fresh every year for five hundred years. The line under it is blank."
     ],
     "$": [
       "The commentator's box. Velvet, varnish, and a cushion that says LOUD."
@@ -65,50 +66,6 @@
       "lines": [
         "CHEERING IS COMPULSORY!",
         "...You too. Especially you."
-      ]
-    },
-    {
-      "id": "maelis",
-      "type": "npc",
-      "x": 21,
-      "y": 14,
-      "sprite": "maelis",
-      "facing": "left",
-      "name": "Sergeant Maelis",
-      "lines": [
-        "Broken Guard. We rake the sand, we carry the fallen out, we mind the drains.",
-        "Our families have guarded a prince for five hundred years. We guard a sandbox with seats. Family tradition, of a sort."
-      ],
-      "questions": [
-        {
-          "ask": "What's the champions' wall?",
-          "answer": [
-            "Five hundred years of names. We cross them out when they fall. It's the only writing we're allowed.",
-            "The newest line's blank. Try not to make me cross you out. I've a steady hand, but I'd rather not."
-          ]
-        },
-        {
-          "ask": "Tell me about the prince.",
-          "answer": [
-            "His captain wrote him down as lost in action. Not deserter. Lost.",
-            "My family's kept that word for five hundred years. Lost things can be found."
-          ]
-        },
-        {
-          "ask": "Tell me about the drains.",
-          "answer": [
-            "Oh, now you've done it.",
-            "The north drain runs under the wall toward the maze. Hugo found something in it once. He won't say what. Gardeners."
-          ]
-        },
-        {
-          "ask": "Some guard. You rake sand for a living.",
-          "answer": [
-            "I do. In very straight lines. Nobody ever notices the lines.",
-            "I'll notice you, though. Long memory. Short rake."
-          ],
-          "deed": "bad"
-        }
       ]
     },
     {

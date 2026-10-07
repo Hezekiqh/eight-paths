@@ -55,7 +55,7 @@ function soFar(id: CharacterId, a: Adventure): string[] {
   const out = [VOICE[id]?.so ?? 'So far, so good.'];
   const did = (f: string) => a.flags.includes(f);
   if (did('kaldor-beaten')) out.push('We beat the Kingbreaker. I still think about that.');
-  else if (did('pit-champion')) out.push("Your name's on the champions' wall now. The first one not crossed out.");
+  else if (did('pit-champion')) out.push("Your name's on the champions' wall now. The first new one since Kaldor's.");
   else if (did('jailed-with-brannoc')) out.push('We have been to prison, which I did not expect to say.');
   else if (did('felix-framed')) out.push('That Felix fellow is still out there. Somewhere. Plotting.');
   out.push(`${a.places} places walked, and ${a.met} of the eight of us found.`);

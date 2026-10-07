@@ -120,7 +120,7 @@ export const JOBS: Job[] = [
     done: [
       '{name} traces the worn letters and reads them aloud:',
       '"Any warrior may challenge the crown in single combat, and the court must bear witness."',
-      'Under it, fresher: "The door to the Trial is closed. — K." He closed the Trial because of this.',
+      'Under it, the names of everyone who tried, each one crossed out. The last reads AUREK.',
     ],
     already: ['"Any warrior may challenge the crown in single combat, and the court must bear witness."'],
     cant: ['The old law, carved in stone. The letters are too old to make out.', 'A Mage could read it.'],

@@ -116,13 +116,36 @@ export const BANTER: Record<string, Banter[]> = {
     },
   ],
 
-  // ---- the Deserters' Camp and the Buried Barracks
-  'deserters-camp:holt': [
+  // ---- Osric's Rest (author, Oct 6, 2026): the faithful at the end of the South Road's farm track, and the
+  // rebels' cellar under the weaver's cottage, where Mira and Holt plan for the prince's return
+  'osrics-rest:heir-shrine': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: …Is that meant to be me?',
+        'BRANNOC: The beard is very good. The sword is rather small.',
+        'BRANNOC: They waited. Five hundred years, and they kept the candles lit.',
+      ],
+    },
+  ],
+  'root-cellar:mira': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Good lady. I… am the prince.',
+        "MIRA: Course you are. And I'm the Queen of the Turnips.",
+        'BRANNOC: …Your Majesty.',
+      ],
+    },
+  ],
+  'root-cellar:holt': [
     {
       who: 'brannoc',
       lines: ['BRANNOC: That is what I always say!', 'BRANNOC: …That is, I have heard it said. By cowards. Ha.'],
     },
   ],
+
+  // ---- the Deserters' Camp and the Buried Barracks
   'deserters-camp:fen': [
     {
       who: 'brannoc',
@@ -548,13 +571,15 @@ export const BANTER: Record<string, Banter[]> = {
   'the-pit:fight-card': [
     { who: 'pip', lines: ["PIP: Compulsory cheering? I've been training my whole life for this."] },
   ],
-  'the-pit:maelis': [
+  // The old queen's fountain, in the Queen's Clearing off the Royal Forest: Brannoc's mother and father, in stone
+  // (author, Oct 6, 2026).
+  'queens-clearing:queens-fountain': [
     {
       who: 'brannoc',
       lines: [
-        'BRANNOC: A prince, eh? I hope he was worth it.',
-        'SERGEANT MAELIS: Family says he was lost. Not ran. Lost.',
-        'BRANNOC: …Lost. Well. Lost things can be found, I suppose.',
+        'BRANNOC: ...Mother.',
+        'BRANNOC: She planted the first oak with her own hands. Father carried the water, and complained the whole way.',
+        'BRANNOC: He is laughing. They got that right, at least. He always laughed when she was near.',
       ],
     },
   ],

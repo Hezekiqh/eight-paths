@@ -53,7 +53,7 @@ export const PATH_TALK: Record<Dimension, { ask: string; answer: string[] }> = {
  */
 export const KINGDOM_GOSSIP: Record<Dimension, string[][]> = {
   physical: [
-    ['Nobody in the garrison has swung a real sword in three hundred years. The arena is a vegetable market now.'],
+    ["Children there hold a sword before they hold a spoon. The ones who would rather not end up at the deserters' camp, up north."],
     ['They say the royal hedge maze has never been fully mapped. People go in for a picnic and come out for supper.'],
     ['The old smithy still has a fire going. Nobody remembers who keeps lighting it.'],
   ],

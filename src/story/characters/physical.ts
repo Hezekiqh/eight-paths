@@ -165,7 +165,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 25,
-    bio: 'The tallest man in the kingdom, and the last to challenge its king. He came within one blow of the crown, and for five hundred years the king kept him standing guard. Laid to rest and woken properly, he is gentle, slow to speak and very, very tall.',
+    bio: 'The tallest man in the kingdom, and the last to challenge its king. He came within one blow of the crown, but the king beat him, and kept him chained in the Kaloseum as its Warden, where everyone called him Bertrand. Laid to rest under his own name and woken properly, he is gentle, slow to speak and very, very tall.',
     quote: 'Almost. And then, at last.',
   },
   varga: {

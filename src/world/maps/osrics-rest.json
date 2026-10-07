@@ -1,0 +1,225 @@
+{
+  "id": "osrics-rest",
+  "name": "Osric's Rest",
+  "style": "outdoor",
+  "walkable": [
+    ".",
+    ",",
+    "g"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTT^TTTTTTTTTTTTTTTTTTT",
+    "TMMMMMMMMMMMMMMMMT..,...fffffffffffff..T",
+    "TMMMMMMMMMMMMMMMMT..,...fffffffffffff..T",
+    "TMMMMMMMMMMMMMMMMT..,...fffffffffffff..T",
+    "T.....,,............,...fffffffffffff..T",
+    "T.....,,............,..................T",
+    "T..AAA,,AAA.........,...HHHH....HHHH...T",
+    "T..AAA,,AAA.........,...HHHH....HHHH...T",
+    "T.....,,............,...HDHH....HdHH...T",
+    "T.....,,.......c....,...........c......T",
+    "T.....,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,.T",
+    "T...................,..................T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP...c.c..,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWWWWWWW..T",
+    "T..PPPPPPPPP........,.......WWWW6WWWW..T",
+    "T..PPPP2PPPP........,...........,......T",
+    "T......,............,...........,......T",
+    "T......,,,,,,,,,,,,,,,,,,,,,,,,,,......T",
+    "T...................,..................T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T.ffffffffffffff....,....ffffffffffff..T",
+    "T...................,..................T",
+    "T..g................,................g.T",
+    "TTTTTTTTTTTTTTTTTTT.T.TTTTTTTTTTTTTTTTTT"
+  ],
+  "spawn": {
+    "x": 20,
+    "y": 1,
+    "facing": "down"
+  },
+  "examine": {
+    "T": [
+      "Pines, crowding close. The town likes it that way."
+    ],
+    "M": [
+      "The hill's rock face.",
+      "Higher up, a rusted horn juts from the rock. At dusk it plays four cheerful notes."
+    ],
+    "A": [
+      "A tent, patched more than it's tent. A plank by the flap reads NOT A DESERTERS' CAMP. Somebody has added, smaller: NOT ANY MORE. WE HAVE A CHAPEL NOW."
+    ],
+    "^": [
+      "The farm track north, back up to the South Road and Warrior City."
+    ],
+    "f": [
+      "Turnips, beans and barley, in rows so straight you could rule a page with them. Everybody here farms. Everybody here prays for rain, and for something else."
+    ],
+    "H": [
+      "A farmhouse. Over the door, a hand-painted sign: an open hand holding a sword by the blade."
+    ],
+    "D": [
+      "You knock. An old voice, through the door: \"Is it him? Is he back?\" A pause. \"Oh. Bless you anyway, dear.\""
+    ],
+    "d": [
+      "The weaver's cottage. The door isn't locked. Through it, a trapdoor stands open, and there are voices underneath."
+    ],
+    "c": [
+      "A candle in a lantern, burning steadily. Every house in Osric's Rest keeps one lit in the window, for when the prince comes home."
+    ],
+    "P": [
+      "The chapel. Small, whitewashed, and full every evening. They pray for the harvest first, and then for him."
+    ],
+    "2": [
+      "The chapel door. A carving over it: a crown, and under it, empty space, waiting."
+    ],
+    "W": [
+      "The Candle Inn. A sign of a candle and the words WARM. FED. NOT ASKED."
+    ],
+    "6": [
+      "The Candle Inn's door. The smell of soup, and somebody singing an old song about a prince, very quietly."
+    ]
+  },
+  "objects": [
+    {
+      "id": "kings-guard-1",
+      "type": "npc",
+      "x": 24,
+      "y": 9,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "King's Guard",
+      "lines": [
+        "Move along. No gathering. No praying in groups of more than three.",
+        "...Four's fine if one of you is a child. I don't make the rules."
+      ],
+      "questions": [
+        {
+          "ask": "Why are you here?",
+          "answer": [
+            "To make sure nobody here gets ideas. The king says a town that prays this much is planning something.",
+            "I've been here six years. All they've planned is turnips."
+          ]
+        },
+        {
+          "ask": "Who are they praying for?",
+          "answer": [
+            "Rain, mostly. And some prince who's been gone five hundred years.",
+            "Nobody's told them he's not coming. I'm not going to be the one."
+          ]
+        },
+        {
+          "ask": "You look bored stiff.",
+          "answer": [
+            "I'm guarding a turnip field against a rebellion of grandmothers.",
+            "Bored is the best day. Bored means nobody's hit me with a hoe."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "kings-guard-2",
+      "type": "npc",
+      "x": 12,
+      "y": 19,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "King's Guard",
+      "lines": [
+        "Curfew's at the last bell. Lanterns out.",
+        "...They never put the lanterns out. Every window, every night. I've stopped writing it down."
+      ],
+      "questions": [
+        {
+          "ask": "Why the lanterns?",
+          "answer": [
+            "For the prince. So he can find his way home in the dark.",
+            "I asked a little girl why. She said, 'So he knows we waited.' I didn't write that down either."
+          ]
+        },
+        {
+          "ask": "Seen anything suspicious?",
+          "answer": [
+            "The weaver gets through a lot of yarn for one woman. And there's a lot of digging at night, for a town that farms by day.",
+            "...It's turnips. It's always turnips."
+          ]
+        },
+        {
+          "ask": "Some guard. You can't even make them put a candle out.",
+          "answer": [
+            "You try. Go on. Tell Nana Birch to put her candle out.",
+            "...I'll wait here. Somebody should be around to carry you back."
+          ],
+          "deed": "bad"
+        }
+      ],
+      "wander": 4,
+      "along": "x"
+    },
+    {
+      "id": "goodwife-ama",
+      "type": "npc",
+      "x": 10,
+      "y": 21,
+      "sprite": "marta",
+      "facing": "down",
+      "name": "Goodwife Ama",
+      "lines": [
+        "Mind the rows, love. Barley this side, beans that side, hope down the middle.",
+        "We plant, we pray, we wait. My mother waited. Her mother waited. It's a family skill."
+      ],
+      "questions": [
+        {
+          "ask": "Who are you waiting for?",
+          "answer": [
+            "The prince. Brannoc, Osric's boy. The one who was lost.",
+            "His regiment wrote him down as lost, not dead. Lost things can be found. We hold them to it."
+          ]
+        },
+        {
+          "ask": "Why is it called Osric's Rest?",
+          "answer": [
+            "After the old king. Mad, they call him in the city. We called him ours.",
+            "When the shadow took him, his last soldiers walked out of the war and came here, and laid their swords down. So it's his rest, and theirs."
+          ]
+        },
+        {
+          "ask": "Heard any gossip?",
+          "answer": [
+            "The guards think we're plotting. We're farming. Mostly.",
+            "Ask the weaver what she does with all that yarn. Actually, don't."
+          ]
+        },
+        {
+          "ask": "Five hundred years of waiting. He's not coming.",
+          "answer": [
+            "Maybe not.",
+            "But if he does, and nobody's waiting, what sort of people would that make us?"
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "heir-shrine",
+      "type": "sign",
+      "x": 16,
+      "y": 15,
+      "lines": [
+        "A little shrine of river stones between two candles. On it, a child's drawing of a man with a big beard and a small sword.",
+        "Under it, in many different hands: COME HOME. COME HOME. COME HOME.",
+        "Somebody has left him an apple."
+      ]
+    }
+  ],
+  "art": {
+    "2": ".",
+    "6": "."
+  }
+}

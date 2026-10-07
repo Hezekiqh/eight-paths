@@ -52,6 +52,9 @@ import warriorCityData from './maps/warrior-city.json';
 import southRoadData from './maps/south-road.json';
 import oldMineData from './maps/old-mine.json';
 import royalForestData from './maps/royal-forest.json';
+import queensClearingData from './maps/queens-clearing.json';
+import osricsRestData from './maps/osrics-rest.json';
+import rootCellarData from './maps/root-cellar.json';
 import paintersSchoolData from './maps/painters-school.json';
 import wcChapelData from './maps/wc-chapel.json';
 import wcLibraryData from './maps/wc-library.json';
@@ -500,6 +503,11 @@ export const MAPS = {
   'south-road': build(southRoadData as MapData, require('@/assets/world/south-road.png')),
   'old-mine': build(oldMineData as MapData, require('@/assets/world/old-mine.png')),
   'royal-forest': build(royalForestData as MapData, require('@/assets/world/royal-forest.png')),
+  // the old queen's clearing, off the Royal Forest (author, Oct 6, 2026: her fountain, her roses)
+  'queens-clearing': build(queensClearingData as MapData, require('@/assets/world/queens-clearing.png')),
+  // Osric's Rest (author, Oct 6, 2026): the faithful, at the end of the South Road's farm track, and the cellar under it
+  'osrics-rest': build(osricsRestData as MapData, require('@/assets/world/osrics-rest.png')),
+  'root-cellar': build(rootCellarData as MapData, require('@/assets/world/root-cellar.png')),
   'painters-school': build(paintersSchoolData as MapData, require('@/assets/world/painters-school.png')),
   'wc-chapel': build(wcChapelData as MapData, require('@/assets/world/wc-chapel.png')),
   'wc-library': build(wcLibraryData as MapData, require('@/assets/world/wc-library.png')),

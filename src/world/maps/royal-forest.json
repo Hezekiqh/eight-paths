@@ -22,7 +22,7 @@
     "w": "woodpile"
   },
   "tiles": [
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT^TT",
     "TTTTTTTTTg.....TT......TT......TT..g...T",
     "TTTTTTTTT.TT...TT......TT......TT......T",
     "T.g....TT...T..TT...T.gTT...TT.TT.T.TT.T",
@@ -151,6 +151,9 @@
     ],
     "w": [
       "A woodpile, stacked neat. Every log from the first row of trees. None from the second."
+    ],
+    "^": [
+      "A path north between the oaks, lined with white roses gone half wild."
     ]
   },
   "objects": [
