@@ -400,6 +400,9 @@ const EXIT_FADE = 1.6;
 const EXIT_GONE = 999;
 /** A shadow's puff (seconds): slower and bigger than a fallen enemy's. */
 const DARK_PUFF = 0.7;
+/** Where a field banner's painted flag ends (its free edge) and its top, in art pixels within its tile. */
+const BANNER_EDGE_X = 13;
+const BANNER_TOP_Y = 3;
 /** "HA" in a 3×5 pixel font, as [x, y] cells. */
 const HA = [
   ...['X.X', 'X.X', 'XXX', 'X.X', 'X.X'].flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : []))),
@@ -959,7 +962,7 @@ export function WorldView({
       bob.set(Math.floor(info.timestamp / 350) % 2);
       clock.set(clock.get() + realDt);
       // a wind dies away slowly; the seal's light holds while a scene keeps it up
-      if (sim.wind.get() > 0) sim.wind.set(Math.max(0, sim.wind.get() - realDt * 0.18));
+      if (sim.wind.get() > 0) sim.wind.set(Math.max(0, sim.wind.get() - realDt * 0.05));
       if (exitT.get() >= 0) exitT.set(exitT.get() + realDt);
 
       // Everyone this frame: [row, facing, frame, x, y], drawn back to front by their feet.
@@ -1233,14 +1236,15 @@ export function WorldView({
     const t = clock.get();
     for (let i = 0; i < banners.length; i++) {
       const { x, y } = banners[i];
-      const px = x * TILE + 9;
-      const py = y * TILE + 1;
-      const len = Math.round(4 + 12 * w);
+      // on from the flag's free edge (the painted flag hangs from x+5 to x+13, y+3 to y+14)
+      const px = x * TILE + BANNER_EDGE_X;
+      const py = y * TILE + BANNER_TOP_Y;
+      const len = Math.round(3 + 9 * w);
       for (let k = 0; k < len; k++) {
-        const wave = Math.round(Math.sin(t * 9 + k * 0.7 + i) * (1 + w * 1.5));
-        // the cloth rises with the wind: from hanging down the pole to straight out
-        const sag = Math.round((1 - w) * k * 0.6);
-        path.addRect(Skia.XYWHRect(px + k, py + sag + wave, 1, 5 - Math.floor(k / 6)));
+        const wave = Math.round(Math.sin(t * 9 - k * 0.8 + i) * (0.5 + w * 1.5));
+        // the cloth rises with the wind: from hanging down to straight out
+        const sag = Math.round((1 - w) * k * 0.8);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave, 1, Math.max(2, 10 - k)));
       }
     }
     return path;
@@ -1252,13 +1256,15 @@ export function WorldView({
     const t = clock.get();
     for (let i = 0; i < banners.length; i++) {
       const { x, y } = banners[i];
-      const px = x * TILE + 9;
-      const py = y * TILE + 1;
-      const len = Math.round(4 + 12 * w);
-      for (let k = 0; k < len; k += 3) {
-        const wave = Math.round(Math.sin(t * 9 + k * 0.7 + i) * (1 + w * 1.5));
-        const sag = Math.round((1 - w) * k * 0.6);
-        path.addRect(Skia.XYWHRect(px + k, py + sag + wave + 4 - Math.floor(k / 6), 1, 1));
+      const px = x * TILE + BANNER_EDGE_X;
+      const py = y * TILE + BANNER_TOP_Y;
+      const len = Math.round(3 + 9 * w);
+      // a fold along the bottom, and a darker hem
+      for (let k = 0; k < len; k++) {
+        const wave = Math.round(Math.sin(t * 9 - k * 0.8 + i) * (0.5 + w * 1.5));
+        const sag = Math.round((1 - w) * k * 0.8);
+        path.addRect(Skia.XYWHRect(px + k, py + sag + wave + Math.max(2, 10 - k) - 1, 1, 1));
+        if (k % 3 === 1) path.addRect(Skia.XYWHRect(px + k, py + sag + wave + 2, 1, Math.max(1, 5 - k)));
       }
     }
     return path;

@@ -498,6 +498,8 @@ function startFor(
 
 /** The Warden, raised (moments.ts BOSS_CUE): the line he comes up out of the floor on, and the heap he climbs out of. */
 const AUREK_KIND = ENEMY_KINDS.indexOf('aurek');
+/** The season finale's line that has King Brannoc standing beside you (keeper-talk-lines.ts FINALE). */
+const KING_BESIDE = /^Beside you, King Brannoc/;
 const RAISED = /The floor cracks/;
 const RISE_HEAP = [
   [0, 0],
@@ -705,7 +707,8 @@ function World({
   const banners = useMemo(
     () =>
       map.id === 'field-of-banners'
-        ? tilesOf(map, ['n']).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }))
+        ? // every banner: the field's hundreds ('n'), and the one standing apart with his name on it ('u')
+          tilesOf(map, ['n', 'u']).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) }))
         : [],
     [map],
   );
@@ -1034,8 +1037,10 @@ function World({
       const withYou = partyWithYou(game.party, game.owned, w.flags).filter(
         (id) => id !== hero && id in WALKER_ROWS,
       ) as HeroId[];
-      const king = withYou.includes('brannoc');
-      const others = withYou.filter((id) => id !== 'brannoc');
+      // King Brannoc's beside you where the flags say so (the finale's own line for it, seasonFinale); otherwise,
+      // if he's with you, he hangs back with the rest
+      const king = hero !== 'brannoc' && said.lines.some((l) => KING_BESIDE.test(l));
+      const others = king ? withYou.filter((id) => id !== 'brannoc') : withYou;
       const actors: Actor[] = finaleStage([hx, hy], king, others, open).map(({ id, path, face }) => ({
         row: WALKER_ROWS[id as HeroId],
         path,
