@@ -178,23 +178,23 @@
       ]
     },
     {
-      "id": "sage-hatched",
+      "id": "moth-hatched",
       "type": "npc",
       "x": 36,
       "y": 22,
-      "sprite": "sagenpc",
+      "sprite": "mothnpc",
       "facing": "right",
-      "name": "Mother Sage",
+      "name": "Moth",
       "lines": [
-        "Hm. Took you long enough. I've been in there since the stars had other names.",
-        "Sit. The answer walks slower than you.",
-        "...No? Busy? Everyone's busy. The stars are never busy.",
-        "Go on, then. I'll find my own way to that Archive of yours. I've a letter to write to the moon.",
-        "* Mother Sage gathers up her candle stubs, every one, and stumps off down the hill."
+        "Shh. Listen to the quiet.",
+        "...Oh. You broke the silk. That's all right. I was only listening.",
+        "The candles went out one by one while I slept. I counted them. Every one.",
+        "I'll go and find some more light. Somewhere there's always a candle someone's left burning.",
+        "* Moth pulls up a grey hood and pads off down the hill, following something you can't see."
       ],
-      "comesAfter": "sage-hatched",
-      "sets": "sage-left",
-      "goneAfter": "sage-left"
+      "comesAfter": "moth-hatched",
+      "sets": "moth-left",
+      "goneAfter": "moth-left"
     }
   ]
 }

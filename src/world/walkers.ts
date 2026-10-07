@@ -105,7 +105,7 @@ export const WALKER_ROWS = {
   aske: 94,
   orm: 95,
   irisnpc: 96,
-  sagenpc: 97,
+  mothnpc: 97,
   lyranpc: 98,
   wynnnpc: 99,
   oonanpc: 100,

@@ -53,9 +53,9 @@ export const COCOONS: Cocoon[] = [
     x: 37,
     y: 22,
     tile: 'J',
-    character: 'sage',
-    hatched: 'sage-hatched',
-    left: 'sage-left',
+    character: 'moth',
+    hatched: 'moth-hatched',
+    left: 'moth-left',
     empty: EMPTY,
   },
   {
