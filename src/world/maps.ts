@@ -17,6 +17,7 @@ import candleInnData from './maps/candle-inn.json';
 import forgeData from './maps/forge.json';
 import chapelData from './maps/chapel.json';
 import oldKingsCryptData from './maps/old-kings-crypt.json';
+import graveyardData from './maps/graveyard.json';
 import hedgeMazeData from './maps/hedge-maze.json';
 import thePitData from './maps/the-pit.json';
 import castleGroundsData from './maps/castle-grounds.json';
@@ -195,6 +196,8 @@ export type SignObject = {
   lines: string[];
   goneAfter?: string;
   comesAfter?: string;
+  /** Already drawn in the map's picture (a tombstone, say): no signpost on top (author, Oct 7, 2026). */
+  inArt?: boolean;
 };
 
 export type MapObject = NpcObject | BoardObject | ChestObject | SignObject;
@@ -447,6 +450,7 @@ export const MAPS = {
   forge: build(forgeData as MapData, require('@/assets/world/forge.png')),
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
+  graveyard: build(graveyardData as MapData, require('@/assets/world/graveyard.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
   'the-pit': build(
     thePitData as MapData,

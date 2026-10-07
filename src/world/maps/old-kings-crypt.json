@@ -8,7 +8,7 @@
   ],
   "tiles": [
     "##########",
-    "#WWBWWBWW#",
+    "#WWBWWB3W#",
     "#W.L..M.W#",
     "#W..OO..W#",
     "#W..OO..W#",
@@ -58,6 +58,9 @@
     ],
     "2": [
       "The stair back up to the chapel."
+    ],
+    "3": [
+      "A short passage climbing to an iron gate. Grass on the other side, and sky."
     ]
   },
   "objects": [
@@ -109,6 +112,7 @@
   ],
   "art": {
     "2": "o",
+    "3": "G",
     "M": "L",
     "O": "t"
   }

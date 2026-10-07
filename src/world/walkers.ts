@@ -106,6 +106,7 @@ export const WALKER_ROWS = {
   orm: 95,
   silasseen: 96,
   traveler: 97,
+  mattock: 98,
 } as const;
 
 export type WalkerId = keyof typeof WALKER_ROWS;

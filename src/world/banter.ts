@@ -95,8 +95,14 @@ export const BANTER: Record<string, Banter[]> = {
         'MOSS: Tuft was the runt of his litter. I kept him anyway.',
       ],
     },
-    { who: 'pip', lines: ["PIP: Hal, twelve and a half. He made them write the half. I'm writing Hal a song. A tall one."] },
-    { who: 'moss', lines: ['MOSS: They measured them like calves at market.', 'MOSS: Tuft was the runt. I kept him anyway.'] },
+    {
+      who: 'pip',
+      lines: ["PIP: Hal, twelve and a half. He made them write the half. I'm writing Hal a song. A tall one."],
+    },
+    {
+      who: 'moss',
+      lines: ['MOSS: They measured them like calves at market.', 'MOSS: Tuft was the runt. I kept him anyway.'],
+    },
   ],
   'cull-road:mile-post': [{ who: 'brannoc', lines: ['BRANNOC: …Let us walk on.'] }],
   'cull-road:orders': [
@@ -819,6 +825,35 @@ export const BANTER: Record<string, Banter[]> = {
     {
       who: 'brannoc',
       lines: ['BRANNOC: Your father is a very good wall. I can tell from here. Solid. Excellent mortar.'],
+    },
+  ],
+  // ---- the Graveyard of Kings, behind the chapel (author, Oct 7, 2026). Brannoc never says whose stone it is.
+  'graveyard:lost-prince': [
+    {
+      who: 'brannoc',
+      lines: [
+        'BRANNOC: Lost in the woods. Never found.',
+        'BRANNOC: …Perhaps he was simply very good at hiding. Some people are. It is a skill.',
+        'BRANNOC: They have kept it very tidy. That is… kind of them. I should like to stand somewhere else now.',
+      ],
+    },
+  ],
+  'graveyard:empty-grave': [
+    {
+      who: 'wren',
+      lines: [
+        'WREN: Dug from the inside. Every one of them.',
+        "WREN: I've said the rites over a great many graves. They're meant to stay shut afterwards. That's rather the point.",
+      ],
+    },
+  ],
+  'graveyard:wardens-grave': [
+    {
+      who: 'moss',
+      lines: [
+        'MOSS: Chain snapped outwards. Whatever was in there pulled.',
+        "MOSS: Grass hasn't grown back over it. Grass grows back over everything. It doesn't want to, here.",
+      ],
     },
   ],
 };

@@ -603,7 +603,8 @@ function World({
       ),
     [map, liveFlags],
   );
-  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign'), [map]);
+  const signs = useMemo(() => map.objects.filter((o) => o.type === 'sign' && !o.inArt), [map]);
+  // (a sign already drawn in the map's picture, the graveyard's tombstones, gets no signpost on top)
   // A bridge the plates bring up out of the river (the Cull Road's ferry-bridge), up for good once they're down.
   const raised = useMemo(() => {
     if (!map.raises || !map.platesFlag || !liveFlags.includes(map.platesFlag)) return [];
