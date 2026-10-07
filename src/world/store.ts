@@ -8,6 +8,7 @@ import { isCharacterId, type CharacterId } from '@/story/companions';
 import { addLore, cleanLore, type LoreEntry } from './lore';
 import { FACINGS, isMapId, type Facing, type MapId } from './maps';
 import type { Deed } from './honor';
+import { isGameSpeed, type GameSpeed } from './speed';
 
 export type ControlScheme = 'joystick' | 'touchpad';
 
@@ -19,6 +20,9 @@ export type CandleSpot = { map: MapId; x: number; y: number; facing: Facing };
 
 type WorldState = {
   controls: ControlScheme;
+  /** How fast dialogue types and cutscenes play (speed.ts). */
+  speed: GameSpeed;
+  setSpeed: (speed: GameSpeed) => void;
   /** Null until the player first walks; they then start at the map's spawn. */
   position: WorldPosition | null;
   /** The one party member who walks the World (null: your class's companion). */
@@ -54,7 +58,7 @@ type WorldState = {
   /** Hidden memories seen (memories.ts ids), oldest first. Yours for good: a restart of the story keeps them. */
   memories: string[];
   remember: (id: string) => void;
-  /** Starts the Other World over from the Archive floor. Keeps the controls and who walks; never touches habits. */
+  /** Starts the Other World over from the Archive floor. Keeps the controls, the speed and who walks; never touches habits. */
   restart: () => void;
 };
 
@@ -73,9 +77,9 @@ export const FRESH_WORLD = {
 
 /**
  * v2 adds the lore journal (`heard`); v3 adds story `flags`; v4 what's been `noticed`; v5 `candles`;
- * v6 `barrageDay`; v7 `specials`; v8 `deeds`; v9 `memories`. All start empty.
+ * v6 `barrageDay`; v7 `specials`; v8 `deeds`; v9 `memories`. All start empty. v10 adds `speed` (normal).
  */
-const SAVE_VERSION = 9;
+const SAVE_VERSION = 10;
 
 function isSpot(value: unknown): value is CandleSpot {
   const v = value as Record<string, unknown> | null;
@@ -89,6 +93,7 @@ function sanitize(persisted: unknown): Partial<WorldState> {
   const data = (persisted ?? {}) as Record<string, unknown>;
   const out: Partial<WorldState> = {};
   if (data.controls === 'joystick' || data.controls === 'touchpad') out.controls = data.controls;
+  if (isGameSpeed(data.speed)) out.speed = data.speed;
   if (isCharacterId(data.hero)) out.hero = data.hero;
   if (Array.isArray(data.discovered)) out.discovered = data.discovered.filter(isMapId);
   if (data.heard !== undefined) out.heard = cleanLore(data.heard);
@@ -123,6 +128,8 @@ export const useWorldStore = create<WorldState>()(
   persist(
     (set) => ({
       controls: 'joystick',
+      speed: 'normal',
+      setSpeed: (speed) => set({ speed }),
       position: null,
       hero: null,
       setHero: (hero) => set({ hero }),
@@ -158,6 +165,7 @@ export const useWorldStore = create<WorldState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
         controls: s.controls,
+        speed: s.speed,
         position: s.position,
         hero: s.hero,
         discovered: s.discovered,

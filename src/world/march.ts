@@ -17,6 +17,8 @@ export const MARCH_ACTORS = 4;
 export const MARCH_HEAD = 5;
 /** A beat at the end, everyone standing, before the march is over. */
 const HOLD = 0.35;
+/** How fast a march walks unless told otherwise, in tiles per second (before the game's speed). */
+export const MARCH_PACE = 3;
 
 export type Actor = {
   /** The walker row in the sheet; -1 for you. */
@@ -33,7 +35,7 @@ export type Actor = {
 const feet = ([x, y]: [number, number]) => [x * TILE + TILE / 2, y * TILE + TILE - 2];
 
 /** A new march, in tiles per second; `linger`: everyone stays put once there, until the next march. */
-export function newMarch(actors: Actor[], tilesPerSecond = 3, linger = false): number[] {
+export function newMarch(actors: Actor[], tilesPerSecond = MARCH_PACE, linger = false): number[] {
   const out = [0, tilesPerSecond * TILE, actors.length, linger ? 1 : 0, 0];
   for (const a of actors) out.push(a.row, a.face ?? -1, a.path.length, ...a.path.flatMap(feet));
   return out;
