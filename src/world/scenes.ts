@@ -123,10 +123,9 @@ export function winScene(
                     'BRANNOC: ...And I came back. That has to count for something.',
                     `Kaldor gets up off the throne. He looks at ${prince} for a long moment, and hands over the crown himself.`,
                     'KALDOR: It never did fit me.',
-                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters. In the Buried Barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.`,
+                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters.`,
                     "Aurek the Tall is laid to rest, and his name goes back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
-                    'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
-                    'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+                    'Aurek joins your collection.',
                     'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
                     // he stays to rule (author, Oct 4, 2026), and catches you up later, working remotely (castle.ts)
                     ...(asBrannoc
@@ -148,7 +147,7 @@ export function winScene(
                       // walking as him, there's nobody to catch you up: you're already gone
                       ...(asBrannoc ? [BRANNOC_REJOINED] : []),
                     ],
-                    joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+                    joins: ['aurek'] as CharacterId[],
                   },
                 },
               ]
@@ -168,14 +167,13 @@ export function winScene(
                         ]
                       : []),
                     'KALDOR: Hm. Five hundred years. I thought I would mind more.',
-                    'The horde scatters. In the Buried Barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
-                    'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
-                    'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+                    'The horde scatters. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+                    'Aurek joins your collection.',
                     'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
                   ],
                   outcome: {
                     flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king'],
-                    joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+                    joins: ['aurek'] as CharacterId[],
                   },
                 },
               ]),
@@ -206,8 +204,8 @@ export function winScene(
               'Two of his own guards march him out. Neither of them is getting paid for it.',
               ...(brannoc && !asBrannoc ? ['BRANNOC: That was... very cold, friend. Effective. But cold.'] : []),
               'You sit. The throne is cold, and far too big, and it suits you a little too well.',
-              'The horde scatters. In the Buried Barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
-              'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+              'The horde scatters. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+              'Aurek joins your collection.',
               'Far below, a cell door clangs.',
               // Gary left with the prisoners (dungeon.ts, CELLS_FREED): nobody's down there to see it
               ...(cellsEmpty
@@ -216,7 +214,7 @@ export function winScene(
             ],
             outcome: {
               flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king', 'kaldor-jailed'],
-              joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+              joins: ['aurek'] as CharacterId[],
             },
           },
         ],

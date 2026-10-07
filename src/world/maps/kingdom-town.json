@@ -856,7 +856,7 @@
       "facing": "left",
       "name": "Old Aske",
       "lines": [
-        "The Lost Prince. My grandmother had it from hers, and hers from hers. Small, he was. Frightened of horses.",
+        "The Lost Prince. My grandmother had it from hers, and hers from hers.",
         "The young ones laugh at it. A fairytale, they say. The king says there was never any prince, and the king is never wrong.",
         "But we know. He'll return one day."
       ],
@@ -871,8 +871,7 @@
         {
           "ask": "Why do you still believe it?",
           "answer": [
-            "Because some of us still tell it. A story that's told isn't over.",
-            "And because the old king's statue lost its head, and nobody's ever found that either."
+            "Because some of us still tell it. A story that's told isn't over."
           ]
         },
         {
@@ -894,7 +893,7 @@
       "facing": "down",
       "name": "Old Orm",
       "lines": [
-        "Kaldor takes the youth now. Twelve years old, some of them. Off to the Kaldorium, and back with eyes like nails.",
+        "Kaldor takes the youth now. Off to the Kaloseum, and back with eyes like nails.",
         "Over the last hundred years the training's got more aggressive. Every decade, a little meaner.",
         "It's like he wants to make war machines out of men.",
         "I get the feeling something horrible might happen soon."
@@ -904,7 +903,7 @@
           "ask": "What could happen?",
           "answer": [
             "You don't build a war machine to leave it in the shed.",
-            "Whatever he's training them for, it's bigger than the pit."
+            "Whatever he's training them for, it's bigger than the Kaloseum."
           ]
         },
         {
@@ -918,7 +917,7 @@
           "ask": "Sounds like you're just scared.",
           "answer": [
             "I am. Anyone with sense is.",
-            "* He goes back to watching the road to the Kaldorium."
+            "* He goes back to watching the road to the Kaloseum."
           ],
           "deed": "bad"
         }
