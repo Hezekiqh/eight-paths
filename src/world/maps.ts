@@ -123,6 +123,12 @@ export type NpcObject = {
   along?: 'x' | 'y';
   /** Stays put but looks about now and then: a glance another way, then back (wander.ts). Ignored if they wander. */
   look?: boolean;
+  /**
+   * Walks a beat round and round (wander.ts; author, Oct 7, 2026): a closed loop of waypoints [x, y], each in a
+   * straight line from the last, and the last from the first. They start wherever they stand on it, and march on
+   * to the next corner. Overrides `wander` and `look`.
+   */
+  patrol?: number[][];
 };
 
 /**

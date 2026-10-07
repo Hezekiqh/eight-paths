@@ -1,6 +1,9 @@
 import { MAPS } from '../maps';
+import { EXITS } from '../progress';
 import {
+  PATROL_SPEED,
   W_FACING,
+  W_PI,
   W_HF,
   W_HX,
   W_HY,
@@ -9,6 +12,7 @@ import {
   W_X,
   W_Y,
   newWanderers,
+  nextWaypoint,
   stepWanderers,
   turnToTalk,
   whoIsAt,
@@ -135,6 +139,114 @@ describe('people strolling about', () => {
   });
 });
 
+describe('people on patrol (author, Oct 7, 2026)', () => {
+  // round the yard, inside the wall, clear of the pillar
+  const LOOP = [
+    [1, 1],
+    [7, 1],
+    [7, 5],
+    [1, 5],
+  ];
+  const beat = (x = 1, y = 1) => {
+    const solid = yard();
+    solid[y * W + x] = 1;
+    return { solid, rows: newWanderers([{ x, y, facing: 0, patrol: LOOP }]) };
+  };
+  const onLoop = (x: number, y: number) => x === 1 || x === 7 || y === 1 || y === 5;
+
+  it('sets off for the far end of the leg they stand on', () => {
+    expect(nextWaypoint(LOOP, 1, 1)).toBe(1);
+    expect(nextWaypoint(LOOP, 4, 1)).toBe(1);
+    expect(nextWaypoint(LOOP, 7, 3)).toBe(2);
+    expect(nextWaypoint(LOOP, 1, 3)).toBe(0);
+    expect(nextWaypoint(LOOP, 7, 1)).toBe(2);
+  });
+
+  it('marches round the loop and back to the start, facing the way they walk, never off it', () => {
+    const { solid, rows } = beat();
+    const visited: string[] = [];
+    let back = false;
+    // the loop is 20 tiles long; give them time for it, corners and all
+    const lap = 20 / (PATROL_SPEED / 16) + 4 * 1 + 2;
+    run(rows, solid, lap, FAR, [], (rs) => {
+      const w = rs[0];
+      for (const [x, y] of [
+        [w[W_X], w[W_Y]],
+        [w[W_TX], w[W_TY]],
+      ])
+        expect(onLoop(x, y)).toBe(true);
+      const at = `${w[W_X]},${w[W_Y]}`;
+      if (visited.at(-1) !== at) visited.push(at);
+      if (visited.length > 1 && at === '1,1') back = true;
+      // stepping: facing the way they go
+      if (w[W_TX] > w[W_X]) expect(w[W_FACING]).toBe(3);
+      if (w[W_TX] < w[W_X]) expect(w[W_FACING]).toBe(2);
+      if (w[W_TY] > w[W_Y]) expect(w[W_FACING]).toBe(0);
+      if (w[W_TY] < w[W_Y]) expect(w[W_FACING]).toBe(1);
+    });
+    expect(back).toBe(true);
+    // clockwise: along the top, down the right, back along the bottom, up the left
+    expect(visited.slice(0, 8)).toEqual(['1,1', '2,1', '3,1', '4,1', '5,1', '6,1', '7,1', '7,2']);
+    expect(visited).toContain('7,5');
+    expect(visited).toContain('1,5');
+    expect(new Set(visited).size).toBe(20);
+  });
+
+  it('keeps going, lap after lap, holding exactly one tile (plus the one ahead)', () => {
+    const { solid, rows } = beat(4, 5);
+    const walls = yard().filter((v) => v === 1).length;
+    let laps = 0;
+    let was = '4,5';
+    run(rows, solid, 120, FAR, [], (rs, grid) => {
+      const w = rs[0];
+      const ahead = w[W_TX] !== w[W_X] || w[W_TY] !== w[W_Y] ? 1 : 0;
+      expect(grid.filter((v) => v === 1).length - walls).toBe(1 + ahead);
+      expect(grid[w[W_Y] * W + w[W_X]]).toBe(1);
+      const at = `${w[W_X]},${w[W_Y]}`;
+      if (at === '4,5' && was !== at) laps++;
+      was = at;
+    });
+    expect(laps).toBeGreaterThan(2);
+  });
+
+  it('waits when you stand in the way, and carries on once you move', () => {
+    const { solid, rows } = beat();
+    // the player on (3, 1), right in the path along the top
+    const player = [3 * 16 + 8, 1 * 16 + 14];
+    const held = run(rows, solid, 10, player, [], (rs) => {
+      expect([rs[0][W_TX], rs[0][W_TY]]).not.toEqual([3, 1]);
+    });
+    expect([held.rows[0][W_X], held.rows[0][W_Y]]).toEqual([2, 1]);
+    expect(held.rows[0][W_FACING]).toBe(3); // facing you, waiting
+    const after = run(held.rows, held.solid, 3);
+    expect(after.rows[0][W_X]).toBeGreaterThan(3);
+  });
+
+  it('waits behind someone standing on the beat, and never walks into them', () => {
+    const solid = yard();
+    solid[1 * W + 1] = 1;
+    solid[1 * W + 4] = 1; // a stander on the top leg
+    const rows = newWanderers([
+      { x: 1, y: 1, facing: 0, patrol: LOOP },
+      { x: 4, y: 1, facing: 0 },
+    ]);
+    const after = run(rows, solid, 20, FAR, [], (rs) => expect([rs[0][W_TX], rs[0][W_TY]]).not.toEqual([4, 1]));
+    expect([after.rows[0][W_X], after.rows[0][W_Y]]).toEqual([3, 1]);
+  });
+
+  it('stops to face you when you talk to them, then marches on', () => {
+    const { solid } = beat();
+    let { rows } = beat();
+    rows = run(rows, solid, 0.5).rows;
+    rows = turnToTalk(rows, 0, 1);
+    const stood = run(rows, solid, 3.5, FAR, [], (rs) => expect(rs[0][W_FACING]).toBe(1));
+    const on = run(stood.rows, stood.solid, 3);
+    expect(on.rows[0][W_FACING]).not.toBe(1);
+    expect(on.rows[0][W_X]).toBeGreaterThan(stood.rows[0][W_X]);
+    expect(on.rows[0][W_PI]).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe('people looking about', () => {
   it('stays on their tile, glances another way now and then, and turns back to how they stand', () => {
     const solid = yard();
@@ -214,5 +326,56 @@ describe('who strolls in the Other World', () => {
 
   it('gives the towns some life', () => {
     expect(people.filter(({ n }) => (n.wander ?? 0) > 0).length).toBeGreaterThanOrEqual(15);
+  });
+});
+
+describe('who walks a beat in the Other World (author, Oct 7, 2026)', () => {
+  const patrols = Object.values(MAPS).flatMap((map) => map.npcs.filter((n) => n.patrol).map((n) => ({ map, n })));
+  /** Every tile of a loop, corner to corner, all the way round. */
+  const tilesOf = (loop: number[][]) =>
+    loop.flatMap(([ax, ay], i) => {
+      const [bx, by] = loop[(i + 1) % loop.length];
+      const n = Math.abs(bx - ax) + Math.abs(by - ay);
+      return Array.from({ length: n }, (_, k) => [ax + Math.sign(bx - ax) * k, ay + Math.sign(by - ay) * k]);
+    });
+
+  it('keeps a few patrols round the kingdom', () => {
+    expect(patrols.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(patrols.map(({ map }) => map.id)).size).toBeGreaterThanOrEqual(2);
+  });
+
+  it('walks closed loops of straight legs, from somewhere on the loop', () => {
+    for (const { n } of patrols) {
+      const loop = n.patrol!;
+      expect(loop.length).toBeGreaterThanOrEqual(2);
+      loop.forEach(([ax, ay], i) => {
+        const [bx, by] = loop[(i + 1) % loop.length];
+        expect([n.name, ax === bx || ay === by, ax !== bx || ay !== by]).toEqual([n.name, true, true]);
+      });
+      expect([n.name, tilesOf(loop).some(([x, y]) => x === n.x && y === n.y)]).toEqual([n.name, true]);
+    }
+  });
+
+  it('keeps every beat on open ground: clear of walls, of anyone standing, and of the ways in and out', () => {
+    for (const { map, n } of patrols) {
+      const ways = new Set(EXITS.filter((e) => e.from === map.id).map((e) => e.tile));
+      const arrivals = EXITS.filter((e) => e.to?.map === map.id).map((e) => `${e.to!.x},${e.to!.y}`);
+      arrivals.push(`${map.spawn.x},${map.spawn.y}`);
+      const standing = map.objects
+        .filter((o) => o.id !== n.id && !(o.type === 'npc' && (o.patrol || (o.wander ?? 0) > 0)))
+        .map((o) => `${o.x},${o.y}`);
+      const wrong = tilesOf(n.patrol!).filter(([x, y]) => {
+        const c = map.tiles[y][x];
+        return (
+          !map.walkable.includes(c) || ways.has(c) || arrivals.includes(`${x},${y}`) || standing.includes(`${x},${y}`)
+        );
+      });
+      expect([n.name, wrong]).toEqual([n.name, []]);
+    }
+  });
+
+  it('never puts anyone the story needs on patrol, and nobody both patrols and strolls', () => {
+    expect(patrols.filter(({ n }) => n.job || n.questions?.some((q) => q.sets) || n.wander || n.look)).toEqual([]);
+    expect(patrols.filter(({ map }) => map.boss || map.ladder || map.enemies.length > 0)).toEqual([]);
   });
 });

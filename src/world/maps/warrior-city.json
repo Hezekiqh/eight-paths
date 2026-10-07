@@ -245,6 +245,626 @@
         "SOUTH: THE ROYAL GARDEN, THE OLD MINE. WEST: THE COURIER ROAD.",
         "EAST: THE BRIDGE TO THE MAGE KINGDOM. Under it, a smaller sign: UNDER CONSTRUCTION. SORRY."
       ]
+    },
+    {
+      "type": "npc",
+      "id": "kell",
+      "x": 30,
+      "y": 10,
+      "sprite": "raider",
+      "facing": "right",
+      "name": "Watchman Kell",
+      "lines": [
+        "Round the Kaloseum, on and on. Dorr does the other side.",
+        "We've never met. We're always exactly opposite. I've heard he's tall."
+      ],
+      "patrol": [
+        [
+          21,
+          10
+        ],
+        [
+          42,
+          10
+        ],
+        [
+          42,
+          28
+        ],
+        [
+          21,
+          28
+        ]
+      ],
+      "questions": [
+        {
+          "ask": "What do you watch for?",
+          "answer": [
+            "Trouble. In Warrior City, trouble is everyone. So I watch everyone.",
+            "Mostly they're fighting. I only step in if somebody's losing badly. Then I take notes for the Yard."
+          ]
+        },
+        {
+          "ask": "Have you ever met Dorr?",
+          "answer": [
+            "Once, nearly. He stopped to tie his boot. I nearly caught him up.",
+            "Then I stopped to tie mine. Professional courtesy. Ruined it."
+          ]
+        },
+        {
+          "ask": "Dorr sounds more interesting than you.",
+          "answer": [
+            "…He probably is. He's tall.",
+            "* Kell marches on round the Kaloseum. A bit sadly."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "dorr",
+      "x": 33,
+      "y": 28,
+      "sprite": "grub",
+      "facing": "left",
+      "name": "Watchman Dorr",
+      "lines": [
+        "Keep moving. Keep it civil. Keep your purse somewhere I can't see it.",
+        "That's for your safety, not mine. Mine's fine."
+      ],
+      "patrol": [
+        [
+          21,
+          10
+        ],
+        [
+          42,
+          10
+        ],
+        [
+          42,
+          28
+        ],
+        [
+          21,
+          28
+        ]
+      ],
+      "questions": [
+        {
+          "ask": "Is the city dangerous?",
+          "answer": [
+            "Everybody's out to get everybody. Only the strong get to keep their boots.",
+            "I'd tie yours on, if I were you. Tightly. Twice."
+          ]
+        },
+        {
+          "ask": "Have you ever met Kell?",
+          "answer": [
+            "Kell's a myth. A story they tell new watchmen.",
+            "Somebody leaves bootprints round the Kaloseum, always just ahead of me. I've never seen him. I've never wanted to."
+          ]
+        },
+        {
+          "ask": "You're not very tall, are you?",
+          "answer": [
+            "Who told you I was tall?",
+            "…Kell. It was Kell, wasn't it."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "haldor",
+      "x": 12,
+      "y": 21,
+      "sprite": "gorm",
+      "facing": "down",
+      "name": "Haldor the Hand",
+      "lines": [
+        "Oi. You looking at me? Look harder. Now FIGHT me.",
+        "Not here. Not now. Later. I'll find you. I find everyone."
+      ],
+      "wander": 2,
+      "questions": [
+        {
+          "ask": "Why 'the Hand'?",
+          "answer": [
+            "You only need one to win a fight. I keep the other for my dinner.",
+            "Lost to a man with two hands, once. He's up north now, at the camp. I'm here. Hands aren't everything."
+          ]
+        },
+        {
+          "ask": "What are you training for?",
+          "answer": [
+            "The culling games. Eighteen next spring. I go into the Kaloseum, I come out a champion.",
+            "Champions get a house by the king, a statue, and every woman in the city smiling at them. I've practised my smile.",
+            "* He smiles. It's frightening."
+          ]
+        },
+        {
+          "ask": "Run along, little boy.",
+          "answer": [
+            "LITTLE?",
+            "* He goes red, then redder, then a colour you've only seen on beetroot. He stomps off to punch a wall. The wall wins."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "sigrun",
+      "x": 9,
+      "y": 30,
+      "sprite": "hagga",
+      "facing": "right",
+      "name": "Sigrun",
+      "lines": [
+        "Kaloseum, third round. Spear through the shoulder. Here. Look. LOOK.",
+        "BEKK: Pfft. Bit of a hole. Check THIS."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who has the most scars?",
+          "answer": [
+            "Me. Twenty-nine.",
+            "BEKK: Thirty.",
+            "One of yours is a tattoo of a scar, Bekk.",
+            "BEKK: Still counts."
+          ]
+        },
+        {
+          "ask": "Why compare scars?",
+          "answer": [
+            "Scars mean you lived. Living means you were strong. Strong means you live by the king.",
+            "Simple maths. The only maths we do here."
+          ]
+        },
+        {
+          "ask": "Did you lose all those fights?",
+          "answer": [
+            "I LIVED through all those fights. That's winning.",
+            "…Most of them were winning. A few were a draw with a wall."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "bekk",
+      "x": 10,
+      "y": 30,
+      "sprite": "brakka",
+      "facing": "left",
+      "name": "Bekk",
+      "lines": [
+        "Every scar's a story. Every story's me winning. I've changed some of them a bit."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Which is your favourite scar?",
+          "answer": [
+            "This one. The culling games, the year I turned eighteen. I fought my best friend.",
+            "He's got the matching one. Up north, at the camp. We write. Well. I write."
+          ]
+        },
+        {
+          "ask": "Is the tattoo really a scar?",
+          "answer": [
+            "It's a scar of a tattoo of a scar. Very rare. Hurt twice."
+          ]
+        },
+        {
+          "ask": "Your stories sound made up.",
+          "answer": [
+            "They ARE made up. That's what a story is.",
+            "* He counts his scars on his fingers, runs out of fingers, and looks at you as if that's your fault."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "mags",
+      "x": 24,
+      "y": 26,
+      "sprite": "evenbett",
+      "facing": "right",
+      "name": "Measuring Mags",
+      "lines": [
+        "Biceps measured! A copper a bicep, two for the pair, three if you want me to lie.",
+        "Most people pay three."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Who has the biggest arms in the city?",
+          "answer": [
+            "Champion Vorn, up in Kaldorhold. Twenty-two inches. I had to borrow a second tape.",
+            "He paid me in a lock of his hair. I've had offers for it. Serious offers. From serious women."
+          ]
+        },
+        {
+          "ask": "Measure mine.",
+          "answer": [
+            "* She wraps the tape round your arm, squints, and writes something down.",
+            "Hm. Lovely. You'll want to pay the three."
+          ]
+        },
+        {
+          "ask": "Your tape's been stretched.",
+          "answer": [
+            "Course it has. Everybody's tape's stretched. That's how you sell a tape.",
+            "…Don't tell Torvald."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "torvald",
+      "x": 25,
+      "y": 26,
+      "sprite": "ox",
+      "facing": "left",
+      "name": "Torvald",
+      "lines": [
+        "* He's flexing so hard his ears have gone white.",
+        "Go on, Mags. Say it. Say the number."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What's the number?",
+          "answer": [
+            "Nineteen. Nineteen and a half if she's feeling kind. Twenty if I pay.",
+            "Twenty gets you looked at in the plaza. Twenty-two gets you a wife. Twenty-five gets you a statue."
+          ]
+        },
+        {
+          "ask": "Why do you want bigger arms?",
+          "answer": [
+            "So the right people notice. The ladies by the Kaloseum rank us all, every morning. There's a list.",
+            "I'm on it. Near the bottom. Under a horse. The horse has a lovely build."
+          ]
+        },
+        {
+          "ask": "All that muscle and nothing upstairs.",
+          "answer": [
+            "Upstairs? I'm not allowed upstairs. I'm not ranked high enough.",
+            "* He keeps flexing. His ears go whiter."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "odessa",
+      "x": 38,
+      "y": 25,
+      "sprite": "oriel",
+      "facing": "up",
+      "name": "Lady Odessa",
+      "lines": [
+        "Shh. We're ranking.",
+        "Champion Vorn, first. Champion Vorn's cousin, second. A very large horse, eleventh. Torvald, twelfth."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What are you ranking?",
+          "answer": [
+            "Men. By Kaloseum standing first, then arms, then whether they still have their own teeth.",
+            "Every woman in the city wants the strongest man. The mother of a champion lives like a goddess. Nobody ever tells her no."
+          ]
+        },
+        {
+          "ask": "Where would I rank?",
+          "answer": [
+            "* She looks you up and down. Then down. Then down a bit further.",
+            "You're not on the list, darling. You're not on the page. You're on the floor, where the list fell."
+          ]
+        },
+        {
+          "ask": "Shallow, much?",
+          "answer": [
+            "Shallow? Darling, I'm practical. Looks fade. Champions get statues.",
+            "* She turns back to the plaza, and ranks you, out loud, below the bench."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "brisa",
+      "x": 39,
+      "y": 25,
+      "sprite": "joss",
+      "facing": "up",
+      "name": "Brisa",
+      "lines": [
+        "Ooh. Ooh! Did you see his arms? No, not him. Behind him. No, he's gone.",
+        "I only like a man if the Kaloseum likes him first."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What's the Kaloseum got to do with love?",
+          "answer": [
+            "Everything! At eighteen they go in. Only the strongest come out champions.",
+            "A champion lives by the king and fathers as many children as he likes, all of them strong. That's not love. That's an investment."
+          ]
+        },
+        {
+          "ask": "Have you met a champion?",
+          "answer": [
+            "Champion Vorn smiled at me once! Well. Near me. At a pie behind me.",
+            "I've kept the pie. I shan't be eating it. It's been six weeks."
+          ]
+        },
+        {
+          "ask": "Champions wouldn't look twice at you.",
+          "answer": [
+            "They looked once, though! Near enough!",
+            "* She fans herself, wounded, and writes your name at the very bottom of a very long list."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "fenna",
+      "x": 40,
+      "y": 25,
+      "sprite": "ylva",
+      "facing": "up",
+      "name": "Fenna Fairbrow",
+      "lines": [
+        "I do my hair every morning, in case a champion walks by. It takes four hours.",
+        "A champion walks by about once a year. It's a lot of hair for once a year."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Why only a champion?",
+          "answer": [
+            "Mothers of champions are treated like goddesses. Statues. Songs. A chair carried by four men, everywhere.",
+            "I'd like a chair carried by four men. My feet hurt. Strength is everything, but so are feet."
+          ]
+        },
+        {
+          "ask": "What about the rest of us?",
+          "answer": [
+            "You?",
+            "* She looks at you, then at your friends, then back at the plaza.",
+            "I'm sure you're all very nice. Nice doesn't get you a chair."
+          ]
+        },
+        {
+          "ask": "Four hours? On that?",
+          "answer": [
+            "FOUR HOURS. And the wind does what it likes with it.",
+            "The wind's not on the list either."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "gilder",
+      "x": 25,
+      "y": 24,
+      "sprite": "fawnley",
+      "facing": "down",
+      "name": "Lord Gilder",
+      "lines": [
+        "Out of the way, please. That's my shadow you're standing in. I paid for it.",
+        "My son is a champion. Three years running. We live by the king now. Everything is gold. Even the things that shouldn't be."
+      ],
+      "questions": [
+        {
+          "ask": "What's made of gold?",
+          "answer": [
+            "The doorknobs. The cutlery. The bath. The dog's bowl. The dog's coat.",
+            "The dog can't get up in it. He seems to like that."
+          ]
+        },
+        {
+          "ask": "Why are you down here, then?",
+          "answer": [
+            "Visiting the poor. Once a year, to remind them what to aim for.",
+            "Also my son fights tonight, and the good seats are down here. The poor get the best view. It's the one thing they've got."
+          ]
+        },
+        {
+          "ask": "What happened to your son's rivals?",
+          "answer": [
+            "Lost. The culling games: the strong go on, the rest don't. That's the whole idea, dear.",
+            "Their families live up north now, I think. I don't go north. There's no gold."
+          ]
+        },
+        {
+          "ask": "You didn't earn a penny of that.",
+          "answer": [
+            "Of course not. My son did. With his fists. On other people's sons.",
+            "That's earning, in Warrior City. You're thinking of somewhere soft."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "nell",
+      "x": 33,
+      "y": 35,
+      "sprite": "wenna",
+      "facing": "left",
+      "name": "Old Nell",
+      "lines": [
+        "Going south? Past the Royal Garden? Don't.",
+        "Don't go into the forest. Stay on the road. If the road goes into the forest, stay on a different road."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What kind of supernatural?",
+          "answer": [
+            "Lights in the trees, at night, low down. Where nobody would carry a lantern.",
+            "Figures, standing just off the path. Still. You look again, they're trees. You look a third time, you're running.",
+            "And a boy crying, deep in. A woodcutter heard him and went to help. Found nobody. Heard him all the way home."
+          ]
+        },
+        {
+          "ask": "Anywhere else?",
+          "answer": [
+            "The old graves, by the chapel in the Berserker Kingdom. The sexton found some open.",
+            "Not dug up. Dug OUT. The earth thrown up and out, like something left in a hurry.",
+            "Badgers, he said. He's moved to a town with no badgers."
+          ]
+        },
+        {
+          "ask": "Do you believe it?",
+          "answer": [
+            "I believe in roads. Roads have never once dug themselves up.",
+            "Could be nothing. Foxes and fog and a lad with a sad dog. I don't need to know which."
+          ]
+        },
+        {
+          "ask": "Superstitious old bat.",
+          "answer": [
+            "Old, yes. Bat, no. Superstitious, absolutely. And I'm still alive, aren't I?",
+            "* She turns her back on you, and on the south road, firmly."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "morda",
+      "x": 51,
+      "y": 27,
+      "sprite": "kaya",
+      "facing": "left",
+      "name": "Sergeant Morda",
+      "lines": [
+        "Again. Again. AGAIN. Lisbet, he's not made of glass. Hit him properly.",
+        "The Yard at Kaldorhold takes them at twelve. I get them the week before, so they turn up knowing which end to hold."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "What happens to the ones who aren't strong enough?",
+          "answer": [
+            "North. The deserters' camp. Little food, no money, no way back.",
+            "I don't decide. The Yard decides. I just stand here and shout until it's obvious."
+          ]
+        },
+        {
+          "ask": "Do you like your job?",
+          "answer": [
+            "Like? I don't do like. I do Tuesdays, and then I do Wednesdays.",
+            "…The odd one makes it. Becomes a champion. Sends me a fruit basket. I eat it alone, in the dark. Lovely."
+          ]
+        },
+        {
+          "ask": "Shouting at children. Very brave.",
+          "answer": [
+            "Shouting's the kind part. The Kaloseum doesn't shout.",
+            "AGAIN, LISBET."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "lisbet",
+      "x": 47,
+      "y": 30,
+      "sprite": "kids",
+      "facing": "right",
+      "name": "Lisbet",
+      "lines": [
+        "HYAH! Sorry, Dunstan. HYAH! Sorry.",
+        "I'm twelve next week. Then it's the Yard. I'm getting my sorries out now."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Are you scared of the Yard?",
+          "answer": [
+            "No. Yes. My big sister went. She's a champion now. Mum gets bowed at in the street.",
+            "My other sister went too. Mum doesn't talk about her. She's up north."
+          ]
+        },
+        {
+          "ask": "Why do you keep saying sorry?",
+          "answer": [
+            "Sergeant says sorry's for the weak. So I'm using them all up before I go. I've about forty left."
+          ]
+        },
+        {
+          "ask": "You'll end up up north too.",
+          "answer": [
+            "I WON'T.",
+            "* She hits Dunstan, hard, and doesn't say sorry. Then says it, very quietly."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "type": "npc",
+      "id": "dunstan",
+      "x": 48,
+      "y": 30,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Dunstan",
+      "lines": [
+        "I'm being a good target. Sergeant says I'm the best target she's ever had.",
+        "I think that's a compliment. I've decided it's a compliment."
+      ],
+      "look": true,
+      "questions": [
+        {
+          "ask": "Do you want to go to the Yard?",
+          "answer": [
+            "Course! Strong kids get their families a house by the king. My nan's never had a house with a floor.",
+            "She's got very excited about the floor."
+          ]
+        },
+        {
+          "ask": "You'll get stronger. Keep at it.",
+          "answer": [
+            "I will! I'll get so strong I can carry Nan AND the floor."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "Best target, eh? Says it all.",
+          "answer": [
+            "…It's a compliment.",
+            "* His wooden sword droops. Lisbet pats his helmet. Then hits it."
+          ],
+          "deed": "bad"
+        }
+      ]
     }
   ]
 }

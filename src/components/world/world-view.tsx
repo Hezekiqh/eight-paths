@@ -183,6 +183,7 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
           wander: n.wander,
           along: n.along,
           look: n.look,
+          patrol: n.patrol,
         })),
       ),
     ),
@@ -488,7 +489,7 @@ export function WorldView({
       ),
     [map, sim.npcIds, talkingTo],
   );
-  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
+  const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look || n.patrol), [map]);
   // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
   // (each as [row in sim.npcWalk, lying flat]: wherever they are now, carried off, say)
   const sleepers = useMemo(
@@ -790,7 +791,7 @@ export function WorldView({
         if (changed) rockPos.set(next);
       }
 
-      // Townsfolk stroll and look about (wander.ts), but not while you're talking or paused.
+      // Townsfolk stroll, look about and walk their beats (wander.ts), but not while you're talking or paused.
       if (wanders && !frozen) {
         const walked = stepWanderers(
           sim.npcWalk.get(),
