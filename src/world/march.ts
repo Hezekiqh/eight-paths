@@ -19,6 +19,8 @@ export const MARCH_HEAD = 5;
 export const ACTOR_HEAD = 6;
 /** A beat at the end, everyone standing, before the march is over. */
 const HOLD = 0.35;
+/** An actor's face for someone who's gone once they get there: up the ladder, out of sight. */
+export const GONE = 6;
 /** How fast a march walks unless told otherwise, in tiles per second (before the game's speed). */
 export const MARCH_PACE = 3;
 /** Actor flags: a snot bubble; gone in a puff at the end of the path; laughing while they wait to set off. */
@@ -33,7 +35,7 @@ export type Actor = {
   path: [number, number][];
   /**
    * 0 down, 1 up, 2 left, 3 right: which way to face once there. 4: out cold, flat on their back the whole way
-   * (Brannoc); 5: the same, carried, held up off the ground.
+   * (Brannoc); 5: the same, carried, held up off the ground. GONE (6): gone once there (up a ladder, out a door).
    */
   face?: number;
   /** Fast asleep the whole way, a snot bubble swelling at the nose (Brannoc sleepwalking to the warden). */
@@ -69,9 +71,9 @@ function facingOf(dx: number, dy: number, was: number): number {
 }
 
 /**
- * Where everyone is, `t` seconds in: one [row, facing, frame, x, y, walking (0/1), snot (0/1), shown (0/1),
- * laughing (0/1)] each, and whether it's over (everyone arrived, and the beat after). Someone who vanishes isn't
- * shown once there.
+ * Where everyone is, `t` seconds in: one [row, facing, frame, x, y, walking (0/1), snot (0/1), gone (0/1),
+ * laughing (0/1)] each, and whether it's over (everyone arrived, and the beat after). Gone: not drawn, once there,
+ * for whoever leaves (face GONE: up a ladder, out a door) or vanishes (in a puff: marchVanished).
  */
 export function marchPoses(m: number[], t: number): { poses: number[][]; done: boolean } {
   'worklet';
@@ -82,7 +84,8 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
   let i = MARCH_HEAD;
   for (let k = 0; k < count; k++) {
     const row = m[i];
-    const face = m[i + 1];
+    const leaves = m[i + 1] === GONE;
+    const face = leaves ? -1 : m[i + 1];
     const flags = m[i + 2];
     const delay = m[i + 3];
     const pace = m[i + 4];
@@ -125,8 +128,8 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
       y -= beat % 3 === 0 ? 2 : 0;
     }
     longest = Math.max(longest, delay * speed + length / pace);
-    const shown = (flags & MF_VANISH) !== 0 && there && length > 0 ? 0 : 1;
-    poses.push([row, facing, walkFrame(run, walking === 1), x, y, walking, flags & MF_SNOT, shown, laughing]);
+    const gone = there && (leaves || ((flags & MF_VANISH) !== 0 && length > 0)) ? 1 : 0;
+    poses.push([row, facing, walkFrame(run, walking === 1), x, y, walking, flags & MF_SNOT, gone, laughing]);
     i = pts + n * 2;
   }
   return { poses, done: t * speed >= longest + HOLD * speed };

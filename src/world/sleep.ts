@@ -54,10 +54,11 @@ export function snotBubble(
   x: number,
   y: number,
   dir = 1,
+  max = BUBBLE_MAX,
 ): { cells: number[][]; rim: number[][]; shine: number[] | null } {
   'worklet';
   const k = (t % BUBBLE_EVERY) / BUBBLE_EVERY;
-  const r = 0.6 + (BUBBLE_MAX - 0.6) * Math.sin(k * Math.PI);
+  const r = 0.6 + (max - 0.6) * Math.sin(k * Math.PI);
   // just off the nose, growing outwards
   const cx = x + dir * (2 + r);
   const cy = y - 12;
