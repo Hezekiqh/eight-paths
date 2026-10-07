@@ -6,7 +6,7 @@ import { TILE } from './maps';
 // at one speed, starting together, and stops at the end of it.
 //
 // For the UI thread it's flat numbers: [t, speed, count, linger, arrived, ...each actor], where an actor is
-// [row, face at the end (-1: the way they last walked), point count, x0, y0, x1, y1, ...] in
+// [row, face at the end (-1: the way they last walked), snot (0/1), point count, x0, y0, x1, y1, ...] in
 // art pixels at the feet. Row -1 is you: the march moves the lead itself. A lingering march
 // keeps everyone standing where they arrived (a guard waiting while someone talks) until the
 // next march replaces it; `arrived` says its end has been reported.
@@ -30,6 +30,8 @@ export type Actor = {
    * (Brannoc); 5: the same, carried, held up off the ground.
    */
   face?: number;
+  /** Fast asleep the whole way, a snot bubble swelling at the nose (Brannoc sleepwalking to the warden). */
+  snot?: boolean;
 };
 
 const feet = ([x, y]: [number, number]) => [x * TILE + TILE / 2, y * TILE + TILE - 2];
@@ -37,7 +39,7 @@ const feet = ([x, y]: [number, number]) => [x * TILE + TILE / 2, y * TILE + TILE
 /** A new march, in tiles per second; `linger`: everyone stays put once there, until the next march. */
 export function newMarch(actors: Actor[], tilesPerSecond = MARCH_PACE, linger = false): number[] {
   const out = [0, tilesPerSecond * TILE, actors.length, linger ? 1 : 0, 0];
-  for (const a of actors) out.push(a.row, a.face ?? -1, a.path.length, ...a.path.flatMap(feet));
+  for (const a of actors) out.push(a.row, a.face ?? -1, a.snot ? 1 : 0, a.path.length, ...a.path.flatMap(feet));
   return out;
 }
 
@@ -50,7 +52,7 @@ function facingOf(dx: number, dy: number, was: number): number {
 }
 
 /**
- * Where everyone is, `t` seconds in: one [row, facing, frame, x, y, walking (0/1)] each, and whether
+ * Where everyone is, `t` seconds in: one [row, facing, frame, x, y, walking (0/1), snot (0/1)] each, and whether
  * it's over (everyone arrived, and the beat after).
  */
 export function marchPoses(m: number[], t: number): { poses: number[][]; done: boolean } {
@@ -63,8 +65,9 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
   for (let k = 0; k < count; k++) {
     const row = m[i];
     const face = m[i + 1];
-    const n = m[i + 2];
-    const pts = i + 3;
+    const snot = m[i + 2];
+    const n = m[i + 3];
+    const pts = i + 4;
     let left = t * speed;
     let x = m[pts];
     let y = m[pts + 1];
@@ -93,7 +96,7 @@ export function marchPoses(m: number[], t: number): { poses: number[][]; done: b
     }
     if (walking === 0 && face >= 0) facing = face;
     longest = Math.max(longest, length);
-    poses.push([row, facing, walkFrame(t * speed, walking === 1), x, y, walking]);
+    poses.push([row, facing, walkFrame(t * speed, walking === 1), x, y, walking, snot]);
     i = pts + n * 2;
   }
   return { poses, done: t * speed >= longest + HOLD * speed };

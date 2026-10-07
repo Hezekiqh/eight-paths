@@ -135,11 +135,10 @@ export const BRANNOC_JOINED = 'brannoc-joined';
 /** Where you meet Brannoc and he can join you (said yes to): the cell, the Kaloseum sand, his cell again. */
 export const BRANNOC_SCENES = ['brannoc-cell', 'brannoc-awake', 'brannoc-sulk'];
 
-/** Where Brannoc lies, fainted, just off the ladder; and where he walks to swing. */
+/** Where Brannoc lies, fainted, just off the ladder. */
 // (the Kaloseum, author, Oct 6, 2026: a wide oval of sand; you come up through the trapdoor at its bottom left,
 // and Brannoc is three tiles on, room enough to faint without landing on you)
 export const BRANNOC_FAINTED: [number, number] = [11, 14];
-const UNDER_WARDEN: [number, number] = [15, 10];
 /** The middle of the sand, on the way from the trapdoor to the gate. */
 export const SAND_MIDDLE: [number, number] = [15, 14];
 const TRAPDOOR: [number, number] = [7, 14];
@@ -229,16 +228,8 @@ export const SNOT_SWING = [
   'He yawns. He raises his club.',
   'Behind you: a snore. A big one.',
 ];
-/** Brannoc walks to the warden, asleep, then swings (from the side of the sand, if the three carried him there). */
-export const brannocSleepwalks = (brannoc: number, carried = false): Actor[] => [
-  {
-    row: brannoc,
-    path: carried
-      ? [CARRIED_TO.brannoc, [CARRIED_TO.brannoc[0], 15], [SAND_MIDDLE[0], 15], SAND_MIDDLE, UNDER_WARDEN]
-      : [BRANNOC_FAINTED, SAND_MIDDLE, UNDER_WARDEN],
-    face: 1,
-  },
-];
+// Brannoc's sleepwalk to the warden, the swing and the flight are in swing.ts (they follow the warden, wherever
+// the fight left him).
 
 // ---- Carried off (author, Oct 7, 2026, as in Episode 13): Brannoc faints, and once the three have made their
 // excuses they rush over, pick him up (Old Mott at his feet, Nails at his head, Silas Seen leading the way), and
@@ -259,7 +250,7 @@ export const CARRIED_TO: Record<'mott' | 'brannoc' | 'nails' | 'silas', [number,
 type Carriers = { mott: number; nails: number; silas: number; brannoc: number };
 /** The rush: round you and over to him (Old Mott below, Nails up and over, Silas ahead), Brannoc out cold. */
 export const arenaRush = (r: Carriers): Actor[] => [
-  { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4 },
+  { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4, snot: true },
   { row: r.mott, path: [[6, 12], [10, 12], [10, 14]], face: 3 },
   { row: r.nails, path: [[7, 12], [7, 11], [12, 11], [12, 14]], face: 2 },
   { row: r.silas, path: [[8, 12], [13, 12], [13, 13]], face: 3 },
@@ -267,7 +258,7 @@ export const arenaRush = (r: Carriers): Actor[] => [
 /** ...and off they go with him, held up between them, to the side of the sand. */
 export const arenaCarry = (r: Carriers): Actor[] => [
   { row: r.mott, path: [[10, 14], CARRIED_TO.mott], face: 3 },
-  { row: r.brannoc, path: [BRANNOC_FAINTED, CARRIED_TO.brannoc], face: 5 },
+  { row: r.brannoc, path: [BRANNOC_FAINTED, CARRIED_TO.brannoc], face: 5, snot: true },
   { row: r.nails, path: [[12, 14], CARRIED_TO.nails], face: 2 },
   { row: r.silas, path: [[13, 13], CARRIED_TO.silas], face: 2 },
 ];
@@ -282,6 +273,9 @@ export const SNOT_SWING_HIT = [
   "GUARD: We won't bother you any more. Strength is valued more than anything here.",
   "GUARD: We don't get paid enough for this.",
 ];
+
+/** The line the swing lands on (world.tsx plays it with the blow). */
+export const SWING_LINE = SNOT_SWING_HIT.indexOf('BRANNOC SUPER SUPER SWING!');
 
 /** Brannoc wakes: will you pair up? */
 export const BRANNOC_OFFER = [
@@ -314,9 +308,11 @@ export const BRANNOC_NO = [
   'BRANNOC: No, I understand. Who would want a knight who faints.',
   'He shuffles off, very slowly, the way you came.',
 ];
+/** Where Brannoc wakes after his swing (the-pit.json's brannoc-awake). */
+const BRANNOC_WAKES: [number, number] = [15, 10];
 /** Back to the ladder, very slowly. */
 export const brannocShuffles = (brannoc: number): Actor[] => [
-  { row: brannoc, path: [UNDER_WARDEN, SAND_MIDDLE, [8, 14], TRAPDOOR] },
+  { row: brannoc, path: [BRANNOC_WAKES, SAND_MIDDLE, [8, 14], TRAPDOOR] },
 ];
 
 /** Walking as Brannoc: the warden drops in, and you faint at the sight of him. `freed`: the three are watching. */

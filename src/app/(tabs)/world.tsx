@@ -20,7 +20,7 @@ import { WorldControls } from '@/components/world/world-controls';
 import { WorldHub } from '@/components/world/world-hub';
 import { HeroSelect } from '@/components/world/hero-select';
 import { VhsOverlay } from '@/components/world/vhs-overlay';
-import { WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
+import { FOCUS_MARCH, WorldView, npcFeet, useWorldSim, type WorldSim } from '@/components/world/world-view';
 import { pickData, useGameStore } from '@/store';
 import { selectKeeperFacts } from '@/store/selectors';
 import { useSession } from '@/store/session';
@@ -167,7 +167,6 @@ import {
   SNOT_SWING_HIT,
   WARDEN_SHRUGS,
   brannocShuffles,
-  brannocSleepwalks,
   prisonRoute,
   BARS_BENT,
   BRANNOC_BOLTS,
@@ -179,6 +178,8 @@ import {
   ARENA_FIGHT_ALONE,
   ARENA_VERDICT,
   ARENA_CARRIED,
+  BRANNOC_FAINTED,
+  SWING_LINE,
   ARENA_FAINTED,
   arenaCarry,
   arenaRush,
@@ -200,12 +201,23 @@ import {
   STAIR_DOOR,
 } from '@/world/dungeon';
 import { WALKER_ROWS } from '@/world/walkers';
+import {
+  SLEEPWALK_PACE,
+  SWING_DELAY,
+  SWING_STRIKE,
+  WARDEN_HOLE,
+  breachX,
+  holeAt,
+  sleepwalkTo,
+} from '@/world/swing';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
 import {
   ATTACKS,
   E_ALIVE,
   E_HP,
   E_KIND,
+  E_X,
+  E_Y,
   ENEMIES,
   ENEMY_KINDS,
   attackFor,
@@ -1179,6 +1191,80 @@ function World({
       return false;
     };
   }, [map, gateScene, setFlag]);
+  // Twenty strikes, and the warden hasn't noticed (dungeon.ts, swing.ts): Brannoc gets up asleep, a snot bubble at
+  // his nose, sleepwalks to wherever the warden stands, and swings. The warden goes up, up, over the banners and out
+  // of the Kaloseum, leaving a hole in them. The camera follows it all: Brannoc on the sand, his walk, the swing, the
+  // flight. The win is only saved at the end, so the three who carried him stay on the sand to watch.
+  const snotSwing = useCallback(() => {
+    const warden = fightRef.current?.get().enemies.find((e) => ENEMY_KINDS[e[E_KIND]] === 'warden');
+    const [wx, wy] = warden ? [warden[E_X], warden[E_Y]] : npcFeet(map.boss ?? { x: 15, y: 7 });
+    const row = sim.npcWalk.get()[sim.npcIds.indexOf('brannoc-pit')];
+    const from: [number, number] = row ? [row[W_X], row[W_Y]] : BRANNOC_FAINTED;
+    const [lx, ly] = npcFeet({ x: from[0], y: from[1] });
+    const walk = sleepwalkTo(from, [wx, wy], (x, y) => !map.solid[y * map.width + x] && x >= 0 && y >= 0);
+    const [ex, ey] = npcFeet({ x: walk.end[0], y: walk.end[1] });
+    const hx = breachX(wx, map.width * TILE);
+    const asleep = WALKER_ROWS.brannocasleep;
+    // the warden and the player, then a look round at the snore behind you
+    setDialogue({
+      lines: SNOT_SWING.slice(0, -1),
+      then: () => {
+        sim.focus.set([lx, ly - 8]);
+        setDialogue({
+          lines: SNOT_SWING.slice(-1),
+          then: () => {
+            // the one lying on the sand steps off the map; the march draws him up and walking
+            const rows = sim.npcWalk.get().map((r) => r.slice());
+            const r = rows[sim.npcIds.indexOf('brannoc-pit')];
+            if (r) {
+              r[W_HX] = r[W_X] = r[W_TX] = -10;
+              r[W_HY] = r[W_Y] = r[W_TY] = -10;
+              r[W_T] = 0;
+              sim.npcWalk.set(rows);
+            }
+            sim.focus.set([FOCUS_MARCH]);
+            march(
+              [{ row: asleep, path: walk.path, face: walk.face, snot: true }],
+              () => {
+                // Brannoc and the warden, side by side
+                sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
+                setDialogue({
+                  lines: SNOT_SWING_HIT.slice(0, SWING_LINE),
+                  then: () => {
+                    // the blow lands as the line's shouted (it types out in well under a second)
+                    setTimeout(() => {
+                      sim.swing.set([0, asleep, ex, ey, walk.face, wx, wy, hx]);
+                      playSound('swing');
+                      haptics.kill();
+                    }, SWING_DELAY * 1000);
+                    setTimeout(
+                      () => {
+                        playSound('slam');
+                        haptics.rumble('crash');
+                      },
+                      (SWING_DELAY + SWING_STRIKE) * 1000,
+                    );
+                    setDialogue({
+                      lines: SNOT_SWING_HIT.slice(SWING_LINE),
+                      then: () => {
+                        // the hole he left in the banners stays (world-view draws it from the swing until now)
+                        setFlag(`${WARDEN_HOLE}${hx}`);
+                        setFlag('pit-champion');
+                        setFlag('brannoc-swung');
+                        travel(hereNow());
+                      },
+                    });
+                  },
+                });
+              },
+              SLEEPWALK_PACE,
+              true,
+            );
+          },
+        });
+      },
+    });
+  }, [map, sim, march, setFlag, travel, hereNow]);
   const onWin = useCallback(() => {
     if (!map.boss) return;
     // The prison route (dungeon.ts): Brannoc is out cold on the sand while you fight.
@@ -1187,26 +1273,7 @@ function World({
       return;
     }
     if (prison && hero !== 'brannoc' && map.boss.flag === 'pit-champion') {
-      // twenty strikes, and the warden hasn't noticed; Brannoc gets up, asleep, and swings
-      setDialogue({
-        lines: SNOT_SWING,
-        then: () => {
-          setFlag('pit-champion');
-          march(
-            brannocSleepwalks(WALKER_ROWS.brannoc, useWorldStore.getState().flags.includes(ARENA_CARRIED)),
-            () =>
-              setDialogue({
-                lines: SNOT_SWING_HIT,
-                then: () => {
-                  setFlag('brannoc-swung');
-                  travel(hereNow());
-                },
-              }),
-            4,
-            true,
-          );
-        },
-      });
+      snotSwing();
       return;
     }
     const scene = winScene(
@@ -1243,7 +1310,7 @@ function World({
       : { ...ending, lines: [...scene.lines, ...ending.lines] };
     if (scene.stepOut && scene.stepOut !== hero) stepOut(sim, scene.stepOut as HeroId, said, setDialogue);
     else setDialogue(said);
-  }, [map, gameParty, owned, finish, prison, hero, setFlag, march, travel, hereNow, sim]);
+  }, [map, gameParty, owned, finish, prison, hero, sim, march, snotSwing]);
   // Brannoc wakes after his swing: will you pair up? (Asked again each time you come in, until you answer.)
   const brannocOffer = useCallback(() => {
     setDialogue({
@@ -1806,6 +1873,7 @@ function World({
         raised={raised}
         resume={resumeFight}
         fightRef={fightRef}
+        breach={map.id === 'the-pit' ? holeAt(liveFlags) : null}
         sealed={sealed}
         autopilot={__DEV__ && autopilotOn}
         onDefeat={onDefeat}

@@ -40,21 +40,37 @@ export function sleepZs(t: number, x: number, y: number): number[][] {
 /** How long a snot bubble takes to swell and shrink back. */
 export const BUBBLE_EVERY = 1.6;
 
+/** The biggest a snot bubble swells, in art pixels across its radius (author, Oct 7, 2026: "make it clearly visible"). */
+export const BUBBLE_MAX = 5;
+
 /**
- * A snot bubble at the nose of a sleeper whose feet are at (x, y) (Brannoc, out cold in the Kaloseum): it swells
- * from nothing to a big round bubble and shrinks again, over and over. Its pixels, as [x, y] pairs, and its
- * highlight, a pixel of shine on the upper left.
+ * A snot bubble at the nose of a sleeper whose feet are at (x, y) (Brannoc, out cold in the Kaloseum, or
+ * sleepwalking): it swells from nothing to a big round bubble and shrinks again, over and over. `dir` is the side
+ * the nose points (1 right, -1 left). Its pixels, as [x, y] pairs; its rim (drawn darker, so it reads against the
+ * sand); and its highlight, a pixel of shine on the upper left.
  */
-export function snotBubble(t: number, x: number, y: number): { cells: number[][]; shine: number[] | null } {
+export function snotBubble(
+  t: number,
+  x: number,
+  y: number,
+  dir = 1,
+): { cells: number[][]; rim: number[][]; shine: number[] | null } {
   'worklet';
   const k = (t % BUBBLE_EVERY) / BUBBLE_EVERY;
-  const r = 0.5 + 3 * Math.sin(k * Math.PI);
-  // just off the nose, on the right, growing outwards
-  const cx = x + 2 + r;
+  const r = 0.6 + (BUBBLE_MAX - 0.6) * Math.sin(k * Math.PI);
+  // just off the nose, growing outwards
+  const cx = x + dir * (2 + r);
   const cy = y - 12;
   const cells: number[][] = [];
+  const rim: number[][] = [];
   const R = Math.ceil(r);
   for (let dy = -R; dy <= R; dy++)
-    for (let dx = -R; dx <= R; dx++) if (dx * dx + dy * dy <= r * r) cells.push([Math.round(cx + dx), cy + dy]);
-  return { cells, shine: r > 1.5 ? [Math.round(cx - r / 2), cy - Math.round(r / 2)] : null };
+    for (let dx = -R; dx <= R; dx++) {
+      const d = dx * dx + dy * dy;
+      if (d > r * r) continue;
+      const cell = [Math.round(cx + dx), cy + dy];
+      if (r > 1.5 && d > (r - 1) * (r - 1)) rim.push(cell);
+      else cells.push(cell);
+    }
+  return { cells, rim, shine: r > 1.5 ? [Math.round(cx - r / 2), cy - Math.round(r / 2)] : null };
 }

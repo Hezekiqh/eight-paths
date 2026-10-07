@@ -7,7 +7,7 @@ const at = (x: number, y: number) => [x * TILE + TILE / 2, y * TILE + TILE - 2];
 describe('a march', () => {
   it('walks everyone along their path and stops them at the end, facing the way asked', () => {
     const m = newMarch([{ row: 3, path: [[1, 1], [4, 1], [4, 3]], face: 0 }], 2);
-    expect(m.length).toBe(MARCH_HEAD + 3 + 6);
+    expect(m.length).toBe(MARCH_HEAD + 4 + 6);
     const half = marchPoses(m, 1).poses[0]; // 2 tiles in: along the top, walking right
     expect(half.slice(3, 5)).toEqual(at(3, 1));
     expect(half[1]).toBe(3);
@@ -17,6 +17,12 @@ describe('a march', () => {
     expect(end.poses[0][1]).toBe(0);
     expect(end.done).toBe(true);
     expect(marchPoses(m, 2).done).toBe(false);
+    expect(end.poses[0][6]).toBe(0);
+  });
+  it('carries a snot bubble for whoever walks it asleep', () => {
+    const m = newMarch([{ row: 3, path: [[1, 1], [2, 1]], snot: true }, { row: 4, path: [[5, 5]] }]);
+    const { poses } = marchPoses(m, 0.1);
+    expect(poses.map((p) => p[6])).toEqual([1, 0]);
   });
 });
 

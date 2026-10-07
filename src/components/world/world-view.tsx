@@ -64,7 +64,7 @@ import {
 } from '@/world/combat';
 import { CHARGE_TIME, startFight, stepFight, type Fight, type Special } from '@/world/fight';
 import { autopilot as autoplay, newPilot, walkToward, type Pilot } from '@/world/autopilot';
-import { AttackEffects } from '@/components/world/attack-effects';
+import { AttackEffects, Sword } from '@/components/world/attack-effects';
 import { MAX_GUTTERED, type Ambience } from '@/world/ambience';
 import { playSound, type Effect } from '@/audio';
 import { haptics } from '@/haptics';
@@ -72,6 +72,22 @@ import { FACINGS, TILE, type Facing, type NpcObject, type WorldMap } from '@/wor
 import { WALKER_FRAME, WALKER_ROWS, type WalkerId } from '@/world/walkers';
 import { cameoAt } from '@/world/step-aside';
 import { MARCH_ACTORS, MARCH_HEAD, marchPoses } from '@/world/march';
+import {
+  FLASH_TIME,
+  FLY_TIME,
+  BREACH_AT,
+  SWING_ARC,
+  SWING_STRIKE,
+  SW_BX,
+  SW_BY,
+  SW_FACE,
+  SW_HX,
+  SW_ROW,
+  SW_T,
+  SW_WX,
+  SW_WY,
+  wardenFlight,
+} from '@/world/swing';
 
 const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
 const WALKERS_IMAGE = require('@/assets/world/walkers.png');
@@ -163,7 +179,17 @@ export type WorldSim = {
   march: SharedValue<number[]>;
   /** Test builds only: the tile [x, y] to walk to by itself (the guide's mark); empty: off. */
   walkTo: SharedValue<number[]>;
+  /**
+   * Where a cutscene points the camera instead of at you: an [x, y] in art pixels, or [FOCUS_MARCH] to follow the
+   * first walker in the march. Empty: on you, as usual. The camera glides there, it doesn't jump.
+   */
+  focus: SharedValue<number[]>;
+  /** Brannoc's Super Super Swing playing out (swing.ts SW_*). Empty: none. */
+  swing: SharedValue<number[]>;
 };
+
+/** sim.focus: follow whoever leads the march. */
+export const FOCUS_MARCH = -1;
 
 export function useWorldSim(start: { x: number; y: number; facing: Facing }, npcs: NpcObject[]): WorldSim {
   const facing = FACINGS.indexOf(start.facing);
@@ -200,6 +226,8 @@ export function useWorldSim(start: { x: number; y: number; facing: Facing }, npc
     cameo: useSharedValue<number[]>([]),
     march: useSharedValue<number[]>([]),
     walkTo: useSharedValue<number[]>([]),
+    focus: useSharedValue<number[]>([]),
+    swing: useSharedValue<number[]>([]),
   };
 }
 
@@ -297,12 +325,17 @@ type Props = {
   raised?: { x: number; y: number }[];
   /** A fight picked back up after a change of character, instead of a fresh one (session.ts carry). */
   resume?: Fight | null;
+  /** The hole the warden left in the Kaloseum's banners (swing.ts): its x in art pixels. */
+  breach?: number | null;
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
 };
 
 /** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
 const dozing = (n: { asleep?: boolean; name: string }, talkingTo: string | null) => !!n.asleep && n.name !== talkingTo;
+
+/** The warden's kind, by index (Brannoc's swing hides him from the fight's drawing and flies him off). */
+const WARDEN_KIND = ENEMY_KINDS.indexOf('warden');
 
 /** A march actor's "facing" for someone out cold on the ground (march.ts), and for someone carried. */
 const LYING = 4;
@@ -315,7 +348,8 @@ const CARRIED = 8;
  */
 function sleeperAt([x, y]: [number, number], lying: boolean, what: 'zs' | 'snot'): [number, number] {
   'worklet';
-  if (!lying) return [x, y];
+  // standing (sleepwalking), the bubble's at the nose, a little above the mouth
+  if (!lying) return what === 'zs' ? [x, y] : [x, y - 2];
   return what === 'zs' ? [x - 2, y + 8] : [x - 1, y - 2];
 }
 
@@ -393,6 +427,7 @@ export function WorldView({
   drawbridge = null,
   raised = [],
   resume = null,
+  breach = null,
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
@@ -516,6 +551,11 @@ export function WorldView({
 
   const camX = useSharedValue(0);
   const camY = useSharedValue(0);
+  /** The camera unrounded, so a cutscene's glide doesn't stall a pixel short; and whether it's gliding yet. */
+  const camF = useSharedValue<number[]>([0, 0, 0]);
+  /** Marchers walking asleep (a snot bubble, Zs): [x, y, lying (0/1), nose side (1 right, -1 left), …]. */
+  const marchSleep = useSharedValue<number[]>([]);
+  const wardenRow = useMemo(() => WALKER_ROWS.warden, []);
   const bob = useSharedValue(0);
   /** Four numbers per walker, back to front: sheet x, sheet y, screen x, screen y. */
   const drawList = useSharedValue<number[]>([]);
@@ -813,12 +853,23 @@ export function WorldView({
         if (walked.solid !== solid.get()) solid.set(walked.solid);
       }
 
-      // The camera follows the lead and stops at the map's edges (or centres a small map).
       const round = (v: number) => Math.round(v * scale) / scale;
-      const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(sim.x.get() - viewW / 2, 0), mapW - viewW);
-      const cy = mapH <= viewH ? (mapH - viewH) / 2 : Math.min(Math.max(sim.y.get() - 12 - viewH / 2, 0), mapH - viewH);
-      camX.set(round(cx));
-      camY.set(round(cy));
+      // Brannoc's swing (swing.ts): the blow lands with a big shake, a puff and a spark on the warden.
+      const sw = sim.swing.get();
+      if (sw.length > 0) {
+        const before = sw[SW_T];
+        const st = before + realDt;
+        if (before < SWING_STRIKE && st >= SWING_STRIKE) {
+          shake.set([FEEL.shakeTime * 4, FEEL.killShake * 2]);
+          puffs.set([...puffs.get().slice(-3), [sw[SW_WX], sw[SW_WY], FEEL.puff]]);
+          sparks.set([sw[SW_WX], sw[SW_WY] - 20, 0.15]);
+        }
+        if (before < SWING_STRIKE + FLY_TIME + 1) {
+          const next = sw.slice();
+          next[SW_T] = st;
+          sim.swing.set(next);
+        }
+      }
       bob.set(Math.floor(info.timestamp / 350) % 2);
       clock.set(clock.get() + realDt);
       if (exitT.get() >= 0) exitT.set(exitT.get() + realDt);
@@ -860,9 +911,17 @@ export function WorldView({
       for (let i = 0; i < all.length; i++) {
         const e = all[i];
         if (e[E_ALIVE] === 0) continue;
-        const toward = facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
-        // The tell: a winding-up enemy blinks red and stands still.
-        const tell = e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
+        // the warden in Brannoc's swing is drawn by it (below), flying
+        if (sw.length > 0 && e[E_KIND] === WARDEN_KIND) continue;
+        // after the fight, in a cutscene pointing the camera somewhere (Brannoc beside the warden), they look there
+        const look = sim.focus.get();
+        const toward =
+          now.won && look.length === 2
+            ? facingFor(look[0] - e[E_X], look[1] + 8 - e[E_Y], DOWN)
+            : facingFor(sim.x.get() - e[E_X], sim.y.get() - e[E_Y], DOWN);
+        // The tell: a winding-up enemy blinks red and stands still (not once the fight's over, or held for a talk:
+        // frozen mid-blink, they'd stay solid red).
+        const tell = !now.won && !frozen && e[E_MODE] === WINDUP && Math.floor(e[E_MT] * 12) % 2 === 0;
         const tint = (whites[i] ?? 0) > 0 ? 1 : tell ? 2 : 0;
         const stepping = e[E_AWAKE] === 1 && e[E_MODE] !== WINDUP && e[E_MODE] !== EXPOSED && e[E_STUN] === 0;
         ents.push([
@@ -878,6 +937,10 @@ export function WorldView({
         if (e[E_MODE] === EXPOSED && ENEMY_KINDS[e[E_KIND]] === 'kaldor') shadows.push(e[E_X], e[E_Y]);
       }
       shadowAt.set(shadows);
+      if (sw.length > 0) {
+        const fl = wardenFlight(sw[SW_T] - SWING_STRIKE, sw[SW_WX], sw[SW_WY], sw[SW_HX]);
+        if (fl[2] > 0) ents.push([wardenRow, fl[3], 0, fl[0], fl[1], 0, fl[2]]);
+      }
       for (let k = partyRows.length - 1; k >= 1; k--) {
         const [fx, fy, ff] = followerAt(sim.trail.get(), k, sim.facing.get());
         ents.push([partyRows[k], ff, walkFrame(sim.walked.get() + k * 5, moving), fx, fy, 0, 1]);
@@ -885,17 +948,26 @@ export function WorldView({
       // A march: everyone in it walks their path; you too, if you're in it.
       const march = sim.march.get();
       let leadWalking = false;
+      let marchLead: number[] | null = null;
+      const asleep: number[] = [];
       if (march.length > MARCH_HEAD) {
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
-        for (const [row, facing, frame, x, y, walking] of poses) {
+        for (const [row, facing, frame, x, y, walking, snot] of poses) {
+          if (row >= 0 && marchLead === null) marchLead = [x, y];
           // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
           if (row >= 0 && facing >= LYING) {
             ents.push([row, 0, 0, x, y + 0.5, 0, facing === LYING ? -1 : -2]);
+            if (snot === 1) asleep.push(x, y - (facing === LYING ? 0 : CARRIED), 1, 1);
             continue;
           }
           if (row >= 0) {
-            ents.push([row, facing, frame, x, y, 0, 1]);
+            // swinging: he lunges into the blow
+            const lunge = sw.length > 0 && row === sw[SW_ROW] && sw[SW_T] < SWING_ARC ? 3 : 0;
+            const lx = facing === 2 ? -lunge : facing === 3 ? lunge : 0;
+            const ly = facing === 1 ? -lunge : facing === 0 ? lunge : 0;
+            ents.push([row, facing, lunge > 0 ? 1 : frame, x + lx, y + ly, 0, 1]);
+            if (snot === 1) asleep.push(x + lx, y + ly, 0, facing === 2 ? -1 : 1);
             continue;
           }
           if (walking === 1) sim.walked.set(sim.walked.get() + Math.hypot(x - sim.x.get(), y - sim.y.get()));
@@ -919,6 +991,40 @@ export function WorldView({
           }
           sim.march.set(next);
         }
+      }
+      if (asleep.length > 0 || marchSleep.get().length > 0) marchSleep.set(asleep);
+      // The camera follows the lead and stops at the map's edges (or centres a small map). In a cutscene it glides
+      // to what the scene points at (sim.focus): someone on the ground, the march's lead, a warden in flight.
+      const focus = sim.focus.get();
+      let fx = sim.x.get();
+      let fy = sim.y.get() - 12;
+      let glide = 4;
+      if (sw.length > 0 && sw[SW_T] >= SWING_STRIKE) {
+        const fl = wardenFlight(sw[SW_T] - SWING_STRIKE, sw[SW_WX], sw[SW_WY], sw[SW_HX]);
+        fx = fl[0];
+        fy = fl[1] - 12;
+        glide = 7;
+      } else if (focus.length === 1 && focus[0] === FOCUS_MARCH && marchLead !== null) {
+        fx = marchLead[0];
+        fy = marchLead[1] - 12;
+      } else if (focus.length === 2) {
+        fx = focus[0];
+        fy = focus[1];
+      }
+      const cx = mapW <= viewW ? (mapW - viewW) / 2 : Math.min(Math.max(fx - viewW / 2, 0), mapW - viewW);
+      const cy = mapH <= viewH ? (mapH - viewH) / 2 : Math.min(Math.max(fy - viewH / 2, 0), mapH - viewH);
+      const cf = camF.get();
+      if (focus.length > 0 || sw.length > 0) {
+        const k = Math.min(1, realDt * glide);
+        const gx = cf[2] === 1 ? cf[0] + (cx - cf[0]) * k : camX.get() + (cx - camX.get()) * k;
+        const gy = cf[2] === 1 ? cf[1] + (cy - cf[1]) * k : camY.get() + (cy - camY.get()) * k;
+        camF.set([gx, gy, 1]);
+        camX.set(round(gx));
+        camY.set(round(gy));
+      } else {
+        if (cf[2] === 1) camF.set([cx, cy, 0]);
+        camX.set(round(cx));
+        camY.set(round(cy));
       }
       // A field move: the lead sidesteps while the party member the job needs walks into their place.
       const cameo = sim.cameo.get();
@@ -1154,33 +1260,69 @@ export function WorldView({
       const zs = sleepZs(t + i * 0.37, x, y);
       for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
     }
+    const walking = marchSleep.get();
+    for (let i = 0; i < walking.length; i += 4) {
+      const [x, y] = sleeperAt([walking[i], walking[i + 1]], walking[i + 2] === 1, 'zs');
+      const zs = sleepZs(t + i * 0.37, x, y);
+      for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
+    }
     return path;
   });
-  const bubblePath = useDerivedValue(() => {
-    const path = Skia.Path.Make();
+  // Snot bubbles (sleep.ts): the lying and the sleepwalking, each a fill, a darker rim, and a pixel of shine.
+  const bubbles = useDerivedValue(() => {
     const t = clock.get();
+    const out: { cells: number[][]; rim: number[][]; shine: number[] | null }[] = [];
     const walkers = sim.npcWalk.get();
     for (let i = 0; i < snorers.length; i++) {
       const w = walkers[snorers[i][0]];
       if (!w) continue;
       const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
-      const b = snotBubble(t + i * 0.5, x, y);
-      for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
+      out.push(snotBubble(t + i * 0.5, x, y));
     }
+    const walking = marchSleep.get();
+    for (let i = 0; i < walking.length; i += 4) {
+      const [x, y] = sleeperAt([walking[i], walking[i + 1]], walking[i + 2] === 1, 'snot');
+      out.push(snotBubble(t + i * 0.13, x, y, walking[i + 3]));
+    }
+    return out;
+  });
+  const bubblePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const b of bubbles.get())
+      for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
+    return path;
+  });
+  const rimPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    for (const b of bubbles.get())
+      for (let k = 0; k < b.rim.length; k++) path.addRect(Skia.XYWHRect(b.rim[k][0], b.rim[k][1], 1, 1));
     return path;
   });
   const shinePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
-    const t = clock.get();
-    const walkers = sim.npcWalk.get();
-    for (let i = 0; i < snorers.length; i++) {
-      const w = walkers[snorers[i][0]];
-      if (!w) continue;
-      const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
-      const s = snotBubble(t + i * 0.5, x, y).shine;
-      if (s) path.addRect(Skia.XYWHRect(s[0], s[1], 1, 1));
-    }
+    for (const b of bubbles.get()) if (b.shine) path.addRect(Skia.XYWHRect(b.shine[0], b.shine[1], 1, 1));
     return path;
+  });
+  // Brannoc's swing: his blade's arc (the Warrior's sword, attack-effects.tsx), and the white of the blow landing.
+  const swingFlash = useDerivedValue(() => {
+    const w = sim.swing.get();
+    if (w.length === 0) return [0, 0, 0, 0, 0, 0, 0, SWING_ARC];
+    return [0, 0, 0, Math.max(0, SWING_ARC - w[SW_T]), w[SW_BX], w[SW_BY], w[SW_FACE], SWING_ARC];
+  });
+  // the hole he punches in the banners, from the moment he goes through them (saved at the scene's end: `breach`)
+  const breachAt = useDerivedValue(() => {
+    const w = sim.swing.get();
+    return [{ translateX: w.length > 0 ? w[SW_HX] : 0 }];
+  });
+  const breaching = useDerivedValue(() => {
+    const w = sim.swing.get();
+    return w.length > 0 && w[SW_T] >= SWING_STRIKE + FLY_TIME * BREACH_AT ? 1 : 0;
+  });
+  const whiteOut = useDerivedValue(() => {
+    const w = sim.swing.get();
+    if (w.length === 0) return 0;
+    const k = w[SW_T] - SWING_STRIKE;
+    return k < 0 || k > FLASH_TIME ? 0 : 0.9 * (1 - k / FLASH_TIME);
   });
   const cheering = useDerivedValue(() => (Math.floor(clock.get() * 2.5) % 2 === 0 ? 0 : 1));
   const motePath = useDerivedValue(() => {
@@ -1232,6 +1374,13 @@ export function WorldView({
         {mapImage && <Image image={mapImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} />}
         {cheerImage && (
           <Image image={cheerImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} opacity={cheering} />
+        )}
+        {breach !== null ? (
+          <Breach x={breach} />
+        ) : (
+          <Group transform={breachAt} opacity={breaching}>
+            <Breach x={0} />
+          </Group>
         )}
         {patches.map((p) => (
           <Group key={`${p.x},${p.y}`}>
@@ -1324,8 +1473,10 @@ export function WorldView({
         )}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
         <Path path={zPath} color="#DCE8FF" opacity={0.85} />
-        <Path path={bubblePath} color="#B8E0C8" opacity={0.8} />
+        <Path path={rimPath} color="#4E9A6A" />
+        <Path path={bubblePath} color="#C4F2D4" opacity={0.9} />
         <Path path={shinePath} color="#FFFFFF" />
+        <Sword flash={swingFlash} color="#FFF4C0" range={26} />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
@@ -1360,7 +1511,65 @@ export function WorldView({
         </Group>
       </Group>
       <Rect x={0} y={0} width={width} height={height} color="#000000" opacity={dim} />
+      <Rect x={0} y={0} width={width} height={height} color="#FFFFFF" opacity={whiteOut} />
     </Canvas>
+  );
+}
+
+/** The hole the warden left going out through the top of the Kaloseum (swing.ts): night sky through torn stands. */
+const BREACH_EDGE = [
+  [-21, 0],
+  [-18, 10],
+  [-22, 17],
+  [-15, 21],
+  [-17, 29],
+  [-8, 28],
+  [-4, 36],
+  [3, 31],
+  [8, 35],
+  [13, 27],
+  [20, 28],
+  [17, 20],
+  [22, 13],
+  [20, 0],
+];
+const BREACH_SCRAPS = [
+  [-25, 1, 3, 10],
+  [-21, 15, 2, 5],
+  [21, 3, 3, 8],
+  [17, 25, 2, 4],
+  [-11, 38, 2, 2],
+  [6, 41, 3, 2],
+];
+const BREACH_RUBBLE = [
+  [-14, 34, 3, 2],
+  [-3, 39, 2, 2],
+  [10, 38, 3, 2],
+  [15, 32, 2, 2],
+  [-20, 31, 2, 2],
+  [0, 45, 2, 1],
+];
+function Breach({ x }: { x: number }) {
+  const [hole, rim] = useMemo(() => {
+    const p = Skia.Path.Make();
+    BREACH_EDGE.forEach(([dx, dy], i) => (i === 0 ? p.moveTo(x + dx, dy) : p.lineTo(x + dx, dy)));
+    p.close();
+    return [p, p.copy()];
+  }, [x]);
+  return (
+    <Group>
+      <Path path={hole} color="#141A30" />
+      <Path path={rim} color="#2A1A12" style="stroke" strokeWidth={2} />
+      <Rect x={x - 8} y={5} width={1} height={1} color="#F4EFD0" />
+      <Rect x={x + 7} y={12} width={1} height={1} color="#F4EFD0" />
+      <Rect x={x - 3} y={19} width={1} height={1} color="#C8C4E0" />
+      {BREACH_SCRAPS.map(([dx, dy, w, h], i) => (
+        <Rect key={`s${i}`} x={x + dx} y={dy} width={w} height={h} color="#9A2A22" />
+      ))}
+      {BREACH_RUBBLE.map(([dx, dy, w, h], i) => (
+        <Rect key={`r${i}`} x={x + dx} y={dy} width={w} height={h} color="#6A625C" />
+      ))}
+    </Group>
   );
 }
 
