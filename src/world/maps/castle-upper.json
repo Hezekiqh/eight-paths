@@ -5,6 +5,7 @@
   "walkable": [".", ",", "=", "h"],
   "art": {
     "6": "D",
+    "9": "D",
     "7": "A",
     "8": "Z",
     "%": "."
@@ -17,7 +18,7 @@
   "tiles": [
     "###############################",
     "#WWfWFWWfWWWWWfWWWWWWWWWWWWWWW#",
-    "#Ww......yW.D.Q.wW.Q..6Wh7hhhW#",
+    "#Ww......yW.D.Q.wW.Q..6Wh7hh9W#",
     "#W.hhhhh..WhhhhhhWhhhhhWhhhKhW#",
     "#W.hhnhh..WhhhhhhWhhhzhWhhhhhW#",
     "#W.hhhhh..WhhhhhhWhhhhhW....8W#",
@@ -61,6 +62,13 @@
       "Nobody has slept here in five hundred years. Nobody has cleared it out, either."
     ],
     "7": ["A tiny suit of armour on a stand. A prince's. It has been polished recently, and not by a servant."],
+    "9": [
+      "A little writing desk, child-height. In the drawer, under a tin soldier: a journal, in a boy's careful hand.",
+      "'I never wanted to be king. I never wanted power. But it appears Mother and Father want me to go to war. They say it is for the good of the kingdom. My teacher disagrees.'",
+      "'Everyone does what they think is best for them. People get wants and needs confused.'",
+      "'They're my parents, and I know I must honour their wishes. But at the cost of how many lives? I've never taken a life before.'",
+      "'What will I do?'"
+    ],
     "8": ["A small carved horse on rockers, the paint long gone. Its name is burned into the saddle: SIR GALLOP."],
     "U": ["The winding stair, turning down into the hall."],
     "h": ["A thick rug from somewhere far away. Kaldor's army brought back a great many rugs."]
