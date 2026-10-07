@@ -247,19 +247,31 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
   },
-  // the Warden, Bertrand (author, Oct 4, 2026), back early (the prison route: freed prisoners or not)
+  // the Warden, Bertrand (author, Oct 4, 2026), back early (the prison route: freed prisoners or not). A working man
+  // who wants the job done (author, Oct 7, 2026): no speeches, and no patience for Barnaby's show.
   'pit-warden': {
     speaker: 'Bertrand',
     lines: [
-      'BERTRAND: Having trouble, Barnaby?',
+      'BERTRAND: Barnaby. Prisoners loose on my sand, and you are up there with a horn.',
       "BARNABY: Wa... Bertrand! I didn't think you'd be back from your vacation so soon.",
+      'BERTRAND: It was not a vacation. The east gate was off its hinges. Somebody had to hang it.',
+      'BERTRAND: Put the horn down, Barnaby. I will take it from here.',
     ],
     questions: [
       {
         ask: 'Who are you?',
         answer: [
-          'BERTRAND: I have never lost a match.',
-          'BERTRAND: The king trusts me to maintain order among the troublemakers.',
+          'BERTRAND: The Warden. I keep the troublemakers in, and I clean up after them.',
+          'BERTRAND: Barnaby does the shouting. I do the work.',
+        ],
+      },
+      {
+        ask: "What's wrong with Barnaby?",
+        answer: [
+          'BERTRAND: Five hundred years in this place, and his hands have never been dirty once.',
+          'BERTRAND: He sells the fight. I finish it.',
+          'BARNABY: I am RIGHT HERE, Bertrand.',
+          'BERTRAND: I know. I can hear you.',
         ],
       },
     ],
@@ -267,9 +279,8 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       {
         label: 'Any chance you could let me go?',
         lines: [
-          'BERTRAND: Of course.',
-          'BERTRAND: I will let you go... to the other side of existence.',
-          "BERTRAND: You've already broken out of prison. There's no point in putting you back.",
+          'BERTRAND: No.',
+          'BERTRAND: You broke out. I put you back down. Nothing personal. It is the job.',
         ],
       },
       {
@@ -277,7 +288,7 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
         deed: 'bad',
         lines: [
           'BERTRAND: My mother is fine. We have tea every Wednesday.',
-          'BERTRAND: You will pay for that comment.',
+          'BERTRAND: Now. Let us get this done.',
         ],
       },
     ],
@@ -311,7 +322,7 @@ export const PRISON_GUARDS_DOWN = [
 /** Twenty strikes in: Bertrand has had enough, and Brannoc gets up, asleep. */
 export const SNOT_SWING = [
   'Twenty strikes.',
-  'BERTRAND: That is enough. It is time I put an end to this.',
+  'BERTRAND: Alright. Enough. Time to finish this and get back to work.',
   "Behind you, Brannoc stands up. He's still asleep.",
 ];
 // Brannoc's sleepwalk to the warden, the swing and the flight are in swing.ts (they follow the warden, wherever
