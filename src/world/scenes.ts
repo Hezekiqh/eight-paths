@@ -102,14 +102,7 @@ export function winScene(
         'Aurek joins your collection.',
         'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
       ];
-      // his shadows are gone, so is his war: the first Warrior habit of each day earns double (blessings.ts)
-      const beaten = [
-        'kaldor-beaten',
-        'kaldor-dethroned',
-        'kaldor-jailed',
-        'warrior-blessing',
-        ...(throne.mean ? ['throne-mean'] : []),
-      ];
+      const beaten = ['kaldor-beaten', 'kaldor-dethroned', 'kaldor-jailed', ...(throne.mean ? ['throne-mean'] : [])];
       const jailed = [
         'Two of his own guards take him by the arms. Neither of them is getting paid for it. They march him out, down to his own cells.',
         'Far below, a cell door clangs.',
@@ -190,7 +183,9 @@ export function winScene(
             ? ['Brannoc closes the empty eyes.', 'BRANNOC: Rest now. You almost did it. We shall do the rest.']
             : ['You close the empty eyes. Whatever held him lets go.']),
           'Kaldor rises from his throne.',
-          'KALDOR: No. No, no. I was chosen. My master...',
+          'KALDOR: You will regret this.',
+          'KALDOR: My master did not have me come this far for it to fall apart...',
+          'KALDOR: ...Right?',
           'Then the shadows go out of him.',
         ],
         shadows: true,
