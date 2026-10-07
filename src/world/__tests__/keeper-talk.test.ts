@@ -63,6 +63,12 @@ describe('the last seal', () => {
     expect(allowed.slice(-FINALE.end.length)).toEqual(FINALE.end);
   });
 
+  it("doesn't put King Brannoc beside you when you are Brannoc", () => {
+    const lines = seasonFinale(memory(), ['kaldor-dethroned'], true).join(' ');
+    expect(lines).not.toContain('King Brannoc');
+    expect(lines).toContain('your empty throne');
+  });
+
   it('leaves out the comeback line when there was none', () => {
     const lines = seasonFinale(memory(), []);
     expect(lines.join(' ')).not.toMatch(/\{/);

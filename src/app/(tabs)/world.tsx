@@ -1077,6 +1077,7 @@ function World({
       partyWithYou(gameParty, owned, useWorldStore.getState().flags).includes('brannoc'),
       map.npcs.some((n) => n.id === 'felix'),
       hero === 'brannoc',
+      useWorldStore.getState().flags.includes(CELLS_FREED),
     );
     if (!scene) return;
     // whoever stepped out for it steps back in as the scene ends, however it ends
@@ -2255,7 +2256,7 @@ function useAct(
           // (author, Oct 4, 2026: partySplit in scenes.ts, kept for then).
           setDialogue({
             lines: [
-              ...seasonFinale(memory, flags),
+              ...seasonFinale(memory, flags, hero === 'brannoc'),
               `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
               ...PORTAL_HOME.lines,
             ],

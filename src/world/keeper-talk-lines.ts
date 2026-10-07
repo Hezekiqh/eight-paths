@@ -211,13 +211,15 @@ export const FINALE: {
   record: string[];
   allowed: string[];
   dethroned: string[];
+  /** The same, walking as Brannoc: it's your throne, and you're the one working remotely. */
+  dethronedAsBrannoc: string[];
   crowned: string[];
   memory: string[];
   keepsake: { name: string; text: string[] };
   end: string[];
 } = {
   seal: [
-    'You stand before the old portal. The field is quiet. No one followed you here, and somehow that feels right.',
+    'You stand before the old portal. The field is quiet. Your party hangs back a step, and lets you go first. Somehow that feels right.',
     "You lay your hand on the stone. It's warm, like something that has been waiting a very long time.",
     'The last seal shivers. A hairline of light runs through it, and through the light: water, falling coins, someone counting.',
     "It doesn't break. It loosens, like a knot someone has finally started to untie.",
@@ -236,6 +238,12 @@ export const FINALE: {
   dethroned: [
     "Far behind you, a royal advisor sits beside Brannoc's empty throne, under a sign in his own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
     'Beside you, King Brannoc checks the sky for ravens. He is working remotely.',
+    "The horde is gone. Nobody guards the streets, and nobody asks permission. It's frightening. It's theirs.",
+    'You chose to let them choose. Somewhere, someone would call that reckless.',
+  ],
+  dethronedAsBrannoc: [
+    "Far behind you, a royal advisor sits beside your empty throne, under a sign in your own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
+    'Now and then, you check the sky for ravens. You are working remotely.',
     "The horde is gone. Nobody guards the streets, and nobody asks permission. It's frightening. It's theirs.",
     'You chose to let them choose. Somewhere, someone would call that reckless.',
   ],

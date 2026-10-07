@@ -29,9 +29,16 @@ export type Scene = {
 /**
  * The scene for winning the fight on `map`. `brannoc`: he's with you (in your party and met, see
  * partyWithYou). `felix`: Felix was in the room (he's out of his cocoon and left the Courier Road).
- * `asBrannoc`: you're walking as Brannoc himself.
+ * `asBrannoc`: you're walking as Brannoc himself. `cellsEmpty`: you let the prisoners out, and Gary's gone too.
  */
-export function winScene(map: MapId, flag: string, brannoc: boolean, felix = false, asBrannoc = false): Scene | null {
+export function winScene(
+  map: MapId,
+  flag: string,
+  brannoc: boolean,
+  felix = false,
+  asBrannoc = false,
+  cellsEmpty = false,
+): Scene | null {
   switch (map) {
     case 'sleeping-keep':
       return {
@@ -202,7 +209,10 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
               'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
               'Captain Ingrid, Aurek and Widow Aldane join your collection.',
               'Far below, a cell door clangs.',
-              'GARY: ...I did not see that.',
+              // Gary left with the prisoners (dungeon.ts, CELLS_FREED): nobody's down there to see it
+              ...(cellsEmpty
+                ? ['For once, it is the only cell down there with anybody in it.']
+                : ['GARY: ...I did not see that.']),
             ],
             outcome: {
               flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king', 'kaldor-jailed'],
@@ -254,9 +264,10 @@ function ladderScene(flag: string): Scene | null {
 /** Said at the sealed portal once Season 1 is finished. */
 /**
  * The last seal of Season 1: the portal, your real record, the king you left
- * (or crowned), and the first memory back. `memory` null: the record is skipped.
+ * (or crowned), and the first memory back. `memory` null: the record is skipped. `asBrannoc`: you're walking
+ * as Brannoc, so the king who left his throne is you.
  */
-export function seasonFinale(memory: HabitMemory | null, flags: string[]): string[] {
+export function seasonFinale(memory: HabitMemory | null, flags: string[], asBrannoc = false): string[] {
   const record = memory
     ? FINALE.record
         .map((line) =>
@@ -275,7 +286,9 @@ export function seasonFinale(memory: HabitMemory | null, flags: string[]): strin
     : flags.includes('you-king')
       ? FINALE.crowned
       : flags.includes('kaldor-dethroned')
-        ? FINALE.dethroned
+        ? asBrannoc
+          ? FINALE.dethronedAsBrannoc
+          : FINALE.dethroned
         : [];
   return [...FINALE.seal, ...record, ...king, ...FINALE.memory, ...FINALE.end];
 }
