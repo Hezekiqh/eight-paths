@@ -96,6 +96,12 @@ export default function RootLayout() {
               name="keeper-call"
               options={{ presentation: 'transparentModal', animation: 'fade', gestureEnabled: false }}
             />
+            <Stack.Screen name="regulator-intro" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
+            <Stack.Screen name="regulator-survey" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="regulator-potion"
+              options={{ presentation: 'transparentModal', animation: 'fade', gestureEnabled: false }}
+            />
             <Stack.Screen name="friend/[code]" options={{ animation: 'none' }} />
             <Stack.Screen name="auth-callback" options={{ animation: 'none' }} />
           </Stack.Protected>

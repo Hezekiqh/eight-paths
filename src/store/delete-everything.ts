@@ -1,4 +1,5 @@
 import { deleteAccount, forgetAccountHere, signedInHere } from '@/social/api';
+import { useRegulator } from '@/regulator/store';
 import { useTradeNotices } from '@/social/notices';
 import { useTour } from '@/tutorial/tour';
 import { useWorldStore } from '@/world/store';
@@ -17,7 +18,8 @@ export const NOT_CONFIRMED = "You didn't confirm with Apple, so your account and
  * launch, and the server's old trades can't flow back into the new collection. Then the
  * game on this phone is erased too, as on the first launch: no player, quests,
  * levels or heroes (back to the start), a fresh Other World, and the Keeper's
- * tour to come. Premium and the app's own settings (theme, sound) stay.
+ * tour to come, and the Dopamine Regulator erased. Premium and the app's own
+ * settings (theme, sound) stay.
  */
 export async function deleteEverything(): Promise<'deleted' | 'canceled'> {
   if ((await signedInHere()) && (await deleteAccount()) === 'canceled') return 'canceled';
@@ -27,5 +29,6 @@ export async function deleteEverything(): Promise<'deleted' | 'canceled'> {
   useWorldStore.getState().restart();
   useWorldStore.setState({ hero: null });
   useTour.getState().replay();
+  useRegulator.getState().reset();
   return 'deleted';
 }

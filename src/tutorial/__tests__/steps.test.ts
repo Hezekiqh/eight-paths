@@ -50,7 +50,16 @@ describe('TOUR_STEPS', () => {
 
   it('makes a habit, comes back to Today, then visits each tab once, in tab-bar order', () => {
     const visited = TOUR_STEPS.map((s) => s.route).filter((r, i, all) => r !== all[i - 1]);
-    expect(visited).toEqual(['/', '/quest-editor', '/', '/character', '/social-tab', '/journey', '/world']);
+    expect(visited).toEqual(['/', '/quest-editor', '/', '/journey', '/social-tab', '/collection', '/world']);
+  });
+
+  it('introduces the Dopamine Regulator on Profile: what it is, that it is Premium and optional, and where', () => {
+    const said = TOUR_STEPS.filter((s) => s.target === 'regulator')
+      .map((s) => s.line)
+      .join(' ');
+    expect(said).toContain('Dopamine Regulator');
+    expect(said).toContain('Premium');
+    expect(said).toContain('off unless');
   });
 
   it('explains all eight Paths in the habit creator', () => {

@@ -27,6 +27,7 @@ npx expo lint
 | `src/store/` | Zustand store (`index.ts`), derived views (`selectors.ts`) and the hooks screens read from (`hooks.ts`). |
 | `src/app/` | Expo Router screens: onboarding, the three tabs, quest editor, change class, class sheet. |
 | `src/components/` | UI pieces, including the hand-rolled SVG radar in `radar/`. |
+| `src/regulator/` | The Dopamine Regulator (Premium): super stimuli, morning check-ins and the HP bar. Its own store, kept only on the phone: never backed up, synced or sent to the server. The HP rules live in `src/game/regulator.ts`. |
 | `src/notifications/` | Schedules the evening nudge two weeks ahead, skipping days you've already played. |
 | `plugins/` | Config plugin that strips the push entitlement `expo-notifications` adds (local notifications don't need it). |
 

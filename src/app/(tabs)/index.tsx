@@ -5,11 +5,12 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
-import { ProgressStrip } from '@/components/progress-strip';
+import { PlayerCard } from '@/components/player-card';
 import { QuestCard } from '@/components/quest-card';
 import { RadarCard } from '@/components/radar/radar-card';
 import { Screen } from '@/components/screen';
 import { SettingsRow } from '@/components/settings-row';
+import { SurveyPrompt } from '@/components/survey-prompt';
 import { WrapUpCard } from '@/components/wrap-up-card';
 import { TUTORIAL_QUEST_ID, type Dimension, type XpGain } from '@/game';
 import { LevelUp } from '@/components/level-up';
@@ -17,7 +18,7 @@ import { PartyRow } from '@/components/party-row';
 import { XpBanner } from '@/components/xp-banner';
 import { useGameStore, type Milestone } from '@/store';
 import { useSession } from '@/store/session';
-import { useClassInfo, usePlayer, useProgressSummary, useToday, useTodayQuests, useTutorialQuest } from '@/store/hooks';
+import { useClassInfo, usePlayer, useToday, useTodayQuests, useTutorialQuest } from '@/store/hooks';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 import type { CharacterId } from '@/story/companions';
 import { useTour, useTourScroller, useTourTarget } from '@/tutorial/tour';
@@ -34,7 +35,6 @@ export default function TodayScreen() {
   const classInfo = useClassInfo();
   const tutorial = useTutorialQuest(today);
   const quests = useTodayQuests(today);
-  const summary = useProgressSummary(today);
   const toggleQuest = useGameStore((s) => s.toggleQuest);
   const skipQuest = useGameStore((s) => s.skipQuest);
   const completeTutorial = useGameStore((s) => s.completeTutorial);
@@ -178,7 +178,9 @@ export default function TodayScreen() {
           </View>
         ) : (
           <>
-            <ProgressStrip summary={summary} color={classInfo.color} />
+            {/* Your level and (with the Dopamine Regulator on) your Health Points, over your graph and habits. */}
+            <PlayerCard today={today} compact />
+            <SurveyPrompt today={today} />
             <View ref={radarRef} collapsable={false}>
               <RadarCard today={today} classInfo={classInfo} />
             </View>

@@ -1,7 +1,7 @@
 export type Rect = { x: number; y: number; width: number; height: number };
 
 /** The screens the tour walks through: the tabs, and the habit creator. */
-export type TourRoute = '/' | '/character' | '/social-tab' | '/journey' | '/world' | '/quest-editor';
+export type TourRoute = '/' | '/collection' | '/social-tab' | '/journey' | '/world' | '/quest-editor';
 
 export type TourStep = {
   /** What the Keeper says. `{name}` is the player's name; `{hero}` the first hero to wake. */
@@ -73,9 +73,19 @@ export const TOUR_STEPS: TourStep[] = [
     line: 'Congratulations. {hero} is awake, and joins you. Only 199 heroes to go.',
   },
   {
-    route: '/character',
-    target: 'collection',
-    line: "Here are the heroes you've collected. The more stars, the rarer they are: five-star heroes are the rarest of all.",
+    route: '/journey',
+    target: 'journey',
+    line: 'Here are your stats: your level, what is improving, what needs tending, and when you do best. Health data is coming soon.',
+  },
+  {
+    route: '/journey',
+    target: 'regulator',
+    line: 'And for seasoned travellers, the Dopamine Regulator: it shows how super stimuli wear down your Health Points, and how your habits bring them back.',
+  },
+  {
+    route: '/journey',
+    target: 'regulator',
+    line: 'It is part of Premium, and stays off unless you choose it. When you are ready, turn it on right here, in Stats.',
   },
   {
     route: '/social-tab',
@@ -83,9 +93,9 @@ export const TOUR_STEPS: TourStep[] = [
     line: 'In Social you can search for friends, look through their collections, and add them to your leaderboard.',
   },
   {
-    route: '/journey',
-    target: 'journey',
-    line: 'Here are your stats: what is improving, what needs tending, and when you do best. Health data is coming soon.',
+    route: '/collection',
+    target: 'collection',
+    line: "Here are the heroes you've collected. The more stars, the rarer they are: five-star heroes are the rarest of all.",
   },
   {
     route: '/world',

@@ -12,6 +12,7 @@ import { useKeeperActions } from '@/notifications/use-keeper-actions';
 import { useKeeperAsk } from '@/notifications/use-keeper-ask';
 import { useKeeperStatsTracking } from '@/notifications/use-keeper-stats';
 import { usePurchases } from '@/premium/purchases';
+import { usePotionWatch } from '@/regulator/use-potion';
 import { useSocialSync } from '@/social/sync';
 import {
   useCharacterDraws,
@@ -37,6 +38,7 @@ export default function TabsLayout() {
   usePurchases();
   useInviteRewards();
   useMusic('home');
+  usePotionWatch(today);
   const insets = useSafeAreaInsets();
   const { unclaimed } = useObjectives(today);
   const newOffers = useNewOfferCount();
@@ -62,14 +64,15 @@ export default function TabsLayout() {
         <TabTrigger name="index" href="/" asChild>
           <RetroTabButton label="Today" icon="script" />
         </TabTrigger>
-        <TabTrigger name="character" href="/character" asChild>
-          <RetroTabButton label="Profile and collection" icon="star" />
+        <TabTrigger name="journey" href="/journey" asChild>
+          <RetroTabButton label="Stats" icon="chart" />
         </TabTrigger>
         <TabTrigger name="social-tab" href="/social-tab" asChild>
           <RetroTabButton label="Social" icon="users" badge={newOffers > 0} badgeLabel="new trade offers" />
         </TabTrigger>
-        <TabTrigger name="journey" href="/journey" asChild>
-          <RetroTabButton label="Stats" icon="chart" />
+        {/* On its own: not everyone wants to look at the heroes. */}
+        <TabTrigger name="collection" href="/collection" asChild>
+          <RetroTabButton label="Collection" icon="star" />
         </TabTrigger>
         {/* Last, since opening it turns the phone sideways. The quest board inside holds the objectives. */}
         <TabTrigger name="world" href="/world" asChild>

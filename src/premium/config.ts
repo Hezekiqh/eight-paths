@@ -27,4 +27,5 @@ export const PERKS: Perk[] = [
   { title: '5★ odds', free: 'Standard', premium: 'About twice as likely' },
   { title: 'Redo a drop', free: '—', premium: 'Once per drop' },
   { title: 'Themes', free: 'The default', premium: 'Every theme' },
+  { title: 'Dopamine Regulator', free: '—', premium: 'Included' },
 ];

@@ -17,7 +17,7 @@ import { getReminderAccess } from './index';
 const ASK_DELAY_MS = 2500;
 
 /** Tabs where the Keeper may interrupt; never over the World, a sheet or a cutscene. */
-const ASK_SCREENS = new Set(['/', '/character', '/journey', '/social-tab']);
+const ASK_SCREENS = new Set(['/', '/journey', '/collection', '/social-tab']);
 
 const CORE = new Set<string>(Object.values(DEFAULT_PARTY));
 

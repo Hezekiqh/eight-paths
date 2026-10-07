@@ -28,6 +28,8 @@ const ICONS = [
   'star',
   'music',
   'volume-2',
+  'potion',
+  'calendar',
 ];
 
 const entries = ICONS.map((name) => {
