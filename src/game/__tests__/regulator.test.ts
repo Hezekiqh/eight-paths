@@ -22,6 +22,8 @@ import {
 const byId = (id: string) => DEFAULT_STIMULI.find((s) => s.id === id)!;
 const sugar = byId('sugar');
 const adult = byId('adult');
+const betting = byId('betting');
+const nicotine = byId('nicotine');
 const shortVideo = byId('short-video');
 
 describe('costs', () => {
@@ -45,7 +47,7 @@ describe('costs', () => {
 });
 
 describe('the HP timeline', () => {
-  const stimuli: Stimulus[] = [adult, sugar];
+  const stimuli: Stimulus[] = [adult, sugar, betting, nicotine];
   const startAt = localTime('2026-10-01', 8 * 60);
   const hour = 60 * 60 * 1000;
   const events = (
@@ -78,14 +80,19 @@ describe('the HP timeline', () => {
   });
 
   it("drinks the Keeper's potion below 20, back up to 50", () => {
+    const e = events({ '2026-09-30': { adult: 9 } }, { '2026-09-30': startAt }, [], 'hard');
+    // 100 − 90 = 10: the potion lifts it to 50.
+    expect(simulateHp(startAt, startAt, e)).toEqual({ hp: POTION_TO, potions: 1 });
+  });
+
+  it('lets a heavy day sink below 20 even after a night of regen', () => {
     const e = events(
-      { '2026-09-30': { adult: 9 }, '2026-10-01': { adult: 9 }, '2026-10-02': { adult: 9 } },
-      { '2026-09-30': startAt, '2026-10-01': startAt + 1, '2026-10-02': startAt + 2 },
+      { '2026-09-30': { adult: 1, betting: 1, nicotine: 1 }, '2026-10-01': { adult: 1, betting: 1, nicotine: 1 } },
+      { '2026-09-30': startAt, '2026-10-01': startAt + 24 * hour },
       [],
-      'hard',
     );
-    // 60, 20, then down to 0: the potion lifts it to 50.
-    expect(simulateHp(startAt, startAt + 2, e)).toEqual({ hp: POTION_TO, potions: 1 });
+    // 100 − 54 = 46, +48 overnight = 94, − 54 = 40: no potion yet.
+    expect(simulateHp(startAt, startAt + 24 * hour, e)).toEqual({ hp: 40, potions: 0 });
   });
 
   it('ignores habits from before the start', () => {

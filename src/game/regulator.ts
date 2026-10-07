@@ -26,8 +26,12 @@ export type Stimulus = {
 export type DayReport = Record<string, number>;
 
 export const MAX_HP = 100;
-/** HP a single day of super stimuli can take, however many there were. */
-export const DAILY_DRAIN_CAP = 40;
+/**
+ * HP a single day of super stimuli can take, however many there were. High
+ * enough that a heavy day can drop the bar below 20 (and earn the Keeper's
+ * potion) despite the bar climbing 48 HP a day on its own.
+ */
+export const DAILY_DRAIN_CAP = 90;
 /** HP each habit kept gives back. */
 export const HP_PER_HABIT = 5;
 /** The most HP habits can give back in a day. */
