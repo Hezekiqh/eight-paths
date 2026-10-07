@@ -8,16 +8,17 @@
     "#VVVYVVVYVVVYVVVV#",
     "#HH...........HHH#",
     "#................#",
-    "#b..b..b...b..b..#",
+    "#b.d.b.b..b.b.b.b#",
     "#................#",
-    "#b..b..b...b..b..#",
+    "#b.b.b.b..b.b.d.b#",
     "#................#",
-    "#................#",
+    "#PPP..........PPP#",
     "#_______11_______#",
     "##################"
   ],
   "art": {
-    "1": "="
+    "1": "=",
+    "d": "b"
   },
   "spawn": {
     "x": 8,
@@ -35,13 +36,20 @@
       "A window, open a crack for the air."
     ],
     "H": [
-      "The apothecary's shelves: willow bark, mint, and something labelled DO NOT."
+      "The apothecary's shelves: willow bark, mint, and something labelled DO NOT.",
+      "The DO NOT is nearly empty."
     ],
     "b": [
-      "A bed, made very tightly."
+      "A bed, made very tightly. It won't be empty long."
     ],
     "_": [
       "The hospital wall."
+    ],
+    "d": [
+      "A bed, and somebody in it."
+    ],
+    "P": [
+      "A bench by the door, worn smooth by families waiting."
     ]
   },
   "objects": [
@@ -56,7 +64,7 @@
       "lines": [
         "...",
         "You're awake. Good.",
-        "Oren. I've been sitting here a while. The ward is quiet. Quiet is good. Sit, if you like."
+        "Oren. I've been sitting here a while. The ward is full of people who were strong once. I sit with them. Sit, if you like."
       ],
       "character": "oren",
       "meets": true,
@@ -66,12 +74,13 @@
       "id": "wc-healer",
       "type": "npc",
       "x": 3,
-      "y": 7,
+      "y": 3,
       "sprite": "tessa",
       "facing": "down",
       "name": "Healer Maud",
       "lines": [
-        "Sit if you're hurt. Stand if you're not. Go away if you're both."
+        "Sit if you're hurt. Stand if you're not. Go away if you're both.",
+        "...Sorry. Fourteen beds. Twelve full. I haven't sat down since the last culling games."
       ],
       "questions": [
         {
@@ -79,6 +88,13 @@
           "answer": [
             "Three sleepers this month. Wandered in out of cocoons, they say, not knowing the year.",
             "We feed them soup and tell them gently. The soup helps more than the telling."
+          ]
+        },
+        {
+          "ask": "Who pays for all this?",
+          "answer": [
+            "Nobody. The bank pays the strong. These aren't, any more. That's rather the point of them being here.",
+            "I mend them, and the city sends them north. I try not to mend them too quickly."
           ]
         },
         {
@@ -90,7 +106,275 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "orderly",
+      "type": "npc",
+      "x": 11,
+      "y": 3,
+      "sprite": "chaplain",
+      "facing": "down",
+      "name": "Orderly Bede",
+      "lines": [
+        "I'm not a healer. I carry things. Water, bandages, bad news.",
+        "Mostly bad news. It's the lightest, and somehow the hardest to put down."
+      ],
+      "look": true
+    },
+    {
+      "id": "champion-bruck",
+      "type": "npc",
+      "x": 12,
+      "y": 4,
+      "sprite": "gorm",
+      "facing": "down",
+      "name": "Champion Bruck",
+      "lines": [
+        "Don't fuss. I'm not hurt. I'm resting standing up. Champions do that.",
+        "The arm? That's how it goes now. It's a new style."
+      ],
+      "questions": [
+        {
+          "ask": "Your arm's broken.",
+          "answer": [
+            "It's bent. Bent is a kind of strong. Ask a bow.",
+            "If I'm hurt, the stipend stops, and my mother stops being a goddess, and we all go north. So I'm not hurt."
+          ]
+        },
+        {
+          "ask": "Let the healer look at it.",
+          "answer": [
+            "She has looked at it. She made a face. I've decided the face meant 'magnificent'."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "Push-ups, then. Go on. Show me.",
+          "answer": [
+            "...",
+            "I'll do them later. When there's more room. And another arm."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "soldier-tam",
+      "type": "npc",
+      "x": 2,
+      "y": 5,
+      "sprite": "leif",
+      "facing": "right",
+      "name": "Private Tam",
+      "lines": [
+        "Shield arm. Snapped clean in the yard.",
+        "They say it'll set. They also say there's no stipend for a soldier who can't hold a shield. I'm learning to hold it with my teeth."
+      ],
+      "questions": [
+        {
+          "ask": "What will you do?",
+          "answer": [
+            "Get better before the bank notices.",
+            "Or move north, to the camp, with my mum. She's already packed. Everyone's mum is already packed."
+          ]
+        },
+        {
+          "ask": "Can't hold a shield? Some soldier.",
+          "answer": [
+            "I held it fine. It was the other fellow's hammer that didn't stop where it was meant to."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "sleeper-bed",
+      "type": "npc",
+      "x": 3,
+      "y": 5,
+      "sprite": "durn",
+      "facing": "down",
+      "name": "Sergeant Holm",
+      "lines": [
+        "Zzz... five hundred... one day... zzz...",
+        "...I was there. On the island. I don't talk about it awake."
+      ],
+      "asleep": true,
+      "lying": true
+    },
+    {
+      "id": "soldier-ivo",
+      "type": "npc",
+      "x": 6,
+      "y": 5,
+      "sprite": "dunn",
+      "facing": "left",
+      "name": "Private Ivo",
+      "lines": [
+        "Knee. I was the fastest runner in my year.",
+        "Now I'm the fastest limper on the ward. It doesn't pay. I asked."
+      ]
+    },
+    {
+      "id": "soldier-hett",
+      "type": "npc",
+      "x": 11,
+      "y": 5,
+      "sprite": "hamm",
+      "facing": "left",
+      "name": "Corporal Hett",
+      "lines": [
+        "Twenty years in the line. One bad landing, and the bank's struck me off by the afternoon.",
+        "They're quick, the bank. Quicker than the healing."
+      ],
+      "questions": [
+        {
+          "ask": "Where will you go?",
+          "answer": [
+            "North. There's a camp for people like me. Deserters, they call us.",
+            "I never deserted anything. It deserted me. Started with the knee."
+          ]
+        },
+        {
+          "ask": "Twenty years and nothing saved?",
+          "answer": [
+            "I saved plenty. The bank keeps it. You only get it back if you're strong enough to ask."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "soldier-sigi",
+      "type": "npc",
+      "x": 15,
+      "y": 5,
+      "sprite": "tib",
+      "facing": "left",
+      "name": "Sigi",
+      "lines": [
+        "Seventeen. I was going into the Kaloseum next spring, for the culling games.",
+        "Now I'm not going anywhere. Except north, Mum says. She's been very brave about it. Louder than usual."
+      ]
+    },
+    {
+      "id": "soldier-osk",
+      "type": "npc",
+      "x": 2,
+      "y": 7,
+      "sprite": "brug",
+      "facing": "right",
+      "name": "Osk the Wall",
+      "lines": [
+        "They called me the Wall. Walls don't fall over.",
+        "Turns out they do, if you hit them enough. Who knew. Everybody, apparently. Everybody but me."
+      ]
+    },
+    {
+      "id": "soldier-corran",
+      "type": "npc",
+      "x": 4,
+      "y": 7,
+      "sprite": "snorri",
+      "facing": "right",
+      "name": "Old Corran",
+      "lines": [
+        "Forty years a soldier. The longest anyone's lasted in the line.",
+        "Thirty-nine of them, I was strong. They don't count those. They only count this one."
+      ],
+      "questions": [
+        {
+          "ask": "Do you have family?",
+          "answer": [
+            "A granddaughter. She's twelve next month. They'll take her to the Yard.",
+            "If she's strong, she stays. If she's not, she comes north with me. I'm hoping for strong. I'm packing for both."
+          ]
+        },
+        {
+          "ask": "Forty years and you still got hurt?",
+          "answer": [
+            "Forty years and I only got hurt the once. You try it."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "soldier-dag",
+      "type": "npc",
+      "x": 13,
+      "y": 7,
+      "sprite": "haskel",
+      "facing": "right",
+      "name": "Dag",
+      "lines": [
+        "Hit my head in the yard. I keep forgetting I'm not strong any more.",
+        "Then I remember. It's worse, the remembering. I'd like to forget it again."
+      ]
+    },
+    {
+      "id": "sleeper-bed-2",
+      "type": "npc",
+      "x": 14,
+      "y": 7,
+      "sprite": "ogg",
+      "facing": "down",
+      "name": "Big Haldor",
+      "lines": [
+        "Zzz... more stew... zzz...",
+        "...not hurt... zzz... resting... like Bruck..."
+      ],
+      "asleep": true,
+      "lying": true
+    },
+    {
+      "id": "mother-ilse",
+      "type": "npc",
+      "x": 15,
+      "y": 8,
+      "sprite": "marta",
+      "facing": "up",
+      "name": "Ilse",
+      "lines": [
+        "Sigi's mum. He'll tell you I'm brave. I'm not. I'm loud. It passes for brave in this city.",
+        "We'll be gone by the new moon. North. I've knitted him a scarf. They say it's cold, at the camp."
+      ],
+      "questions": [
+        {
+          "ask": "Is there nothing that can be done?",
+          "answer": [
+            "He could get strong again. Before the bank's next count.",
+            "So I've brought him soup, and I'm knitting faster. It's all a mother can do here, unless you're a goddess."
+          ]
+        },
+        {
+          "ask": "Maybe he should've trained harder.",
+          "answer": [
+            "He trained every day since he was twelve. Every day. In the snow.",
+            "Go and stand somewhere else."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "kids-bench",
+      "type": "npc",
+      "x": 4,
+      "y": 9,
+      "sprite": "kids",
+      "facing": "up",
+      "name": "Brin and Bet",
+      "lines": [
+        "We're waiting for Dad. He's the Wall.",
+        "He fell over. Mum says walls don't, but he did, so now we know."
+      ]
     }
   ],
-  "floor": "tile"
+  "floor": "tile",
+  "walkable": [
+    ".",
+    "r",
+    "d"
+  ]
 }

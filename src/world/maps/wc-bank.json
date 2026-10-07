@@ -1,0 +1,413 @@
+{
+  "id": "wc-bank",
+  "name": "The Bank of Warrior City",
+  "wall": "marble",
+  "tiles": [
+    "##################",
+    "#VVKKKVVGGVVKKKVV#",
+    "#VVKKKVVGGVVKKKVV#",
+    "#.i..j......l..q.#",
+    "#................#",
+    "#UUUUUU....UUUUUU#",
+    "#................#",
+    "#................#",
+    "#..t.........t...#",
+    "#................#",
+    "#_______11_______#",
+    "##################"
+  ],
+  "art": {
+    "1": "=",
+    "i": "E",
+    "j": "E",
+    "l": "E",
+    "q": "L"
+  },
+  "spawn": {
+    "x": 8,
+    "y": 9,
+    "facing": "up"
+  },
+  "examine": {
+    "1": [
+      "The door back out to Warrior City."
+    ],
+    "V": [
+      "Marble walls, polished until you can see how poor you look in them."
+    ],
+    "K": [
+      "Deposit boxes, floor to ceiling. The big ones have names on them: champions. The small ones have numbers.",
+      "There are no very small ones."
+    ],
+    "G": [
+      "The vault door. Three brass dials, nought to nine.",
+      "Engraved round the rim: THE BOOKS BALANCE. READ THEM IN ORDER."
+    ],
+    "U": [
+      "The tellers' counter, behind a brass grille. Gold goes in one side. Less gold comes out the other."
+    ],
+    "t": [
+      "A writing table. Deposit slips, and a quill on a chain. The chain is stronger than the quill."
+    ],
+    "i": [
+      "LEDGER I: RATIONS. By household, by the strength of the child.",
+      "CHAMPION'S HOUSEHOLD: FULL MEASURE, AND MEAT ON FEAST DAYS. FIT CHILD: THREE-QUARTERS. MIDDLING CHILD: HALF.",
+      "UNFIT CHILD: STRUCK OFF. REMOVED TO THE DESERTERS' CAMP. NO MEASURE.",
+      "At the foot of the page, the only line in red ink: HOUSEHOLDS STRUCK OFF THIS MONTH: 6."
+    ],
+    "j": [
+      "LEDGER II: STIPENDS. Paid to champions of the Kaloseum on the first of the month. In gold. By hand. With a bow.",
+      "MOTHERS OF CHAMPIONS: PAID AS GODDESSES. It has its own column. Then its own page. Then, frankly, its own book.",
+      "One line in red ink: CHAMPIONS RETIRED HURT: 2. STIPENDS STOPPED. SEE HOSPITAL."
+    ],
+    "l": [
+      "LEDGER III: SPOILS.",
+      "Across the top of the page, in letters a finger high: SPOILS OF THE ISLAND. 500 SOLDIERS. ONE DAY.",
+      "Below it, gold, timber, grain and ships, carried forward, and forward, and forward.",
+      "One line in red ink: SOLDIERS LOST: 1. (TRIPPED GETTING OFF THE BOAT.)"
+    ],
+    "q": [
+      "THE WAR CHEST. The great ledger, on a stand of its own, as thick as a door.",
+      "Every page says the same thing in bigger numbers. At the bottom of the last one: FOR THE MARCH.",
+      "Not a drop of red ink in it anywhere. Whoever keeps this book has never once lost."
+    ],
+    "_": [
+      "The bank wall. Thicker than it needs to be. Everything in here is."
+    ]
+  },
+  "objects": [
+    {
+      "id": "coyne",
+      "type": "npc",
+      "x": 16,
+      "y": 3,
+      "sprite": "quartermaster",
+      "facing": "down",
+      "name": "Master Coyne",
+      "lines": [
+        "Welcome to the Bank of Warrior City. Strength is wealth.",
+        "You look... liquid. Moderately."
+      ],
+      "questions": [
+        {
+          "ask": "What does the bank do?",
+          "answer": [
+            "We keep the kingdom's gold. We count it. Then we count it again. It's very relaxing.",
+            "And we pay the strong. The king's orders: the stronger the child, the fuller the plate. It's all in the ledgers.",
+            "Do have a look. Nobody would dare take one."
+          ]
+        },
+        {
+          "ask": "Where does all the gold come from?",
+          "answer": [
+            "The island, mostly. Five hundred of ours went over one morning and were back for supper.",
+            "We've had to build three new strongrooms since. Spoils are murder on the floors."
+          ]
+        },
+        {
+          "ask": "Who's the war chest for?",
+          "answer": [
+            "The march, of course. On the wizards. Any day now, His Majesty says.",
+            "Wars are expensive. Luckily, so is everything else, and we've been saving."
+          ]
+        },
+        {
+          "ask": "Must be nice, counting other people's money.",
+          "answer": [
+            "It is, thank you. Better than counting your own, I imagine. Quicker, too.",
+            "Mind the step on the way out. It's marble. It's worth more than you."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "grimsby",
+      "type": "npc",
+      "x": 10,
+      "y": 3,
+      "sprite": "officer",
+      "facing": "down",
+      "name": "Vaultwarden Grimsby",
+      "lines": [
+        "The vault. Nobody goes in without the combination.",
+        "I don't know it. I only guard it. It's safer that way. For me."
+      ],
+      "questions": [
+        {
+          "ask": "Where would I find the combination?",
+          "answer": [
+            "Where everything is, in this building: in the books.",
+            "Master Coyne says a banker reads the red ink first. Everyone else reads the totals, and feels good about themselves."
+          ]
+        },
+        {
+          "ask": "What's in there?",
+          "answer": [
+            "The war chest. All of it.",
+            "And one small chest that isn't in any ledger at all. It keeps Master Coyne up at night."
+          ]
+        },
+        {
+          "ask": "Step aside, or I'll make you.",
+          "answer": [
+            "You'd have to get through me. Then the door. The door's the hard part.",
+            "I'm mostly decorative."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "dimmock",
+      "type": "npc",
+      "x": 3,
+      "y": 3,
+      "sprite": "abbot",
+      "facing": "down",
+      "name": "Clerk Dimmock",
+      "lines": [
+        "Rations. I do the rations. Every household, by the strength of its child.",
+        "It's very simple. Strong child: dinner. Weak child: directions."
+      ],
+      "questions": [
+        {
+          "ask": "What happens to the families you strike off?",
+          "answer": [
+            "North, to the deserters' camp. No measure, no stipend, nothing.",
+            "I write them in red. Then I never have to write them again."
+          ]
+        },
+        {
+          "ask": "You sound like you enjoy it.",
+          "answer": [
+            "I don't enjoy anything. That's why they gave me the rations."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "pennywhistle",
+      "type": "npc",
+      "x": 6,
+      "y": 3,
+      "sprite": "hoot",
+      "facing": "down",
+      "name": "Clerk Pennywhistle",
+      "lines": [
+        "Stipends! The happy ledger. Champions get gold, by hand, with a bow.",
+        "Their mothers get more. Like goddesses, the king says. We had to order a bigger quill."
+      ],
+      "questions": [
+        {
+          "ask": "And when a champion gets hurt?",
+          "answer": [
+            "Then he isn't one. I draw a line through him, in red.",
+            "The hospital keeps a ledger too. Theirs is sadder than mine."
+          ]
+        },
+        {
+          "ask": "A bigger quill. Compensating for something?",
+          "answer": [
+            "...It's a perfectly normal quill for a person of my responsibilities."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "tallis",
+      "type": "npc",
+      "x": 13,
+      "y": 3,
+      "sprite": "chisk",
+      "facing": "down",
+      "name": "Clerk Tallis",
+      "lines": [
+        "Spoils. Mine's the big one. Well. Second biggest. Nobody beats the war chest."
+      ],
+      "questions": [
+        {
+          "ask": "What was the island?",
+          "answer": [
+            "Some nation over the water. The nearest one. Five hundred of ours went over in the morning, and it was ours by supper.",
+            "One day. It's written at the top of my page. The king had it written very large."
+          ]
+        },
+        {
+          "ask": "Anyone lost?",
+          "answer": [
+            "One. Tripped getting off the boat. I've put him in red.",
+            "It feels unkind. But the book has to balance."
+          ]
+        },
+        {
+          "ask": "Stolen goods, then. You're a thief with a pen.",
+          "answer": [
+            "Spoils, if you please. Stolen goods are what other people take.",
+            "Different column entirely."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "hulda",
+      "type": "npc",
+      "x": 4,
+      "y": 7,
+      "sprite": "ylva",
+      "facing": "down",
+      "name": "Dame Hulda",
+      "lines": [
+        "Mind the gown, dear. It's the king's gift. So is the house. So is the carriage. So is the other carriage.",
+        "I'm a mother of champions. Three of them. Strength runs in the family. Mostly down one side."
+      ],
+      "questions": [
+        {
+          "ask": "What's it like, being a goddess?",
+          "answer": [
+            "Exhausting. The bank sends a man to pay me, and another man to carry it, and another man to carry him.",
+            "I'd swap the lot to have my boys home for supper. Don't tell the bank."
+          ]
+        },
+        {
+          "ask": "Where are your sons now?",
+          "answer": [
+            "Two are champions.",
+            "One's in the hospital. They don't pay goddesses for that one."
+          ]
+        },
+        {
+          "ask": "Nice work. Paid to have children.",
+          "answer": [
+            "It is lovely work. Try it.",
+            "Oh, you can't. Shame. Off you go."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "rask",
+      "type": "npc",
+      "x": 11,
+      "y": 6,
+      "sprite": "brakka",
+      "facing": "down",
+      "name": "Champion Rask",
+      "lines": [
+        "Stipend day. Mine comes in gold, by hand, with a bow. I like the bow best."
+      ],
+      "questions": [
+        {
+          "ask": "What do you do for it?",
+          "answer": [
+            "Won the culling games at eighteen. Since then: be strong, live in town, have lots of children.",
+            "Good job. The only bad day is the day you're not strong any more. Nobody's said what happens then."
+          ]
+        },
+        {
+          "ask": "Can you count it, or does the bow do that?",
+          "answer": [
+            "...One. Two. Bow.",
+            "It's always the right amount. They'd never cheat a champion."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "ferrant",
+      "type": "npc",
+      "x": 12,
+      "y": 8,
+      "sprite": "fawnley",
+      "facing": "right",
+      "name": "Lord Ferrant",
+      "lines": [
+        "A deposit. A large one. Don't stare. It isn't polite and it isn't yours."
+      ],
+      "questions": [
+        {
+          "ask": "How did you get so rich?",
+          "answer": [
+            "My grandson can lift a cart. Before him we lived by the north gate, eating soup made of the idea of soup.",
+            "Now I've a house by the Kaloseum and an account here. Strength is wealth, the sign says. Mine is technically his."
+          ]
+        },
+        {
+          "ask": "So you've never done a day's work.",
+          "answer": [
+            "I've done a great many days of being related.",
+            "It's harder than it looks. Feast days are a nightmare."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "agna",
+      "type": "npc",
+      "x": 7,
+      "y": 7,
+      "sprite": "wick",
+      "facing": "up",
+      "name": "Old Agna",
+      "lines": [
+        "I'm here to ask for a loan. I've been asking since the spring.",
+        "They say come back when my grandson's stronger. He's nine. He's trying."
+      ],
+      "questions": [
+        {
+          "ask": "What if he isn't strong enough?",
+          "answer": [
+            "Then at twelve they'll take him to the Yard, and look at him, and we'll go north to the camp.",
+            "I've packed already. You pack early in this city. Saves time."
+          ]
+        },
+        {
+          "ask": "I hope he grows strong.",
+          "answer": [
+            "So do I, dear. So does the bank. It's the only thing we agree on."
+          ],
+          "deed": "good"
+        },
+        {
+          "ask": "Have you tried being richer?",
+          "answer": [
+            "Do you know, I hadn't. I'll go home and try it now."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "bank-guard",
+      "type": "npc",
+      "x": 15,
+      "y": 9,
+      "sprite": "raider",
+      "facing": "left",
+      "name": "Bank Guard",
+      "lines": [
+        "No running. No shouting. No punching.",
+        "This is the one building in the city where you can't. It's very hard on me."
+      ]
+    },
+    {
+      "id": "rates",
+      "type": "sign",
+      "x": 2,
+      "y": 9,
+      "lines": [
+        "A board on a stand: TODAY'S RATES.",
+        "CHAMPIONS: WE PAY YOU. MOTHERS OF CHAMPIONS: WE PAY YOU MORE.",
+        "EVERYONE ELSE: YOU PAY US. FORTY IN THE HUNDRED, MONTHLY.",
+        "Underneath, smaller: STRENGTH IS WEALTH."
+      ]
+    }
+  ],
+  "floor": "marble"
+}

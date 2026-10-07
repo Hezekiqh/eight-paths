@@ -436,6 +436,51 @@ export function cityArt({ box, put, ellipse, hash }) {
     }
   };
 
+  // The Bank of Warrior City (author, Oct 7, 2026): pale stone, a slate roof trimmed in gold, fat columns,
+  // a great gold coin over the door, and a door banded in iron. It is the only building in the city that looks
+  // like it has never been hit. Its letter is '$', the only one left that suits it.
+  art['$'] = (g, x, y, m) => {
+    if (m.at(-1, 0) === '$' || m.at(0, -1) === '$') return;
+    const ext = extent(m, '$');
+    const top = 22;
+    ground(g, x, y, ext.w, ext.h, top);
+    box(g, x, y + top, ext.w, ext.h - top, '#D8D0C0');
+    for (let j = top; j < ext.h; j += 6) box(g, x, y + j, ext.w, 1, '#C0B8A6');
+    roof(g, x, y + 2, ext.w, top - 2, '#3A3A4A', '#2A2A36', '#5A5A6A');
+    // the gold cornice, and a frieze of little coins along it
+    box(g, x - 2, y + top - 1, ext.w + 4, 3, '#C8963A');
+    box(g, x - 2, y + top + 2, ext.w + 4, 1, '#8A6420');
+    for (let i = 3; i < ext.w; i += 6) put(g, x + i, y + top, '#FFF0A0');
+    // columns, fat and polished
+    const step = Math.max(16, Math.floor(ext.w / 6));
+    for (let i = 5; i < ext.w - 6; i += step) {
+      if (ext.doors.some((c) => Math.abs(c * TILE + 8 - (i + 3)) < 14)) continue;
+      box(g, x + i, y + top + 4, 7, ext.h - top - 8, '#F0EADC');
+      box(g, x + i + 5, y + top + 4, 2, ext.h - top - 8, '#B8AE9C');
+      box(g, x + i - 1, y + top + 3, 9, 2, '#C8963A');
+      box(g, x + i - 1, y + ext.h - 5, 9, 2, '#B8AE9C');
+    }
+    // the coin over the door
+    if (ext.doors.length) {
+      const cx = x + ext.doors[0] * TILE + 8;
+      const cy = y + top - 4;
+      ellipse(g, cx, cy, 8, 8, '#8A6420');
+      ellipse(g, cx, cy, 7, 7, '#E8C86A');
+      ellipse(g, cx, cy, 5, 5, '#C8963A');
+      box(g, cx - 1, cy - 3, 3, 6, '#8A6420');
+      box(g, cx - 3, cy - 1, 7, 2, '#8A6420');
+    }
+    shade(g, x + ext.w - 5, y + top, 5, ext.h - top, 0.25);
+    // wide steps, then the door: dark oak, banded in iron
+    box(g, x + ext.w / 2 - 20, y + ext.h - 3, 40, 3, '#F0EADC');
+    box(g, x + ext.w / 2 - 20, y + ext.h - 1, 40, 1, '#B8AE9C');
+    door(g, x, y, ext, '#3A2A1E', '#1E1816');
+    for (const col of ext.doors) {
+      const dx = x + col * TILE;
+      for (const j of [8, 14]) box(g, dx + 2, y + ext.h - j, 12, 1, '#6A6A74');
+    }
+  };
+
   // The training ground's sand, and its furniture: straw dummies and racks of practice weapons.
   art.z = (g, x, y) => {
     for (let j = 0; j < TILE; j++)

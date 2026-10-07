@@ -95,6 +95,8 @@ const REGION: Partial<Record<MapId, MapId>> = {
   'wc-tavern': 'warrior-city',
   'wc-store': 'warrior-city',
   'wc-barn': 'warrior-city',
+  'wc-bank': 'warrior-city',
+  'wc-vault': 'warrior-city',
   'room-brannoc': 'archive',
   'room-ysolde': 'archive',
   'room-quill': 'archive',

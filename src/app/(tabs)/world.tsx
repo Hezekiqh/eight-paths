@@ -72,6 +72,7 @@ import { callDue, callFlag, callLines, type KeeperCall } from '@/world/keeper-ca
 import { dayNumber, pendingNews, roomOwner, roomQuestions, saidFlag, withRoster } from '@/world/hero-rooms';
 import { keeperQuestions } from '@/world/keeper-advice';
 import { jobAt, openPatches, openedByJobs } from '@/world/jobs';
+import { DIALS, DIAL_LINES, VAULT, opens } from '@/world/vault';
 import {
   ANSWERS,
   ANSWER_LEVEL,
@@ -2520,6 +2521,40 @@ function useAct(
           { label: 'Go back the way I came', then: () => onTravel(PASSAGE_RETURN) },
         ],
       });
+      return;
+    }
+    // The bank's vault, shut, and no Noble with you to just see the numbers (vault.ts): turn the dials yourself.
+    if (
+      map.id === VAULT.map &&
+      tile === VAULT.tile &&
+      !useWorldStore.getState().flags.includes(VAULT.flag) &&
+      COMPANIONS[hero].dimension !== 'financial' &&
+      !stepsIn('financial', hero)
+    ) {
+      const here: Arrival = {
+        map: map.id as MapId,
+        x: Math.floor(sim.x.get() / TILE),
+        y: Math.floor((sim.y.get() - 1) / TILE),
+        facing: FACINGS[facing],
+      };
+      const dial = (turned: number[]) => {
+        const k = turned.length;
+        if (k === DIALS.length) {
+          if (!opens(turned)) {
+            setDialogue({ lines: DIAL_LINES.wrong });
+            return;
+          }
+          useWorldStore.getState().setFlag(VAULT.flag);
+          // re-entered, so the door's drawn open
+          setDialogue({ lines: DIAL_LINES.right, then: () => onTravel(here) });
+          return;
+        }
+        setDialogue({
+          lines: k === 0 ? [...DIAL_LINES.start, DIAL_LINES.dial[0]] : [DIAL_LINES.dial[k]],
+          choices: DIALS[k].map((n) => ({ label: `Turn it to ${n}`, then: () => dial([...turned, n]) })),
+        });
+      };
+      dial([]);
       return;
     }
     // A job: pull a lever, break a wall. Doing one changes the room, so it's re-entered afterwards.

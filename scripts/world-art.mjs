@@ -3166,6 +3166,8 @@ const MAPS = [
   'wc-tavern',
   'wc-store',
   'wc-barn',
+  'wc-bank',
+  'wc-vault',
   'room-brannoc',
   'room-ysolde',
   'room-quill',
