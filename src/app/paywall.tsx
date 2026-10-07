@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { close } from '@/components/modal-header';
 import { haptics } from '@/haptics';
-import { FALLBACK_PRICES, PERKS, PRIVACY_URL, TERMS_URL } from '@/premium/config';
+import { CREATOR_NOTE, CREATOR_SIGNATURE, FALLBACK_PRICES, PERKS, PRIVACY_URL, TERMS_URL } from '@/premium/config';
 import { buy, loadProducts, purchasesEnabled, restore, type Offer, type ProductKind } from '@/premium/purchases';
 import { usePremium } from '@/premium/store';
 import { useSocial } from '@/social/store';
@@ -121,10 +121,12 @@ export default function Paywall() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.kicker, { color }]}>EIGHT PATHS PREMIUM</Text>
         <Text style={styles.title}>Wake the legends faster</Text>
-        <Text style={styles.body}>
-          Twice the XP, twice the chance of a 5★ hero, and a redo on every drop. Your habits, levels and heroes stay
-          free, always.
-        </Text>
+
+        <View style={[styles.letter, { borderColor: color }]}>
+          <Text style={[styles.letterHead, { color }]}>A NOTE FROM THE CREATOR</Text>
+          <Text style={styles.letterBody}>{CREATOR_NOTE}</Text>
+          <Text style={styles.signature}>{CREATOR_SIGNATURE}</Text>
+        </View>
 
         <View style={styles.table}>
           <View style={styles.row}>
@@ -225,6 +227,10 @@ const styles = StyleSheet.create({
   founder: { ...windowStyle, padding: spacing.lg, gap: spacing.sm },
   founderLabel: { fontFamily: fonts.bold, fontSize: 18, letterSpacing: 1 },
   founderPrice: { color: colors.text, fontFamily: fonts.bold, fontSize: 34 },
+  letter: { ...windowStyle, padding: spacing.lg, gap: spacing.sm, borderLeftWidth: 6 },
+  letterHead: { fontFamily: fonts.bold, fontSize: 17, letterSpacing: 1 },
+  letterBody: { color: colors.text, fontFamily: fonts.ancient, fontSize: 17, lineHeight: 24 },
+  signature: { color: colors.textMuted, fontFamily: fonts.ancientItalic, fontSize: 17, textAlign: 'right' },
   table: { ...windowStyle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   plans: { gap: spacing.md },
   plan: {
