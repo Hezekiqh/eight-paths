@@ -2,6 +2,13 @@
 
 Oct 7, 2026 · decided by the author; the game follows this
 
+Every fact here is one of three kinds, and the game must keep them apart:
+
+- **Told:** the player can learn it plainly in Season 1.
+- **Hinted:** rumours, "or so they say", half-lines. The player can piece it together, but nobody confirms it.
+- **Secret:** the author's canon, so every line stays consistent. **Never shown in Season 1**, not even as a hint
+  unless the line says so. Secret sections are marked 🔒.
+
 ## Timeline
 
 It is **500 years** everywhere. Every mention of how long Kaldor has reigned, how long the soldiers have waited, or
@@ -11,6 +18,13 @@ how long ago the old king died is five hundred years.
 - **For 400 years:** the Shadow Monarch rules the eight kingdoms through the kings he put in place.
 - **About 100 years ago:** the Shadow Monarch falls silent. Kaldor's journal: "No word from my master. A hundred years
   now. I take it as trust."
+  - The first year, Kaldor does nothing. The second, he begins to forget his master. The third, he begins preparing
+    for war.
+- **For the last ~97 years:** the war machine (below). He tests it once: **500 soldiers take the nearest island
+  nation in a single day**. Since then, the spoils and the land taken from nations outside the eight kingdoms have fed
+  the army.
+- **Now:** Kaldor feels ready to conquer the eight kingdoms, starting with the wizard kingdom. **The march begins the
+  day after you meet him in his castle.**
 
 ## The old king's death (the crypt's flashback)
 
@@ -21,6 +35,13 @@ The players can see this flashback in the old king's crypt, under the chapel: it
   council begged him to march on the mages, and he hesitated. He named his brother Kaldor heir, and a month later he
   died of a broken heart. People thought it suspicious that he died so soon after naming a successor.
 - **What really happened:**
+  0. 🔒 *Hinted only.* Osric was a peaceful king. He fell in love with the most beautiful woman in the world (before she
+     was queen). His friends and advisors warned him there was something otherworldly about her: she was too perfect,
+     and the king was changing. Rumours spread that she was manipulating him. He ignored them and did as his beloved
+     wished: he began building an army the way Kaldor later would, and groomed his son Brannoc to be its general.
+     It was almost time to strike the wizard kingdom when he was assassinated. (The south road's garden stones already
+     hint this: "she wanted more than roses", "strike first".) The "hesitated" in what people believe is wrong: by the
+     end he was ready to march.
   1. Kaldor was the second-born. He believed the throne had been stolen from him, and that he'd make the better king.
   2. The Shadow Monarch was listening. He promised Kaldor power over the dead and eternal youth.
   3. Using a shadow ability, Kaldor appeared in the king's bedroom. The king, lying awake, recognised his brother.
@@ -31,8 +52,100 @@ The players can see this flashback in the old king's crypt, under the chapel: it
   condition. He must strengthen his army, but never, under any circumstances, use it for war. It is for defence
   only.
 
+### 🔒 The queen
+
+**Never revealed, and never hinted beyond what the game already says** (the painted-over portrait, the cold side of the
+bed, the woman in the gardener's apron and the player's "(...I've been here before. Haven't I?)"). The queen is the
+**player's character, in the past**. Nothing in Season 1 may spoil it.
+
+### The Mad King, the Beautiful Queen, the Lost Prince
+
 Prince Brannoc is Osric's son, so Kaldor is his uncle. On the throne-room steps Kaldor calls him "my brother's boy",
 and Brannoc calls him "Uncle".
+
+## Kaldor's kingdom: strength above everything (Told)
+
+What the player sees and hears all over the Berserker Kingdom. All of it is Told, a little at a time.
+
+- **At 12,** every child is taken to the training grounds (Kaldorhold's Training Yard) to train day and night.
+- **Children unfit for battle** are sent to the **deserters' camp**: little food, little warmth, no money, nothing to
+  live on. That is who the "deserters" are: the unfit, and the families who wouldn't give them up.
+- **A family that gives birth to a strong child** may live near Kaldor in the city, with everything that comes with it:
+  better roads and houses, better food, a better life.
+- **The main city is cutthroat.** Everybody is out to get everybody; only the strongest survive; strength matters most.
+- **Kaldor looks after strong soldiers.** At 18 they go into the Kaloseum for **the culling games**. The strongest live
+  on as champions in the city and father as many children as they like, to breed stronger soldiers. The women who bear
+  them are treated like goddesses.
+- **The island:** "500 soldiers. One day." Told as a boast (a plaque, a banner, a veteran), never as Kaldor's test.
+
+## Kaldor and his master (Hinted, then Told at the end)
+
+- **Hinted:** Kaldor was given power over the dead. The Warden in the Kaloseum is one of the dead he woke, and so are
+  the shadow soldiers. The graveyard (Season 1 plan) has empty graves, dug from the inside.
+- **Hinted:** he made a deal with something, and the deal forbade war. He yearned for war anyway. He waited, patiently,
+  hoping his master would change its mind; perhaps if the army were strong enough, it would approve. He never knew much
+  about his master, only that it must be the greatest power in the universe.
+- **Told, late:** his journal (already in the game) and his boss lines can say this outright, in his own words.
+
+## 🔒 Brannoc (B)
+
+Most of this is **Told** over Brannoc's arc, through the places in the Season 1 plan. What stays secret is marked.
+
+- B saw what the crown did to his father. He wanted to be free. **He is an artist at heart.**
+- The joke: he was born with immeasurable strength, the strongest character in the game, but he has no confidence,
+  and is far too cowardly to face his fears and use it. Asleep, he beats the Warden in one swing.
+- He loved his mother, his father, and the people.
+- His parents were grooming him to be **the general of the army that would attack the wizard kingdom**.
+- He escaped to **an art school**, to a teacher (a painter and philosopher) who taught him. There he confessed he was no
+  great warrior. The teacher told him he *was* a great warrior: yearning for battle doesn't make one a great warrior.
+  B didn't understand. B told him his mother and father wanted him to lead their army. The teacher smiled: "The
+  responsibilities of the crown are heavy." (Fade to black. The school is closed. The teacher has been attacked, and is
+  nearly dead.)
+- That is what made B flee into **the forest**. Shadows found him there and surrounded him, and that is the last thing he
+  remembers. 🔒 The Keeper caught him in a cocoon, and he slept five hundred years.
+- 🔒 Open: who attacked the teacher, and whose shadows were in the forest. (Proposal: Kaldor's. He cleared away the heir
+  before he killed the king, and the Keeper got to B first.)
+
+## 🔒 The Keeper and the cocoons
+
+Never revealed. It's here so lore drops stay consistent.
+
+- Everyone in a cocoon is **a person of interest**: allies who might help, enemies who might make you stronger.
+- The Keeper is not bound by good or evil. Humans were made to experience life. He wants him and his friends to enjoy
+  their experience, and to let the humans live theirs.
+
+## 🔒 Gary, Felix, and the world outside
+
+Never revealed in Season 1. Felix gives no hints, ever.
+
+- **The eight kingdoms are not the only kingdoms in the world.** Other nations lie beyond them, with their own races,
+  entities, beliefs, philosophies and desires. If the eight had gone to war with each other, their neighbours would
+  have swarmed in and taken them. (That is the Shadow Monarch's "never use it for war". The schoolyard memory's
+  entities are some of them.)
+- **Gary is not who he seems.** He is a teleporting, fifth-dimensional trickster from a nation outside the eight
+  kingdoms. He watches because he's bored.
+- **Felix is Gary.** (A later season reveals it.) Unrealistic speed, teleportation, charisma: the Hisoka of the story.
+  He exists for his own pleasure and entertainment. He finds it hilarious that you've forgotten you were an entity. He
+  won't tell you, and he won't hint; he'll make your life miserable, and sometimes help, as it amuses him.
+- After you beat the king, Felix pauses: "…" / "This is turning out better than I expected." Then he fades into
+  nothing.
+
+## Season 1's ending: what do we do? (author, Oct 7, 2026)
+
+After you beat Kaldor, Brannoc: "I can't believe you actually defeated him. The kingdom was a night's sleep from going
+to war. The nation is without a king. What do we do?" Your answer depends on your choice **and on how you've treated
+people** (honor.ts: more good and neutral answers than bad, or more bad).
+
+- **Brannoc takes the throne, kind:** you ask him to take it. It was always his. He needs to overcome his fears, and
+  you'll be by his side to see him through it.
+- **Brannoc takes the throne, mean:** you force him. "You just need to sit there and listen to my orders. Don't worry
+  about a thing." He hesitates, then: "… OK. OK." / "Oh, wait. I never got your name." The game reads the player's name:
+  "OK, *name*. As you command." (🔒 A wink at your power over humans: you can possess and control them, though it's weak
+  for now.)
+- **You take the throne, kind:** "I'll take over the kingdom. You have nothing to worry about, but I'd like you to be my
+  champion." He agrees, and will support you to the end.
+- **You take the throne, mean:** Brannoc tries to speak up, then: "Of course. You obviously would make a great king. You
+  will have my sword for life, my liege."
 
 ## The Shadow Monarch
 
