@@ -77,9 +77,9 @@ describe('the Maze Ward holes', () => {
       expect(h.to.x).toBeGreaterThan(x);
     }
   });
-  it('need more Mage the further they skip: Lv 6, 8, 10', () => {
+  it('need more Mage the further they skip: Lv 6, then 10', () => {
     const ward = MAZE_HOLES.filter((h) => h.map === 'dungeon-mazes');
-    expect(ward.map((h) => (h.needs.kind === 'path' ? h.needs.level : 0))).toEqual([6, 8, 10]);
+    expect(ward.map((h) => (h.needs.kind === 'path' ? h.needs.level : 0))).toEqual([6, 10]);
   });
   it("include the Test of the Mind's shortcut, a Mage's way past the plates to the Hall of Champions", () => {
     const mind = MAZE_HOLES.find((h) => h.map === 'dungeon-mind');

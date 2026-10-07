@@ -167,19 +167,19 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
   },
-  // the Warden, back early (the prison route: freed prisoners or not)
+  // the Warden, Bertrand (author, Oct 4, 2026), back early (the prison route: freed prisoners or not)
   'pit-warden': {
-    speaker: 'Warden',
+    speaker: 'Bertrand',
     lines: [
-      'WARDEN: Having trouble, Barnaby?',
-      "BARNABY: Wa... Warden! I didn't think you'd be back from your vacation so soon.",
+      'BERTRAND: Having trouble, Barnaby?',
+      "BARNABY: Wa... Bertrand! I didn't think you'd be back from your vacation so soon.",
     ],
     questions: [
       {
         ask: 'Who are you?',
         answer: [
-          'WARDEN: I have never lost a match.',
-          'WARDEN: The king trusts me to maintain order among the troublemakers.',
+          'BERTRAND: I have never lost a match.',
+          'BERTRAND: The king trusts me to maintain order among the troublemakers.',
         ],
       },
     ],
@@ -187,15 +187,18 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       {
         label: 'Any chance you could let me go?',
         lines: [
-          'WARDEN: Of course.',
-          'WARDEN: I will let you go... to the other side of existence.',
-          "WARDEN: You've already broken out of prison. There's no point in putting you back.",
+          'BERTRAND: Of course.',
+          'BERTRAND: I will let you go... to the other side of existence.',
+          "BERTRAND: You've already broken out of prison. There's no point in putting you back.",
         ],
       },
       {
         label: 'Your poor mother.',
         deed: 'bad',
-        lines: ['WARDEN: My mother is fine. We have tea every Wednesday.', 'WARDEN: You will pay for that comment.'],
+        lines: [
+          'BERTRAND: My mother is fine. We have tea every Wednesday.',
+          'BERTRAND: You will pay for that comment.',
+        ],
       },
     ],
   },
@@ -228,7 +231,7 @@ export const PRISON_GUARDS_DOWN = [
 /** Twenty strikes in: the warden yawns, raises his club, and Brannoc gets up. */
 export const SNOT_SWING = [
   'Twenty strikes.',
-  'WARDEN: That is enough. It is time I put an end to this.',
+  'BERTRAND: That is enough. It is time I put an end to this.',
   "Behind you, Brannoc stands up. He's still asleep.",
 ];
 /** Brannoc walks to the warden, asleep, then swings. */
@@ -318,7 +321,8 @@ export const ALONE_WARDEN = [
 ];
 
 // ---- The Maze Ward (author, Oct 3, 2026): three mazes, each with a hole in the wall by its way in
-// that skips it. They look like plain wall; a Mage sees them twinkle, one at Lv 6, two at Lv 8, all
+// that skips it. Brannoc ran straight through all three (author, Oct 4, 2026): a line of Brannoc-shaped
+// holes along the middle row, so you can just walk through; the Lv 8 hole sat on that row and went. They look like plain wall; a Mage sees them twinkle, one at Lv 6, two at Lv 8, all
 // three at Lv 10. Brannoc made them, running: they're Brannoc-shaped. Walking as Brannoc yourself,
 // they're just hidden passages (he hasn't run through anything yet).
 
@@ -328,7 +332,6 @@ const MAGE = (level: number): Requirement => ({ kind: 'path', dimension: 'intell
 
 export const MAZE_HOLES: MazeHole[] = [
   { map: 'dungeon-mazes', tile: '6', needs: MAGE(6), to: { map: 'dungeon-mazes', x: 16, y: 6, facing: 'right' } },
-  { map: 'dungeon-mazes', tile: '8', needs: MAGE(8), to: { map: 'dungeon-mazes', x: 30, y: 8, facing: 'right' } },
   { map: 'dungeon-mazes', tile: '0', needs: MAGE(10), to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' } },
   // the Test of the Mind's shortcut (author, Oct 4, 2026): Brannoc went through the wall, not the puzzle
   { map: 'dungeon-mind', tile: '7', needs: MAGE(8), to: { map: 'dungeon-lore', x: 3, y: 5, facing: 'up' } },

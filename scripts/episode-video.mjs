@@ -898,6 +898,8 @@ function compile(ep) {
           typing,
           blips,
           voice,
+          // `silent`: a thought, typed out with no voice at all (author, Oct 4, 2026)
+          silent: !!step.silent,
           last: i === lines.length - 1,
         });
         t += dur;
@@ -2281,20 +2283,31 @@ const EPISODES = {
       titleDur: 0,
       endDur: 4.5,
       script: [
-        // frame one: up the ladder, and a hole in the wall in front of you
-        { narrate: true, lines: ward.examine.o },
-        // straight through, the way he went
+        // all thoughts (author, Oct 4, 2026): no name, no portrait, no voice
+        { narrate: true, silent: true, lines: ['(A hole in the wall. It is exactly Brannoc-shaped.)'] },
+        // the joke: you just walk straight through the maze, the way he went
         {
           walk: [
             [2, 6],
-            [15, 6],
+            [21, 6],
           ],
         },
-        { you: ['(That coward, who swore he was heroically defending a corner...)', '(Could he really be that strong?)'] },
-        // the rest of the way, and into the tunnels
+        {
+          narrate: true,
+          silent: true,
+          lines: ['(He completely destroyed this maze.)', '(Could he really be that strong?)'],
+        },
+        // all the way to the end, and up the ladder
+        {
+          walk: [
+            [42, 6],
+            [42, 2],
+            [43, 2],
+          ],
+          face: 'right',
+        },
         { scene: { map: fork, at: [9, 5], facing: 'up' } },
-        { walk: [[9, 3]], face: 'up' },
-        { wait: 0.6 },
+        { wait: 0.8 },
       ],
     };
   },
@@ -2413,7 +2426,7 @@ const EPISODES = {
     const add = (id, x, y, sprite, facing, name, extra = {}) =>
       (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
     add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
-    add('warden', 10, 2, 'warden', 'down', 'Warden');
+    add('warden', 10, 2, 'warden', 'down', 'Bertrand');
     add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
     add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
     add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
@@ -2432,10 +2445,10 @@ const EPISODES = {
         // frame one: the guards are down, and the Warden walks out
         { npcWalk: 'warden', to: [[10, 2], [10, 5]], speed: 30 },
         { say: 'warden', lines: ['Having trouble, Barnaby?'] },
-        { say: 'barnaby', lines: ["Wa... Warden! I didn't think you'd be back from your vacation so soon."] },
+        { say: 'barnaby', lines: ["Wa... Bertrand! I didn't think you'd be back from your vacation so soon."] },
         {
           menu: {
-            speaker: 'Warden',
+            speaker: 'Bertrand',
             options: ['Who are you?', 'Any chance you could let me go?', 'Your poor mother.'],
             pick: 2,
             hold: 0.8,
@@ -2451,7 +2464,7 @@ const EPISODES = {
     const add = (id, x, y, sprite, facing, name, extra = {}) =>
       (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
     add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
-    add('warden', 10, 5, 'warden', 'down', 'Warden');
+    add('warden', 10, 5, 'warden', 'down', 'Bertrand');
     add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
     add('brannoc', 4, 8, 'brannoc', 'right', 'Brannoc');
     const freed = [
@@ -2739,7 +2752,7 @@ const place = (sound, at, gain) => {
   for (let i = 0; i < sound.length && start + i < mix.length; i++) mix[start + i] += (sound[i] / 32768) * gain;
 };
 for (const s of compiled.segs) {
-  if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
+  if (s.kind === 'line' && !s.silent) for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {

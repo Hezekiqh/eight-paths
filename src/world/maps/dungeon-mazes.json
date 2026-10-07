@@ -7,7 +7,6 @@
     "1": "H",
     "2": "H",
     "6": "W",
-    "8": "W",
     "0": "W"
   },
   "tiles": [
@@ -17,7 +16,7 @@
     "#WoWWW.W.WWWWW.W.W.WWWWWWWWW.WWW.W.W.W.W.W.W#",
     "#W...W.W.W.....W.W.W...W...W.W...W.W...W.W.W#",
     "#W.W.W.W.W.WWWWWvW.W.WvW.W.W.W.W.W.WWWWW.W.R#",
-    "#W.o...o.o...o...8.....W.W...W...W.....W.W.W#",
+    "#W.o...o.o...o...o.....o.o...o...o.....o.o.W#",
     "#W.WWWWW.WW..W.W.WWWWW.W.WWWWWWWvWWWWW.W.W.W#",
     "#W.......Wv....W.......W...............W...W#",
     "#WWWWWWWWWWWWWWWWWWWWWWWWWWWWW0WWWWWWWWWWWWW#",
@@ -33,7 +32,6 @@
     "v": ["Damp stone. There's a hairline crack in it."],
     "W": ["Damp stone. Someone has drawn an arrow on it, pointing at another arrow."],
     "6": ["Damp stone."],
-    "8": ["Damp stone."],
     "0": ["Damp stone."],
     "1": ["The ladder back down, to the cells."],
     "2": ["A ladder up. Light, and voices, from above."],
