@@ -6,7 +6,7 @@ import keeperWelcome from './keeper-welcome.json';
 import type { MapId } from './maps';
 import type { Arrival, Requirement } from './progress';
 
-// Felix's boulder maze, between the Courier Road and the deserters' camp
+// Felix's boulder maze, between the Courier Road and Warrior City
 // (author, Oct 3, 2026). Anyone can solve it; push a boulder the wrong way and
 // you're stuck, so you walk back out to the road and in again, which puts every
 // boulder back. A Mage of Lv 6 sees a hidden passage instead: it leads to the
@@ -56,6 +56,7 @@ export const KNOCKED_IN: Arrival = { map: 'kingdom-dungeon', x: 6, y: 4, facing:
 export const KNOCKED_WAKE = [
   'You wake up on straw. Your head is ringing. Somewhere far above, someone is still saying "the Third."',
   'Stone walls. Iron bars. Straw that smells of other people.',
+  'Someone has pinned a note to your shirt: FIVE LIFE SENTENCES. PLOTTING AGAINST THE THRONE. BY ORDER OF THE KING. - BARNABY',
 ];
 
 /**

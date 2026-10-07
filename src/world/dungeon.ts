@@ -71,7 +71,11 @@ export const guardsLeave = (guard: number): Actor[] => [
 export const ESCORT_LINES = {
   // at the foot of the guards' stair, before they march you down
   start: ['GUARD: Walk. And no plotting.'],
-  door: ['GUARD: In you go.'],
+  // the sentence (author, Oct 7, 2026): Barnaby hands them out, at the king's bidding
+  door: [
+    'GUARD: Plotting to overtake the throne, huh? Five life sentences will teach you.',
+    "GUARD: Barnaby's sentence, by order of the king. In you go.",
+  ],
   // after the door slams and the guards have gone
   cell: [
     'CLANG.',

@@ -27,7 +27,7 @@ import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, overallLevelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
-import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
+import { advisedBy, brokenCocoons, cocoonAt, COCOON_WALL } from '@/world/cocoons';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
 import { turnToTalk, whoIsAt } from '@/world/wander';
 import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet } from '@/world/meet';
@@ -551,13 +551,18 @@ function World({
     for (const b of boulders) solid[b] = 1;
     return { ...fightMap, solid };
   }, [map, fightMap, boulders]);
+  const liveFlags = useWorldStore((s) => s.flags);
+  // Felix's cocoon, still whole: the road east is walled off, invisibly, till you've broken it (cocoons.ts)
+  const cocoonWall = map.id === COCOON_WALL.map && !liveFlags.includes(COCOON_WALL.until);
   const stepTiles = useMemo(
-    () => tilesOf(map, [...ways.map((e) => e.tile), ...(map.id === MAZE ? [CLEARING_TILE] : [])]),
-    [map, ways],
+    () => [
+      ...tilesOf(map, [...ways.map((e) => e.tile), ...(map.id === MAZE ? [CLEARING_TILE] : [])]),
+      ...(cocoonWall ? map.tiles.map((_, y) => y * map.width + COCOON_WALL.x) : []),
+    ],
+    [map, ways, cocoonWall],
   );
   const party = useMemo(() => [hero], [hero]);
   // What stands in the room and how it feels: chests (open once their flag is set), signs, the dark, the flames.
-  const liveFlags = useWorldStore((s) => s.flags);
   const chests = useMemo(
     () =>
       map.objects.flatMap((o) =>
@@ -606,6 +611,9 @@ function World({
   }, [testWalk, goal, sim]);
   // Setting foot somewhere puts it on the World map.
   useEffect(() => {
+    // out of the Archive for the first time: the Keeper rings, too soon (keeper-calls.json, author, Oct 7, 2026)
+    if (map.id === 'courier-road' && !useWorldStore.getState().discovered.includes('courier-road'))
+      useWorldStore.getState().setFlag('left-archive');
     discover(map.id as MapId);
     // Felix, hatched and never asked "What now?": once you've left the Courier Road, so has he
     // (else he'd be by his cocoon and in his maze at once, and missing from the throne room)
@@ -1291,9 +1299,19 @@ function World({
       choices: [{ label: MISTER, then: () => ask(CUT_OFF) }],
     });
   }, [setFlag, travel, hero, sim, march, canSay, sayAs]);
+  const wallTries = useRef(0);
   const onStep = useCallback(
     (tile: number) => {
       const letter = map.tiles[Math.floor(tile / map.width)][tile % map.width];
+      // walking on past Felix's cocoon: back you go, and a thought each try (the last one for good)
+      if (cocoonWall && tile % map.width === COCOON_WALL.x) {
+        sim.x.set(COCOON_WALL.x * TILE - TILE / 2);
+        const lines = COCOON_WALL.lines;
+        if (dialogueRef.current === null)
+          setDialogue({ lines: [lines[Math.min(wallTries.current, lines.length - 1)]] });
+        wallTries.current++;
+        return;
+      }
       // Past Felix's maze: it stays solved, and if Felix is waiting with the guards, here they are.
       if (map.id === MAZE && letter === CLEARING_TILE) {
         const { flags } = useWorldStore.getState();
@@ -1304,7 +1322,7 @@ function World({
       const to = ways.find((e) => e.tile === letter)?.to;
       if (to) travel(to);
     },
-    [map, ways, travel, setFlag, guardScene],
+    [map, ways, travel, setFlag, guardScene, cocoonWall, sim],
   );
   const board = map.objects.find((o) => o.type === 'board');
   // A Mage of Lv 6 sees the hidden passage by Felix's maze twinkle.

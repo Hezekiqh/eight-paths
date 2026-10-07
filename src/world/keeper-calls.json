@@ -1,18 +1,32 @@
 {
   "calls": [
     {
+      "id": "too-soon",
+      "after": "left-archive",
+      "lines": [
+        "Hey, this is the Keeper.",
+        "Oops. Am I calling too soon?",
+        "I'll hang up now."
+      ],
+      "end": [
+        "*click*"
+      ]
+    },
+    {
       "id": "brannoc-joined",
       "after": "brannoc-joined",
       "lines": [
-        "Hello? Ah, splendid. It works. It is the Keeper.",
-        "Forgive me. While you slept, I slipped a telephone into your pocket. One never knows when a word might be needed.",
+        "Hello? Ah, splendid. It is the Keeper again. Properly, this time.",
+        "Forgive me for earlier. While you slept, I slipped a telephone into your pocket. One never knows when a word might be needed.",
         "Now. You have found yourself a powerful ally. Do look after him. He will insist he needs no looking after.",
         "I believe {others} like him have left their cocoons and are wandering the realm.",
         "Some came out early, and are rather lost. Some are still trapped inside.",
         "Whether you set them free is entirely your choice.",
         "Oh. Oh dear, I must go. I am expecting a guest."
       ],
-      "end": ["*click*"],
+      "end": [
+        "*click*"
+      ],
       "aboutOthers": 2
     }
   ]

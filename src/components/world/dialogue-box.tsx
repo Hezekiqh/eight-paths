@@ -172,6 +172,8 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
               onPress={() => {
                 playSound('select');
                 haptics.select();
+                // locked: it says what it needs, and the menu comes back (author, Oct 7, 2026)
+                if (c.locked) return say([lockedWhy(c.locked)]);
                 onChoice?.(c);
                 onClose();
                 c.then();
@@ -224,6 +226,16 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
   );
 }
 
+/**
+ * Why a locked option can't be picked yet, said when it's tapped: "Mage Lv 10" is the party member of that Path
+ * needing a higher level; "a Mage with you" (or "Pip with you") is someone missing from the party.
+ */
+export function lockedWhy(locked: string): string {
+  const lv = /^(.+) Lv (\d+)$/.exec(locked);
+  if (lv) return `Your ${lv[1]} needs to be a higher level to say that: Lv ${lv[2]}. Every habit on their Path counts.`;
+  return `You need ${locked} to say that.`;
+}
+
 /** One thing to say, with the heart cursor from the tab bar beside it while pressed. */
 function Choice({
   label,
@@ -241,16 +253,17 @@ function Choice({
   );
   if (locked)
     return (
-      <View
-        accessible
+      <Pressable
         accessibilityRole="button"
-        accessibilityState={{ disabled: true }}
         accessibilityLabel={`${label}. Locked: needs ${locked}`}
+        accessibilityHint="Says what it needs"
+        onPress={onPress}
+        hitSlop={4}
         style={styles.choice}>
         {/* just the Path's icon, greyed, where the heart would be (a padlock if it has none) */}
         {mark ?? <Text style={[styles.cursor, styles.cursorIdle]}>🔒</Text>}
         <Text style={[styles.text, styles.choiceLocked]}>{label}</Text>
-      </View>
+      </Pressable>
     );
   return (
     <Pressable accessibilityRole="button" onPress={onPress} hitSlop={4} style={styles.choice}>
