@@ -72,7 +72,8 @@ describe('what stands in the rooms', () => {
         queue.push(n);
       }
     }
-    // next to them, or across the bars of their cell ('p': the prisoners are talked to through them)
+    // next to somewhere you can stand, or across bars from it (map.talkThrough: the prisoners in their cells)
+    const through = (x: number, y: number) => map.talkThrough?.includes(map.tiles[y]?.[x] ?? '') ?? false;
     const stuck = map.objects.filter(
       (o) =>
         ![
@@ -83,7 +84,7 @@ describe('what stands in the rooms', () => {
         ].some(
           ([dx, dy]) =>
             seen.has((o.y + dy) * map.width + o.x + dx) ||
-            (map.tiles[o.y + dy]?.[o.x + dx] === 'p' && seen.has((o.y + 2 * dy) * map.width + o.x + 2 * dx)),
+            (through(o.x + dx, o.y + dy) && seen.has((o.y + 2 * dy) * map.width + o.x + 2 * dx)),
         ),
     );
     expect(stuck.map((o) => o.id)).toEqual([]);

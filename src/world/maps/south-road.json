@@ -31,7 +31,7 @@
     "TT...............T.....g......g......g.T",
     "TT.....v.w.......T....g......gT.....g..T",
     "TT...............T..........g......g...T",
-    "TT...............T.........g......g....T",
+    "TT...............T.........g......g..J.T",
     "TTTTTTTTTTTTTTTTTT........T......g.....T",
     "T........................g......g......T",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
@@ -72,6 +72,10 @@
     ],
     "^": [
       "North: back up to Warrior City."
+    ],
+    "J": [
+      "A cocoon on the hilltop, where the wind is strongest.",
+      "A ring of candle stubs sits round it. Every one has burnt right down."
     ]
   },
   "objects": [
@@ -92,7 +96,7 @@
       "y": 11,
       "lines": [
         "The king trained his army hard, but only so his people would be safe.",
-        "His advisors began to whisper that his heart had turned to war. Some say a shadow had crept into theirs."
+        "His advisors began to whisper that an army that never marches is a waste of good bread. Some say a shadow had crept into their hearts."
       ]
     },
     {
@@ -131,8 +135,8 @@
       "x": 12,
       "y": 20,
       "lines": [
-        "Five years on, the royal army was the strongest force in all the land. The king listened to no one but his queen.",
-        "And the queen said: strike first. And so the kingdom readied itself for war.",
+        "Five years on, the royal army was the strongest force in all the land. The queen wanted it used.",
+        "Strike the mages first, she said. And the king, who listened to her in everything, made ready.",
         "The rest of the stone has broken away."
       ]
     },
@@ -172,6 +176,25 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "moth-hatched",
+      "type": "npc",
+      "x": 36,
+      "y": 22,
+      "sprite": "mothnpc",
+      "facing": "right",
+      "name": "Moth",
+      "lines": [
+        "Shh. Listen to the quiet.",
+        "...Oh. You broke the silk. That's all right. I was only listening.",
+        "The candles went out one by one while I slept. I counted them. Every one.",
+        "I'll go and find some more light. Somewhere there's always a candle someone's left burning.",
+        "* Moth pulls up a grey hood and pads off down the hill, following something you can't see."
+      ],
+      "comesAfter": "moth-hatched",
+      "sets": "moth-left",
+      "goneAfter": "moth-left"
     }
   ]
 }

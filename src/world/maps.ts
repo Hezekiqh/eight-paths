@@ -6,6 +6,8 @@ import desertersCampData from './maps/deserters-camp.json';
 import barracksHallData from './maps/barracks-hall.json';
 import barracksArmouryData from './maps/barracks-armoury.json';
 import officersMessData from './maps/officers-mess.json';
+import longMessData from './maps/long-mess.json';
+import warRoomData from './maps/war-room.json';
 import barracksYardData from './maps/barracks-yard.json';
 import pitBelowData from './maps/pit-below.json';
 import lowerBarracksData from './maps/lower-barracks.json';
@@ -83,6 +85,23 @@ export type NpcObject = {
   name: string;
   /** What they say when you first talk to them. */
   lines: string[];
+  /** Fast asleep where they stand: Zs float up off their head (sleep.ts). Gary, mostly. */
+  asleep?: boolean;
+  /** Asleep with a snot bubble swelling and shrinking at their nose (sleep.ts): Brannoc, out cold. */
+  snot?: boolean;
+  /** Drawn flat on their back (head to the right) while asleep: out cold, not dozing where they stand. */
+  lying?: boolean;
+  /** Awake and on their feet until this story flag is set; then out cold, flat on their back (Brannoc, fainting). */
+  faintsAfter?: string;
+  /** Standing somewhere else once this story flag is set (carried off to the side of the sand, say). */
+  movesAfter?: { flag: string; x: number; y: number };
+  /**
+   * Watching from the edge, never in the way: nothing bumps into them, so a fight goes exactly as it would
+   * without them (the Kaloseum's Warden, and the three you let out, at the side of the sand).
+   */
+  passable?: boolean;
+  /** Drawn this many times bigger (the Warden, standing at the head of the sand, as big as when he fights). */
+  size?: number;
   /** Questions you can ask them afterwards, from a menu (plus Goodbye). */
   questions?: Question[];
   /** What they say back when you say Goodbye (Felix's adieu), before the talk closes. */
@@ -91,6 +110,8 @@ export type NpcObject = {
   character?: CharacterId;
   /** What they say instead once a story flag is set. */
   after?: { flag: string; lines: string[] };
+  /** A story flag set the first time you talk to them: with `after` on it, they only tell you once (Old Mags). */
+  sets?: string;
   /** A job only one Path can do by talking to them. */
   job?: NpcJob;
   /** Gone from the map once this story flag is set. */
@@ -140,6 +161,11 @@ export type Question = {
   then?: string[];
   /** The one answering leaves with a flourish once the talk ends (a laugh, then a dash), and then this flag is set. */
   leaves?: string;
+  /**
+   * A flag set only once `then` has been read to the end, so whoever goes with it (`goneAfter`) is still there while
+   * it's told: the prisoners shout their confessions on the way out, and only then are the cells empty.
+   */
+  after?: string;
   /** A kind or a mean thing to say (honor.ts): every menu has a mean one (author, Oct 4, 2026). */
   deed?: 'good' | 'bad';
 };
@@ -168,6 +194,8 @@ type MapData = {
   pushable?: string;
   /** The story flag set when every pressure plate has a boulder on it. */
   platesFlag?: string;
+  /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
+  talkThrough?: string[];
   enemies?: { kind: string; x: number; y: number }[];
   /** A boss fight here, until `flag` is set: the boss at (x, y) and the enemies that fight for them. */
   boss?: Boss;
@@ -197,6 +225,8 @@ export type WorldMap = {
   boulders: number[];
   plates: number[];
   platesFlag?: string;
+  /** Tile letters you can talk across, to whoever's just the other side (a cell's bars). */
+  talkThrough?: string[];
   /** Who's waiting to fight you in here, in tiles. They're back each visit. */
   /** `hp`: tougher (or weaker) than the kind usually is, for this fight (the castle's shadows, castle.ts). */
   enemies: { kind: EnemyKind; x: number; y: number; hp?: number }[];
@@ -205,6 +235,8 @@ export type WorldMap = {
   ladder?: Boss[];
   /** The baked picture from scripts/world-art.mjs, one pixel per art pixel. */
   image: number;
+  /** A second picture to flick to and back, a few times a second: the Kaloseum's crowd, on its feet, cheering. */
+  cheer?: number;
   /** Where a new game starts, in tiles. */
   spawn: { x: number; y: number; facing: Facing };
   /** What the player reads on examining a tile, by its letter in `tiles`. */
@@ -235,9 +267,10 @@ function solidFor(tiles: string[], walkable: string[], standing: Standing[]): nu
   return solid;
 }
 
-const blocking = (objects: MapObject[]): Standing[] => objects.filter((o) => o.type !== 'board');
+const blocking = (objects: MapObject[]): Standing[] =>
+  objects.filter((o) => o.type !== 'board' && !(o.type === 'npc' && o.passable));
 
-function build(data: MapData, image: number): WorldMap {
+function build(data: MapData, image: number, cheer?: number): WorldMap {
   const width = data.tiles[0].length;
   const height = data.tiles.length;
   const objects = data.objects as MapObject[];
@@ -255,12 +288,14 @@ function build(data: MapData, image: number): WorldMap {
     boulders: data.pushable ? letterTiles(data.tiles, data.pushable) : [],
     plates: letterTiles(data.tiles, 'P'),
     platesFlag: data.platesFlag,
+    talkThrough: data.talkThrough,
     boss: data.boss,
     ladder: data.ladder,
     enemies: (data.enemies ?? []).filter((e): e is { kind: EnemyKind; x: number; y: number } =>
       (ENEMY_KINDS as readonly string[]).includes(e.kind),
     ),
     image,
+    cheer,
     spawn: { ...data.spawn, facing: data.spawn.facing as Facing },
     examine: data.examine,
     objects,
@@ -316,6 +351,26 @@ export function withoutGone(map: WorldMap, flags: string[]): WorldMap {
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
 }
 
+/**
+ * Everyone as the story has left them: out cold once they've fainted (`faintsAfter`), and wherever they were
+ * moved to (`movesAfter`).
+ */
+export function withStoryPoses(map: WorldMap, flags: string[]): WorldMap {
+  if (!map.npcs.some((n) => n.faintsAfter || n.movesAfter)) return map;
+  const pose = (n: NpcObject): NpcObject => {
+    let out = n;
+    if (n.faintsAfter) {
+      const fainted = flags.includes(n.faintsAfter);
+      out = { ...out, asleep: fainted, lying: fainted };
+    }
+    if (n.movesAfter && flags.includes(n.movesAfter.flag)) out = { ...out, x: n.movesAfter.x, y: n.movesAfter.y };
+    return out;
+  };
+  const objects = map.objects.map((o) => (o.type === 'npc' ? pose(o) : o));
+  const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
+  return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
 /** The map without these people (by id): who's out of their room today, say (hero-rooms.ts). */
 export function withoutNpcs(map: WorldMap, ids: string[]): WorldMap {
   if (!map.npcs.some((n) => ids.includes(n.id))) return map;
@@ -340,6 +395,8 @@ export const MAPS = {
   'barracks-hall': build(barracksHallData, require('@/assets/world/barracks-hall.png')),
   'barracks-armoury': build(barracksArmouryData, require('@/assets/world/barracks-armoury.png')),
   'officers-mess': build(officersMessData, require('@/assets/world/officers-mess.png')),
+  'long-mess': build(longMessData as MapData, require('@/assets/world/long-mess.png')),
+  'war-room': build(warRoomData as MapData, require('@/assets/world/war-room.png')),
   'barracks-yard': build(barracksYardData, require('@/assets/world/barracks-yard.png')),
   'pit-below': build(pitBelowData, require('@/assets/world/pit-below.png')),
   'lower-barracks': build(lowerBarracksData, require('@/assets/world/lower-barracks.png')),
@@ -351,7 +408,11 @@ export const MAPS = {
   chapel: build(chapelData as MapData, require('@/assets/world/chapel.png')),
   'old-kings-crypt': build(oldKingsCryptData as MapData, require('@/assets/world/old-kings-crypt.png')),
   'hedge-maze': build(hedgeMazeData as MapData, require('@/assets/world/hedge-maze.png')),
-  'the-pit': build(thePitData as MapData, require('@/assets/world/the-pit.png')),
+  'the-pit': build(
+    thePitData as MapData,
+    require('@/assets/world/the-pit.png'),
+    require('@/assets/world/the-pit-cheer.png'),
+  ),
   'castle-grounds': build(castleGroundsData as MapData, require('@/assets/world/castle-grounds.png')),
   'castle-hall': build(castleHallData as MapData, require('@/assets/world/castle-hall.png')),
   'castle-upper': build(castleUpperData as MapData, require('@/assets/world/castle-upper.png')),

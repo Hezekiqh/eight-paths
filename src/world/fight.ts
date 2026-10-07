@@ -219,7 +219,7 @@ export type FightRules = {
   maxHp: number;
   /**
    * A boss you can't beat, only hold out against: the fight is "won" (over) once any enemy has
-   * taken this many hp, still standing. 0: off. The Kaldorium's warden on the prison route.
+   * taken this many hp, still standing. 0: off. The Kaloseum's warden on the prison route.
    */
   holdOut?: number;
 };

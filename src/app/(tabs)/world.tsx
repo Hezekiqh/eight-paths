@@ -27,9 +27,10 @@ import { useSession } from '@/store/session';
 import { useCollection, useObjectives, useToday } from '@/store/hooks';
 import { CLASSES, levelFromXp, overallLevelFromXp, toDateKey, type Dimension } from '@/game';
 import { fonts } from '@/theme';
-import { advisedBy, brokenCocoons, cocoonAt } from '@/world/cocoons';
+import { advisedBy, brokenCocoons, cocoonAt, COCOON_WALL } from '@/world/cocoons';
+import { isTraveler, TRAVELER_FRIEND, travelerTalk } from '@/world/traveler';
 import { DOWN, LEFT, RIGHT, UP, tileAhead } from '@/world/engine';
-import { turnToTalk, whoIsAt } from '@/world/wander';
+import { turnToTalk, W_HX, W_HY, W_T, W_TX, W_TY, W_X, W_Y, whoIsAt } from '@/world/wander';
 import { NOT_YET, meetingLines, metFlag, recruitNeeds, whereToMeet, wokeFlag } from '@/world/meet';
 import type { Owned } from '@/store/draws';
 import { COMPANIONS, DEFAULT_PARTY, type CharacterId } from '@/story/companions';
@@ -43,6 +44,7 @@ import {
   withOpenTiles,
   withoutCharacter,
   withoutGone,
+  withStoryPoses,
   type MapId,
   type NpcObject,
   type WorldMap,
@@ -75,7 +77,10 @@ import {
   ANSWER_LEVEL,
   CLEARED_BOULDERS,
   CLEARING_TILE,
-  FELIX_FOILED,
+  DRINKS,
+  DRINKS_DUE,
+  TAB_UNPAID,
+  TO_THE_BAR,
   CUT_OFF,
   forHero,
   MISTER,
@@ -113,7 +118,8 @@ import {
 import { useWorldHydrated, useWorldStore, type WorldPosition } from '@/world/store';
 import { partyWithYou, walkersFor, worldHero, type HeroId } from '@/world/hero';
 import { STEP_ASIDE_SECONDS, newCameo } from '@/world/step-aside';
-import { newMarch, type Actor } from '@/world/march';
+import { MARCH_PACE, newMarch, type Actor } from '@/world/march';
+import { SPEED_RATE } from '@/world/speed';
 import { BOSS_CUE, bossMoment } from '@/world/moments';
 import { noneLeft, practiceWarning, specialsLeft } from '@/world/specials';
 import { deedId } from '@/world/honor';
@@ -140,24 +146,19 @@ import {
   FUNERAL,
   STATUE_SURE,
   STRENGTH_TUNNEL,
-  CHILL,
   withRaven,
   FREED_ENDING,
   PARDONED,
   FREED_FLAG,
-  KEYS_ASK,
-  KEYS_FLAG,
-  PRISONERS,
-  UNLOCK,
-  garyWanders,
-  prisonersBolt,
   FALLING,
   FELL_INTO,
   PIT_TILE,
   fallLines,
   fellFlag,
   holeLines,
-  ALONE_WARDEN,
+  aloneWarden,
+  ARENA_FIGHT_AS_BRANNOC,
+  ARENA_VERDICT_AS_BRANNOC,
   BRANNOC_DECLINED,
   BRANNOC_JOINED,
   BRANNOC_NO,
@@ -180,11 +181,30 @@ import {
   CELL_DOOR,
   ESCORT_LINES,
   GARY_STARTLED,
+  ARENA_EXCUSES,
+  ARENA_FIGHT,
+  ARENA_FIGHT_ALONE,
+  ARENA_VERDICT,
+  ARENA_CARRIED,
+  ARENA_FAINTED,
+  arenaCarry,
+  arenaRush,
+  CARRIED_TO,
+  ARENA_WELCOME,
+  ARENA_WELCOME_ALONE,
+  CELLS_FREED,
+  SAND_MIDDLE,
+  FELL_IN,
+  POTHOLE,
+  POTHOLE_LANDING,
+  POTHOLE_UNSEEN,
+  toTheCells,
   brannocBolts,
   escortIn,
   escortStand,
   guardsLeave,
   shovedIn,
+  STAIR_DOOR,
 } from '@/world/dungeon';
 import { WALKER_ROWS } from '@/world/walkers';
 import { exitNotice, fightHint, fightNotice, jobNotice, npcNotice, whoCan } from '@/world/notices';
@@ -457,12 +477,14 @@ function World({
 }) {
   const controls = useWorldStore((s) => s.controls);
   const setControls = useWorldStore((s) => s.setControls);
+  const speed = useWorldStore((s) => s.speed);
+  const setSpeed = useWorldStore((s) => s.setSpeed);
   const savePosition = useWorldStore((s) => s.savePosition);
   const [start] = useState(() => startFor(useWorldStore.getState().position, hero));
   const xpNow = useWorldProgress();
   // Doorways, holes and road ends you walk through, if they're open to you yet.
   // A boss fight, the first time you come in: the boss has their say, then the fight is on.
-  // Up from the cells into the Kaldorium (dungeon.ts): Brannoc has fainted on the sand, and the warden can't be hurt.
+  // Up from the cells into the Kaloseum (dungeon.ts): Brannoc has fainted on the sand, and the warden can't be hurt.
   const [prison] = useState(() => prisonRoute(start.map.id, xpNow.flags ?? []));
   // Walking as Brannoc there, the warden is no fight: you faint at the sight of him (a scene, on arrival).
   const [faints] = useState(() => prison && hero === 'brannoc' && start.map.boss?.flag === 'pit-champion');
@@ -471,7 +493,15 @@ function World({
   const [ways] = useState(() =>
     bossOn
       ? []
-      : EXITS.filter((e) => e.from === start.map.id && e.walk && e.to !== null && standing(e.needs, xpNow).met),
+      : EXITS.filter(
+          (e) =>
+            e.from === start.map.id &&
+            e.walk &&
+            e.to !== null &&
+            standing(e.needs, xpNow).met &&
+            // the pothole only gives way once
+            !(e.id === 'maze-pothole' && (xpNow.flags ?? []).includes(FELL_IN)),
+        ),
   );
   const bossNpc = start.map.npcs.find((n) => n.after?.flag === start.map.boss?.flag);
   // The room is fixed for this visit (doing a job re-enters it), so these read the flags on arrival.
@@ -492,28 +522,40 @@ function World({
   useEffect(() => {
     if (resume) useSession.setState({ carry: null });
   }, [resume]);
-  const roomMap = useMemo(
-    () =>
-      withOpenTiles(
-        // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
-        withRoster(start.map, dayNumber(), arrivalFlags),
-        [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
-      ),
-    [start, ways, arrivalFlags],
-  );
+  // The Maze Ward's pothole (dungeon.ts): once you've fallen through it, it stays open, and you walk round it.
+  const [pitOpen] = useState(() => start.map.id === 'dungeon-mazes' && arrivalFlags.includes(FELL_IN));
+  const roomMap = useMemo(() => {
+    const room = withOpenTiles(
+      // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
+      withRoster(start.map, dayNumber(), arrivalFlags),
+      [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
+    );
+    if (!pitOpen) return room;
+    const solid = room.solid.slice();
+    for (const t of tilesOf(room, [POTHOLE.tile])) solid[t] = 1;
+    return { ...room, solid };
+  }, [start, ways, arrivalFlags, pitOpen]);
   // Someone who leaves for good (Nib, if you're mean to him) is gone as soon as the talk ends, not on the next visit.
   const flagsNow = useWorldStore((s) => s.flags);
-  const map = useMemo(() => withoutGone(roomMap, flagsNow), [roomMap, flagsNow]);
+  // ...and everyone as the story's left them: fainted, carried off (maps.ts)
+  const map = useMemo(() => withStoryPoses(withoutGone(roomMap, flagsNow), flagsNow), [roomMap, flagsNow]);
   /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
   const afterTalk = useRef<string[] | null>(null);
-  /** Gary just handed over the cell keys: once the talk closes, he wanders off (dungeon.ts). */
-  const garyGoes = useRef(false);
+  /** A flag to set once that narration's been read (Question.after). */
+  const afterRead = useRef<string | null>(null);
   /** Someone to see off once the conversation closes (Question.leaves), and who's leaving now. */
   const leaving = useRef<{ id: string; flag: string } | null>(null);
   const [exit, setExit] = useState<{ id: string; flag: string } | null>(null);
   /** Doors standing open for a moment in a cutscene (the cell door, as you're shoved in). */
   const [ajar, setAjar] = useState<{ x: number; y: number }[]>([]);
-  const patches = useMemo(() => [...openPatches(map, arrivalFlags), ...ajar], [map, arrivalFlags, ajar]);
+  const patches = useMemo(
+    () => [
+      ...openPatches(map, arrivalFlags),
+      ...ajar,
+      ...(pitOpen ? tilesOf(map, [POTHOLE.tile]).map((t) => ({ x: t % map.width, y: Math.floor(t / map.width) })) : []),
+    ],
+    [map, arrivalFlags, ajar, pitOpen],
+  );
   // The walking character's real level (from their habits): how hard they hit, and in the castle how hard the shadows are.
   const collection = useCollection();
   const heroLevel = collection.entries.find((e) => e.companion.id === hero)?.progress.level ?? 1;
@@ -555,18 +597,22 @@ function World({
     for (const b of boulders) solid[b] = 1;
     return { ...fightMap, solid };
   }, [map, fightMap, boulders]);
+  const liveFlags = useWorldStore((s) => s.flags);
+  // Felix's cocoon, still whole: the road east is walled off, invisibly, till you've broken it (cocoons.ts)
+  const cocoonWall = map.id === COCOON_WALL.map && !liveFlags.includes(COCOON_WALL.until);
   const stepTiles = useMemo(
-    () =>
-      tilesOf(map, [
+    () => [
+      ...tilesOf(map, [
         ...ways.map((e) => e.tile),
         ...(map.id === MAZE ? [CLEARING_TILE] : []),
         ...(map.id === 'dungeon-mazes' ? [PIT_TILE] : []),
       ]),
-    [map, ways],
+      ...(cocoonWall ? map.tiles.map((_, y) => y * map.width + COCOON_WALL.x) : []),
+    ],
+    [map, ways, cocoonWall],
   );
   const party = useMemo(() => [hero], [hero]);
   // What stands in the room and how it feels: chests (open once their flag is set), signs, the dark, the flames.
-  const liveFlags = useWorldStore((s) => s.flags);
   const chests = useMemo(
     () =>
       map.objects.flatMap((o) =>
@@ -615,6 +661,9 @@ function World({
   }, [testWalk, goal, sim]);
   // Setting foot somewhere puts it on the World map.
   useEffect(() => {
+    // out of the Archive for the first time: the Keeper rings, too soon (keeper-calls.json, author, Oct 7, 2026)
+    if (map.id === 'courier-road' && !useWorldStore.getState().discovered.includes('courier-road'))
+      useWorldStore.getState().setFlag('left-archive');
     discover(map.id as MapId);
     // Felix, hatched and never asked "What now?": once you've left the Courier Road, so has he
     // (else he'd be by his cocoon and in his maze at once, and missing from the throne room)
@@ -631,7 +680,11 @@ function World({
             : 'pit-warden'
         ]
       : undefined;
-  const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
+  /** The verdict's been read: what comes next (the three's excuses and the carry, if they're here), played below. */
+  const [afterVerdict, setAfterVerdict] = useState<{ fight: string[]; carry: boolean } | null>(null);
+  // The Kaloseum's welcome goes on past your excuse (dungeon.ts): the Warden's answer, once one's been picked.
+  const [verdict, setVerdict] = useState<Dialogue | null>(null);
+  const [said, setDialogue] = useState<Dialogue | null>(() =>
     resume
       ? null
       : !bossOn
@@ -643,34 +696,70 @@ function World({
                 then: () => useWorldStore.getState().setFlag(`seen:${start.map.id}`),
               }
             : null))
-        : prisonIntro
-          ? // one with a menu (Barnaby's, the Warden's) is put up just after, below, so its choices can say more
-            prisonIntro.choices
-            ? null
-            : { speaker: prisonIntro.speaker, lines: prisonIntro.lines.map((l) => forHero(l, hero)) }
-          : start.map.boss?.intro
-            ? {
-                speaker: start.map.boss.intro.speaker ?? undefined,
-                lines: [
-                  // a line of Felix's only if he's in the room to say it
-                  // Silas's raven, if you freed him (dungeon.ts): it takes the place of the king's last line
-                  ...withRaven(start.map.id, start.map.boss.intro.lines.filter(aboutFelix), arrivalFlags),
-                  ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
-                  // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
-                  // this, and ends in the fight's cue; already seen, the cue comes straight after
-                  ...(() => {
-                    const m = bossMoment(start.map.id, hero);
-                    const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
-                    if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
-                    return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
-                  })(),
-                ],
-              }
-            : bossNpc
-              ? { speaker: bossNpc.name, lines: bossNpc.lines }
-              : null,
+        : prisonIntro && start.map.boss?.flag === 'pit-guards'
+          ? (() => {
+              // the Warden's waiting (dungeon.ts): any excuse you like, and it's UNACCEPTABLE. Walking as
+              // Brannoc, the "500!?" is yours, you stay up (your faint is the Warden's), and nobody's carried off.
+              const freed = arrivalFlags.includes(CELLS_FREED);
+              const asBrannoc = hero === 'brannoc';
+              const fight = !freed ? ARENA_FIGHT_ALONE : asBrannoc ? ARENA_FIGHT_AS_BRANNOC : ARENA_FIGHT;
+              const verdictLines = asBrannoc ? ARENA_VERDICT_AS_BRANNOC : ARENA_VERDICT;
+              return {
+                lines: freed ? ARENA_WELCOME : ARENA_WELCOME_ALONE,
+                choices: ARENA_EXCUSES.map((e) => ({
+                  ...e,
+                  // the verdict, then Brannoc's down; then the three's excuses, and they carry him off (arenaNext)
+                  then: () =>
+                    setVerdict({
+                      lines: verdictLines,
+                      then: () => setAfterVerdict({ fight, carry: freed && !asBrannoc }),
+                    }),
+                })),
+              };
+            })()
+          : prisonIntro
+            ? // one with a menu (Barnaby's, the Warden's) is put up just after, below, so its choices can say more
+              prisonIntro.choices
+              ? null
+              : { speaker: prisonIntro.speaker, lines: prisonIntro.lines.map((l) => forHero(l, hero)) }
+            : start.map.boss?.intro
+              ? {
+                  speaker: start.map.boss.intro.speaker ?? undefined,
+                  lines: [
+                    // a line of Felix's only if he's in the room to say it
+                    // Silas's raven, if you freed him (dungeon.ts): it takes the place of the king's last line
+                    ...withRaven(start.map.id, start.map.boss.intro.lines.filter(aboutFelix), arrivalFlags),
+                    ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
+                    // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
+                    // this, and ends in the fight's cue; already seen, the cue comes straight after
+                    ...(() => {
+                      const m = bossMoment(start.map.id, hero);
+                      const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
+                      if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
+                      return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
+                    })(),
+                  ],
+                }
+              : bossNpc
+                ? { speaker: bossNpc.name, lines: bossNpc.lines }
+                : null,
   );
-  // Barnaby's or the Warden's menu as you come into the Colosseum (dungeon.ts PRISON_INTROS): ask, and
+  // Any excuse you like: UNACCEPTABLE. The Warden's answer, once an excuse has been picked, until it's read.
+  const dialogue = useMemo(
+    () =>
+      said ??
+      (verdict
+        ? {
+            ...verdict,
+            then: () => {
+              setVerdict(null);
+              verdict.then?.();
+            },
+          }
+        : null),
+    [said, verdict],
+  );
+  // Barnaby's or the Warden's menu as you come into the Kaloseum (dungeon.ts PRISON_INTROS): ask, and
   // it's back to the menu; choose, and that's said, then the fight
   const introMenuShown = useRef(false);
   useEffect(() => {
@@ -732,7 +821,9 @@ function World({
     (actors: Actor[], then: () => void, tilesPerSecond?: number, linger = false) => {
       setCutscene(true);
       marchDone.current = then;
-      sim.march.set(newMarch(actors, tilesPerSecond, linger));
+      // the pause menu's speed hurries (or slows) the walk along with the dialogue
+      const rate = SPEED_RATE[useWorldStore.getState().speed];
+      sim.march.set(newMarch(actors, (tilesPerSecond ?? MARCH_PACE) * rate, linger));
     },
     [sim],
   );
@@ -1042,8 +1133,73 @@ function World({
       });
     ask(GATE_OPEN);
   }, [setFlag, travel, hereNow, bridgeDown, sayAs, hero]);
+  // Brannoc's down (dungeon.ts): the three make their excuses, rush over, pick him up and carry him off to the side
+  // of the sand (as in Episode 13), and then: FINISH THEM. Whoever's in a march is drawn by it, so the four of them
+  // step off the map while it plays, and are put down where it leaves them.
+  const arenaPlayed = useRef(false);
+  useEffect(() => {
+    if (!afterVerdict || arenaPlayed.current) return;
+    const { fight, carry } = afterVerdict;
+    const place = (moves: [string, number, number][]) => {
+      const rows = sim.npcWalk.get().map((r) => r.slice());
+      for (const [id, x, y] of moves) {
+        const r = rows[sim.npcIds.indexOf(id)];
+        if (!r) continue;
+        r[W_HX] = r[W_X] = r[W_TX] = x;
+        r[W_HY] = r[W_Y] = r[W_TY] = y;
+        r[W_T] = 0;
+      }
+      sim.npcWalk.set(rows);
+    };
+    setFlag(ARENA_FAINTED);
+    // a beat on him, out cold, before the three speak up (the fight holds off till FINISH THEM)
+    sim.frozen.set(true);
+    const timer = setTimeout(() => {
+      arenaPlayed.current = true;
+      if (!carry) return setDialogue({ lines: fight });
+      const rows = {
+        mott: WALKER_ROWS.oldmott,
+        nails: WALKER_ROWS.nails,
+        silas: WALKER_ROWS.silasseen,
+        brannoc: WALKER_ROWS.brannocasleep,
+      };
+      setDialogue({
+        lines: fight.slice(0, -1),
+        then: () => {
+          place(['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'].map((id) => [id, -10, -10]));
+          march(
+            arenaRush(rows),
+            () =>
+              march(
+                arenaCarry(rows),
+                () => {
+                  place([
+                    ['arena-mott', ...CARRIED_TO.mott],
+                    ['brannoc-pit', ...CARRIED_TO.brannoc],
+                    ['arena-nails', ...CARRIED_TO.nails],
+                    ['arena-silas', ...CARRIED_TO.silas],
+                  ]);
+                  setFlag(ARENA_CARRIED);
+                  setDialogue({ lines: fight.slice(-1) });
+                },
+                2,
+              ),
+            4,
+            true,
+          );
+        },
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [afterVerdict, sim, march, setFlag]);
   useEffect(() => {
     specialTalk.current = (thing) => {
+      // the Traveler: hello first, and directions only if you're nice about it (traveler.ts)
+      if (isTraveler(thing)) {
+        const { flags } = useWorldStore.getState();
+        setDialogue(travelerTalk(map.id, flags, () => setFlag(TRAVELER_FRIEND), setDialogue));
+        return true;
+      }
       if (
         map.id === 'castle-grounds' &&
         thing.id === GATE_GUARD &&
@@ -1052,42 +1208,9 @@ function World({
         gateScene();
         return true;
       }
-      // With Gary's keys, at a cell: let them out, and they bolt for the ladder (dungeon.ts)
-      const flags = useWorldStore.getState().flags;
-      if (
-        map.id === 'kingdom-dungeon' &&
-        PRISONERS.includes(thing.name) &&
-        flags.includes(KEYS_FLAG) &&
-        !flags.includes(FREED_FLAG)
-      ) {
-        setDialogue({
-          lines: UNLOCK.ask,
-          choices: [
-            {
-              label: UNLOCK.yes,
-              deed: 'good',
-              then: () =>
-                setDialogue({
-                  lines: UNLOCK.freed,
-                  then: () => {
-                    setFlag(FREED_FLAG);
-                    march(prisonersBolt([WALKER_ROWS.nails, WALKER_ROWS.oldmott, WALKER_ROWS.silas]), () => {}, 5);
-                  },
-                }),
-            },
-            { label: UNLOCK.no, then: () => {} },
-            {
-              label: UNLOCK.mean,
-              deed: 'bad',
-              then: () => setDialogue({ lines: UNLOCK.rot }),
-            },
-          ],
-        });
-        return true;
-      }
       return false;
     };
-  }, [map, gateScene, setFlag, march]);
+  }, [map, gateScene, setFlag]);
   const onWin = useCallback(() => {
     if (!map.boss) return;
     // The prison route (dungeon.ts): Brannoc is out cold on the sand while you fight.
@@ -1101,10 +1224,8 @@ function World({
         lines: SNOT_SWING,
         then: () => {
           setFlag('pit-champion');
-          // the champion's name goes on Barnaby's bill too
-          setFlag('on-the-bill');
           march(
-            brannocSleepwalks(WALKER_ROWS.brannoc),
+            brannocSleepwalks(WALKER_ROWS.brannoc, useWorldStore.getState().flags.includes(ARENA_CARRIED)),
             () =>
               setDialogue({
                 // the prisoners you freed come to, and go free too (dungeon.ts)
@@ -1128,6 +1249,7 @@ function World({
       partyWithYou(gameParty, owned, useWorldStore.getState().flags).includes('brannoc'),
       map.npcs.some((n) => n.id === 'felix'),
       hero === 'brannoc',
+      useWorldStore.getState().flags.includes(CELLS_FREED),
     );
     if (!scene) return;
     // whoever stepped out for it steps back in as the scene ends, however it ends
@@ -1249,8 +1371,8 @@ function World({
       then: () => travel(here),
     });
   }, [map, setFlag, sim, travel]);
-  // Felix frames you to the king's guards (felix-maze.ts): you answer, and either walk free while he
-  // laughs and dashes off, or (a wrong answer) wake in the dungeon next to Brannoc. First he gives his
+  // Felix frames you to the king's guards (felix-maze.ts): you answer, and however you answer, you end
+  // up in the dungeon next to Brannoc (the drink goes by way of the tavern). First he gives his
   // name, you try "Mr. Himothy", and he cuts you off.
   const guardScene = useCallback(() => {
     const ask = (lines: string[]): void =>
@@ -1280,58 +1402,63 @@ function World({
                 });
                 return;
               }
-              if (a.jailed) {
-                // "Seize him!" (or her): they only want you
-                const seize = a.lines.map((l) => forHero(l, hero));
-                setDialogue({
-                  lines: seize,
-                  then: () => {
-                    // the guards close in on you from either side while Felix laughs (march.ts stands in
-                    // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
-                    setFlag(FRAMED);
-                    const hx = Math.floor(sim.x.get() / TILE);
-                    const hy = Math.floor((sim.y.get() - 1) / TILE);
-                    playSound('laugh');
-                    march(
-                      [
-                        { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
-                        {
-                          row: WALKER_ROWS.raider,
-                          path: [
-                            [25, 3],
-                            [hx, hy - 1],
-                          ],
-                          face: 0,
-                        },
-                        {
-                          row: WALKER_ROWS.raider,
-                          path: [
-                            [26, 4],
-                            [26, hy + 1],
-                            [hx, hy + 1],
-                          ],
-                          face: 1,
-                        },
-                        { row: -1, path: [[hx, hy]], face: 3 },
+              if (a.drinks) {
+                // "Let me buy you a drink" (author, Oct 7, 2026): they thank you, you answer, and it's off to the
+                // tavern there and then. The bar (TO_THE_BAR, on arrival) is where it goes wrong.
+                sayAs(can.who!, a.lines, a.by, () =>
+                  setDialogue({
+                    lines: DRINKS.thanks,
+                    choices: DRINKS.replies.map((label) => ({
+                      label,
+                      then: () =>
+                        setDialogue({
+                          lines: DRINKS.off,
+                          then: () => {
+                            setFlag(FRAMED);
+                            travel(TO_THE_BAR);
+                          },
+                        }),
+                    })),
+                  }),
+                );
+                return;
+              }
+              // "Seize him!" (or her): they only want you. Every other answer ends here (author, Oct 7, 2026).
+              const seize = a.lines.map((l) => forHero(l, hero));
+              const by = a.by && Object.fromEntries(Object.entries(a.by).map(([id, ls]) => [id, ls!.map((l) => forHero(l, hero))]));
+              sayAs(can.who!, seize, by, () => {
+                // the guards close in on you from either side while Felix laughs (march.ts stands in
+                // for the three of them), and it goes black as they reach you (author, Oct 4, 2026: no sack)
+                setFlag(FRAMED);
+                const hx = Math.floor(sim.x.get() / TILE);
+                const hy = Math.floor((sim.y.get() - 1) / TILE);
+                playSound('laugh');
+                march(
+                  [
+                    { row: WALKER_ROWS.felix, path: [[24, 4]], face: 2 },
+                    {
+                      row: WALKER_ROWS.raider,
+                      path: [
+                        [25, 3],
+                        [hx, hy - 1],
                       ],
-                      () => travel(INTO_THE_CELL),
-                      2.5,
-                      true,
-                    );
-                  },
-                });
-                return;
-              }
-              // Let go: once the talk closes, Felix laughs and dashes off, and the guards go with him.
-              if (can.who === hero) {
-                leaving.current = { id: 'felix-maze', flag: FRAMED };
-                setDialogue({ lines: [...a.lines, ...FELIX_FOILED] });
-                return;
-              }
-              // a party member said it: they step back in, then Felix has his say and goes
-              sayAs(can.who!, a.lines, a.by, () => {
-                leaving.current = { id: 'felix-maze', flag: FRAMED };
-                setDialogue({ lines: FELIX_FOILED });
+                      face: 0,
+                    },
+                    {
+                      row: WALKER_ROWS.raider,
+                      path: [
+                        [26, 4],
+                        [26, hy + 1],
+                        [hx, hy + 1],
+                      ],
+                      face: 1,
+                    },
+                    { row: -1, path: [[hx, hy]], face: 3 },
+                  ],
+                  () => travel(INTO_THE_CELL),
+                  2.5,
+                  true,
+                );
               });
             },
           };
@@ -1342,9 +1469,19 @@ function World({
       choices: [{ label: MISTER, then: () => ask(CUT_OFF) }],
     });
   }, [setFlag, travel, hero, sim, march, canSay, sayAs]);
+  const wallTries = useRef(0);
   const onStep = useCallback(
     (tile: number) => {
       const letter = map.tiles[Math.floor(tile / map.width)][tile % map.width];
+      // walking on past Felix's cocoon: back you go, and a thought each try (the last one for good)
+      if (cocoonWall && tile % map.width === COCOON_WALL.x) {
+        sim.x.set(COCOON_WALL.x * TILE - TILE / 2);
+        const lines = COCOON_WALL.lines;
+        if (dialogueRef.current === null)
+          setDialogue({ lines: [lines[Math.min(wallTries.current, lines.length - 1)]] });
+        wallTries.current++;
+        return;
+      }
       // Past Felix's maze: it stays solved, and if Felix is waiting with the guards, here they are.
       if (map.id === MAZE && letter === CLEARING_TILE) {
         const { flags } = useWorldStore.getState();
@@ -1385,7 +1522,7 @@ function World({
       const to = ways.find((e) => e.tile === letter)?.to;
       if (to) travel(to);
     },
-    [map, ways, travel, setFlag, guardScene],
+    [map, ways, travel, setFlag, guardScene, cocoonWall, sim],
   );
   const board = map.objects.find((o) => o.type === 'board');
   // A Mage of Lv 6 sees the hidden passage by Felix's maze twinkle.
@@ -1463,10 +1600,10 @@ function World({
       if (fell && map.id === FELL_INTO.map) {
         // dropped back into the cells through a trap pit: the prisoners have seen it all
         useSession.setState({ fell: null });
-        setDialogue({ lines: fallLines(fell, w.flags.includes(FREED_FLAG), !w.flags.includes(KEYS_FLAG)) });
+        setDialogue({ lines: fallLines(fell, w.flags.includes(FREED_FLAG), !w.flags.includes(CELLS_FREED)) });
       } else if (map.id === MAZE && tx >= 20 && scenePending(w.flags)) guardScene();
       else if (map.id === MAZE && tx < 5 && passageSeen && !w.flags.includes(PASSAGE_TAKEN) && !dialogueRef.current)
-        setDialogue({ speaker: COMPANIONS[hero].name, sprite: hero, lines: PASSAGE_LINES.notice });
+        setDialogue({ lines: PASSAGE_LINES.notice });
       else if (map.id === 'archive' && greenLit(w.flags) && !w.flags.includes('keeper:welcome-back')) {
         w.setFlag('keeper:welcome-back');
         // Cards or not, he tells you where you are and how you got here (you ask both), then
@@ -1477,8 +1614,6 @@ function World({
           if (left.length === 0) {
             // you're left wondering, then he points you at the candle
             setDialogue({
-              speaker: COMPANIONS[hero].name,
-              sprite: hero,
               lines: KEEPER_AFTERTHOUGHTS,
               then: () =>
                 setDialogue({
@@ -1529,20 +1664,18 @@ function World({
         brannocOffer();
       else if (faints)
         setDialogue({
-          lines: [...ALONE_WARDEN, ...(freedNow() ? FREED_ENDING : [])],
+          lines: aloneWarden(w.flags.includes(CELLS_FREED)),
           then: () => {
             if (freedNow()) w.setFlag(PARDONED);
             w.setFlag('pit-champion');
-            w.setFlag('on-the-bill');
+            // the Keeper's first proper call, yours instead of 'brannoc-joined' (keeper-calls.json)
+            w.setFlag('brannoc-free');
             // confused, you walk out into the town
             march(
               [
                 {
                   row: -1,
-                  path: [
-                    [Math.floor(start.x / TILE), 9],
-                    [10, 9],
-                  ],
+                  path: [[Math.floor(start.x / TILE), SAND_MIDDLE[1]], SAND_MIDDLE],
                   face: 0,
                 },
               ],
@@ -1550,7 +1683,35 @@ function World({
             );
           },
         });
-      else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
+      else if (
+        map.id === 'kingdom-dungeon' &&
+        tx === POTHOLE.landing.x &&
+        Math.floor(start.y / TILE) === POTHOLE.landing.y &&
+        !w.flags.includes(FELL_IN)
+      ) {
+        // Down through the Maze Ward's floor, outside Silas Seen's cell (dungeon.ts). If you've already let
+        // everyone out, there's nobody left to see it.
+        w.setFlag(FELL_IN);
+        setDialogue({ lines: w.flags.includes(CELLS_FREED) ? POTHOLE_UNSEEN : POTHOLE_LANDING });
+      } else if (map.id === 'wc-tavern' && w.flags.includes(DRINKS_DUE) && !w.flags.includes(TAB_UNPAID)) {
+        // The guards' drink (felix-maze.ts): you order, Rolla asks for the money, and you haven't got any.
+        // Then it's black, and the guards march you down to the cells from their stair.
+        setDialogue({
+          lines: DRINKS.bar,
+          choices: DRINKS.menu.map((d) => ({
+            label: d.label,
+            then: () =>
+              setDialogue({
+                lines: DRINKS.noMoney.map((l) => forHero(l.replace('{drink}', d.drink), hero)),
+                then: () => {
+                  w.setFlag(TAB_UNPAID);
+                  w.setFlag(JAILED);
+                  travel(INTO_THE_CELL);
+                },
+              }),
+          })),
+        });
+      } else if (map.id === 'kingdom-dungeon' && w.flags.includes(JAILED) && !w.flags.includes(JAIL_WOKE)) {
         w.setFlag(JAIL_WOKE);
         // Knocked out by Himothy: you come to already in the cell, no guards, no march.
         if (w.flags.includes(KNOCKED_OUT)) {
@@ -1569,14 +1730,21 @@ function World({
               setDialogue({
                 lines: ESCORT_LINES.door,
                 then: () => {
-                  setAjar([CELL_DOOR]);
+                  setAjar([STAIR_DOOR, CELL_DOOR]);
                   march(
                     shovedIn(guard),
                     () => {
-                      setAjar([]);
-                      march(guardsLeave(guard), () =>
-                        setDialogue({ lines: hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell }),
-                      );
+                      setAjar([STAIR_DOOR]);
+                      // back up the stair, and they lock the door behind them: no way out up there
+                      march(guardsLeave(guard), () => {
+                        setAjar([]);
+                        setDialogue({
+                          lines: [
+                            ...(hero === 'brannoc' ? ESCORT_LINES.alone : ESCORT_LINES.cell),
+                            ...ESCORT_LINES.locked,
+                          ],
+                        });
+                      });
                     },
                     5,
                     true,
@@ -1586,7 +1754,8 @@ function World({
             3,
             true,
           );
-        // the guards stand you up at the foot of the stair, then march you down (dungeon.ts)
+        // the guards stand you up at the foot of the stair, the door open behind them, then march you down (dungeon.ts)
+        setAjar([STAIR_DOOR]);
         march(escortStand(guard), () => setDialogue({ lines: ESCORT_LINES.start, then: marchIn }), 3, true);
       }
     }, 450);
@@ -1613,6 +1782,7 @@ function World({
         height={height}
         scale={scale}
         active={focused}
+        pace={SPEED_RATE[speed]}
         marks={[...(unclaimed > 0 && board ? [board] : []), ...newsMarks]}
         twinkles={twinkles}
         stepTiles={stepTiles}
@@ -1638,6 +1808,7 @@ function World({
         talker={dialogue?.speaker}
         onMarched={onMarched}
         exit={exit}
+        talkingTo={dialogue?.speaker ?? null}
         onExited={() => {
           if (exit) useWorldStore.getState().setFlag(exit.flag);
           setExit(null);
@@ -1702,7 +1873,7 @@ function World({
             dialogue.then?.();
             // "We need to break out": a squeak in the straw, and Brannoc goes straight through the bars.
             const w = useWorldStore.getState();
-            // Already the Kaldorium's champion (you came down from the top, and maybe bent the bars yourself
+            // Already the Kaloseum's champion (you came down from the top, and maybe bent the bars yourself
             // to get in): no mouse, he just asks to come along.
             if (
               map.id === 'kingdom-dungeon' &&
@@ -1789,16 +1960,21 @@ function World({
               return;
             }
             const narration = afterTalk.current;
+            const flag = afterRead.current;
             afterTalk.current = null;
-            if (narration) setDialogue({ lines: narration });
-            if (garyGoes.current) {
-              // Gary hands over the keys and wanders off up the ladder; you watch him go
-              garyGoes.current = false;
-              useWorldStore.getState().setFlag(KEYS_FLAG);
-              march(garyWanders(WALKER_ROWS.raider), () =>
-                setDialogue({ speaker: COMPANIONS[hero].name, sprite: hero, lines: CHILL }),
-              );
-            }
+            afterRead.current = null;
+            const tell = () => {
+              if (narration)
+                setDialogue({
+                  lines: narration,
+                  then: flag ? () => useWorldStore.getState().setFlag(flag) : undefined,
+                });
+              else if (flag) useWorldStore.getState().setFlag(flag);
+            };
+            // "Sure. Why not." Keys in hand, you go straight along the cells unlocking them (dungeon.ts), then they empty.
+            if (flag === CELLS_FREED)
+              march(toTheCells(Math.floor(sim.x.get() / TILE), Math.floor(sim.y.get() / TILE)), tell);
+            else tell();
             if (leaving.current) {
               // they laugh (out loud), then they're gone
               playSound('laugh');
@@ -1808,7 +1984,6 @@ function World({
           }}
           onAsk={(q) => {
             if (q.sets) useWorldStore.getState().setFlag(q.sets);
-            if (q.ask === KEYS_ASK.ask) garyGoes.current = true;
             // Brannoc, asked again in his cell after you turned him down: he joins (and hatches, if he's new to you)
             if (q.sets === BRANNOC_JOINED) {
               useWorldStore.getState().setFlag(metFlag('brannoc'));
@@ -1816,6 +1991,7 @@ function World({
               haptics.celebrate();
             }
             if (q.then) afterTalk.current = q.then;
+            if (q.after) afterRead.current = q.after;
             // a kind or mean thing to say counts once (honor.ts)
             if (q.deed)
               useWorldStore
@@ -1856,6 +2032,8 @@ function World({
           mapName={map.name}
           controls={controls}
           onControls={setControls}
+          speed={speed}
+          onSpeed={setSpeed}
           onResume={() => setPaused(false)}
           onOpenMap={() => {
             setYou({ x: sim.x.get(), y: sim.y.get() });
@@ -1992,6 +2170,8 @@ function useAct(
         .getState()
         .hear({ id: talkedId(thing.name), speaker: thing.name, ask: TALKED, answer: thing.lines, at: Date.now() });
       const after = thing.after && useWorldStore.getState().flags.includes(thing.after.flag);
+      // some things are only said once: from now on it's their `after` lines
+      if (thing.sets) useWorldStore.getState().setFlag(thing.sets);
       // The Keeper can also be asked how you're doing and who to bring (keeper-advice.ts).
       const keeper =
         thing.id === 'keeper' ? selectKeeperFacts(pickData(useGameStore.getState()), toDateKey(new Date())) : null;
@@ -2016,10 +2196,7 @@ function useAct(
             ]
           : general;
       const asked = keeper ? [...keeperQuestions(keeper), ...(own ?? [])] : own;
-      // Gary, once you've talked to all three prisoners: you can ask him for the cell keys (dungeon.ts)
-      const heardAll = PRISONERS.every((name) => w0.heard.some((h) => h.id === talkedId(name)));
-      const questions =
-        thing.id === 'jailer' && heardAll && !w0.flags.includes(KEYS_FLAG) ? [KEYS_ASK, ...(asked ?? [])] : asked;
+      const questions = asked;
       // The Keeper opens with whatever's new since you last talked (keeper-talk.ts), after his first hello.
       if (thing.id === 'keeper' && map.id === 'archive') {
         const w = useWorldStore.getState();
@@ -2031,6 +2208,7 @@ function useAct(
             heartPieces: heartPieces(w.flags),
             memory: habitMemory(useGameStore.getState(), toDateKey(new Date())),
             day: Math.floor(Date.now() / 86400000),
+            hero,
           });
           if (news.said) w.setFlag(news.said);
           setDialogue({
@@ -2056,7 +2234,7 @@ function useAct(
         farewell: thing.farewell,
       });
     },
-    [map, sim, setDialogue, xp],
+    [map, sim, setDialogue, xp, hero],
   );
   const act = useCallback(() => {
     if (busy.current) return;
@@ -2089,12 +2267,19 @@ function useAct(
       return;
     }
     // People can be mid-stroll (wander.ts): look for them where they are now, then for anything else on the tile.
+    // Through bars (map.talkThrough), whoever's just the other side.
+    const [dx, dy] = [
+      [0, 1],
+      [0, -1],
+      [-1, 0],
+      [1, 0],
+    ][facing];
+    const across = map.talkThrough?.includes(map.tiles[ty]?.[tx] ?? '')
+      ? whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx + dx, ty + dy)
+      : undefined;
     const thing =
       whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx, ty) ??
-      // someone in a cell: you talk to them through the bars (the prisoners, author Oct 4, 2026)
-      (BARS.includes(tileAt(map, tx, ty))
-        ? whoIsAt(map.npcs, sim.npcIds, sim.npcWalk.get(), tx + STEP[facing][0], ty + STEP[facing][1])
-        : undefined) ??
+      across ??
       map.objects.find((o) => o.type !== 'npc' && o.x === tx && o.y === ty);
     if (thing?.type === 'npc' && special(thing)) return;
     // party members you have may chime in, after the person's own lines (see banter.ts)
@@ -2111,7 +2296,7 @@ function useAct(
         const who = COMPANIONS[doer];
         useWorldStore.getState().setFlag(job.flag);
         if (job.joins) useGameStore.getState().giftCharacters(job.joins);
-        // A way out of here that this opens (the checkpoint, the Kaldorium) opens now, not next visit.
+        // A way out of here that this opens (the checkpoint, the Kaloseum) opens now, not next visit.
         const opens = EXITS.some((e) => e.from === map.id && e.walk && needsFlag(e.needs, job.flag));
         const here: Arrival = {
           map: map.id as MapId,
@@ -2327,7 +2512,7 @@ function useAct(
           // (author, Oct 4, 2026: partySplit in scenes.ts, kept for then).
           setDialogue({
             lines: [
-              ...seasonFinale(memory, flags),
+              ...seasonFinale(memory, flags, hero === 'brannoc'),
               `${ITEMS['first-memory'].name} is in your Satchel (pause).`,
               ...PORTAL_HOME.lines,
             ],
@@ -2347,9 +2532,8 @@ function useAct(
         setDialogue({ lines: map.examine[tile] ?? [] });
         return;
       }
+      // your hero thinks it: a plain box, with no one's face on it
       setDialogue({
-        speaker: COMPANIONS[hero].name,
-        sprite: hero,
         lines: holeLines(hero === 'brannoc'),
         then: () =>
           setDialogue({
@@ -2368,11 +2552,9 @@ function useAct(
         setDialogue({ lines: PASSAGE_LINES.plain });
         return;
       }
+      // your hero thinks it, then the question is put: both plainly, with no one's face on them
       setDialogue({
-        speaker: COMPANIONS[hero].name,
-        sprite: hero,
         lines: PASSAGE_LINES.found,
-        // your hero thinks it; the question is put plainly, with no one's face on it
         then: () =>
           setDialogue({
             lines: PASSAGE_LINES.ask,
@@ -2510,20 +2692,6 @@ function needsFlag(needs: Requirement, flag: string): boolean {
   return false;
 }
 
-/**
- * Who steps in for a job only `path` can do, like a field move: a party
- * member of that Path you've met who can walk the World. Undefined if none.
- */
-/** Cell bars you can talk through (kingdom-dungeon.json: 'p' is the bars in front of each prisoner). */
-const BARS = ['p'];
-/** One tile on, by facing (0 down, 1 up, 2 left, 3 right). */
-const STEP: [number, number][] = [
-  [0, 1],
-  [0, -1],
-  [-1, 0],
-  [1, 0],
-];
-
 /** You let the prisoners out of their cells (read live: it can change mid-visit). */
 function freedNow(): boolean {
   return useWorldStore.getState().flags.includes(FREED_FLAG);
@@ -2537,6 +2705,10 @@ function withYou(id: CharacterId, hero: HeroId): boolean {
   return walkersFor(party, owned, flags, flags).includes(id as HeroId);
 }
 
+/**
+ * Who steps in for a job only `path` can do, like a field move: a party
+ * member of that Path you've met who can walk the World. Undefined if none.
+ */
 function stepsIn(path: Dimension, hero: HeroId): HeroId | undefined {
   const { party, owned } = useGameStore.getState();
   const flags = useWorldStore.getState().flags;

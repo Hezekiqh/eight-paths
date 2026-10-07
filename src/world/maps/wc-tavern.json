@@ -44,8 +44,8 @@
       "facing": "down",
       "name": "Pip",
       "lines": [
-        "A new face! I've played the same song to Grask four hundred times. He hasn't smiled once.",
-        "Pip, Bard. You look like you need a song. Or a way past that checkpoint. I can do both."
+        "A new face! I've played the same song to this tavern four hundred times. Rolla hasn't smiled once.",
+        "Pip, Bard. You look like you need a song. Or someone who knows this city. I can do both."
       ],
       "character": "pip",
       "meets": true,
@@ -64,7 +64,7 @@
         {
           "ask": "Heard anything?",
           "answer": [
-            "They say the old king up north hasn't aged a day. They say he's building an army.",
+            "They say the king up north hasn't aged a day. They say he's building an army.",
             "They say a lot of things in here after the third mug."
           ]
         },
@@ -133,11 +133,39 @@
       "type": "npc",
       "x": 4,
       "y": 9,
-      "sprite": "silas",
+      "sprite": "silasseen",
       "facing": "up",
       "name": "Silas Seen",
       "comesAfter": "prisoners-pardoned",
       "lines": ["Yeah, made plans with the king to golf at four tomorrow.", "Really don't want to be executed."]
+    },
+    {
+      "id": "tab-guard",
+      "type": "npc",
+      "x": 5,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Guard",
+      "lines": [
+        "Stay where you are."
+      ],
+      "comesAfter": "guards-drinks-due",
+      "goneAfter": "guards-tab-unpaid"
+    },
+    {
+      "id": "tab-himothy",
+      "type": "npc",
+      "x": 7,
+      "y": 5,
+      "sprite": "raider",
+      "facing": "up",
+      "name": "Sir Himothy the Third",
+      "lines": [
+        "You said you were buying."
+      ],
+      "comesAfter": "guards-drinks-due",
+      "goneAfter": "guards-tab-unpaid"
     }
   ]
 }

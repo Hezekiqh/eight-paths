@@ -5,7 +5,8 @@ import type { Trigger } from './keeper-talk';
 // approved by the author. {placeholders} are filled from your record (memory.ts).
 
 export const KEEPER_TALK: {
-  moments: { id: string; when: Trigger; lines: string[] }[];
+  /** `asBrannoc`: what he says instead when you're walking as Brannoc (the king he's talking about is you). */
+  moments: { id: string; when: Trigger; lines: string[]; asBrannoc?: string[] }[];
   habits: Record<string, string[]>;
   ambient: string[];
 } = {
@@ -63,14 +64,24 @@ export const KEEPER_TALK: {
         "He ran from that throne once. Now he's sitting on it. The roads people take home are rarely straight.",
         "Nobody tells that kingdom what to do now. It's frightening, and it's theirs. Choosing usually is both.",
       ],
+      asBrannoc: [
+        "King Brannoc. I'll need a fresh page for that. Possibly two.",
+        "You ran from that throne once. Now it's yours, mostly by raven. The roads people take home are rarely straight.",
+        "Nobody tells that kingdom what to do now. It's frightening, and it's theirs. Choosing usually is both.",
+      ],
     },
     {
       id: 'kaldor-dethroned-2',
       when: 'kaldor-dethroned',
       lines: [
-        "The horde's scattered, I hear, and the pit's an arena again. Children will be climbing the walls by spring.",
+        "The horde's scattered, I hear, and the Kaloseum's just an arena again. Children will be climbing the walls by spring.",
         "You gave them back the right to get things wrong. It's a heavy gift. It's the only kind worth giving.",
         "Tell Brannoc the crown suits him. He won't believe you. Tell him anyway.",
+      ],
+      asBrannoc: [
+        "The horde's scattered, I hear, and the Kaloseum's just an arena again. Children will be climbing the walls by spring.",
+        "You gave them back the right to get things wrong. It's a heavy gift. It's the only kind worth giving.",
+        "The crown suits you, by the way. You won't believe me. I'm saying it anyway.",
       ],
     },
     {
@@ -78,7 +89,12 @@ export const KEEPER_TALK: {
       when: 'you-crowned',
       lines: [
         'You took the throne yourself. I shall need a fresh page for that. Perhaps a fresh book.',
-        'Brannoc tells me you sit on it as if it might bite. Good. It might.',
+        "The steward tells me you sit on it as if it might bite. Good. It might.",
+        'A crown is mostly a promise to keep turning up. You know a little about that already.',
+      ],
+      asBrannoc: [
+        "Your father's throne, and your uncle in the cells beneath it. I shall need a fresh page for that. Perhaps a fresh book.",
+        'The steward tells me you sit on it as if it might bite. Good. It might.',
         'A crown is mostly a promise to keep turning up. You know a little about that already.',
       ],
     },
@@ -142,7 +158,7 @@ export const KEEPER_TALK: {
       lines: [
         "Hundreds of banners, and not one of them ever saw a battle. Did Orrin tell you? 'Nobody came. Strange quiet. Ate lunch.'",
         'His family always did write things down properly.',
-        "Every army in the world was meant to meet on that field. Then one night a king fell in his own hall, and the war simply… didn't happen.",
+        "Every army in the world was meant to meet on that field. Then a king died in his own bed, and the war simply… didn't happen.",
         "People call that luck. I've lived a long time. I've never once met luck. I have met people who wanted something to look like luck.",
       ],
     },
@@ -211,13 +227,15 @@ export const FINALE: {
   record: string[];
   allowed: string[];
   dethroned: string[];
+  /** The same, walking as Brannoc: it's your throne, and you're the one working remotely. */
+  dethronedAsBrannoc: string[];
   crowned: string[];
   memory: string[];
   keepsake: { name: string; text: string[] };
   end: string[];
 } = {
   seal: [
-    'You stand before the old portal. The field is quiet. No one followed you here, and somehow that feels right.',
+    'You stand before the old portal. The field is quiet. Your party hangs back a step, and lets you go first. Somehow that feels right.',
     "You lay your hand on the stone. It's warm, like something that has been waiting a very long time.",
     'The last seal shivers. A hairline of light runs through it, and through the light: water, falling coins, someone counting.',
     "It doesn't break. It loosens, like a knot someone has finally started to untie.",
@@ -234,13 +252,19 @@ export const FINALE: {
     "It's a fearsome peace. But it's a peace, and you chose it.",
   ],
   dethroned: [
-    "Far behind you, a royal advisor sits beside Brannoc's empty throne, under a sign in his own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
+    "Far behind you, a royal advisor sits beside Brannoc's empty throne, under a sign in the king's own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
     'Beside you, King Brannoc checks the sky for ravens. He is working remotely.',
     "The horde is gone. Nobody guards the streets, and nobody asks permission. It's frightening. It's theirs.",
     'You chose to let them choose. Somewhere, someone would call that reckless.',
   ],
+  dethronedAsBrannoc: [
+    "Far behind you, a royal advisor sits beside your empty throne, under a sign in your own hand: DON'T GO TO WAR. DON'T CAUSE PROBLEMS.",
+    'Now and then, you check the sky for ravens. You are working remotely.',
+    "The horde is gone. Nobody guards the streets, and nobody asks permission. It's frightening. It's theirs.",
+    'You chose to let them choose. Somewhere, someone would call that reckless.',
+  ],
   crowned: [
-    'Far behind you, there is an empty throne with your name on it, and a captain who faints keeping it warm.',
+    'Far behind you, there is an empty throne with your name on it, and a steward with a ledger keeping it warm.',
     "The horde is gone. The cages are open. Nobody is quite sure what a kingdom does next, and they're asking you.",
     'You chose to carry it yourself. Somewhere, someone would call that brave.',
   ],

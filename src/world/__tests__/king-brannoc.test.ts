@@ -35,6 +35,18 @@ describe('King Brannoc, working remotely', () => {
   });
 });
 
+describe('the cells ending', () => {
+  const cells = (cellsEmpty: boolean) =>
+    winScene('war-hall', 'kaldor-beaten', true, false, false, cellsEmpty)!
+      .choices!.find((c) => c.outcome.flags.includes('kaldor-jailed'))!
+      .lines.join(' ');
+
+  it("has Gary see it only if he's still down there", () => {
+    expect(cells(false)).toContain('GARY:');
+    expect(cells(true)).not.toContain('GARY');
+  });
+});
+
 describe("Captain Orsk's gate", () => {
   it('fits four rows: "Leave it to...", the polite one and the mean one, and a way past for each Path', () => {
     const { GATE_ANSWERS } = jest.requireActual('../castle') as typeof import('../castle');

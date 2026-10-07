@@ -25,7 +25,7 @@
     "T.............FFFFF.FFFFF........T",
     "T..AA..x......F.........F........T",
     "T..AA.........F.........F.....x..T",
-    "T.............F.........F........T",
+    "T.............F.........F.......JT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "spawn": {
@@ -63,6 +63,10 @@
     ],
     "^": [
       "North, back up to the bazaar."
+    ],
+    "J": [
+      "A cocoon, half buried in snow.",
+      "The snow has settled on top of it in the shape of a little umbrella."
     ]
   },
   "objects": [
@@ -75,8 +79,8 @@
       "facing": "down",
       "name": "Elder Skadi",
       "lines": [
-        "Sit, child. I'm the oldest Kaldari in the city. My grandmother's grandmother walked out of the wastes.",
-        "'We walked south until the world ran out of winter.' That's what she said. So we brought a little winter with us."
+        "Sit, child. I'm the oldest Kaldari in the city. My people walked out of the wastes five hundred years ago.",
+        "'We walked south until the world ran out of winter.' That's what the first Elder said. So we brought a little winter with us."
       ],
       "questions": [
         {
@@ -187,6 +191,24 @@
         "THE DRUM TOWER. At dusk, one drum; then the city answers.",
         "Carved small at the bottom, old: an open hand. Somebody's tried to scratch it off, and given up."
       ]
+    },
+    {
+      "id": "wynn-hatched",
+      "type": "npc",
+      "x": 31,
+      "y": 12,
+      "sprite": "wynnnpc",
+      "facing": "right",
+      "name": "Wynn",
+      "lines": [
+        "Snow! In summer! Do you have ANY idea how beautiful that is?",
+        "Nobody knows why it snows here? Marvellous. I'll stand in it until I do.",
+        "Rain isn't bad weather, you know. It's the sky watering its garden. And snow is the sky tidying up.",
+        "* Wynn pops open a patched umbrella and wanders off into the snow, sniffing the air."
+      ],
+      "comesAfter": "wynn-hatched",
+      "sets": "wynn-left",
+      "goneAfter": "wynn-left"
     }
   ]
 }

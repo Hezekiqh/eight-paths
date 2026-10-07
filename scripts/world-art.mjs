@@ -84,6 +84,29 @@ function egg(g, cx, by, w, h) {
   }
   return rows;
 }
+/** Darkens (or, toward a light colour, lights) what is already there by `a` (0–1), dithered, so it works over any floor. */
+function tint(g, x, y, a, to = '#0A0608', dithered = true) {
+  x = Math.round(x);
+  y = Math.round(y);
+  if (y < 0 || y >= g.h || x < 0 || x >= g.w || !g[y][x] || a <= 0) return;
+  g[y][x] = mix(g[y][x], typeof to === 'string' ? hex(to) : to, dithered ? dither(a, x, y) : a);
+}
+/** A soft contact shadow on the ground: densest in the middle, fading out, so an object sits on the floor. */
+function dropShadow(g, cx, cy, rx, ry, a = 0.5) {
+  for (let j = -ry; j <= ry; j++)
+    for (let i = -rx; i <= rx; i++) {
+      const d = (i * i) / (rx * rx) + (j * j) / (ry * ry);
+      if (d <= 1) tint(g, cx + i, cy + j, a * (1 - d * 0.6));
+    }
+}
+/** A one-pixel dark outline round a rectangle (castle style: everything solid has an edge). */
+const rim = (g, x, y, w, h, c) => {
+  box(g, x - 1, y, 1, h, c);
+  box(g, x + w, y, 1, h, c);
+  box(g, x, y - 1, w, 1, c);
+  box(g, x, y + h, w, 1, c);
+};
+
 function toPng(g) {
   const png = new PNG({ width: g.w, height: g.h });
   for (let y = 0; y < g.h; y++)
@@ -439,9 +462,11 @@ function drawMap(map) {
   // Candlelight pools around every candelabra.
   rows.forEach((r, ty) =>
     [...r].forEach((c, tx) => {
-      if (c !== 'c' && c !== 'g') return;
+      // (a hearth lights the floor in front of it, from the fire low in its lower tile)
+      const hearth = c === 'F' && at(tx, ty + 1) !== 'F';
+      if (c !== 'c' && c !== 'g' && !hearth) return;
       const lx = tx * TILE + 8;
-      const ly = ty * TILE + 3;
+      const ly = ty * TILE + (hearth ? 12 : 3);
       const R = 44;
       for (let y = ly - R; y < ly + R; y++)
         for (let x = lx - R; x < lx + R; x++) {
@@ -552,7 +577,8 @@ const SNOW = {
 };
 
 function tree(g, x, y) {
-  // A round canopy that spills a little past its tile, over a short trunk.
+  // A round canopy that spills a little past its tile, over a short trunk, its shadow on the ground.
+  dropShadow(g, x + 10, y + 15, 6, 2, 0.45);
   box(g, x + 6, y + 10, 4, 6, O.trunk);
   box(g, x + 6, y + 10, 1, 6, O.trunkDark);
   ellipse(g, x + 8, y + 7, 8, 7, O.leafDark);
@@ -560,6 +586,57 @@ function tree(g, x, y) {
   ellipse(g, x + 6, y + 4, 3, 2, O.leafLight);
   for (let i = 0; i < 6; i++)
     put(g, x + 3 + Math.floor(hash(x, y, i) * 10), y + 3 + Math.floor(hash(y, x, i) * 7), O.leafLight);
+}
+
+/** Burnt ground, ash grey with charred specks, under the old museum's ruins. */
+function scorched(g, x, y, m) {
+  // ash grey with charred specks; toward unburnt ground the edge frays into the grass
+  const burnt = (c) => '0234'.includes(c) && c !== '0';
+  const open = m ? { l: !burnt(m.at(-1, 0)), r: !burnt(m.at(1, 0)), t: !burnt(m.at(0, -1)), b: !burnt(m.at(0, 1)) } : {};
+  for (let j = 0; j < TILE; j++)
+    for (let i = 0; i < TILE; i++) {
+      const d = Math.min(open.l ? i : 9, open.r ? 15 - i : 9, open.t ? j : 9, open.b ? 15 - j : 9);
+      const h = hash(x + i, y + j, 56);
+      if (d < 4 && hash(x + i, y + j, 59) > d / 4) {
+        if (d < 2) continue;
+        tint(g, x + i, y + j, 0.35, '#2A2622');
+        continue;
+      }
+      put(g, x + i, y + j, h < 0.12 ? '#2A2622' : h < 0.2 ? '#5A524C' : h < 0.24 ? '#4A3E36' : '#3E3834');
+    }
+}
+
+/**
+ * Rough grey stone in courses of uneven blocks, worked out from where each pixel sits so a run of it never seams:
+ * each block its own shade, its top edge lit and its bottom in shade, the odd tuft of moss. `rng` seeds the courses.
+ */
+const ROCK_ROWS = new Map();
+function rockAt(px, py, seed = 0) {
+  const rowH = 5;
+  const row = Math.floor(py / rowH);
+  const jy = py % rowH;
+  const key = row * 7 + seed;
+  if (!ROCK_ROWS.has(key)) {
+    const cuts = [];
+    let at = -Math.floor(hash(row, seed, 101) * 10);
+    while (at < 4096) {
+      cuts.push(at);
+      at += 6 + Math.floor(hash(row, cuts.length + seed * 999, 102) * 7);
+    }
+    ROCK_ROWS.set(key, cuts);
+  }
+  const cuts = ROCK_ROWS.get(key);
+  let k = 0;
+  while (cuts[k + 1] <= px) k++;
+  const ix = px - cuts[k];
+  const w = cuts[k + 1] - cuts[k];
+  if (jy === rowH - 1 || ix === 0) return O.stoneDark;
+  const h = hash(k, row, 103 + seed);
+  if (jy === 0) return h < 0.5 ? O.stoneLight : '#7E7674';
+  if (ix === w - 1 || jy === rowH - 2) return '#544C4A';
+  if (hash(px, py, 104) < 0.04) return '#544C4A';
+  if (h > 0.9 && jy === 1 && ix < 3) return '#5A7244'; // moss in the joints
+  return h < 0.35 ? O.stone : h < 0.7 ? '#645C5A' : '#706866';
 }
 
 const OUTDOOR_ART = {
@@ -606,8 +683,14 @@ const OUTDOOR_ART = {
   },
   J(g, x, y) {
     // Felix's cocoon, the same egg as every cocoon, half hidden in the long grass (see src/world/cocoons.ts).
-    // A little taller than its tile, so the silk's wrap shows.
+    // A little taller than its tile, so the silk's wrap shows; its shadow on the ground, a few blades in front.
+    dropShadow(g, x + 10, y + 15, 7, 2, 0.55);
     egg(g, x + 8, y + 16, 11, 19);
+    put(g, x + 8, y - 4, '#3A3044');
+    for (const [i, tall] of [[2, 3], [4, 4], [11, 3], [13, 4], [7, 2]]) {
+      box(g, x + i, y + 16 - tall, 1, tall, i % 2 ? O.leafLight : O.leaf);
+      put(g, x + i + 1, y + 15, O.leafDark);
+    }
   },
   '='(g, x, y, m) {
     // The Archive's great door, set into a hill of old stone.
@@ -679,49 +762,189 @@ const OUTDOOR_ART = {
     box(g, x + 1, y + 1, 14, 2, O.thatchDark);
   },
   A(g, x, y, m) {
-    // A patched canvas tent: a peaked roof on the top row, the front and flap below.
-    const left = m.at(-1, 0) !== 'A';
-    const right = m.at(1, 0) !== 'A';
-    if (m.at(0, -1) !== 'A') {
-      for (let j = 0; j < TILE; j++) {
-        const inset = left ? Math.max(0, 12 - j) : 0;
-        const outset = right ? Math.max(0, 12 - j) : 0;
-        box(g, x + inset, y + j, TILE - inset - outset, 1, j % 4 === 3 ? O.canvasDark : O.canvas);
+    // A patched canvas tent, drawn once across its block: a ridge pole, the near slope lit and the far one in
+    // shade, seams and patches, guy ropes pegged out, the flap tied back on a dark doorway, its shadow on the grass.
+    if (m.at(-1, 0) === 'A' || m.at(0, -1) === 'A') return;
+    let w = 1;
+    while (m.at(w, 0) === 'A') w++;
+    let h = 1;
+    while (m.at(0, h) === 'A') h++;
+    w *= TILE;
+    h *= TILE;
+    const ridge = Math.round(h * 0.3);
+    const foot = h - 2;
+    // the shadow, down and to the right
+    for (let j = ridge; j < h + 3; j++)
+      for (let i = 4; i < w + 4; i++) tint(g, x + i, y + j, j < foot ? 0.4 : 0.5 - (j - foot) * 0.1);
+    for (let j = 0; j <= foot; j++) {
+      // the roof pulls in toward the ridge at either end
+      const inset = j < ridge ? Math.round((ridge - j) * 0.6) + 1 : Math.max(0, 1 - (j - ridge));
+      for (let i = inset; i < w - inset; i++) {
+        let c;
+        if (j < ridge) {
+          // the far slope, in shade, its seams running up to the ridge
+          c = (i - 2) % 9 === 0 ? '#8A7A50' : '#A89868';
+          if (j === 1 || i === inset) c = '#C0B080';
+        } else {
+          // the near slope, catching the light, darkening toward the hem
+          c = (i - 2) % 9 === 0 ? '#A89868' : j > foot - 4 || i > w * 0.72 ? '#B8A878' : O.canvas;
+          if (j === ridge + 1) c = '#E0D4A8';
+          if (i === inset) c = '#D8CCA0';
+          if (i === w - inset - 1) c = '#A89868';
+        }
+        put(g, x + i, y + j, c);
       }
-      return;
+      // the outline round it
+      const edge = j < ridge ? Math.round((ridge - j) * 0.6) + 1 : Math.max(0, 1 - (j - ridge));
+      put(g, x + edge - 1, y + j, '#3A2A18');
+      put(g, x + w - edge, y + j, '#3A2A18');
     }
-    box(g, x, y, TILE, 14, O.canvasDark);
-    box(g, x, y + 14, TILE, 2, '#3A2A18');
-    if (!left && !right) box(g, x + 4, y + 3, 8, 11, '#2A2018');
+    box(g, x + Math.round(ridge * 0.6) + 1, y - 1, w - 2 * Math.round(ridge * 0.6) - 2, 1, '#3A2A18');
+    // the ridge pole, its ends poking out
+    box(g, x + 1, y + ridge, w - 2, 1, '#5A3A22');
+    put(g, x, y + ridge - 1, '#5A3A22');
+    put(g, x + w - 1, y + ridge - 1, '#5A3A22');
+    box(g, x, y + foot, w, 2, '#3A2A18');
+    // a patch or two, stitched on
+    for (let k = 0; k < 2; k++) {
+      const px = x + (k ? w - 10 : 3) + Math.floor(hash(x, y, 110 + k) * 4);
+      const py = y + ridge + 3 + Math.floor(hash(y, x, 112 + k) * (foot - ridge - 10));
+      box(g, px, py, 5, 4, k ? '#A8906A' : '#C8A878');
+      for (let i = 0; i < 5; i += 2) put(g, px + i, py, '#6A5A3A');
+    }
+    // the doorway, flaps tied back
+    const dx = x + Math.floor(w / 2) - 4;
+    const dh = Math.min(12, foot - ridge - 2);
+    for (let j = 0; j < dh; j++) {
+      const half = Math.min(4, 1 + Math.floor(j / 2));
+      box(g, dx + 4 - half, y + foot - dh + j, half * 2, 1, j < 2 ? '#3A2A18' : '#1A120C');
+      put(g, dx + 4 - half - 1, y + foot - dh + j, '#E0D4A8');
+      put(g, dx + 4 + half, y + foot - dh + j, '#A89868');
+    }
+    // guy ropes to pegs at either end
+    for (const [sx, dir] of [
+      [0, -1],
+      [w - 1, 1],
+    ]) {
+      for (let k = 0; k < 5; k++) put(g, x + sx + dir * Math.round(k * 0.6), y + ridge + k, '#6A5A3A');
+      put(g, x + sx + dir * 3, y + ridge + 5, '#3A2A18');
+    }
   },
   x(g, x, y) {
-    // A campfire in a ring of stones.
-    ellipse(g, x + 8, y + 11, 6, 3, O.stoneDark);
-    box(g, x + 4, y + 10, 8, 2, O.trunk);
-    ellipse(g, x + 8, y + 7, 3, 5, P.flame2);
-    ellipse(g, x + 8, y + 8, 2, 3, P.flame);
+    // A campfire in a ring of stones: its warm light on the grass, crossed logs, flames, a curl of smoke.
+    for (let j = -10; j < 24; j++)
+      for (let i = -14; i < 30; i++) {
+        const d = Math.hypot(i - 8, (j - 11) * 1.4) / 20;
+        if (d < 1) tint(g, x + i, y + j, 0.3 * (1 - d) ** 1.5, '#FFB04A');
+      }
+    ellipse(g, x + 8, y + 12, 7, 3, '#2A2220');
+    ellipse(g, x + 8, y + 12, 5, 2, '#3A2A20');
+    // the ring of stones, each lit on its upper left
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      const sx = x + 8 + Math.round(Math.cos(a) * 6);
+      const sy = y + 12 + Math.round(Math.sin(a) * 3);
+      box(g, sx - 1, sy - 1, 3, 2, O.stoneDark);
+      put(g, sx - 1, sy - 1, k > 4 ? '#C8A070' : O.stoneLight);
+      put(g, sx, sy - 1, O.stone);
+    }
+    // crossed logs, charred at the ends
+    for (let k = 0; k < 7; k++) {
+      put(g, x + 5 + k, y + 9 + Math.floor(k / 2), O.trunk);
+      put(g, x + 11 - k, y + 9 + Math.floor(k / 2), '#5A3A22');
+    }
+    put(g, x + 5, y + 9, '#1E1410');
+    put(g, x + 11, y + 9, '#1E1410');
+    // the flames: red at the edge, orange, a yellow heart, a white-hot core
+    ellipse(g, x + 8, y + 7, 3, 5, '#C8501E');
+    ellipse(g, x + 8, y + 8, 2, 4, P.flame2);
+    ellipse(g, x + 8, y + 9, 1, 2, P.flame);
+    put(g, x + 8, y + 10, '#FFF4C8');
+    put(g, x + 6, y + 4, '#C8501E');
+    put(g, x + 10, y + 3, P.flame2);
+    put(g, x + 9, y + 1, '#8A8280');
+    put(g, x + 10, y, '#6A6260');
   },
   M(g, x, y, m) {
-    // The hill's rock face, with the fort buried in it.
-    box(g, x, y, TILE, TILE, O.stone);
-    for (let j = 0; j < TILE; j += 5) box(g, x + ((j * 7) % 9), y + j, 7, 1, O.stoneDark);
-    if (m.at(0, -1) !== 'M' && m.at(0, -1) !== 'E') box(g, x, y, TILE, 3, O.leaf);
-    if (m.at(0, 1) !== 'M' && m.at(0, 1) !== 'E') box(g, x, y + 13, TILE, 3, O.stoneDark);
+    // The hill's rock face (and the towns' walls): rough stone courses, grass along the top, its foot in shadow.
+    const rock = (c) => c === 'M' || c === 'E' || c === 'o';
+    const openAbove = !rock(m.at(0, -1));
+    const openBelow = !rock(m.at(0, 1));
+    const openLeft = !rock(m.at(-1, 0));
+    const openRight = !rock(m.at(1, 0));
+    for (let j = 0; j < TILE; j++)
+      for (let i = 0; i < TILE; i++) {
+        let c = rockAt(x + i, y + j);
+        if (openLeft && i === 0) c = O.stoneLight;
+        if (openRight && i === 15) c = O.stoneDark;
+        put(g, x + i, y + j, c);
+      }
+    if (openAbove) {
+      // a grassy lip, ragged where it hangs over the edge
+      for (let i = 0; i < TILE; i++) {
+        const hang = 2 + Math.floor(hash(x + i, y, 105) * 3);
+        box(g, x + i, y, 1, hang, i % 5 === 2 ? O.leafLight : O.leaf);
+        put(g, x + i, y + hang, O.leafDark);
+        put(g, x + i, y, '#5E8A48');
+      }
+    }
+    if (openBelow) {
+      // the foot: darker stone, then the face's shadow on the ground below
+      for (let i = 0; i < TILE; i++) {
+        for (let j = 12; j < TILE; j++) tint(g, x + i, y + j, (j - 11) * 0.08);
+        put(g, x + i, y + 15, '#2A2422');
+        for (let j = 0; j < 4; j++) tint(g, x + i, y + 16 + j, 0.45 - j * 0.11);
+      }
+    }
   },
   E(g, x, y, m) {
-    // The fort's arch, half buried: a dark way in.
+    // The fort's arch, half buried: a dark way in, a lit stone surround, a keystone.
     OUTDOOR_ART.M(g, x, y, m);
-    const left = m.at(-1, 0) !== 'E';
-    const right = m.at(1, 0) !== 'E';
-    box(g, x + (left ? 3 : 0), y + 3, TILE - (left ? 3 : 0) - (right ? 3 : 0), 13, '#0C0806');
-    if (left) box(g, x + 1, y + 1, 3, 15, O.stoneLight);
-    if (right) box(g, x + 12, y + 1, 3, 15, O.stoneLight);
-    if (m.at(0, -1) !== 'E') box(g, x, y + 1, TILE, 3, O.stoneLight);
+    const arch = (c) => c === 'E' || c === 'o';
+    const left = !arch(m.at(-1, 0));
+    const right = !arch(m.at(1, 0));
+    const top = !arch(m.at(0, -1));
+    const x0 = x + (left ? 4 : 0);
+    const x1 = x + TILE - (right ? 4 : 0);
+    box(g, x0, y + (top ? 5 : 0), x1 - x0, TILE - (top ? 5 : 0), '#0C0806');
+    // the dark deepens inward
+    for (let j = top ? 5 : 0; j < 9; j++) for (let i = x0; i < x1; i++) put(g, i, y + j, '#060404');
+    if (left) {
+      box(g, x + 1, y + 2, 3, 14, O.stoneLight);
+      box(g, x + 1, y + 2, 1, 14, '#ACA5A0');
+      box(g, x + 4, y + 5, 1, 11, '#2A2422');
+    }
+    if (right) {
+      box(g, x + 12, y + 2, 3, 14, O.stone);
+      box(g, x + 14, y + 2, 1, 14, O.stoneDark);
+      box(g, x + 11, y + 5, 1, 11, '#2A2422');
+    }
+    if (top) {
+      box(g, x, y + 2, TILE, 3, O.stoneLight);
+      box(g, x, y + 2, TILE, 1, '#ACA5A0');
+      box(g, x, y + 5, TILE, 1, '#2A2422');
+      if (!left) {
+        // the keystone, over the middle
+        box(g, x - 2, y + 1, 4, 5, O.stone);
+        box(g, x - 2, y + 1, 4, 1, '#ACA5A0');
+        box(g, x + 1, y + 1, 1, 5, O.stoneDark);
+      }
+    }
   },
   O(g, x, y) {
-    ellipse(g, x + 8, y + 10, 7, 6, O.stoneDark);
-    ellipse(g, x + 7, y + 8, 6, 5, O.stone);
-    ellipse(g, x + 5, y + 6, 2, 1, O.stoneLight);
+    // A boulder: an outline, lit from the upper left, a crack, moss on its shaded side, its shadow on the grass.
+    dropShadow(g, x + 10, y + 14, 7, 2, 0.55);
+    ellipse(g, x + 8, y + 9, 7, 6, '#2A2422');
+    ellipse(g, x + 8, y + 9, 6, 5, O.stoneDark);
+    ellipse(g, x + 7, y + 8, 5, 4, O.stone);
+    ellipse(g, x + 6, y + 7, 3, 2, O.stoneLight);
+    put(g, x + 5, y + 6, '#ACA5A0');
+    put(g, x + 9, y + 9, '#3A3432');
+    put(g, x + 10, y + 10, '#3A3432');
+    put(g, x + 10, y + 11, '#3A3432');
+    put(g, x + 12, y + 11, O.leaf);
+    put(g, x + 11, y + 13, O.leaf);
+    put(g, x + 13, y + 10, O.leafLight);
   },
   Y(g, x, y) {
     // A child's wooden sword, left in the rubble.
@@ -855,24 +1078,58 @@ const OUTDOOR_ART = {
     );
   },
   X(g, x, y) {
-    // An iron cage.
-    box(g, x + 1, y + 2, 14, 13, '#1A1618');
-    for (let i = 1; i < 16; i += 3) box(g, x + i, y + 2, 1, 13, P.iron);
-    box(g, x + 1, y + 2, 14, 1, P.iron);
-    box(g, x + 1, y + 14, 14, 1, P.iron);
+    // An iron cage: the ground inside in its shade, bars lit on their left, a heavy top and floor rail, a padlock.
+    for (let j = 3; j < 15; j++) for (let i = 2; i < 15; i++) tint(g, x + i, y + j, 0.5);
+    box(g, x + 1, y + 1, 14, 2, '#1A1618');
+    box(g, x + 1, y + 1, 14, 1, '#6A6070');
+    for (let i = 1; i < 16; i += 3) {
+      box(g, x + i, y + 3, 1, 11, '#5A5060');
+      put(g, x + i, y + 4, '#8A8094');
+      put(g, x + i + 1, y + 3, '#1A1618');
+    }
+    box(g, x + 1, y + 14, 14, 1, '#2A2228');
+    box(g, x + 1, y + 13, 14, 1, '#5A5060');
+    box(g, x + 7, y + 7, 3, 3, '#8A6A30');
+    put(g, x + 7, y + 7, '#C8963A');
+    put(g, x + 8, y + 6, '#5A5060');
   },
   n(g, x, y) {
-    // A banner on a pole: the horde's fist crushing a crown.
+    // A banner on a pole: the horde's fist crushing a crown. Lit on the left, a fold in shade, swallow-tailed.
+    for (let j = 2; j < 13; j++) tint(g, x + 14, y + j + 1, 0.35);
     box(g, x + 3, y, 2, TILE, O.trunk);
-    box(g, x + 5, y + 1, 9, 10, '#6A1216');
-    box(g, x + 7, y + 3, 5, 3, P.rugGold);
-    box(g, x + 7, y + 6, 5, 3, '#E8B48C');
+    box(g, x + 3, y, 1, TILE, '#6A4A2A');
+    put(g, x + 4, y - 1, P.rugGold);
+    box(g, x + 5, y + 1, 9, 1, O.trunkDark);
+    box(g, x + 5, y + 2, 9, 9, '#6A1216');
+    box(g, x + 5, y + 2, 1, 9, '#8A2A2E');
+    box(g, x + 12, y + 2, 2, 9, '#4A0C10');
+    box(g, x + 5, y + 11, 3, 2, '#6A1216');
+    box(g, x + 11, y + 11, 3, 2, '#4A0C10');
+    // the crown, then the fist coming down on it
+    box(g, x + 7, y + 7, 5, 2, P.rugGold);
+    put(g, x + 7, y + 6, P.rugGold);
+    put(g, x + 9, y + 6, P.rugGold);
+    put(g, x + 11, y + 6, P.rugGold);
+    put(g, x + 7, y + 7, '#F0C860');
+    box(g, x + 7, y + 3, 5, 3, '#E8B48C');
+    box(g, x + 7, y + 3, 5, 1, '#F4CCA8');
+    for (const i of [8, 10]) put(g, x + i, y + 4, '#B07A58');
   },
   j(g, x, y) {
-    // A regimental cairn.
-    ellipse(g, x + 8, y + 12, 6, 3, O.stoneDark);
-    ellipse(g, x + 8, y + 9, 5, 3, O.stone);
-    ellipse(g, x + 8, y + 6, 3, 2, O.stoneLight);
+    // A regimental cairn: stones stacked, each lit on its upper left, its shadow on the grass.
+    dropShadow(g, x + 10, y + 14, 7, 2, 0.5);
+    for (const [cx, cy, rx, ry] of [
+      [8, 12, 6, 3],
+      [8, 9, 5, 2],
+      [8, 6, 4, 2],
+      [8, 3, 2, 2],
+    ]) {
+      ellipse(g, x + cx, y + cy, rx + 1, ry + 1, '#2A2422');
+      ellipse(g, x + cx, y + cy, rx, ry, O.stone);
+      box(g, x + cx - rx + 1, y + cy - ry, rx, 1, O.stoneLight);
+      box(g, x + cx + 1, y + cy + ry, rx - 1, 1, O.stoneDark);
+    }
+    put(g, x + 6, y + 2, '#ACA5A0');
   },
   G(g, x, y) {
     // A barrier of sharpened spears.
@@ -943,11 +1200,18 @@ const OUTDOOR_ART = {
     put(g, x + 9, y + 3, O.trunkDark);
   },
   q(g, x, y) {
-    // A barrel, iron-hooped.
+    // A barrel, iron-hooped, its staves lit on the left.
+    ellipse(g, x + 8, y + 9, 6, 6, O.trunkDark);
     ellipse(g, x + 8, y + 9, 5, 6, O.trunk);
+    box(g, x + 4, y + 5, 2, 9, '#6A4A2A');
+    box(g, x + 11, y + 5, 2, 9, '#3A2418');
+    box(g, x + 8, y + 4, 1, 10, '#3A2418');
     box(g, x + 3, y + 6, 11, 1, P.iron);
     box(g, x + 3, y + 12, 11, 1, P.iron);
-    ellipse(g, x + 8, y + 4, 4, 2, '#6A4A2A');
+    put(g, x + 4, y + 6, '#6A6070');
+    put(g, x + 4, y + 12, '#6A6070');
+    ellipse(g, x + 8, y + 4, 4, 2, O.trunkDark);
+    ellipse(g, x + 8, y + 4, 3, 1, '#7A5A3A');
   },
   U(g, x, y, m) {
     // The Kaldorium Maximus: tall sandstone, arched windows up top, dark arches at the bottom.
@@ -972,6 +1236,118 @@ const OUTDOOR_ART = {
     if (m.at(1, 0) !== '8') box(g, x + 14, y + 4, 2, 12, '#D8BC8A');
     box(g, x + 3, y, 10, 4, '#6A1216');
   },
+  6(g, x, y, m) {
+    // A rose bed, weeded to the last leaf: red and white roses in dark soil, edged with a stone kerb.
+    const l = m.at(-1, 0) !== '6';
+    const r = m.at(1, 0) !== '6';
+    for (let i = 0; i < TILE; i++) tint(g, x + i + 1, y + 15, 0.4);
+    const x0 = x + (l ? 1 : 0);
+    const x1 = x + TILE - (r ? 1 : 0);
+    // the kerb: lit along the top, shaded along the front
+    box(g, x0, y + 4, x1 - x0, 11, O.stoneDark);
+    box(g, x0, y + 4, x1 - x0, 1, O.stoneLight);
+    box(g, x0, y + 13, x1 - x0, 2, O.stone);
+    box(g, x0, y + 13, x1 - x0, 1, O.stoneLight);
+    for (let i = x0 + 3; i < x1; i += 6) put(g, i, y + 14, O.stoneDark);
+    // the soil, turned and dark
+    const s0 = x0 + (l ? 1 : 0);
+    const s1 = x1 - (r ? 1 : 0);
+    for (let j = 5; j < 13; j++)
+      for (let i = s0; i < s1; i++) put(g, i, y + j, hash(i, y + j, 57) < 0.2 ? O.soil : O.soilDark);
+    // the bushes: dark leaves, lit leaves on top, then the blooms, each with a highlight
+    for (const [i, j, red] of [
+      [4, 7, true],
+      [11, 6, false],
+      [8, 11, false],
+      [13, 11, true],
+      [3, 11, true],
+    ]) {
+      ellipse(g, x + i, y + j + 1, 3, 2, O.leafDark);
+      box(g, x + i - 2, y + j, 4, 1, O.leaf);
+      put(g, x + i - 2, y + j + 1, O.leafLight);
+      box(g, x + i - 1, y + j - 2, 3, 3, red ? '#7A1A22' : '#B8B0A0');
+      box(g, x + i - 1, y + j - 2, 2, 2, red ? '#B0303A' : '#F4F0EA');
+      put(g, x + i - 1, y + j - 2, red ? '#E0606A' : '#FFFFFF');
+      put(g, x + i, y + j - 1, red ? '#7A1A22' : '#C8C0B0');
+    }
+  },
+  // Kaldorhold's old museum (author, Oct 7, 2026), burned to the ground: soot-black wall stubs, ash and fallen
+  // beams, and the plinths where the old kingdom's things stood, every case empty.
+  2(g, x, y, m) {
+    // a stub of wall, black with soot, its top broken jagged, the bricks still showing through in places
+    scorched(g, x, y, m);
+    for (let i = 0; i < TILE; i++) tint(g, x + i + 1, y + 15, 0.5);
+    for (let i = 1; i < 15; i++) {
+      const top = 3 + Math.floor(hash(x + i, y, 51) * 4) + (i > 9 ? 2 : 0);
+      for (let j = top; j < 15; j++) {
+        const course = Math.floor(j / 3);
+        const joint = j % 3 === 2 || (i + (course % 2) * 3) % 6 === 0;
+        let c = joint ? '#14100E' : hash(Math.floor((i + (course % 2) * 3) / 6), course + y, 58) < 0.3 ? '#4A2E22' : '#2A2420';
+        if (j === top) c = '#5A524C'; // the broken edge, catching the light
+        else if (i === 1 && !joint) c = '#3E3632';
+        put(g, x + i, y + j, c);
+      }
+      put(g, x + i, y + top - 1, '#14100E');
+    }
+    box(g, x + 1, y + 14, 14, 1, '#14100E');
+    for (let k = 0; k < 4; k++) put(g, x + 2 + Math.floor(hash(x, y, k + 52) * 12), y + 9 + Math.floor(hash(y, x, k + 53) * 5), '#7A3A1A');
+  },
+  3(g, x, y, m) {
+    // ash heaped over a fallen roof beam, charred, an ember or two still glowing under it
+    scorched(g, x, y, m);
+    ellipse(g, x + 8, y + 11, 7, 4, '#2A2622');
+    ellipse(g, x + 8, y + 10, 6, 3, '#5A524C');
+    ellipse(g, x + 7, y + 9, 4, 2, '#6E6660');
+    for (let k = 0; k < 14; k++) {
+      const bx = x + 1 + k;
+      const by = y + 12 - Math.floor(k / 2);
+      box(g, bx, by, 1, 3, '#1E140C');
+      put(g, bx, by, '#4A2E1A');
+      if (k % 3 === 1) put(g, bx, by + 1, '#2A1A10');
+    }
+    put(g, x, y + 13, '#1E140C');
+    for (let k = 0; k < 4; k++) {
+      const ex = x + 3 + Math.floor(hash(x, y, k + 54) * 10);
+      const ey = y + 11 + Math.floor(hash(y, x, k + 55) * 3);
+      put(g, ex, ey, '#E8742A');
+      if (k === 0) put(g, ex + 1, ey, '#FFD060');
+    }
+  },
+  4(g, x, y, m) {
+    // a stone plinth, smoke-stained, and on it an empty glass case with a cracked pane
+    scorched(g, x, y, m);
+    dropShadow(g, x + 9, y + 15, 7, 2, 0.6);
+    box(g, x + 2, y + 9, 12, 7, '#1E1A18');
+    box(g, x + 3, y + 9, 10, 6, '#5A524C');
+    box(g, x + 3, y + 9, 10, 1, '#8A8280');
+    box(g, x + 3, y + 9, 1, 6, '#6E6660');
+    box(g, x + 11, y + 10, 2, 5, '#3E3834');
+    box(g, x + 5, y + 12, 6, 2, '#6A4A20'); // the brass label, half melted
+    put(g, x + 5, y + 12, '#A8803A');
+    put(g, x + 9, y + 14, '#6A4A20');
+    // the case: an iron frame, smoked glass, a crack across it, nothing inside
+    box(g, x + 3, y + 1, 10, 8, '#1E1A18');
+    box(g, x + 4, y + 2, 8, 6, '#24282E');
+    box(g, x + 4, y + 2, 2, 6, '#3A4048');
+    put(g, x + 5, y + 3, '#A8B0BC');
+    for (const [i, j] of [[7, 2], [8, 3], [8, 4], [9, 5], [10, 6]]) put(g, x + i, y + j, '#8A92A0');
+    box(g, x + 6, y + 6, 4, 1, '#2E2A26'); // the cushion, where the crown sat
+  },
+  0(g, x, y) {
+    // the king's notice, nailed to a post in front of the ruin
+    dropShadow(g, x + 10, y + 15, 4, 1, 0.5);
+    box(g, x + 7, y + 6, 2, 10, O.trunk);
+    put(g, x + 7, y + 10, '#6A4A2A');
+    box(g, x + 1, y + 1, 14, 9, '#3A2A1A');
+    box(g, x + 2, y + 2, 12, 7, '#E8DCC0');
+    box(g, x + 2, y + 2, 12, 1, '#FFF6DC');
+    box(g, x + 13, y + 3, 1, 6, '#C8B898');
+    box(g, x + 4, y + 4, 8, 1, '#5A4A3A');
+    box(g, x + 4, y + 6, 6, 1, '#5A4A3A');
+    box(g, x + 9, y + 7, 3, 1, '#8A1A1A'); // his seal
+    put(g, x + 2, y + 2, '#8A8280');
+    put(g, x + 13, y + 2, '#8A8280');
+  },
   Q(g, x, y) {
     // A faceless statue, toppled face-down in the moss.
     box(g, x + 2, y + 7, 12, 6, O.stoneDark);
@@ -991,7 +1367,15 @@ function cottageWall(g, x, y, m) {
 }
 
 // Warrior City's interiors: walls, furniture (interior-art.mjs). Only letters the Archive doesn't use.
-for (const [k, v] of Object.entries(interiorArt({ box, put, ellipse, hash }))) if (!TILE_ART[k]) TILE_ART[k] = v;
+for (const [k, v] of Object.entries(interiorArt({ box, put, ellipse, hash, tint }))) if (!TILE_ART[k]) TILE_ART[k] = v;
+// Free-standing furniture sits on the floor: a soft contact shadow under each piece, down and to the right.
+for (const [k, rx] of Object.entries({ t: 7, x: 6, k: 6, h: 7, L: 5, A: 7, n: 7, b: 6 })) {
+  const draw = TILE_ART[k];
+  TILE_ART[k] = (g, x, y, m) => {
+    dropShadow(g, x + 9, y + 15, rx, 2, 0.55);
+    draw(g, x, y, m);
+  };
+}
 
 // Warrior City's buildings, each its own look, and every older town's cottages and stone houses
 // redrawn the same way (city-art.mjs). A building draws its own door, so a door tile set into one
@@ -1002,6 +1386,15 @@ for (const k of ['D', 'd']) {
   OUTDOOR_ART[k] = (g, x, y, m) => {
     if ('HIu'.includes(m.at(0, -1))) return;
     plain(g, x, y, m);
+  };
+}
+
+// Free-standing things outdoors sit on the ground: a soft contact shadow under each, down and to the right.
+for (const [k, rx] of Object.entries({ n: 4, q: 6, S: 5, c: 3, y: 5, m: 7, l: 6, b: 6, w: 7, X: 7, L: 5, Y: 5, Q: 7, R: 6 })) {
+  const draw = OUTDOOR_ART[k];
+  OUTDOOR_ART[k] = (g, x, y, m) => {
+    dropShadow(g, x + 9, y + 15, rx, 2, 0.45);
+    draw(g, x, y, m);
   };
 }
 
@@ -1117,32 +1510,70 @@ const DUNGEON_ART = {
     const sideHole = m.at(0, 1) === 'o' && 'WBCcRGE#'.includes(m.at(0, 2));
     const face = !sideHole && !'W#BCcf'.includes(m.at(0, 1));
     if (!face) {
-      box(g, x, y, TILE, TILE, DG.wallDark);
+      // the wall's top, seen from above: rough dark stone, a little grit
+      for (let j = 0; j < TILE; j++)
+        for (let i = 0; i < TILE; i++) {
+          const n = hash(x + i, y + j, 86);
+          put(g, x + i, y + j, n < 0.04 ? '#322E2C' : n > 0.96 ? '#282422' : DG.wallDark);
+        }
       box(g, x, y, TILE, 1, DG.mortar);
+      // where the face below begins, the top's lip catches the light
+      if (!'W#BCcf'.includes(m.at(0, 1)) || sideHole) box(g, x, y + 15, TILE, 1, '#3E3936');
       return;
     }
-    box(g, x, y, TILE, TILE, DG.wall);
-    for (let j = 0; j < TILE; j += 4) {
-      box(g, x, y + j, TILE, 1, DG.mortar);
-      const off = (j / 4) % 2 ? 4 : 12;
-      box(g, x + off, y + j, 1, 4, DG.mortar);
-    }
+    // Ashlar in courses of four, each block its own shade, its top edge lit and its right end in shade.
+    for (let j = 0; j < TILE; j++)
+      for (let i = 0; i < TILE; i++) {
+        const px = x + i;
+        const course = Math.floor(j / 4);
+        const jj = j % 4;
+        const bx = px + (((y >> 4) * 4 + course) % 2 ? 4 : 0);
+        const brick = Math.floor(bx / 8);
+        const ii = bx % 8;
+        let c;
+        if (jj === 3 || ii === 7) c = DG.mortar;
+        else {
+          const h = hash(brick, (y >> 2) + course, 87);
+          c = h < 0.33 ? DG.wall : h < 0.66 ? '#4E4844' : '#544E4A';
+          if (jj === 0) c = h < 0.5 ? '#68605A' : '#625A55';
+          else if (ii === 6) c = '#423C39';
+          else if (hash(px, y + j, 88) < 0.06) c = '#3C3634';
+        }
+        put(g, px, y + j, c);
+      }
+    // grime gathers toward the floor
+    for (let j = 9; j < 14; j++) for (let i = 0; i < TILE; i++) tint(g, x + i, y + j, (j - 9) * 0.06);
     box(g, x, y + 14, TILE, 2, DG.wallDark);
+    box(g, x, y + 14, TILE, 1, '#3A3432');
   },
   B(g, x, y, m) {
     DUNGEON_ART.W(g, x, y, m);
+    // a Hale banner on an iron rod: lit on the left, a fold in shade, swallow-tailed, its shadow on the stone
+    for (let j = 2; j < 16; j++) tint(g, x + 13, y + j, 0.45);
+    box(g, x + 2, y, 12, 1, DG.iron);
+    put(g, x + 2, y, DG.ironLight);
     box(g, x + 3, y + 1, 10, 13, DG.banner);
+    box(g, x + 3, y + 1, 1, 13, '#8A2A2E');
+    box(g, x + 11, y + 1, 2, 13, DG.bannerDark);
     box(g, x + 3, y + 1, 10, 1, DG.gold);
     box(g, x + 3, y + 13, 3, 2, DG.banner);
-    box(g, x + 10, y + 13, 3, 2, DG.banner);
+    box(g, x + 10, y + 13, 3, 2, DG.bannerDark);
+    put(g, x + 3, y + 14, '#8A2A2E');
     haleSigil(g, x, y + 3);
   },
   c(g, x, y, m) {
     // A wall torch: the dungeon's save point.
     DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 6, y + 12, 4, 2, DG.iron);
+    put(g, x + 6, y + 12, DG.ironLight);
     box(g, x + 7, y + 7, 2, 6, DG.timber);
-    ellipse(g, x + 8, y + 5, 2, 3, P.flame2);
+    put(g, x + 7, y + 8, '#7A5A3C');
+    box(g, x + 6, y + 7, 4, 1, DG.iron);
+    ellipse(g, x + 8, y + 4, 2, 3, '#C8501E');
+    ellipse(g, x + 8, y + 5, 2, 2, P.flame2);
     put(g, x + 8, y + 4, P.flame);
+    put(g, x + 8, y + 5, '#FFF4C8');
+    put(g, x + 9, y + 1, '#C8501E');
   },
   C(g, x, y, m) {
     // A cracked wall: something strong could break through.
@@ -1205,6 +1636,17 @@ const DUNGEON_ART = {
     box(g, x + 2, y + 2, 12, 14, DG.earth);
     box(g, x + 1, y + 1, 14, 2, DG.wallLight);
   },
+  N(g, x, y, m) {
+    // A stone archway with its door shut: planks, two iron bands and a lock.
+    DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 1, y + 1, 14, 2, DG.wallLight);
+    box(g, x + 2, y + 3, 12, 13, DG.timber);
+    for (let i = 5; i < 14; i += 3) box(g, x + i, y + 3, 1, 13, DG.timberDark);
+    box(g, x + 2, y + 5, 12, 2, DG.iron);
+    box(g, x + 2, y + 12, 12, 2, DG.iron);
+    box(g, x + 10, y + 8, 3, 3, DG.ironLight);
+    put(g, x + 11, y + 9, DG.earth);
+  },
   G(g, x, y, m) {
     // A portcullis, down.
     DUNGEON_ART.W(g, x, y, m);
@@ -1219,30 +1661,70 @@ const DUNGEON_ART = {
     for (let j = 2; j < TILE; j += 4) box(g, x + 3, y + j, 10, 2, DG.timberDark);
   },
   b(g, x, y) {
-    // A bunk, straw mattress and a grey blanket.
-    box(g, x + 1, y + 2, 14, 13, DG.timber);
-    box(g, x + 2, y + 3, 12, 10, DG.straw);
-    box(g, x + 2, y + 7, 12, 6, DG.blanket);
+    // A bunk, straw mattress and a grey blanket, on a timber frame.
+    dropShadow(g, x + 9, y + 15, 7, 2, 0.55);
+    box(g, x + 1, y + 1, 14, 14, DG.timberDark);
+    box(g, x + 2, y + 1, 12, 13, DG.timber);
+    box(g, x + 2, y + 1, 12, 1, '#7A5A3C');
+    box(g, x + 3, y + 3, 10, 10, DG.straw);
+    for (let k = 0; k < 6; k++) put(g, x + 3 + Math.floor(hash(x, y, k + 90) * 10), y + 3 + Math.floor(hash(y, x, k + 90) * 3), '#C8B060');
+    // a flat pillow, then the blanket with its folded-down edge
+    box(g, x + 5, y + 3, 6, 2, '#C8C0A8');
+    box(g, x + 3, y + 7, 10, 6, DG.blanket);
+    box(g, x + 3, y + 7, 10, 1, '#6A7A8A');
+    box(g, x + 11, y + 8, 2, 5, '#3A4A58');
+    put(g, x + 6, y + 10, '#3A4A58');
+    put(g, x + 7, y + 10, '#3A4A58');
+    box(g, x + 1, y + 14, 14, 1, '#20160E');
   },
-  t(g, x, y) {
-    box(g, x, y + 4, TILE, 8, DG.timber);
-    box(g, x, y + 11, TILE, 1, DG.timberDark);
-    box(g, x + 1, y + 12, 2, 4, DG.timberDark);
-    box(g, x + 13, y + 12, 2, 4, DG.timberDark);
+  t(g, x, y, m) {
+    // A trestle table, its boards joined along its length.
+    const l = m.at(-1, 0) !== 't';
+    const r = m.at(1, 0) !== 't';
+    for (let i = l ? 1 : 0; i < (r ? 15 : 16); i++) for (let j = 13; j < 16; j++) tint(g, x + i, y + j, 0.5 - (j - 13) * 0.12);
+    if (l) box(g, x + 1, y + 10, 2, 5, DG.timberDark);
+    if (r) box(g, x + 13, y + 10, 2, 5, DG.timberDark);
+    if (!l && !r) box(g, x + 7, y + 10, 2, 5, DG.timberDark);
+    const x0 = x + (l ? 0 : 0);
+    box(g, x0, y + 3, TILE, 7, DG.timber);
+    box(g, x0, y + 3, TILE, 1, '#7A5A3C');
+    box(g, x0, y + 6, TILE, 1, '#4E3622');
+    for (let i = 0; i < TILE; i++) if (hash(x + i, y, 91) < 0.15) put(g, x + i, y + 4 + Math.floor(hash(x + i, y, 92) * 4), '#4E3622');
+    box(g, x0, y + 10, TILE, 1, DG.timberDark);
+    box(g, x0, y + 2, TILE, 1, '#1E140C');
+    if (l) {
+      box(g, x, y + 2, 1, 9, '#1E140C');
+      box(g, x + 1, y + 3, 1, 7, '#6A4C32');
+    }
+    if (r) box(g, x + 15, y + 2, 1, 9, '#1E140C');
   },
   r(g, x, y) {
     // A weapon rack of rusted spears.
-    box(g, x + 1, y + 12, 14, 2, DG.timber);
+    dropShadow(g, x + 8, y + 15, 7, 1, 0.5);
     for (let i = 3; i < 14; i += 4) {
-      box(g, x + i, y + 1, 1, 12, DG.timberDark);
+      box(g, x + i, y + 2, 1, 11, DG.timberDark);
+      put(g, x + i + 1, y + 3, '#2A1C10');
       box(g, x + i - 1, y, 3, 3, DG.rust);
+      put(g, x + i, y - 1, '#A86A40');
+      put(g, x + i - 1, y, '#A86A40');
     }
+    box(g, x + 1, y + 12, 14, 2, DG.timber);
+    box(g, x + 1, y + 12, 14, 1, '#7A5A3C');
+    box(g, x + 1, y + 14, 2, 2, DG.timberDark);
+    box(g, x + 13, y + 14, 2, 2, DG.timberDark);
   },
   d(g, x, y) {
     // A drill dummy: straw on a post.
+    dropShadow(g, x + 9, y + 15, 5, 1, 0.55);
     box(g, x + 7, y + 8, 2, 8, DG.timber);
-    ellipse(g, x + 8, y + 6, 4, 5, DG.straw);
+    put(g, x + 8, y + 12, DG.timberDark);
     box(g, x + 3, y + 5, 10, 2, DG.timber);
+    box(g, x + 3, y + 5, 10, 1, '#7A5A3C');
+    ellipse(g, x + 8, y + 6, 4, 5, '#8A7438');
+    ellipse(g, x + 8, y + 6, 3, 4, DG.straw);
+    ellipse(g, x + 7, y + 4, 1, 2, '#C8B060');
+    box(g, x + 4, y + 7, 8, 1, '#5A3E28');
+    put(g, x + 9, y + 9, '#6A5A2A');
   },
   P(g, x, y) {
     // A pressure plate set into the floor.
@@ -1251,104 +1733,207 @@ const DUNGEON_ART = {
     box(g, x + 3, y + 3, 10, 1, DG.ironLight);
   },
   O(g, x, y) {
-    ellipse(g, x + 8, y + 10, 7, 6, DG.wallDark);
-    ellipse(g, x + 7, y + 8, 6, 5, DG.wall);
-    ellipse(g, x + 5, y + 6, 2, 1, DG.wallLight);
+    // A boulder, lit from the upper left.
+    dropShadow(g, x + 9, y + 14, 7, 2, 0.6);
+    ellipse(g, x + 8, y + 9, 7, 6, '#1E1A18');
+    ellipse(g, x + 8, y + 9, 6, 5, DG.wallDark);
+    ellipse(g, x + 7, y + 8, 5, 4, DG.wall);
+    ellipse(g, x + 6, y + 7, 3, 2, DG.wallLight);
+    put(g, x + 5, y + 6, '#7A726A');
+    put(g, x + 10, y + 10, '#262220');
+    put(g, x + 9, y + 11, '#262220');
   },
   x(g, x, y) {
-    ellipse(g, x + 8, y + 10, 7, 5, DG.wallDark);
-    for (let i = 0; i < 8; i++)
-      ellipse(
-        g,
-        x + 3 + Math.floor(hash(x, y, i) * 10),
-        y + 6 + Math.floor(hash(y, x, i) * 7),
-        2,
-        2,
-        i % 2 ? DG.rubble : DG.wall,
-      );
+    // A heap of rubble.
+    dropShadow(g, x + 8, y + 12, 7, 3, 0.5);
+    for (let i = 0; i < 8; i++) {
+      const rx = x + 3 + Math.floor(hash(x, y, i) * 10);
+      const ry = y + 6 + Math.floor(hash(y, x, i) * 7);
+      ellipse(g, rx, ry, 2, 2, '#262220');
+      ellipse(g, rx, ry, 1, 1, i % 2 ? DG.rubble : DG.wall);
+      put(g, rx - 1, ry - 1, i % 2 ? '#7A726A' : DG.wallLight);
+    }
   },
   L(g, x, y) {
     // A crate with a note pinned to it.
+    dropShadow(g, x + 9, y + 15, 7, 2, 0.55);
+    box(g, x + 1, y + 4, 14, 12, '#20160E');
     box(g, x + 2, y + 5, 12, 10, DG.timber);
+    box(g, x + 2, y + 5, 12, 1, '#7A5A3C');
+    box(g, x + 2, y + 5, 1, 10, '#6A4C32');
     box(g, x + 2, y + 9, 12, 1, DG.timberDark);
+    box(g, x + 2, y + 13, 12, 1, DG.timberDark);
+    for (const [i, j] of [[3, 6], [12, 6], [3, 12], [12, 12]]) put(g, x + i, y + j, DG.ironLight);
     box(g, x + 6, y + 3, 5, 6, P.paper);
-    put(g, x + 8, y + 4, DG.rust);
+    box(g, x + 10, y + 4, 1, 5, '#B8A888');
+    box(g, x + 7, y + 5, 3, 1, '#8A7A60');
+    box(g, x + 7, y + 7, 2, 1, '#8A7A60');
+    put(g, x + 8, y + 3, DG.rust);
   },
   R(g, x, y, m) {
     // A duty roster, nailed to the wall.
     DUNGEON_ART.W(g, x, y, m);
+    box(g, x + 3, y + 3, 12, 11, '#1E1A18');
     box(g, x + 2, y + 2, 12, 11, P.paper);
-    for (let j = 4; j < 12; j += 2) box(g, x + 4, y + j, 8, 1, '#8A7A60');
+    box(g, x + 2, y + 2, 12, 1, '#FFF6DC');
+    box(g, x + 13, y + 3, 1, 10, '#C8B890');
+    for (let j = 5; j < 12; j += 2) box(g, x + 4, y + j, 4 + Math.floor(hash(x, y + j, 93) * 5), 1, '#8A7A60');
+    put(g, x + 8, y + 2, DG.iron);
   },
   A(g, x, y) {
     // An empty suit of armour on a stand.
-    box(g, x + 7, y + 13, 2, 3, DG.timber);
-    ellipse(g, x + 8, y + 3, 3, 3, DG.ironLight);
-    box(g, x + 5, y + 6, 6, 7, DG.iron);
-    box(g, x + 5, y + 6, 6, 1, DG.ironLight);
-    box(g, x + 7, y + 3, 2, 1, DG.earth);
+    dropShadow(g, x + 9, y + 15, 5, 1, 0.6);
+    box(g, x + 5, y + 14, 6, 2, DG.timberDark);
+    box(g, x + 7, y + 12, 2, 3, DG.timber);
+    // legs, breastplate, pauldrons, helm: steel, lit on the left
+    box(g, x + 6, y + 10, 1, 3, '#4A4A56');
+    box(g, x + 9, y + 10, 1, 3, '#3A3A44');
+    box(g, x + 4, y + 5, 8, 6, '#1E1C22');
+    box(g, x + 5, y + 5, 6, 5, '#5A5A68');
+    box(g, x + 5, y + 5, 2, 5, '#8A8A9A');
+    box(g, x + 10, y + 5, 1, 5, '#3A3A44');
+    put(g, x + 8, y + 7, '#B8B8C8');
+    box(g, x + 3, y + 5, 2, 2, '#8A8A9A');
+    box(g, x + 11, y + 5, 2, 2, '#4A4A56');
+    ellipse(g, x + 8, y + 2, 3, 3, '#1E1C22');
+    ellipse(g, x + 8, y + 2, 2, 2, '#5A5A68');
+    box(g, x + 6, y + 1, 2, 2, '#9A9AAA');
+    box(g, x + 7, y + 3, 3, 1, DG.earth);
+    put(g, x + 8, y - 2, DG.banner);
+    put(g, x + 8, y - 1, DG.banner);
   },
   S(g, x, y, m) {
     // Baron Plush's great sofa, velvet and tassels.
     const left = m.at(-1, 0) !== 'S';
     const right = m.at(1, 0) !== 'S';
-    box(g, x, y + 3, TILE, 12, '#6A2A6A');
+    for (let i = 0; i < TILE; i++) for (let j = 15; j < 17; j++) tint(g, x + i, y + j, 0.45);
+    box(g, x, y + 2, TILE, 13, '#3A1238');
+    box(g, x, y + 3, TILE, 11, '#6A2A6A');
     box(g, x, y + 3, TILE, 4, '#8A3A8A');
-    if (left) box(g, x, y + 1, 4, 14, '#5A205A');
-    if (right) box(g, x + 12, y + 1, 4, 14, '#5A205A');
+    box(g, x, y + 3, TILE, 1, '#A85AA8');
+    box(g, x, y + 7, TILE, 1, '#4A1A4A');
+    // buttoned cushions
+    for (let i = 4; i < TILE; i += 8) put(g, x + i, y + 5, '#4A1A4A');
+    if (left) {
+      box(g, x, y + 1, 4, 14, '#3A1238');
+      box(g, x + 1, y + 2, 3, 12, '#5A205A');
+      box(g, x + 1, y + 2, 1, 12, '#7A3A7A');
+    }
+    if (right) {
+      box(g, x + 12, y + 1, 4, 14, '#3A1238');
+      box(g, x + 12, y + 2, 3, 12, '#5A205A');
+    }
     for (let i = 2; i < 14; i += 4) put(g, x + i, y + 14, DG.gold);
   },
   V(g, x, y) {
     // A winch lever and its chain.
+    dropShadow(g, x + 8, y + 15, 5, 1, 0.55);
+    box(g, x + 3, y + 10, 10, 6, '#1E1C22');
     box(g, x + 4, y + 11, 8, 4, DG.iron);
+    box(g, x + 4, y + 11, 8, 1, DG.ironLight);
     box(g, x + 7, y + 3, 2, 9, DG.ironLight);
+    put(g, x + 8, y + 4, DG.iron);
     ellipse(g, x + 8, y + 3, 2, 2, DG.rust);
-    for (let j = 0; j < 3; j++) box(g, x + 12, y + j * 2, 2, 1, DG.iron);
+    put(g, x + 7, y + 2, '#B87048');
+    for (let j = 0; j < 3; j++) {
+      box(g, x + 12, y + j * 2, 2, 1, DG.iron);
+      put(g, x + 13, y + j * 2 + 1, DG.ironLight);
+    }
   },
   Y(g, x, y, m) {
     // The Throne of a Hundred Challengers: a heap of tagged weapons, drawn once.
     if (m.at(-1, 0) === 'Y') return;
-    box(g, x, y + 2, 48, 14, DG.wallDark);
-    for (let i = 0; i < 16; i++) {
-      const bx = x + 2 + Math.floor(hash(x, i, 1) * 44);
-      const by = y + 1 + Math.floor(hash(i, y, 2) * 10);
-      box(g, bx, by, 1, 6, i % 3 ? DG.ironLight : DG.rust);
+    for (let i = 0; i < 50; i++) for (let j = 14; j < 18; j++) tint(g, x + i, y + j, 0.5 - (j - 14) * 0.1);
+    // the heap: a mound of dark iron, lit along its top
+    for (let i = 0; i < 48; i++) {
+      const top = 4 + Math.round(Math.abs(i - 24) / 6 + hash(x + i, y, 94) * 2);
+      box(g, x + i, y + top, 1, 16 - top, '#1E1C22');
+      box(g, x + i, y + top + 1, 1, 14 - top, DG.wallDark);
+      put(g, x + i, y + top + 1, DG.iron);
     }
+    for (let i = 0; i < 22; i++) {
+      const bx = x + 2 + Math.floor(hash(x, i, 1) * 44);
+      const by = y + Math.floor(hash(i, y, 2) * 10);
+      const rust = i % 3 === 0;
+      box(g, bx, by, 1, 7, rust ? DG.rust : DG.ironLight);
+      put(g, bx + 1, by + 1, rust ? '#5A2E1A' : DG.iron);
+      put(g, bx, by, rust ? '#B87048' : '#A8A8B8');
+      if (i % 4 === 1) box(g, bx - 1, by + 5, 3, 1, DG.timber); // a crossguard
+      if (i % 5 === 2) put(g, bx + 1, by + 3, P.paper); // a tag
+    }
+    // the seat, draped in a red banner
+    box(g, x + 17, y + 5, 14, 11, '#1E1012');
     box(g, x + 18, y + 6, 12, 10, DG.banner);
     box(g, x + 18, y + 6, 12, 1, DG.gold);
+    box(g, x + 28, y + 7, 2, 9, DG.bannerDark);
+    box(g, x + 18, y + 6, 1, 10, '#8A2A2E');
   },
   m(g, x, y, m) {
     // Big Tova's bar: a long counter, sixty feet of it, and mugs that never spill.
-    box(g, x, y + 3, TILE, 10, DG.timber);
-    box(g, x, y + 3, TILE, 2, '#7A5A3A');
-    box(g, x, y + 12, TILE, 1, DG.timberDark);
+    const l = m.at(-1, 0) !== 'm';
+    const r = m.at(1, 0) !== 'm';
+    for (let i = 0; i < TILE; i++) for (let j = 14; j < 16; j++) tint(g, x + i, y + j, 0.5 - (j - 14) * 0.2);
+    box(g, x, y + 2, TILE, 12, '#20160E');
+    box(g, x, y + 3, TILE, 4, '#7A5A3A');
+    box(g, x, y + 3, TILE, 1, '#9A7A52');
+    box(g, x, y + 7, TILE, 6, DG.timber);
+    box(g, x, y + 7, TILE, 1, DG.timberDark);
+    for (let i = 3; i < TILE; i += 8) box(g, x + i, y + 8, 1, 5, DG.timberDark);
+    box(g, x, y + 12, TILE, 1, '#2E2014');
+    if (l) box(g, x, y + 2, 1, 12, '#20160E');
+    if (r) box(g, x + 15, y + 2, 1, 12, '#20160E');
     if (hash(x, y, 2) < 0.6) {
       box(g, x + 5, y, 4, 5, '#C8B070');
+      box(g, x + 5, y, 1, 5, '#E8D090');
+      box(g, x + 8, y, 1, 5, '#9A8448');
       box(g, x + 5, y, 4, 1, '#F4F0EA');
       box(g, x + 9, y + 1, 1, 3, '#C8B070');
     }
   },
   q(g, x, y) {
+    // A barrel, iron-hooped, its staves lit on the left.
+    dropShadow(g, x + 9, y + 15, 6, 1, 0.6);
+    ellipse(g, x + 8, y + 9, 6, 6, '#1E140C');
     ellipse(g, x + 8, y + 9, 5, 6, DG.timber);
+    box(g, x + 4, y + 5, 2, 9, '#7A5A3C');
+    box(g, x + 11, y + 5, 2, 9, DG.timberDark);
+    box(g, x + 8, y + 4, 1, 10, DG.timberDark);
     box(g, x + 3, y + 6, 11, 1, DG.iron);
     box(g, x + 3, y + 12, 11, 1, DG.iron);
-    ellipse(g, x + 8, y + 4, 4, 2, DG.timberDark);
+    put(g, x + 4, y + 6, DG.ironLight);
+    put(g, x + 4, y + 12, DG.ironLight);
+    ellipse(g, x + 8, y + 4, 4, 2, '#1E140C');
+    ellipse(g, x + 8, y + 4, 3, 1, DG.timberDark);
   },
   i(g, x, y, m) {
     // The last block of ice from the wastes, drawn once across its 2x2 tiles.
     if (m.at(-1, 0) === 'i' || m.at(0, -1) === 'i') return;
-    box(g, x + 3, y + 26, 26, 4, DG.wallDark);
+    dropShadow(g, x + 17, y + 27, 14, 3, 0.55);
+    box(g, x + 4, y + 3, 24, 25, '#3A5A78');
     box(g, x + 5, y + 4, 22, 23, '#A8D0E8');
     box(g, x + 5, y + 4, 22, 3, '#E0F0FA');
-    box(g, x + 7, y + 9, 3, 14, '#E0F0FA');
-    box(g, x + 22, y + 8, 2, 16, '#7AA8C8');
+    box(g, x + 5, y + 4, 2, 23, '#C8E4F4');
+    box(g, x + 22, y + 7, 5, 20, '#7AA8C8');
+    box(g, x + 8, y + 9, 2, 14, '#F4FAFF');
+    put(g, x + 11, y + 10, '#F4FAFF');
+    // cracks and trapped bubbles
+    for (const [i, j] of [[14, 12], [15, 13], [15, 14], [16, 15], [18, 20], [12, 22]]) put(g, x + i, y + j, '#7AA8C8');
+    for (const [i, j] of [[19, 10], [13, 18], [17, 23]]) put(g, x + i, y + j, '#E0F0FA');
+    // meltwater round the foot
+    for (let i = 3; i < 30; i++) if (hash(x + i, y, 95) < 0.5) put(g, x + i, y + 28, '#5A7A96');
   },
   u(g, x, y) {
     // A war drum: hide stretched over a barrel, painted in three stripes.
+    dropShadow(g, x + 9, y + 15, 6, 1, 0.6);
+    ellipse(g, x + 8, y + 10, 7, 5, '#2A0A0C');
     ellipse(g, x + 8, y + 10, 6, 5, '#6A1216');
+    box(g, x + 3, y + 8, 2, 6, '#8A2A2A');
     box(g, x + 2, y + 8, 13, 1, '#E8E0D0');
     box(g, x + 2, y + 11, 13, 1, '#E8E0D0');
-    ellipse(g, x + 8, y + 5, 6, 3, '#D8C8A0');
+    for (let i = 3; i < 14; i += 3) put(g, x + i, y + 9, '#C8B890');
+    ellipse(g, x + 8, y + 5, 6, 3, '#8A7A58');
+    ellipse(g, x + 8, y + 5, 5, 2, '#D8C8A0');
+    put(g, x + 6, y + 4, '#F0E4C0');
   },
   f(g, x, y, m) {
     // A portrait of Kaldor, each more flattering than the last.
@@ -1367,18 +1952,63 @@ const DUNGEON_ART = {
   },
   Z(g, x, y) {
     // A small statue of Kaldor on a plinth (one of many).
-    box(g, x + 3, y + 12, 10, 4, DG.wallDark);
-    box(g, x + 5, y + 5, 6, 7, DG.wallLight);
-    ellipse(g, x + 8, y + 3, 2, 2, DG.wallLight);
-    box(g, x + 6, y + 1, 5, 1, DG.gold);
+    dropShadow(g, x + 9, y + 15, 6, 1, 0.6);
+    box(g, x + 3, y + 11, 10, 5, KS.o);
+    box(g, x + 4, y + 12, 8, 3, KS.m);
+    box(g, x + 4, y + 12, 8, 1, KS.l);
+    box(g, x + 10, y + 13, 2, 2, KS.d);
+    box(g, x + 7, y + 13, 2, 1, KS.b);
+    // the little king: robe, arms folded, crown, lit from the left
+    box(g, x + 5, y + 4, 6, 8, KS.o);
+    box(g, x + 6, y + 5, 4, 6, KS.m);
+    box(g, x + 6, y + 5, 1, 6, KS.l);
+    box(g, x + 9, y + 5, 1, 6, KS.d);
+    box(g, x + 6, y + 7, 4, 1, KS.d);
+    ellipse(g, x + 8, y + 3, 2, 2, KS.o);
+    box(g, x + 7, y + 2, 2, 2, KS.l);
+    put(g, x + 7, y + 2, KS.h);
+    box(g, x + 6, y, 5, 1, DG.gold);
+    put(g, x + 6, y - 1, DG.gold);
+    put(g, x + 8, y - 1, '#F0C860');
+    put(g, x + 10, y - 1, DG.gold);
+  },
+  l(g, x, y, m) {
+    // The training yard's wall, and a straw dummy leaning on it with Kaldor's face painted on, much hit.
+    DUNGEON_ART.W(g, x, y, m);
+    for (let j = 3; j < 16; j++) tint(g, x + 12, y + j, 0.4);
+    box(g, x + 7, y + 6, 2, 10, DG.timber);
+    put(g, x + 7, y + 7, '#7A5A3C');
+    box(g, x + 4, y + 7, 9, 2, DG.timber);
+    ellipse(g, x + 8, y + 9, 4, 4, '#6A5428');
+    ellipse(g, x + 8, y + 9, 3, 3, DG.straw);
+    put(g, x + 6, y + 8, '#C8B060');
+    box(g, x + 5, y + 10, 6, 1, DG.timberDark);
+    // the head, the face daubed on: the beard, two scowling eyes, a gold crown, a patch where it's been punched
+    ellipse(g, x + 8, y + 3, 3, 3, '#6A5428');
+    ellipse(g, x + 8, y + 3, 2, 2, '#D8B890');
+    box(g, x + 7, y + 5, 3, 1, '#8A4A2A');
+    put(g, x + 7, y + 3, '#2A1A10');
+    put(g, x + 9, y + 3, '#2A1A10');
+    box(g, x + 6, y, 5, 1, DG.gold);
+    put(g, x + 6, y - 1, DG.gold);
+    put(g, x + 10, y - 1, DG.gold);
+    put(g, x + 10, y + 2, DG.straw);
+    put(g, x + 11, y + 3, DG.straw);
   },
   k(g, x, y) {
     // A candle on an iron stand: rest here.
+    dropShadow(g, x + 8, y + 15, 4, 1, 0.5);
     box(g, x + 7, y + 7, 2, 9, P.iron);
+    put(g, x + 7, y + 8, '#4A4048');
     box(g, x + 5, y + 14, 6, 2, P.iron);
+    box(g, x + 5, y + 14, 6, 1, '#4A4048');
+    box(g, x + 5, y + 7, 6, 1, P.iron);
     box(g, x + 7, y + 3, 2, 4, P.wax);
+    put(g, x + 8, y + 4, '#D8CCB8');
+    put(g, x + 9, y + 6, P.wax);
     put(g, x + 7, y + 2, P.flame);
     put(g, x + 8, y + 1, P.flame2);
+    put(g, x + 7, y + 1, '#FFF4C8');
   },
 };
 
@@ -1388,7 +2018,7 @@ Object.assign(DUNGEON_ART, mineArt({ box, put, ellipse, hash, wall: (g, x, y, m)
 // Kaldor's castle (castle-art.mjs): the castle, moat, pikes and guard post outside; pillars, carpet,
 // half-stairs, galleries, the winding stair and the king's floor's furniture inside. New letters only.
 {
-  const castle = castleArt({ box, put, ellipse, hash, wall: (g, x, y, m) => DUNGEON_ART.W(g, x, y, m) });
+  const castle = castleArt({ box, put, ellipse, hash, tint, wall: (g, x, y, m) => DUNGEON_ART.W(g, x, y, m) });
   for (const [set, into] of [
     [castle.outdoor, OUTDOOR_ART],
     [castle.inside, DUNGEON_ART],
@@ -1414,6 +2044,326 @@ function marbleAt(x, y) {
   return c;
 }
 
+/**
+ * The Kaloseum from the inside (author, Oct 6, 2026: "look at the arena outside looking in"): the same great oval
+ * as Warrior City shows from without. Sand in the middle, a low stone wall round it, grey tiers climbing away
+ * packed with the crowd, the Crown's red banners with the gold fist along the top, the great gate at the bottom,
+ * open to the sky. The sand's oval sits just inside the walkable tiles (`.` and `,`); everything else is the stands.
+ */
+function drawArena(map, cheer = false) {
+  const rows = map.tiles;
+  const H = rows.length;
+  const W = rows[0].length;
+  const g = canvas(W * TILE, H * TILE);
+  const at = (tx, ty) => rows[ty]?.[tx] ?? 'T';
+  // the oval of sand, in art pixels: as wide and tall as the walkable tiles reach along its middle
+  // (measured from the sand's edge, `,`: a spot of floor inside the commentator's box doesn't count)
+  const mid = rows[Math.floor(H / 2)];
+  const left = [...mid].findIndex((c) => c === ',');
+  const right = mid.length - [...mid].reverse().findIndex((c) => c === ',');
+  // (top and bottom across the middle dozen columns: the commentator's desk sits right on the middle one)
+  const band = (r) => r.slice(Math.floor(W / 2) - 6, Math.floor(W / 2) + 6).includes(',');
+  const top = rows.findIndex(band);
+  const bottom = rows.length - [...rows].reverse().findIndex(band);
+  const cx = ((left + right) / 2) * TILE;
+  const cy = ((top + bottom) / 2) * TILE;
+  const rx = ((right - left) / 2) * TILE - 2;
+  const ry = ((bottom - top) / 2) * TILE - 2;
+  const SAND = hex('#C8A870');
+  const TIER = 11;
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) {
+      const dx = (x + 0.5 - cx) / rx;
+      const dy = (y + 0.5 - cy) / ry;
+      const e = Math.sqrt(dx * dx + dy * dy);
+      if (e <= 1) {
+        // sand, raked, with darker and lighter grains
+        let c = SAND;
+        const h = hash(x, y, 51);
+        if (h < 0.08) c = hex('#B8985E');
+        else if (h > 0.94) c = hex('#D8B880');
+        // the wall's shadow falls on the sand along the far (top) side
+        if (dy < -0.2 && e > 0.93) c = mix(c, hex('#5A4A30'), dither(0.4 * Math.min(1, (-dy - 0.2) / 0.5), x, y));
+        g[y][x] = c;
+        continue;
+      }
+      // out from the sand: the arena wall, then the tiers (a pixel's way out, measured up and down)
+      const out = (e - 1) * ry;
+      if (out < 2) {
+        g[y][x] = hex('#9A928E');
+        continue;
+      }
+      // the far side shows the wall's face, the near side only its top
+      if (dy < 0 && out < 9) {
+        const course = Math.floor(out) % 3 === 0;
+        g[y][x] = course ? hex('#5A5250') : (Math.floor(x / 7) + Math.floor(out / 3)) % 2 ? hex('#7A7270') : hex('#726A66');
+        continue;
+      }
+      if (out < 4) {
+        g[y][x] = hex('#5A5250');
+        continue;
+      }
+      // the tiers: stone benches, a lit edge on each (the people go on afterwards)
+      const step = (out - 4) % TIER;
+      const tier = Math.floor((out - 4) / TIER);
+      g[y][x] = step < 1 ? hex('#8A8280') : step > TIER - 3 ? hex('#4E4846') : tier % 2 ? hex('#726A66') : hex('#625A56');
+    }
+  // The Crown's banners along the top of the stands (not over the commentator's box), worked out first so nobody
+  // in the crowd sits behind one
+  const HALF = 0.2; // the commentator's box: a wedge of the ring either side of the top of the oval (radians)
+  const inWedge = (x, y, margin = 0) => {
+    const dx = (x + 0.5 - cx) / rx;
+    const dy = (y + 0.5 - cy) / ry;
+    return dy < 0 && Math.abs(Math.atan2(dy, dx) + Math.PI / 2) <= HALF + margin;
+  };
+  const hasBooth = rows.some((r) => r.includes('$'));
+  const banners = [];
+  for (let k = 0; k < 7; k++) {
+    const bx = Math.round(cx - rx + ((k + 0.5) / 7) * rx * 2);
+    const ey = Math.sqrt(Math.max(0, 1 - ((bx - cx) / (rx + 60)) ** 2));
+    const by = Math.max(2, Math.round(cy - (ry + 60) * ey));
+    if (hasBooth && (inWedge(bx, by + 6, 0.04) || inWedge(bx + 9, by + 6, 0.04))) continue;
+    banners.push([bx, by]);
+  }
+  const gateTiles = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '1' && gateTiles.push([tx, ty])));
+  const gateBox = gateTiles.length
+    ? [
+        Math.min(...gateTiles.map(([tx]) => tx)) * TILE - 6,
+        gateTiles[0][1] * TILE - 10,
+        gateTiles.length * TILE + 12,
+        TILE + 16,
+      ]
+    : null;
+  const inside = (x, y, [bx, by, bw, bh]) => x >= bx && x < bx + bw && y >= by && y < by + bh;
+
+  // The crowd (author, Oct 6, 2026): small pixel people, scenery in the stands, far off behind the action on the
+  // sand; outlined like the walkers, hair, a face with two eyes, shoulders in a shirt (all hair from behind), arms up
+  // when they cheer. Nobody touches anybody else, or the arena wall, a banner, the commentator's box, the gate or the
+  // edge of the picture: each seat is checked clear at full cheering height, and anyone who wouldn't fit isn't there.
+  const PEOPLE = ['#B04030', '#C8963A', '#4A6AA0', '#E0D4B8', '#3A5A2C', '#7A4A8A'].map(hex);
+  const SKINS = ['#E8B48C', '#C8956C', '#8A5A3A', '#F0C8A0'].map(hex);
+  const HAIR = ['#2A1A12', '#6A4028', '#C8A040', '#1A1416', '#8A8A7A', '#A0482A'].map(hex);
+  const PW = 7; // a spectator's width
+  const SEATED = 8; // and height, sitting
+  const HOP = 1; // how far up they come when they cheer
+  const taken = new Uint8Array(g.w * g.h);
+  const clear = (x, y, side) => {
+    if (x < 0 || y < 0 || x >= g.w || y >= g.h || taken[y * g.w + x]) return false;
+    const dx = (x + 0.5 - cx) / rx;
+    const dy = (y + 0.5 - cy) / ry;
+    const out = (Math.sqrt(dx * dx + dy * dy) - 1) * ry;
+    // in the stands, past the arena wall (its face is taller on the far side)
+    if (out < (side < 0 ? 10 : 5)) return false;
+    if (hasBooth && inWedge(x, y, 0.03)) return false;
+    if (banners.some(([bx, by]) => inside(x, y, [bx - 1, by - 1, 11, 21]))) return false;
+    if (gateBox && inside(x, y, gateBox)) return false;
+    return true;
+  };
+  const spectator = (px, py, seed, back) => {
+    const top = py - SEATED - HOP;
+    // (outline to outline is fine; over each other isn't)
+    for (let j = top; j <= py; j++) for (let i = px; i < px + PW; i++) if (!clear(i, j, back ? 1 : -1)) return;
+    for (let j = top; j <= py; j++) for (let i = px; i < px + PW; i++) taken[j * g.w + i] = 1;
+    const shirt = PEOPLE[Math.floor(hash(seed, 1, 71) * PEOPLE.length)];
+    const shade = mix(shirt, hex('#000000'), 0.3);
+    const skin = SKINS[Math.floor(hash(seed, 2, 71) * SKINS.length)];
+    const hair = HAIR[Math.floor(hash(seed, 3, 71) * HAIR.length)];
+    const up = cheer && hash(seed, 4, 71) < 0.7;
+    const y = py - SEATED - (up && hash(seed, 5, 71) < 0.5 ? HOP : 0);
+    const rows = up
+      ? ['O.OOO.O', 'KOHHHOK', 'BOSSSOB', 'BOESEOB', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.']
+      : ['..OOO..', '.OHHHO.', '.OSSSO.', '.OESEO.', '.OSSSO.', 'OBBBBBO', 'ODBBBDO', '.ODBDO.'];
+    const colour = { O: OUT, H: hair, S: back ? hair : skin, E: back ? hair : OUT, B: shirt, D: shade, K: skin };
+    rows.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch !== '.') put(g, px + i, y + j, colour[ch]);
+      }),
+    );
+  };
+  // along the benches, front rows first, so the people nearest the sand are the ones always there
+  for (const side of [-1, 1])
+    for (let tier = 0; tier < 40; tier++)
+      for (let x0 = -PW; x0 < g.w; x0 += PW) {
+        const out = 4 + tier * TIER + TIER - 2 + (side > 0 ? SEATED - 2 : 0);
+        const e = 1 + out / ry;
+        const px = x0 + (tier % 2) * 3;
+        const dx = (px + PW / 2 - cx) / rx;
+        if (Math.abs(dx) >= e) continue;
+        const py = Math.round(cy + side * Math.sqrt(e * e - dx * dx) * ry);
+        const seed = x0 * 131 + tier * 7 + (side > 0 ? 3 : 0);
+        if (hash(seed, 0, 73) < 0.1) continue; // an empty seat
+        spectator(px, py, seed, side > 0);
+      }
+  // then anywhere else there's room (the ends of the oval, where the benches run up and down)
+  for (let py = SEATED + HOP; py < g.h; py += SEATED + HOP + 2)
+    for (let px = 0; px + PW <= g.w; px += PW) {
+      const seed = py * 137 + px * 11;
+      if (hash(seed, 0, 85) < 0.1) continue;
+      spectator(px, py, seed, py > cy);
+    }
+  for (const [bx, by] of banners) {
+    box(g, bx, by, 1, 18, '#3A2618');
+    box(g, bx + 1, by, 8, 11, '#9A2A22');
+    box(g, bx + 1, by + 11, 3, 2, '#9A2A22');
+    box(g, bx + 6, by + 11, 3, 2, '#9A2A22');
+    box(g, bx + 4, by + 3, 2, 3, '#C8963A');
+    box(g, bx + 3, by + 4, 4, 2, '#C8963A');
+  }
+  // the great gate at the bottom, over its tiles: a dark arch, shut, the portcullis down across it (author, Oct 6, 2026:
+  // "make the exit blocked by bars and a gate")
+  if (gateTiles.length) {
+    const gx = Math.min(...gateTiles.map(([tx]) => tx)) * TILE - 2;
+    const gw = gateTiles.length * TILE + 4;
+    const gy = gateTiles[0][1] * TILE - 6;
+    box(g, gx - 3, gy - 3, gw + 6, TILE + 9, '#8A8280');
+    box(g, gx, gy, gw, TILE + 6, '#1E1816');
+    ellipse(g, gx + gw / 2, gy, gw / 2, 4, '#1E1816');
+    // timber doors behind, then the iron grid in front, spikes at its foot
+    for (let x = gx + 1; x < gx + gw - 1; x++) box(g, x, gy + 2, 1, TILE + 3, x % 4 === 0 ? '#3A2618' : '#5C3A28');
+    for (let x = gx + 2; x < gx + gw - 1; x += 4) {
+      box(g, x, gy - 3, 2, TILE + 9, '#4A4442');
+      put(g, x, gy - 3, '#7A7470');
+      put(g, x, gy + TILE + 6, '#2A2422');
+    }
+    for (let y = gy + 1; y < gy + TILE + 5; y += 5) box(g, gx, y, gw, 1, '#4A4442');
+  }
+  // the commentator's box, part of the Kaloseum's own ring and down at the level of the sand (author, Oct 6, 2026:
+  // the crowd is scenery, far off, and a character among them looks like a giant; Barnaby stands where everyone else
+  // stands). A wedge of the ring at the head of the sand, following the same oval as the tiers: the box opens in the
+  // arena wall at ground level, dark under a red curtain and an arch, solid stone above it to the top of the stands
+  // so no spectator sits beside him; his desk is a low stone wall on the edge of the sand in front of it.
+  if (hasBooth) {
+    const OPEN = 0.13; // the box's opening, within the wedge
+    const STONE = (px, py) => {
+      const course = py % 5 === 0 || (px + (Math.floor(py / 5) % 2) * 4) % 9 === 0;
+      return course ? hex('#5A5250') : (Math.floor(px / 9) + Math.floor(py / 5)) % 2 ? hex('#7A7270') : hex('#726A66');
+    };
+    for (let y = 0; y < g.h; y++)
+      for (let x = 0; x < g.w; x++) {
+        const dx = (x + 0.5 - cx) / rx;
+        const dy = (y + 0.5 - cy) / ry;
+        const e = Math.sqrt(dx * dx + dy * dy);
+        if (e <= 1 || dy >= 0) continue;
+        const off = Math.abs(Math.atan2(dy, dx) + Math.PI / 2);
+        if (off > HALF) continue;
+        const out = (e - 1) * ry;
+        if (out < 2 && off >= OPEN) continue;
+        let c = STONE(x, y);
+        // the wedge's edges, where the tiers meet it: radial pilasters, lit on the left, shaded on the right
+        if (off > HALF - 0.025) c = dx < 0 ? mix(c, hex('#FFFFFF'), 0.15) : hex('#4E4846');
+        else if (off < OPEN && out < 32) {
+          // the box, opening right onto the sand: dark, darker at the back, the red curtain swagged across its top
+          // and hanging down its sides
+          c = out > 20 ? hex('#2A2422') : hex('#3A3432');
+          const swag = 27 - Math.round(3 * Math.sin((off / OPEN) * Math.PI * 1.5) ** 2);
+          if (out >= swag) c = hex('#7A1E18');
+          if (Math.round(out) === swag) c = hex('#C8963A');
+          if (off > OPEN - 0.02) c = hex('#7A1E18');
+        } else if (off < OPEN + 0.02 && out < 36) {
+          // the arch's stones, lit
+          c = hex('#9A928E');
+        }
+        g[y][x] = c;
+      }
+    // two of the Crown's banners on top of the wedge
+    for (const side of [-1, 1]) {
+      const bx = Math.round(cx + side * Math.sin(HALF - 0.05) * (rx + 60));
+      box(g, bx, 0, 1, 5, '#3A2618');
+      box(g, bx + 1, 0, 7, 4, '#9A2A22');
+    }
+    // the desk: a low stone wall on the sand's edge, a lit coping, the Crown's cloth over it with the gold fist, his
+    // speaking trumpet on top
+    const desk = [];
+    rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '+' && desk.push([tx, ty])));
+    const dx0 = Math.min(...desk.map(([tx]) => tx)) * TILE - 6;
+    const dx1 = (Math.max(...desk.map(([tx]) => tx)) + 1) * TILE + 6;
+    const dy0 = desk[0][1] * TILE + 1;
+    for (let y = dy0; y < dy0 + 12; y++) for (let x = dx0; x < dx1; x++) put(g, x, y, STONE(x, y));
+    box(g, dx0, dy0, dx1 - dx0, 2, '#9A928E');
+    box(g, dx0, dy0 + 12, dx1 - dx0, 1, '#4E4846');
+    const mid = Math.round((dx0 + dx1) / 2);
+    box(g, mid - 7, dy0 + 2, 14, 9, '#9A2A22');
+    box(g, mid - 7, dy0 + 10, 14, 1, '#C8963A');
+    box(g, mid - 1, dy0 + 4, 2, 3, '#C8963A');
+    box(g, mid - 2, dy0 + 5, 4, 2, '#C8963A');
+    box(g, dx1 - 14, dy0 - 1, 6, 1, '#C8963A');
+    box(g, dx1 - 9, dy0 - 2, 2, 3, '#E0B040');
+  }
+  // what stands on the sand: the trapdoor down to the cells, the rack of clubs, the brazier
+  for (let ty = 0; ty < H; ty++)
+    for (let tx = 0; tx < W; tx++) {
+      const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
+      if ('.,T1$+'.includes(at(tx, ty))) continue;
+      const draw = DUNGEON_ART[letter];
+      if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
+      // the ladder down goes through a trapdoor: a timber frame, open, dark below
+      if (letter === 'H') {
+        box(g, tx * TILE + 1, ty * TILE + 1, TILE - 2, TILE - 2, '#5C3A28');
+        box(g, tx * TILE + 3, ty * TILE + 3, TILE - 6, TILE - 6, '#120C0A');
+      }
+      draw(g, tx * TILE, ty * TILE, { at: (dx, dy) => map.art?.[at(tx + dx, ty + dy)] ?? at(tx + dx, ty + dy) });
+    }
+  return g;
+}
+
+/**
+ * Worn flagstones, laid in courses of uneven lengths: each stone its own shade, its upper-left edges catching
+ * the light and its lower-right edges in shadow (lit from the upper left, like the castle), with the odd crack,
+ * chip and stain. Worked out per pixel from where the stone falls, so it never seams between tiles.
+ */
+const FLAG_ROWS = new Map();
+function flagstone(x, y) {
+  const rowH = 8;
+  const row = Math.floor(y / rowH);
+  const jy = y % rowH;
+  // where this course's joints fall: stones 7–13 pixels long, the course shifted so joints never line up
+  if (!FLAG_ROWS.has(row)) {
+    const cuts = [];
+    let at = -Math.floor(hash(row, 0, 81) * 12);
+    while (at < 4096) {
+      cuts.push(at);
+      at += 7 + Math.floor(hash(row, cuts.length, 82) * 7);
+    }
+    FLAG_ROWS.set(row, cuts);
+  }
+  const cuts = FLAG_ROWS.get(row);
+  let k = 0;
+  while (cuts[k + 1] <= x) k++;
+  const ix = x - cuts[k];
+  const w = cuts[k + 1] - cuts[k];
+  if (ix === 0 || jy === 0) return hex(DG.floorLine);
+  const h = hash(k, row, 83);
+  let c = hex(DG.floor[Math.floor(h * 3)]);
+  // a few stones a shade lighter or darker than the rest
+  if (h > 0.86) c = mix(c, hex('#4A4440'), 0.35);
+  else if (h < 0.1) c = mix(c, hex('#262220'), 0.35);
+  // the bevel: lit top and left, shaded bottom and right
+  if (jy === 1 || ix === 1) c = mix(c, hex('#4A4440'), 0.3);
+  else if (jy === rowH - 1 || ix === w - 1) c = mix(c, hex('#1E1A18'), 0.3);
+  else {
+    const n = hash(x, y, 84);
+    if (n < 0.05) c = mix(c, hex(DG.floorLine), 0.6);
+    else if (n > 0.97) c = mix(c, hex('#5A524C'), 0.5);
+    // a crack across one stone in a dozen
+    if (hash(k, row, 85) < 0.06 && jy - 2 === Math.round((ix * 4) / w) && ix > 1 && ix < w - 2)
+      c = hex(DG.floorLine);
+  }
+  return c;
+}
+
+/** A training yard's floor: packed sand, raked in long rows, scuffed where the fighting is. */
+function yardSand(x, y) {
+  let c = hex('#8A6E4C');
+  const h = hash(x, y, 120);
+  if (h < 0.1) c = hex('#765C3E');
+  else if (h > 0.94) c = hex('#A4865C');
+  // the rake's lines, a little wobbly, and the scuffs across them
+  if ((y + Math.round(Math.sin(x * 0.15 + Math.floor(y / 5)) * 0.8)) % 5 === 0) c = mix(c, hex('#5A4430'), 0.35);
+  if (hash(Math.floor(x / 9), Math.floor(y / 7), 121) < 0.12) c = mix(c, hex('#6A5236'), 0.3);
+  return c;
+}
+
 function drawDungeon(map) {
   const rows = map.tiles;
   const H = rows.length;
@@ -1428,11 +2378,11 @@ function drawDungeon(map) {
         g[y][x] = hex(marbleAt(x, y));
         continue;
       }
-      const stone = Math.floor(x / 8) + Math.floor(y / 8) * 7;
-      let c = hex(DG.floor[Math.floor(hash(stone, 1, 3) * 3)]);
-      if (x % 8 === 0 || y % 8 === 0) c = hex(DG.floorLine);
-      else if (hash(x, y, 4) < 0.04) c = mix(c, hex(DG.floorLine), 0.6);
-      g[y][x] = c;
+      if (map.floor === 'yard') {
+        g[y][x] = yardSand(x, y);
+        continue;
+      }
+      g[y][x] = flagstone(x, y);
     }
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
@@ -1445,8 +2395,8 @@ function drawDungeon(map) {
   // Shadow under the walls, and torchlight around each torch and candle.
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
-      const c = at(tx, ty);
-      if ((c === '.' || c === ',' || c === 'P' || c === 'v') && 'WBCcRGoE#f'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
+      const c = map.art?.[at(tx, ty)] ?? at(tx, ty);
+      if ((c === '.' || c === ',' || c === 'P' || c === 'v') && 'WBCcRGoEN#fl'.includes(map.art?.[at(tx, ty - 1)] ?? at(tx, ty - 1)))
         for (let j = 0; j < 5; j++)
           for (let i = 0; i < TILE; i++) {
             const px = tx * TILE + i;
@@ -1700,37 +2650,6 @@ const WALKERS = {
     hair: ['bald', '#A2A2AA'],
     beard: '#7E7E88',
   },
-  // the Kingdom Dungeon's three worst prisoners (author, Oct 4, 2026: each their own look, not the guards')
-  // Nails, who served the king one ice cube: ginger and spiky, in his serving apron
-  nails: {
-    top: '#3A2E3A',
-    shade: '#2A2230',
-    legs: '#2A2A30',
-    boots: '#1A1418',
-    skin: '#E8B48C',
-    hair: ['spiky', '#C8662A'],
-    apron: '#E8E0D0',
-  },
-  // Old Mott, twenty life sentences: bald, a great white beard, a patched old tunic
-  oldmott: {
-    top: '#7A6A4A',
-    shade: '#5A4E36',
-    legs: '#4A3E2E',
-    boots: '#2E241A',
-    belt: '#3A2E20',
-    skin: '#E0B898',
-    hair: ['bald', '#E8E8E0'],
-    beard: '#E8E8E0',
-  },
-  // Silas Seen, who left the king on read: pale, quiet, in a deep blue hood
-  silas: {
-    top: '#2E3E52',
-    shade: '#22303F',
-    legs: '#22303F',
-    boots: '#161C24',
-    skin: '#EAD8C8',
-    hair: ['hood', '#2E3E52'],
-  },
   raider: {
     top: '#6A4A3A',
     shade: '#4A3228',
@@ -1751,14 +2670,19 @@ const WALKERS = {
     hair: ['bun', '#8A4A2A'],
     apron: '#F4F0EA',
   },
+  // Barnaby Loudmouth, the Kaloseum's announcer (author, Oct 6, 2026: "a crowd announcer type"): a ringmaster's
+  // red tailcoat with gold, a white collar, a big moustache, and a tall black top hat with a red band.
   barnaby: {
-    top: '#8A2A2A',
-    shade: '#6A1E1E',
-    legs: '#3A2A20',
-    boots: '#2A1A12',
+    top: '#B02A22',
+    shade: '#8A1E18',
+    legs: '#1E1A22',
+    boots: '#140E14',
     belt: '#FFC940',
+    collar: '#F4F0EA',
     hair: ['short', '#4A3A2A'],
-    hat: 'wizard',
+    mustache: '#3A2418',
+    hat: 'top',
+    short: true,
   },
   pim: { top: '#8A7A5A', shade: '#6A5A40', legs: '#4A3A2A', boots: '#3A2A1A', hair: ['spiky', '#2A1A12'] },
   varga: {
@@ -2318,6 +3242,119 @@ const WALKERS = {
     hair: ['short', '#C4442A'],
     beard: '#C4442A',
   },
+  // The three in the Deep Cells (author, Episode 10, Oct 5, 2026), each in for something petty against the king.
+  // Old Mott: bald, a white tuft and a white beard, an old brown tunic. Didn't say bless you.
+  oldmott: {
+    top: '#7A6A48',
+    shade: '#5C4E34',
+    legs: '#3E3428',
+    boots: '#2A2018',
+    belt: '#3E3020',
+    skin: '#E0B498',
+    hair: ['bald', '#ECE8DC'],
+    beard: '#ECE8DC',
+  },
+  // Nails: spiky orange hair, a white shirt under a black jacket. One ice cube.
+  nails: {
+    top: '#E4DCC8',
+    shade: '#2E2430',
+    legs: '#2E2430',
+    boots: '#1A1418',
+    skin: '#E8B48C',
+    hair: ['spiky', '#C4642A'],
+  },
+  // Gary of the cells (author, Oct 6, 2026): the guards' kit. A chill guy, not an idiot: awake when you talk to him.
+  gary: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#3A2418'],
+    beard: '#3A2418',
+    sword: true,
+  },
+  // Brannoc out cold on the Kaldorium's sand (author, Episode 13): eyes shut, a snot bubble (sleep.ts).
+  brannocasleep: {
+    top: '#9AA0B4',
+    shade: '#6A7088',
+    legs: '#6A7088',
+    boots: '#5C3A28',
+    belt: '#5C3A28',
+    hair: ['short', '#C4442A'],
+    sword: true,
+    beard: '#C4442A',
+    sleepy: true,
+  },
+  // ...and the rest of the time, asleep at his post, eyes shut (the game floats Zs over him, sleep.ts).
+  garyasleep: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#3A2418'],
+    beard: '#3A2418',
+    sword: true,
+    sleepy: true,
+  },
+  // Old Mags, who tends the Mad King's roses at the deserters' camp: a grey veil, a moss-dark robe.
+  mags: {
+    robe: true,
+    top: '#3E4A3A',
+    shade: '#2E382C',
+    boots: '#2A2420',
+    skin: '#E0D0C0',
+    hair: ['veil', '#B8B4AC'],
+  },
+  // Kingdom Town's keepers of the Lost Prince (author, Oct 7, 2026): Fitch, who loves the story;
+  // Old Aske, who believes it; Old Orm, who watches the king take the young ones.
+  fitch: { top: '#4E7A9A', shade: '#3A5E7A', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['spiky', '#C87A3A'] },
+  aske: { robe: true, top: '#7A5A6A', shade: '#5E4452', boots: '#3A2A20', hair: ['bun', '#F0ECE6'] },
+  orm: {
+    robe: true,
+    top: '#5A6A5A',
+    shade: '#445044',
+    boots: '#3A2A20',
+    hair: ['bald', '#D8B090'],
+    beard: '#F0ECE6',
+  },
+  // The Long Mess's ghosts (author, Oct 7, 2026): pale and blue like the Chaplain's Echo. Two cooks in aprons, and
+  // Corporal Hobb, who is at both ends of the table.
+  // Each is see-through and trails off in a wisp where the feet should be (`ghost`); the cooks wear their toques.
+  ghostcook: { ghost: true, hat: 'chef', hatColour: '#E8E8F8', top: '#9A9AC8', shade: '#7A7AA8', legs: '#6A6A98', boots: '#4A4A7A', skin: '#B8B8E0', hair: ['bald', '#B8B8E0'], apron: '#E0E0F4' },
+  ghostcook2: { ghost: true, hat: 'chef', hatColour: '#E0E0F4', top: '#8A8ABA', shade: '#6A6A9A', legs: '#5A5A8A', boots: '#3A3A6A', skin: '#B0B0DC', hair: ['bun', '#9A9AC8'], apron: '#E0E0F4' },
+  ghosthobb: { ghost: true, top: '#7A7AAA', shade: '#5A5A8A', legs: '#4A4A7A', boots: '#3A3A6A', belt: '#A8A8D8', skin: '#A8A8D4', hair: ['short', '#5A5A8A'] },
+  // Out of the new cocoons (cocoons.ts, author, Oct 7, 2026). Their own walker ids, so the heroes themselves
+  // don't become walkers in your party.
+  irisnpc: { top: '#6A7A5A', shade: '#4E5A42', legs: '#4A4038', boots: '#2A2420', hair: ['short', '#3A2A20'], belt: '#B84A3A' },
+  mothnpc: { robe: true, top: '#7A7A84', shade: '#5A5A64', boots: '#3A3A42', hair: ['hood', '#7A7A84'] },
+  lyranpc: { top: '#3A5A7A', shade: '#2A445E', legs: '#5A4A3A', boots: '#3A2A1A', hair: ['bun', '#8A4A2A'], belt: '#C8963A' },
+  wynnnpc: { top: '#C8A040', shade: '#A07E2A', legs: '#3A4A5A', boots: '#2A2A30', hair: ['spiky', '#6A6A78'] },
+  oonanpc: { robe: true, top: '#2A2A48', shade: '#1E1E36', boots: '#1A1A2A', skin: '#E8D8C8', hair: ['veil', '#D8DCE8'] },
+  // Silas Seen: a navy hood and robe, a pale face. Left the king on read.
+  silasseen: {
+    robe: true,
+    top: '#2E3C50',
+    shade: '#243040',
+    boots: '#1A2230',
+    skin: '#E8D8C8',
+    hair: ['hood', '#2E3C50'],
+  },
+  // The Traveler (author, Oct 7, 2026): a tourist, everywhere you go. A loud yellow holiday shirt, khaki shorts, a
+  // straw sun hat with a red band, round glasses.
+  traveler: {
+    top: '#F2C14E',
+    shade: '#D8963A',
+    legs: '#C8B07A',
+    boots: '#6A4028',
+    belt: '#6A4028',
+    hair: ['short', '#7A4A2A'],
+    hat: 'sun',
+    glasses: true,
+  },
 };
 
 /** Draws one frame of a walker into `g` at (ox, oy). */
@@ -2674,6 +3711,36 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     }
   }
 
+  if (w.hat === 'sun') {
+    // a tourist's straw sun hat: a wide flat brim, a low crown, a red band
+    const straw = '#E8D08A';
+    b(2, 4, 12, 1, straw);
+    b(5, 2, 6, 2, straw);
+    b(5, 3, 6, 1, '#C4442A');
+    if (!back) p(6, 2, '#F6E6B0');
+  }
+
+  if (w.hat === 'top') {
+    // a ringmaster's top hat: a wide brim, a tall black crown, a red band
+    const hat = '#1A161E';
+    b(3, 4, 10, 1, hat);
+    b(5, -1, 6, 5, hat);
+    b(5, 2, 6, 1, '#B02A22');
+    if (!back) p(6, 0, '#4A4452');
+  }
+
+  if (w.hat === 'chef') {
+    // a cook's tall white toque, puffed at the top, lit on the left
+    const hat = w.hatColour ?? '#F4F0EA';
+    b(3, 0, 10, 3, hat);
+    b(4, 3, 8, 1, '#7A7AA8');
+    p(4, 0, '#FFFFFF');
+    p(5, 0, '#FFFFFF');
+    b(11, 0, 2, 3, '#B8B8D8');
+    p(6, 2, '#C8C8E0');
+    p(9, 1, '#C8C8E0');
+  }
+
   if (w.stitches && !back) {
     // a seam down the chest and across the brow
     for (let y = 11; y <= 16; y++) p(side ? 7 : 8, y, w.stitches);
@@ -2698,6 +3765,32 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     ellipse(f, bx - 1, 6, 2, 2, '#8A8280');
   }
 
+  // a short one (Barnaby, author, Oct 6, 2026: "a small guy"): the same head and body on stubby legs, four rows
+  // shorter, feet where everyone's feet are
+  if (w.short) {
+    const rows = f.map((r) => r.slice());
+    for (let y = 0; y < FH; y++) {
+      const from = y >= 20 ? y : y - 4;
+      f[y] = from >= 0 ? rows[from].slice() : Array(FW).fill(null);
+    }
+    // the four rows of leg that went: the belt sits right on top of the boots
+    for (let y = 16; y < 20; y++) f[y] = rows[y - 4].slice();
+  }
+
+  // a ghost has no feet: below the hem the body thins to a wisp that sways as it drifts
+  if (w.ghost) {
+    const sway = frame === 1 ? -1 : frame === 2 ? 1 : 0;
+    for (let y = 17; y < FH; y++) {
+      const half = [5, 4, 3, 2, 1, 0.5, 0, 0][y - 17] ?? 0;
+      const row = f[y].slice();
+      const shift = y > 18 ? sway : 0;
+      for (let x = 0; x < FW; x++) {
+        const src = row[x - shift] ?? null;
+        f[y][x] = Math.abs(x - 7.5 - shift) <= half ? (src ?? w.top) : null;
+      }
+    }
+  }
+
   // a dark outline around the whole silhouette, then a soft shadow at the feet
   const solid = (x, y) => x >= 0 && y >= 0 && x < FW && y < FH && f[y][x] && f[y][x] !== OUT;
   const outline = [];
@@ -2705,7 +3798,16 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     for (let x = 0; x < FW; x++)
       if (!f[y][x] && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) outline.push([x, y]);
   for (const [x, y] of outline) f[y][x] = OUT;
-  for (let y = 21; y < (w.noShadow ? 21 : 24); y++)
+  if (w.ghost)
+    // see-through, a little more so toward the tail
+    for (let y = 0; y < FH; y++)
+      for (let x = 0; x < FW; x++) {
+        const c = f[y][x];
+        if (!c) continue;
+        const rgb = typeof c === 'string' ? hex(c) : c;
+        f[y][x] = [rgb[0], rgb[1], rgb[2], y < 17 ? 215 : Math.max(70, 215 - (y - 16) * 30)];
+      }
+  for (let y = 21; y < (w.noShadow || w.ghost ? 21 : 24); y++)
     for (let x = 2; x < 14; x++) {
       const d = ((x - 7.5) / 6) ** 2 + ((y - 22.5) / 1.6) ** 2;
       if (d <= 1 && !f[y][x]) f[y][x] = [16, 10, 8, 90];
@@ -2744,6 +3846,7 @@ const MAPS = [
   'barracks-hall',
   'barracks-armoury',
   'officers-mess',
+  'long-mess',
   'barracks-yard',
   'pit-below',
   'lower-barracks',
@@ -2759,6 +3862,7 @@ const MAPS = [
   'castle-grounds',
   'castle-hall',
   'castle-upper',
+  'war-room',
   'war-hall',
   'field-of-banners',
   'tithe-road',
@@ -2808,8 +3912,18 @@ for (const id of MAPS) {
   if (widths.size !== 1) throw new Error(`${id}: rows have different lengths (${[...widths].join(', ')})`);
   writeFileSync(
     `assets/world/${id}.png`,
-    toPng(map.style === 'outdoor' ? drawOutdoor(map) : map.style === 'dungeon' ? drawDungeon(map) : drawMap(map)),
+    toPng(
+      map.style === 'outdoor'
+        ? drawOutdoor(map)
+        : map.floor === 'sand'
+          ? drawArena(map)
+          : map.style === 'dungeon'
+            ? drawDungeon(map)
+            : drawMap(map),
+    ),
   );
+  // the Kaloseum's crowd, on its feet: a second picture the game and the episodes switch to and back
+  if (map.floor === 'sand') writeFileSync(`assets/world/${id}-cheer.png`, toPng(drawArena(map, true)));
 }
 const { g, ids } = drawWalkers();
 writeFileSync('assets/world/walkers.png', toPng(g));

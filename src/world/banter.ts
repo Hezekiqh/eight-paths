@@ -22,7 +22,7 @@ export const BANTER: Record<string, Banter[]> = {
       who: 'brannoc',
       with: 'oren',
       lines: [
-        'BRANNOC: Half a stick? I will have you know I am— Oren, tell her.',
+        'BRANNOC: Half a stick? I will have you know I am— Oren, tell him.',
         'OREN: She could.',
         'BRANNOC: …My thanks, Oren.',
       ],
@@ -230,7 +230,7 @@ export const BANTER: Record<string, Banter[]> = {
     },
   ],
   'warrior-city:barnaby': [
-    { who: 'pip', lines: ['PIP: The same victory for three hundred years? Have you tried a key change?'] },
+    { who: 'pip', lines: ['PIP: Glory every fight, every night? Same tune? Have you tried a key change?'] },
   ],
   'kingdom-town:pim': [{ who: 'ysolde', lines: ['YSOLDE: A penny a rumour. And a false one?', 'PIM: Two pennies!'] }],
   'kingdom-town:guard': [
@@ -274,8 +274,8 @@ export const BANTER: Record<string, Banter[]> = {
       who: 'brannoc',
       lines: [
         'BRANNOC: A prince, eh? I hope he was worth it.',
-        'SERGEANT MAELIS: Family says he ran.',
-        'BRANNOC: …He sounds a coward.',
+        'SERGEANT MAELIS: Family says he was lost. Not ran. Lost.',
+        'BRANNOC: …Lost. Well. Lost things can be found, I suppose.',
       ],
     },
   ],

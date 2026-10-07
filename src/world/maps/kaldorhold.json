@@ -28,10 +28,10 @@
     "M.............ssssssssssss.............M",
     "M...mm..mm..mmsKKssssssKKs.mm..mm......M",
     "M.............sKKssssssKKs.............M",
-    "M.IIIIII......ssssssssssss......IIIIII.M",
-    "M.IIIIII......ssssssssssss......IIIIII.M",
-    "M.IIIIII............s...........IIIIII.M",
-    "M..n................s...............n..M",
+    "M.232232......ssssssssssss......IIIIII.M",
+    "M.434342......ssssssssssss......IIIIII.M",
+    "M.323323............s...........IIIIIIJM",
+    "M..n.0..............s...............n..M",
     "MMMMMMMMMMMMMMMMMMMM_MMMMMMMMMMMMMMMMMMM"
   ],
   "spawn": {
@@ -71,13 +71,33 @@
       "The way back west, to the old town."
     ],
     "^": [
-      "North, toward the roar of the Kaldorium Maximus."
+      "North, toward the shouting of the Training Yard."
     ],
     ">": [
       "The east road, toward drums and shouting in time."
     ],
     "_": [
       "The south street, toward the smell of ice and old furs."
+    ],
+    "J": [
+      "A cocoon in the corner, where nobody looks.",
+      "The silk is silver, and very still. You get the feeling it's looking at you."
+    ],
+    "2": [
+      "What's left of a wall, black with soot. A building stood here once. A big one."
+    ],
+    "3": [
+      "Ash, and a fallen roof beam. Somewhere under it, the ash is still warm. It shouldn't be, after this long."
+    ],
+    "4": [
+      "A stone plinth with an empty glass case on it. A brass label, half melted: THE HALE CROWN, AS WORN BY—",
+      "The rest has run like candle wax."
+    ],
+    "0": [
+      "A notice nailed to a post, in the king's own square hand:",
+      "THE MUSEUM OF THE OLD KINGDOM IS CLOSED. THERE IS NO OLD KINGDOM.",
+      "STRENGTH CREATES JUSTICE. THE WINNERS DECIDE JUSTICE.",
+      "— KALDOR"
     ]
   },
   "objects": [
@@ -128,7 +148,7 @@
         {
           "ask": "Where do the furs come from?",
           "answer": [
-            "North. Up past the Frost Ward. My cousins trap. I sell. I make you do push-ups.",
+            "South. Down past the Frost Ward. My cousins trap. I sell. I make you do push-ups.",
             "Elder Skadi says the old Kaldari wore wolves. I say wolves wore them first."
           ]
         },
@@ -229,7 +249,7 @@
         {
           "ask": "What happens if you don't pay?",
           "answer": [
-            "The Kaldorium Maximus. Or the fighters' cells first. Then the Maximus.",
+            "The Training Yard. Or the fighters' cells first. Then the yard.",
             "Joss's whole camp owed a tithe. They sent Joss. He writes about clouds. I felt bad. I wrote it down anyway."
           ]
         },
@@ -311,6 +331,25 @@
         "Behind the Hall of Kaldor, in a crate marked RETURNS: a Heart Piece.",
         "Somebody tried to sell it at the bazaar. Nobody could do enough push-ups."
       ]
+    },
+    {
+      "id": "oona-hatched",
+      "type": "npc",
+      "x": 38,
+      "y": 16,
+      "sprite": "oonanpc",
+      "facing": "down",
+      "name": "Oona",
+      "lines": [
+        "* She steps out of the silk, a silver blindfold over her eyes, and turns her face straight to you.",
+        "There you are. You were later than I saw. Only a little.",
+        "The future is shy. Be patient with it.",
+        "Tomorrow it will rain in Warrior City. Bring a cloak. That is all I am going to tell you, and it is quite enough.",
+        "* Oona walks away along the wall without once touching it."
+      ],
+      "comesAfter": "oona-hatched",
+      "sets": "oona-left",
+      "goneAfter": "oona-left"
     }
   ]
 }

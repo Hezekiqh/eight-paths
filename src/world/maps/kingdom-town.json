@@ -58,14 +58,14 @@
       "The chapel, dark and quiet."
     ],
     "3": [
-      "The old Kaldorium, boarded up. A painted sign: THE PIT IS CLOSED. FOR FIGHTS: THE COLOSSEUM, IN WARRIOR CITY, OR THE MAXIMUS, BY THE EAST GATE. Under it: (BOTH HAVE STATUES. OF COURSE BOTH HAVE STATUES.)"
+      "An old fighting ring, boarded up. A painted sign: CLOSED. FOR FIGHTS: THE KALOSEUM, IN WARRIOR CITY. Under it: (IT HAS A STATUE. OF COURSE IT HAS A STATUE.)"
     ],
     "d": [
       "You knock. A woman's voice, very close to the door: \"Go away. Unless you're the prince. Are you the prince?\""
     ],
     "K": [
       "The statue of Kaldor, colossal, one boot on a broken crown.",
-      "The plaque: KALDOR THE KINGBREAKER. He struck down the Mad King and saved the world from war. First of the Eight. Undying.",
+      "The plaque: KALDOR THE KINGBREAKER. Brother of King Osric, named his heir, and king when Osric's heart gave out. He kept the world from war. First of the Eight. Undying.",
       "Its eyes are two lenses of old-world glass. They follow you round the square. They probably don't."
     ],
     "Z": [
@@ -109,7 +109,8 @@
       "name": "Gert",
       "lines": [
         "Yeah, we know. He names everything after himself.",
-        "That's Kaldor Street. So's that one. They cross. You get used to it."
+        "That's Kaldor Street. So's that one. They cross. You get used to it.",
+        "Got everything he ever wanted, folk say. The money, the wealth, the fame, the women. Now he collects streets."
       ],
       "questions": [
         {
@@ -122,13 +123,13 @@
           "ask": "Heard any gossip?",
           "answer": [
             "Don't make eye contact with the Crushers. The babies. They can smell weakness.",
-            "Also the king closed the Trial of Arms three hundred years ago. You'd need the old law to get near him. Hugo knows where it's carved. In the maze."
+            "Also the king closed the Trial of Arms five hundred years ago. You'd need the old law to get near him. Hugo knows where it's carved. In the maze."
           ]
         },
         {
           "ask": "How do I reach the king?",
           "answer": [
-            "Get yourself billed at the Colosseum in Warrior City: Barnaby does the bills, he likes a talker. Win the fights. Read the old law in the maze. Free the cages so there's a court to witness. And get Varga to agree to witness it.",
+            "Win at the Kaloseum in Warrior City. Read the old law in the maze. Free the cages so there's a court to witness. Get Varga to agree to witness it. And get Harrow's forge working.",
             "Or buy a lamp. Lamps are nice."
           ]
         },
@@ -305,14 +306,14 @@
       "name": "The Cage Guard",
       "lines": [
         "Back off. King's cages, king's prisoners.",
-        "I score their cheering at the Maximus. That one's a three. That one's a two.",
+        "I score their cheering at the Kaloseum. That one's a three. That one's a two.",
         "You? You look like a one."
       ],
       "questions": [
         {
           "ask": "Who's in the cages?",
           "answer": [
-            "People who wouldn't cheer at the Maximus. They'll cheer next time."
+            "People who wouldn't cheer at the Kaloseum. They'll cheer next time."
           ]
         },
         {
@@ -774,7 +775,7 @@
       "lines": [
         "Ninety-one. Ninety-two. Don't interrupt.",
         "Chin-ups on the cage bars. The bars are the only thing in this town that don't wobble.",
-        "Ninety-three. When I was a girl I did these on the old king's gate. Ninety-four."
+        "Ninety-three. My gran's gran did these on the old king's gate, they say. Ninety-four."
       ],
       "look": true,
       "questions": [
@@ -788,7 +789,7 @@
         {
           "ask": "What was the old king like?",
           "answer": [
-            "Hale. Kind man. Open hand. Let children swing on his gate. I was one of them.",
+            "Hale. King Osric, last of them. Kind man, the family says. Open hand. Let children swing on his gate. My gran's gran was one of them.",
             "Kaldor took the gate down. I took up the cage bars. Ninety-six."
           ]
         },
@@ -832,6 +833,109 @@
           "deed": "bad"
         }
       ]
+    },
+    {
+      "id": "fitch",
+      "type": "npc",
+      "x": 24,
+      "y": 14,
+      "sprite": "fitch",
+      "facing": "down",
+      "name": "Fitch",
+      "lines": [
+        "Have you heard of the Lost Prince? He got lost in the woods, and he's STILL lost, and one day he comes back with a sword THIS big.",
+        "My brother says it's a baby story. My brother says everything's a baby story.",
+        "I'm going to find him first. I've got a stick."
+      ]
+    },
+    {
+      "id": "aske",
+      "type": "npc",
+      "x": 20,
+      "y": 11,
+      "sprite": "aske",
+      "facing": "left",
+      "name": "Old Aske",
+      "lines": [
+        "The Lost Prince. My grandmother had it from hers, and hers from hers.",
+        "The young ones laugh at it. A fairytale, they say. The king says there was never any prince, and the king is never wrong.",
+        "But we know. He'll return one day."
+      ],
+      "questions": [
+        {
+          "ask": "Why don't the young ones believe it?",
+          "answer": [
+            "Five hundred years of one king. You'd think he was the sky, if he was all you'd ever had over you.",
+            "They believe what he tells them. They're frightened not to. He likes it that way."
+          ]
+        },
+        {
+          "ask": "Why do you still believe it?",
+          "answer": [
+            "Because some of us still tell it. A story that's told isn't over."
+          ]
+        },
+        {
+          "ask": "It's a fairytale, grandma.",
+          "answer": [
+            "That's what they all say. Mind you don't say it twice.",
+            "* She turns back to the statue. You've been dismissed."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "orm",
+      "type": "npc",
+      "x": 30,
+      "y": 12,
+      "sprite": "orm",
+      "facing": "down",
+      "name": "Old Orm",
+      "lines": [
+        "Kaldor takes the youth now. Off to the Kaloseum, and back with eyes like nails.",
+        "Over the last hundred years the training's got more aggressive. Every decade, a little meaner.",
+        "It's like he wants to make war machines out of men.",
+        "I get the feeling something horrible might happen soon."
+      ],
+      "questions": [
+        {
+          "ask": "What could happen?",
+          "answer": [
+            "You don't build a war machine to leave it in the shed.",
+            "Whatever he's training them for, it's bigger than the Kaloseum."
+          ]
+        },
+        {
+          "ask": "Do you believe in the Lost Prince?",
+          "answer": [
+            "Aske does. I want to.",
+            "If he's coming back, he'd best hurry."
+          ]
+        },
+        {
+          "ask": "Sounds like you're just scared.",
+          "answer": [
+            "I am. Anyone with sense is.",
+            "* He goes back to watching the road to the Kaloseum."
+          ],
+          "deed": "bad"
+        }
+      ]
+    },
+    {
+      "id": "traveler-kingdom-town",
+      "type": "npc",
+      "x": 3,
+      "y": 11,
+      "sprite": "traveler",
+      "facing": "right",
+      "name": "The Traveler",
+      "lines": [
+        "Oh! Hello, hello! Lovely day for it."
+      ],
+      "goneAfter": "kaldor-beaten"
     }
   ],
   "art": {

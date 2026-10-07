@@ -1,6 +1,7 @@
 import { CLASSES, type Dimension } from '@/game';
 
 import { GATE_FLAG, GATE_GUARD } from './castle';
+import { COCOONS } from './cocoons';
 import { JOBS } from './jobs';
 import { MAPS, type MapId, type WorldMap } from './maps';
 import {
@@ -175,6 +176,15 @@ export function nextGoal(here: MapId, discovered: MapId[], xp: XpTotals): Goal {
   const been = (id: MapId) => id === here || discovered.includes(id);
   // The next gated way out not yet both open and walked through.
   const step = EXITS.find((e) => !e.back && e.to && !(standing(e.needs, xp).met && been(e.to.map)));
+
+  // Out of the Archive, Felix's cocoon comes first (the road east is walled off till it's broken, cocoons.ts)
+  const felix = COCOONS[0];
+  if (
+    step?.id !== 'archive-door' &&
+    !(xp.flags ?? []).includes(felix.hatched) &&
+    !discovered.includes('warrior-city')
+  )
+    return pointAt(here, { map: felix.map, box: ONE(felix.x, felix.y), tag: 'The cocoon' }, 'Look at the cocoon', xp);
 
   if (!step) {
     const flags = xp.flags ?? [];

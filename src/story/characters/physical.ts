@@ -94,7 +94,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 23,
-    bio: 'A guard captain in dented chainmail and a helmet with one proud red plume. She drills the whole camp at dawn with a voice like a trumpet, checks that everyone ate breakfast, and never lets anyone out of her sight. Not again.',
+    bio: 'A guard captain in dented chainmail and a helmet with one proud red plume. She drills the whole camp at dawn with a voice like a trumpet, checks that everyone ate breakfast, and counts heads twice. Just to be sure.',
     quote: 'Form up. Stretch first. Complain after.',
   },
   kofi: {
@@ -121,16 +121,17 @@ export const PHYSICAL = {
     bio: 'A field medic with a dark bob and a towel always slung over one shoulder, who once swam supplies across the cold Mirrorlake when every bridge was down. Calm, unsentimental and faintly smug about her circulation.',
     quote: 'Cold water, clear head.',
   },
-  sable: {
+  kaldor: {
     number: 2,
     rarity: 4,
-    alignment: 'Neutral Evil',
-    name: 'Sable',
+    alignment: 'Lawful Evil',
+    name: 'Kaldor',
+    fullName: 'Kaldor the Kingbreaker',
     dimension: 'physical',
-    kind: 'recruit',
+    kind: 'steward',
     unlockLevel: 35,
-    bio: 'A masked duelist in a black cloak who practices footwork alone in the dark. Sable rarely speaks, never boasts, and has never once been seen to hurry, even while winning.',
-    quote: 'Again. Slower. Now faster.',
+    bio: 'The king who broke the old crown and stood on it: crimson cloak, red beard, a gold crown over a grey hood, and statues of himself on every corner. He closed the Trial of Arms so nobody could ever challenge him, and in his hall, by some trick of torches and mirrors, he casts no shadow.',
+    quote: 'Strength is everything. Kneel, and you may keep a little of it.',
   },
   nana: {
     number: 26,
@@ -164,7 +165,7 @@ export const PHYSICAL = {
     dimension: 'physical',
     kind: 'recruit',
     unlockLevel: 25,
-    bio: 'The tallest man in the kingdom, and the last to challenge its king. He came within one blow of the crown, and for three hundred years the king kept him standing guard. Laid to rest and woken properly, he is gentle, slow to speak and very, very tall.',
+    bio: 'The tallest man in the kingdom, and the last to challenge its king. He came within one blow of the crown, and for five hundred years the king kept him standing guard. Laid to rest and woken properly, he is gentle, slow to speak and very, very tall.',
     quote: 'Almost. And then, at last.',
   },
   varga: {

@@ -127,14 +127,14 @@ export const GATE_ANSWERS: GateAnswer[] = [
     label: '"Captain. When did you last sleep?"',
     path: 'spiritual',
     lines: [
-      'You ask the captain how he is. Really ask. He opens his mouth to say "fine," and seven years of night shifts come out instead.',
+      'You ask the captain how he is. Really ask. He opens his mouth to say "fine," and five hundred years of night shifts come out instead.',
       'CAPTAIN ORSK: ...Nobody asks. Nobody ever asks.',
       'CAPTAIN ORSK: Lower the bridge. I need a minute.',
     ],
     by: {
       wren: [
         'SISTER WREN: Captain. When did you last sleep?',
-        'Her lantern brightens. Orsk opens his mouth to say "fine," and seven years of night shifts come out instead. Wren listens to all of it.',
+        'Her lantern brightens. Orsk opens his mouth to say "fine," and five hundred years of night shifts come out instead. Wren listens to all of it.',
         'CAPTAIN ORSK: ...Nobody asks. Nobody ever asks.',
         'CAPTAIN ORSK: Lower the bridge. I need a minute.',
       ],
@@ -247,8 +247,8 @@ export const REJOIN_MAP = 'broken-watch';
 export const BRANNOC_REJOINS = [
   'BRANNOC: WAIT! WAIT FOR ME!',
   'Brannoc comes pounding down the road, crown jammed on over his helmet, a scroll flapping in one hand.',
-  'BRANNOC: I have appointed a royal advisor. I gave her two rules. Do not go to war. Do not cause problems.',
-  "BRANNOC: Everything else, she sends by raven. I am... what is the Keeper's word for it... working remotely.",
+  'BRANNOC: I have appointed a royal advisor. I gave him two rules. Do not go to war. Do not cause problems.',
+  "BRANNOC: Everything else, he sends by raven. I am... what is the Keeper's word for it... working remotely.",
   'BRANNOC: I have set my banner to "Away". I shall attend the royal council by candle. I have learned to say "you are on mute." I know not what it means. It is very powerful.',
   'BRANNOC: And I have written an out-of-office scroll. Behold.',
   'The scroll reads: THE KING IS AWAY FROM HIS THRONE. FOR URGENT MATTERS, CONTACT THE ROYAL ADVISOR. FOR WAR, THE ANSWER IS NO.',

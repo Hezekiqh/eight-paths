@@ -6,20 +6,26 @@ import keeperWelcome from './keeper-welcome.json';
 import type { MapId } from './maps';
 import type { Arrival, Requirement } from './progress';
 
-// Felix's boulder maze, between the Courier Road and the deserters' camp
+// Felix's boulder maze, between the Courier Road and Warrior City
 // (author, Oct 3, 2026). Anyone can solve it; push a boulder the wrong way and
 // you're stuck, so you walk back out to the road and in again, which puts every
 // boulder back. A Mage of Lv 6 sees a hidden passage instead: it leads to the
 // Archive, where the Keeper waits, and its green candle sets you down past
-// the maze. Either way you walk into Felix framing you to the king's guards.
+// the maze. Either way you walk into Felix framing you to the king's guards,
+// and however you answer them, you end up in the cells (author, Oct 7, 2026:
+// the prison arc is for every player).
 
 export const MAZE = 'felix-maze';
 /** Set once you're past the boulders (or the guards took you): they stay rolled aside after that. */
 export const MAZE_SOLVED = 'felix-maze-solved';
 /** The guard scene is over, however it went: Felix and the guards are gone. */
 export const FRAMED = 'felix-framed';
-/** You promised the guards a drink. They'll remember. */
+/** You promised the guards a drink. They'll remember. (Old saves only: now you buy it on the spot, DRINKS_DUE.) */
 export const OWES_GUARDS = 'owes-guards-a-drink';
+/** You offered the guards a drink: they take you straight to Warrior City's tavern to collect (TO_THE_BAR). */
+export const DRINKS_DUE = 'guards-drinks-due';
+/** You ordered, and couldn't pay: off to the cells. */
+export const TAB_UNPAID = 'guards-tab-unpaid';
 /** A wrong answer to Sir Himothy: you were thrown in the dungeon, next to Brannoc. */
 export const JAILED = 'jailed-with-brannoc';
 /** You've come to in the cell (said once). */
@@ -48,6 +54,8 @@ export const PASSAGE_RETURN: Arrival = { map: 'felix-maze', x: 2, y: 2, facing: 
 export const INTO_THE_ARCHIVE: Arrival = { map: 'archive', x: 20, y: 6, facing: 'up' };
 /** Out of the green candle: in front of Felix and the guards, one tile between you and him. */
 export const PAST_THE_MAZE: Arrival = { map: 'felix-maze', x: 22, y: 4, facing: 'right' };
+/** At the bar in Warrior City's tavern, Barkeep Rolla across it, a guard on either side: where they collect their drink. */
+export const TO_THE_BAR: Arrival = { map: 'wc-tavern', x: 6, y: 5, facing: 'up' };
 /** Under the guards' stair: the guards march you down to the cell from here (dungeon.ts). */
 export const INTO_THE_CELL: Arrival = { map: 'kingdom-dungeon', x: 21, y: 3, facing: 'down' };
 /** Knocked out: you come to on the straw, inside the cell (where shovedIn leaves you). */
@@ -56,6 +64,7 @@ export const KNOCKED_IN: Arrival = { map: 'kingdom-dungeon', x: 6, y: 4, facing:
 export const KNOCKED_WAKE = [
   'You wake up on straw. Your head is ringing. Somewhere far above, someone is still saying "the Third."',
   'Stone walls. Iron bars. Straw that smells of other people.',
+  'Someone has pinned a note to your shirt: FIVE LIFE SENTENCES. PLOTTING AGAINST THE THRONE. BY ORDER OF THE KING. - BARNABY',
 ];
 
 /**
@@ -141,6 +150,44 @@ export const SCENE_OPEN = [
 export const MISTER = '"Mr. Himothy, I..."';
 export const CUT_OFF = [`${HIMOTHY}: SAY. THE WHOLE. THING.`];
 
+/** The clever answer lands, and it doesn't matter: Felix's mustache is more convincing (author, Oct 7, 2026). */
+const SEIZE_ANYWAY = [
+  `${HIMOTHY}: But how am I supposed to believe you? Besides, this guy's mustache is very convincing.`,
+  `${HIMOTHY}: Seize {them}!`,
+];
+
+// The drink (author, Oct 7, 2026): they take you up on it there and then, straight to Warrior City's tavern.
+// You order, Barkeep Rolla asks for the money, you haven't got any, and the guards walk you to the cells.
+export const DRINKS = {
+  thanks: [`${HIMOTHY}: Hey, buddy. Thanks for offering to buy us drinks. It's been a long day.`],
+  /** What you say back: either way, they're thirsty now. */
+  replies: ['"No problem."', '"Anytime."'],
+  /** The guards hold you to it on the spot (the fade to the inn follows). */
+  off: [`${HIMOTHY}: Then what are we standing here for? The tavern. Your treat.`],
+  /** At the bar: Rolla pours, and asks. */
+  bar: [
+    "The tavern in Warrior City. Sir Himothy and his guard have the best stools, and their elbows on the bar already.",
+    "BARKEEP ROLLA: Two of the king's own, and somebody else paying? That's a first. What'll it be?",
+  ],
+  /** Every drink in the house is named after the king. */
+  menu: [
+    { label: 'A Kaldor (1 coin)', drink: 'a Kaldor' },
+    { label: "Kaldor's Reserve (2 coins)", drink: "a Kaldor's Reserve" },
+    { label: 'Kaldor the Undying (100 coins)', drink: 'a round of Kaldor the Undying' },
+    { label: 'Kaldor, Forever (1,000 coins)', drink: "the bottle of Kaldor, Forever, from the top shelf" },
+  ],
+  /** `{drink}`: what you ordered. Then it's the cells: the fade, and the guards march you down. */
+  noMoney: [
+    'You order {drink}. Barkeep Rolla reaches for it, and stops.',
+    "BARKEEP ROLLA: Hey. You don't have any money, do you?",
+    '(You check your pockets. Lint. Half a button.)',
+    `${HIMOTHY}: ...No money.`,
+    "GUARD: We left a perfectly good arrest for this, sir.",
+    `${HIMOTHY}: First plotting against the king, and now lying to his guard. On my long day.`,
+    `${HIMOTHY}: Seize {them}!`,
+  ],
+};
+
 /** Who the guards are after, for "Seize him!": they only want you. ('them' for anyone not listed.) */
 export const PRONOUN: Record<string, 'him' | 'her' | 'them'> = {
   brannoc: 'him',
@@ -165,6 +212,8 @@ export type Answer = {
   jailed?: boolean;
   /** Knocked out instead of marched off: you wake in the cell (KNOCKED_IN). */
   knockout?: boolean;
+  /** Off to the tavern with the guards first (DRINKS): you can't pay, and it's the cells from there. */
+  drinks?: boolean;
   /** Kind or mean (honor.ts). */
   deed?: 'good' | 'bad';
   /** Said when a party member of that Path steps out and says it for you, in their own voice (author, Oct 4, 2026). */
@@ -181,9 +230,9 @@ export const forHero = (line: string, hero: string) => {
 
 /**
  * The guards' question, four answers at most like every menu (author, Oct 4, 2026): two clever ones
- * (Lv 10 in their Path, greyed out with just the Path's icon until then) that talk you free, and two
- * anyone can say that land you in the cells: the plea he's heard a thousand times, and the mean one,
- * which gets you knocked out.
+ * (Lv 10 in their Path, greyed out with just the Path's icon until then), and two anyone can say: the
+ * plea he's heard a thousand times, and the mean one, which gets you knocked out. Every one of them
+ * ends in the cells (author, Oct 7, 2026); the drink just takes the long way, through the tavern.
  */
 export const ANSWERS: Answer[] = [
   {
@@ -192,32 +241,32 @@ export const ANSWERS: Answer[] = [
     lines: [
       "You explain: you've been awake a matter of days, you don't know where the throne is, and you'd need a map, a plan, and allies, which you also don't have.",
       `${HIMOTHY}: ...That is a very good point.`,
+      ...SEIZE_ANYWAY,
     ],
     by: {
       quill: [
         "QUILL: Plots take weeks. Months, if they're any good. I've been awake for about four days.",
         "QUILL: I don't know where the throne is. I'd need a map, a plan and allies, and I have, let me check... a pencil.",
         `${HIMOTHY}: ...That is a very good point.`,
+        ...SEIZE_ANYWAY,
       ],
     },
+    sets: [JAILED],
+    jailed: true,
   },
   {
     label: '"Let me buy you both a drink."',
     path: 'social',
-    lines: [
-      `${HIMOTHY}: ...A drink?`,
-      `${HIMOTHY}: Now you're talking. The Candle Inn, when you're in town. Don't forget.`,
-      `${HIMOTHY}: You owe us.`,
-    ],
+    // then DRINKS.thanks, with your reply
+    lines: [`${HIMOTHY}: ...A drink?`],
     by: {
       pip: [
         'PIP: Gentlemen! You look thirsty. Arresting people is thirsty work. Let me buy you both a drink!',
         `${HIMOTHY}: ...A drink?`,
-        `${HIMOTHY}: Now you're talking. The Candle Inn, when you're in town. Don't forget.`,
-        `${HIMOTHY}: You owe us.`,
       ],
     },
-    sets: [OWES_GUARDS],
+    sets: [DRINKS_DUE],
+    drinks: true,
   },
   {
     // the mean one (honor.ts; author, Oct 4, 2026): no escort for this, he knocks you out cold
@@ -242,11 +291,4 @@ export const ANSWERS: Answer[] = [
     sets: [JAILED],
     jailed: true,
   },
-];
-
-/** Felix, let off the hook: then he laughs, and he's gone. */
-export const FELIX_FOILED = [
-  'FELIX: What? No! You were meant to be outraged! Dragged off! Weeping!',
-  'FELIX: Hmph. Fine. FINE. This round is yours, mon ami.',
-  'FELIX: But my next trap? Magnifique. Truly. You will see. Au revoir!',
 ];

@@ -21,6 +21,8 @@ export type Cocoon = {
   empty: string[];
 };
 
+const EMPTY = ['The split silk of an empty cocoon. Whoever was inside is long gone.'];
+
 export const COCOONS: Cocoon[] = [
   {
     // The first one you find: open to anyone, to show what cocoons are. Felix Rook,
@@ -32,9 +34,78 @@ export const COCOONS: Cocoon[] = [
     character: 'felix',
     hatched: 'felix-hatched',
     left: 'felix-left',
-    empty: ['The split silk of an empty cocoon. Whoever was inside is long gone.'],
+    empty: EMPTY,
+  },
+  // More sleepers, scattered along the way (author, Oct 7, 2026): two 2-stars, two 3-stars and a 5-star. Each
+  // says their piece once, by the silk, and heads off (their NPC `sets` the left flag).
+  {
+    map: 'deserters-camp',
+    x: 27,
+    y: 11,
+    tile: 'J',
+    character: 'iris',
+    hatched: 'iris-hatched',
+    left: 'iris-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'south-road',
+    x: 37,
+    y: 22,
+    tile: 'J',
+    character: 'moth',
+    hatched: 'moth-hatched',
+    left: 'moth-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'march-road',
+    x: 2,
+    y: 6,
+    tile: 'J',
+    character: 'lyra',
+    hatched: 'lyra-hatched',
+    left: 'lyra-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'frost-ward',
+    x: 32,
+    y: 12,
+    tile: 'J',
+    character: 'wynn',
+    hatched: 'wynn-hatched',
+    left: 'wynn-left',
+    empty: EMPTY,
+  },
+  {
+    map: 'kaldorhold',
+    x: 38,
+    y: 17,
+    tile: 'J',
+    character: 'oona',
+    hatched: 'oona-hatched',
+    left: 'oona-left',
+    empty: EMPTY,
   },
 ];
+
+/**
+ * You can't walk on past Felix's cocoon without breaking it (author, Oct 7, 2026): an invisible wall across the
+ * road, east of the Waystation, and a thought each time you try it, the last one for good. Felix frames you, and
+ * that's how the story gets you into the cells.
+ */
+export const COCOON_WALL = {
+  map: 'courier-road',
+  x: 27,
+  until: 'felix-hatched',
+  lines: [
+    '(I wonder what that cocoon is over there.)',
+    '(I should probably check out that cocoon.)',
+    '(Cocoooooooooooooooon.)',
+    '(There is absolutely no way I could ever move forward without checking out that cocoon.)',
+  ],
+} as const;
 
 /** The cocoon on this tile of this map, if there is one. */
 export const cocoonAt = (map: string, tile: string) => COCOONS.find((c) => c.map === map && c.tile === tile);

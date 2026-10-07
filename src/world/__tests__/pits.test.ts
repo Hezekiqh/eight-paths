@@ -31,12 +31,6 @@ describe('the Maze Ward', () => {
     expect(reach(false).has('42,2')).toBe(true);
   });
 
-  it('has a few pits, all walkable, on the wrong turns', () => {
-    const pits = ward.tiles.flatMap((row, y) => [...row].flatMap((c, x) => (c === PIT_TILE ? [[x, y]] : [])));
-    expect(pits.length).toBeGreaterThanOrEqual(3);
-    expect(ward.walkable).toContain(PIT_TILE);
-  });
-
   it('drops you in the cells, in the corridor', () => {
     const cells = MAPS[FELL_INTO.map];
     expect(cells.tiles[FELL_INTO.y][FELL_INTO.x]).toBe('.');

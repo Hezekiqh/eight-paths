@@ -11,7 +11,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -43,12 +43,6 @@ const SPEED = 112;
 const FW = 16;
 const FH = 24;
 const FEET = 22;
-/**
- * Everyone standing about breathes, as in the game (src/world/idle.ts, author Oct 5, 2026): a one-pixel dip
- * of the head and shoulders, quicker while they talk. Never the hero.
- */
-const IDLE_SPLIT = 13;
-const idleDip = (t, who, talking) => ((t / (talking ? 0.6 : 1.8) + who * 0.37) % 1 < 0.45 ? 1 : 0);
 const DIRS = { down: 0, up: 1, left: 2, right: 3 };
 
 // The Scroll theme (palettes.ts), the default.
@@ -88,7 +82,8 @@ const WALKER_ROWS = Object.fromEntries(
 const NEAREST = { filter: CK.FilterMode.Nearest, mipmap: CK.MipmapMode.None };
 
 // ---- maps: the baked picture, the people, the candles (ambience.ts)
-const AMBIENCE = { rooms: { darkness: 0.18 }, outdoor: { darkness: 0 }, dungeon: { darkness: 0.32 } };
+// (`arena`: the Kaloseum, drawn like a dungeon but open to the sky, ambience.ts)
+const AMBIENCE = { rooms: { darkness: 0.18 }, outdoor: { darkness: 0 }, dungeon: { darkness: 0.32 }, arena: { darkness: 0 } };
 const FLAMES = {
   rooms: {
     c: [
@@ -99,6 +94,7 @@ const FLAMES = {
   },
   outdoor: { c: [{ dx: 7, dy: 2, reach: 40 }] },
   dungeon: { k: [{ dx: 7, dy: 1, reach: 48 }] },
+  arena: { k: [{ dx: 7, dy: 1, reach: 48 }] },
 };
 function loadMap(id, style) {
   const json = JSON.parse(readFileSync(join(ROOT, `src/world/maps/${id}.json`), 'utf8'));
@@ -121,6 +117,8 @@ function loadMap(id, style) {
     boulders,
     style,
     image: image(join(ROOT, `assets/world/${id}.png`)),
+    // the Kaloseum's crowd on its feet, flicked to and back as the game does (world-view.tsx)
+    cheer: existsSync(join(ROOT, `assets/world/${id}-cheer.png`)) ? image(join(ROOT, `assets/world/${id}-cheer.png`)) : null,
     flames,
     npcs,
     signs,
@@ -132,7 +130,23 @@ function loadMap(id, style) {
 
 // ---- voices (portraits.ts)
 // The Keeper gets voice 0: lower than anyone, the lowest blip played an octave down.
-const VOICES = { kaldor: 1, aurek: 1, plush: 1, bo: 1, keeper: 0, harrow: 2, hugo: 2, brannoc: 2, brunna: 5, pim: 5 };
+const VOICES = {
+  kaldor: 1,
+  aurek: 1,
+  plush: 1,
+  bo: 1,
+  keeper: 0,
+  harrow: 2,
+  hugo: 2,
+  brannoc: 2,
+  brunna: 5,
+  pim: 5,
+  oldmott: 1,
+  gary: 2,
+  garyasleep: 2,
+  silasseen: 3,
+  nails: 4,
+};
 function voiceFor(name, sprite) {
   if (sprite && sprite in VOICES) return VOICES[sprite];
   let hash = 0;
@@ -143,12 +157,15 @@ function voiceFor(name, sprite) {
 // ---- the typewriter (typewriter-text.tsx): 28ms a letter, longer after punctuation
 const LETTER_MS = 28;
 const PAUSES = { '.': 260, '!': 260, '?': 260, ',': 120, ':': 160, ';': 160 };
-/** When each letter appears, in seconds from the line's start. */
-function letterTimes(text, pace = 1) {
+/**
+ * When each letter appears, in seconds from the line's start. The short-form template (EPISODES.md, from
+ * Episode 10) types faster than the game: `ms` a letter, and the punctuation pauses scaled by `pause`.
+ */
+function letterTimes(text, ms = LETTER_MS, pause = 1) {
   const at = [];
   let t = 0;
   for (let i = 0; i < text.length; i++) {
-    if (i > 0) t += ((LETTER_MS + (PAUSES[text[i - 1]] ?? 0)) / 1000) * pace;
+    if (i > 0) t += (ms + (PAUSES[text[i - 1]] ?? 0) * pause) / 1000;
     at.push(t);
   }
   return at;
@@ -380,10 +397,6 @@ const easeInOut = (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2)
 /** How far the camera has zoomed in on the card game: 0 → 1 over the first 0.7s, back over the last 0.6s. */
 function zoomIn(t, dur) {
   return easeInOut(Math.min(1, Math.max(0, Math.min(t / 0.7, (dur - t) / 0.6))));
-}
-/** A short's punch-in (author, Oct 5, 2026): in fast (0.25s), held, and back out over the last 0.4s. */
-function punchIn(t, dur) {
-  return easeInOut(Math.min(1, Math.max(0, Math.min(t / 0.25, (dur - t) / 0.4))));
 }
 /** Where you and the Keeper sit: a little apart, the rug between you. */
 function cardsSeats(ep, st) {
@@ -736,15 +749,50 @@ function drawSplitCocoon(canvas, x, y) {
 // ---- the script: walk, face, say, narrate, wait; compiled into timed segments
 const center = (tx, ty) => [tx * TILE + TILE / 2, ty * TILE + TILE - 2];
 const HOLD = (text) => Math.min(2.6, 1.1 + text.length * 0.022);
+// ---- sleepers (src/world/sleep.ts, the same Zs, the same timing)
+const Z_EVERY = 0.8;
+const Z_LIFE = 2.4;
+const zCells = (rows) => rows.flatMap((row, y) => [...row].flatMap((c, x) => (c === 'X' ? [[x, y]] : [])));
+const Z_SMALL = zCells(['XXX', '.X.', 'XXX']);
+const Z_BIG = zCells(['XXXX', '..X.', '.X..', 'XXXX']);
+function sleepZs(t, x, y) {
+  const out = [];
+  const newest = Math.floor(t / Z_EVERY);
+  for (let k = 0; k < Math.ceil(Z_LIFE / Z_EVERY); k++) {
+    const age = t - (newest - k) * Z_EVERY;
+    if (age < 0 || age >= Z_LIFE) continue;
+    const f = age / Z_LIFE;
+    const ox = Math.round(x + 3 + f * 6 + Math.sin(age * 4) * 1.5);
+    const oy = Math.round(y - 26 - f * 16);
+    for (const [cx, cy] of f < 0.5 ? Z_SMALL : Z_BIG) out.push([ox + cx, oy + cy]);
+  }
+  return out;
+}
+
+/** Someone asleep at their post (Gary) is drawn eyes shut unless the episode has them awake (`ep.awake`). */
+const dozing = (ep, n) => !!n.asleep && !(ep.awake ?? []).includes(n.id);
+const spriteOf = (ep, n) => (dozing(ep, n) && WALKER_ROWS[`${n.sprite}asleep`] !== undefined ? `${n.sprite}asleep` : n.sprite);
+
+const BUBBLE_EVERY = 1.6;
+/** A snot bubble at a nose (sleep.ts snotBubble, the same swell and shrink), and its shine. */
+function bubbleAt(t, nx, ny) {
+  const k = (t % BUBBLE_EVERY) / BUBBLE_EVERY;
+  const r = 0.5 + 3 * Math.sin(k * Math.PI);
+  const cx = nx + r;
+  const cells = [];
+  const R = Math.ceil(r);
+  for (let dy = -R; dy <= R; dy++)
+    for (let dx = -R; dx <= R; dx++) if (dx * dx + dy * dy <= r * r) cells.push([Math.round(cx + dx), ny + dy]);
+  return { cells, shine: r > 1.5 ? [Math.round(cx - r / 2), ny - Math.round(r / 2)] : null };
+}
+
+/** After the fall's impact: the shake, the bounce and the flop, before anyone speaks. */
+const FALL_SETTLE = 0.45;
 /** A change of place: half of it fading out, half fading in. */
 const SCENE_GAP = 1.0;
 /** Pushing a boulder: leaning on it (engine.ts PUSH_DELAY), then the slide. */
 const PUSH_LEAN = 0.35;
 const PUSH_TIME = 0.3;
-/** How long a puff of shadow smoke lasts (seconds), the spark the first part of it. */
-const PUFF = 0.55;
-const SPARK = 0.14;
-
 function compile(ep) {
   const segs = [];
   let t = ep.titleDur;
@@ -767,10 +815,8 @@ function compile(ep) {
         legs.push({ a: [ax, ay], b: [bx, by], d0: dist, len, dir });
         dist += len;
       }
-      const speed = step.speed ?? SPEED;
+      const speed = step.speed ?? ep.speed ?? SPEED;
       const dur = dist / speed;
-      // the camera always stays on you (author, Oct 5, 2026): a punch-in lets go before you set off
-      for (const z of segs) if (z.kind === 'zoom' && z.t1 > t) z.t1 = Math.max(z.t0, t);
       segs.push({ kind: 'walk', t0: t, t1: t + dur, legs, dist, speed });
       // `cut`: the episode ends this many seconds into the walk, mid-stride
       t += step.cut ?? dur;
@@ -808,10 +854,12 @@ function compile(ep) {
       }
       const speed = step.speed ?? SPEED;
       const dur = dist / speed;
+      // `delay`: sets off this long after now, while whatever comes next in the script goes on
+      const t0 = t + (step.delay ?? 0);
       segs.push({
         kind: 'npcWalk',
-        t0: t,
-        t1: t + dur,
+        t0,
+        t1: t0 + dur,
         id: step.npcWalk,
         legs,
         dist,
@@ -819,21 +867,28 @@ function compile(ep) {
         hide: step.hide,
         tears: step.tears,
         dash: step.dash,
+        // `turn`: which way they turn once there; `facing`: which way they face the whole way (walking backwards)
+        turn: step.turn,
+        facing: step.facing,
+        // `carried`: lifted off the ground as they set off, and set down when they get there (out cold, carried)
+        carried: step.carried,
       });
-      if (!step.together) t += dur + 0.15;
+      if (!step.together) t += (step.delay ?? 0) + dur + 0.15;
     } else if (step.laugh) {
       // someone laughs: shoulders shaking, a burst of HA over their head (`quiet`: just the shaking, a cower)
       segs.push({ kind: 'laugh', t0: t, t1: t + step.dur, id: step.laugh, quiet: step.quiet });
-      // `together`: alongside what comes next (five shadows roaring at once)
+      // `together`: the next one laughs at the same time
       if (!step.together) t += step.dur;
     } else if (step.scene) {
       // somewhere else: fade to black, and up again there (a new map, you standing at `at`)
       const sc = step.scene;
-      segs.push({ kind: 'scene', t0: t, t1: t + SCENE_GAP, ...sc, at: center(...sc.at) });
+      // `gap`: how long the cut takes (the template cuts quicker than the old episodes' second)
+      const gap = sc.gap ?? SCENE_GAP;
+      segs.push({ kind: 'scene', t0: t, t1: t + gap, ...sc, gap, at: center(...sc.at) });
       map = sc.map;
       pos = center(...sc.at);
       facing = sc.facing;
-      t += SCENE_GAP + 0.1;
+      t += gap + 0.1;
     } else if (step.push) {
       // lean on the boulder in front a moment, then shove it a tile, stepping in behind it
       const [dx, dy] = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] }[step.push];
@@ -862,11 +917,13 @@ function compile(ep) {
       const game = segs.findLast((x) => x.kind === 'cards');
       game.t1 = t + 0.6;
       t += 0.75;
-    } else if (step.say || step.narrate || step.you) {
+    } else if (step.say || step.narrate || step.you || step.as) {
       const npc = step.say ? map.npcs[step.say] : null;
-      const speaker = step.you ? 'You' : npc ? npc.name : undefined;
-      const sprite = step.you ? ep.hero.sprite : npc ? npc.sprite : undefined;
-      const voice = step.you ? 3 : voiceFor(speaker, sprite);
+      // `as`: someone heard but not on the map (Barnaby, announcing from the stands): { name, sprite }
+      // your hero's thoughts are a plain box, as in the game: no name, no face
+      const speaker = npc ? npc.name : step.as?.name;
+      const sprite = npc ? spriteOf(ep, npc) : step.as?.sprite;
+      const voice = voiceFor(speaker, sprite);
       // the person turns to face you, as in the game
       if (npc) {
         const [nx, ny] = center(npc.x, npc.y);
@@ -878,15 +935,18 @@ function compile(ep) {
       }
       const lines = step.you ?? step.lines ?? (npc ? npc.lines : []);
       lines.forEach((text, i) => {
-        // `pace`: a short types a touch quicker than the game (author, Oct 5, 2026: 12–15s)
-        const at = letterTimes(text, ep.pace ?? 1);
+        // `letterMs`, `pause`, `read` on the step: this one types slower (or quicker), and stops or holds less, than the
+        // episode
+        const at = letterTimes(text, step.letterMs ?? ep.letterMs, step.pause ?? ep.pause);
         const typing = at[at.length - 1] + 0.03;
         const blips = speaker
           ? at.map((a, k) => (text[k].trim() && k % 2 === 0 ? a : null)).filter((a) => a !== null)
           : [];
         // `hold`: how long a finished line stays, against the usual (a talky episode reads a touch quicker)
-        // `beat`: a punchline's last line stays up this much longer, so it can land (author, Oct 5, 2026)
-        const dur = typing + HOLD(text) * (ep.hold ?? 1) + (i === lines.length - 1 ? (step.beat ?? 0) : 0);
+        // `punch`: the last line of a beat (the punchline) stays this long instead, so it lands
+        // `ep.read`: every finished line stays this many times longer, so it reads comfortably (author, Episode 13: 1.3)
+        const dur =
+          typing + (i === lines.length - 1 && step.punch ? step.punch : HOLD(text) * (ep.hold ?? 1)) * (step.read ?? ep.read ?? 1);
         segs.push({
           kind: 'line',
           t0: t,
@@ -898,41 +958,57 @@ function compile(ep) {
           typing,
           blips,
           voice,
-          // `silent`: a thought, typed out with no voice at all (author, Oct 4, 2026)
-          silent: !!step.silent,
           last: i === lines.length - 1,
         });
         t += dur;
       });
-      t += 0.25;
+      t += step.gapAfter ?? ep.gapAfter ?? 0.25;
+    } else if (step.fall) {
+      // dropping in from above the screen onto where you stand: a shadow grows, you slam down, bounce, and end up
+      // upside down, seeing stars, until an `upright`
+      segs.push({ kind: 'fall', t0: t, t1: t + step.fall, height: step.height ?? 170, flop: step.flop });
+      t += step.fall + FALL_SETTLE;
+    } else if ('look' in step) {
+      // a cut to someone else (the camera on that tile), or back to you (null)
+      segs.push({ kind: 'look', t0: t, t1: t, at: step.look && center(...step.look) });
+    } else if (step.faint) {
+      // someone goes white, then grey, then flat on their back
+      segs.push({ kind: 'faint', t0: t, t1: t + 0.35, id: step.faint });
+      t += 0.5;
+    } else if (step.shrug) {
+      // someone shrugs
+      segs.push({ kind: 'shrug', t0: t, t1: t + 0.55, id: step.shrug });
+      t += 0.6;
+    } else if (step.jolt) {
+      // the screen jolts (a lever thrown: CLUNK)
+      segs.push({ kind: 'jolt', t0: t, t1: t + step.jolt });
+    } else if (step.vanish) {
+      // someone's simply gone (Gary, while you weren't looking)
+      segs.push({ kind: 'vanish', t0: t, t1: t, id: step.vanish });
+    } else if (step.upright) {
+      segs.push({ kind: 'upright', t0: t, t1: t });
+      t += 0.2;
+    } else if (step.drop) {
+      // the floor gives way: you sink out of sight into a hole (the Maze Ward's pothole); `together` with what's said
+      segs.push({ kind: 'drop', t0: t, t1: t + step.drop });
+      if (!step.together) t += step.drop;
+    } else if (step.zoom) {
+      // a cut to closer in (or back out, 1): the template's hook opens close on whoever's talking
+      segs.push({ kind: 'zoom', t0: t, t1: t, z: step.zoom });
     } else if (step.hatch) {
       // the app's hatch, full screen (scripts/hatch-video.mjs beats), then back to the World
       segs.push({ kind: 'hatch', t0: t, t1: t + HATCH_END, ...step.hatch });
       t += HATCH_END;
-    } else if (step.vanish) {
-      // gone at once, no smoke (someone getting up: the lying one swapped for the standing one)
-      for (const id of [step.vanish].flat()) segs.push({ kind: 'puff', t0: t, t1: t, hide: [id], show: [], spark: false, quiet: true });
-    } else if (step.puff) {
-      // a burst of black smoke that takes `hide` away and leaves `show` (a guard swallowed by his shadow),
-      // with a white spark first if it's a blow (`spark`): the fights, told without the game's combat
-      const p = step.puff;
-      // `on`: a blow that lands on someone who stays standing (the Warden): just the spark, no smoke
-      segs.push({ kind: 'puff', t0: t, t1: t + PUFF, hide: p.hide ?? [], show: p.show ?? [], on: p.on ?? [], spark: !!p.spark });
-      t += p.wait ?? PUFF;
     } else if (step.show) {
       segs.push({ kind: 'show', t0: t, t1: t, id: step.show });
     } else if (step.open) {
       segs.push({ kind: 'open', t0: t, t1: t, at: step.open });
     } else if (step.gap) {
       segs.push({ kind: 'gap', t0: t, t1: t, at: step.gap });
-    } else if (step.zoom) {
-      // `zoom`: the camera punches in on someone for `dur` seconds, over whatever comes next (the shorts' hook)
-      segs.push({ kind: 'zoom', t0: t, t1: t + (step.dur ?? 3), id: step.zoom, z: step.z ?? 1 });
-    } else if (step.caption) {
-      // a big caption across the top (the clips' hook, author's test, Oct 4, 2026): until the next one
-      segs.push({ kind: 'caption', t0: t, t1: t, lines: step.caption });
     } else if (step.wait) t += step.wait;
   }
+  // (a `delay`ed walk starts after steps that come later in the script)
+  segs.sort((a, b) => a.t0 - b.t0);
   return { segs, end: t };
 }
 
@@ -964,15 +1040,26 @@ function stateAt(ep, compiled, t) {
   let opened = [];
   /** Tiles broken open (bars bent wide), drawn as the game's dark gap. */
   let gaps = [...(ep.gaps ?? [])];
-  /** Taken by the smoke, and the smoke itself as it goes: { ids, since, spark }. */
-  let vanished = [];
-  const puffs = [];
-  let caption = null;
-  let zoom = null;
+  let zoom = ep.zoom ?? 1;
+  /** How far you've sunk through the floor (0 to 1), and the hole you went down. */
+  let sink = 0;
+  let hole = null;
+  /** The fall: how high above the floor you are (art px), the squash on impact, upside down, the shake. */
+  let air = 0;
+  let squash = 0;
+  let flipped = false;
+  let flippedAt = 0;
+  let shake = 0;
+  /** Where the camera is looking instead of at you (a cut to someone else), in art px. */
+  let look = ep.look ? center(...ep.look) : null;
+  /** Who's mid-shrug, by id: seconds into it. */
+  const shrugs = {};
+  /** Who's fainted, by id: how far over they've gone (0 standing, 1 flat). */
+  const fainted = {};
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
-      const half = SCENE_GAP / 2;
+      const half = s.gap / 2;
       white = !!s.flash;
       if (t < s.t0 + half) {
         blackout = (t - s.t0) / half;
@@ -991,10 +1078,17 @@ function stateAt(ep, compiled, t) {
       npcAt = {};
       laughing = {};
       shown = [...(s.show ?? [])];
-      vanished = [];
       opened = [];
       line = null;
       menu = null;
+      sink = 0;
+      hole = null;
+      // `airborne`: you arrive still above the screen, for a `fall` to bring you down
+      air = s.airborne ? 400 : 0;
+      squash = 0;
+      flipped = false;
+      shake = 0;
+      look = null;
       continue;
     }
     if (s.kind === 'push') {
@@ -1019,14 +1113,18 @@ function stateAt(ep, compiled, t) {
     } else if (s.kind === 'face') facing = s.dir;
     else if (s.kind === 'npcFace') npcFacing[s.id] = s.dir;
     else if (s.kind === 'npcWalk') {
-      const d = Math.min(s.dist, (t - s.t0) * s.speed);
+      const d = Math.max(0, Math.min(s.dist, (t - s.t0) * s.speed));
       const leg = s.legs.findLast((l) => l.d0 <= d) ?? s.legs[0];
       const k = Math.min(1, (d - leg.d0) / leg.len);
       const done = t >= s.t1;
+      // up over a quarter of a second, a bob with every step, and down again at the end
+      const LIFT = 10;
+      const up = Math.min(1, (t - s.t0) / 0.25, Math.max(0, 1 - (t - s.t1) / 0.25));
       npcAt[s.id] = {
         x: leg.a[0] + (leg.b[0] - leg.a[0]) * k,
         y: leg.a[1] + (leg.b[1] - leg.a[1]) * k,
-        dir: leg.dir,
+        dir: done && s.turn ? s.turn : (s.facing ?? leg.dir),
+        lift: s.carried ? Math.round(up * LIFT + (done ? 0 : Math.abs(Math.sin(d / 5)) * 1.5)) : 0,
         frame: walkFrame(d, !done),
         gone: done && s.hide,
         tears: s.tears && !done,
@@ -1044,20 +1142,45 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'cards' && t < s.t1 + 0.4) cards = { t: t - s.t0, dur: s.t1 - s.t0 };
     else if (s.kind === 'hatch' && t < s.t1) hatch = { ...s, t: t - s.t0 };
     else if (s.kind === 'show') shown.push(s.id);
-    else if (s.kind === 'caption') caption = s.lines;
-    else if (s.kind === 'zoom' && t < s.t1) zoom = { k: punchIn(t - s.t0, s.t1 - s.t0) * s.z, id: s.id };
-    else if (s.kind === 'puff') {
-      // the smoke hides who it takes (once the spark's done) and brings in who it leaves
-      const since = t - s.t0;
-      if (since >= (s.spark ? SPARK : 0)) {
-        vanished.push(...s.hide);
-        shown.push(...s.show);
-      }
-      if (since < PUFF && !s.quiet) puffs.push({ ids: [...s.hide, ...s.show], on: s.on ?? [], since, spark: s.spark });
-    } else if (s.kind === 'open') opened.push(s.at);
+    else if (s.kind === 'open') opened.push(s.at);
     else if (s.kind === 'gap') gaps.push(s.at);
+    else if (s.kind === 'zoom') zoom = s.z;
+    else if (s.kind === 'fall') {
+      if (t < s.t1) {
+        const k = (t - s.t0) / (s.t1 - s.t0);
+        air = s.height * (1 - k * k);
+      } else {
+        const since = t - s.t1;
+        // `flop`: a bounce off the flagstones, over in mid-air, butt up; otherwise feet first, a squash and you're up
+        air = s.flop && since < 0.28 ? Math.sin((Math.PI * since) / 0.28) * 7 : 0;
+        squash = since < 0.07 ? (s.flop ? 0.45 : 0.3) : s.flop && since >= 0.28 && since < 0.33 ? 0.25 : 0;
+        shake = since < 0.25 ? (s.flop ? 3 : 2) * (1 - since / 0.25) : 0;
+        flipped = !!s.flop && since >= 0.14;
+        flippedAt = s.t1 + 0.14;
+      }
+    } else if (s.kind === 'upright') flipped = false;
+    else if (s.kind === 'look') look = s.at;
+    else if (s.kind === 'vanish') hide = [...hide, s.id];
+    else if (s.kind === 'shrug' && t < s.t1) shrugs[s.id] = t - s.t0;
+    else if (s.kind === 'faint') fainted[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'jolt' && t < s.t1) shake = 2.5 * (1 - (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'drop') {
+      sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      hole = [hx, hy];
+    }
   }
   return {
+    zoom,
+    air,
+    squash,
+    flipped,
+    flippedFor: t - flippedAt,
+    look,
+    shrugs,
+    fainted,
+    shake,
+    sink,
+    hole,
     hx,
     hy,
     facing,
@@ -1072,10 +1195,6 @@ function stateAt(ep, compiled, t) {
     cards,
     hatch,
     shown,
-    vanished,
-    puffs,
-    caption,
-    zoom,
     opened,
     gaps,
     map,
@@ -1101,19 +1220,14 @@ function drawWorld(canvas, ep, st, t) {
   const mapW = map.image.width();
   const mapH = map.image.height();
   // the camera follows you; for the card game it eases in close on the two of you, and back out
-  const zk = st.cards ? zoomIn(st.cards.t, st.cards.dur) : (st.zoom?.k ?? 0);
-  const z = 1 + zk;
+  const zk = st.cards ? zoomIn(st.cards.t, st.cards.dur) : 0;
+  const z = (st.zoom ?? 1) + zk;
   const sk = K * z;
   const vw = W / sk;
   const vh = H / sk;
-  // a punch-in looks at whoever it's on
-  const [zx, zy] = st.zoom
-    ? st.npcAt[st.zoom.id]
-      ? [st.npcAt[st.zoom.id].x, st.npcAt[st.zoom.id].y]
-      : center(map.npcs[st.zoom.id].x, map.npcs[st.zoom.id].y)
-    : [st.hx, st.hy];
-  const fx = st.cards ? lerpf(st.hx, cardsMid(ep, st)[0], zk) : lerpf(st.hx, zx, zk);
-  const fy = st.cards ? lerpf(st.hy - 12, cardsMid(ep, st)[1] - 10, zk) : lerpf(st.hy - 12, zy - 12, zk);
+  const [ax, ay] = st.look ?? [st.hx, st.hy];
+  const fx = st.cards ? lerpf(st.hx, cardsMid(ep, st)[0], zk) : ax;
+  const fy = st.cards ? lerpf(st.hy - 12, cardsMid(ep, st)[1] - 10, zk) : ay - 12;
   const camX = mapW <= vw ? (mapW - vw) / 2 : Math.min(Math.max(fx - vw / 2, 0), mapW - vw);
   // the action sits a third of the way down, so the text box (raised clear of app captions) never covers it
   // (it may look past the map's bottom edge: that strip sits behind the box and the apps' captions anyway)
@@ -1122,9 +1236,10 @@ function drawWorld(canvas, ep, st, t) {
   canvas.clear(color('#0C0806'));
   canvas.save();
   canvas.scale(sk, sk);
-  canvas.translate(-Math.round(camX * sk) / sk, -Math.round(camY * sk) / sk);
+  const shook = st.shake ? [Math.sin(t * 90) * st.shake, Math.cos(t * 77) * st.shake] : [0, 0];
+  canvas.translate(-Math.round((camX + shook[0]) * sk) / sk, -Math.round((camY + shook[1]) * sk) / sk);
   canvas.drawImageRectOptions(
-    map.image,
+    map.cheer && Math.floor(t * 2.5) % 2 === 1 ? map.cheer : map.image,
     CK.XYWHRect(0, 0, mapW, mapH),
     CK.XYWHRect(0, 0, mapW, mapH),
     NEAREST.filter,
@@ -1213,76 +1328,140 @@ function drawWorld(canvas, ep, st, t) {
       (n) =>
         ((!(st.hide ?? ep.hide)?.includes(n.id) && !n.comesAfter) || st.shown.includes(n.id)) &&
         !sitting.includes(n.id) &&
-        !st.vanished.includes(n.id) &&
         !st.npcAt[n.id]?.gone,
     )
     .map((n) => {
       const at = st.npcAt[n.id];
       const lt = st.laughing[n.id];
-      if (at && lt === undefined) return [WALKER_ROWS[n.sprite], DIRS[at.dir], at.frame, at.x, at.y];
+      const row = WALKER_ROWS[spriteOf(ep, n)];
+      const over = st.fainted[n.id];
+      // fainted: tipped over onto their back, feet where they stood, eyes shut
+      const out = WALKER_ROWS[`${n.sprite}asleep`] ?? row;
+      // carried: held up at their hands, drawn in front of whoever's carrying them
+      if (over !== undefined) {
+        const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
+        return [over >= 1 ? out : row, DIRS.down, 0, x, y - (at?.lift ?? 0), 0, { lie: over, sortY: y + 1 }];
+      }
+      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
+      // a shrug: up on the shoulders a moment
+      const sh = st.shrugs[n.id];
+      if (sh !== undefined && lt === undefined)
+        return [row, DIRS[st.npcFacing[n.id]], 0, x, y - (sh > 0.1 && sh < 0.45 ? 1 : 0)];
       // laughing: a quick shake and a hop, head thrown back on every other beat
       if (lt !== undefined) {
         const beat = Math.floor(lt * 12);
         return [
-          WALKER_ROWS[n.sprite],
+          row,
           DIRS[st.npcFacing[n.id]],
           0,
           x + (beat % 2 ? 1 : -1),
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      const who = Object.keys(map.npcs).indexOf(n.id);
-      const dip = n.lying ? 0 : idleDip(t, who, st.line?.speaker === n.name);
-      return [WALKER_ROWS[n.sprite], DIRS[st.npcFacing[n.id]], 0, x, y, n.lying, dip];
+      return [row, DIRS[st.npcFacing[n.id]], 0, x, y, 0, { size: n.size }];
     });
-  if (!st.cards)
-    ents.push([WALKER_ROWS[ep.hero.sprite], DIRS[st.facing], walkFrame(st.walked, st.moving), st.hx, st.hy]);
-  ents.sort((a, b) => a[4] - b[4]);
-  for (const [row, dir, frame, x, y, lying, dip] of ents) {
-    // `lying`: knocked flat on the floor, head to the left (the beaten prisoners, the fainted prince)
-    if (lying) {
-      canvas.save();
-      canvas.translate(Math.round(x), Math.round(y - 6));
-      canvas.rotate(-90, 0, 0);
-      canvas.drawImageRectOptions(
-        WALKERS,
-        CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH),
-        CK.XYWHRect(-FH / 2, -FW / 2, FW, FH),
-        NEAREST.filter,
-        NEAREST.mipmap,
-        null,
-      );
-      canvas.restore();
-      continue;
+  // the hole you went down: dark, with a lip of broken flagstone
+  if (st.hole) {
+    const [hx0, hy0] = st.hole;
+    canvas.drawRect(CK.XYWHRect(Math.round(hx0 - 6), Math.round(hy0 - 3), 12, 5), paint('#06040A'));
+    canvas.drawRect(CK.XYWHRect(Math.round(hx0 - 7), Math.round(hy0 - 4), 14, 1), paint('#5A524C'));
+  }
+  if (!st.cards && st.sink < 1)
+    ents.push([
+      WALKER_ROWS[ep.hero.sprite],
+      DIRS[st.facing],
+      walkFrame(st.walked, st.moving),
+      st.hx,
+      st.hy,
+      st.sink,
+      { air: st.air, squash: st.squash, flipped: st.flipped },
+    ]);
+  // where you're about to land: a shadow, bigger the closer you get
+  if (st.air > 0) {
+    const r = Math.max(2, 6 - st.air / 40);
+    canvas.drawOval(CK.XYWHRect(st.hx - r, st.hy - r / 3, r * 2, (r * 2) / 3), paint('#000000', 0.45));
+  }
+  ents.sort((a, b) => (a[6]?.sortY ?? a[4]) - (b[6]?.sortY ?? b[4]));
+  for (const [row, dir, frame, x, y, sunk = 0, fx = {}] of ents) {
+    // sinking: lower and lower, cut off at the floor
+    const cut = Math.round(sunk * FH);
+    const lift = Math.round(fx.air ?? 0);
+    canvas.save();
+    // squashed flat on impact (from the feet), and upside down from the middle
+    if (fx.squash) {
+      canvas.translate(x, y + 2 - lift);
+      canvas.scale(1 + fx.squash * 0.6, 1 - fx.squash);
+      canvas.translate(-x, -(y + 2 - lift));
     }
-    // breathing: the legs where they are, the head and shoulders a pixel lower over them
-    const sx = (dir * 3 + frame) * FW;
-    const dx = Math.round(x - FW / 2);
-    const dy = Math.round(y - FEET);
-    if (dip) {
-      for (const [from, rows, down] of [
-        [IDLE_SPLIT, FH - IDLE_SPLIT, 0],
-        [0, IDLE_SPLIT, dip],
-      ])
-        canvas.drawImageRectOptions(
-          WALKERS,
-          CK.XYWHRect(sx, row * FH + from, FW, rows),
-          CK.XYWHRect(dx, dy + from + down, FW, rows),
-          NEAREST.filter,
-          NEAREST.mipmap,
-          null,
-        );
-      continue;
+    // bigger than everyone (the Warden), from the feet up, as the game draws him
+    if (fx.size && fx.size !== 1) {
+      canvas.translate(x, y + FH - FEET);
+      canvas.scale(fx.size, fx.size);
+      canvas.translate(-x, -(y + FH - FEET));
+    }
+    // fainting: tipping over backwards, pivoting on the feet, until flat
+    if (fx.lie) {
+      canvas.translate(x, y);
+      // over backwards, away from whoever's beside them (head to the right)
+      canvas.rotate(90 * fx.lie, 0, 0);
+      canvas.translate(-x, -y);
+    }
+    if (fx.flipped) {
+      const mid = y - FEET + FH / 2 - lift;
+      canvas.translate(0, mid);
+      canvas.scale(1, -1);
+      canvas.translate(0, -mid);
     }
     canvas.drawImageRectOptions(
       WALKERS,
-      CK.XYWHRect(sx, row * FH, FW, FH),
-      CK.XYWHRect(dx, dy, FW, FH),
+      CK.XYWHRect((dir * 3 + frame) * FW, row * FH, FW, FH - cut),
+      CK.XYWHRect(Math.round(x - FW / 2), Math.round(y - FEET) + cut - lift, FW, FH - cut),
       NEAREST.filter,
       NEAREST.mipmap,
       null,
     );
+    canvas.restore();
+  }
+  // seeing stars: three little ones circling the head (at the bottom, upside down)
+  if (st.flipped && !st.air) {
+    const star = paint('#FFE070');
+    for (let i = 0; i < 3; i++) {
+      const a = st.flippedFor * 7 + (i * Math.PI * 2) / 3;
+      const sx = Math.round(st.hx + Math.cos(a) * 8);
+      const sy = Math.round(st.hy + 3 + Math.sin(a) * 2.5);
+      canvas.drawRect(CK.XYWHRect(sx, sy - 1, 1, 3), star);
+      canvas.drawRect(CK.XYWHRect(sx - 1, sy, 3, 1), star);
+    }
+  }
+  // asleep where they stand (Gary): Zs floating up off the head, as the game draws them
+  const zPaint = paint('#DCE8FF', 0.85);
+  Object.values(map.npcs)
+    .filter(
+      (n) =>
+        dozing(ep, n) &&
+        !(st.hide ?? ep.hide)?.includes(n.id) &&
+        !st.npcAt[n.id] &&
+        !(n.comesAfter && !st.shown.includes(n.id)),
+    )
+    .forEach((n, i) => {
+      const [x, y] = center(n.x, n.y);
+      for (const [zx, zy] of sleepZs(t + i * 0.37, x, y)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+    });
+  // out cold (fainted, flat on their back, head to the right): Zs rising off the head, a snot bubble at the nose
+  const snot = paint('#B8E0C8', 0.8);
+  const shine = paint('#FFFFFF');
+  for (const [id, over] of Object.entries(st.fainted)) {
+    const n = map.npcs[id];
+    if (!n || over < 1) continue;
+    // (wherever they are: carried off, say)
+    const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y - st.npcAt[id].lift] : center(n.x, n.y);
+    for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+    if (n.snot) {
+      const b = bubbleAt(t, x + 13, y - 4);
+      for (const [bx, by] of b.cells) canvas.drawRect(CK.XYWHRect(bx, by, 1, 1), snot);
+      if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), shine);
+    }
   }
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
@@ -1294,39 +1473,6 @@ function drawWorld(canvas, ep, st, t) {
       if (age < 0 || age > 0.9) continue;
       const side = k % 2 ? 6 : -10;
       tinyText(canvas, 'HA', x + side, y - 30 - age * 10, paint('#FFF4C0', 1 - age / 0.9));
-    }
-  }
-  // a blow's white spark, then black smoke billowing out and fading where someone was taken
-  for (const p of st.puffs) {
-    for (const id of p.on) {
-      const n = map.npcs[id];
-      if (!n || p.since >= SPARK * 1.6) continue;
-      const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(n.x, n.y);
-      const k = p.since / (SPARK * 1.6);
-      const white = paint('#FFFFFF', 1 - k * 0.6);
-      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]])
-        for (let r = 2; r < 4 + k * 10; r += 2) canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 14 + dy * r - 1, 2, 2), white);
-    }
-    for (const id of p.ids) {
-      const n = map.npcs[id];
-      if (!n) continue;
-      const [x, y] = center(n.x, n.y);
-      if (p.spark && p.since < SPARK) {
-        const k = p.since / SPARK;
-        const white = paint('#FFFFFF', 1 - k * 0.5);
-        for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]])
-          for (let r = 2; r < 4 + k * 8; r += 2)
-            canvas.drawRect(CK.XYWHRect(x + dx * r - 1, y - 12 + dy * r - 1, 2, 2), white);
-        continue;
-      }
-      const k = Math.min(1, (p.since - (p.spark ? SPARK : 0)) / (PUFF - (p.spark ? SPARK : 0)));
-      for (let i = 0; i < 14; i++) {
-        const a = i * 2.39996;
-        const r = 3 + k * (8 + (i % 4) * 3);
-        const size = Math.max(1, Math.round(5 - k * 3 - (i % 3)));
-        const dark = paint(i % 3 === 0 ? '#3A2A4A' : '#120C18', (1 - k) * 0.9);
-        canvas.drawRect(CK.XYWHRect(x + Math.cos(a) * r - size / 2, y - 12 + Math.sin(a) * r * 0.8 - k * 6, size, size), dark);
-      }
     }
   }
   // a dash: a puff of dust where they set off, and speed streaks behind them
@@ -1513,27 +1659,6 @@ function drawTitle(canvas, ep, t) {
 }
 const CARD_LOGO = fontOf(JERSEY, 170);
 /**
- * A clip's hook (author's test, Oct 4, 2026): big words across the top, on a dark band, readable in a
- * second with the sound off. Kept clear of the apps' buttons on the right (out of the right 160px).
- */
-const CAPTION_FONT = fontOf(JERSEY, 92);
-function drawCaption(canvas, st) {
-  if (!st.caption) return;
-  const lines = st.caption;
-  const lh = 96;
-  const top = 120;
-  const left = 40;
-  const right = W - 170;
-  canvas.drawRect(CK.XYWHRect(left, top, right - left, lines.length * lh + 40), paint('#05030A', 0.82));
-  lines.forEach((line, i) => {
-    const x = left + (right - left - widthOf(CAPTION_FONT, line)) / 2;
-    const y = top + 20 + (i + 1) * lh - 18;
-    // a hard shadow, then the words: the last line in the game's gold
-    canvas.drawText(line, x + 5, y + 5, paint('#000000'), CAPTION_FONT);
-    canvas.drawText(line, x, y, paint(i === lines.length - 1 ? '#FFC940' : '#FFFFFF'), CAPTION_FONT);
-  });
-}
-/**
  * The close: what's next, then the brand as the ads end on it ("8 PATHS / THE HABIT
  * POWERED RPG"), then where to follow. Kept above the apps' captions and clear of their buttons.
  */
@@ -1572,11 +1697,51 @@ const menuOf = (questions, asked) => {
   return [...order.slice(0, mean ? 2 : 3), ...(mean ? [mean] : [])].map((q) => q.ask).concat('Goodbye.');
 };
 
-/** The statue at the Two Tunnels, as the game has it (dungeon.ts STATUE_SURE, FUNERAL). */
-const STATUE_SURE = ["STATUE: Are you sure? You don't look very strong."];
-const FUNERAL = ["STATUE: ...Well. It's your funeral."];
-
 const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'moss'].map((id) => `hall-${id}`);
+
+/**
+ * The short-form template (EPISODES.md, measured from Episode 10): text at 20 ms a letter with half the
+ * punctuation pauses, setups gone almost as soon as they're typed, a quick walk, no title card, no end card.
+ */
+const SHORT = { letterMs: 24, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
+/** Episode 10 as posted, before the author slowed the template a touch (Oct 6, 2026: "a little too fast"). */
+const SHORT_10 = { ...SHORT, letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190 };
+
+/** An exported array of lines from src/world/dungeon.ts, read from the game so the episodes say the same. */
+const gameLines = (name) => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  // from its `= [` to the `];` that closes it, one string per line or all on one
+  const block = src.slice(src.indexOf('= [', src.indexOf(`export const ${name} `)));
+  return [...block.slice(0, block.indexOf('];')).matchAll(/(['"])((?:\\.|(?!\1).)*)\1/g)].map((m) =>
+    m[2].replace(/\\(['"])/g, '$1'),
+  );
+};
+/** "WARDEN: Well, well, well." → "Well, well, well." */
+const unnamed = (l) => l.replace(/^[A-Z][A-Z ']+: /, '');
+/** The excuses on offer (dungeon.ts ARENA_EXCUSES), as the menu shows them. */
+const arenaExcuses = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf('export const ARENA_EXCUSES'));
+  return [...block.slice(0, block.indexOf('];')).matchAll(/label: (['"])(.*?)\1/g)].map((m) => m[2].replace(/\\'/g, "'"));
+};
+
+/**
+ * The pothole's landing (src/world/dungeon.ts POTHOLE_LANDING), read from the game so the episode says the same:
+ * what each of them says, by name ("OLD MOTT: Nice trip." → { 'OLD MOTT': ['Nice trip.'] }).
+ */
+const POTHOLE_LANDING = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf('export const POTHOLE_LANDING'));
+  const lines = [...block.slice(0, block.indexOf('];')).matchAll(/^\s+(['"])(.*)\1,$/gm)].map((m) =>
+    m[2].replace(/\\'/g, "'"),
+  );
+  const said = {};
+  for (const l of lines) {
+    const m = l.match(/^([A-Z][A-Z ]+): (.+)$/);
+    if (m) (said[m[1]] ??= []).push(m[2]);
+  }
+  return said;
+};
 
 const EPISODES = {
   // Just you and the Keeper. Written by the author for this episode (not in the game yet).
@@ -2067,461 +2232,214 @@ const EPISODES = {
       ],
     };
   },
-  // A test clip (author, Oct 4, 2026): the three crimes on their own, for people who've never seen an
-  // episode. A big caption hook from the first frame, the game's music under it, no menus: just the jokes.
-  //   node scripts/episode-video.mjs clip-prisoners marketing/clip-prisoners.mp4
-  'clip-prisoners': () => {
-    const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
-    return {
-      number: 'CLIP',
-      title: 'THE WORST PRISONERS',
-      music: 'assets/audio/world-1.m4a',
-      hold: 0.45,
-      map: cells,
-      hero: { sprite: 'quill', at: [14, 6], facing: 'up' },
-      hide: ['brannoc-cell', 'brannoc-sulk'],
-      gaps: [[5, 5]],
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: the best joke, as words you can read with the sound off
-        { caption: ['20 LIFE SENTENCES', 'FOR NOT SAYING', '"BLESS YOU"'] },
-        { say: 'prisoner-2', lines: crime('prisoner-2') },
-        { walk: [[10, 6]], face: 'up', speed: 140 },
-        { caption: ['LIFE SENTENCE', 'FOR ONE', 'ICE CUBE'] },
-        { say: 'prisoner-1', lines: crime('prisoner-1') },
-        { walk: [[18, 6]], face: 'up', speed: 140 },
-        { caption: ['HE LEFT', 'THE KING', 'ON READ'] },
-        { say: 'prisoner-3', lines: ['...', ...crime('prisoner-3')] },
-        { wait: 0.4 },
-      ],
-    };
-  },
-  // 9–13 (the author's direction, Oct 4, 2026): Gary's interview; the prisoners (their menus show the mean
-  // options, but the episode only asks what they're in for); up the ladder through Brannoc's holes; the Test
-  // of Strength; and the king's letter to the Warden, with a candle to rest at before the Colosseum.
-  9: () => {
-    const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const gary = cells.npcs.jailer;
-    const answer = (ask) => gary.questions.find((q) => q.ask === ask).answer;
-    const asks = ['Who are you?', "Isn't this place watched 24/7?", 'How much do they pay you?'];
-    return {
-      number: 9,
-      title: 'GARY',
-      next: 'THE WORST PRISONERS',
-      hold: 0.7,
-      map: cells,
-      hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
-      hide: ['brannoc-cell', 'brannoc-sulk'],
-      gaps: [[5, 5]],
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: Gary, wide awake, and not paid enough to care
-        { say: 'jailer', lines: gary.lines },
-        { menu: { speaker: 'Gary', options: menuOf(gary.questions, []), pick: 0, hold: 0.5 } },
-        { say: 'jailer', lines: answer(asks[0]) },
-        { menu: { speaker: 'Gary', options: menuOf(gary.questions, asks.slice(0, 1)), pick: 0, hold: 0.5 } },
-        { say: 'jailer', lines: answer(asks[1]) },
-        {
-          menu: {
-            speaker: 'Gary',
-            options: menuOf(gary.questions, asks.slice(0, 2)),
-            pick: menuOf(gary.questions, asks.slice(0, 2)).indexOf(asks[2]),
-            hold: 0.5,
-          },
-        },
-        { say: 'jailer', lines: answer(asks[2]) },
-        { wait: 0.3 },
-      ],
-    };
-  },
-  // The shorts (author, Oct 5, 2026): 12–15s, loopable, a punch-in on frame one, a hard cut at the end.
-  // Short 1 (no Gary: his joke was the last episode): two prisoners tell you their crimes as you walk up (Goodbye), and the
-  // third says she deserves it: you leave and go up the ladder, and it cuts. Silas's crime stays a secret.
-  //   node scripts/episode-video.mjs short-1
-  'short-1': () => {
-    const cells = loadMap('kingdom-dungeon', 'dungeon');
-    // Old Mott first (author, Oct 5, 2026): he and Nails swap cells for the short, so you still walk left to right
-    [cells.npcs['prisoner-1'].x, cells.npcs['prisoner-2'].x] = [cells.npcs['prisoner-2'].x, cells.npcs['prisoner-1'].x];
-    const goodbye = (id, name) => {
-      const options = menuOf(cells.npcs[id].questions, []);
-      return { menu: { speaker: name, options, pick: options.indexOf('Goodbye.'), hold: 0.15 } };
-    };
-    // how long a punchline stays up once it's typed (fast setups, slow payoffs)
-    const BEAT = 1.2;
-    return {
-      number: 'SHORT',
-      short: 1,
-      title: 'THE WORST PRISONERS',
-      loop: true,
-      pace: 0.9,
-      hold: 0.25,
-      map: cells,
-      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
-      hide: ['brannoc-cell', 'brannoc-sulk'],
-      gaps: [[5, 5]],
-      titleDur: 0,
-      endDur: 0,
-      script: [
-        // frame one: in close on Old Mott, straight into the sneeze (Gary's joke was the last episode)
-        { zoom: 'prisoner-2', dur: 6 },
-        { say: 'prisoner-2', lines: cells.npcs['prisoner-2'].lines, beat: BEAT },
-        goodbye('prisoner-2', 'Old Mott'),
-        { walk: [[14, 6]], face: 'up', speed: 260 },
-        { say: 'prisoner-1', lines: cells.npcs['prisoner-1'].lines, beat: BEAT },
-        goodbye('prisoner-1', 'Nails'),
-        { walk: [[18, 6]], face: 'up', speed: 260 },
-        { say: 'prisoner-3', lines: cells.npcs['prisoner-3'].lines, beat: BEAT },
-        // and you leave, up the ladder: cut
-        { walk: [[21, 6], [21, 8]], face: 'up', speed: 260 },
-      ],
-    };
-  },
+  // ---- The short-form template (EPISODES.md, author, Oct 5, 2026): Episode 10, "the worst prisoners ever", is the
+  // one that worked. About 15 seconds, open on the line, three quick beats, punchlines that hold, no end card.
+  // 10: three prisoners, three petty crimes against the king, three sentences that don't fit them.
   10: () => {
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const crime = (id) => cells.npcs[id].questions.find((q) => q.ask === 'What are you in for?')?.answer ?? cells.npcs[id].lines;
-    const ask = (id, name) => ({
-      menu: { speaker: name, options: menuOf(cells.npcs[id].questions, []), pick: 0, hold: 0.45 },
-    });
+    // each beat's menu flashes up and Goodbye is picked
+    const menu = (id) => {
+      const options = menuOf(cells.npcs[id].questions, []);
+      return { menu: { speaker: cells.npcs[id].name, options, pick: options.length - 1, hold: 0.5 } };
+    };
     return {
+      ...SHORT_10,
       number: 10,
-      title: 'THE WORST PRISONERS',
-      next: 'A CHILL GUY',
-      hold: 0.4,
+      title: 'THE WORST PRISONERS EVER',
       map: cells,
-      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
-      hide: ['brannoc-cell', 'brannoc-sulk'],
+      hide: ['brannoc-cell'],
       gaps: [[5, 5]],
-      titleDur: 0,
-      endDur: 4.5,
+      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
+      // the hook: in close on Old Mott, then back out for the other two
+      zoom: 1.5,
       script: [
-        // frame one: the first word with Nails, through the bars (author: start at the first interaction)
-        { say: 'prisoner-1', lines: cells.npcs['prisoner-1'].lines },
-        ask('prisoner-1', 'Nails'),
-        { say: 'prisoner-1', lines: crime('prisoner-1') },
+        { say: 'prisoner-1', punch: 1.6 },
+        menu('prisoner-1'),
+        { zoom: 1 },
         { walk: [[14, 6]], face: 'up' },
-        ask('prisoner-2', 'Old Mott'),
-        { say: 'prisoner-2', lines: crime('prisoner-2') },
+        { say: 'prisoner-2', punch: 1.4 },
+        menu('prisoner-2'),
         { walk: [[18, 6]], face: 'up' },
-        ask('prisoner-3', 'Silas Seen'),
-        { say: 'prisoner-3', lines: crime('prisoner-3') },
-        { wait: 0.3 },
+        { say: 'prisoner-3', punch: 1.6 },
       ],
     };
   },
+  // 11: two steps into the Maze Ward the floor gives way, and you drop into the Deep Cells outside Silas Seen's cell.
+  // The other two have a go, Silas Seen blames Gary, and Gary is asleep (author, Oct 6, 2026).
   11: () => {
-    // back to Gary for the cell keys (dungeon.ts KEYS_ASK, CHILL, UNLOCK: the game's lines)
+    const ward = loadMap('dungeon-mazes', 'dungeon');
     const cells = loadMap('kingdom-dungeon', 'dungeon');
-    const keys = { ask: 'Can I have the cell keys?' };
-    const asked = ['Who are you?', "Isn't this place watched 24/7?", 'How much do they pay you?'];
-    const bolt = (id, x) => ({
-      npcWalk: id,
-      to: [
-        [x, 6],
-        [20, 6],
-        [20, 8],
+    const said = POTHOLE_LANDING();
+    return {
+      ...SHORT,
+      number: 11,
+      title: 'SEE YOU NEXT FALL',
+      map: ward,
+      hero: { sprite: 'quill', at: [2, 2], facing: 'right' },
+      script: [
+        // the wizard never speaks. Frame one: already walking into the maze, and two steps in the floor goes
+        { walk: [[4, 2]] },
+        { drop: 0.25 },
+        { wait: 0.1 },
+        // the hook: out of the top of the screen, down onto your feet outside the last cell
+        { zoom: 1.6 },
+        { scene: { map: cells, at: [18, 6], facing: 'up', hide: ['brannoc-cell'], gap: 0.3, airborne: true } },
+        { gap: [5, 5] },
+        { fall: 0.45 },
+        // cut to the other two
+        { look: [12, 5] },
+        { zoom: 1.3 },
+        { say: 'prisoner-1', lines: said['OLD MOTT'] },
+        { say: 'prisoner-2', lines: said.NAILS, punch: 0.9 },
+        { laugh: 'prisoner-1', dur: 1.3, together: true },
+        { laugh: 'prisoner-2', dur: 1.3 },
+        // back to Silas Seen
+        { look: null },
+        { zoom: 1.6 },
+        { say: 'prisoner-3', lines: said['SILAS SEEN'], punch: 1.2 },
+        // and Gary
+        { look: [3, 7] },
+        { say: 'jailer', lines: said.GARY, punch: 1.4 },
       ],
-      speed: 85,
+    };
+  },
+  // 12: "Sure. Why not." Gary's Cell Keys. You unlock the cells one after another, and the three confess at the tops
+  // of their voices on the way up the ladder. You head for the way out, double back, and Gary's gone (author, Oct 6,
+  // 2026).
+  12: () => {
+    const cells = loadMap('kingdom-dungeon', 'dungeon');
+    const gary = cells.npcs.jailer;
+    const keys = gary.questions.find((q) => q.after === 'cells-freed');
+    // from the game (kingdom-dungeon.json): his answer's last line, the keys, and what each of them shouts
+    const says = keys.answer.filter((l) => !l.startsWith('* ') && l !== '...');
+    const received = keys.answer.filter((l) => l.startsWith('* You received')).map((l) => l.slice(2));
+    const shout = (name) => keys.then.find((l) => l.startsWith(`${name.toUpperCase()}: `)).slice(name.length + 2);
+    // a cell door, unlocked as you pass: face it, click, it swings open
+    const unlock = (x) => [{ walk: [[x, 6]], face: 'up' }, { jolt: 0.15 }, { gap: [x, 5] }, { wait: 0.15 }];
+    // out of the cell, through the open door, along the corridor and up the ladder, getting there as the shout ends
+    const run = (id, x, speed) => ({
+      npcWalk: id,
+      to: [[x, 5], [x, 6], [20, 6], [20, 8]],
+      speed,
       hide: true,
       together: true,
     });
     return {
-      number: 11,
-      title: 'A CHILL GUY',
-      next: 'BRANNOC-SHAPED',
-      hold: 0.5,
-      map: cells,
-      hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
-      hide: ['brannoc-cell', 'brannoc-sulk'],
-      gaps: [[5, 5]],
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: back at Gary's desk, asking for the keys (author: start there)
-        { menu: { speaker: 'Gary', options: menuOf([keys, ...cells.npcs.jailer.questions], asked), pick: 0, hold: 0.6 } },
-        { say: 'jailer', lines: ['...', 'Sure.'] },
-        { narrate: true, lines: ['Gary unhooks the ring of keys from his belt, drops it in your hand, and wanders off toward the ladder.'] },
-        {
-          npcWalk: 'jailer',
-          to: [
-            [3, 8],
-            [20, 8],
-          ],
-          speed: 70,
-          hide: true,
-          together: true,
-        },
-        { you: ['(What a chill guy.)'] },
-        { walk: [[12, 7], [12, 6]], face: 'up', speed: 110 },
-        { menu: { options: ['Unlock the cells', 'Not yet', 'You can all rot.'], pick: 0, hold: 0.5 } },
-        { narrate: true, lines: ['Click. Click. Click.'] },
-        // the bars in front of each cell swing open
-        { gap: [10, 5] },
-        { gap: [14, 5] },
-        { gap: [18, 5] },
-        // they run while it's said
-        bolt('prisoner-1', 10),
-        bolt('prisoner-2', 14),
-        bolt('prisoner-3', 18),
-        { narrate: true, lines: ['The three of them bolt for the ladder.'] },
-        { wait: 1.2 },
-      ],
-    };
-  },
-  12: () => {
-    const ward = loadMap('dungeon-mazes', 'dungeon');
-    const fork = loadMap('dungeon-fork', 'dungeon');
-    return {
+      ...SHORT,
       number: 12,
-      title: 'BRANNOC-SHAPED',
-      next: 'THE TEST OF STRENGTH',
-      hold: 0.75,
-      map: ward,
-      hero: { sprite: 'quill', at: [2, 2], facing: 'down' },
-      titleDur: 0,
-      endDur: 4.5,
+      title: 'I REGRET NOTHING',
+      map: cells,
+      hide: ['brannoc-cell'],
+      gaps: [[5, 5]],
+      // Gary's a chill guy, not an idiot: awake for this
+      awake: ['jailer'],
+      hero: { sprite: 'quill', at: [4, 7], facing: 'left' },
+      zoom: 1.4,
       script: [
-        // all thoughts (author, Oct 4, 2026): no name, no portrait, no voice
-        { narrate: true, silent: true, lines: ['(A hole in the wall. It is exactly Brannoc-shaped.)'] },
-        // the joke: you just walk straight through the maze, the way he went
-        {
-          walk: [
-            [2, 6],
-            [21, 6],
-          ],
-        },
-        {
-          narrate: true,
-          silent: true,
-          lines: ['(He completely destroyed this maze.)', '(Could he really be that strong?)'],
-        },
-        // all the way to the end, and up the ladder
-        {
-          walk: [
-            [42, 6],
-            [42, 2],
-            [43, 2],
-          ],
-          face: 'right',
-        },
-        { scene: { map: fork, at: [9, 5], facing: 'up' } },
-        { wait: 0.8 },
-      ],
-    };
-  },
-  13: () => {
-    // (author, Oct 4, 2026) the statue between the tunnels explains them; it doubts you; it's your funeral;
-    // and the five shadow soldiers roar at you as you come in
-    const fork = loadMap('dungeon-fork', 'dungeon');
-    const might = loadMap('dungeon-might', 'dungeon');
-    const statue = fork.npcs.statue;
-    const spots = might.boss.bearers;
-    spots.forEach(([x, y], i) => {
-      might.npcs[`shade-${i}`] = { id: `shade-${i}`, type: 'npc', x, y, sprite: 'shadow', facing: 'down', name: 'Shadow', lines: [] };
-    });
-    const shades = spots.map((_, i) => `shade-${i}`);
-    const said = (l) => l.replace(/^STATUE: /, '');
-    return {
-      number: 13,
-      title: 'THE TEST OF STRENGTH',
-      next: 'THE NOTE',
-      hold: 0.6,
-      map: fork,
-      hero: { sprite: 'quill', at: [8, 4], facing: 'up' },
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: the statue explains the two ways
-        { say: 'statue', lines: statue.lines },
-        { walk: [[12, 4], [12, 2]], face: 'up', speed: 110 },
-        { say: 'statue', lines: STATUE_SURE.map(said) },
-        { menu: { speaker: 'Statue', options: ['Yes', 'No', 'Mind your own business.'], pick: 0, hold: 0.5 } },
-        { say: 'statue', lines: FUNERAL.map(said) },
-        { walk: [[12, 1]], face: 'up', speed: 80 },
-        { scene: { map: might, at: [7, 8], facing: 'up', show: shades } },
-        ...shades.map((id) => ({ laugh: id, dur: 2.2, quiet: true, together: true })),
-        { narrate: true, lines: might.boss.intro.lines },
-        { wait: 0.4 },
-      ],
-    };
-  },
-  14: () => {
-    // (author, Oct 4, 2026) the last shadow, the statue lost its bet, and the king's note to the Warden
-    const might = loadMap('dungeon-might', 'dungeon');
-    const hall = loadMap('dungeon-lore', 'dungeon');
-    might.npcs['shade-3'] = { id: 'shade-3', type: 'npc', x: 11, y: 5, sprite: 'shadow', facing: 'left', name: 'Shadow', lines: [] };
-    const letter = hall.examine['9'];
-    return {
-      number: 14,
-      title: 'THE NOTE',
-      next: 'TWENTY MINUTES',
-      hold: 0.6,
-      map: might,
-      hero: { sprite: 'quill', at: [10, 5], facing: 'right' },
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: finishing off the last of them
-        { puff: { hide: ['shade-3'], spark: true, wait: 0.5 } },
-        { face: 'up' },
-        { say: 'statue', lines: ["Wow. I can't believe you actually survived.", 'I really need to stop gambling.'] },
-        { gap: [7, 1] },
-        { narrate: true, lines: ['The gate opens.'] },
-        { walk: [[7, 5], [7, 1]], face: 'up', speed: 120 },
-        { scene: { map: hall, at: [12, 5], facing: 'up' } },
-        { walk: [[10, 5], [10, 2]], face: 'up', speed: 120 },
-        { narrate: true, lines: letter },
-        { wait: 0.3 },
-      ],
-    };
-  },
-  // 15–17: the Colosseum, the prison route with the prisoners freed (dungeon.ts PRISON_INTROS, SNOT_SWING…)
-  15: () => {
-    const pit = loadMap('the-pit', 'dungeon');
-    const add = (id, x, y, sprite, facing, name, extra = {}) =>
-      (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
-    add('barnaby', 10, 3, 'barnaby', 'down', 'Barnaby');
-    add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
-    add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
-    add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
-    add('down-silas', 11, 8, 'silas', 'down', 'Silas Seen', { lying: true });
-    const guards = [[6, 4], [14, 4], [8, 5], [12, 5], [10, 4]].map(([x, y], i) => add(`pit-guard-${i}`, x, y, 'raider', 'down', 'Guard').id);
-    const crowd = Object.keys(pit.npcs).filter((id) => id.startsWith('crowd-'));
-    const B = (l) => l.replace(/^BARNABY: /, '');
-    return {
-      number: 15,
-      title: 'TWENTY MINUTES',
-      next: 'HAVING TROUBLE, BARNABY?',
-      hold: 0.6,
-      map: pit,
-      hero: { sprite: 'quill', at: [3, 9], facing: 'right' },
-      hide: ['brannoc-pit', 'brannoc-awake', 'maelis', ...guards],
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: up the ladder, onto the sand
-        { narrate: true, lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.'] },
-        { say: 'barnaby', lines: ["Really? You haven't been here twenty minutes, and you're causing this much trouble?"] },
-        { menu: { speaker: 'Barnaby', options: ['Who are you?', "You're too loud."], pick: 0, hold: 0.6 } },
-        {
-          say: 'barnaby',
-          lines: [
-            'I am the assistant warden and part-time announcer for the Colosseum!',
-            "Sponsored by Bettor. There's no better way to bet than Bettor.",
-            'Enough idle chat.',
-            'Guards! Last fight before we go to the tavern! Free drinks for whoever brings me his head!',
-          ],
-        },
-        ...guards.map((id) => ({ show: id })),
-        ...[...guards, ...crowd].map((id) => ({ laugh: id, dur: 2.2, quiet: true, together: true })),
-        { narrate: true, lines: ['The guards roar.'] },
-        { wait: 0.4 },
-      ],
-    };
-  },
-  16: () => {
-    const pit = loadMap('the-pit', 'dungeon');
-    const add = (id, x, y, sprite, facing, name, extra = {}) =>
-      (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
-    add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
-    add('warden', 10, 2, 'warden', 'down', 'Bertrand');
-    add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
-    add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
-    add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
-    add('down-silas', 11, 8, 'silas', 'down', 'Silas Seen', { lying: true });
-    return {
-      number: 16,
-      title: 'HAVING TROUBLE, BARNABY?',
-      next: 'FREEDOM',
-      hold: 0.6,
-      map: pit,
-      hero: { sprite: 'quill', at: [10, 7], facing: 'up' },
-      hide: ['brannoc-pit', 'brannoc-awake', 'maelis'],
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: the guards are down, and the Warden walks out
-        { npcWalk: 'warden', to: [[10, 2], [10, 5]], speed: 30 },
-        { say: 'warden', lines: ['Having trouble, Barnaby?'] },
-        { say: 'barnaby', lines: ["Wa... Bertrand! I didn't think you'd be back from your vacation so soon."] },
-        {
-          menu: {
-            speaker: 'Bertrand',
-            options: ['Who are you?', 'Any chance you could let me go?', 'Your poor mother.'],
-            pick: 2,
-            hold: 0.8,
-          },
-        },
-        { say: 'warden', lines: ['My mother is fine. We have tea every Wednesday.', 'You will pay for that comment.'] },
-        { wait: 0.4 },
-      ],
-    };
-  },
-  17: () => {
-    const pit = loadMap('the-pit', 'dungeon');
-    const add = (id, x, y, sprite, facing, name, extra = {}) =>
-      (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
-    add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
-    add('warden', 10, 5, 'warden', 'down', 'Bertrand');
-    add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
-    add('brannoc', 4, 8, 'brannoc', 'right', 'Brannoc');
-    const freed = [
-      ['nails', 7, 'Nails'],
-      ['mott', 9, 'Old Mott'],
-      ['silas', 11, 'Silas Seen'],
-    ];
-    for (const [id, x, name] of freed) {
-      const sprite = id === 'mott' ? 'oldmott' : id;
-      add(`down-${id}`, x, 8, sprite, 'down', name, { lying: true });
-      add(`up-${id}`, x, 8, sprite, 'right', name);
-    }
-    const hits = (n) => Array.from({ length: n }, () => ({ puff: { on: ['warden'], spark: true, wait: 0.22 } }));
-    const run = (id, x) => ({ npcWalk: `up-${id}`, to: [[x, 7], [19, 6], [21, 6]], speed: 110, hide: true, together: true });
-    return {
-      number: 17,
-      title: 'FREEDOM',
-      next: 'MY SWORD IS YOURS',
-      hold: 0.6,
-      map: pit,
-      hero: { sprite: 'quill', at: [10, 6], facing: 'up' },
-      hide: ['brannoc-pit', 'brannoc-awake', 'maelis', 'brannoc', 'up-nails', 'up-mott', 'up-silas'],
-      titleDur: 0,
-      endDur: 4.5,
-      script: [
-        // frame one: the last of twenty strikes
-        ...hits(3),
-        { say: 'warden', lines: ['That is enough. It is time I put an end to this.'] },
-        // Brannoc gets up, still asleep
-        { vanish: 'down-brannoc' },
-        { show: 'brannoc' },
-        { narrate: true, lines: ["Behind you, Brannoc stands up. He's still asleep."] },
-        { npcWalk: 'brannoc', to: [[4, 5], [9, 5]], speed: 70 },
-        { say: 'brannoc', lines: ['BRANNOC SUPER SUPER SWING!'] },
-        // the Warden, straight through the side of the Colosseum
-        { npcWalk: 'warden', to: [[10, 5], [21, 5]], speed: 260, hide: true },
-        { gap: [20, 5] },
-        { gap: [20, 6] },
-        { narrate: true, lines: ['The Warden goes straight through the side of the Colosseum.'] },
-        // the prisoners get up, and run for it
-        { vanish: ['down-nails', 'down-mott', 'down-silas'] },
-        { show: 'up-nails' },
-        { show: 'up-mott' },
-        { show: 'up-silas' },
-        { say: 'up-nails', lines: ['FREEDOM!'] },
-        { say: 'up-mott', lines: ['FREEDOM!'] },
-        { say: 'up-silas', lines: ['FREEDOM!'] },
-        run('nails', 7),
-        run('mott', 9),
-        run('silas', 11),
+        // frame one: already saying it
+        { say: 'jailer', lines: says, punch: 0.8 },
+        { narrate: true, lines: received, punch: 0.9 },
+        // keys in hand, straight along the cells
+        { zoom: 1 },
+        { walk: [[4, 6]], speed: 220 },
+        ...unlock(10),
+        ...unlock(14),
+        ...unlock(18),
+        { walk: [[18, 7]], face: 'right' },
+        // out they go, confessing
+        { look: [15.5, 6] },
+        { zoom: 6 / 7 },
+        run('prisoner-2', 14, 94),
+        { say: 'prisoner-2', lines: [shout('Nails')] },
+        run('prisoner-1', 10, 118),
+        { say: 'prisoner-1', lines: [shout('Old Mott')] },
+        // Silas Seen, in no hurry at all
+        run('prisoner-3', 18, 56),
+        { say: 'prisoner-3', lines: [shout('Silas Seen')], punch: 1.1 },
+        // you start for the way out...
+        { look: null },
+        { zoom: 1 },
+        { walk: [[20, 7]] },
+        { vanish: 'jailer' },
+        { wait: 0.25 },
+        // ...and double back, quick, to Gary. Who isn't there.
+        { walk: [[4, 7]], speed: 380, face: 'left' },
         { wait: 1.4 },
-        { say: 'brannoc', lines: ['Where am I!? What happened?'] },
-        { wait: 0.3 },
       ],
     };
   },
-
+  // 13: up into the Kaldorium. The Warden's been expecting you: the three you let out got here first, and lost.
+  // Any excuse is UNACCEPTABLE, Brannoc faints, Barnaby is unimpressed, the three step aside, and: FIGHT!
+  // (author, Oct 6, 2026). Lines from the game (dungeon.ts ARENA_WELCOME, ARENA_EXCUSES, ARENA_VERDICT).
+  13: () => {
+    const pit = loadMap('the-pit', 'arena');
+    const welcome = gameLines('ARENA_WELCOME').map(unnamed);
+    const verdict = gameLines('ARENA_VERDICT');
+    const after = gameLines('ARENA_FIGHT');
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    // you in the middle of the ring, your three close by on your left, Brannoc a few tiles off on your right
+    // (side by side, a sprite's width apart: never stacked, never overlapping)
+    Object.assign(pit.npcs['arena-mott'], { x: 11, y: 11, facing: 'up' });
+    Object.assign(pit.npcs['arena-nails'], { x: 12, y: 11, facing: 'up' });
+    Object.assign(pit.npcs['arena-silas'], { x: 13, y: 11, facing: 'up' });
+    Object.assign(pit.npcs['brannoc-pit'], { x: 18, y: 10, facing: 'up' });
+    // two fixed shots, cut between, never panned (author, Oct 6, 2026: "camera angles are video game like")
+    const RING = [{ look: [15, 10] }, { zoom: 1 }];
+    const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
+    return {
+      ...SHORT,
+      // fifteen seconds (author, Oct 6, 2026), every line held 1.45x so it lands; Barnaby types fast, the three slow
+      read: 1.45,
+      gapAfter: 0.12,
+      number: 13,
+      title: 'UNACCEPTABLE',
+      map: pit,
+      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      // Brannoc's awake until he isn't
+      awake: ['brannoc-pit'],
+      hero: { sprite: 'quill', at: [15, 10], facing: 'up' },
+      // the hook: Barnaby in his box at the edge of the sand, at his desk, already talking
+      look: [15.5, 4],
+      zoom: 1.6,
+      script: [
+        // Barnaby talks fast, a showman working the crowd
+        { say: 'barnaby-box', lines: welcome, punch: 0.4, letterMs: 16, pause: 0.3, read: 1.1 },
+        ...RING,
+        { menu: { speaker: 'Barnaby', options: arenaExcuses().concat('Goodbye.').slice(0, 4), pick: 0, hold: 0.25 } },
+        ...BOX,
+        { jolt: 0.45 },
+        { say: 'barnaby-box', lines: by(verdict, 'BARNABY'), punch: 0.4, letterMs: 16, pause: 0.2, read: 0.95 },
+        // Brannoc heard that
+        ...RING,
+        { say: 'brannoc-pit', lines: by(verdict, 'BRANNOC'), punch: 0.4 },
+        { faint: 'brannoc-pit' },
+        // a beat on him, out cold, snot bubble going
+        { wait: 0.2 },
+        // your three make their excuses as they grab Brannoc and carry him off to the side of the sand, out of the way
+        // of the fight (author, Oct 6, 2026): one wide shot for all of it
+        { look: [19.5, 10] },
+        { zoom: 6 / 7 },
+        // the rush (each round, never through anyone: Old Mott below you, Nails further below, Silas Seen up and over);
+        // Old Mott and Nails turn to him, hands on him, at his feet and at his head
+        { npcWalk: 'arena-mott', to: [[11, 12], [17.7, 12], [17.7, 10]], speed: 170, turn: 'right', together: true },
+        { npcWalk: 'arena-nails', to: [[12, 13], [19.6, 13], [19.6, 10]], speed: 190, turn: 'left', together: true },
+        { npcWalk: 'arena-silas', to: [[13, 8], [21, 8]], speed: 170, turn: 'right', together: true },
+        // the heave, then off they shuffle with him, slow, held up between them: Old Mott at his feet, Nails at his
+        // head walking backwards, Silas Seen (the pulled muscle) leading the way, empty-handed
+        { npcWalk: 'arena-mott', from: center(17.7, 10), to: [[21.7, 10]], speed: 21, delay: 1.25, turn: 'right', together: true },
+        { npcWalk: 'brannoc-pit', from: center(18, 10), to: [[22, 10]], speed: 21, delay: 1.25, carried: true, together: true },
+        { npcWalk: 'arena-nails', from: center(19.6, 10), to: [[23.6, 10]], speed: 21, delay: 1.25, facing: 'left', together: true },
+        { npcWalk: 'arena-silas', from: center(21, 8), to: [[24, 8]], speed: 15.5, delay: 1.25, turn: 'left', together: true },
+        // (typed slower than the rest, so each excuse reads: author, Oct 6, 2026)
+        { say: 'arena-silas', lines: by(after, 'SILAS SEEN'), punch: 0.3, letterMs: 22 },
+        { say: 'arena-mott', lines: by(after, 'OLD MOTT'), punch: 0.3, letterMs: 22 },
+        { say: 'arena-nails', lines: by(after, 'NAILS'), punch: 0.35, letterMs: 22 },
+        ...BOX,
+        { jolt: 0.4 },
+        { say: 'barnaby-box', lines: by(after, 'BARNABY'), punch: 0.55, letterMs: 16, pause: 0.3, read: 1.1 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -2538,18 +2456,11 @@ const titleCase = (t) =>
 const out =
   outArg ??
   (mkdirSync(EPISODE_FOLDER, { recursive: true }),
-  (ep.short
-    ? (mkdirSync(join(EPISODE_FOLDER, 'Shorts'), { recursive: true }),
-      join(EPISODE_FOLDER, 'Shorts', `Short ${String(ep.short).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`))
-    : join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`)));
+  join(EPISODE_FOLDER, `Episode ${String(ep.number).padStart(2, '0')} - ${titleCase(ep.title)}.mp4`));
 const compiled = compile(ep);
 const FADE = 0.5;
-// No end card (author, Oct 4, 2026: viewers leave the moment the story stops, and the card dragged
-// completion down): an episode ends when its story does, on the fade. Set END_CARD to bring it back.
-const END_CARD = false;
-const total = compiled.end + (END_CARD ? ep.endDur : 0);
-// UNTIL=6 stops after that many seconds (a quick look at something, not a finished cut)
-const frames = Math.ceil(Math.min(total, Number(process.env.UNTIL) || Infinity) * FPS);
+const total = compiled.end + ep.endDur;
+const frames = Math.ceil(total * FPS);
 
 // STILLS='3.5,9' writes those moments as PNGs next to `out` instead of a video, for checking the look.
 if (process.env.STILLS) {
@@ -2568,7 +2479,6 @@ if (process.env.STILLS) {
     else if (st) {
       drawWorld(canvas, ep, st, s);
       drawOverlays(canvas, st);
-      drawCaption(canvas, st);
       if (st.blackout > 0)
         canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint(st.white ? '#FFFFFF' : '#000000', Math.min(1, st.blackout)));
     } else drawEnd(canvas, ep, s - compiled.end);
@@ -2699,14 +2609,13 @@ async function renderPicture() {
       }
       drawWorld(canvas, ep, st, t);
       drawOverlays(canvas, st);
-      drawCaption(canvas, st);
       if (st.white) {
         if (st.blackout > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', Math.min(1, st.blackout)));
       } else black(st.blackout);
       // no title card: the first frame is already the scene (author: open on the line, not a fade)
       if (ep.titleDur > 0) black(1 - (t - ep.titleDur) / FADE);
-      // a short loops (author, Oct 5, 2026): a hard cut, straight back to the first frame
-      if (!ep.loop) black((t - (compiled.end - FADE)) / FADE);
+      // the template ends on the last laugh, no fade and no end card, so the short loops straight back round
+      if (ep.endDur > 0) black((t - (compiled.end - FADE)) / FADE);
     } else {
       drawEnd(canvas, ep, t - compiled.end);
     }
@@ -2752,7 +2661,7 @@ const place = (sound, at, gain) => {
   for (let i = 0; i < sound.length && start + i < mix.length; i++) mix[start + i] += (sound[i] / 32768) * gain;
 };
 for (const s of compiled.segs) {
-  if (s.kind === 'line' && !s.silent) for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
+  if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {
@@ -2793,22 +2702,12 @@ const r = spawnSync(
     // the game's blips are soft under a phone's own volume; a feed needs them up front
     // Instagram and YouTube reject uploads part-way through without 44.1/48 kHz audio and the index
     // up front (faststart): 48 kHz stereo, BT.709 tags, moov first.
-    // `music` (the clips, author's test): the game's own track under the voices, looped, fading out at the end
-    ...(ep.music
-      ? [
-          '-stream_loop',
-          '-1',
-          '-i',
-          join(ROOT, ep.music),
-          '-filter_complex',
-          `[1:a]volume=14dB[v];[2:a]volume=-9dB${ep.loop ? '' : `,afade=t=out:st=${Math.max(0, total - 1.5).toFixed(2)}:d=1.5`}[m];` +
-            '[v][m]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.9[a]',
-          '-map',
-          '0:v',
-          '-map',
-          '[a]',
-        ]
-      : ['-map', '0:v', '-map', '1:a', '-af', 'volume=14dB,alimiter=limit=0.9']),
+    '-map',
+    '0:v',
+    '-map',
+    '1:a',
+    '-af',
+    'volume=14dB,alimiter=limit=0.9',
     '-c:v',
     'copy',
     '-bsf:v',

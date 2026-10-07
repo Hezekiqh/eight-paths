@@ -123,8 +123,8 @@
         {
           "ask": "The Kingdom?",
           "answer": [
-            "East, past the old fort. They call it the Berserker Kingdom now.",
-            "In my great-grandmother's day it had another name. Pretty one. Nobody says it any more."
+            "East to Warrior City, then north, past the old fort. They call it the Berserker Kingdom now.",
+            "Long before my day it had another name. Pretty one. Nobody says it any more."
           ]
         },
         {
@@ -152,7 +152,7 @@
       "after": {
         "flag": "pit-champion",
         "lines": [
-          "Heard you won in the pit. Three of the king's own.",
+          "Heard you won at the Kaloseum. Five of the king's own, and the Warden.",
           "Still soft. Less soft. Sit down. Arm."
         ]
       },

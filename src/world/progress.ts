@@ -68,7 +68,7 @@ export const KING_LEVEL = 18;
  * father's throne), and the other seven. Each is the `met:` flag of meet.ts, set when they join.
  */
 const WHERE: Record<string, string> = {
-  brannoc: 'He is in a cell under the Colosseum, in Warrior City.',
+  brannoc: 'He is in a cell under the Kaloseum, in Warrior City.',
   ysolde: "She is in Warrior City's adventurers' guild.",
   quill: "He is in Warrior City's library.",
   wren: "She is in Warrior City's chapel.",
@@ -247,6 +247,27 @@ export const EXITS: Exit[] = [
     tile: 'E',
     label: 'The way back',
     to: { map: 'barracks-hall', x: 8, y: 2, facing: 'down' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The Long Mess (author, Oct 7, 2026): the barracks' dining hall, ghost cooks and a very long table.
+  {
+    id: 'hall-long-mess',
+    from: 'barracks-hall',
+    tile: '2',
+    label: 'The hole in the west wall',
+    to: { map: 'long-mess', x: 2, y: 7, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'long-mess-hall',
+    from: 'long-mess',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'barracks-hall', x: 2, y: 5, facing: 'right' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -493,14 +514,10 @@ export const EXITS: Exit[] = [
     id: 'town-pit',
     from: 'warrior-city',
     tile: '1',
-    label: 'The Colosseum',
-    to: { map: 'the-pit', x: 10, y: 9, facing: 'up' },
-    needs: {
-      kind: 'flag',
-      flag: 'on-the-bill',
-      label: 'Get on the bill',
-      hint: 'Barnaby does the bills. He loves a good story.',
-    },
+    label: 'The Kaloseum',
+    to: { map: 'the-pit', x: 15, y: 15, facing: 'up' },
+    // every player reaches Warrior City as the Kaloseum's champion (the prison break), so it's open
+    needs: OPEN,
     walk: true,
   },
   {
@@ -525,8 +542,8 @@ export const EXITS: Exit[] = [
         {
           kind: 'flag',
           flag: 'pit-champion',
-          label: 'Win at the Colosseum',
-          hint: 'Get on the bill, then beat five guards and the warden.',
+          label: 'Win at the Kaloseum',
+          hint: 'Beat five guards and the warden at the Kaloseum.',
         },
         {
           kind: 'flag',
@@ -560,6 +577,27 @@ export const EXITS: Exit[] = [
   },
   // Kaldor's castle (author, Oct 4, 2026; castle.ts): the grounds and the gate guards, the empty
   // hall (straight on to the throne room, or up the winding stair to the king's floor), the throne.
+  // The war council (author, Oct 7, 2026): why the hall is empty. Everyone's in here, planning a march.
+  {
+    id: 'hall-war-room',
+    from: 'castle-hall',
+    tile: '2',
+    label: 'The heavy door',
+    to: { map: 'war-room', x: 6, y: 6, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  {
+    id: 'war-room-hall',
+    from: 'war-room',
+    tile: '1',
+    label: 'The way back',
+    to: { map: 'castle-hall', x: 23, y: 3, facing: 'left' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
   {
     id: 'grounds-town',
     from: 'castle-grounds',
@@ -744,7 +782,7 @@ export const EXITS: Exit[] = [
     id: 'ring-maximus',
     from: 'ring-ward',
     tile: '8',
-    label: 'The great gate',
+    label: 'The yard gate',
     to: { map: 'kaldorium-maximus', x: 9, y: 9, facing: 'up' },
     needs: OPEN,
     back: true,
@@ -931,7 +969,7 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Colosseum at its heart, the
+  // Warrior City (author, Oct 3, 2026), just past Felix's maze: the Kaloseum at its heart, the
   // castle road north (through the camp, the barracks and on to Kaldor), a bridge east to the Mage
   // kingdom and a road south to the old mines (both still being built).
   {
@@ -1142,7 +1180,7 @@ export const EXITS: Exit[] = [
     back: true,
     walk: true,
   },
-  // The Kingdom Dungeon, under Warrior City's Colosseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
+  // The Kingdom Dungeon, under Warrior City's Kaloseum (author, Oct 3, 2026): the cells, the Maze Ward, then up into the arena.
   {
     id: 'cells-mazes',
     from: 'kingdom-dungeon',
@@ -1159,6 +1197,18 @@ export const EXITS: Exit[] = [
     tile: '1',
     label: 'The ladder down',
     to: { map: 'kingdom-dungeon', x: 20, y: 7, facing: 'up' },
+    needs: OPEN,
+    back: true,
+    walk: true,
+  },
+  // The pothole (dungeon.ts POTHOLE): three steps in, the floor gives way and drops you back into the cells.
+  // Once only: after you've fallen (FELL_IN), the game leaves it out and the hole stays open; you walk round it.
+  {
+    id: 'maze-pothole',
+    from: 'dungeon-mazes',
+    tile: 'h',
+    label: 'The floor',
+    to: { map: 'kingdom-dungeon', x: 18, y: 6, facing: 'up' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -1184,13 +1234,13 @@ export const EXITS: Exit[] = [
     walk: true,
   },
   // The Two Tunnels (author, Oct 4, 2026): past the Maze Ward, a test of the mind (a plate puzzle) or of
-  // strength (five shadows); either way, the Hall of Champions and the ladder up into the Colosseum.
+  // strength (five shadows); either way, the Hall of Champions and the ladder up into the Kaloseum.
   {
     id: 'fork-mazes',
     from: 'dungeon-fork',
     tile: '2',
     label: 'The ladder down',
-    to: { map: 'dungeon-mazes', x: 42, y: 2, facing: 'down' },
+    to: { map: 'dungeon-mazes', x: 60, y: 6, facing: 'left' },
     needs: OPEN,
     back: true,
     walk: true,
@@ -1286,7 +1336,7 @@ export const EXITS: Exit[] = [
     from: 'dungeon-lore',
     tile: '2',
     label: 'The ladder up',
-    to: { map: 'the-pit', x: 3, y: 9, facing: 'right' },
+    to: { map: 'the-pit', x: 8, y: 14, facing: 'right' },
     needs: OPEN,
     back: true,
     walk: true,

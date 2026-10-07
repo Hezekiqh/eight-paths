@@ -62,14 +62,14 @@
       "facing": "right",
       "name": "Marta",
       "lines": [
-        "Knitting armour for my boy. He goes to the city in the spring, for the tithe.",
+        "Knitting a spare set of armour for my boy. He's gone to the city for the tithe, wearing the first.",
         "Wool armour. I know. But it's very thick wool, and I've put a lot of love in it, and love is heavier than you'd think."
       ],
       "questions": [
         {
           "ask": "What is the tithe?",
           "answer": [
-            "Every house gives one fighter to the pit a year. Or iron, if you've got iron.",
+            "Every house gives one fighter to the Kaloseum a year. Or iron, if you've got iron.",
             "Nobody's got iron. The king has all the iron. So it's fighters."
           ]
         },
@@ -116,7 +116,7 @@
         {
           "ask": "A spoon? The king'll laugh you out.",
           "answer": [
-            "Good. Nobody's heard the king laugh in four hundred years. I'd be a hero.",
+            "Good. Nobody's heard the king laugh in five hundred years. I'd be a hero.",
             "* He polishes the spoon on his sleeve, with enormous dignity."
           ],
           "deed": "bad"
@@ -163,7 +163,7 @@
       "y": 3,
       "lines": [
         "TITHE CAMP. NO FIGHTING IN THE CAMP.",
-        "Underneath, smaller: (ALL FIGHTING TO BE SAVED FOR THE PIT.)"
+        "Underneath, smaller: (ALL FIGHTING TO BE SAVED FOR THE KALOSEUM.)"
       ]
     }
   ]

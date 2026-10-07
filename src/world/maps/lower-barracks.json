@@ -52,7 +52,7 @@
     ],
     "K": [
       "A great studded door. Behind it, very faintly: snoring.",
-      "It won't open for you yet. You'd need more strength behind you."
+      "It isn't locked. Somebody just very much doesn't want to be disturbed."
     ],
     "L": [
       "Scratched into a board: \"The prince is hiding in the maze again.\""
@@ -105,7 +105,8 @@
           "ask": "Whose spoon?",
           "answer": [
             "The prince's. Borrowed it for porridge. Five hundred years ago. Never signed it back.",
-            "I've not forgotten. I've had a great deal of time not to forget."
+            "I've not forgotten. I've had a great deal of time not to forget.",
+            "Left a scrap of paper on the shelf instead. Same words, over and over. Filed under IOU."
           ]
         },
         {

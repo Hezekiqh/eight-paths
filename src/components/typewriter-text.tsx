@@ -5,7 +5,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { haptics } from '@/haptics';
 
 /** Milliseconds per letter, and the extra beat after punctuation. */
-const LETTER_MS = 28;
+export const LETTER_MS = 28;
 const PAUSES: Record<string, number> = { '.': 260, '!': 260, '?': 260, ',': 120, ':': 160, ';': 160 };
 
 type Props = {

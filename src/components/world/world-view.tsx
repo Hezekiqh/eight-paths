@@ -25,6 +25,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import {
   DOWN,
   PUSH_DELAY,
+  EXPLORE_SPEED,
   SPEED,
   byFeet,
   extendTrail,
@@ -39,6 +40,7 @@ import {
   type Grid,
 } from '@/world/engine';
 import { W_FACING, newWanderers, stepWanderers, strolling, wandererFeet, type Wanderer } from '@/world/wander';
+import { sleepZs, snotBubble } from '@/world/sleep';
 import {
   E_ALIVE,
   E_AWAKE,
@@ -273,6 +275,8 @@ type Props = {
   /** The boss lobs pillows (Baron Plush). */
   throws?: boolean;
   drowsy?: number;
+  /** The game speed (speed.ts): times EXPLORE_SPEED, outside a fight. */
+  pace?: number;
   /** The boss can only be held out against: over once an enemy has taken this many hp (fight.ts). */
   holdOut?: number;
   onWin?: () => void;
@@ -281,6 +285,8 @@ type Props = {
    * east off the map, lightning fast. `onExited` runs once they're gone.
    */
   exit?: { id: string } | null;
+  /** Who you're talking to, by name: someone asleep at their post (Gary) is awake for it. */
+  talkingTo?: string | null;
   onExited?: () => void;
   /** A march (sim.march) has finished. */
   onMarched?: () => void;
@@ -294,6 +300,24 @@ type Props = {
   /** Where the fight lives, so a change of character can carry it over. */
   fightRef?: { current: SharedValue<Fight> | null };
 };
+
+/** Asleep at their post (sleep.ts), and not the one you're talking to: a chill guy wakes up for a chat. */
+const dozing = (n: { asleep?: boolean; name: string }, talkingTo: string | null) => !!n.asleep && n.name !== talkingTo;
+
+/** A march actor's "facing" for someone out cold on the ground (march.ts), and for someone carried. */
+const LYING = 4;
+/** How high someone carried is held off the ground, in art pixels. */
+const CARRIED = 8;
+
+/**
+ * Where to put a sleeper's Zs or snot bubble (sleep.ts takes the feet of someone standing): for someone lying flat,
+ * a point that puts them at the head, on the right, with the bubble at the nose, facing up.
+ */
+function sleeperAt([x, y]: [number, number], lying: boolean, what: 'zs' | 'snot'): [number, number] {
+  'worklet';
+  if (!lying) return [x, y];
+  return what === 'zs' ? [x - 2, y + 8] : [x - 1, y - 2];
+}
 
 /** A leaver's laugh (seconds), then their dash (art pixels a second). */
 const EXIT_LAUGH = 1.4;
@@ -351,9 +375,11 @@ export function WorldView({
   boss = null,
   throws = false,
   drowsy = 0,
+  pace = 1,
   holdOut = 0,
   onWin,
   exit = null,
+  talkingTo = null,
   onExited,
   onMarched,
   chests = [],
@@ -369,6 +395,8 @@ export function WorldView({
   fightRef,
 }: Props) {
   const mapImage = useImage(map.image);
+  // the crowd on its feet and back down again (the Kaloseum): the second picture shows on every other beat
+  const cheerImage = useImage(map.cheer ?? null);
   const walkers = useImage(WALKERS_IMAGE);
   // Walls can change while you're here (a boulder moves), so the grid lives on the UI thread.
   const solid = useSharedValue<number[]>(map.solid);
@@ -456,11 +484,37 @@ export function WorldView({
   }, [exit, sim.npcIds, exitRow, exitT]);
   const partyRows = useMemo(() => party.map((id) => WALKER_ROWS[id]), [party]);
   // [sprite row, row in sim.npcWalk] for everyone still here.
+  // someone asleep at their post is drawn eyes shut (their "asleep" walker), unless you're talking to them
   const npcs = useMemo(
-    () => map.npcs.map((n) => [WALKER_ROWS[n.sprite], sim.npcIds.indexOf(n.id)] as [number, number]),
-    [map, sim.npcIds],
+    () =>
+      map.npcs.map(
+        (n) =>
+          [
+            dozing(n, talkingTo)
+              ? (WALKER_ROWS[`${n.sprite}asleep` as WalkerId] ?? WALKER_ROWS[n.sprite])
+              : WALKER_ROWS[n.sprite],
+            sim.npcIds.indexOf(n.id),
+            // flat on their back while out cold (size -1: see the sprite list below)
+            n.lying && dozing(n, talkingTo) ? -1 : (n.size ?? 1),
+          ] as [number, number, number],
+      ),
+    [map, sim.npcIds, talkingTo],
   );
   const wanders = useMemo(() => map.npcs.some((n) => (n.wander ?? 0) > 0 || n.look), [map]);
+  // Whoever's asleep where they stand (sleep.ts): their feet, for the Zs.
+  // (each as [row in sim.npcWalk, lying flat]: wherever they are now, carried off, say)
+  const sleepers = useMemo(
+    () => map.npcs.filter((n) => dozing(n, talkingTo)).map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+    [map, talkingTo, sim.npcIds],
+  );
+  // ...and those with a snot bubble too
+  const snorers = useMemo(
+    () =>
+      map.npcs
+        .filter((n) => n.snot && dozing(n, talkingTo))
+        .map((n) => [sim.npcIds.indexOf(n.id), n.lying ? 1 : 0]),
+    [map, talkingTo, sim.npcIds],
+  );
   // One more for a party member stepping in for a job (a cameo).
   // And room for a march's actors.
   // (each NPC can take two: legs, then head and shoulders a pixel lower as they breathe)
@@ -531,6 +585,9 @@ export function WorldView({
         iy = 0;
       }
       const push = Math.hypot(ix, iy);
+      // In a fight you walk at the pace the fights are tuned to; otherwise at the game speed.
+      const battling = !fighting.won && fighting.enemies.some((e) => e[E_ALIVE] === 1);
+      const walk = battling ? SPEED : EXPLORE_SPEED * pace;
       let moving = false;
       if (push > 0.25) {
         sim.facing.set(facingFor(ix, iy, sim.facing.get()));
@@ -539,7 +596,7 @@ export function WorldView({
         const against = leaningOn(grid, rocks.get(), sim.x.get(), sim.y.get(), sim.facing.get()) !== -1;
         const [nx, ny] = against
           ? [sim.x.get(), sim.y.get()]
-          : move(grid, sim.x.get(), sim.y.get(), (ix / push) * SPEED * dt, (iy / push) * SPEED * dt);
+          : move(grid, sim.x.get(), sim.y.get(), (ix / push) * walk * dt, (iy / push) * walk * dt);
         const d = Math.abs(nx - sim.x.get()) + Math.abs(ny - sim.y.get());
         if (d > 0.001) {
           moving = true;
@@ -800,9 +857,9 @@ export function WorldView({
           ents.push([npcs[i][0], 3, walkFrame(d, true), fx + d, fy, 0, 1]);
           continue;
         }
-        // standing about, they breathe (never while strolling)
-        const dip = strolling(w) ? 0 : idleDip(clock.get(), i, npcs[i][1] === talkerRow.get());
-        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, 1, dip]);
+        // standing about, they breathe (never while strolling, nor lying down)
+        const dip = strolling(w) || npcs[i][2] < 0 ? 0 : idleDip(clock.get(), i, npcs[i][1] === talkerRow.get());
+        ents.push([npcs[i][0], w[W_FACING], walkFrame(fx + fy, strolling(w)), fx, fy, 0, npcs[i][2], dip]);
       }
       const whites = whiteFor.get();
       const now = fight.get();
@@ -840,6 +897,11 @@ export function WorldView({
         const t = march[0] + realDt;
         const { poses, done } = marchPoses(march, t);
         for (const [row, facing, frame, x, y, walking] of poses) {
+          // out cold on the sand (4), or carried off, held up off it (5): drawn in front of whoever carries them
+          if (row >= 0 && facing >= LYING) {
+            ents.push([row, 0, 0, x, y + 0.5, 0, facing === LYING ? -1 : -2]);
+            continue;
+          }
           if (row >= 0) {
             ents.push([row, facing, frame, x, y, 0, 1]);
             continue;
@@ -902,7 +964,11 @@ export function WorldView({
       const lit: number[] = [];
       const red: number[] = [];
       for (const [row, facing, f, x, y, tint, size, dip] of ents) {
-        const item = [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size, 0, FH];
+        // size -1: flat on their back, head to the right, along the ground; -2: the same, held up off it
+        const item =
+          size < 0
+            ? [(facing * 3 + f) * FW, row * FH, round(x + FH / 2), round(y - FW + 2 - (size < -1 ? CARRIED : 0)), -1, 0, FH]
+            : [(facing * 3 + f) * FW, row * FH, round(x - (FW * size) / 2), round(y - FEET * size), size, 0, FH];
         if (dip) {
           // breathing: the legs where they are, the head and shoulders a pixel lower over them
           list.push(item[0], item[1], item[2], item[3] + IDLE_SPLIT * size, size, IDLE_SPLIT, FH - IDLE_SPLIT);
@@ -1089,6 +1155,46 @@ export function WorldView({
     path.addRect(Skia.XYWHRect(Math.round(x) - 20, Math.round(y) - 4, 14, 1));
     return path;
   });
+  const zPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const walkers = sim.npcWalk.get();
+    for (let i = 0; i < sleepers.length; i++) {
+      const w = walkers[sleepers[i][0]];
+      if (!w) continue;
+      const [x, y] = sleeperAt(wandererFeet(w), sleepers[i][1] === 1, 'zs');
+      const zs = sleepZs(t + i * 0.37, x, y);
+      for (let k = 0; k < zs.length; k++) path.addRect(Skia.XYWHRect(zs[k][0], zs[k][1], 1, 1));
+    }
+    return path;
+  });
+  const bubblePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const walkers = sim.npcWalk.get();
+    for (let i = 0; i < snorers.length; i++) {
+      const w = walkers[snorers[i][0]];
+      if (!w) continue;
+      const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
+      const b = snotBubble(t + i * 0.5, x, y);
+      for (let k = 0; k < b.cells.length; k++) path.addRect(Skia.XYWHRect(b.cells[k][0], b.cells[k][1], 1, 1));
+    }
+    return path;
+  });
+  const shinePath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const t = clock.get();
+    const walkers = sim.npcWalk.get();
+    for (let i = 0; i < snorers.length; i++) {
+      const w = walkers[snorers[i][0]];
+      if (!w) continue;
+      const [x, y] = sleeperAt(wandererFeet(w), snorers[i][1] === 1, 'snot');
+      const s = snotBubble(t + i * 0.5, x, y).shine;
+      if (s) path.addRect(Skia.XYWHRect(s[0], s[1], 1, 1));
+    }
+    return path;
+  });
+  const cheering = useDerivedValue(() => (Math.floor(clock.get() * 2.5) % 2 === 0 ? 0 : 1));
   const motePath = useDerivedValue(() => {
     const path = Skia.Path.Make();
     if (!ambience.motes) return path;
@@ -1136,6 +1242,9 @@ export function WorldView({
     <Canvas style={{ width, height, backgroundColor: '#0C0806' }}>
       <Group transform={camera}>
         {mapImage && <Image image={mapImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} />}
+        {cheerImage && (
+          <Image image={cheerImage} x={0} y={0} width={mapW} height={mapH} sampling={NEAREST} opacity={cheering} />
+        )}
         {patches.map((p) => (
           <Group key={`${p.x},${p.y}`}>
             <Rect x={p.x * TILE + 1} y={p.y * TILE + 1} width={TILE - 2} height={TILE - 1} color="#0C0908" />
@@ -1220,6 +1329,9 @@ export function WorldView({
           <Path path={motePath} color={ambience.motes === 'pollen' ? '#F4EFA0' : '#D8D0C0'} opacity={0.55} />
         )}
         <Path path={exitPath} color="#FFF4C0" opacity={0.9} />
+        <Path path={zPath} color="#DCE8FF" opacity={0.85} />
+        <Path path={bubblePath} color="#B8E0C8" opacity={0.8} />
+        <Path path={shinePath} color="#FFFFFF" />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />
@@ -1273,6 +1385,8 @@ function useSpriteBuffers(list: SharedValue<number[]>, count: number) {
     'worklet';
     const l = list.get();
     if (l.length < (i + 1) * STRIDE) xf.set(1, 0, -999, -999);
+    // lying flat: turned a quarter clockwise, so the head points right and the feet left
+    else if (l[i * STRIDE + 4] < 0) xf.set(0, 1, l[i * STRIDE + 2], l[i * STRIDE + 3]);
     else xf.set(l[i * STRIDE + 4], 0, l[i * STRIDE + 2], l[i * STRIDE + 3]);
   });
   return [sprites, transforms] as const;

@@ -385,6 +385,7 @@ export function selectReminderState(data: GameData, today: string, tier: Tier = 
       ...woken.filter((e) => !party.has(e.companion.id)),
     ].map((e) => e.companion.name),
     sleeping: collection.entries.length - woken.length,
+    dayReminders: player.dayReminders,
   };
 }
 

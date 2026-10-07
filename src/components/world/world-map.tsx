@@ -64,6 +64,7 @@ const AREA_SPOTS: Partial<Record<MapId, { x: number; y: number }>> = {
 const REGION: Partial<Record<MapId, MapId>> = {
   'barracks-armoury': 'barracks-hall',
   'officers-mess': 'barracks-hall',
+  'long-mess': 'barracks-hall',
   'barracks-yard': 'barracks-hall',
   'pit-below': 'barracks-hall',
   'lower-barracks': 'barracks-hall',
@@ -75,6 +76,7 @@ const REGION: Partial<Record<MapId, MapId>> = {
   'hedge-maze': 'kingdom-town',
   'the-pit': 'warrior-city',
   'castle-hall': 'castle-grounds',
+  'war-room': 'castle-grounds',
   'castle-upper': 'castle-grounds',
   'war-hall': 'castle-grounds',
   'gut-and-gauntlet': 'kaldorhold',

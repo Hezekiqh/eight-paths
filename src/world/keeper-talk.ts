@@ -37,6 +37,8 @@ export type KeeperContext = {
   memory: HabitMemory;
   /** Today, as a day number, to turn the rotation. */
   day: number;
+  /** Who you're walking as: Brannoc hears about the throne as his own. */
+  hero?: string;
 };
 
 /** In order of importance: the story's biggest news first. */
@@ -113,7 +115,11 @@ export function keeperTalk(c: KeeperContext): { lines: string[]; said: string | 
     if (STORY.includes(p.when) && p.when !== latest) continue;
     const moments = KEEPER_TALK.moments.filter((m) => m.when === p.when);
     const unsaid = moments.find((m) => !c.flags.includes(`keeper:${m.id}`));
-    if (unsaid) return { lines: unsaid.lines, said: `keeper:${unsaid.id}` };
+    if (unsaid)
+      return {
+        lines: (c.hero === 'brannoc' && unsaid.asBrannoc) || unsaid.lines,
+        said: `keeper:${unsaid.id}`,
+      };
   }
   const habit = habitLine(c.memory, c.flags, c.day);
   if (habit) return { lines: [habit.line], said: `keeper:${habit.id}` };

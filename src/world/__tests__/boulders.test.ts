@@ -1,7 +1,8 @@
-import { PUSH_DELAY, SPEED, facingFor, leaningOn, move, platesCovered, pushBoulder, type Grid } from '../engine';
+import { EXPLORE_SPEED, PUSH_DELAY, facingFor, leaningOn, move, platesCovered, pushBoulder, type Grid } from '../engine';
 import { CLEARED_BOULDERS } from '../felix-maze';
 import { MAPS, withOpenTiles } from '../maps';
 import { EXITS } from '../progress';
+import { SPEED_RATE } from '../speed';
 
 describe('the Drill Yard puzzle', () => {
   const yard = MAPS['barracks-yard'];
@@ -122,8 +123,11 @@ describe('pushing a boulder by walking into it', () => {
   const yard = MAPS['barracks-yard'];
   const at = (x: number, y: number) => y * yard.width + x;
 
-  /** Holds the stick one way for `seconds`, the way the World's frame loop does. Returns where the boulders end up. */
-  function hold(x: number, y: number, ix: number, iy: number, seconds: number) {
+  /**
+   * Holds the stick one way for `seconds`, the way the World's frame loop does, at a game speed's walk.
+   * Returns where the boulders end up.
+   */
+  function hold(x: number, y: number, ix: number, iy: number, seconds: number, rate = 1) {
     let solid = yard.solid;
     let boulders = yard.boulders;
     let facing = 0;
@@ -134,7 +138,7 @@ describe('pushing a boulder by walking into it', () => {
       facing = facingFor(ix, iy, facing);
       const against = leaningOn(grid, boulders, x, y, facing);
       if (against === -1) {
-        [x, y] = move(grid, x, y, ix * SPEED * dt, iy * SPEED * dt);
+        [x, y] = move(grid, x, y, ix * EXPLORE_SPEED * rate * dt, iy * EXPLORE_SPEED * rate * dt);
         lean = 0;
       } else if ((lean += dt) >= PUSH_DELAY) {
         lean = 0;
@@ -145,17 +149,22 @@ describe('pushing a boulder by walking into it', () => {
     return boulders;
   }
 
-  // Walking up to the top-left boulder (5, 4) from the left, feet anywhere in its row.
-  it.each([65, 70, 74, 78])('moves it when you walk into it from the left (feet at y %i)', (y) => {
-    const after = hold(3 * 16 + 8, y, 1, 0, 1.2);
-    expect(after).not.toContain(at(5, 4));
-    expect(after.some((b) => b === at(6, 4) || b === at(7, 4))).toBe(true);
-  });
+  // Walking up to the top-left boulder (5, 4) from the left, feet anywhere in its row, at every game
+  // speed: it goes a tile or more along (further the faster you walk back up to it), never off its row.
+  const RATES = Object.values(SPEED_RATE);
+  it.each(RATES.flatMap((rate) => [65, 70, 74, 78].map((y) => ({ rate, y }))))(
+    'moves it when you walk into it from the left (feet at y $y, $rate×)',
+    ({ rate, y }) => {
+      const after = hold(3 * 16 + 8, y, 1, 0, 1.2, rate);
+      expect(after).not.toContain(at(5, 4));
+      expect(after.some((b) => b >= at(6, 4) && b <= at(8, 4))).toBe(true);
+    },
+  );
 
-  it('moves it when you walk into it from above', () => {
-    const after = hold(5 * 16 + 6, 2 * 16 + 14, 0, 1, 1.2);
+  it.each(RATES)('moves it when you walk into it from above (%d×)', (rate) => {
+    const after = hold(5 * 16 + 6, 2 * 16 + 14, 0, 1, 1.2, rate);
     expect(after).not.toContain(at(5, 4));
-    expect(after.some((b) => b === at(5, 5) || b === at(5, 6))).toBe(true);
+    expect(after.some((b) => [at(5, 5), at(5, 6), at(5, 7)].includes(b))).toBe(true);
   });
 });
 

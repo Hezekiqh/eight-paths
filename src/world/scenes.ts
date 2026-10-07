@@ -29,9 +29,16 @@ export type Scene = {
 /**
  * The scene for winning the fight on `map`. `brannoc`: he's with you (in your party and met, see
  * partyWithYou). `felix`: Felix was in the room (he's out of his cocoon and left the Courier Road).
- * `asBrannoc`: you're walking as Brannoc himself.
+ * `asBrannoc`: you're walking as Brannoc himself. `cellsEmpty`: you let the prisoners out, and Gary's gone too.
  */
-export function winScene(map: MapId, flag: string, brannoc: boolean, felix = false, asBrannoc = false): Scene | null {
+export function winScene(
+  map: MapId,
+  flag: string,
+  brannoc: boolean,
+  felix = false,
+  asBrannoc = false,
+  cellsEmpty = false,
+): Scene | null {
   switch (map) {
     case 'sleeping-keep':
       return {
@@ -63,7 +70,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
         outcome: { flags: [flag] },
       };
     case 'the-pit':
-      // The Kaldorium (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
+      // The Kaloseum (author, Oct 3, 2026): five guards, then the warden drops in. He takes 30 strikes at any level.
       if (flag === 'pit-guards')
         return {
           lines: [
@@ -76,12 +83,12 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
       return {
         lines: [
           'The warden sways, and sits down in the sand with a thump that rattles the banners.',
-          'For a heartbeat the Colosseum is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
+          'For a heartbeat the Kaloseum is silent. Then the crowd roars, the real roar, the one nobody told them to make.',
           ...(brannoc ? ["BRANNOC: I… I didn't run. Did you see? I didn't run!"] : []),
           "GUARD: Strength is valued more than anything here. You're free to explore the prison.",
           "GUARD: We don't get paid enough for this.",
           "THE WARDEN: (grunts) We don't get paid at all.",
-          "Barnaby chalks a new name on the champions' wall. The first one in three hundred years that isn't crossed out.",
+          "Barnaby chalks a new name on the champions' wall. The first one in five hundred years that isn't crossed out.",
         ],
         outcome: { flags: [flag] },
       };
@@ -90,7 +97,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
       // then the throne is yours to settle, three ways. Brannoc is always with you by now (the
       // castle road needs the whole party), and steps out beside you for it (moments.ts).
       const prince = asBrannoc ? 'you' : 'Brannoc';
-      return {
+      const scene: Scene = {
         // Brannoc's father's throne: he steps out beside you for it
         stepOut: brannoc && !asBrannoc ? 'brannoc' : undefined,
         lines: [
@@ -101,16 +108,9 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
             : ['You close the empty eyes. Whatever held him lets go.']),
           'Kaldor has not moved from his throne. He claps. Slowly.',
           brannoc
-            ? `KALDOR: So. The Mad King's son, and ${asBrannoc ? 'not one friend in the world, and yet here you are' : 'whoever this is'}. My best, and you went through them like a door.`
+            ? `KALDOR: So. My brother's boy, and ${asBrannoc ? 'his little band of friends' : 'whoever this is'}. My best, and you went through them like a door.`
             : 'KALDOR: So. My best, and you went through them like a door.',
           "KALDOR: The law is the law, and the court is watching. Beat the king's champions, and the throne is yours to settle. So. Settle it.",
-          // Felix, gone the moment the fight turned (author): only a note where he stood
-          ...(felix
-            ? [
-                'Where Felix stood, there is only a chess piece, and a note pinned under it:',
-                '"Wish I could have stayed, but I need to prepare the next surprise. F :b"',
-              ]
-            : []),
         ],
         choices: [
           ...(brannoc
@@ -126,10 +126,9 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
                     'BRANNOC: ...And I came back. That has to count for something.',
                     `Kaldor gets up off the throne. He looks at ${prince} for a long moment, and hands over the crown himself.`,
                     'KALDOR: It never did fit me.',
-                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid, who covered for a prince five hundred years ago.`,
+                    `${asBrannoc ? 'You take' : 'Brannoc takes'} his father's throne. The horde scatters.`,
                     "Aurek the Tall is laid to rest, and his name goes back on the champions' wall. Later, somehow, he wakes, properly, as himself.",
-                    'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
-                    'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+                    'Aurek joins your collection.',
                     'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
                     // he stays to rule (author, Oct 4, 2026), and catches you up later, working remotely (castle.ts)
                     ...(asBrannoc
@@ -151,7 +150,7 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
                       // walking as him, there's nobody to catch you up: you're already gone
                       ...(asBrannoc ? [BRANNOC_REJOINED] : []),
                     ],
-                    joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+                    joins: ['aurek'] as CharacterId[],
                   },
                 },
               ]
@@ -171,14 +170,13 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
                         ]
                       : []),
                     'KALDOR: Hm. Five hundred years. I thought I would mind more.',
-                    'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
-                    'Widow Aldane brings the old portrait out from under her floor and hangs it in the throne room.',
-                    'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+                    'The horde scatters. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+                    'Aurek joins your collection.',
                     'Word runs down the Tithe Road ahead of you. At the Broken Watch, for the first time in three years, Grub steps aside.',
                   ],
                   outcome: {
                     flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king'],
-                    joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+                    joins: ['aurek'] as CharacterId[],
                   },
                 },
               ]),
@@ -205,22 +203,29 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
             deed: 'bad' as const,
             lines: [
               'You point at Kaldor. Then at the floor. Then, for clarity, down.',
-              'KALDOR: ...The cells? Under my own Colosseum?',
+              'KALDOR: ...The cells? Under my own Kaloseum?',
               'Two of his own guards march him out. Neither of them is getting paid for it.',
               ...(brannoc && !asBrannoc ? ['BRANNOC: That was... very cold, friend. Effective. But cold.'] : []),
               'You sit. The throne is cold, and far too big, and it suits you a little too well.',
-              'The horde scatters. In the burned barracks, a cocoon is found: Captain Ingrid. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
-              'Captain Ingrid, Aurek and Widow Aldane join your collection.',
+              'The horde scatters. Aurek the Tall is laid to rest, and later, somehow, wakes as himself.',
+              'Aurek joins your collection.',
               'Far below, a cell door clangs.',
-              'GARY: ...I did not see that.',
+              // Gary left with the prisoners (dungeon.ts, CELLS_FREED): nobody's down there to see it
+              ...(cellsEmpty
+                ? ['For once, it is the only cell down there with anybody in it.']
+                : ['GARY: ...I did not see that.']),
             ],
             outcome: {
               flags: ['kaldor-beaten', 'kaldor-dethroned', 'you-king', 'kaldor-jailed'],
-              joins: ['ingrid', 'aurek', 'aldane'] as CharacterId[],
+              joins: ['aurek'] as CharacterId[],
             },
           },
         ],
       };
+      // Felix watches it all from by the throne, and once you've decided, he goes (author, Oct 7, 2026)
+      return felix
+        ? { ...scene, choices: scene.choices!.map((c) => ({ ...c, lines: [...c.lines, ...FELIX_LEAVES] })) }
+        : scene;
     }
     case 'kaldorium-maximus':
       return ladderScene(flag);
@@ -229,15 +234,21 @@ export function winScene(map: MapId, flag: string, brannoc: boolean, felix = fal
   }
 }
 
-/** Out of the Maximus after a bout, to the Ring Ward: the next rung waits for your next visit. */
+/** Felix, by the throne, once the throne's decided: then he fades. */
+export const FELIX_LEAVES = [
+  'FELIX: This is getting interesting. I look forward to what you decide next.',
+  '* Felix fades away, like he was never there.',
+];
+
+/** Out of the Training Yard after a spar, to the Ring Ward: the next rung waits for your next visit. */
 const RING_GATE = { map: 'ring-ward' as MapId, x: 15, y: 5, facing: 'down' as const };
 
-/** Winning a rung of the Maximus's ladder. Drafts, for the author. */
+/** Winning a rung of the Training Yard's sparring board (author, Oct 7, 2026: a training yard, no announcer). */
 function ladderScene(flag: string): Scene | null {
   const lines: Record<string, string[]> = {
     'maximus-1': [
       'Ugg goes down. Ogg, on the sideline, shouts "GET UP! No, stay down! No, get up!"',
-      'LADY HOLLER: RUNG ONE, CLIMBED! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
+      'YARDMASTER HOLLER: RUNG ONE! Come back when you want rung two. Matron Sorrel is warming up her rattle.',
     ],
     'maximus-2': [
       'Matron Sorrel lowers her rattle, and pats you on the head.',
@@ -252,9 +263,9 @@ function ladderScene(flag: string): Scene | null {
       "CAPTAIN VARGA: …Don't tell the king I do this on my day off.",
     ],
     'maximus-5': [
-      'Grand Champion Hroth sits down in the sand, and laughs, and laughs.',
+      'Hroth, master-at-arms, sits down in the sand, and laughs, and laughs.',
       'HROTH: Forty years. Forty YEARS. Thank you. Thank you. I can retire.',
-      'Lady Holler chalks your name at the top of the ladder. The crowd roars, the real roar, the one nobody told them to make.',
+      'Yardmaster Holler chalks your name at the top of the sparring board. The whole yard stops, and cheers, the real cheer, the one nobody ordered.',
       "HROTH: Find me at Tova's. I'll be the one smiling.",
     ],
   };
@@ -264,9 +275,10 @@ function ladderScene(flag: string): Scene | null {
 /** Said at the sealed portal once Season 1 is finished. */
 /**
  * The last seal of Season 1: the portal, your real record, the king you left
- * (or crowned), and the first memory back. `memory` null: the record is skipped.
+ * (or crowned), and the first memory back. `memory` null: the record is skipped. `asBrannoc`: you're walking
+ * as Brannoc, so the king who left his throne is you.
  */
-export function seasonFinale(memory: HabitMemory | null, flags: string[]): string[] {
+export function seasonFinale(memory: HabitMemory | null, flags: string[], asBrannoc = false): string[] {
   const record = memory
     ? FINALE.record
         .map((line) =>
@@ -285,7 +297,9 @@ export function seasonFinale(memory: HabitMemory | null, flags: string[]): strin
     : flags.includes('you-king')
       ? FINALE.crowned
       : flags.includes('kaldor-dethroned')
-        ? FINALE.dethroned
+        ? asBrannoc
+          ? FINALE.dethronedAsBrannoc
+          : FINALE.dethroned
         : [];
   return [...FINALE.seal, ...record, ...king, ...FINALE.memory, ...FINALE.end];
 }

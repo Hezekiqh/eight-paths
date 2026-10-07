@@ -1,4 +1,4 @@
-import { FREED_FLAG, KEYS_FLAG, PRISONERS, PRISON_INTROS, garyWanders, prisonersBolt } from '../dungeon';
+import { FREED_FLAG, PRISONERS, PRISON_INTROS, garyWanders, prisonersBolt } from '../dungeon';
 import { MAPS } from '../maps';
 
 const cells = MAPS['kingdom-dungeon'];
@@ -12,10 +12,6 @@ describe("Gary's keys and the jailbreak", () => {
     }
   });
 
-  it('Gary leaves once he has handed over the keys', () => {
-    expect(cells.npcs.find((n) => n.id === 'jailer')?.goneAfter).toBe(KEYS_FLAG);
-  });
-
   it('walks Gary and the prisoners along the corridor to the ladder', () => {
     for (const a of [...garyWanders(0), ...prisonersBolt([0, 1, 2])]) {
       for (const p of a.path) expect([p, floor(p)]).toEqual([p, true]);
@@ -23,7 +19,7 @@ describe("Gary's keys and the jailbreak", () => {
     }
   });
 
-  it('has the Colosseum waiting for them, with or without Brannoc: Barnaby, his menu, and the guards', () => {
+  it('has the Kaloseum waiting for them, with or without Brannoc: Barnaby, his menu, and the guards', () => {
     for (const key of ['pit-guards-freed', 'pit-guards-freed-alone']) {
       const intro = PRISON_INTROS[key];
       expect(intro.lines.join(' ')).toContain("You haven't been here twenty minutes");
