@@ -100,6 +100,16 @@
   },
   "objects": [
     {
+      "id": "gate-guard-castle",
+      "type": "npc",
+      "x": 18,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Halberdier Morrow",
+      "lines": ["The king receives the strong. Lv 15, or you can admire the gate from here."]
+    },
+    {
       "id": "gert",
       "type": "npc",
       "x": 27,

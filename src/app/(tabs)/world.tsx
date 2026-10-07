@@ -81,6 +81,7 @@ import { banterFor } from '@/world/banter';
 import { hasWalkBanter, walkBanterFlag, walkBanterFor } from '@/world/walk-banter';
 import { characterQuestions } from '@/world/talk';
 import { PhoneCall } from '@/components/world/phone-call';
+import { GateSheet } from '@/components/world/gate-sheet';
 import { callDue, callFlag, callLines, type KeeperCall } from '@/world/keeper-calls';
 import { dayNumber, pendingNews, roomOwner, roomQuestions, saidFlag, withRoster } from '@/world/hero-rooms';
 import { keeperQuestions } from '@/world/keeper-advice';
@@ -141,6 +142,19 @@ import { deedId, honor } from '@/world/honor';
 import keeperWelcome from '@/world/keeper-welcome.json';
 import { TEST_TOOLS } from '@/world/test-tools';
 import { usePremium } from '@/premium/store';
+import { premiumEnabled } from '@/premium/config';
+import {
+  exitOf,
+  gateBlock,
+  gateForExit,
+  gateForGuard,
+  gatePrompt,
+  gatesOn,
+  guardLines,
+  ON_YOU_GO,
+  shouldOfferPremium,
+  type LevelGate,
+} from '@/world/gate-guards';
 import {
   BRIDGE_LOWERS,
   GATE_ANSWERS,
@@ -571,6 +585,11 @@ function World({
   );
   /** The boss fight's over and its scene played (the throne room): the doorways open again, without coming back in. */
   const [bossOver, setBossOver] = useState(false);
+  // The level gates still shut to you here (gate-guards.ts): you can walk into one, and its guard turns you back.
+  const shutGates = useMemo(
+    () => (bossOn ? [] : gatesOn(start.map.id).filter((g) => !ways.some((e) => e.id === g.exit))),
+    [start, ways, bossOn],
+  );
   /** Ways a scene opened while you're here (a gate, a bridge): their letters, walkable from now on. */
   const [openedLetters, setOpenedLetters] = useState<string[]>([]);
   // A scene opens a way out (the drawbridge down, the plates' gate, the throne room's doors) there and then: no
@@ -610,13 +629,17 @@ function World({
       // who's out exploring the hall today, and who's in their room (hero-rooms.ts)
       // ...and, once Kaldor's beaten, none of his shadows anywhere (maps.ts)
       withRoster(withoutShadows(start.map, arrivalFlags), dayNumber(), arrivalFlags),
-      [...ways.map((e) => e.tile), ...openedByJobs(start.map.id as MapId, arrivalFlags)],
+      [
+        ...ways.map((e) => e.tile),
+        ...shutGates.map((g) => exitOf(g).tile),
+        ...openedByJobs(start.map.id as MapId, arrivalFlags),
+      ],
     );
     if (!pitOpen) return room;
     const solid = room.solid.slice();
     for (const t of tilesOf(room, [POTHOLE.tile])) solid[t] = 1;
     return { ...room, solid };
-  }, [start, ways, arrivalFlags, pitOpen]);
+  }, [start, ways, shutGates, arrivalFlags, pitOpen]);
   // Someone who leaves for good (Nib, if you're mean to him) is gone as soon as the talk ends, not on the next visit.
   const flagsNow = useWorldStore((s) => s.flags);
   // ...and everyone as the story's left them: fainted, carried off (maps.ts)
@@ -692,12 +715,13 @@ function World({
     () => [
       ...tilesOf(map, [
         ...ways.map((e) => e.tile),
+        ...shutGates.map((g) => exitOf(g).tile),
         ...(map.id === MAZE ? [CLEARING_TILE] : []),
         ...(map.id === 'dungeon-mazes' ? [PIT_TILE] : []),
       ]),
       ...(cocoonWall ? map.tiles.map((_, y) => y * map.width + COCOON_WALL.x) : []),
     ],
-    [map, ways, cocoonWall],
+    [map, ways, shutGates, cocoonWall],
   );
   const party = useMemo(() => [hero], [hero]);
   // What stands in the room and how it feels: chests (open once their flag is set), signs, the dark, the flames.
@@ -1040,8 +1064,11 @@ function World({
   }, [map, hero, arrivalFlags, sim, march]);
   // The Keeper's telephone (keeper-calls.ts): it rings once a call is due and you're free to answer.
   const [ringing, setRinging] = useState<KeeperCall | null>(null);
+  /** The Premium sheet after a guard's turned you back (its text), or null. */
+  const [gateSheet, setGateSheet] = useState<string | null>(null);
   // (someone fading out is a scene too: Felix, at the throne)
-  const frozen = paused || dialogue !== null || cutscene || ringing !== null || stepping || !!exit?.fade;
+  const frozen =
+    paused || dialogue !== null || cutscene || ringing !== null || stepping || !!exit?.fade || gateSheet !== null;
   /** A party member steps out beside you (stepOut), holding the World (and hiding its controls) till they speak. */
   const stepOutHere = useCallback(
     (doer: HeroId, said: Dialogue) => {
@@ -1074,6 +1101,15 @@ function World({
   // Someone with a scene of their own instead of a plain talk (the castle's gate captain); set below, once it can be.
   const specialTalk = useRef<(thing: NpcObject) => boolean>(() => false);
   const special = useCallback((thing: NpcObject) => specialTalk.current(thing), []);
+  /** A level gate's guard has his say (gate-guards.ts): walking into the gate (`bump`, its tile), A on it, or on him. */
+  const gateTalk = useRef<(gate: LevelGate, bump: number | null) => void>(() => {});
+  const atGate = useCallback((exitId: string) => {
+    const gate = gateForExit(exitId);
+    // (strong enough, but the story's not done: the gate's usual hint, not the guard)
+    if (!gate || gateBlock(gate, xpRef.current).kind !== 'level') return false;
+    gateTalk.current(gate, null);
+    return true;
+  }, []);
   const [memoryShown, setMemoryShown] = useState<Shade>(null);
   // The season's last seal: your party walks up and hangs back a step behind you (King Brannoc, if he's with you,
   // comes up beside you), and then it's said. The seal's light shows as it loosens, and every banner in the field
@@ -1131,6 +1167,7 @@ function World({
     setStepping,
     setMemoryShown,
     finale,
+    atGate,
   );
   // Back from a cocoon's hatch: whoever came out of it talks to you straight away. (Not in the room being left: it
   // re-renders as the cocoon breaks, still focused, and would use the talk up unseen behind the hatch. The room come
@@ -1505,6 +1542,13 @@ function World({
   }, [afterVerdict, sim, march, setFlag, arenaCue]);
   useEffect(() => {
     specialTalk.current = (thing) => {
+      // a guard at a level gate: why not, or "On you go." (gate-guards.ts)
+      const gate = gateForGuard(map.id, thing.id);
+      if (gate) {
+        sim.npcWalk.set(turnToTalk(sim.npcWalk.get(), sim.npcIds.indexOf(thing.id), OPPOSITE[sim.facing.get()]));
+        gateTalk.current(gate, null);
+        return true;
+      }
       // the Traveler: hello first, and directions only if you're nice about it (traveler.ts)
       if (isTraveler(thing)) {
         const { flags } = useWorldStore.getState();
@@ -1521,7 +1565,7 @@ function World({
       }
       return false;
     };
-  }, [map, gateScene, setFlag]);
+  }, [map, gateScene, setFlag, sim]);
   // Twenty strikes, and the warden hasn't noticed (dungeon.ts, swing.ts): Brannoc gets up asleep, a snot bubble at
   // his nose, sleepwalks to wherever the warden stands, and swings. The warden goes up, up, over the banners and out
   // of the Kaloseum, leaving a hole in them. The camera follows it all: Brannoc on the sand, his walk, the swing, the
@@ -2068,6 +2112,12 @@ function World({
         wallTries.current++;
         return;
       }
+      // A level gate still shut: its guard turns you back (gate-guards.ts)
+      const gate = shutGates.find((g) => exitOf(g).tile === letter);
+      if (gate) {
+        gateTalk.current(gate, tile);
+        return;
+      }
       // Past Felix's maze: it stays solved, and if Felix is waiting with the guards, here they are.
       if (map.id === MAZE && letter === CLEARING_TILE) {
         const { flags } = useWorldStore.getState();
@@ -2113,8 +2163,86 @@ function World({
         travel(to);
       }
     },
-    [map, ways, travel, setFlag, guardScene, cocoonWall, sim],
+    [map, ways, shutGates, travel, setFlag, guardScene, cocoonWall, sim],
   );
+  // Never over a scene, a cutscene, a boss fight or a phone call (read as the guard's lines close).
+  const busyRef = useRef(false);
+  const busy =
+    cutscene || ringing !== null || (bossOn && !bossOver) || stepping || paused || !!exit || memoryShown !== null;
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
+  useEffect(() => {
+    gateTalk.current = (gate, bump) => {
+      const exit = exitOf(gate);
+      const block = gateBlock(gate, xpRef.current);
+      const guard = map.npcs.find((n) => n.id === gate.guard);
+      // Open now (Premium bought, or a level gained, since you came in): straight through.
+      if (block.kind === 'open' && exit.to) {
+        if (bump !== null) {
+          sim.frozen.set(true);
+          travel(exit.to);
+        } else if (dialogueRef.current === null) setDialogue({ speaker: guard?.name, lines: [ON_YOU_GO] });
+        return;
+      }
+      if (bump !== null) {
+        // back the way you came, a tile, like the cocoon wall
+        const gx = bump % map.width;
+        const gy = Math.floor(bump / map.width);
+        const steps = [
+          [0, 1],
+          [0, -1],
+          [-1, 0],
+          [1, 0],
+        ];
+        const open = (x: number, y: number) =>
+          x >= 0 &&
+          y >= 0 &&
+          x < map.width &&
+          y < map.height &&
+          !map.solid[y * map.width + x] &&
+          map.tiles[y][x] !== exit.tile;
+        const back = [OPPOSITE[sim.facing.get()], UP, DOWN, LEFT, RIGHT]
+          .map((d) => [gx + steps[d][0], gy + steps[d][1]] as const)
+          .find(([x, y]) => open(x, y));
+        if (back) {
+          sim.x.set(back[0] * TILE + TILE / 2);
+          sim.y.set(back[1] * TILE + TILE - 4);
+        }
+      }
+      if (dialogueRef.current !== null) return;
+      useWorldStore.getState().notice(exitNotice(exit.id));
+      // Strong enough, but the story isn't done (the castle road): at the gate, the usual hint; from him, his word too.
+      if (block.kind === 'flags') {
+        setDialogue(
+          bump === null && guard
+            ? { speaker: guard.name, lines: guardLines(gate, block) }
+            : { lines: [`${exit.label}. It won't budge.`, ...(block.all.hint ? [block.all.hint] : [])] },
+        );
+        return;
+      }
+      setDialogue({
+        speaker: guard?.name,
+        lines: guardLines(gate, block),
+        then: () => {
+          const today = toDateKey(new Date());
+          const { premium, gateOffers } = usePremium.getState();
+          const offer = shouldOfferPremium({
+            gate: gate.exit,
+            block: block.kind,
+            history: gateOffers ?? [],
+            today,
+            premium,
+            enabled: premiumEnabled,
+            busy: busyRef.current,
+          });
+          if (!offer) return;
+          usePremium.setState({ gateOffers: [...(gateOffers ?? []), { gate: gate.exit, day: today }] });
+          setGateSheet(gatePrompt(gate, block));
+        },
+      });
+    };
+  }, [map, sim, travel]);
   const board = map.objects.find((o) => o.type === 'board');
   // A Mage of Lv 6 sees the hidden passage by Felix's maze twinkle.
   const passageSeen = map.id === MAZE && standing(PASSAGE, xp).met;
@@ -2546,13 +2674,13 @@ function World({
 
   const callFlags = useWorldStore((s) => s.flags);
   useEffect(() => {
-    if (dialogue || cutscene || ringing || paused || bossOn || stepping || exit) return;
+    if (dialogue || cutscene || ringing || paused || bossOn || stepping || exit || gateSheet) return;
     const call = callDue(callFlags);
     if (!call) return;
     // a moment's quiet after whatever just happened, then your pocket rings
     const timer = setTimeout(() => setRinging(call), 1200);
     return () => clearTimeout(timer);
-  }, [callFlags, dialogue, cutscene, ringing, paused, bossOn, stepping, exit]);
+  }, [callFlags, dialogue, cutscene, ringing, paused, bossOn, stepping, exit, gateSheet]);
 
   // Walking banter (walk-banter.ts, author, Oct 7, 2026): the party talks among themselves as you arrive
   // or pass a spot, once each, after any arrival scene and only while nothing else is going on.
@@ -2852,6 +2980,19 @@ function World({
           }}
         />
       )}
+      {gateSheet && !dialogue && (
+        <GateSheet
+          text={gateSheet}
+          onPremium={() => {
+            setGateSheet(null);
+            save();
+            // over the World, as the quest board is: back at the gate after, still sideways
+            keepSideways = true;
+            router.push('/paywall');
+          }}
+          onClose={() => setGateSheet(null)}
+        />
+      )}
       {ringing && !dialogue && (
         <PhoneCall
           caller="The Keeper"
@@ -3063,6 +3204,8 @@ function useAct(
   shade: (s: Shade) => void = () => {},
   /** The season's last seal (castle.ts finaleStage): the party walks up behind you, then `said` plays. */
   finale: (said: Dialogue) => void = (said) => setDialogue(said),
+  /** A level gate, still shut: its guard has his say (gate-guards.ts). True if it took over. */
+  atGate: (exitId: string) => boolean = () => false,
 ) {
   const busy = useRef(false);
   /** Talking to someone in the room: they turn to face you, say their piece, and the party chimes in. */
@@ -3674,6 +3817,7 @@ function useAct(
         } else onTravel(to);
         return;
       }
+      if (!s.met && atGate(exit.id)) return;
       useWorldStore.getState().notice(exitNotice(exit.id));
       setDialogue({
         lines: s.met
@@ -3693,7 +3837,7 @@ function useAct(
     const { party, owned } = useGameStore.getState();
     const said = banterFor(map.id, `tile:${tile}`, chattersWithYou(party, owned, useWorldStore.getState().flags, hero));
     if (lines) setDialogue({ lines: [...lines, ...said] });
-  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special, hold, shade, finale]);
+  }, [map, sim, setDialogue, save, xp, onTravel, hero, talk, special, hold, shade, finale, atGate]);
   // Whatever goes wrong pressing A (a person, a sign, a door), the game carries on: it's logged, never a crash.
   const safeAct = useCallback(() => {
     try {

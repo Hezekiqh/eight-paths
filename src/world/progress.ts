@@ -55,10 +55,12 @@ export type Exit = {
 export const ARCHIVE_DOOR_LEVEL = 6;
 
 /**
- * After the door, three gates and no more (author, Oct 4, 2026: Season 1 beatable in 30 to 50
- * habits over two or three days; the story's the draw, habits are the fuel): the road north out of
- * Warrior City at Lv 10, the king at Lv 15 (author, Oct 7, 2026: lowered from 18), and the end of Season 1 at Lv 20. Overall, so any
- * habit counts. Recruiting the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
+ * After the door, the level gates and no more (author, Oct 4, 2026: Season 1 beatable over two or
+ * three days; the story's the draw, habits are the fuel): the road north out of Warrior City and the
+ * Royal Forest at Lv 10, and the king at Lv 15 (author, Oct 7, 2026: lowered from 18). The end of
+ * Season 1 is at Lv 15 too (FINAL_GOAL; author, Oct 7, 2026: lowered from 20), about 20 habits from
+ * the start. Overall, so any habit counts. A guard stands at each gate (gate-guards.ts). Recruiting
+ * the core eight (Lv 6 on each one's Path, see meet.ts) fills the gaps.
  */
 export const NORTH_ROAD_LEVEL = 10;
 export const KING_LEVEL = 15;
@@ -95,10 +97,10 @@ export const GRAVEYARD_GATE = 'graveyard-gate';
 const OPEN: Requirement = { kind: 'overall', level: 0 };
 
 /**
- * Season 1 ends at this overall level (author, Sep 29, 2026): 35 habits
+ * Season 1 ends at this overall level (author, Oct 7, 2026: lowered from 20 to the castle's Lv 15): 20 habits
  * of any kind. Later kingdoms arrive as new seasons, each with its own finish.
  */
-export const FINAL_GOAL = { kind: 'overall', level: 20 } as const satisfies Requirement;
+export const FINAL_GOAL = { kind: 'overall', level: 15 } as const satisfies Requirement;
 
 export const EXITS: Exit[] = [
   {
@@ -1924,7 +1926,7 @@ export function describeRequirement(needs: Requirement): string {
 }
 
 /** The level part of a requirement, if it has one (an "all" counts its first level part). */
-function levelPart(needs: Requirement): Requirement | null {
+export function levelPart(needs: Requirement): Requirement | null {
   if (needs.kind === 'flag') return null;
   if (needs.kind === 'all') return needs.of.map(levelPart).find((r) => r !== null) ?? null;
   return needs;

@@ -93,6 +93,16 @@
   },
   "objects": [
     {
+      "id": "gate-guard-forest",
+      "type": "npc",
+      "x": 18,
+      "y": 23,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Woodguard Tolly",
+      "lines": ["Nobody goes in those woods under Lv 10. Things happen in there. I don't ask what."]
+    },
+    {
       "id": "garden-stone-1",
       "type": "sign",
       "x": 5,

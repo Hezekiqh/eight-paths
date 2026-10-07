@@ -216,6 +216,16 @@
   },
   "objects": [
     {
+      "id": "gate-guard-north",
+      "type": "npc",
+      "x": 33,
+      "y": 2,
+      "sprite": "raider",
+      "facing": "down",
+      "name": "Sergeant Brask",
+      "lines": ["Nobody goes north under Lv 10. King's orders. The road eats the weak."]
+    },
+    {
       "id": "barnaby",
       "type": "npc",
       "x": 28,

@@ -33,18 +33,19 @@ describe('the lore journal', () => {
   });
 });
 
-describe('the last seal (overall Lv 20)', () => {
+describe('the last seal (overall Lv 15, like the castle)', () => {
   const totals = (total: number) => ({ total, byPath: { ...zero, physical: total } });
 
   it('counts every habit, whatever the Path', () => {
     const start = standing(FINAL_GOAL, totals(0));
-    expect(start).toMatchObject({ met: false, have: 5, need: 20, className: null });
-    expect(start.habitsLeft).toBe(35);
+    expect(start).toMatchObject({ met: false, have: 5, need: 15, className: null });
+    expect(start.habitsLeft).toBe(20);
     expect(howToProgress(start)).toContain('Any habit counts');
   });
 
-  it('is met at Overall Lv 20', () => {
-    expect(standing(FINAL_GOAL, totals(350))).toMatchObject({ met: true, habitsLeft: 0, fraction: 1 });
+  it('is met at Overall Lv 15', () => {
+    expect(standing(FINAL_GOAL, totals(190))).toMatchObject({ met: false });
+    expect(standing(FINAL_GOAL, totals(200))).toMatchObject({ met: true, habitsLeft: 0, fraction: 1 });
   });
 });
 
