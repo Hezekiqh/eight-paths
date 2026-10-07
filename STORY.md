@@ -34,6 +34,13 @@ The players can see this flashback in the old king's crypt, under the chapel: it
 Prince Brannoc is Osric's son, so Kaldor is his uncle. On the throne-room steps Kaldor calls him "my brother's boy",
 and Brannoc calls him "Uncle".
 
+## The lost prince
+
+Nobody recognises Brannoc, not even when you're walking as him. Too many generations have passed: to the town the
+lost prince is a fairytale, and most of the young think it's a baby story. A few elders still tell the legend and
+believe he'll return one day, and the deserters' camp keeps the old tales (Old Morrow, at the Mad King's statue).
+Lines about "the prince" stay as they are for a Brannoc player; nobody says "it's you".
+
 ## The Shadow Monarch
 
 - The Shadow Monarch became lonely: what's the point of saving the world if he loses his friends?
