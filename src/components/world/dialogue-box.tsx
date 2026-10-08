@@ -86,6 +86,8 @@ export function DialogueBox({ dialogue, onClose, onAsk, onChoice }: Props) {
         if (!next || next.at > upTo) return;
         felt.current += 1;
         haptics.rumble(next.kind);
+        // a giant's footfall is heard as well as felt
+        if (next.kind === 'stomp') playSound('stomp');
       }
     },
     [rumbles],

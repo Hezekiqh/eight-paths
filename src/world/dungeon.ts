@@ -182,11 +182,13 @@ export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
   },
+  // the Warden is Aurek the Tall (author, Oct 8, 2026, Episode 14): his every footfall shakes the Kaloseum
   'pit-warden': {
     lines: [
-      'The floor shakes. Then it shakes again.',
-      'BARNABY: Oh, you have done it now. Everybody, please welcome... THE WARDEN!',
-      "BARNABY: Nobody's ever hurt him. Nobody's ever hurt his feelings either. Mostly because he hasn't got any. FIGHT!",
+      'STOMP. STOMP.',
+      "BARNABY: You're in for it now! The Greatest Champion and Warden of the Kalo...",
+      'STOMP.',
+      'BARNABY: AUREK THE TALL!!!!',
     ],
   },
   // walking as Brannoc: nobody on the sand but you
@@ -199,11 +201,23 @@ export const PRISON_INTROS: Record<string, { speaker?: string; lines: string[] }
   },
 };
 
-/** The fifth guard down: the warden's coming (as the front-door fight, but Brannoc is still out cold). */
+/** The fifth guard down (author, Oct 8, 2026, Episode 14): Barnaby's sentence, and then something very big. */
 export const PRISON_GUARDS_DOWN = [
   'The fifth guard hits the sand.',
-  'Behind you, Brannoc snores.',
-  'Then the floor shakes. Something very big is walking up the tunnel.',
+  "BARNABY: UNACCEPTABLE!!!!! Five of the king's own, beaten by ONE escapee?!",
+  "BARNABY: That's 100 life sentences. EACH!",
+  'STOMP. The whole Kaloseum shakes. STOMP. Something very big is coming up from below.',
+];
+
+/** What you say to Aurek the Tall as he looms over you (the first is Episode 14's), and what he says back. */
+export const AUREK_ANSWERS: { label: string; reply: string[]; deed?: 'bad' }[] = [
+  { label: "How's the weather up there?", reply: ['AUREK: ...Cloudy.', 'AUREK: With a chance of pain.'] },
+  { label: 'Can we talk about this?', reply: ['AUREK: We are talking.', 'AUREK: This is the last of it.'] },
+  {
+    label: "You're not THAT tall.",
+    reply: ['Aurek straightens up. And up. And up. His head blots out the sun.', 'AUREK: Say that again.'],
+    deed: 'bad',
+  },
 ];
 
 /** Twenty strikes in: the warden yawns, raises his club, and Brannoc gets up. */
@@ -243,9 +257,34 @@ type Carriers = { mott: number; nails: number; silas: number; brannoc: number };
 /** The rush: round you and over to him (Old Mott below, Nails up and over, Silas ahead), Brannoc out cold. */
 export const arenaRush = (r: Carriers): Actor[] => [
   { row: r.brannoc, path: [BRANNOC_FAINTED], face: 4 },
-  { row: r.mott, path: [[6, 12], [10, 12], [10, 14]], face: 3 },
-  { row: r.nails, path: [[7, 12], [7, 11], [12, 11], [12, 14]], face: 2 },
-  { row: r.silas, path: [[8, 12], [13, 12], [13, 13]], face: 3 },
+  {
+    row: r.mott,
+    path: [
+      [6, 12],
+      [10, 12],
+      [10, 14],
+    ],
+    face: 3,
+  },
+  {
+    row: r.nails,
+    path: [
+      [7, 12],
+      [7, 11],
+      [12, 11],
+      [12, 14],
+    ],
+    face: 2,
+  },
+  {
+    row: r.silas,
+    path: [
+      [8, 12],
+      [13, 12],
+      [13, 13],
+    ],
+    face: 3,
+  },
 ];
 /** ...and off they go with him, held up between them, to the side of the sand. */
 export const arenaCarry = (r: Carriers): Actor[] => [

@@ -2518,17 +2518,17 @@ const WALKERS = {
     villain: '#1A1416',
     checks: ['#F0E6D0', '#4A3A30'],
   },
-  // The Kaldorium's warden: the biggest guard in the kingdom, drawn twice as big. Same colours as his guards, more of him.
+  // The Kaloseum's Warden is Aurek the Tall (author, Oct 8, 2026): the same stitched champion Kaldor raised from
+  // the dead, who stands with him in the throne room later.
   warden: {
-    top: '#5A3A2E',
-    shade: '#3E2820',
-    legs: '#3A2A20',
-    boots: '#2A1A12',
-    belt: '#FFC940',
-    skin: '#C8956C',
-    hair: ['bald', '#C8956C'],
-    beard: '#2A1810',
+    top: '#7A8A7A',
+    shade: '#5A6A5A',
+    legs: '#5A6A5A',
+    boots: '#3A4A3A',
+    skin: '#A8B8A8',
+    hair: ['short', '#5A6A5A'],
     sword: true,
+    stitches: '#2A1A1A',
   },
   // Brannoc with no sword: the cell (author, Oct 3, 2026: they took it; he picks one up in the Kaldorium).
   brannocbare: {

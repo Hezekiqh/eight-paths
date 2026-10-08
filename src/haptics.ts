@@ -33,6 +33,8 @@ const RUMBLES: Record<Rumble, Beat[]> = {
   scream: [[Rigid, 0], [Rigid, 45], [Rigid, 90], [Rigid, 135], [Medium, 190]],
   // One great blow and its echo.
   crash: [[Heavy, 0], [Medium, 110], [Soft, 230]],
+  // A giant's foot coming down: one huge thump, the ground answering.
+  stomp: [[Heavy, 0], [Heavy, 40], [Medium, 160], [Soft, 300]],
   // Low and slow, felt more than heard.
   rumble: [[Soft, 0], [Soft, 130], [Medium, 260], [Soft, 390], [Soft, 520]],
   // Knock, knock.

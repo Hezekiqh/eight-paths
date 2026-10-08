@@ -167,6 +167,7 @@ import {
   ARENA_FIGHT,
   ARENA_FIGHT_ALONE,
   ARENA_VERDICT,
+  AUREK_ANSWERS,
   ARENA_CARRIED,
   ARENA_FAINTED,
   arenaCarry,
@@ -666,28 +667,38 @@ function World({
                 })),
               };
             })()
-          : prisonIntro
-            ? { lines: prisonIntro.lines }
-            : start.map.boss?.intro
-              ? {
-                  speaker: start.map.boss.intro.speaker ?? undefined,
-                  lines: [
-                    // a line of Felix's only if he's in the room to say it
-                    ...start.map.boss.intro.lines.filter(aboutFelix),
-                    ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
-                    // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
-                    // this, and ends in the fight's cue; already seen, the cue comes straight after
-                    ...(() => {
-                      const m = bossMoment(start.map.id, hero);
-                      const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
-                      if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
-                      return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
-                    })(),
-                  ],
-                }
-              : bossNpc
-                ? { speaker: bossNpc.name, lines: bossNpc.lines }
-                : null,
+          : prisonIntro && start.map.boss?.flag === 'pit-champion'
+            ? {
+                // Aurek the Tall comes up from below (dungeon.ts): you answer him, and he answers back
+                lines: prisonIntro.lines,
+                choices: AUREK_ANSWERS.map((a) => ({
+                  label: a.label,
+                  deed: a.deed,
+                  then: () => setVerdict({ lines: a.reply }),
+                })),
+              }
+            : prisonIntro
+              ? { lines: prisonIntro.lines }
+              : start.map.boss?.intro
+                ? {
+                    speaker: start.map.boss.intro.speaker ?? undefined,
+                    lines: [
+                      // a line of Felix's only if he's in the room to say it
+                      ...start.map.boss.intro.lines.filter(aboutFelix),
+                      ...(advisedBy(start.map.id, arrivalFlags)?.lines ?? []),
+                      // a big moment (moments.ts): yours, walking as its hero yourself; theirs steps out after
+                      // this, and ends in the fight's cue; already seen, the cue comes straight after
+                      ...(() => {
+                        const m = bossMoment(start.map.id, hero);
+                        const cue = (BOSS_CUE[start.map.id as MapId] ?? []).filter(aboutFelix);
+                        if (!m || arrivalFlags.includes(`moment:${start.map.id}`)) return cue;
+                        return m.stepsOut ? [] : [...(m.moment.asThem ?? []), ...cue];
+                      })(),
+                    ],
+                  }
+                : bossNpc
+                  ? { speaker: bossNpc.name, lines: bossNpc.lines }
+                  : null,
   );
   // Any excuse you like: UNACCEPTABLE. The Warden's answer, once an excuse has been picked, until it's read.
   const dialogue = useMemo(
