@@ -106,7 +106,7 @@ Every completion is worth 10 XP; quests in the player's class dimension are wort
 
 - Start with 1, hold at most 3.
 - Earn 1 for every 7-day run with at least one completion anywhere.
-- On a day with zero completions, a token is spent automatically at midnight and every streak survives. No token = streaks reset to 0.
+- One token per missed habit: at midnight, each habit that was due, not done, and had a live streak spends a token (longest streak first), which saves that habit's streak (and its Path's, if every quest due there was saved). It never saves the day: the days-shown-up streak still resets on a day with nothing done. No token = that habit's streak resets to 0.
 
 **Dimming (neglect)**
 

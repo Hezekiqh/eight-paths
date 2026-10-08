@@ -38,7 +38,7 @@ function describe(day: HabitDay): string {
     case 'open':
       return 'Due today. Not done yet.';
     case 'excused':
-      return 'Skipped, or a rest day. It doesn’t count against you.';
+      return 'Skipped, or saved by a rest token. Your streak carries on.';
     default:
       return 'Not scheduled.';
   }
@@ -225,7 +225,7 @@ export default function HabitSheet() {
           <View style={[styles.key, { borderColor: colors.danger, borderWidth: 1.5 }]} />
           <Text style={styles.legendText}>Missed {stats.month.misses}</Text>
           <View style={[styles.key, { backgroundColor: colors.cardRaised }]} />
-          <Text style={styles.legendText}>Skipped or rest</Text>
+          <Text style={styles.legendText}>Skipped or rest token</Text>
         </View>
       </View>
 

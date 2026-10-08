@@ -172,10 +172,11 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
     input.heroes.length > 0 ? input.heroes[(seed + i) % input.heroes.length] : undefined;
 
   // At the start of the day being planned: tokens left, whether the streak is
-  // still alive, and whether the day before was saved by a token.
+  // still alive, and whether a token saved a habit the day before. Tokens save
+  // habits, never the day, so a day away always ends the showing-up streak.
   let tokens = input.restTokens;
   let alive = input.streak > 0;
-  let coveredYesterday = input.restDays.some((r) => r.date === addDays(input.today, -1) && r.dimension === 'all');
+  let coveredYesterday = input.restDays.some((r) => r.date === addDays(input.today, -1));
 
   const choice: Choice = {
     stats: input.lineStats ?? {},
@@ -190,9 +191,8 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
     const due = input.quests.some((q) => isDueOn(q, date));
     const daySeed = seed + missed;
 
-    // A streak worth keeping, no token to save it, and a quest due.
-    const atRisk =
-      !(k === 0 && playedToday) && alive && tokens === 0 && input.streak >= LAST_CALL_MIN_STREAK && due;
+    // A streak worth keeping and a quest due (a rest token can't save the day).
+    const atRisk = !(k === 0 && playedToday) && alive && input.streak >= LAST_CALL_MIN_STREAK && due;
 
     // The usual call.
     let usualAt: number | null = null;
@@ -254,7 +254,8 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
     // The last call.
     const lastCallAhead = k > 0 || input.minutesNow < LAST_CALL_MINUTES;
     if (atRisk && lastCallFits && lastCallAhead) {
-      const picked = pickLine('lastCall', daySeed, { name: input.name, streak: input.streak }, choice);
+      // c5 says no rest tokens are left, so only when that's true.
+      const picked = pickLine('lastCall', daySeed, { name: input.name, streak: input.streak }, choice, undefined, tokens > 0 ? ['c5'] : []);
       if (picked) {
         plans.push({
           date,
@@ -269,14 +270,16 @@ export function planReminders(input: ReminderInput): PlannedReminder[] {
     }
 
     // Midnight, with the player away (unless today is already played).
+    // A token goes on each habit missed, at most one per habit.
     if (k === 0) {
-      coveredYesterday = !playedToday && input.restTokens > 0;
-      alive = alive && (playedToday || input.restTokens > 0);
+      coveredYesterday = !playedToday && input.restTokens > input.restTokensTomorrow;
+      alive = alive && playedToday;
       tokens = input.restTokensTomorrow;
     } else {
-      coveredYesterday = tokens > 0;
-      alive = alive && tokens > 0;
-      tokens = Math.max(0, tokens - 1);
+      const missedHabits = input.quests.filter((q) => isDueOn(q, date)).length;
+      coveredYesterday = tokens > 0 && missedHabits > 0;
+      alive = false;
+      tokens = Math.max(0, tokens - missedHabits);
     }
   }
   return plans.slice(0, MAX_PENDING_REMINDERS);
@@ -310,7 +313,7 @@ function pickPersonal(
   const topics: { ids: string[]; vars: KeeperVars }[] = [];
 
   if (input.streak >= 3) {
-    // b3 says the streak is only safe until midnight, so only when no token would save it.
+    // b3 says the streak is only safe until midnight: true whenever today isn't played (tokens never save the day).
     const ids = ['b1', ...(input.streak >= 7 ? ['b2'] : []), ...(atRisk ? ['b3'] : [])];
     topics.push({ ids, vars: { streak: input.streak } });
   }
@@ -363,8 +366,10 @@ function pickLine(
   vars: KeeperVars,
   choice: Choice,
   prefer?: string,
+  /** Lines that wouldn't be true right now. */
+  exclude: string[] = [],
 ): Picked | null {
-  const options = KEEPER_LINES.filter((l) => l.group === group)
+  const options = KEEPER_LINES.filter((l) => l.group === group && !exclude.includes(l.id))
     .map((l) => ({ lineId: l.id, group, body: fillLine(l.text, vars) }))
     .filter((o): o is Picked => o.body !== null);
   if (options.length === 0) return null;

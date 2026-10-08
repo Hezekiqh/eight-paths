@@ -231,15 +231,17 @@ describe('game store', () => {
     expect(s.completions).toHaveLength(1);
   });
 
-  it('settles missed days with a rest token', () => {
+  it('settles a missed habit with a rest token', () => {
     start();
+    // Quests are stamped with the real clock; date them from the start of this test's game.
+    useGameStore.setState((st) => ({ quests: st.quests.map((q) => ({ ...q, createdAt: `${today}T08:00:00.000Z` })) }));
     const read = useGameStore.getState().quests.find((q) => q.title === 'Read 20 min')!;
     useGameStore.getState().toggleQuest(read.id, today);
-    // The 26th started a streak; the 27th, with nothing done, would break it.
+    // The 26th started Read's streak; missing it on the 27th would break it. Move had none to save.
     useGameStore.getState().settle('2026-09-28');
     const s = useGameStore.getState();
     expect(s.player?.restTokens).toBe(0);
-    expect(s.restDays).toEqual([{ date: '2026-09-27', dimension: 'all' }]);
+    expect(s.restDays).toEqual([{ date: '2026-09-27', dimension: 'intellectual', questId: read.id }]);
     expect(s.lastSettledDate).toBe('2026-09-27');
   });
 });
@@ -401,6 +403,35 @@ describe('loading a saved game', () => {
     toggleGoal(run.id, today);
     expect(physical().xp).toBe(0);
     expect(useGameStore.getState().goals[0].completedAt).toBeUndefined();
+  });
+
+  it('moves a finished goal\'s XP when its Path is edited', () => {
+    start();
+    const { addGoal, toggleGoal, updateGoal } = useGameStore.getState();
+    addGoal({ title: 'Run a 5K', dimension: 'physical' });
+    const [run] = useGameStore.getState().goals;
+    toggleGoal(run.id, today);
+    const xp = (d: string) =>
+      selectDimensionStats(useGameStore.getState(), today).find((s) => s.dimension === d)!.xp;
+
+    updateGoal(run.id, { title: 'Run a 5K', dimension: 'emotional' });
+    expect(xp('physical')).toBe(0);
+    expect(xp('emotional')).toBe(30);
+
+    updateGoal(run.id, { title: 'Run a 5K' });
+    expect(useGameStore.getState().xpGrants).toHaveLength(0);
+
+    updateGoal(run.id, { title: 'Run a 5K', dimension: 'physical' });
+    expect(xp('physical')).toBe(30);
+    expect(useGameStore.getState().goals[0].completedAt).toBe(today);
+  });
+
+  it('renames the player, ignoring a blank name', () => {
+    start();
+    useGameStore.getState().setPlayerName('  Hez ');
+    expect(useGameStore.getState().player!.name).toBe('Hez');
+    useGameStore.getState().setPlayerName('   ');
+    expect(useGameStore.getState().player!.name).toBe('Hez');
   });
 
   it('remembers the Vibration setting', () => {

@@ -71,7 +71,7 @@ export default function TodayScreen() {
   }, [touring, beginTour]);
 
   const onToggle = (questId: string) => {
-    // What this habit gives back to the Dopamine Baseline (DB) bar, from the bar as it stands before it (see hpEvents):
+    // What this habit gives back to the Dopamine Baseline (HP) bar, from the bar as it stands before it (see hpEvents):
     // a habit's worth, up to the day's limit and never past full.
     const hpGain = regulatorOn ? Math.max(0, Math.min(HP_PER_HABIT, DAILY_RESTORE_CAP - todayRestore, MAX_HP - hp)) : 0;
     const outcome = toggleQuest(questId, today);

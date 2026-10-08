@@ -20,7 +20,7 @@ export default function RegulatorPotion() {
       <SafeAreaView edges={['bottom']} style={styles.bottom}>
         <View style={styles.potion}>
           <PixelIcon name="potion" color={HP_COLORS.high} size={72} />
-          <Text style={styles.restored}>DB restored to {POTION_TO}</Text>
+          <Text style={styles.restored}>HP restored to {POTION_TO}</Text>
         </View>
         <View style={styles.dialogue} accessibilityRole="alert">
           <Text style={styles.speaker}>THE KEEPER</Text>

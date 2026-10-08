@@ -65,7 +65,7 @@ export default function RegulatorSurvey() {
         <View style={styles.result}>
           <Text style={styles.resultLabel}>{done.clean ? 'STEADY DAY' : 'CHECKED IN'}</Text>
           <Text style={[styles.resultBig, { color: done.clean ? '#3FA34D' : REGULATOR_COLOR }]}>
-            {done.clean ? `+${CLEAN_DAY_BONUS} DB` : `−${done.drain} DB`}
+            {done.clean ? `+${CLEAN_DAY_BONUS} HP` : `−${done.drain} HP`}
           </Text>
           {done.capped && <Text style={styles.hint}>A single day never costs more than this.</Text>}
           <Text style={styles.afterword}>{afterword(done.drain, done.clean)}</Text>

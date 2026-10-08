@@ -141,6 +141,8 @@ type Actions = {
   setSmartReminders: (on: boolean) => void;
   setDayReminders: (dayReminders: DayReminders) => void;
   setHapticsEnabled: (on: boolean) => void;
+  /** Renames the player (the name the Keeper and the Today card use). Blank keeps the old name. */
+  setPlayerName: (name: string) => void;
   /** Today's quests in the player's own order, or null to go back to their usual order. */
   /** Saves a dragged order (and switches to it), or null to go back to auto ordering. */
   setQuestOrder: (ids: string[] | null) => void;
@@ -439,6 +441,8 @@ export const useGameStore = create<GameState>()(
         set((s) => ({ questOrder, questSort: { ...s.questSort, by: questOrder ? 'mine' : 'auto' } })),
       setQuestSort: (sort) => set((s) => ({ questSort: { ...s.questSort, ...sort } })),
       setHapticsEnabled: (hapticsEnabled) => set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
+      setPlayerName: (name) =>
+        set((s) => (s.player && name.trim() ? { player: { ...s.player, name: name.trim() } } : s)),
 
       setObjectivesLandscape: (objectivesLandscape) =>
         set((s) => (s.player ? { player: { ...s.player, objectivesLandscape } } : s)),
@@ -475,7 +479,29 @@ export const useGameStore = create<GameState>()(
         set((s) => ({ goals: [...s.goals, { ...cleanDraft(draft), id: newId(), createdAt: todayKey() }] })),
 
       updateGoal: (id, draft) =>
-        set((s) => ({ goals: s.goals.map((g) => (g.id === id ? { ...g, ...cleanDraft(draft) } : g)) })),
+        set((s) => {
+          const goal = s.goals.find((g) => g.id === id);
+          if (!goal) return s;
+          const updated = { ...goal, ...cleanDraft(draft) };
+          const goals = s.goals.map((g) => (g === goal ? updated : g));
+          if (!updated.completedAt || updated.dimension === goal.dimension) return { goals };
+          // A finished goal moved to another Path (or to none) takes its XP with it.
+          const others = s.xpGrants.filter((x) => x.id !== id);
+          const xpGrants = updated.dimension
+            ? [
+                ...others,
+                {
+                  id,
+                  date: updated.completedAt,
+                  dimension: updated.dimension,
+                  xp: GOAL_XP,
+                  characterId: s.party[updated.dimension],
+                  source: 'goal' as const,
+                },
+              ]
+            : others;
+          return { goals, xpGrants };
+        }),
 
       deleteGoal: (id) =>
         set((s) => ({ goals: s.goals.filter((g) => g.id !== id), xpGrants: s.xpGrants.filter((x) => x.id !== id) })),

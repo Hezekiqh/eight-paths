@@ -31,7 +31,7 @@ type Props = {
   dimension: Dimension;
   gain: XpGain;
   milestone?: Milestone | null;
-  /** With the Dopamine Regulator on: the Dopamine Baseline (DB) before and after this habit gave some back. */
+  /** With the Dopamine Regulator on: the Dopamine Baseline (HP) before and after this habit gave some back. */
   hp?: { before: number; after: number } | null;
   onDone: () => void;
 };
@@ -132,7 +132,7 @@ export function XpBanner({ dimension, gain, milestone, hp, onDone }: Props) {
           <Text style={[styles.gain, { color: info.color }]}>
             {gain.gained > 0 ? `+${gain.gained} XP` : 'XP full today'}
           </Text>
-          {hp && <Text style={[styles.gain, { color: HP_COLOR }]}>+{hp.after - hp.before} DB</Text>}
+          {hp && <Text style={[styles.gain, { color: HP_COLOR }]}>+{hp.after - hp.before} HP</Text>}
         </View>
         <View style={styles.track}>
           <Animated.View style={[styles.fill, { backgroundColor: info.color }, fillStyle]} />
@@ -145,7 +145,7 @@ export function XpBanner({ dimension, gain, milestone, hp, onDone }: Props) {
               <Animated.View style={[styles.fill, { backgroundColor: HP_COLOR }, hpFillStyle]} />
             </View>
             <Text style={styles.xp} accessibilityLabel={`Dopamine Baseline: ${hp.after} of ${MAX_HP}`}>
-              {hp.after} / {MAX_HP} DB
+              {hp.after} / {MAX_HP} HP
             </Text>
           </>
         )}

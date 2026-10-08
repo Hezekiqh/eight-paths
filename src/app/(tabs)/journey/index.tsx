@@ -1,15 +1,16 @@
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ActivityCalendar } from '@/components/activity-calendar';
+import { showDialog } from '@/components/dialog';
 import { ProgressStrip } from '@/components/progress-strip';
 import { Screen } from '@/components/screen';
 import { Segmented } from '@/components/segmented';
 import { BarChart } from '@/components/stats/bar-chart';
 import { Highlight } from '@/components/stats/highlight';
 import { PathBars } from '@/components/stats/path-bars';
-import { CLASSES, MAX_REST_TOKENS, WEEKDAY_NAMES, type Stats, type StatsPeriod } from '@/game';
+import { CLASSES, DAYS_PER_TOKEN, MAX_REST_TOKENS, WEEKDAY_NAMES, type Stats, type StatsPeriod } from '@/game';
 import { useClassInfo, usePlayer, useProgressSummary, useStats, useToday } from '@/store/hooks';
 import { colors, fonts, spacing, windowStyle } from '@/theme';
 import { useTourScroller, useTourTarget } from '@/tutorial/tour';
@@ -32,8 +33,10 @@ const TIMELINE: Record<StatsPeriod, string> = {
 const pct = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)}%`);
 const pts = (change: number) => `${change > 0 ? '+' : ''}${Math.round(change * 100)} pts`;
 
+const REST_TOKENS_HELP = `Miss a habit and a rest token saves that habit's streak: one token for each habit missed. It doesn't save the day, so your days-in-a-row streak still resets if you do nothing at all.\n\nYou earn one for every ${DAYS_PER_TOKEN} days in a row you show up, and can hold up to ${MAX_REST_TOKENS}.`;
+
 /**
- * The Stats tab: first your rest days and consistency (your name, level, XP
+ * The Stats tab: first your rest tokens and consistency (your name, level, XP
  * and HP are on Today; Friends are on Social; the Regulator is in Settings);
  * then how reliably you keep what you schedule, for a week, a month
  * or a year. First the overall rate, then what's worth pointing out (most
@@ -56,10 +59,12 @@ export default function StatsScreen() {
   return (
     <Screen title="Stats" scrollRef={scroller.ref} onScroll={scroller.onScroll}>
       <View style={styles.extras}>
-        <View
+        <Pressable
           style={styles.tokens}
-          accessible
-          accessibilityLabel={`${player.restTokens} of ${MAX_REST_TOKENS} rest days`}>
+          accessibilityRole="button"
+          accessibilityLabel={`${player.restTokens} of ${MAX_REST_TOKENS} rest tokens`}
+          accessibilityHint="What rest tokens do"
+          onPress={() => showDialog('Rest tokens', REST_TOKENS_HELP)}>
           {Array.from({ length: MAX_REST_TOKENS }, (_, i) => (
             <SymbolView
               key={i}
@@ -69,9 +74,9 @@ export default function StatsScreen() {
             />
           ))}
           <Text style={styles.tokenText}>
-            {player.restTokens} rest {player.restTokens === 1 ? 'day' : 'days'}
+            {player.restTokens} rest {player.restTokens === 1 ? 'token' : 'tokens'}
           </Text>
-        </View>
+        </Pressable>
       </View>
 
       <View ref={summaryRef} collapsable={false}>

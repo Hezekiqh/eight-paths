@@ -53,7 +53,7 @@ function graceReward(data: GameData, id: string, today: string): RewardResult {
   return {
     changes: { player: { ...player, restTokens: player.restTokens + 1 } },
     title: 'Grace Day',
-    detail: '+1 rest token. It covers a missed day so your streaks survive.',
+    detail: '+1 rest token. It saves one missed habit\'s streak.',
   };
 }
 

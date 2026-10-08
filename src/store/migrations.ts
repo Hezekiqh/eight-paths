@@ -210,7 +210,9 @@ function cleanNextDraw(raw: unknown): Partial<Record<Dimension, number>> {
 function cleanRestDay(raw: unknown): RestDay | null {
   if (!isObject(raw) || !isDateKey(raw.date)) return null;
   if (raw.dimension !== 'all' && !isDimension(raw.dimension)) return null;
-  return { date: raw.date, dimension: raw.dimension };
+  return typeof raw.questId === 'string'
+    ? { date: raw.date, dimension: raw.dimension, questId: raw.questId }
+    : { date: raw.date, dimension: raw.dimension };
 }
 
 const keep = <T>(items: unknown[], clean: (raw: unknown) => T | null) =>

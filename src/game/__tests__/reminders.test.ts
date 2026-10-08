@@ -176,9 +176,10 @@ describe('personal calls (N2)', () => {
     expect(personalIds({ streak: 8 }).has('b2')).toBe(true);
   });
 
-  it('only says the streak is safe "only until midnight" when no token would save it', () => {
-    expect(personalIds({ streak: 5, restTokens: 1 }).has('b3')).toBe(false);
+  it('says the streak is safe "only until midnight" even with tokens, since they never save the day', () => {
+    expect(personalIds({ streak: 5, restTokens: 1 }).has('b3')).toBe(true);
     expect(personalIds({ streak: 5, restTokens: 0 }).has('b3')).toBe(true);
+    expect(personalIds({ streak: 5, lastActive: today }).has('b3')).toBe(false);
   });
 
   it('names a level one quest away, but not when the daily cap stops the XP', () => {
@@ -236,10 +237,15 @@ describe('the last call (N2)', () => {
     expect(plans.filter((p) => p.timeSensitive)).toHaveLength(1);
   });
 
-  it('stays quiet while a rest token would save the streak, then knocks once they run out', () => {
+  it('knocks tonight even with rest tokens (they save habits, not the day), never saying none are left', () => {
     const plans = planReminders(input({ streak: 14, restTokens: 2, restTokensTomorrow: 1 }));
-    // Today and tomorrow are covered; the day after, no tokens are left.
-    expect(lastCalls(plans).map((p) => p.date)).toEqual([addDays(today, 2)]);
+    // A day away ends the streak, so there's only tonight to knock for.
+    expect(lastCalls(plans).map((p) => p.date)).toEqual([today]);
+    for (let i = 0; i < 40; i += 1) {
+      const day = addDays(today, i);
+      const knock = lastCalls(planReminders(input({ today: day, lastActive: addDays(day, -1), streak: 14, restTokens: 2 })));
+      expect(knock.map((p) => p.lineId)).not.toContain('c5');
+    }
   });
 
   it('knocks tomorrow when today is played and no token is left', () => {

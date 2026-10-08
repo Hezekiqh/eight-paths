@@ -71,9 +71,13 @@ export default function TradeScreen() {
   }
 
   const myCopies = mine ? giveable(mine, { owned, drops }, walking) : null;
-  const giveList = listCopies(give);
-  const getList = listCopies(get);
-  const ready = giveList.length > 0 && getList.length > 0;
+  // A counter starts from what they asked for, which may include heroes you can't give
+  // (not hatched yet, or the walking hero's last copy): only what's tradeable counts.
+  const giving = myCopies ? within(give, myCopies) : give;
+  const getting = theirs ? within(get, theirs) : get;
+  const giveList = listCopies(giving);
+  const getList = listCopies(getting);
+  const ready = giveList.length > 0 && getList.length > 0 && myCopies !== null && theirs !== null;
 
   const send = () =>
     showDialog(
@@ -128,14 +132,14 @@ export default function TradeScreen() {
           <Picker
             title={`YOU GIVE · ${giveList.length}/${MAX_SIDE}`}
             available={myCopies}
-            side={{ picked: give, setPicked: setGive }}
+            side={{ picked: giving, setPicked: setGive }}
             color={color}
             empty="Nothing to trade yet. Heroes beyond the starting eight can be traded once they've hatched."
           />
           <Picker
             title={`YOU GET · ${getList.length}/${MAX_SIDE}`}
             available={theirs}
-            side={{ picked: get, setPicked: setGet }}
+            side={{ picked: getting, setPicked: setGet }}
             color={color}
             empty={`${friend.username} has nothing to trade yet.`}
           />
@@ -154,6 +158,16 @@ export default function TradeScreen() {
       />
     </ScrollView>
   );
+}
+
+/** `picked`, cut down to what `available` holds. */
+function within(picked: Copies, available: Copies): Copies {
+  const out: Copies = {};
+  for (const [id, n] of Object.entries(picked) as [CharacterId, number][]) {
+    const k = Math.min(n, available[id] ?? 0);
+    if (k > 0) out[id] = k;
+  }
+  return out;
 }
 
 /** A grid of heroes one side can trade; each tap adds a copy, until it wraps back to none. */

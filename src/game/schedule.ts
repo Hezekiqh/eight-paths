@@ -27,9 +27,25 @@ export function isDueOn(quest: Quest, date: string): boolean {
   return isScheduledOn(quest, date) && questLiveOn(quest, date) && !isSkippedOn(quest, date);
 }
 
-/** Days a rest token covered, for `dimension` (or any dimension when omitted). */
+/**
+ * Whole days a rest token covered, for `dimension` (or any dimension when omitted).
+ * Only older saves have these: a token now saves one habit (see restedHabitDays).
+ */
 export function restDaySet(restDays: RestDay[], dimension?: string): Set<string> {
   return new Set(
-    restDays.filter((r) => r.dimension === 'all' || dimension === undefined || r.dimension === dimension).map((r) => r.date),
+    restDays
+      .filter((r) => !r.questId && (r.dimension === 'all' || dimension === undefined || r.dimension === dimension))
+      .map((r) => r.date),
+  );
+}
+
+/** Days `quest`'s streak was saved by a rest token: spent on it, or an older whole-day rest. */
+export function restedHabitDays(restDays: RestDay[], quest: Quest): Set<string> {
+  return new Set(
+    restDays
+      .filter((r) =>
+        r.questId ? r.questId === quest.id : r.dimension === 'all' || r.dimension === quest.dimension,
+      )
+      .map((r) => r.date),
   );
 }

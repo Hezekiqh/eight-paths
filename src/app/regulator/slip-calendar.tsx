@@ -71,7 +71,7 @@ export default function SlipCalendarScreen() {
       <View style={styles.streaks}>
         <View style={styles.streak}>
           <Text style={[styles.streakBig, { color: CLEAN }]}>{streaks.current}</Text>
-          <Text style={styles.streakLabel}>clean days in a row</Text>
+          <Text style={styles.streakLabel}>steady days in a row</Text>
         </View>
         <View style={styles.streak}>
           <Text style={styles.streakBig}>{streaks.best}</Text>

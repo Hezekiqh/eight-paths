@@ -568,6 +568,63 @@ export type LeaderRow = {
   value: number;
 };
 
+/** A player and the heroes they hold, for the niche rankings. */
+export type BoardPlayer = {
+  userId: string;
+  username: string;
+  founderNumber: number | null;
+  leader: string | null;
+  level: number;
+  holdings: Record<string, number>;
+};
+
+/**
+ * Everyone's collections, for the niche rankings (the server's top 100 by
+ * collection size). Before that function is on the server, falls back to the
+ * player and their friends, whose collections are already visible to them.
+ */
+export async function fetchBoardPlayers(): Promise<BoardPlayer[]> {
+  const { data, error } = await supabase().rpc('board_players');
+  if (!error) {
+    return (
+      (data ?? []) as {
+        user_id: string;
+        username: string;
+        founder_number: number | null;
+        leader: string | null;
+        level: number;
+        holdings: Record<string, number> | null;
+      }[]
+    ).map((r) => ({
+      userId: r.user_id,
+      username: r.username,
+      founderNumber: r.founder_number,
+      leader: r.leader,
+      level: r.level,
+      holdings: r.holdings ?? {},
+    }));
+  }
+  const { profile, friends } = useSocial.getState();
+  if (!profile) return [];
+  return Promise.all(
+    [profile, ...friends].map(async (p) => ({
+      userId: p.id,
+      username: p.username,
+      founderNumber: p.founderNumber,
+      leader: p.leader,
+      level: p.level,
+      holdings: await fetchHoldings(p.id),
+    })),
+  );
+}
+
+/** Copies of each hero a player (or a friend of theirs) holds right now. */
+async function fetchHoldings(userId: string): Promise<Record<string, number>> {
+  const { data, error } = await supabase().rpc('hero_holdings', { player: userId });
+  if (error) fail(OFFLINE);
+  return Object.fromEntries(((data ?? []) as { character_id: string; copies: number }[]).map((r) => [r.character_id, r.copies]));
+}
+
 /** The top collections among friends (and the player), or among everyone. */
 export async function fetchLeaderboard(scope: 'friends' | 'all'): Promise<LeaderRow[]> {
   const { data, error } = await supabase().rpc('leaderboard', { scope });

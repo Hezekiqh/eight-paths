@@ -33,7 +33,7 @@ const KEEPER_LINES = [
   'Ah, {name}. You found the Regulator. Few do. Let me tell you how it works.',
   'Each of us has a Dopamine Baseline: the steady level beneath the whole day. It is what lets ordinary things feel good.',
   'Some pleasures lift you far above it, all at once. I call them super stimuli. Afterwards, your baseline settles a little lower while it recovers.',
-  'The Regulator helps you keep it steady. Your DB bar shows where your Dopamine Baseline sits.',
+  'Think of your Dopamine Baseline as your health and energy in the real world. Your HP bar shows where it sits, and the Regulator helps you keep it steady.',
   'Each morning, tell me what spiked yesterday. Every habit you keep lifts it again. It all stays here, on this phone.',
 ];
 
@@ -125,7 +125,7 @@ function KeeperIntro({ name, onDone }: { name: string; onDone: () => void }) {
       onPress={onTap}
       accessibilityRole="button"
       accessibilityLabel={`${line} Tap to continue.`}>
-      {/* What he's describing, above him: the baseline as a DB bar. */}
+      {/* What he's describing, above him: the baseline as an HP bar. */}
       <View style={styles.scene}>
         <PixelIcon name="potion" color={REGULATOR_COLOR} size={96} />
         <Text style={styles.sceneTitle}>DOPAMINE REGULATOR</Text>
@@ -160,7 +160,7 @@ function RankingStep({ onNext }: { onNext: () => void }) {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>The super stimuli, ranked</Text>
         <Text style={styles.hint}>
-          Strongest first: how far each one lifts you above your Dopamine Baseline, and the DB it takes while your
+          Strongest first: how far each one lifts you above your Dopamine Baseline, and the HP it takes while your
           baseline settles back.
         </Text>
         <View style={styles.list}>
@@ -169,7 +169,7 @@ function RankingStep({ onNext }: { onNext: () => void }) {
               key={s.id}
               style={styles.rankRow}
               accessible
-              accessibilityLabel={`${i + 1}. ${s.name}, strength ${s.severity} of 10, ${stimulusCost(s.severity)} DB`}>
+              accessibilityLabel={`${i + 1}. ${s.name}, strength ${s.severity} of 10, ${stimulusCost(s.severity)} HP`}>
               <Text style={styles.rankNumber}>{i + 1}</Text>
               <View style={styles.rankText}>
                 <Text style={styles.listName}>{s.name}</Text>
@@ -182,7 +182,7 @@ function RankingStep({ onNext }: { onNext: () => void }) {
                   ))}
                 </View>
               </View>
-              <Text style={styles.listCost}>−{stimulusCost(s.severity)} DB</Text>
+              <Text style={styles.listCost}>−{stimulusCost(s.severity)} HP</Text>
             </View>
           ))}
         </View>
@@ -281,7 +281,7 @@ function SelectStep({
                 </Pressable>
               ))}
             </View>
-            <Text style={styles.hint}>Costs {stimulusCost(severity)} DB when it comes up.</Text>
+            <Text style={styles.hint}>Costs {stimulusCost(severity)} HP when it comes up.</Text>
             <View style={styles.addButtons}>
               <View style={styles.flex}>
                 <Button title="Cancel" variant="ghost" color={colors.textMuted} onPress={() => setAdding(false)} />
@@ -343,7 +343,7 @@ function ConfirmStep({ picked, onYes, onBack }: { picked: Stimulus[]; onYes: () 
           {picked.map((s) => (
             <View key={s.id} style={styles.listRow}>
               <Text style={styles.listName}>{s.name}</Text>
-              <Text style={styles.listCost}>−{stimulusCost(s.severity)} DB</Text>
+              <Text style={styles.listCost}>−{stimulusCost(s.severity)} HP</Text>
             </View>
           ))}
         </View>
@@ -378,7 +378,7 @@ function SummaryStep({ picked, last, onNext }: { picked: Stimulus[]; last: boole
               style={styles.noteCard}>
               <View style={styles.noteTop}>
                 <Text style={styles.noteName}>{s.name}</Text>
-                <Text style={styles.listCost}>−{stimulusCost(s.severity)} DB</Text>
+                <Text style={styles.listCost}>−{stimulusCost(s.severity)} HP</Text>
                 <Text style={styles.caret}>{expanded ? '▲' : '▼'}</Text>
               </View>
               <Text style={styles.noteShort}>{note.short}</Text>

@@ -17,7 +17,7 @@ import { haptics } from '@/haptics';
 import type { QuestSort } from '@/game';
 import { useGameStore } from '@/store';
 import { useClassInfo, useToday, useTodayQuests } from '@/store/hooks';
-import type { QuestView } from '@/store/selectors';
+import { selectTodayQuests, type QuestView } from '@/store/selectors';
 import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 const ROW = 64;
@@ -159,6 +159,10 @@ export default function ReorderQuestsScreen() {
     // Keep quests that aren't on today's list where they were in the saved order.
     const others = (useGameStore.getState().questOrder ?? []).filter((id) => !(id in positions.value));
     setQuestOrder([...order, ...others]);
+    // With unfinished quests on top, Today may not keep a done quest dragged above an
+    // unfinished one; settle the rows where Today will actually show them.
+    const shown = selectTodayQuests(useGameStore.getState(), today);
+    positions.set(Object.fromEntries(shown.map((v, i) => [v.quest.id, i])));
     haptics.tap();
   };
 

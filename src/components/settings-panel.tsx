@@ -5,6 +5,7 @@ import { Linking, StyleSheet, Switch, Text, View } from 'react-native';
 import { playSound, useAudioSettings } from '@/audio';
 import { Segmented } from '@/components/segmented';
 import { KeeperStatusRows } from '@/components/keeper-status';
+import { NameRows } from '@/components/name-rows';
 import { RegulatorRow } from '@/components/regulator-row';
 import { SettingsRow } from '@/components/settings-row';
 import { ThemePicker } from '@/components/theme-picker';
@@ -120,7 +121,7 @@ export function SettingsPanel() {
 
   return (
     <View style={styles.panel}>
-      <RegulatorRow today={today} />
+      <RegulatorRow today={today} color={color} />
 
       <Text style={styles.section}>GAMEPLAY</Text>
       <View style={styles.list}>
@@ -278,6 +279,8 @@ export function SettingsPanel() {
 
       <Text style={styles.section}>OPTIONS</Text>
       <View style={styles.list}>
+        <NameRows color={color} divider={<View style={styles.divider} />} />
+        <View style={styles.divider} />
         {premiumEnabled && (
           <>
             <SettingsRow
@@ -292,6 +295,14 @@ export function SettingsPanel() {
         )}
         {profile && (
           <>
+            <SettingsRow
+              icon="users"
+              iconColor={color}
+              title="Friends and account"
+              subtitle="Your friends, add by code, sign out"
+              onPress={() => router.push('/social')}
+            />
+            <View style={styles.divider} />
             <SettingsRow
               icon="share"
               iconColor={color}

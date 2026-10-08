@@ -35,7 +35,7 @@ import { showDialog } from '@/components/dialog';
 export default function DopamineRegulatorScreen() {
   const today = useToday();
   const premium = usePremium((s) => s.premium);
-  // Opened from Settings or from the DB bar on Today; Back returns there.
+  // Opened from Settings or from the HP bar on Today; Back returns there.
   const { from } = useLocalSearchParams<{ from?: string }>();
   const header = (
     <BackHeader title="Dopamine Regulator" back={from === 'settings' ? 'Settings' : 'Today'} color={REGULATOR_COLOR} />
@@ -87,8 +87,8 @@ export default function DopamineRegulatorScreen() {
         <View style={styles.card}>
           <Text style={styles.label}>OFF</Text>
           <Text style={styles.body}>
-            Keep your Dopamine Baseline steady. Note the super stimuli that spike it, see your baseline as Health
-            Points, and lift it back up with every habit you keep.
+            Your Dopamine Baseline is basically your real-life health or energy bar, so it shows as HP. Keep it steady:
+            note the super stimuli that spike it, watch it on the HP bar, and lift it back up with every habit you keep.
           </Text>
           <Text style={styles.small}>
             Everything you enter stays on this phone. It is never backed up or sent anywhere.
@@ -135,9 +135,9 @@ export default function DopamineRegulatorScreen() {
             <HpBar hp={hp} height={14} />
             <Text style={styles.small}>
               {todayRestore > 0
-                ? `+${todayRestore} DB from habits today${todayRestore >= DAILY_RESTORE_CAP ? ' (the most a day gives)' : ''}.`
-                : `Each habit you keep today gives back ${HP_PER_HABIT} DB.`}{' '}
-              {hp < MAX_HP ? `Climbing ${REGEN_PER_HOUR} DB an hour, even while you sleep.` : ''}
+                ? `+${todayRestore} HP from habits today${todayRestore >= DAILY_RESTORE_CAP ? ' (the most a day gives)' : ''}.`
+                : `Each habit you keep today gives back ${HP_PER_HABIT} HP.`}{' '}
+              {hp < MAX_HP ? `Climbing ${REGEN_PER_HOUR} HP an hour, even while you sleep.` : ''}
             </Text>
             <Text style={styles.small}>
               Steady-day streak: {streaks.current} {streaks.current === 1 ? 'day' : 'days'} · best {streaks.best}
@@ -176,7 +176,7 @@ export default function DopamineRegulatorScreen() {
         {stimuli.map((s) => (
           <View key={s.id} style={styles.stimulus}>
             <Text style={styles.stimulusName}>{s.name}</Text>
-            <Text style={styles.stimulusCost}>−{stimulusCost(s.severity)} DB</Text>
+            <Text style={styles.stimulusCost}>−{stimulusCost(s.severity)} HP</Text>
           </View>
         ))}
         <View style={styles.divider} />
@@ -209,7 +209,7 @@ export default function DopamineRegulatorScreen() {
         <Text style={styles.label}>HOW THE BAR WORKS {mathOpen ? '▲' : '▼'}</Text>
         {mathOpen && (
           <Text style={styles.body}>
-            {`You start at ${MAX_HP}. Each super stimulus costs its strength × 2 in DB${mode === 'hard' ? ', for every time' : ''}, taken when you check in. A single day never costs more than ${DAILY_DRAIN_CAP}.\n\nThe bar climbs back ${REGEN_PER_HOUR} HP every hour on its own, sleep included: a night's rest is worth 16 or more. Every habit you keep gives back ${HP_PER_HABIT}, up to ${DAILY_RESTORE_CAP} a day, and a steady day adds ${CLEAN_DAY_BONUS}.\n\nIf you ever fall below ${POTION_BELOW}, the Keeper hands you a potion that brings you back to ${POTION_TO}.`}
+            {`You start at ${MAX_HP}. Each super stimulus costs its strength × 2 in HP${mode === 'hard' ? ', for every time' : ''}, taken when you check in. A single day never costs more than ${DAILY_DRAIN_CAP}.\n\nThe bar climbs back ${REGEN_PER_HOUR} HP every hour on its own, sleep included: a night's rest is worth 16 or more. Every habit you keep gives back ${HP_PER_HABIT}, up to ${DAILY_RESTORE_CAP} a day, and a steady day adds ${CLEAN_DAY_BONUS}.\n\nIf you ever fall below ${POTION_BELOW}, the Keeper hands you a potion that brings you back to ${POTION_TO}.`}
           </Text>
         )}
       </Pressable>

@@ -76,7 +76,7 @@ Crisp pixel art in an aged parchment scroll theme. Premium unlocks four more, up
 
 GENTLE BY DESIGN
 • Levels and XP are never taken away
-• Rest tokens protect your streaks on days off
+• Rest tokens save a habit's streak when you miss it
 • One supportive evening reminder, skipped on days you've already played
 
 JOIN THE SECOND 100 (OPTIONAL)
@@ -87,9 +87,10 @@ Support the game with Premium, a yearly or monthly subscription:
 • No level barriers in the Other World: go anywhere, at any level
 • 20 XP per habit, up to 60 a Path each day
 • Unlimited habits (free players keep up to 10)
-• 5★ characters twice as likely, and one redo per drop
+• 5-star characters twice as likely, and one redo per drop
 • Three special moves a day instead of one
 • Every theme
+• The Dopamine Regulator
 The habit tracker itself is always free. Drop odds are shown in the app.
 
 NO ADS, NO TRACKING
@@ -102,7 +103,7 @@ Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://hezekiqh.github.io/eight-paths/privacy.html
 ```
 
-The last three lines are required for subscription apps (guideline 3.1.2): the description must link to the Terms of Use (EULA) and the Privacy Policy. We use Apple's standard EULA, so leave **App Information → License Agreement** on the standard one.
+No ★ or other symbols: App Store Connect rejects them as invalid characters. The last three lines are required for subscription apps (guideline 3.1.2): the description must link to the Terms of Use (EULA) and the Privacy Policy. We use Apple's standard EULA, so leave **App Information → License Agreement** on the standard one.
 
 ### Keywords (100)
 

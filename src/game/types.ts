@@ -64,7 +64,12 @@ export type Completion = {
   at?: number;
 };
 
-export type RestDay = { date: string; dimension: Dimension | 'all' };
+/**
+ * A rest token spent. With `questId` it saved that one missed habit's streak, and
+ * nothing else (the day still counts as missed). Without it, it's an older whole-day
+ * rest, from when one token covered every streak for the day.
+ */
+export type RestDay = { date: string; dimension: Dimension | 'all'; questId?: string };
 
 /** XP that didn't come from a quest: objective drops and finished goals. */
 export type XpGrant = {

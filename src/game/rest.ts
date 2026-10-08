@@ -1,6 +1,6 @@
 import { addDays } from './dates';
 import { isDueOn } from './schedule';
-import { dimensionStreak, habitStreak, showUpStreak } from './streaks';
+import { habitStreak } from './streaks';
 import type { Completion, Quest, RestDay } from './types';
 
 export const STARTING_REST_TOKENS = 1;
@@ -25,38 +25,24 @@ function activeRunEndingOn(activeDays: Set<string>, day: string): number {
 }
 
 /**
- * Whether `day`, as it stands, would break a streak that's still alive: the
- * show-up streak (nothing done at all), a Path's (one of its quests was due
- * and nothing in it was done) or a habit's (it was due and not done). Each
- * streak is read with `day` as "today", so it's the streak going into it.
+ * The habits `day` would break a live streak for: due, not done, and with a
+ * streak going into it. Longest streak first, so tokens save the most.
  */
-function breaksAStreak(
-  day: string,
-  completions: Completion[],
-  quests: Quest[],
-  restDays: RestDay[],
-  firstDay: string,
-): boolean {
-  const doneThatDay = completions.filter((c) => c.date === day);
-  if (doneThatDay.length === 0 && showUpStreak(completions, restDays, firstDay, day).current > 0) return true;
-  const due = quests.filter((q) => isDueOn(q, day));
-  const doneQuests = new Set(doneThatDay.map((c) => c.questId));
-  const donePaths = new Set(doneThatDay.map((c) => c.dimension));
-  for (const q of due) {
-    if (doneQuests.has(q.id)) continue;
-    if (habitStreak(q, completions, restDays, day) > 0) return true;
-    if (!donePaths.has(q.dimension) && dimensionStreak(completions, restDays, quests, q.dimension, firstDay, day).current > 0) {
-      return true;
-    }
-  }
-  return false;
+function habitsToSave(day: string, completions: Completion[], quests: Quest[], restDays: RestDay[]): Quest[] {
+  const done = new Set(completions.filter((c) => c.date === day).map((c) => c.questId));
+  return quests
+    .filter((q) => isDueOn(q, day) && !done.has(q.id))
+    .map((q) => ({ q, streak: habitStreak(q, completions, restDays, day) }))
+    .filter((h) => h.streak > 0)
+    .sort((a, b) => b.streak - a.streak)
+    .map((h) => h.q);
 }
 
 /**
- * Plays every midnight between the last settle and `today`: each finished day
- * that would break a live streak (a missed habit, a Path left untouched, or
- * nothing done at all) spends a token and becomes a rest day for everything,
- * if one is available. Every 7th consecutive active day earns a token, up to 3.
+ * Plays every midnight between the last settle and `today`: each habit missed
+ * that day with a live streak spends one rest token, which saves that habit's
+ * streak and nothing else (the day itself still counts as missed). Every 7th
+ * consecutive active day earns a token, up to 3.
  * `firstDay` is the first day eligible for settling (the onboarding date).
  */
 export function settleRestDays(
@@ -73,9 +59,10 @@ export function settleRestDays(
   let lastSettledDate = ledger.lastSettledDate;
 
   while (day < today) {
-    if (restTokens > 0 && breaksAStreak(day, completions, quests, restDays, firstDay)) {
+    for (const quest of habitsToSave(day, completions, quests, restDays)) {
+      if (restTokens === 0) break;
       restTokens -= 1;
-      restDays.push({ date: day, dimension: 'all' });
+      restDays.push({ date: day, dimension: quest.dimension, questId: quest.id });
     }
     if (activeDays.has(day)) {
       const run = activeRunEndingOn(activeDays, day);

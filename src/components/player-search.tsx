@@ -33,6 +33,8 @@ export function PlayerSearch({ color }: { color: string }) {
     return () => {
       live = false;
       clearTimeout(timer);
+      // A search cut short never reaches its own finally, so it can't leave the spinner on.
+      setBusy(false);
     };
   }, [query]);
 

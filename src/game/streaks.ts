@@ -1,5 +1,5 @@
 import { addDays } from './dates';
-import { isDueOn, isScheduledOn, isSkippedOn, restDaySet } from './schedule';
+import { isDueOn, isScheduledOn, isSkippedOn, restDaySet, restedHabitDays } from './schedule';
 import type { Completion, Dimension, Quest, RestDay } from './types';
 
 export type Streak = { current: number; best: number };
@@ -31,8 +31,8 @@ function earliest(start: string, completions: Completion[]): string {
 }
 
 /**
- * Days showing up: any completion is a hit, and only a day with nothing
- * done (and no rest token) is a miss.
+ * Days showing up: any completion is a hit, and a day with nothing done is a
+ * miss. Rest tokens save habits, not the day (older whole-day rests still count).
  */
 export function showUpStreak(completions: Completion[], restDays: RestDay[], start: string, today: string): Streak {
   const active = new Set(completions.map((c) => c.date));
@@ -45,7 +45,7 @@ export function showUpStreak(completions: Completion[], restDays: RestDay[], sta
 /**
  * A Path's streak. A completion in the Path is a hit. A day only breaks it
  * when one of the Path's quests was due, nothing in the Path was done, and
- * no rest token covered it. Days with nothing due are skipped, so a
+ * not every quest due was saved by a rest token. Days with nothing due are skipped, so a
  * Mon/Wed/Fri habit isn't punished on the weekend.
  */
 export function dimensionStreak(
@@ -60,10 +60,12 @@ export function dimensionStreak(
   const active = new Set(inPath.map((c) => c.date));
   const rest = restDaySet(restDays, dimension);
   const pathQuests = quests.filter((q) => q.dimension === dimension);
+  const saved = new Map(pathQuests.map((q) => [q.id, restedHabitDays(restDays, q)]));
   return runStreak(earliest(start, inPath), today, (day) => {
     if (active.has(day)) return 'hit';
     if (rest.has(day)) return 'skip';
-    return pathQuests.some((q) => isDueOn(q, day)) ? 'miss' : 'skip';
+    const due = pathQuests.filter((q) => isDueOn(q, day));
+    return due.some((q) => !saved.get(q.id)!.has(day)) ? 'miss' : 'skip';
   });
 }
 
@@ -75,7 +77,7 @@ export function habitStreak(quest: Quest, completions: Completion[], restDays: R
   if (quest.repeatDays.length === 0) return 0;
   const doneDays = new Set(completions.filter((c) => c.questId === quest.id).map((c) => c.date));
   if (doneDays.size === 0) return 0;
-  const rest = restDaySet(restDays, quest.dimension);
+  const rest = restedHabitDays(restDays, quest);
   const first = [...doneDays].sort()[0];
   return runStreak(first, today, (day) => {
     if (!isScheduledOn(quest, day) || isSkippedOn(quest, day)) return 'skip';

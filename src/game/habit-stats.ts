@@ -1,7 +1,7 @@
 import { monthOf, monthWeeks } from './calendar';
 import { consistency, type Consistency } from './consistency';
 import { addDays, dayOfWeek } from './dates';
-import { createdDay, isScheduledOn, isSkippedOn, questLiveOn, restDaySet } from './schedule';
+import { createdDay, isScheduledOn, isSkippedOn, questLiveOn, restedHabitDays } from './schedule';
 import { runStreak, type Streak } from './streaks';
 import { WEEKDAY_NAMES } from './stats';
 import type { Completion, Quest, RestDay } from './types';
@@ -18,7 +18,7 @@ export type HabitDayStatus =
   | 'miss'
   /** Due today, not done yet. */
   | 'open'
-  /** Skipped, or a rest day for its Path: excused. */
+  /** Skipped, or saved by a rest token: excused. */
   | 'excused'
   /** Not scheduled that weekday, before the habit existed, after it was archived, or still to come. */
   | 'off';
@@ -93,7 +93,7 @@ export function habitStats(
     if (!doneAt.has(c.date) || (c.at !== undefined && (before === undefined || c.at < before)))
       doneAt.set(c.date, c.at);
   }
-  const rest = restDaySet(restDays, quest.dimension);
+  const rest = restedHabitDays(restDays, quest);
   const timedTimes = mine.filter((c) => c.at !== undefined).map((c) => c.at!);
 
   const start = [createdDay(quest), ...doneAt.keys()].sort()[0];

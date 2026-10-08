@@ -9,7 +9,7 @@ import { useSession } from '@/store/session';
 import { earnedCopies } from '@/store/trades';
 import { isCharacterId } from '@/story/companions';
 
-import { fetchTradeMoves, fetchTradePartners, refreshOffers, refreshStats, reportCollection, startSocial, uploadSnapshot, type Snapshot } from './api';
+import { fetchTradeMoves, fetchTradePartners, refreshFriends, refreshOffers, refreshStats, reportCollection, startSocial, uploadSnapshot, type Snapshot } from './api';
 import { socialEnabled } from './config';
 import { momentsFrom, useTradeNotices, type MoveRow } from './notices';
 import { useSocial } from './store';
@@ -133,7 +133,7 @@ function useTradeSync(userId: string | null) {
   useEffect(() => {
     if (!userId || !hasPlayer) return;
     const pull = () =>
-      Promise.all([pullTrades(), refreshOffers()]).catch(() => {
+      Promise.all([refreshFriends(), pullTrades(), refreshOffers()]).catch(() => {
         // Offline: the next time the app comes to the front tries again.
       });
     pull();

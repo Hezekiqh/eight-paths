@@ -12,14 +12,14 @@ import { colors, fonts, radius, spacing, windowStyle } from '@/theme';
 
 /** Green and amber for the Regulator's steady days and potions. */
 export const HP_COLORS = { high: '#3FA34D', mid: '#D9A400', low: '#D2453A' } as const;
-/** The DB bar is always red, whatever it reads. */
+/** The HP bar is always red, whatever it reads. */
 export const HP_COLOR = HP_COLORS.low;
 
-/** The labelled Dopamine Baseline bar: "DB", the bar, and the numbers under it. */
+/** The labelled Dopamine Baseline bar: "HP", the bar, and the numbers under it. */
 export function HpBar({ hp, height = 12 }: { hp: number; height?: number }) {
   return (
     <View style={styles.barRow} accessible accessibilityLabel={`Dopamine Baseline: ${hp} of ${MAX_HP}`}>
-      <Text style={[styles.tag, styles.hpTag]}>DB</Text>
+      <Text style={[styles.tag, styles.hpTag]}>HP</Text>
       <View style={styles.flex}>
         <XpBar fill={hp / MAX_HP} color={HP_COLOR} height={height} />
       </View>
@@ -29,8 +29,8 @@ export function HpBar({ hp, height = 12 }: { hp: number; height?: number }) {
 
 /**
  * The player at the top of Today: name, Collection Ranking (CR, once signed in), level and XP.
- * With the Dopamine Regulator on, a Dopamine Baseline (DB) bar sits above XP,
- * drawn and labelled the same way ("52 / 100 DB" under it); otherwise just XP.
+ * With the Dopamine Regulator on, a Dopamine Baseline (HP) bar sits above XP,
+ * drawn and labelled the same way ("52 / 100 HP" under it); otherwise just XP.
  */
 export function PlayerCard({ today }: { today: string }) {
   const player = usePlayer();
@@ -75,7 +75,7 @@ export function PlayerCard({ today }: { today: string }) {
           style={styles.barBlock}>
           <XpBar fill={hp / MAX_HP} color={HP_COLOR} height={10} />
           <Text style={styles.barText}>
-            {hp} / {MAX_HP} DB
+            {hp} / {MAX_HP} HP
           </Text>
         </Pressable>
       )}
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   barRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   tag: { width: 24, fontFamily: fonts.bold, fontSize: 17, letterSpacing: 0.5 },
   hpTag: { color: '#D9A400' },
-  // DB and XP alike: the bar, and its numbers under it on the left.
+  // HP and XP alike: the bar, and its numbers under it on the left.
   barBlock: { gap: 2 },
   barText: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: 13, fontVariant: ['tabular-nums'] },
 });

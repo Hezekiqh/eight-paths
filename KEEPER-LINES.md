@@ -47,7 +47,7 @@ Picked in this order: streak, close level-up, close cocoon, quests left, milesto
 
 ## C · Last call, 10:30 PM
 
-Only when the streak is ≥ 3, there's no rest token, and a quest is due. Time-sensitive.
+Only when the streak is ≥ 3, today isn't played, and a quest is due (rest tokens save habits, never the day). c5 only when no tokens are left. Time-sensitive.
 
 | id | line |
 |---|---|
@@ -89,7 +89,7 @@ Only when at least one quest is still left that day, and only for today and tomo
 
 ## D · The day after a miss (+1)
 
-A rest token covered it:
+A rest token saved a missed habit's streak:
 
 | id | line |
 |---|---|

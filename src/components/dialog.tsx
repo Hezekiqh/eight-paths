@@ -1,4 +1,6 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Animated, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
 import { create } from 'zustand';
 
 import { haptics } from '@/haptics';
@@ -31,6 +33,33 @@ function close(id: number, button?: DialogButton) {
   button?.onPress?.();
 }
 
+/**
+ * On iOS a `Modal` is presented by the root screen, and UIKit won't let a screen that is already
+ * presenting a sheet or modal present anything else: the pop-up never appeared and the queue
+ * stuck, so e.g. Skip on a held quest's sheet did nothing. `FullWindowOverlay` draws in its own
+ * window above every sheet instead.
+ */
+function Layer({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+  const [fade] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+  }, [fade]);
+  if (Platform.OS === 'ios') {
+    return (
+      <FullWindowOverlay>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade }]}>
+          {children}
+        </Animated.View>
+      </FullWindowOverlay>
+    );
+  }
+  return (
+    <Modal transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      {children}
+    </Modal>
+  );
+}
+
 /** Draws the waiting pop-up. Mounted once, at the root, so it sits over every screen and sheet. */
 export function DialogHost() {
   const dialog = useDialogs((s) => s.queue[0]);
@@ -41,13 +70,8 @@ export function DialogHost() {
   const buttons = row && cancel ? [cancel, ...dialog.buttons.filter((b) => b !== cancel)] : dialog.buttons;
 
   return (
-    <Modal
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      supportedOrientations={['portrait', 'landscape']}
-      // The hardware back gesture or a tap outside counts as Cancel, when there is one.
-      onRequestClose={() => cancel && close(dialog.id, cancel)}>
+    // The hardware back gesture or a tap outside counts as Cancel, when there is one.
+    <Layer onClose={() => cancel && close(dialog.id, cancel)}>
       <Pressable style={styles.backdrop} onPress={() => cancel && close(dialog.id, cancel)} accessible={false}>
         <Pressable style={styles.window} accessibilityViewIsModal onPress={() => {}}>
           <Text style={styles.title} accessibilityRole="header">
@@ -81,7 +105,7 @@ export function DialogHost() {
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+    </Layer>
   );
 }
 
