@@ -146,6 +146,8 @@ const VOICES = {
   garyasleep: 2,
   silasseen: 3,
   nails: 4,
+  // Aurek the Tall, the Kaloseum's Warden
+  warden: 1,
 };
 function voiceFor(name, sprite) {
   if (sprite && sprite in VOICES) return VOICES[sprite];
@@ -982,6 +984,16 @@ function compile(ep) {
     } else if (step.jolt) {
       // the screen jolts (a lever thrown: CLUNK)
       segs.push({ kind: 'jolt', t0: t, t1: t + step.jolt });
+    } else if (step.stomp) {
+      // a giant's footfall (Aurek the Tall): the screen jumps, hard, and STOMP (assets/audio/stomp.wav); then a beat
+      segs.push({ kind: 'jolt', t0: t, t1: t + 0.4, amp: 5 });
+      segs.push({ kind: 'stomp', t0: t, t1: t });
+      t += step.stomp;
+    } else if (step.rise) {
+      // someone climbs up out of the floor (a trapdoor), feet last: `dur` seconds, and there they stand
+      segs.push({ kind: 'show', t0: t, t1: t, id: step.rise });
+      segs.push({ kind: 'rise', t0: t, t1: t + step.dur, id: step.rise });
+      if (!step.together) t += step.dur;
     } else if (step.vanish) {
       // someone's simply gone (Gary, while you weren't looking)
       segs.push({ kind: 'vanish', t0: t, t1: t, id: step.vanish });
@@ -1056,6 +1068,10 @@ function stateAt(ep, compiled, t) {
   const shrugs = {};
   /** Who's fainted, by id: how far over they've gone (0 standing, 1 flat). */
   const fainted = {};
+  // out cold from the start (`ep.out`: where the last episode left them)
+  for (const id of ep.out ?? []) fainted[id] = 1;
+  /** Who's climbing up out of the floor, by id: how far up (0 under it, 1 out). */
+  const rising = {};
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1163,7 +1179,8 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'vanish') hide = [...hide, s.id];
     else if (s.kind === 'shrug' && t < s.t1) shrugs[s.id] = t - s.t0;
     else if (s.kind === 'faint') fainted[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
-    else if (s.kind === 'jolt' && t < s.t1) shake = 2.5 * (1 - (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'jolt' && t < s.t1) shake = (s.amp ?? 2.5) * (1 - (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'rise') rising[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1178,6 +1195,7 @@ function stateAt(ep, compiled, t) {
     look,
     shrugs,
     fainted,
+    rising,
     shake,
     sink,
     hole,
@@ -1342,7 +1360,7 @@ function drawWorld(canvas, ep, st, t) {
         const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
         return [over >= 1 ? out : row, DIRS.down, 0, x, y - (at?.lift ?? 0), 0, { lie: over, sortY: y + 1 }];
       }
-      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
+      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y, 0, { size: n.size }];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
       const sh = st.shrugs[n.id];
@@ -1359,7 +1377,9 @@ function drawWorld(canvas, ep, st, t) {
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      return [row, DIRS[st.npcFacing[n.id]], 0, x, y, 0, { size: n.size }];
+      // climbing out of the floor: cut off below it, less and less
+      const up = st.rising[n.id];
+      return [row, DIRS[st.npcFacing[n.id]], 0, x, y, up === undefined ? 0 : 1 - up, { size: n.size }];
     });
   // the hole you went down: dark, with a lip of broken flagstone
   if (st.hole) {
@@ -1719,6 +1739,26 @@ const gameLines = (name) => {
 /** "WARDEN: Well, well, well." → "Well, well, well." */
 const unnamed = (l) => l.replace(/^[A-Z][A-Z ']+: /, '');
 /** The excuses on offer (dungeon.ts ARENA_EXCUSES), as the menu shows them. */
+/**
+ * The Warden's entrance, from PRISON_INTROS['pit-warden'] in dungeon.ts: its lines, the menu as the game shows it
+ * (questions, then choices), and what Bertrand says back to a choice.
+ */
+const wardenIntro = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf("'pit-warden': {"));
+  const body = block.slice(0, block.indexOf('\n  },\n'));
+  const quoted = (t) => [...t.matchAll(/(['"])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2].replace(/\\(['"])/g, '$1'));
+  const section = (name) => body.slice(body.indexOf(`${name}: [`), body.indexOf(`\n    ],`, body.indexOf(`${name}: [`)));
+  const lines = quoted(section('lines'));
+  const asks = [...section('questions').matchAll(/ask: (['"])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]);
+  const choices = section('choices');
+  const labels = [...choices.matchAll(/label: (['"])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2].replace(/\\(['"])/g, '$1'));
+  const reply = (label) => {
+    const at = choices.indexOf(label);
+    return quoted(/lines: \[([^\]]*)\]/.exec(choices.slice(at))[1]);
+  };
+  return { lines, menu: [...asks, ...labels], reply };
+};
 const arenaExcuses = () => {
   const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
   const block = src.slice(src.indexOf('export const ARENA_EXCUSES'));
@@ -2440,6 +2480,77 @@ const EPISODES = {
       ],
     };
   },
+  // Episode 14 (author, Oct 8, 2026): the fifth guard goes down; Barnaby gives the five of them 100 life sentences
+  // EACH; the Kaloseum shakes, STOMP, STOMP, and up out of the trapdoor comes the Warden: BERTRAND (who was Aurek the
+  // Tall, but nobody says so yet). You answer him (the menu), and he answers back. Same sand, everyone where Episode
+  // 13 left them. All of it from the game.
+  14: () => {
+    const pit = loadMap('the-pit', 'arena');
+    const down = gameLines('PRISON_GUARDS_DOWN');
+    const warden = wardenIntro();
+    const WEATHER = "How's the weather up there?";
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    const [announce, name] = by(warden.lines, 'BARNABY');
+    // where Episode 13 left them: your three at the side of the sand, Brannoc out cold between Old Mott and Nails
+    Object.assign(pit.npcs['arena-mott'], { x: 21.7, y: 10, facing: 'left' });
+    Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
+    Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
+    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'up' });
+    // the five guards where they fought you (the game's bearers), four of them already down; the fifth falls first
+    const guards = [[11, 8], [19, 8], [13, 9], [17, 9], [15, 8]];
+    guards.forEach(([x, y], i) => {
+      pit.npcs[`guard-${i + 1}`] = { id: `guard-${i + 1}`, type: 'npc', x, y, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
+    });
+    // Bertrand, twice anyone's size: up out of the trapdoor you came up through
+    pit.npcs.bertrand = { id: 'bertrand', type: 'npc', x: 7, y: 14, sprite: 'warden', facing: 'right', name: 'Bertrand', size: 2, lines: [] };
+    // fixed shots, cut between, never panned
+    const RING = [{ look: [15, 9.5] }, { zoom: 1 }];
+    const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
+    const WIDE = [{ look: [11, 10.5] }, { zoom: 1 }];
+    return {
+      ...SHORT,
+      read: 1.3,
+      gapAfter: 0.12,
+      number: 14,
+      title: 'THE WARDEN',
+      map: pit,
+      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      awake: ['brannoc-pit'],
+      out: ['brannoc-pit', 'guard-1', 'guard-2', 'guard-3', 'guard-4'],
+      hide: ['bertrand'],
+      hero: { sprite: 'quill', at: [15, 10], facing: 'up' },
+      // the hook: the last guard standing, right in front of you, goes down
+      look: [15, 9.5],
+      zoom: 1,
+      script: [
+        { faint: 'guard-5' },
+        { wait: 0.3 },
+        ...BOX,
+        { jolt: 0.45 },
+        { say: 'barnaby-box', lines: by(down, 'BARNABY'), punch: 0.4, letterMs: 16, pause: 0.2, read: 0.95 },
+        // the ground answers: STOMP. STOMP.
+        ...WIDE,
+        { face: 'left' },
+        { stomp: 0.45 },
+        { stomp: 0.5 },
+        ...BOX,
+        { say: 'barnaby-box', lines: [announce], punch: 0.05, letterMs: 16, pause: 0.2, read: 1 },
+        // cut off mid-word: STOMP, and there he is, climbing up out of the trapdoor
+        ...WIDE,
+        { stomp: 0.1 },
+        { rise: 'bertrand', dur: 0.9, together: true },
+        { say: 'barnaby-box', lines: [name], punch: 0.3, letterMs: 30, read: 1 },
+        // two great strides your way
+        { npcWalk: 'bertrand', to: [[8.5, 13.5]], speed: 30 },
+        { stomp: 0.2 },
+        { npcWalk: 'bertrand', from: center(8.5, 13.5), to: [[10, 13]], speed: 30 },
+        { stomp: 0.35 },
+        // (cut along the way: Bertrand and Barnaby's words about the horn and the vacation)
+        { menu: { speaker: 'Bertrand', options: warden.menu, pick: warden.menu.indexOf(WEATHER), hold: 0.35 } },
+        { say: 'bertrand', lines: warden.reply(WEATHER).map(unnamed), punch: 0.9 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -2655,6 +2766,8 @@ const SELECT = (() => {
   return out;
 })();
 const LAUGH = laugh(RATE);
+/** A giant's footfall (scripts/stomp-sound.mjs), as the game plays it. */
+const STOMP = pcm(join(ROOT, 'assets/audio/stomp.wav'));
 const mix = new Float32Array(Math.ceil(total * RATE));
 const place = (sound, at, gain) => {
   const start = Math.round(at * RATE);
@@ -2663,6 +2776,7 @@ const place = (sound, at, gain) => {
 for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
+  if (s.kind === 'stomp') place(STOMP, s.t0, 1);
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {
     const start = Math.round(s.t0 * RATE);

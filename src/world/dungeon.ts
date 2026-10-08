@@ -251,20 +251,19 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
   // who wants the job done (author, Oct 7, 2026): no speeches, and no patience for Barnaby's show.
   'pit-warden': {
     speaker: 'Bertrand',
+    // his every footfall shakes the Kaloseum, and Barnaby announces him like a champion (author, Oct 8, Episode 14)
     lines: [
+      '* STOMP. STOMP.',
+      "BARNABY: You're in for it now! The Greatest Champion and Warden of the Kalo...",
+      '* STOMP.',
+      'BARNABY: BERTRAND!!!!',
       'BERTRAND: Barnaby. Prisoners loose on my sand, and you are up there with a horn.',
-      "BARNABY: Wa... Bertrand! I didn't think you'd be back from your vacation so soon.",
+      "BARNABY: I didn't think you'd be back from your vacation so soon.",
       'BERTRAND: It was not a vacation. The east gate was off its hinges. Somebody had to hang it.',
       'BERTRAND: Put the horn down, Barnaby. I will take it from here.',
     ],
+    // (Barnaby's just told you who he is; four to a menu)
     questions: [
-      {
-        ask: 'Who are you?',
-        answer: [
-          'BERTRAND: The Warden. I keep the troublemakers in, and I clean up after them.',
-          'BERTRAND: Barnaby does the shouting. I do the work.',
-        ],
-      },
       {
         ask: "What's wrong with Barnaby?",
         answer: [
@@ -276,6 +275,8 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       },
     ],
     choices: [
+      // Episode 14's answer (author, Oct 8, 2026)
+      { label: "How's the weather up there?", lines: ['BERTRAND: ...Cloudy.', 'BERTRAND: With a chance of pain.'] },
       {
         label: 'Any chance you could let me go?',
         lines: [
@@ -315,8 +316,10 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
 /** The fifth guard down: the warden's coming (as the front-door fight, but Brannoc is still out cold). */
 export const PRISON_GUARDS_DOWN = [
   'The fifth guard hits the sand.',
-  'Behind you, Brannoc snores.',
-  'Then the floor shakes. Something very big is walking up the tunnel.',
+  // Barnaby sentences them, at the king's bidding (author, Oct 8, 2026, Episode 14)
+  "BARNABY: UNACCEPTABLE!!!!! Five of the king's own, beaten by ONE escapee?!",
+  "BARNABY: That's 100 life sentences. EACH!",
+  'STOMP. The whole Kaloseum shakes. STOMP. Something very big is coming up from below.',
 ];
 
 /** Twenty strikes in: Bertrand has had enough, and Brannoc gets up, asleep. */
