@@ -95,7 +95,17 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   three) are `passable`, so every fight still balances (fights.test).
 - **No overlap** (author): nobody stands or falls into anyone. Brannoc is three tiles from where you come up, and
   faints away from you.
-- **Next:** Episode 14.
+- **Episode 14, "Aurek the Tall"** (`node scripts/episode-video.mjs 14`, 15.5 s): picks up where 13 left off. Frame one,
+  the fifth guard hits the sand. Barnaby (box, the screen jolts): "UNACCEPTABLE!!!!! Five of the king's own, beaten by
+  ONE escapee?!" / "That's 100 life sentences. EACH!" STOMP. STOMP. (A giant's footfall: `assets/audio/stomp.wav`,
+  `scripts/stomp-sound.mjs`; the screen jumps on each.) Barnaby: "You're in for it now! The Greatest Champion and
+  Warden of the Kalo..." STOMP: up out of the trapdoor climbs the Warden, twice anyone's size, and Barnaby: "AUREK THE
+  TALL!!!!" Two stomping strides your way. The menu: *How's the weather up there?* Aurek: "...Cloudy." / "With a chance
+  of pain." Cut. (Cut along the way, author: the guard's "We don't get paid enough for this.") In the game, the same:
+  `PRISON_GUARDS_DOWN`, the `pit-warden` entrance and `AUREK_ANSWERS` in `dungeon.ts` (every answer gets a reply); the
+  Warden is Aurek the Tall, drawn as the stitched champion Kaldor raised from the dead; a line that says STOMP thumps
+  the phone and plays the stomp, every time (`rumbles.ts`).
+- **Next:** Episode 15.
 
 ## In the episode script
 
