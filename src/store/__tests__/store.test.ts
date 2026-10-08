@@ -159,7 +159,7 @@ describe('game store', () => {
     expect(second.kind === 'completed' && second.milestone).toBeNull();
   });
 
-  it('caps XP at 30 a Path a day, or 60 with Premium', () => {
+  it('gives XP for the first 10 habits a day, on any Paths; Premium doubles it', () => {
     const gainsFor = (count: number) => {
       start();
       for (let i = 0; i < count; i += 1) {
@@ -173,14 +173,14 @@ describe('game store', () => {
           return o.kind === 'completed' ? o.gain.gained : -1;
         });
     };
-    expect(gainsFor(4)).toEqual([10, 10, 10, 0]);
-    // Another Path still has its own 30 to earn.
+    expect(gainsFor(11)).toEqual([...Array(10).fill(10), 0]);
+    // The 10 are for the whole day: another Path gets nothing more either.
     const other = useGameStore.getState().quests.find((q) => q.dimension !== 'physical')!;
     const o = useGameStore.getState().toggleQuest(other.id, today);
-    expect(o.kind === 'completed' && o.gain.gained).toBe(10);
+    expect(o.kind === 'completed' && o.gain.gained).toBe(0);
 
     usePremium.setState({ premium: true });
-    expect(gainsFor(4)).toEqual([20, 20, 20, 0]);
+    expect(gainsFor(11)).toEqual([...Array(10).fill(20), 0]);
   });
 
   it('only lets Premium redo a waiting drop', () => {
@@ -324,7 +324,7 @@ describe('loading a saved game', () => {
     expect(xpOf('quill').progress.level).toBeGreaterThan(9);
   });
 
-  it('claims a finished objective once, and a boost doubles that Path for the day', () => {
+  it('claims a finished objective once, and a boost doubles the next 3 habits in that class', () => {
     start();
     const { quests } = useGameStore.getState();
     const read = quests.find((q) => q.title === 'Read 20 min')!;
@@ -340,13 +340,26 @@ describe('loading a saved game', () => {
     const reward = useGameStore.getState().claimObjective(path.id, today)!;
     expect(reward.title).toMatch(/2× (Warrior|Mage) XP/);
     expect(useGameStore.getState().claimObjective(path.id, today)).toBeNull(); // already claimed
-    expect(objectives().boosted).toEqual([path.dimension]);
+    expect(objectives().boosted).toEqual([{ dimension: path.dimension, left: 3 }]);
 
-    // Undo and redo: the boost now doubles it.
+    // Undo and redo: the boost now doubles it, and one of its 3 habits is spent.
     const normal = useGameStore.getState().completions.at(-1)!.xp;
     useGameStore.getState().toggleQuest(first.id, today);
     useGameStore.getState().toggleQuest(first.id, today);
     expect(useGameStore.getState().completions.at(-1)!.xp).toBe(normal * 2);
+    expect(objectives().boosted).toEqual([{ dimension: path.dimension, left: 2 }]);
+    // Undoing it gives the habit back.
+    useGameStore.getState().toggleQuest(first.id, today);
+    expect(objectives().boosted).toEqual([{ dimension: path.dimension, left: 3 }]);
+
+    // It lasts across days, in order of completion, until 3 habits have used it.
+    const later = ['2026-09-27', '2026-09-28', '2026-09-29', '2026-09-30'];
+    const xps = later.map((d) => {
+      useGameStore.getState().toggleQuest(first.id, d);
+      return useGameStore.getState().completions.at(-1)!.xp;
+    });
+    expect(xps).toEqual([normal * 2, normal * 2, normal * 2, normal]);
+    expect(objectives().boosted).toEqual([]);
   });
 
   it('gives a grace day, or bonus XP when tokens are full', () => {

@@ -57,7 +57,7 @@ AN ADVENTURE YOUR HABITS UNLOCK
 A pixel kingdom with a full first season. Break out of prison with a knight who only wins in his sleep, explore a city where strength is everything, a haunted graveyard and the king's castle. Solve puzzles, fight shadows and uncover what happened to the old king. Every level you earn opens more of the map.
 
 TURN HABITS INTO QUESTS
-Write your own quests or start with ready-made ones, daily, on weekdays or on the days you choose. Tap to complete and watch your companion's XP bar fill. Every task is worth the same XP, up to 30 a Path each day.
+Write your own quests or start with ready-made ones, daily, on weekdays or on the days you choose. Tap to complete and watch your companion's XP bar fill. Every habit is worth the same XP, for your first 10 habits each day.
 
 LEVEL UP FAST, THEN FOR LIFE
 Your first quests level you up almost every time. Reach Level 100 in about three months of steady play, then a second climb begins.
@@ -66,7 +66,7 @@ WAKE 100 CHARACTERS
 Keep a Path strong and new characters join your collection: recruits, rivals and legends. Over 100 in all, each with their own lore. Swap anyone into your party.
 
 OBJECTIVES AND REWARDS
-Daily and weekly objectives built from your own quests. Claim drops, grace days and double-XP boosts. Add goals like "Run a 5K" and earn XP when you finish them.
+Daily and weekly objectives built from your own quests. Claim drops, grace days and double-XP boosts for your next 3 habits in a class. Add goals like "Run a 5K" and earn XP when you finish them.
 
 SEE YOUR PROGRESS HONESTLY
 A radar shows how balanced your life is. A calendar glows brighter on the days you did more. Consistency is measured against the days you planned, never a perfect week.
@@ -85,7 +85,7 @@ Sign in with Apple or Google to add friends and see each other's heroes. The fir
 EIGHT PATHS PREMIUM (OPTIONAL)
 Support the game with Premium, a yearly or monthly subscription:
 • No level barriers in the Other World: go anywhere, at any level
-• 20 XP per habit, up to 60 a Path each day
+• Double XP: 20 per habit
 • Unlimited habits (free players keep up to 10)
 • 5-star characters twice as likely, and one redo per drop
 • Three special moves a day instead of one
@@ -165,7 +165,7 @@ To see the full flow: enter a name (optional), choose a class, keep the default 
 
 OPTIONAL ACCOUNT (Friends, "the Second 100"): Character tab > Friends. Sign in with Apple or Google, then choose a username. Only the username, level, party and collection are shared; habits never leave the device. Players can report and block others from a friend's page (Report / Block). Delete account is at the bottom of the Friends screen: it deletes the server account and revokes Sign in with Apple.
 
-PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once when the Keeper's tour ends (or after choosing a username, if that comes first), and any time from Character tab > Settings > Eight Paths Premium. In the Other World, the first time a free player is turned back at a level gate, a short sheet offers Premium (once per gate, at most once a day); its See Premium button opens the same paywall. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99/month); everyone else chooses premium_yearly ($24.99/year, selected by default) or premium_monthly ($3.99/month). Premium never locks the habit tracker: it lifts every level requirement in the Other World (free players reach each place's level first; story steps still apply), raises XP per habit and the daily XP cap, removes the 10-habit limit, doubles 5-star character odds, adds one redo per character drop, gives three special moves a day instead of one, and unlocks every theme.
+PREMIUM (auto-renewable subscription, group "Eight Paths Premium"): the paywall appears once when the Keeper's tour ends (or after choosing a username, if that comes first), and any time from Character tab > Settings > Eight Paths Premium. In the Other World, the first time a free player is turned back at a level gate, a short sheet offers Premium (once per gate, at most once a day); its See Premium button opens the same paywall. It lists the price and period, what's included, Restore purchases, Terms of Use, Privacy and Drop odds. Players with a founder number (the first 100 accounts) are offered premium_founder_monthly ($0.99/month); everyone else chooses premium_yearly ($24.99/year, selected by default) or premium_monthly ($3.99/month). Premium never locks the habit tracker: it lifts every level requirement in the Other World (free players reach each place's level first; story steps still apply), doubles XP per habit (still for the first 10 habits a day), removes the 10-habit limit, doubles 5-star character odds, adds one redo per character drop, gives three special moves a day instead of one, and unlocks every theme.
 
 CHARACTER DROPS: every few levels a Path awards a random character from its roster (no purchase can buy a drop directly). The exact odds per Path, free and Premium, are on the Drop odds sheet (link at the bottom of the paywall).
 

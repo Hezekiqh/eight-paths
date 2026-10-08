@@ -39,6 +39,15 @@ const KEEPER_LINES = [
 
 const close = () => (router.canGoBack() ? router.back() : router.replace('/regulator'));
 
+/** The list as it was when the screen opened, put back if changing it is cancelled. */
+function useListSnapshot() {
+  const [snapshot] = useState(() => {
+    const { selected, custom } = useRegulator.getState();
+    return { selected, custom };
+  });
+  return () => useRegulator.setState(snapshot);
+}
+
 /**
  * Switching on the Dopamine Regulator: the Keeper explains, the super stimuli
  * are ranked by strength, the player picks
@@ -56,6 +65,12 @@ export default function RegulatorIntro() {
   const mode = useRegulator((s) => s.mode);
   const { setSelected, addCustom, removeCustom, setMode, finishOnboarding } = useRegulator.getState();
   const [step, setStep] = useState<Step>(editing ? 'select' : 'keeper');
+  const restoreList = useListSnapshot();
+  // Changing the list: Cancel throws away every tick, untick, addition and removal.
+  const cancel = () => {
+    if (editing) restoreList();
+    close();
+  };
   // Padded by hand: SafeAreaView reads no insets inside this full-screen modal.
   const insets = useSafeAreaInsets();
 
@@ -72,7 +87,7 @@ export default function RegulatorIntro() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.topBar}>
-        <Pressable accessibilityRole="button" onPress={close} hitSlop={12}>
+        <Pressable accessibilityRole="button" onPress={cancel} hitSlop={12}>
           <Text style={styles.cancel}>{editing ? 'Cancel' : 'Not now'}</Text>
         </Pressable>
       </View>
@@ -210,6 +225,7 @@ function SelectStep({
   onNext: () => void;
 }) {
   const [adding, setAdding] = useState(false);
+  const shownCustom = custom.filter((s) => !s.archived);
   const [name, setName] = useState('');
   const [severity, setSeverity] = useState(5);
 
@@ -228,7 +244,7 @@ function SelectStep({
         <Text style={styles.heading}>Select your super stimuli</Text>
         <Text style={styles.hint}>Pick every one that pulls at you. You can change these later.</Text>
         <View style={styles.chips}>
-          {[...DEFAULT_STIMULI, ...custom].map((s) => (
+          {[...DEFAULT_STIMULI, ...shownCustom].map((s) => (
             <Chip
               key={s.id}
               label={s.name}
@@ -239,7 +255,7 @@ function SelectStep({
           ))}
           <Chip label="+ Add custom" on={false} dashed onPress={() => setAdding(true)} />
         </View>
-        {custom.length > 0 && <Text style={styles.hint}>Hold one of your own to remove it.</Text>}
+        {shownCustom.length > 0 && <Text style={styles.hint}>Hold one of your own to remove it.</Text>}
 
         <Text style={styles.subheading}>Also worth a check</Text>
         <View style={styles.chips}>

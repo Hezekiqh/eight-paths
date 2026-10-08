@@ -80,8 +80,12 @@ export const useRegulator = create<RegulatorState>()(
         set({ custom: [...get().custom, stimulus], selected: [...get().selected, stimulus.id] });
         return stimulus;
       },
+      // Archived, not deleted: past check-ins that counted it keep their drain.
       removeCustom: (id) =>
-        set({ custom: get().custom.filter((s) => s.id !== id), selected: get().selected.filter((s) => s !== id) }),
+        set({
+          custom: get().custom.map((s) => (s.id === id ? { ...s, archived: true } : s)),
+          selected: get().selected.filter((s) => s !== id),
+        }),
       finishOnboarding: (start) =>
         set({ onboarded: true, enabled: true, start: get().start ?? start, startAt: get().startAt ?? Date.now() }),
       report: (date, report) => {

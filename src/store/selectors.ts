@@ -345,14 +345,13 @@ export function selectReminderState(data: GameData, today: string, tier: Tier = 
   const pathXp = xpByDimension(allXp(data));
   const paths: PathFacts[] = DIMENSIONS.map((dimension) => {
     const progress = levelFromXp(pathXp[dimension]);
-    const earnedToday = doneToday.filter((c) => c.dimension === dimension).reduce((sum, c) => sum + c.xp, 0);
-    const boosted = data.boosts.some((b) => b.date === today && b.dimension === dimension);
+    const boosted = data.boosts.some((b) => b.dimension === dimension && b.left > 0);
     return {
       dimension,
       name: CLASSES[dimension].className,
       nextLevel: progress.level + 1,
       xpToLevel: progress.xpForNext - progress.xpIntoLevel,
-      xpPerQuestToday: xpForCompletion(earnedToday, tier, boosted),
+      xpPerQuestToday: xpForCompletion(doneToday.length, tier, boosted),
       xpPerQuest: xpForCompletion(0, tier),
       cocoonAtNextLevel: data.nextDraw[dimension] === progress.level + 1,
     };
@@ -396,8 +395,8 @@ export type Objectives = {
   weekly: ObjectiveView[];
   /** Finished but not yet claimed, for the tab badge. */
   unclaimed: number;
-  /** Paths with double XP for the rest of today. */
-  boosted: Dimension[];
+  /** Classes with a multiplier drop waiting, and how many habits it has left. */
+  boosted: { dimension: Dimension; left: number }[];
 };
 
 export function selectObjectives(data: GameData, today: string): Objectives {
@@ -410,7 +409,7 @@ export function selectObjectives(data: GameData, today: string): Objectives {
     daily,
     weekly,
     unclaimed: [...daily, ...weekly].filter((o) => isObjectiveDone(o) && !o.claimed).length,
-    boosted: data.boosts.filter((b) => b.date === today).map((b) => b.dimension),
+    boosted: data.boosts.filter((b) => b.left > 0).map((b) => ({ dimension: b.dimension, left: b.left })),
   };
 }
 

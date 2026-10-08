@@ -267,6 +267,14 @@ function withoutOne<T>(list: T[], item: T): T[] {
 
 const todayKey = () => toDateKey(new Date());
 
+/** One habit back to a class's multiplier drop (a new one-habit drop if it had run out). */
+function refundBoost(boosts: Boost[], dimension: Dimension, today: string): Boost[] {
+  const waiting = boosts.find((b) => b.dimension === dimension);
+  return waiting
+    ? boosts.map((b) => (b === waiting ? { ...b, left: b.left + 1 } : b))
+    : [...boosts, { date: today, dimension, left: 1 }];
+}
+
 const BACKUP_APP = 'eight-paths';
 
 /** Every tenth overall level is a milestone; level 100 ends the first climb. */
@@ -362,22 +370,35 @@ export const useGameStore = create<GameState>()(
         if (!player || !quest) return { kind: 'ignored' };
 
         const xpBefore = xpByDimension([...completions, ...xpGrants])[quest.dimension];
-        // Double XP: an objective's boost, or a World blessing on the first habit of that Path today.
+        // Double XP: a World blessing on the first habit of that Path today, or one of a class
+        // multiplier drop's habits (spent in the order they're done, whatever the day).
         const blessed = blessedPath(quest.dimension) && earnedToday(completions, quest.dimension, today) === 0;
-        const boosted = blessed || boosts.some((b) => b.date === today && b.dimension === quest.dimension);
+        const drop = boosts.find((b) => b.dimension === quest.dimension && b.left > 0);
+        const boosted = blessed || !!drop;
+        const undoing = completionFor(completions, quest.id, today);
         const result = toggleCompletion(completions, quest, today, newId(), { tier: currentTier(), boosted });
         if (result.kind !== 'completed') {
-          set({ completions: result.completions });
+          // Undoing a habit a drop doubled gives that habit back to the drop.
+          const refund = result.kind === 'undone' && undoing?.boostUsed;
+          set({ completions: result.completions, ...(refund ? { boosts: refundBoost(boosts, quest.dimension, today) } : {}) });
           return { kind: result.kind };
         }
         const now = new Date();
+        // A drop's habit is only spent when it doubled some XP (not on a blessing, nor past the day's 10).
+        const spendsDrop = !!drop && !blessed && result.completion.xp > 0;
         const completion = {
           ...result.completion,
           characterId: party[quest.dimension],
+          ...(spendsDrop ? { boostUsed: true } : {}),
           // Only a completion made today, right now, says when the player plays.
           ...(toDateKey(now) === today ? { at: now.getHours() * 60 + now.getMinutes() } : {}),
         };
-        set({ completions: result.completions.map((c) => (c === result.completion ? completion : c)) });
+        set({
+          completions: result.completions.map((c) => (c === result.completion ? completion : c)),
+          ...(spendsDrop
+            ? { boosts: boosts.map((b) => (b === drop ? { ...b, left: b.left - 1 } : b)).filter((b) => b.left > 0) }
+            : {}),
+        });
         const xpBeforeAll = totalXp([...completions, ...xpGrants]);
         const levelAfter = overallLevelFromXp(xpBeforeAll + completion.xp).level;
         const overallLevelUp = levelAfter > overallLevelFromXp(xpBeforeAll).level ? levelAfter : null;

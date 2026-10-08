@@ -7,7 +7,7 @@ import type { Completion, Dimension, Quest } from './types';
 export type ObjectiveReward =
   | { kind: 'drop' }
   | { kind: 'grace' }
-  /** Double XP on this Path for the rest of the day it's claimed. */
+  /** Double XP on the next 3 habits on this Path, whenever they are done. */
   | { kind: 'boost'; dimension: Dimension };
 
 export type Objective = {

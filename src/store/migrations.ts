@@ -1,4 +1,5 @@
 import {
+  BOOST_HABITS,
   DAY_REMINDERS,
   DIMENSIONS,
   MAX_REST_TOKENS,
@@ -15,6 +16,7 @@ import {
   type Quest,
   type QuestSort,
   type RestDay,
+  toDateKey,
 } from '@/game';
 
 import { COMPANIONS, DEFAULT_PARTY, STARTERS, isCharacterId, type CharacterId } from '@/story/companions';
@@ -128,6 +130,7 @@ function cleanCompletion(raw: unknown): Completion | null {
     dimension: raw.dimension,
     date: raw.date,
     xp: raw.xp,
+    ...(raw.boostUsed === true ? { boostUsed: true } : {}),
     // Unknown or missing: credit the core companion, who held every slot first.
     characterId: isCharacterId(raw.characterId) ? raw.characterId : DEFAULT_PARTY[raw.dimension],
     ...(Number.isInteger(raw.at) && (raw.at as number) >= 0 && (raw.at as number) < 24 * 60 ? { at: raw.at as number } : {}),
@@ -170,7 +173,11 @@ function cleanGrant(raw: unknown): XpGrant | null {
 
 function cleanBoost(raw: unknown): Boost | null {
   if (!isObject(raw) || !isDateKey(raw.date) || !isDimension(raw.dimension)) return null;
-  return { date: raw.date, dimension: raw.dimension };
+  if (typeof raw.left === 'number' && Number.isInteger(raw.left)) {
+    return raw.left > 0 ? { date: raw.date, dimension: raw.dimension, left: Math.min(raw.left, 99) } : null;
+  }
+  // Before drops counted habits they lasted the day: today's becomes a fresh 3, older ones are spent.
+  return raw.date === toDateKey(new Date()) ? { date: raw.date, dimension: raw.dimension, left: BOOST_HABITS } : null;
 }
 
 function cleanGoal(raw: unknown): Goal | null {

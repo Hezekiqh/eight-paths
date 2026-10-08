@@ -39,7 +39,7 @@ const valid = {
   lastSettledDate: '2026-09-03',
   party: { ...DEFAULT_PARTY, intellectual: 'ottilie' },
   xpGrants: [{ id: 'g1', date: '2026-09-02', dimension: 'physical', xp: 20, characterId: 'brannoc', source: 'drop' }],
-  boosts: [{ date: '2026-09-03', dimension: 'intellectual' }],
+  boosts: [{ date: '2026-09-03', dimension: 'intellectual', left: 2 }],
   shards: { thane: 2 },
   claimed: ['daily:2026-09-03:show-up'],
   goals: [
@@ -100,6 +100,20 @@ describe('v7: random arrivals', () => {
 });
 
 describe('sanitizeSave', () => {
+  it("turns today's old day-long boost into 3 habits, and drops older ones", () => {
+    const today = new Date();
+    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const boosts = sanitizeSave({
+      ...valid,
+      boosts: [
+        { date: key, dimension: 'physical' },
+        { date: '2026-09-03', dimension: 'social' },
+        { date: '2026-09-03', dimension: 'social', left: 0 },
+      ],
+    }).boosts;
+    expect(boosts).toEqual([{ date: key, dimension: 'physical', left: 3 }]);
+  });
+
   it('keeps a valid save exactly as it is', () => {
     expect(sanitizeSave(valid)).toEqual(valid);
   });

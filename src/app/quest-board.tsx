@@ -92,9 +92,9 @@ export default function QuestBoardScreen() {
         })}
         {objectives.boosted.length > 0 && (
           <View style={styles.boosts}>
-            {objectives.boosted.map((d) => (
+            {objectives.boosted.map(({ dimension: d, left }) => (
               <Text key={d} style={[styles.boost, { color: CLASSES[d].color }]}>
-                {BOOST_MULTIPLIER}× {CLASSES[d].className} today
+                {BOOST_MULTIPLIER}× {CLASSES[d].className} · next {left}
               </Text>
             ))}
           </View>

@@ -22,6 +22,8 @@ export type Stimulus = {
   severity: number;
   /** Named by the player. */
   custom?: boolean;
+  /** One of the player's own they removed: gone from the list, kept so past check-ins still count it. */
+  archived?: boolean;
 };
 
 /** What a morning survey records about one day: stimulus id → times (0 = not at all). */
@@ -35,7 +37,7 @@ export const MAX_HP = 100;
  */
 export const DAILY_DRAIN_CAP = 90;
 /** HP each habit kept gives back. */
-export const HP_PER_HABIT = 5;
+export const HP_PER_HABIT = 2;
 /** The most HP habits can give back in a day. */
 export const DAILY_RESTORE_CAP = 30;
 /** For a day reported with nothing on it. */

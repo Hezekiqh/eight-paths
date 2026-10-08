@@ -71,7 +71,7 @@ describe('the HP timeline', () => {
     const e = events(
       { '2026-09-30': { adult: 1 }, '2026-10-01': {} },
       { '2026-09-30': startAt, '2026-10-01': startAt + 2 * hour },
-      Array.from({ length: 10 }, () => ({ date: '2026-10-01', at: 9 * 60 })),
+      Array.from({ length: 20 }, () => ({ date: '2026-10-01', at: 9 * 60 })),
     );
     expect(e.filter((x) => x.change === HP_PER_HABIT)).toHaveLength(DAILY_RESTORE_CAP / HP_PER_HABIT);
     expect(e.some((x) => x.change === CLEAN_DAY_BONUS)).toBe(true);

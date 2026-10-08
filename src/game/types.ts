@@ -54,6 +54,8 @@ export type Quest = {
 
 export type Completion = {
   id: string;
+  /** Doubled by a class multiplier drop (one of its 3 habits): undoing it gives the habit back. */
+  boostUsed?: boolean;
   questId: string;
   dimension: Dimension;
   date: string;
@@ -82,7 +84,8 @@ export type XpGrant = {
 };
 
 /** Double XP on one Path for the rest of `date`. */
-export type Boost = { date: string; dimension: Dimension };
+/** A class multiplier drop: double XP on the next `left` habits in that class, whenever they're done. */
+export type Boost = { date: string; dimension: Dimension; left: number };
 
 /** A goal the player wrote for themselves. */
 export type Goal = {

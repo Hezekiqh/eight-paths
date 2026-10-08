@@ -86,3 +86,20 @@ describe('the Dopamine Regulator, start to finish', () => {
     expect(s.reports).toEqual({});
   });
 });
+
+describe('removing one of your own stimuli', () => {
+  it('drops it from the list but keeps what past check-ins cost', () => {
+    useRegulator.getState().setSelected(['sugar']);
+    useRegulator.getState().finishOnboarding(yesterday);
+    const mine = useRegulator.getState().addCustom('Doomscrolling', 8);
+    useRegulator.getState().report(yesterday, { [mine.id]: 1 });
+    const before = hpNow().hp;
+    useRegulator.getState().removeCustom(mine.id);
+    const s = useRegulator.getState();
+    expect(s.selected).not.toContain(mine.id);
+    expect(selectedStimuli(s.selected, s.custom).map((x) => x.id)).not.toContain(mine.id);
+    expect(s.custom.find((x) => x.id === mine.id)?.archived).toBe(true);
+    expect(hpNow().hp).toBe(before);
+    expect(before).toBeLessThan(MAX_HP);
+  });
+});

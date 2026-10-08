@@ -17,17 +17,17 @@ describe('xp per completion', () => {
     expect(xpForCompletion(0, 'premium')).toBe(20);
   });
 
-  it('stops at 30 XP a Path a day, or 60 with Premium', () => {
-    expect(xpForCompletion(20)).toBe(10);
-    expect(xpForCompletion(30)).toBe(0);
-    expect(xpForCompletion(40, 'premium')).toBe(20);
-    expect(xpForCompletion(60, 'premium')).toBe(0);
+  it('stops after 10 habits a day, Premium too (Premium just earns double)', () => {
+    expect(xpForCompletion(9)).toBe(10);
+    expect(xpForCompletion(10)).toBe(0);
+    expect(xpForCompletion(9, 'premium')).toBe(20);
+    expect(xpForCompletion(10, 'premium')).toBe(0);
   });
 
-  it('lets a boost double the XP but never past the cap', () => {
+  it('lets a boost double the XP, but not past the 10th habit', () => {
     expect(xpForCompletion(0, 'free', true)).toBe(20);
-    expect(xpForCompletion(20, 'free', true)).toBe(10);
-    expect(xpForCompletion(40, 'premium', true)).toBe(20);
+    expect(xpForCompletion(3, 'premium', true)).toBe(40);
+    expect(xpForCompletion(10, 'free', true)).toBe(0);
   });
 });
 

@@ -28,7 +28,12 @@ export function completionFor(completions: Completion[], questId: string, date: 
   return completions.find((c) => c.questId === questId && c.date === date);
 }
 
-/** XP a Path has earned from tasks on `date`, for the daily cap. */
+/** Habits done on `date`, on every Path: only the first 10 earn XP. */
+export function habitsDoneOn(completions: Completion[], date: string): number {
+  return completions.filter((c) => c.date === date).length;
+}
+
+/** XP a Path has earned from tasks on `date`. */
 export function earnedToday(completions: Completion[], dimension: Dimension, date: string): number {
   return completions.filter((c) => c.date === date && c.dimension === dimension).reduce((sum, c) => sum + c.xp, 0);
 }
@@ -59,7 +64,7 @@ export function toggleCompletion(
     questId: quest.id,
     dimension: quest.dimension,
     date: today,
-    xp: xpForCompletion(earnedToday(completions, quest.dimension, today), tier, boosted),
+    xp: xpForCompletion(habitsDoneOn(completions, today), tier, boosted),
   };
   return { kind: 'completed', completions: [...completions, completion], completion };
 }

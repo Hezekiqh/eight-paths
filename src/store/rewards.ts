@@ -1,4 +1,5 @@
 import {
+  BOOST_HABITS,
   BOOST_MULTIPLIER,
   CLASSES,
   DIMENSIONS,
@@ -89,12 +90,15 @@ export function applyReward(data: GameData, id: string, reward: ObjectiveReward,
   if (reward.kind === 'grace') return graceReward(data, id, today);
   if (reward.kind === 'boost') {
     const info = CLASSES[reward.dimension];
+    // A second drop for the same class adds 3 more habits to the one already waiting.
+    const waiting = data.boosts.find((b) => b.dimension === reward.dimension);
+    const boosts = waiting
+      ? data.boosts.map((b) => (b === waiting ? { ...b, left: b.left + BOOST_HABITS } : b))
+      : [...data.boosts, { date: today, dimension: reward.dimension, left: BOOST_HABITS }];
     return {
-      changes: {
-        boosts: [...data.boosts.filter((b) => b.date >= today), { date: today, dimension: reward.dimension }],
-      },
+      changes: { boosts },
       title: `${BOOST_MULTIPLIER}× ${info.className} XP`,
-      detail: `Every ${info.className} quest earns ${BOOST_MULTIPLIER}× XP for the rest of today.`,
+      detail: `Your next ${BOOST_HABITS} ${info.className} quests earn ${BOOST_MULTIPLIER}× XP, whenever you do them.`,
     };
   }
   return dropReward(data, id, today);
@@ -103,6 +107,7 @@ export function applyReward(data: GameData, id: string, reward: ObjectiveReward,
 /** How an objective's reward reads before it's claimed. */
 export function describeReward(reward: ObjectiveReward): string {
   if (reward.kind === 'grace') return 'Grace Day';
-  if (reward.kind === 'boost') return `${BOOST_MULTIPLIER}× ${CLASSES[reward.dimension].className} XP today`;
+  if (reward.kind === 'boost')
+    return `${BOOST_MULTIPLIER}× XP on your next ${BOOST_HABITS} ${CLASSES[reward.dimension].className} quests`;
   return 'Random drop';
 }

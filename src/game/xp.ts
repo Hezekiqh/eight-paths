@@ -11,13 +11,15 @@ export type Tier = 'free' | 'premium';
 export const TASK_XP: Record<Tier, number> = { free: BASE_XP, premium: BASE_XP * 2 };
 
 /**
- * The most XP one Path can earn from tasks in a day, boosts included. Past it,
- * tasks still count for streaks and objectives, just not for XP.
+ * Only the first 10 habits each day earn XP, on any Paths, Premium or not.
+ * Past them, habits still count for streaks, HP and objectives, just not for XP.
  */
-export const DAILY_PATH_XP_CAP: Record<Tier, number> = { free: 30, premium: 60 };
+export const DAILY_XP_HABITS = 10;
 
-/** Double XP on a boosted Path (from objectives). */
+/** Double XP from a class multiplier drop (from objectives)... */
 export const BOOST_MULTIPLIER = 2;
+/** ...on the next 3 habits in that class, in the order they're done, whatever the day. */
+export const BOOST_HABITS = 3;
 
 /** Tasks per level stop growing here, so progress never grinds to a halt. */
 export const MAX_TASKS_PER_LEVEL = 10;
@@ -28,13 +30,12 @@ export const MAX_TASKS_PER_LEVEL = 10;
  * settles at 10 tasks a level from level 18 on.
  */
 /**
- * XP for completing a task on a Path that has already earned
- * `earnedOnPathToday` from tasks today: the tier's rate (doubled when
- * boosted), cut down to whatever room is left under the daily cap.
+ * XP for completing a habit when `habitsDoneToday` were already done today:
+ * the tier's rate (doubled when boosted), or nothing past the day's 10.
  */
-export function xpForCompletion(earnedOnPathToday = 0, tier: Tier = 'free', boosted = false): number {
-  const xp = TASK_XP[tier] * (boosted ? BOOST_MULTIPLIER : 1);
-  return Math.max(0, Math.min(xp, DAILY_PATH_XP_CAP[tier] - earnedOnPathToday));
+export function xpForCompletion(habitsDoneToday = 0, tier: Tier = 'free', boosted = false): number {
+  if (habitsDoneToday >= DAILY_XP_HABITS) return 0;
+  return TASK_XP[tier] * (boosted ? BOOST_MULTIPLIER : 1);
 }
 
 export function tasksToNextLevel(level: number): number {

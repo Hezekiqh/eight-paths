@@ -6,10 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { REGULATOR_COLOR } from '@/components/regulator-row';
 import { addDays } from '@/game';
-import { CLEAN_DAY_BONUS, MAX_COUNT, dayDrain, rawDrain, type DayReport } from '@/game/regulator';
+import { CLEAN_DAY_BONUS, MAX_COUNT, dayDrain, isCleanDay, rawDrain, type DayReport } from '@/game/regulator';
 import { haptics } from '@/haptics';
 import { useTrackedStimuli } from '@/regulator/hooks';
-import { useRegulator } from '@/regulator/store';
+import { allStimuli, useRegulator } from '@/regulator/store';
 import { useToday } from '@/store/hooks';
 import { FRAME, colors, fonts, spacing, windowStyle } from '@/theme';
 
@@ -35,6 +35,7 @@ export default function RegulatorSurvey() {
   const existing = useRegulator((s) => s.reports[date]);
   const save = useRegulator((s) => s.report);
   const stimuli = useTrackedStimuli();
+  const custom = useRegulator((s) => s.custom);
   const [answers, setAnswers] = useState<DayReport>(() => ({ ...existing }));
   const [done, setDone] = useState<{ drain: number; capped: boolean; clean: boolean } | null>(null);
 
@@ -44,14 +45,16 @@ export default function RegulatorSurvey() {
   };
 
   const submit = () => {
-    const report: DayReport = {};
+    // Answers for stimuli no longer tracked stay as they were: changing a day never erases them.
+    const report: DayReport = { ...existing };
     for (const s of stimuli) report[s.id] = answers[s.id] ?? 0;
     save(date, report);
-    const drain = dayDrain(report, stimuli, mode);
-    const clean = drain === 0;
+    const everything = allStimuli(custom);
+    const drain = dayDrain(report, everything, mode);
+    const clean = isCleanDay(report, everything);
     if (clean) haptics.success();
     else haptics.nudge();
-    setDone({ drain, capped: rawDrain(report, stimuli, mode) > drain, clean });
+    setDone({ drain, capped: rawDrain(report, everything, mode) > drain, clean });
   };
 
   const day =
