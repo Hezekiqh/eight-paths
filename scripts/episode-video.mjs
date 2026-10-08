@@ -1603,17 +1603,28 @@ function drawWorld(canvas, ep, st, t) {
   }
   // asleep where they stand (Gary): Zs floating up off the head, as the game draws them
   const zPaint = paint('#DCE8FF', 0.85);
+  // (wherever they are now: walking in their sleep, say; and with a snot bubble at the nose, if they have one: Brannoc)
   Object.values(map.npcs)
     .filter(
       (n) =>
         dozing(ep, n) &&
+        st.fainted[n.id] === undefined &&
         !(st.hide ?? ep.hide)?.includes(n.id) &&
-        !st.npcAt[n.id] &&
+        !st.npcAt[n.id]?.gone &&
         !(n.comesAfter && !st.shown.includes(n.id)),
     )
     .forEach((n, i) => {
-      const [x, y] = center(n.x, n.y);
+      const at = st.npcAt[n.id];
+      const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       for (const [zx, zy] of sleepZs(t + i * 0.37, x, y)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+      if (n.snot) {
+        // at the nose, on whichever side they face
+        const left = (at?.dir ?? st.npcFacing[n.id] ?? n.facing) === 'left';
+        const b = bubbleAt(t + i * 0.5, x + (left ? -8 : 2), y - 12);
+        const sp = paint('#B8E0C8', 0.8);
+        for (const [bx, by] of b.cells) canvas.drawRect(CK.XYWHRect(bx, by, 1, 1), sp);
+        if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), paint('#FFFFFF'));
+      }
     });
   // out cold (fainted, flat on their back, head to the right): Zs rising off the head, a snot bubble at the nose
   const snot = paint('#B8E0C8', 0.8);
@@ -2785,7 +2796,8 @@ const EPISODES = {
     Object.assign(pit.npcs['arena-mott'], { x: 20.5, y: 10, facing: 'right' });
     Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
     Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
-    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'left', snot: true });
+    // (still fast asleep, the whole way: eyes shut, Zs, the snot bubble going)
+    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'left', snot: true, asleep: true });
     pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 9, sprite: 'warden', facing: 'down', name: 'Balderek', size: 2, lines: [] };
     // the banner he goes through: the near one, top left (swing.ts PIT_BANNERS), its cloth's middle in art pixels
     const BANNER = [143, 29];

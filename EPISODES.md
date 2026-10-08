@@ -109,7 +109,14 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   horn and the vacation.) All dialogue a touch slower from here on (author: "it reads way too fast": 28 ms a letter, 1.4×
   holds). In the game, the same: `PRISON_GUARDS_DOWN`, the `pit-warden` entrance and menu in `dungeon.ts`; a line that
   says STOMP thumps the phone and plays the stomp, every time (`rumbles.ts`).
-- **Next:** Episode 15.
+- **Episode 15, "That Move"** (`node scripts/episode-video.mjs 15`, 14.3 s): six blows land on Balderek (white bursts,
+  the game's hit sound); "Twenty strikes." Balderek: "Alright. Enough. Time to finish this and get back to work." Behind
+  you, Brannoc gets up, still fast asleep the whole way (eyes shut, Zs, snot bubble), shuffles over and, without a word
+  (author: he doesn't shout it), swings: a gleam on the blade, a crescent of light as big as a house across the sand, a
+  white flash, a huge jolt. Balderek tumbles up through a banner and out of the Kaloseum; a roof gives way in town. Barnaby:
+  "*GASP*" / "That move... I thought it was a fairytale." Cut. In the game, the same (`SNOT_SWING`, `SNOT_SWING_HIT` in
+  `dungeon.ts`), and the game's swing throws the same crescent (`slashPath`, world-view.tsx).
+- **Next:** Episode 16.
 
 ## In the episode script
 
