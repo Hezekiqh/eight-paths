@@ -100,10 +100,10 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   Barnaby (box, the screen jolts): "UNACCEPTABLE! Five of the king's finest, bested by a lone escapee! What do we pay
   you for?" The guard in front of you, slowly, because he's hurt: "You don't pay us at all." While he gets it out, the
   Kaloseum's tiny medics (`medic`, a red cross on white) run on in single file, two to a guard, roll each onto a cot,
-  and carry them all off as the ground starts to shake. STOMP. STOMP. (A giant's
+  and carry them all off into the fighters' tunnel as the ground starts to shake. STOMP. STOMP. (A giant's
   footfall: `assets/audio/stomp.wav`, `scripts/stomp-sound.mjs`; the screen jumps on each.) Barnaby: "You're in for it
-  now! The second greatest champion... aside from the king, of course..." STOMP: up out of the trapdoor climbs the
-  Warden, twice anyone's size: "BALDEREK!!!!" (author, Oct 8: the Warden is Balderek, renamed from Bertrand; his old
+  now! The second greatest champion... aside from the king, of course..." STOMP: out of the dark of the fighters' tunnel (a
+  stone-framed opening in the west end of the stands, `7` on the map) comes the Warden, twice anyone's size: "BALDEREK!!!!" (author, Oct 8: the Warden is Balderek, renamed from Bertrand; his old
   name, Aurek, stays a secret). Two stomping strides your way. The menu, as the game has it: *How's the weather up
   there?* Balderek: "Cloudy... with a chance of pain." Cut. (Cut along the way, in the game: Balderek and Barnaby on the
   horn and the vacation.) All dialogue a touch slower from here on (author: "it reads way too fast": 28 ms a letter, 1.4×

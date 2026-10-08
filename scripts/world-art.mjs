@@ -3088,6 +3088,17 @@ function drawArena(map, cheer = false) {
       ]
     : null;
   const inside = (x, y, [bx, by, bw, bh]) => x >= bx && x < bx + bw && y >= by && y < by + bh;
+  // the fighters' tunnel (author, Oct 8, 2026: "a tunnel they can run into"), cut through the stands at the west end of
+  // the sand, over its tiles (`7`): where the fighters, the Warden and the medics come and go
+  const tunnelTiles = [];
+  rows.forEach((r, ty) => [...r].forEach((c, tx) => c === '7' && tunnelTiles.push([tx, ty])));
+  const tunnelBox = tunnelTiles.length
+    ? (() => {
+        const ty0 = Math.min(...tunnelTiles.map(([, ty]) => ty));
+        const ty1 = Math.max(...tunnelTiles.map(([, ty]) => ty)) + 1;
+        return [0, ty0 * TILE - 8, Math.round(cx - rx) + 10, (ty1 - ty0) * TILE + 16];
+      })()
+    : null;
 
   // The crowd (author, Oct 6, 2026): small pixel people, scenery in the stands, far off behind the action on the
   // sand; outlined like the walkers, hair, a face with two eyes, shoulders in a shirt (all hair from behind), arms up
@@ -3110,6 +3121,7 @@ function drawArena(map, cheer = false) {
     if (hasBooth && inWedge(x, y, 0.03)) return false;
     if (banners.some(([bx, by]) => inside(x, y, [bx - 1, by - 1, 11, 21]))) return false;
     if (gateBox && inside(x, y, gateBox)) return false;
+    if (tunnelBox && inside(x, y, tunnelBox)) return false;
     return true;
   };
   const spectator = (px, py, seed, back) => {
@@ -3180,6 +3192,37 @@ function drawArena(map, cheer = false) {
     }
     for (let y = gy + 1; y < gy + TILE + 5; y += 5) box(g, gx, y, gw, 1, '#4A4442');
   }
+  // the fighters' tunnel: a stone-framed opening in the end of the stands, sand running on into the dark, a lintel and
+  // a keystone over it, a lamp on either side
+  if (tunnelBox) {
+    const [, ty, , th] = tunnelBox;
+    const y0 = ty + 8;
+    const y1 = ty + th - 8;
+    const edge = Math.round(cx - rx) + 3;
+    for (let y = y0 - 7; y < y1 + 7; y++)
+      for (let x = 0; x < edge + 3; x++) {
+        const stone = (Math.floor(x / 7) + Math.floor(y / 4)) % 2 ? '#7A7270' : '#6E6662';
+        if (y < y0 || y >= y1) put(g, x, y, y % 4 === 0 ? '#5A5250' : stone);
+        else {
+          // the floor of the tunnel: sand, darker the deeper in it goes
+          // (dark within a few steps of the mouth: the camera never sees further in than that)
+          const k = Math.min(1, (edge - x) / (edge * 0.45));
+          put(g, x, y, mix(hex('#B89A64'), hex('#140E0C'), k));
+        }
+      }
+    // the jambs' inner faces, in shade, and the lintel's lit edge
+    box(g, 0, y0, edge, 2, '#2A2220');
+    box(g, 0, y1 - 1, edge, 1, '#3A3230');
+    box(g, 0, y0 - 7, edge + 3, 1, '#9A9290');
+    // a keystone over the mouth, and a lamp either side of it
+    box(g, edge - 6, y0 - 9, 6, 5, '#8A8280');
+    box(g, edge - 5, y0 - 8, 4, 3, '#9A9290');
+    for (const ly of [y0 - 5, y1 + 2]) {
+      box(g, edge, ly, 3, 3, '#3A3A42');
+      put(g, edge + 1, ly, '#FFC940');
+      put(g, edge + 1, ly + 1, '#E07A2A');
+    }
+  }
   // the commentator's box, part of the Kaloseum's own ring and down at the level of the sand (author, Oct 6, 2026:
   // the crowd is scenery, far off, and a character among them looks like a giant; Barnaby stands where everyone else
   // stands). A wedge of the ring at the head of the sand, following the same oval as the tiers: the box opens in the
@@ -3246,7 +3289,7 @@ function drawArena(map, cheer = false) {
   for (let ty = 0; ty < H; ty++)
     for (let tx = 0; tx < W; tx++) {
       const letter = map.art?.[at(tx, ty)] ?? at(tx, ty);
-      if ('.,T1$+'.includes(at(tx, ty))) continue;
+      if ('.,T1$+7'.includes(at(tx, ty))) continue;
       const draw = DUNGEON_ART[letter];
       if (!draw) throw new Error(`No arena art for tile "${at(tx, ty)}" in ${map.id}`);
       // the ladder down goes through a trapdoor: a timber frame, open, dark below

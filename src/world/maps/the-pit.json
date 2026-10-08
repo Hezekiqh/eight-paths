@@ -16,9 +16,9 @@
     "TTTTT,,..................,,TTTTT",
     "TTTT,,....................,,TTTT",
     "TTT,,......................,,TTT",
-    "TTT,........................,TTT",
-    "TT,,........................,,TT",
-    "TTT,........................,TTT",
+    "777,........................,TTT",
+    "77,,........................,,TT",
+    "777,........................,TTT",
     "TTT,,......................,,TTT",
     "TTTT,r....................k,TTTT",
     "TTTTT,,3.................,,TTTTT",
@@ -33,6 +33,9 @@
     "facing": "up"
   },
   "examine": {
+    "7": [
+      "The fighters' tunnel, into the dark under the stands. It smells of sweat, sand and lamp oil, and of something very big."
+    ],
     "1": [
       "The way out, into Warrior City."
     ],
@@ -209,10 +212,10 @@
     {
       "id": "crowd-5",
       "type": "npc",
-      "x": 4,
-      "y": 8,
+      "x": 7,
+      "y": 5,
       "sprite": "raider",
-      "facing": "right",
+      "facing": "down",
       "name": "Guard",
       "lines": [
         "Is it starting? It's starting."
@@ -299,10 +302,10 @@
     {
       "id": "crowd-8",
       "type": "npc",
-      "x": 4,
-      "y": 11,
+      "x": 8,
+      "y": 15,
       "sprite": "raider",
-      "facing": "right",
+      "facing": "up",
       "name": "Guard",
       "lines": [
         "Mind the sand. It gets everywhere. Everywhere."

@@ -2563,11 +2563,15 @@ const EPISODES = {
         together: true,
       }));
     });
+    // off into the fighters' tunnel (author, Oct 8, 2026), each cot and its two bearers moving as one, in single file:
+    // the top three along their row, down into the tunnel's upper lane; the bottom two along theirs, up into its lower
+    const lane = (y) => (y < 10 ? 9.2 : 10.6);
+    const offPath = (x, y, o) => [[4 + o, y], [4 + o, lane(y)], [-3 + o, lane(y)]];
     const carryOff = [
       ...bearers.map((m) => ({
         npcWalk: m.id,
         from: center(m.x, m.y),
-        to: [[m.x, m.row], [m.x - 22, m.row]],
+        to: offPath(m.x, m.y, m.faces === 'right' ? -0.6 : 1.8),
         speed: 125,
         hide: true,
         together: true,
@@ -2575,7 +2579,7 @@ const EPISODES = {
       ...guards.map(([x, y], i) => ({
         npcWalk: `guard-${i + 1}`,
         from: center(x, y),
-        to: [[x, y < 10 ? 6 : 14], [x - 22, y < 10 ? 6 : 14]],
+        to: offPath(x, y, 0),
         speed: 125,
         carried: true,
         lift: 4,
@@ -2583,12 +2587,14 @@ const EPISODES = {
         together: true,
       })),
     ];
-    // Balderek, twice anyone's size: up out of the trapdoor you came up through
-    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 14, sprite: 'warden', facing: 'right', name: 'Balderek', size: 2, lines: [] };
+    // Balderek, twice anyone's size: out of the fighters' tunnel, out of the dark
+    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: -2, y: 10, sprite: 'warden', facing: 'right', name: 'Balderek', size: 2, lines: [] };
     // fixed shots, cut between, never panned
     const RING = [{ look: [15, 9.5] }, { zoom: 1 }];
     const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
-    const WIDE = [{ look: [11, 10.5] }, { zoom: 1 }];
+    // the tunnel's mouth, and the sand in front of it; and wide, Balderek and you both
+    const TUNNEL = [{ look: [6, 10] }, { zoom: 1 }];
+    const WIDE = [{ look: [10.5, 10] }, { zoom: 1 }];
     return {
       ...SHORT,
       read: 1.4,
@@ -2617,22 +2623,22 @@ const EPISODES = {
         // and off they go with them, as the ground starts to shake
         // the ground answers: STOMP. STOMP.
         ...carryOff,
-        ...WIDE,
+        ...TUNNEL,
         { face: 'left' },
         { stomp: 0.45 },
         { stomp: 0.5 },
         ...BOX,
         { say: 'barnaby-box', lines: [announce], punch: 0.05, letterMs: 20, pause: 0.25, read: 1.1 },
-        // cut off mid-word: STOMP, and there he is, climbing up out of the trapdoor
-        ...WIDE,
+        // cut off mid-word: STOMP, and out of the dark of the tunnel he comes, a stomp at every stride
+        ...TUNNEL,
+        { show: 'balderek' },
         { stomp: 0.1 },
-        { rise: 'balderek', dur: 0.9, together: true },
-        { say: 'barnaby-box', lines: [name], punch: 0.3, letterMs: 34, read: 1.1 },
-        // two great strides your way
-        { npcWalk: 'balderek', to: [[8.5, 13.5]], speed: 40 },
-        { stomp: 0.2 },
-        { npcWalk: 'balderek', from: center(8.5, 13.5), to: [[10, 13]], speed: 40 },
+        { npcWalk: 'balderek', to: [[1.5, 10]], speed: 45, together: true },
+        { say: 'barnaby-box', lines: [name], punch: 0.2, letterMs: 34, read: 1.1 },
+        { stomp: 0.1 },
+        { npcWalk: 'balderek', from: center(1.5, 10), to: [[4.5, 10]], speed: 45 },
         { stomp: 0.35 },
+        ...WIDE,
         // (cut along the way: Balderek and Barnaby's words about the horn and the vacation)
         { menu: { speaker: 'Balderek', options: warden.menu, pick: warden.menu.indexOf(WEATHER), hold: 0.35 } },
         { say: 'balderek', lines: warden.reply(WEATHER).map(unnamed), punch: 0.8 },

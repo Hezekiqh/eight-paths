@@ -257,6 +257,7 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       "BARNABY: You're in for it now! The second greatest champion... aside from the king, of course...",
       '* STOMP.',
       'BARNABY: BALDEREK!!!!',
+      "* Out of the dark of the fighters' tunnel he comes, twice the size of anyone, and every stride shakes the sand.",
       'BALDEREK: Barnaby. Prisoners loose on my sand, and you are up there with a horn.',
       "BARNABY: I didn't think you'd be back from your vacation so soon.",
       'BALDEREK: It was not a vacation. The east gate was off its hinges. Somebody had to hang it.',
@@ -320,7 +321,9 @@ export const PRISON_GUARDS_DOWN = [
   "BARNABY: UNACCEPTABLE! Five of the king's finest, bested by a lone escapee! What do we pay you for?",
   // one of them, flat on the sand, gets it out (author, Oct 8, 2026): the guards have never been paid
   "GUARD: You don't pay us at all.",
-  'STOMP. The whole Kaloseum shakes. STOMP. Something very big is coming up from below.',
+  // the Kaloseum's tiny medics clear the sand (Episode 14)
+  "* The Kaloseum's medics run on with cots, two to a guard, and hurry all five of them off into the fighters' tunnel.",
+  "* STOMP. The whole Kaloseum shakes. STOMP. Something very big is coming up the fighters' tunnel.",
 ];
 
 /** Twenty strikes in: Balderek has had enough, and Brannoc gets up, asleep. */
