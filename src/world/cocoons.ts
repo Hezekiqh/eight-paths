@@ -92,12 +92,14 @@ export const COCOONS: Cocoon[] = [
 
 /**
  * You can't walk on past Felix's cocoon without breaking it (author, Oct 7, 2026): an invisible wall across the
- * road, east of the Waystation, and a thought each time you try it, the last one for good. Felix frames you, and
+ * road, east of the Waystation: it sends you back three steps, with a thought each time you try it, the last one for good. Felix frames you, and
  * that's how the story gets you into the cells.
  */
 export const COCOON_WALL = {
   map: 'courier-road',
   x: 27,
+  /** How many tiles west you're sent back each time you walk into it. */
+  back: 3,
   until: 'felix-hatched',
   lines: [
     '(I wonder what that cocoon is over there.)',

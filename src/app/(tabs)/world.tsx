@@ -2103,9 +2103,13 @@ function World({
   const onStep = useCallback(
     (tile: number) => {
       const letter = map.tiles[Math.floor(tile / map.width)][tile % map.width];
-      // walking on past Felix's cocoon: back you go, and a thought each try (the last one for good)
+      // walking on past Felix's cocoon: back you go, a few steps west so you're clear of it, and a thought each
+      // try (the last one for good)
       if (cocoonWall && tile % map.width === COCOON_WALL.x) {
-        sim.x.set(COCOON_WALL.x * TILE - TILE / 2);
+        const row = Math.floor(tile / map.width);
+        let x = COCOON_WALL.x;
+        while (x > COCOON_WALL.x - COCOON_WALL.back && x > 0 && !map.solid[row * map.width + x - 1]) x--;
+        sim.x.set(x * TILE + TILE / 2);
         const lines = COCOON_WALL.lines;
         if (dialogueRef.current === null)
           setDialogue({ lines: [lines[Math.min(wallTries.current, lines.length - 1)]] });
