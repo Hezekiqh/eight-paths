@@ -4333,6 +4333,16 @@ const WALKERS = {
     sword: true,
     ko: true,
   },
+  // The Kaloseum's medics (author, Oct 8, 2026, Episode 14): tiny stretcher-bearers in white, a red cross on the chest
+  // and on the cap, who run on and carry the knocked-out off on cots.
+  medic: {
+    top: '#F0ECE4',
+    shade: '#C8C0B4',
+    legs: '#E0D8CC',
+    boots: '#4A3A2A',
+    hair: ['short', '#6A4A2A'],
+    cross: '#D0302A',
+  },
 };
 
 // The walkers' light, as the castle's: from the upper left. Lit edges warm toward candlelight, shade cools toward
@@ -4509,6 +4519,12 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     const medal = ['#F2C14E', '#C4442A', '#C8CCD8'];
     if (side) p(dir === 'left' ? 6 : 9, 11, medal[0]);
     else for (let x = 5; x <= 10; x += 2) p(x, 11, medal[(x - 5) / 2]);
+  }
+  if (w.cross && !back) {
+    // a red cross on the chest (front, or the near side)
+    const cx = side ? (dir === 'left' ? 6 : 9) : 8;
+    b(cx - 1, 13, 3, 1, w.cross);
+    b(cx, 12, 1, 3, w.cross);
   }
   if (w.apron) {
     if (dir === 'down') b(5, 12, 6, 6, w.apron);

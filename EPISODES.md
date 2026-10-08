@@ -95,10 +95,12 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   three) are `passable`, so every fight still balances (fights.test).
 - **No overlap** (author): nobody stands or falls into anyone. Brannoc is three tiles from where you come up, and
   faints away from you.
-- **Episode 14, "The Warden"** (`node scripts/episode-video.mjs 14`, 16.4 s): picks up where 13 left off. Frame one, all
+- **Episode 14, "The Warden"** (`node scripts/episode-video.mjs 14`, 16.6 s): picks up where 13 left off. Frame one, all
   five guards flat on the sand round you, little Xs for eyes and snot bubbles going (out cold, not dead: `raiderko`).
   Barnaby (box, the screen jolts): "UNACCEPTABLE! Five of the king's finest, bested by a lone escapee! What do we pay
-  you for?" The guard in front of you, slowly, because he's hurt: "You don't pay us at all." STOMP. STOMP. (A giant's
+  you for?" The guard in front of you, slowly, because he's hurt: "You don't pay us at all." While he gets it out, the
+  Kaloseum's tiny medics (`medic`, a red cross on white) run on in single file, two to a guard, roll each onto a cot,
+  and carry them all off as the ground starts to shake. STOMP. STOMP. (A giant's
   footfall: `assets/audio/stomp.wav`, `scripts/stomp-sound.mjs`; the screen jumps on each.) Barnaby: "You're in for it
   now! The second greatest champion... aside from the king, of course..." STOMP: up out of the trapdoor climbs the
   Warden, twice anyone's size: "BALDEREK!!!!" (author, Oct 8: the Warden is Balderek, renamed from Bertrand; his old

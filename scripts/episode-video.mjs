@@ -874,6 +874,8 @@ function compile(ep) {
         facing: step.facing,
         // `carried`: lifted off the ground as they set off, and set down when they get there (out cold, carried)
         carried: step.carried,
+        // how high they're held (default 10; the tiny medics' cots, lower)
+        lift: step.lift,
       });
       if (!step.together) t += (step.delay ?? 0) + dur + 0.15;
     } else if (step.laugh) {
@@ -984,6 +986,10 @@ function compile(ep) {
     } else if (step.jolt) {
       // the screen jolts (a lever thrown: CLUNK)
       segs.push({ kind: 'jolt', t0: t, t1: t + step.jolt });
+    } else if (step.cot) {
+      // the medics roll them onto cots (Episode 14)
+      segs.push({ kind: 'cot', t0: t, t1: t, ids: step.cot });
+      t += 0.25;
     } else if (step.stomp) {
       // a giant's footfall (Aurek the Tall): the screen jumps, hard, and STOMP (assets/audio/stomp.wav); then a beat
       segs.push({ kind: 'jolt', t0: t, t1: t + 0.4, amp: 5 });
@@ -1072,6 +1078,8 @@ function stateAt(ep, compiled, t) {
   for (const id of ep.out ?? []) fainted[id] = 1;
   /** Who's climbing up out of the floor, by id: how far up (0 under it, 1 out). */
   const rising = {};
+  /** Who's been rolled onto a cot (the Kaloseum's medics), by id. */
+  const onCot = new Set();
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1134,7 +1142,7 @@ function stateAt(ep, compiled, t) {
       const k = Math.min(1, (d - leg.d0) / leg.len);
       const done = t >= s.t1;
       // up over a quarter of a second, a bob with every step, and down again at the end
-      const LIFT = 10;
+      const LIFT = s.lift ?? 10;
       const up = Math.min(1, (t - s.t0) / 0.25, Math.max(0, 1 - (t - s.t1) / 0.25));
       npcAt[s.id] = {
         x: leg.a[0] + (leg.b[0] - leg.a[0]) * k,
@@ -1181,6 +1189,7 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'faint') fainted[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'jolt' && t < s.t1) shake = (s.amp ?? 2.5) * (1 - (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'rise') rising[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'cot') for (const id of s.ids) onCot.add(id);
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1196,6 +1205,7 @@ function stateAt(ep, compiled, t) {
     shrugs,
     fainted,
     rising,
+    onCot,
     shake,
     sink,
     hole,
@@ -1358,7 +1368,15 @@ function drawWorld(canvas, ep, st, t) {
       // carried: held up at their hands, drawn in front of whoever's carrying them
       if (over !== undefined) {
         const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
-        return [over >= 1 ? out : row, DIRS.down, 0, x, y - (at?.lift ?? 0), 0, { lie: over, sortY: y + 1 }];
+        return [
+          over >= 1 ? out : row,
+          DIRS.down,
+          0,
+          x,
+          y - (at?.lift ?? 0),
+          0,
+          { lie: over, sortY: y + 1, cot: st.onCot.has(n.id) },
+        ];
       }
       if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y, 0, { size: n.size }];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
@@ -1419,6 +1437,11 @@ function drawWorld(canvas, ep, st, t) {
       canvas.translate(x, y + FH - FEET);
       canvas.scale(fx.size, fx.size);
       canvas.translate(-x, -(y + FH - FEET));
+    }
+    // on a cot: canvas under them, a pole along each side, the ends sticking out for the bearers' hands
+    if (fx.cot) {
+      canvas.drawRect(CK.XYWHRect(Math.round(x) - 5, Math.round(y) - 7, 30, 15), paint('#D8CDB0'));
+      for (const py of [-8, 8]) canvas.drawRect(CK.XYWHRect(Math.round(x) - 10, Math.round(y) + py, 40, 1), paint('#6A4A2A'));
     }
     // fainting: tipping over backwards, pivoting on the feet, until flat
     if (fx.lie) {
@@ -2500,9 +2523,10 @@ const EPISODES = {
     Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
     Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
     Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'up' });
-    // the five guards where they fought you (the game's bearers), all of them flat on the sand: little Xs for eyes, and
-    // snot bubbles, so you know they're out cold, not dead (author, Oct 8, 2026)
-    const guards = [[11, 8], [19, 8], [13, 9], [17, 9], [15, 8]];
+    // the five guards, all of them flat on the sand round you: little Xs for eyes, and snot bubbles, so you know they're
+    // out cold, not dead (author, Oct 8, 2026). Three above you, two below, with room round each for a cot and its
+    // bearers; the last is the one who answers Barnaby back.
+    const guards = [[10, 7], [17, 7], [11, 12], [16.5, 12], [13.5, 7]];
     guards.forEach(([x, y], i) => {
       pit.npcs[`guard-${i + 1}`] = {
         id: `guard-${i + 1}`,
@@ -2517,6 +2541,48 @@ const EPISODES = {
         ko: true,
       };
     });
+    // ...and the Kaloseum's tiny medics (author, Oct 8, 2026), two to a cot: one at the guard's feet, one at his head.
+    // They run on in single file along an empty row (above the top three, below the bottom two), roll them onto cots, and
+    // carry them off left, out of the way of whatever's coming.
+    const SMALL = 0.7;
+    const bearers = guards.flatMap(([x, y], i) => [
+      { id: `medic-${i}-a`, x: x - 0.6, y, faces: 'right', row: y < 10 ? 6 : 14 },
+      { id: `medic-${i}-b`, x: x + 1.8, y, faces: 'left', row: y < 10 ? 6 : 14 },
+    ]);
+    for (const m of bearers)
+      pit.npcs[m.id] = { id: m.id, type: 'npc', x: -3, y: m.row, sprite: 'medic', facing: 'right', name: 'Medic', size: SMALL, lines: [] };
+    const runOn = ['above', 'below'].flatMap((side) => {
+      const line = bearers.filter((m) => (m.row === 6) === (side === 'above')).sort((a, b) => b.x - a.x);
+      // the one going furthest runs at the front; a step and a bit between each, so nobody runs into anybody
+      return line.map((m, k) => ({
+        npcWalk: m.id,
+        from: center(2 - k * 1.1, m.row),
+        to: [[m.x, m.row], [m.x, m.y]],
+        speed: 150,
+        turn: m.faces,
+        together: true,
+      }));
+    });
+    const carryOff = [
+      ...bearers.map((m) => ({
+        npcWalk: m.id,
+        from: center(m.x, m.y),
+        to: [[m.x, m.row], [m.x - 22, m.row]],
+        speed: 125,
+        hide: true,
+        together: true,
+      })),
+      ...guards.map(([x, y], i) => ({
+        npcWalk: `guard-${i + 1}`,
+        from: center(x, y),
+        to: [[x, y < 10 ? 6 : 14], [x - 22, y < 10 ? 6 : 14]],
+        speed: 125,
+        carried: true,
+        lift: 4,
+        hide: true,
+        together: true,
+      })),
+    ];
     // Balderek, twice anyone's size: up out of the trapdoor you came up through
     pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 14, sprite: 'warden', facing: 'right', name: 'Balderek', size: 2, lines: [] };
     // fixed shots, cut between, never panned
@@ -2543,10 +2609,14 @@ const EPISODES = {
         ...BOX,
         { jolt: 0.45 },
         { say: 'barnaby-box', lines: by(down, 'BARNABY'), punch: 0.4, letterMs: 20, pause: 0.25, read: 1.1 },
-        // the one in front of you gets it out, slowly: he's hurt
+        // the one in front of you gets it out, slowly: he's hurt; the medics run on while he does
         ...RING,
+        ...runOn,
         { say: 'guard-5', lines: by(down, 'GUARD'), punch: 0.5, letterMs: 70 },
+        { cot: guards.map((_, i) => `guard-${i + 1}`) },
+        // and off they go with them, as the ground starts to shake
         // the ground answers: STOMP. STOMP.
+        ...carryOff,
         ...WIDE,
         { face: 'left' },
         { stomp: 0.45 },
