@@ -869,6 +869,8 @@ function compile(ep) {
         hide: step.hide,
         tears: step.tears,
         dash: step.dash,
+        // `spin`: tumbling end over end the whole way (flying out of the Kaloseum)
+        spin: step.spin,
         // `turn`: which way they turn once there; `facing`: which way they face the whole way (walking backwards)
         turn: step.turn,
         facing: step.facing,
@@ -986,6 +988,28 @@ function compile(ep) {
     } else if (step.jolt) {
       // the screen jolts (a lever thrown: CLUNK)
       segs.push({ kind: 'jolt', t0: t, t1: t + step.jolt });
+    } else if (step.strike) {
+      // a blow landing (Episode 15): a burst of white at the target, a small jolt, and the game's hit sound
+      segs.push({ kind: 'strike', t0: t, t1: t + 0.16, at: step.strike });
+      segs.push({ kind: 'jolt', t0: t, t1: t + 0.12, amp: 1.5 });
+      t += step.gap ?? 0.22;
+    } else if (step.stand) {
+      // someone out cold gets back up (still asleep: Brannoc), the faint in reverse
+      segs.push({ kind: 'stand', t0: t, t1: t + 0.45, id: step.stand });
+      t += 0.5;
+    } else if (step.slash) {
+      // a sword swung so hard it throws a slash of light (Brannoc, Episode 15, author: "extravagant"): a gleam on the
+      // blade as he winds up, the crescent flying across the sand, growing, and on the hit a white flash, a huge jolt
+      const { from, to, windup = 0.35, fly = 0.4 } = step.slash;
+      segs.push({ kind: 'gleam', t0: t, t1: t + windup, at: from });
+      segs.push({ kind: 'slash', t0: t + windup, t1: t + windup + fly, from, to });
+      segs.push({ kind: 'flash', t0: t + windup + fly, t1: t + windup + fly + 0.45 });
+      segs.push({ kind: 'jolt', t0: t + windup + fly, t1: t + windup + fly + 0.7, amp: 8 });
+      segs.push({ kind: 'boom', t0: t + windup + fly, t1: t + windup + fly });
+      t += windup + fly;
+    } else if (step.hole) {
+      // a hole torn in a banner, where someone went through it
+      segs.push({ kind: 'hole', t0: t, t1: t, at: step.hole });
     } else if (step.cot) {
       // the medics roll them onto cots (Episode 14)
       segs.push({ kind: 'cot', t0: t, t1: t, ids: step.cot });
@@ -1080,6 +1104,12 @@ function stateAt(ep, compiled, t) {
   const rising = {};
   /** Who's been rolled onto a cot (the Kaloseum's medics), by id. */
   const onCot = new Set();
+  /** Blows landing, a blade's gleam, a slash in flight, the white of its hit, and torn banners (Episode 15). */
+  const strikes = [];
+  let gleam = null;
+  let slash = null;
+  let flash = 0;
+  const holes = [];
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1153,6 +1183,7 @@ function stateAt(ep, compiled, t) {
         gone: done && s.hide,
         tears: s.tears && !done,
         dash: s.dash && !done ? { from: s.legs[0].a, since: t - s.t0, dir: leg.dir } : null,
+        spin: s.spin ? (t - s.t0) * 900 : 0,
       };
     } else if (s.kind === 'laugh' && t < s.t1) {
       laughing[s.id] = t - s.t0;
@@ -1190,6 +1221,15 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'jolt' && t < s.t1) shake = (s.amp ?? 2.5) * (1 - (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'rise') rising[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'cot') for (const id of s.ids) onCot.add(id);
+    else if (s.kind === 'stand') {
+      const k = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      if (k >= 1) delete fainted[s.id];
+      else fainted[s.id] = 1 - k;
+    } else if (s.kind === 'strike' && t < s.t1) strikes.push({ at: s.at, k: (t - s.t0) / (s.t1 - s.t0) });
+    else if (s.kind === 'gleam' && t < s.t1) gleam = { at: s.at, k: (t - s.t0) / (s.t1 - s.t0) };
+    else if (s.kind === 'slash' && t < s.t1 + 0.35) slash = { from: s.from, to: s.to, k: (t - s.t0) / (s.t1 - s.t0) };
+    else if (s.kind === 'flash' && t < s.t1) flash = 1 - (t - s.t0) / (s.t1 - s.t0);
+    else if (s.kind === 'hole') holes.push(s.at);
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1206,6 +1246,11 @@ function stateAt(ep, compiled, t) {
     fainted,
     rising,
     onCot,
+    strikes,
+    gleam,
+    slash,
+    flash,
+    holes,
     shake,
     sink,
     hole,
@@ -1243,6 +1288,78 @@ function walkFrame(distance, moving) {
 // ---- the World, at K px per art pixel
 const VIEW_W = W / K;
 const VIEW_H = H / K;
+/**
+ * Blows and their light (Episode 15): white bursts where hits land; a gleam on Brannoc's blade as he winds up; the
+ * slash of light he throws, a crescent that grows as it flies, white at its heart and edged in pale blue, with a wake
+ * of sparks; and the holes torn in banners. In art pixels, over everyone.
+ */
+function drawBlows(canvas, st) {
+  for (const { at, k } of st.strikes) {
+    const [x, y] = center(...at);
+    // (on his chest, a little to whichever side the blow came from)
+    const r = 4 + k * 10;
+    const p = paint('#FFFFFF', 1 - k);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + 0.4;
+      const len = i % 2 ? 2 : 3;
+      for (let j = 0; j < len; j++)
+        canvas.drawRect(CK.XYWHRect(Math.round(x + Math.cos(a) * (r + j * 2)), Math.round(y - 26 + Math.sin(a) * (r + j * 2)), 2, 2), p);
+    }
+    canvas.drawRect(CK.XYWHRect(Math.round(x) - 3, Math.round(y) - 29, 6, 6), paint('#FFF4C0', 1 - k));
+  }
+  if (st.gleam) {
+    // a star of light on the blade, swelling
+    const [x, y] = center(...st.gleam.at);
+    const s = 3 + st.gleam.k * 12;
+    const p = paint('#FFFFFF', 0.4 + 0.6 * st.gleam.k);
+    const gx = Math.round(x - 6);
+    const gy = Math.round(y - 24);
+    canvas.drawRect(CK.XYWHRect(gx - s, gy, s * 2 + 1, 1), p);
+    canvas.drawRect(CK.XYWHRect(gx, gy - s, 1, s * 2 + 1), p);
+    canvas.drawRect(CK.XYWHRect(gx - 1, gy - 1, 3, 3), paint('#B8ECFF', 0.4 + 0.6 * st.gleam.k));
+  }
+  if (st.slash) {
+    const { from, to, k } = st.slash;
+    const [ax, ay] = center(...from);
+    const [bx, by] = center(...to);
+    const kk = Math.min(1, k);
+    const x = ax + (bx - ax) * kk;
+    const y = ay - 14 + (by - ay) * kk;
+    const dir = Math.sign(bx - ax) || 1;
+    const fade = k > 1 ? Math.max(0, 1 - (k - 1) * 3) : 1;
+    const r = 16 + kk * 34;
+    // the crescent: arcs bulging the way it flies, the outer ones pale blue and faint, the heart white
+    const arc = (radius, width, colour, alpha) => {
+      // (a paint of its own: the shared ones are fills)
+      const p = new CK.Paint();
+      p.setColor(color(colour, alpha * fade));
+      p.setAntiAlias(false);
+      p.setStyle(CK.PaintStyle.Stroke);
+      p.setStrokeWidth(width);
+      const ox = x - dir * radius * 0.55;
+      canvas.drawArc(CK.XYWHRect(ox - radius, y - radius, radius * 2, radius * 2), dir > 0 ? -70 : 110, 140, false, p);
+      p.delete();
+    };
+    // a glow, a pale blue edge, a white heart, and a second, fainter crescent close behind
+    arc(r + 6, 12, '#7FD8FF', 0.25);
+    arc(r + 2, 7, '#B8ECFF', 0.6);
+    arc(r, 3, '#FFFFFF', 1);
+    arc(r * 0.7, 3, '#B8ECFF', 0.55);
+    // a wake of sparks behind it
+    for (let i = 0; i < 28; i++) {
+      const back = (i / 28) * 60 * kk;
+      const sx = x - dir * (back + 6);
+      const sy = y + Math.sin(i * 2.3 + kk * 9) * r * 0.7;
+      canvas.drawRect(CK.XYWHRect(Math.round(sx), Math.round(sy), 2, 2), paint(i % 3 ? '#FFFFFF' : '#7FD8FF', (1 - i / 28) * fade));
+    }
+  }
+  for (const [hx, hy] of st.holes) {
+    // the banner torn through: a ragged dark hole, and the sky beyond
+    canvas.drawRect(CK.XYWHRect(hx - 3, hy - 3, 7, 7), paint('#1A1012'));
+    canvas.drawRect(CK.XYWHRect(hx - 2, hy - 2, 5, 5), paint('#8AB8E8'));
+  }
+}
+
 function drawWorld(canvas, ep, st, t) {
   const map = st.map ?? ep.map;
   const mapW = map.image.width();
@@ -1378,7 +1495,7 @@ function drawWorld(canvas, ep, st, t) {
           { lie: over, sortY: y + 1, cot: st.onCot.has(n.id) },
         ];
       }
-      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y, 0, { size: n.size }];
+      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y, 0, { size: n.size, spin: at.spin }];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
       const sh = st.shrugs[n.id];
@@ -1433,6 +1550,13 @@ function drawWorld(canvas, ep, st, t) {
       canvas.translate(-x, -(y + 2 - lift));
     }
     // bigger than everyone (the Warden), from the feet up, as the game draws him
+    // tumbling end over end, about the middle of them
+    if (fx.spin) {
+      const mid = y - (FEET - FH / 2) * (fx.size ?? 1);
+      canvas.translate(x, mid);
+      canvas.rotate(fx.spin, 0, 0);
+      canvas.translate(-x, -mid);
+    }
     if (fx.size && fx.size !== 1) {
       canvas.translate(x, y + FH - FEET);
       canvas.scale(fx.size, fx.size);
@@ -1509,6 +1633,7 @@ function drawWorld(canvas, ep, st, t) {
       if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), shine);
     }
   }
+  drawBlows(canvas, st);
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
@@ -2645,6 +2770,66 @@ const EPISODES = {
       ],
     };
   },
+  // Episode 15 (author, Oct 8, 2026): twenty strikes, and Balderek hasn't noticed; he's had enough. Behind you Brannoc
+  // gets up, still asleep, snot bubble and all, shuffles over and, without a word, swings: a slash of light as big as a
+  // house, a flash, and Balderek goes up, up, over the banners and out of the Kaloseum. Barnaby gasps: that move, he
+  // thought it was a fairytale. All of it from the game (SNOT_SWING, SNOT_SWING_HIT in dungeon.ts).
+  15: () => {
+    const pit = loadMap('the-pit', 'arena');
+    const lead = gameLines('SNOT_SWING');
+    const hit = gameLines('SNOT_SWING_HIT');
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    // where Episode 14 left them: your three by Brannoc at the side of the sand, Brannoc out cold; Balderek out of
+    // his tunnel, and you up against him, hitting
+    // (Old Mott a step back from his feet: Brannoc's about to stand up there)
+    Object.assign(pit.npcs['arena-mott'], { x: 20.5, y: 10, facing: 'right' });
+    Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
+    Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
+    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'left', snot: true });
+    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 9, sprite: 'warden', facing: 'down', name: 'Balderek', size: 2, lines: [] };
+    // the banner he goes through: the near one, top left (swing.ts PIT_BANNERS), its cloth's middle in art pixels
+    const BANNER = [143, 29];
+    const bannerTile = [(BANNER[0] - 8) / 16, (BANNER[1] + 10 - 14) / 16];
+    const FIGHT = [{ look: [8.5, 9] }, { zoom: 1 }];
+    const SIDE = [{ look: [21, 9.5] }, { zoom: 1 }];
+    const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
+    const strikes = Array.from({ length: 6 }, () => ({ strike: [7, 9], gap: 0.17 }));
+    return {
+      ...SHORT,
+      read: 1.4,
+      gapAfter: 0.12,
+      number: 15,
+      title: 'THAT MOVE',
+      map: pit,
+      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      out: ['brannoc-pit'],
+      hero: { sprite: 'quill', at: [7, 11.4], facing: 'up' },
+      // the hook: you, flat out hitting him, and he hasn't noticed
+      look: [8.5, 9],
+      zoom: 1,
+      script: [
+        ...strikes,
+        { narrate: true, lines: [lead[0]], punch: 0.3 },
+        { say: 'balderek', lines: by(lead, 'BALDEREK'), punch: 0.4 },
+        // behind you: Brannoc gets up, eyes shut, snot bubble going
+        ...SIDE,
+        { stand: 'brannoc-pit' },
+        { wait: 0.5 },
+        // and shuffles over, asleep, to stand off from him; then, without a word, swings
+        ...FIGHT,
+        { npcWalk: 'brannoc-pit', from: center(14, 9), to: [[10.6, 9]], speed: 40, turn: 'left' },
+        { slash: { from: [10.6, 9], to: [7, 9], windup: 0.45, fly: 0.3 } },
+        // up, up, tumbling, over the banners and out of the Kaloseum
+        { npcWalk: 'balderek', to: [bannerTile], speed: 260, spin: true },
+        { hole: BANNER },
+        { npcWalk: 'balderek', from: center(...bannerTile), to: [[bannerTile[0] + 0.5, -5]], speed: 260, spin: true, hide: true },
+        { wait: 0.9 },
+        // Barnaby has heard of that move
+        ...BOX,
+        { say: 'barnaby-box', lines: by(hit, 'BARNABY'), punch: 1.0, letterMs: 30 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -2684,6 +2869,7 @@ if (process.env.STILLS) {
     else if (st) {
       drawWorld(canvas, ep, st, s);
       drawOverlays(canvas, st);
+      if (st.flash > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', st.flash * 0.85));
       if (st.blackout > 0)
         canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint(st.white ? '#FFFFFF' : '#000000', Math.min(1, st.blackout)));
     } else drawEnd(canvas, ep, s - compiled.end);
@@ -2814,6 +3000,8 @@ async function renderPicture() {
       }
       drawWorld(canvas, ep, st, t);
       drawOverlays(canvas, st);
+      // the white of a great blow landing (Episode 15)
+      if (st.flash > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', st.flash * 0.85));
       if (st.white) {
         if (st.blackout > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', Math.min(1, st.blackout)));
       } else black(st.blackout);
@@ -2862,6 +3050,10 @@ const SELECT = (() => {
 const LAUGH = laugh(RATE);
 /** A giant's footfall (scripts/stomp-sound.mjs), as the game plays it. */
 const STOMP = pcm(join(ROOT, 'assets/audio/stomp.wav'));
+/** The game's own blows: a hit landing, a sword swung, a slam (Episode 15). */
+const HIT = pcm(join(ROOT, 'assets/audio/hit.wav'));
+const SWING = pcm(join(ROOT, 'assets/audio/swing.wav'));
+const SLAM = pcm(join(ROOT, 'assets/audio/slam.wav'));
 const mix = new Float32Array(Math.ceil(total * RATE));
 const place = (sound, at, gain) => {
   const start = Math.round(at * RATE);
@@ -2871,6 +3063,13 @@ for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
   if (s.kind === 'stomp') place(STOMP, s.t0, 1);
+  if (s.kind === 'strike') place(HIT, s.t0, 0.6);
+  if (s.kind === 'gleam') place(SWING, s.t0 + 0.2, 0.9);
+  if (s.kind === 'boom') {
+    place(SLAM, s.t0, 1);
+    // ...and far off in town, a moment later, a roof giving way
+    place(SLAM, s.t0 + 1.5, 0.35);
+  }
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {
     const start = Math.round(s.t0 * RATE);

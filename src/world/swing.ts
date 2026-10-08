@@ -22,7 +22,7 @@ export const SWING_TRAIL = 0.5;
 export const BLADE_REST = -0.5;
 export const BLADE_RAISED = -2.4;
 export const BLADE_END = 0.9;
-/** How long the swing waits after "BRANNOC SUPER SUPER SWING!" starts typing, so the blow lands on its last word. */
+/** How long the swing waits after the swing's line ("a slash of light as big as a house") starts, so the blow lands with it. */
 export const SWING_DELAY = 0.25;
 /** The white flash on the strike, and how bright it gets; the impact star at the blade's tip. */
 export const FLASH_TIME = 0.4;

@@ -393,10 +393,14 @@ export const arenaCarry = (r: Carriers): Actor[] => [
 ];
 // Balderek goes over the banners, not through the wall (STORY.md: he lands on the bakery, and the swing kills him);
 // the hole he leaves is drawn in the banner he went through (swing.ts, world-view Breach).
+// (author, Oct 8, 2026, Episode 15: he doesn't shout it; he just swings, and the slash says it for him; and Barnaby has
+// heard of that move)
 export const SNOT_SWING_HIT = [
   'His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
-  'BRANNOC SUPER SUPER SWING!',
+  '* Brannoc swings his sword, without a word, and a slash of light as big as a house tears across the sand.',
   'Balderek goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
+  'BARNABY: *GASP*',
+  'BARNABY: That move... I thought it was a fairytale.',
 ];
 
 /**
@@ -426,7 +430,7 @@ export const FREED_ENDING = [
 ];
 
 /** The line the swing lands on (world.tsx plays it with the blow). */
-export const SWING_LINE = SNOT_SWING_HIT.indexOf('BRANNOC SUPER SUPER SWING!');
+export const SWING_LINE = SNOT_SWING_HIT.findIndex((l) => l.startsWith('* Brannoc swings his sword'));
 
 /** The snot bubble's popped: he's awake (the-pit.json's brannoc-awake dozes until then). */
 export const BRANNOC_BLINKED = 'brannoc-blinked';
@@ -509,7 +513,7 @@ const ALONE_WARDEN = [
   'He is enormous. He is right in front of you. He smiles.',
   'You go white. Then grey.',
   '...',
-  'BRANNOC SUPER SUPER SWING!',
+  '* You swing, fast asleep, without a word, and a slash of light as big as a house tears across the sand.',
   '...',
   'You wake up on the sand. Your sword is in your hand. There is a warden-shaped hole in the banners.',
   ALONE_GUARD_LINE,

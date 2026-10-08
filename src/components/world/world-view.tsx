@@ -82,6 +82,7 @@ import {
   IMPACT_TIME,
   SWING_STRIKE,
   SWING_WINDUP,
+  SWING_SWEEP,
   SW_HY,
   SW_RUN,
   bladeAt,
@@ -1585,6 +1586,37 @@ export function WorldView({
     const w = sim.swing.get();
     return w.length === 0 ? 0 : bladeAt(w[SW_T])[2];
   });
+  // the slash his blade throws (author, Oct 8, 2026, Episode 15: "make that sword swing extravagant"): a crescent of
+  // light the size of a house, off the blade as it comes down, across the gap to the warden and on past him, growing
+  // as it flies, white at its heart and edged in pale blue, then gone
+  const slashK = (w: number[]) => {
+    'worklet';
+    return w.length === 0 || w[SW_RUN] === 0 ? -1 : (w[SW_T] - SWING_WINDUP) / (SWING_SWEEP + 0.35);
+  };
+  const slashPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    const k = slashK(w);
+    if (k < 0 || k > 1) return path;
+    const dir = w[SW_FACE] === 2 ? -1 : 1;
+    const reach = (w[SW_WX] - w[SW_BX]) * 1.6;
+    const x = w[SW_BX] + reach * k;
+    const y = w[SW_BY] - 14;
+    const r = 10 + 30 * k;
+    const steps = 16;
+    for (let i = 0; i <= steps; i++) {
+      const ang = -1.25 + (2.5 * i) / steps;
+      const px = x - dir * r * 0.55 + Math.cos(ang) * r * dir;
+      const py = y + Math.sin(ang) * r;
+      if (i === 0) path.moveTo(px, py);
+      else path.lineTo(px, py);
+    }
+    return path;
+  });
+  const slashO = useDerivedValue(() => {
+    const k = slashK(sim.swing.get());
+    return k < 0 || k > 1 ? 0 : k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4;
+  });
   // where the blade meets him: a star of white and gold bursting out, then gone
   const impactPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
@@ -1787,6 +1819,9 @@ export function WorldView({
         <Path path={shinePath} color="#FFFFFF" />
         <Path path={arcPath} color="#FFE9A0" style="stroke" strokeWidth={7} strokeCap="round" opacity={arcO} />
         <Path path={arcPath} color="#FFFFFF" style="stroke" strokeWidth={2.5} strokeCap="round" opacity={arcO} />
+        <Path path={slashPath} color="#7FD8FF" style="stroke" strokeWidth={9} strokeCap="round" opacity={slashO} />
+        <Path path={slashPath} color="#B8ECFF" style="stroke" strokeWidth={5} strokeCap="round" opacity={slashO} />
+        <Path path={slashPath} color="#FFFFFF" style="stroke" strokeWidth={2} strokeCap="round" opacity={slashO} />
         <Path path={bladePath} color="#E8ECF4" />
         <Path path={bladePath} color="#4A4E58" style="stroke" strokeWidth={0.75} />
         <Path path={hiltPath} color="#8A6A3A" />
