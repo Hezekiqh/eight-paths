@@ -25,7 +25,7 @@ export const BOSS_CUE: Partial<Record<MapId, string[]>> = {
     // the Warden, raised from the dead (author, Oct 7, 2026): Brannoc's swing killed him in the Kaloseum; he was
     // buried in the Graveyard of Kings, and Kaldor raises him for the fight before the king
     '* Kaldor lifts a hand. The floor cracks, and something huge climbs up out of it, earth sliding off its shoulders.',
-    '* Bertrand, the Warden. Dead, and up again. His eyes are empty.',
+    '* Balderek, the Warden. Dead, and up again. His eyes are empty.',
     '* A tag hangs from his neck: AUREK THE TALL. Almost.',
     '* Up by the throne, Felix settles in to watch.',
   ],

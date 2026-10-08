@@ -117,7 +117,7 @@ export function winScene(
           ...(brannoc ? ["BRANNOC: I… I didn't run. Did you see? I didn't run!"] : []),
           "GUARD: Strength is valued more than anything here. You're free to explore the prison.",
           "GUARD: We don't get paid enough for this.",
-          "BERTRAND: (grunts) We don't get paid at all.",
+          "BALDEREK: (grunts) We don't get paid at all.",
           "Barnaby chalks a new name on the champions' wall, under KALDOR. The first new name in five hundred years.",
         ],
         outcome: { flags: [flag] },

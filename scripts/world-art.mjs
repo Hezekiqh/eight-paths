@@ -4320,6 +4320,19 @@ const WALKERS = {
     beard: '#8A847C',
     spade: true,
   },
+  // A guard knocked out cold (author, Oct 8, 2026, Episode 14): a raider with little Xs for eyes.
+  raiderko: {
+    top: '#6A4A3A',
+    shade: '#4A3228',
+    legs: '#3A2A20',
+    boots: '#2A1A12',
+    belt: '#8A3A2A',
+    skin: '#D8A880',
+    hair: ['short', '#3A2418'],
+    beard: '#3A2418',
+    sword: true,
+    ko: true,
+  },
 };
 
 // The walkers' light, as the castle's: from the upper left. Lit edges warm toward candlelight, shade cools toward
@@ -4590,6 +4603,15 @@ function drawWalker(g, ox, oy, w, dir, frame) {
     if (side) {
       p(5, 8, EYE);
       if (!w.sleepy) p(5, 7, EYE);
+    } else if (w.ko) {
+      // knocked out: a little X for each eye
+      for (const ex of [5, 9]) {
+        p(ex, 7, EYE);
+        p(ex + 2, 7, EYE);
+        p(ex + 1, 8, EYE);
+        p(ex, 9, EYE);
+        p(ex + 2, 9, EYE);
+      }
     } else if (w.sleepy) {
       b(5, 8, 2, 1, EYE);
       b(9, 8, 2, 1, EYE);

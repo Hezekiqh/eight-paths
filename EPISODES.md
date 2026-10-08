@@ -15,7 +15,7 @@ episode for the next two weeks follows this. Numbers below are measured from the
 | Ending | Ends on "...Touchy." over the scene | **No end card.** End on the last laugh, held ~1.5 s |
 | Shape | Three beats of ~5 s: Old Mott 0–5 s, Nails 5–10.5 s, Silas Seen 10.5–16.6 s | **Three beats, rule of three**, the third one topping the other two |
 | Each beat | Setup (1–2 short lines) → punchline held ~1.5–2 s → menu flashes ~1 s, Goodbye picked → cut | Setup fast, **punchline holds**, menu shows the game's choices for a second |
-| Text speed | ~20 ms a letter (the game's 28 ms, sped up); setups held only ~0.3 s once typed | **Type fast, don't linger on setups.** From Episode 11 a touch slower (author, Oct 6: "a little too fast"): 24 ms a letter, setups held ~0.5 s |
+| Text speed | ~20 ms a letter (the game's 28 ms, sped up); setups held only ~0.3 s once typed | **Type fast, don't linger on setups.** From Episode 11 a touch slower (author, Oct 6: "a little too fast"): 24 ms a letter, setups held ~0.5 s. From Episode 14, 28 ms (author, Oct 8: "it reads way too fast") |
 | Movement | Between cells, the wizard walks quick (~0.5 s) | **Speed the character up.** No slow walks |
 | Camera | Beat one framed close on Old Mott, then the wider corridor | **Hook close**, then open up |
 | Sound | Voice blips only | Voices only; add a sound when posting if wanted |
@@ -95,16 +95,18 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   three) are `passable`, so every fight still balances (fights.test).
 - **No overlap** (author): nobody stands or falls into anyone. Brannoc is three tiles from where you come up, and
   faints away from you.
-- **Episode 14, "The Warden"** (`node scripts/episode-video.mjs 14`, 15.3 s): picks up where 13 left off. Frame one, the
-  fifth guard hits the sand. Barnaby (box, the screen jolts): "UNACCEPTABLE!!!!! Five of the king's own, beaten by ONE
-  escapee?!" / "That's 100 life sentences. EACH!" STOMP. STOMP. (A giant's footfall: `assets/audio/stomp.wav`,
-  `scripts/stomp-sound.mjs`; the screen jumps on each.) Barnaby: "You're in for it now! The Greatest Champion and
-  Warden of the Kalo..." STOMP: up out of the trapdoor climbs the Warden, twice anyone's size: "BERTRAND!!!!" (author:
-  Bertrand, not Aurek; his old name stays a secret). Two stomping strides your way. The menu, as the game has it:
-  *How's the weather up there?* Bertrand: "...Cloudy." / "With a chance of pain." Cut. (Cut along the way: the guard's
-  "We don't get paid enough for this", and in the game Bertrand and Barnaby's words about the horn and the vacation.)
-  In the game, the same: `PRISON_GUARDS_DOWN` and the `pit-warden` entrance and menu in `dungeon.ts`; a line that says
-  STOMP thumps the phone and plays the stomp, every time (`rumbles.ts`).
+- **Episode 14, "The Warden"** (`node scripts/episode-video.mjs 14`, 16.4 s): picks up where 13 left off. Frame one, all
+  five guards flat on the sand round you, little Xs for eyes and snot bubbles going (out cold, not dead: `raiderko`).
+  Barnaby (box, the screen jolts): "UNACCEPTABLE! Five of the king's finest, bested by a lone escapee! What do we pay
+  you for?" The guard in front of you, slowly, because he's hurt: "You don't pay us at all." STOMP. STOMP. (A giant's
+  footfall: `assets/audio/stomp.wav`, `scripts/stomp-sound.mjs`; the screen jumps on each.) Barnaby: "You're in for it
+  now! The second greatest champion... aside from the king, of course..." STOMP: up out of the trapdoor climbs the
+  Warden, twice anyone's size: "BALDEREK!!!!" (author, Oct 8: the Warden is Balderek, renamed from Bertrand; his old
+  name, Aurek, stays a secret). Two stomping strides your way. The menu, as the game has it: *How's the weather up
+  there?* Balderek: "Cloudy... with a chance of pain." Cut. (Cut along the way, in the game: Balderek and Barnaby on the
+  horn and the vacation.) All dialogue a touch slower from here on (author: "it reads way too fast": 28 ms a letter, 1.4×
+  holds). In the game, the same: `PRISON_GUARDS_DOWN`, the `pit-warden` entrance and menu in `dungeon.ts`; a line that
+  says STOMP thumps the phone and plays the stomp, every time (`rumbles.ts`).
 - **Next:** Episode 15.
 
 ## In the episode script

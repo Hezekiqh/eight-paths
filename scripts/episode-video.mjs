@@ -1476,9 +1476,12 @@ function drawWorld(canvas, ep, st, t) {
     if (!n || over < 1) continue;
     // (wherever they are: carried off, say)
     const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y - st.npcAt[id].lift] : center(n.x, n.y);
-    for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+    // (knocked out cold, `ko`: no Zs, just the bubble)
+    if (!n.ko) for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
     if (n.snot) {
-      const b = bubbleAt(t, x + 13, y - 4);
+      // (each on its own breath, not all together)
+      // (a knocked-out guard's off the end of his nose, clear of his X eyes)
+      const b = bubbleAt(t + [...id].reduce((h, c) => h + c.charCodeAt(0), 0) * 0.13, x + (n.ko ? 16 : 13), y - (n.ko ? 7 : 4));
       for (const [bx, by] of b.cells) canvas.drawRect(CK.XYWHRect(bx, by, 1, 1), snot);
       if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), shine);
     }
@@ -1723,7 +1726,8 @@ const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'mo
  * The short-form template (EPISODES.md, measured from Episode 10): text at 20 ms a letter with half the
  * punctuation pauses, setups gone almost as soon as they're typed, a quick walk, no title card, no end card.
  */
-const SHORT = { letterMs: 24, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
+// (a touch slower from Episode 14 on, author, Oct 8, 2026: "it reads way too fast")
+const SHORT = { letterMs: 28, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
 /** Episode 10 as posted, before the author slowed the template a touch (Oct 6, 2026: "a little too fast"). */
 const SHORT_10 = { ...SHORT, letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190 };
 
@@ -1741,7 +1745,7 @@ const unnamed = (l) => l.replace(/^[A-Z][A-Z ']+: /, '');
 /** The excuses on offer (dungeon.ts ARENA_EXCUSES), as the menu shows them. */
 /**
  * The Warden's entrance, from PRISON_INTROS['pit-warden'] in dungeon.ts: its lines, the menu as the game shows it
- * (questions, then choices), and what Bertrand says back to a choice.
+ * (questions, then choices), and what Balderek says back to a choice.
  */
 const wardenIntro = () => {
   const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
@@ -2481,7 +2485,7 @@ const EPISODES = {
     };
   },
   // Episode 14 (author, Oct 8, 2026): the fifth guard goes down; Barnaby gives the five of them 100 life sentences
-  // EACH; the Kaloseum shakes, STOMP, STOMP, and up out of the trapdoor comes the Warden: BERTRAND (who was Aurek the
+  // EACH; the Kaloseum shakes, STOMP, STOMP, and up out of the trapdoor comes the Warden: BALDEREK (who was Aurek the
   // Tall, but nobody says so yet). You answer him (the menu), and he answers back. Same sand, everyone where Episode
   // 13 left them. All of it from the game.
   14: () => {
@@ -2496,58 +2500,72 @@ const EPISODES = {
     Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
     Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
     Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'up' });
-    // the five guards where they fought you (the game's bearers), four of them already down; the fifth falls first
+    // the five guards where they fought you (the game's bearers), all of them flat on the sand: little Xs for eyes, and
+    // snot bubbles, so you know they're out cold, not dead (author, Oct 8, 2026)
     const guards = [[11, 8], [19, 8], [13, 9], [17, 9], [15, 8]];
     guards.forEach(([x, y], i) => {
-      pit.npcs[`guard-${i + 1}`] = { id: `guard-${i + 1}`, type: 'npc', x, y, sprite: 'raider', facing: 'down', name: 'Guard', lines: [] };
+      pit.npcs[`guard-${i + 1}`] = {
+        id: `guard-${i + 1}`,
+        type: 'npc',
+        x,
+        y,
+        sprite: 'raiderko',
+        facing: 'down',
+        name: 'Guard',
+        lines: [],
+        snot: true,
+        ko: true,
+      };
     });
-    // Bertrand, twice anyone's size: up out of the trapdoor you came up through
-    pit.npcs.bertrand = { id: 'bertrand', type: 'npc', x: 7, y: 14, sprite: 'warden', facing: 'right', name: 'Bertrand', size: 2, lines: [] };
+    // Balderek, twice anyone's size: up out of the trapdoor you came up through
+    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 14, sprite: 'warden', facing: 'right', name: 'Balderek', size: 2, lines: [] };
     // fixed shots, cut between, never panned
     const RING = [{ look: [15, 9.5] }, { zoom: 1 }];
     const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
     const WIDE = [{ look: [11, 10.5] }, { zoom: 1 }];
     return {
       ...SHORT,
-      read: 1.3,
+      read: 1.4,
       gapAfter: 0.12,
       number: 14,
       title: 'THE WARDEN',
       map: pit,
       shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
       awake: ['brannoc-pit'],
-      out: ['brannoc-pit', 'guard-1', 'guard-2', 'guard-3', 'guard-4'],
-      hide: ['bertrand'],
+      out: ['brannoc-pit', 'guard-1', 'guard-2', 'guard-3', 'guard-4', 'guard-5'],
+      hide: ['balderek'],
       hero: { sprite: 'quill', at: [15, 10], facing: 'up' },
-      // the hook: the last guard standing, right in front of you, goes down
+      // the hook: five of the king's finest, out cold all round you, snot bubbles going
       look: [15, 9.5],
       zoom: 1,
       script: [
-        { faint: 'guard-5' },
-        { wait: 0.3 },
+        { wait: 0.6 },
         ...BOX,
         { jolt: 0.45 },
-        { say: 'barnaby-box', lines: by(down, 'BARNABY'), punch: 0.4, letterMs: 16, pause: 0.2, read: 0.95 },
+        { say: 'barnaby-box', lines: by(down, 'BARNABY'), punch: 0.4, letterMs: 20, pause: 0.25, read: 1.1 },
+        // the one in front of you gets it out, slowly: he's hurt
+        ...RING,
+        { say: 'guard-5', lines: by(down, 'GUARD'), punch: 0.5, letterMs: 70 },
         // the ground answers: STOMP. STOMP.
         ...WIDE,
         { face: 'left' },
         { stomp: 0.45 },
         { stomp: 0.5 },
         ...BOX,
-        { say: 'barnaby-box', lines: [announce], punch: 0.05, letterMs: 16, pause: 0.2, read: 1 },
+        { say: 'barnaby-box', lines: [announce], punch: 0.05, letterMs: 20, pause: 0.25, read: 1.1 },
         // cut off mid-word: STOMP, and there he is, climbing up out of the trapdoor
         ...WIDE,
         { stomp: 0.1 },
-        { rise: 'bertrand', dur: 0.9, together: true },
-        { say: 'barnaby-box', lines: [name], punch: 0.3, letterMs: 30, read: 1 },
+        { rise: 'balderek', dur: 0.9, together: true },
+        { say: 'barnaby-box', lines: [name], punch: 0.3, letterMs: 34, read: 1.1 },
         // two great strides your way
-        { npcWalk: 'bertrand', to: [[8.5, 13.5]], speed: 30 },
+        { npcWalk: 'balderek', to: [[8.5, 13.5]], speed: 40 },
         { stomp: 0.2 },
-        { npcWalk: 'bertrand', from: center(8.5, 13.5), to: [[10, 13]], speed: 30 },
+        { npcWalk: 'balderek', from: center(8.5, 13.5), to: [[10, 13]], speed: 40 },
         { stomp: 0.35 },
-        // (cut along the way: Bertrand and Barnaby's words about the horn and the vacation)
-        { menu: { speaker: 'Bertrand', options: warden.menu, pick: warden.menu.indexOf(WEATHER), hold: 0.35 } },
-        { say: 'bertrand', lines: warden.reply(WEATHER).map(unnamed), punch: 0.9 },
+        // (cut along the way: Balderek and Barnaby's words about the horn and the vacation)
+        { menu: { speaker: 'Balderek', options: warden.menu, pick: warden.menu.indexOf(WEATHER), hold: 0.35 } },
+        { say: 'balderek', lines: warden.reply(WEATHER).map(unnamed), punch: 0.8 },
       ],
     };
   },
