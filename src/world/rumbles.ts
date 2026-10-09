@@ -8,6 +8,8 @@ export type Rumble =
   | 'scream'
   | 'crash'
   | 'rumble'
+  /** A giant's footfall: the phone thumps, and the stomp plays (dialogue-box.tsx). */
+  | 'stomp'
   // The little ones, for whoever's paying attention:
   | 'knock'
   | 'heartbeat'
@@ -24,6 +26,7 @@ const WORDS: [Rumble, RegExp][] = [
   ['roar', /\b(roar(s|ed|ing)?|cheer(s|ed|ing)?|applau(d|ds|ded|se)|r+a{3,}h+)\b/gi],
   ['scream', /\b(scream(s|ed|ing)?|shriek(s|ed|ing)?|wail(s|ed|ing)?|yell(s|ed|ing)?|a{3,}h+)\b/gi],
   ['crash', /\b(crash(es|ed|ing)?|slam(s|med|ming)?|smash(es|ed|ing)?|thud(s|ded)?|boom(s|ed|ing)?|bang(s|ed)?|explod(e|es|ed|ing)|explosion)\b/gi],
+  ['stomp', /\b(stomp(s|ed|ing)?)\b/gi],
   ['rumble', /\b(rumbl(e|es|ed|ing)|quak(e|es|ed|ing)|thunder(s|ed|ing|ous)?)\b/gi],
   ['knock', /\b(knock(s|ed|ing)?)\b(?! (back|out|over|down|off|into|him|her|them|you))/gi],
   ['heartbeat', /\b(heartbeats?|heart (pounds|pounding|thumps|thumping|races|racing))\b/gi],
@@ -37,13 +40,13 @@ const WORDS: [Rumble, RegExp][] = [
   ['hiccup', /\b(hiccup(s|ped|ping)?|hic|burp(s|ed)?|belch(es|ed)?)\b/gi],
 ];
 
-/** Where each loud word starts in `text`, in order. One per kind, so a line can't rattle on. */
+/** Where each loud word starts in `text`, in order. One per kind (but every stomp), so a line can't rattle on. */
 export function rumblesIn(text: string): { at: number; kind: Rumble }[] {
   const found: { at: number; kind: Rumble }[] = [];
   for (const [kind, re] of WORDS) {
     re.lastIndex = 0;
-    const m = re.exec(text);
-    if (m) found.push({ at: m.index, kind });
+    // a giant's every footfall lands (STOMP. STOMP. STOMP.); anything else, once a line
+    for (let m = re.exec(text); m; m = kind === 'stomp' ? re.exec(text) : null) found.push({ at: m.index, kind });
   }
   return found.sort((a, b) => a.at - b.at);
 }

@@ -30,10 +30,14 @@ describe("Gary's keys and the jailbreak", () => {
     expect(PRISON_INTROS['pit-guards-freed-alone'].lines.join(' ')).not.toContain('Brannoc');
   });
 
-  it("has the Warden's menu: two to ask, two that start the fight, one of them mean", () => {
+  it("has the Warden's menu: one to ask, three that start the fight (Episode 14's first), one of them mean", () => {
     const warden = PRISON_INTROS['pit-warden'];
-    expect(warden.questions?.map((q) => q.ask)).toEqual(['Who are you?', "What's wrong with Barnaby?"]);
-    expect(warden.choices?.map((c) => c.label)).toEqual(['Any chance you could let me go?', 'Your poor mother.']);
+    expect(warden.questions?.map((q) => q.ask)).toEqual(["What's wrong with Barnaby?"]);
+    expect(warden.choices?.map((c) => c.label)).toEqual([
+      "How's the weather up there?",
+      'Any chance you could let me go?',
+      'Your poor mother.',
+    ]);
     expect(warden.choices!.filter((c) => c.deed === 'bad')).toHaveLength(1);
   });
 });

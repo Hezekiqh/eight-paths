@@ -15,7 +15,7 @@ episode for the next two weeks follows this. Numbers below are measured from the
 | Ending | Ends on "...Touchy." over the scene | **No end card.** End on the last laugh, held ~1.5 s |
 | Shape | Three beats of ~5 s: Old Mott 0–5 s, Nails 5–10.5 s, Silas Seen 10.5–16.6 s | **Three beats, rule of three**, the third one topping the other two |
 | Each beat | Setup (1–2 short lines) → punchline held ~1.5–2 s → menu flashes ~1 s, Goodbye picked → cut | Setup fast, **punchline holds**, menu shows the game's choices for a second |
-| Text speed | ~20 ms a letter (the game's 28 ms, sped up); setups held only ~0.3 s once typed | **Type fast, don't linger on setups.** From Episode 11 a touch slower (author, Oct 6: "a little too fast"): 24 ms a letter, setups held ~0.5 s |
+| Text speed | ~20 ms a letter (the game's 28 ms, sped up); setups held only ~0.3 s once typed | **Type fast, don't linger on setups.** From Episode 11 a touch slower (author, Oct 6: "a little too fast"): 24 ms a letter, setups held ~0.5 s. From Episode 14, 28 ms (author, Oct 8: "it reads way too fast") |
 | Movement | Between cells, the wizard walks quick (~0.5 s) | **Speed the character up.** No slow walks |
 | Camera | Beat one framed close on Old Mott, then the wider corridor | **Hook close**, then open up |
 | Sound | Voice blips only | Voices only; add a sound when posting if wanted |
@@ -95,7 +95,28 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   three) are `passable`, so every fight still balances (fights.test).
 - **No overlap** (author): nobody stands or falls into anyone. Brannoc is three tiles from where you come up, and
   faints away from you.
-- **Next:** Episode 14.
+- **Episode 14, "The Warden"** (`node scripts/episode-video.mjs 14`, 16.6 s): picks up where 13 left off. Frame one, all
+  five guards flat on the sand round you, little Xs for eyes and snot bubbles going (out cold, not dead: `raiderko`).
+  Barnaby (box, the screen jolts): "UNACCEPTABLE! Five of the king's finest, bested by a lone escapee! What do we pay
+  you for?" The guard in front of you, slowly, because he's hurt: "You don't pay us at all." While he gets it out, the
+  Kaloseum's tiny medics (`medic`, a red cross on white) run on in single file, two to a guard, roll each onto a cot,
+  and carry them all off into the fighters' tunnel as the ground starts to shake. STOMP. STOMP. (A giant's
+  footfall: `assets/audio/stomp.wav`, `scripts/stomp-sound.mjs`; the screen jumps on each.) Barnaby: "You're in for it
+  now! The second greatest champion... aside from the king, of course..." STOMP: out of the dark of the fighters' tunnel (a
+  stone-framed opening in the west end of the stands, `7` on the map) comes the Warden, twice anyone's size: "BALDEREK!!!!" (author, Oct 8: the Warden is Balderek, renamed from Bertrand; his old
+  name, Aurek, stays a secret). Two stomping strides your way. The menu, as the game has it: *How's the weather up
+  there?* Balderek: "Cloudy... with a chance of pain." Cut. (Cut along the way, in the game: Balderek and Barnaby on the
+  horn and the vacation.) All dialogue a touch slower from here on (author: "it reads way too fast": 28 ms a letter, 1.4×
+  holds). In the game, the same: `PRISON_GUARDS_DOWN`, the `pit-warden` entrance and menu in `dungeon.ts`; a line that
+  says STOMP thumps the phone and plays the stomp, every time (`rumbles.ts`).
+- **Episode 15, "That Move"** (`node scripts/episode-video.mjs 15`, 14.3 s): six blows land on Balderek (white bursts,
+  the game's hit sound); "Twenty strikes." Balderek: "Alright. Enough. Time to finish this and get back to work." Behind
+  you, Brannoc gets up, still fast asleep the whole way (eyes shut, Zs, snot bubble), shuffles over and, without a word
+  (author: he doesn't shout it), swings: a gleam on the blade, a crescent of light as big as a house across the sand, a
+  white flash, a huge jolt. Balderek tumbles up through a banner and out of the Kaloseum; a roof gives way in town. Barnaby:
+  "*GASP*" / "That move... I thought it was a fairytale." Cut. In the game, the same (`SNOT_SWING`, `SNOT_SWING_HIT` in
+  `dungeon.ts`), and the game's swing throws the same crescent (`slashPath`, world-view.tsx).
+- **Next:** Episode 16.
 
 ## In the episode script
 

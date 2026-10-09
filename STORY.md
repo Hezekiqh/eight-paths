@@ -115,12 +115,13 @@ What the player sees and hears all over the Berserker Kingdom. All of it is Told
 
 - **Hinted:** Kaldor was given power over the dead. The shadow soldiers are the dead he woke, and so, in the end, is the
   Warden. The Graveyard of Kings has empty graves, dug from the inside.
-- **The Warden is Bertrand, who was Aurek** (author, Oct 7, 2026). Everyone calls the Warden **Bertrand** (Barnaby
-  nearly calls him "Wa... Bertrand!"), and that is the name the game uses for him. His true old name, the one he had
+- **The Warden is Balderek, who was Aurek** (author, Oct 7, 2026; renamed from Bertrand, Oct 8). Everyone calls the
+  Warden **Balderek**: he's bald, and the name keeps a little of the old one. Barnaby announces him as "the second
+  greatest champion, aside from the king of course... BALDEREK!" That is the name the game uses for him. His true old name, the one he had
   before the chains, is **Aurek the Tall**: the challenger who almost beat Kaldor in the Trial and scarred his face,
-  kept chained in the Kaloseum as its Warden ever since. Bertrand is what they call him; Aurek was who he was.
+  kept chained in the Kaloseum as its Warden ever since. Balderek is what they call him; Aurek was who he was.
   - In the prison break, Brannoc's swing puts him through the banners, and he dies (he lands on a bakery).
-  - He's buried in the Graveyard of Kings. The stone reads BERTRAND, THE WARDEN, with "AUREK THE TALL" scratched
+  - He's buried in the Graveyard of Kings. The stone reads BALDEREK, THE WARDEN, with "AUREK THE TALL" scratched
     underneath.
   - After you've escaped, Kaldor raises him from the dead (his grave is found dug from the inside) for the throne-room
     fight, the fight before the king: the floor cracks and he climbs out.

@@ -247,48 +247,50 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
       "BARNABY: In this corner: one escapee, upright! One escapee, not! In the other: FIVE OF THE KING'S OWN! FIGHT!",
     ],
   },
-  // the Warden, Bertrand (author, Oct 4, 2026), back early (the prison route: freed prisoners or not). A working man
+  // the Warden, Balderek (author, Oct 4, 2026), back early (the prison route: freed prisoners or not). A working man
   // who wants the job done (author, Oct 7, 2026): no speeches, and no patience for Barnaby's show.
   'pit-warden': {
-    speaker: 'Bertrand',
+    speaker: 'Balderek',
+    // his every footfall shakes the Kaloseum, and Barnaby announces him like a champion (author, Oct 8, Episode 14)
     lines: [
-      'BERTRAND: Barnaby. Prisoners loose on my sand, and you are up there with a horn.',
-      "BARNABY: Wa... Bertrand! I didn't think you'd be back from your vacation so soon.",
-      'BERTRAND: It was not a vacation. The east gate was off its hinges. Somebody had to hang it.',
-      'BERTRAND: Put the horn down, Barnaby. I will take it from here.',
+      '* STOMP. STOMP.',
+      "BARNABY: You're in for it now! The second greatest champion... aside from the king, of course...",
+      '* STOMP.',
+      'BARNABY: BALDEREK!!!!',
+      "* Out of the dark of the fighters' tunnel he comes, twice the size of anyone, and every stride shakes the sand.",
+      'BALDEREK: Barnaby. Prisoners loose on my sand, and you are up there with a horn.',
+      "BARNABY: I didn't think you'd be back from your vacation so soon.",
+      'BALDEREK: It was not a vacation. The east gate was off its hinges. Somebody had to hang it.',
+      'BALDEREK: Put the horn down, Barnaby. I will take it from here.',
     ],
+    // (Barnaby's just told you who he is; four to a menu)
     questions: [
-      {
-        ask: 'Who are you?',
-        answer: [
-          'BERTRAND: The Warden. I keep the troublemakers in, and I clean up after them.',
-          'BERTRAND: Barnaby does the shouting. I do the work.',
-        ],
-      },
       {
         ask: "What's wrong with Barnaby?",
         answer: [
-          'BERTRAND: Five hundred years in this place, and his hands have never been dirty once.',
-          'BERTRAND: He sells the fight. I finish it.',
-          'BARNABY: I am RIGHT HERE, Bertrand.',
-          'BERTRAND: I know. I can hear you.',
+          'BALDEREK: Five hundred years in this place, and his hands have never been dirty once.',
+          'BALDEREK: He sells the fight. I finish it.',
+          'BARNABY: I am RIGHT HERE, Balderek.',
+          'BALDEREK: I know. I can hear you.',
         ],
       },
     ],
     choices: [
+      // Episode 14's answer (author, Oct 8, 2026)
+      { label: "How's the weather up there?", lines: ['BALDEREK: Cloudy... with a chance of pain.'] },
       {
         label: 'Any chance you could let me go?',
         lines: [
-          'BERTRAND: No.',
-          'BERTRAND: You broke out. I put you back down. Nothing personal. It is the job.',
+          'BALDEREK: No.',
+          'BALDEREK: You broke out. I put you back down. Nothing personal. It is the job.',
         ],
       },
       {
         label: 'Your poor mother.',
         deed: 'bad',
         lines: [
-          'BERTRAND: My mother is fine. We have tea every Wednesday.',
-          'BERTRAND: Now. Let us get this done.',
+          'BALDEREK: My mother is fine. We have tea every Wednesday.',
+          'BALDEREK: Now. Let us get this done.',
         ],
       },
     ],
@@ -315,14 +317,19 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
 /** The fifth guard down: the warden's coming (as the front-door fight, but Brannoc is still out cold). */
 export const PRISON_GUARDS_DOWN = [
   'The fifth guard hits the sand.',
-  'Behind you, Brannoc snores.',
-  'Then the floor shakes. Something very big is walking up the tunnel.',
+  // Barnaby lays into them (author, Oct 8, 2026, Episode 14)
+  "BARNABY: UNACCEPTABLE! Five of the king's finest, bested by a lone escapee! What do we pay you for?",
+  // one of them, flat on the sand, gets it out (author, Oct 8, 2026): the guards have never been paid
+  "GUARD: You don't pay us at all.",
+  // the Kaloseum's tiny medics clear the sand (Episode 14)
+  "* The Kaloseum's medics run on with cots, two to a guard, and hurry all five of them off into the fighters' tunnel.",
+  "* STOMP. The whole Kaloseum shakes. STOMP. Something very big is coming up the fighters' tunnel.",
 ];
 
-/** Twenty strikes in: Bertrand has had enough, and Brannoc gets up, asleep. */
+/** Twenty strikes in: Balderek has had enough, and Brannoc gets up, asleep. */
 export const SNOT_SWING = [
   'Twenty strikes.',
-  'BERTRAND: Alright. Enough. Time to finish this and get back to work.',
+  'BALDEREK: Alright. Enough. Time to finish this and get back to work.',
   "Behind you, Brannoc stands up. He's still asleep.",
 ];
 // Brannoc's sleepwalk to the warden, the swing and the flight are in swing.ts (they follow the warden, wherever
@@ -384,12 +391,16 @@ export const arenaCarry = (r: Carriers): Actor[] => [
   { row: r.nails, path: [[12, 14], CARRIED_TO.nails], face: 2 },
   { row: r.silas, path: [[13, 13], CARRIED_TO.silas], face: 2 },
 ];
-// Bertrand goes over the banners, not through the wall (STORY.md: he lands on the bakery, and the swing kills him);
+// Balderek goes over the banners, not through the wall (STORY.md: he lands on the bakery, and the swing kills him);
 // the hole he leaves is drawn in the banner he went through (swing.ts, world-view Breach).
+// (author, Oct 8, 2026, Episode 15: he doesn't shout it; he just swings, and the slash says it for him; and Barnaby has
+// heard of that move)
 export const SNOT_SWING_HIT = [
   'His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
-  'BRANNOC SUPER SUPER SWING!',
-  'Bertrand goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
+  '* Brannoc swings his sword, without a word, and a slash of light as big as a house tears across the sand.',
+  'Balderek goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
+  'BARNABY: *GASP*',
+  'BARNABY: That move... I thought it was a fairytale.',
 ];
 
 /**
@@ -419,7 +430,7 @@ export const FREED_ENDING = [
 ];
 
 /** The line the swing lands on (world.tsx plays it with the blow). */
-export const SWING_LINE = SNOT_SWING_HIT.indexOf('BRANNOC SUPER SUPER SWING!');
+export const SWING_LINE = SNOT_SWING_HIT.findIndex((l) => l.startsWith('* Brannoc swings his sword'));
 
 /** The snot bubble's popped: he's awake (the-pit.json's brannoc-awake dozes until then). */
 export const BRANNOC_BLINKED = 'brannoc-blinked';
@@ -502,7 +513,7 @@ const ALONE_WARDEN = [
   'He is enormous. He is right in front of you. He smiles.',
   'You go white. Then grey.',
   '...',
-  'BRANNOC SUPER SUPER SWING!',
+  '* You swing, fast asleep, without a word, and a slash of light as big as a house tears across the sand.',
   '...',
   'You wake up on the sand. Your sword is in your hand. There is a warden-shaped hole in the banners.',
   ALONE_GUARD_LINE,

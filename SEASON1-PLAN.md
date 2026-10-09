@@ -29,7 +29,7 @@ straight in, with no fights. The Cull Road goes in between.
 
   Each has a few small lines underneath on who they were, in what people believe.
 - **Lore (Hinted):** rows of soldiers' graves, **empty, and dug from the inside**. One big grave with a broken chain:
-  BERTRAND, THE WARDEN (AUREK THE TALL scratched underneath). Kaldor's power over the dead, without anyone saying so.
+  BALDEREK, THE WARDEN (AUREK THE TALL scratched underneath). Kaldor's power over the dead, without anyone saying so.
 - **Fights:** the risen dead (shadow soldiers), at the empty graves.
 - **Puzzle:** match the epitaphs to the graves (or light the lanterns in order) to open the crypt gate. This replaces
   the Cleric job as the way into the crypt, or sits beside it.

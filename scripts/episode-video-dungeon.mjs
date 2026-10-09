@@ -2557,7 +2557,7 @@ const EPISODES = {
     const add = (id, x, y, sprite, facing, name, extra = {}) =>
       (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
     add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
-    add('warden', 10, 2, 'warden', 'down', 'Bertrand');
+    add('warden', 10, 2, 'warden', 'down', 'Balderek');
     add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
     add('down-nails', 7, 8, 'nails', 'down', 'Nails', { lying: true });
     add('down-mott', 9, 8, 'oldmott', 'down', 'Old Mott', { lying: true });
@@ -2583,10 +2583,10 @@ const EPISODES = {
           speed: 30,
         },
         { say: 'warden', lines: ['Having trouble, Barnaby?'] },
-        { say: 'barnaby', lines: ["Wa... Bertrand! I didn't think you'd be back from your vacation so soon."] },
+        { say: 'barnaby', lines: ["Wa... Balderek! I didn't think you'd be back from your vacation so soon."] },
         {
           menu: {
-            speaker: 'Bertrand',
+            speaker: 'Balderek',
             options: ['Who are you?', 'Any chance you could let me go?', 'Your poor mother.'],
             pick: 2,
             hold: 0.8,
@@ -2602,7 +2602,7 @@ const EPISODES = {
     const add = (id, x, y, sprite, facing, name, extra = {}) =>
       (pit.npcs[id] = { id, type: 'npc', x, y, sprite, facing, name, lines: [], ...extra });
     add('barnaby', 13, 3, 'barnaby', 'left', 'Barnaby');
-    add('warden', 10, 5, 'warden', 'down', 'Bertrand');
+    add('warden', 10, 5, 'warden', 'down', 'Balderek');
     add('down-brannoc', 4, 8, 'brannoc', 'down', 'Brannoc', { lying: true });
     add('brannoc', 4, 8, 'brannoc', 'right', 'Brannoc');
     const freed = [
@@ -2673,7 +2673,7 @@ const EPISODES = {
         {
           narrate: true,
           lines: [
-            'Bertrand goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
+            'Balderek goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
           ],
         },
         // the prisoners get up, and run for it

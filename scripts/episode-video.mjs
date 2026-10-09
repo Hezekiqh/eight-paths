@@ -146,6 +146,8 @@ const VOICES = {
   garyasleep: 2,
   silasseen: 3,
   nails: 4,
+  // Aurek the Tall, the Kaloseum's Warden
+  warden: 1,
 };
 function voiceFor(name, sprite) {
   if (sprite && sprite in VOICES) return VOICES[sprite];
@@ -867,11 +869,15 @@ function compile(ep) {
         hide: step.hide,
         tears: step.tears,
         dash: step.dash,
+        // `spin`: tumbling end over end the whole way (flying out of the Kaloseum)
+        spin: step.spin,
         // `turn`: which way they turn once there; `facing`: which way they face the whole way (walking backwards)
         turn: step.turn,
         facing: step.facing,
         // `carried`: lifted off the ground as they set off, and set down when they get there (out cold, carried)
         carried: step.carried,
+        // how high they're held (default 10; the tiny medics' cots, lower)
+        lift: step.lift,
       });
       if (!step.together) t += (step.delay ?? 0) + dur + 0.15;
     } else if (step.laugh) {
@@ -982,6 +988,42 @@ function compile(ep) {
     } else if (step.jolt) {
       // the screen jolts (a lever thrown: CLUNK)
       segs.push({ kind: 'jolt', t0: t, t1: t + step.jolt });
+    } else if (step.strike) {
+      // a blow landing (Episode 15): a burst of white at the target, a small jolt, and the game's hit sound
+      segs.push({ kind: 'strike', t0: t, t1: t + 0.16, at: step.strike });
+      segs.push({ kind: 'jolt', t0: t, t1: t + 0.12, amp: 1.5 });
+      t += step.gap ?? 0.22;
+    } else if (step.stand) {
+      // someone out cold gets back up (still asleep: Brannoc), the faint in reverse
+      segs.push({ kind: 'stand', t0: t, t1: t + 0.45, id: step.stand });
+      t += 0.5;
+    } else if (step.slash) {
+      // a sword swung so hard it throws a slash of light (Brannoc, Episode 15, author: "extravagant"): a gleam on the
+      // blade as he winds up, the crescent flying across the sand, growing, and on the hit a white flash, a huge jolt
+      const { from, to, windup = 0.35, fly = 0.4 } = step.slash;
+      segs.push({ kind: 'gleam', t0: t, t1: t + windup, at: from });
+      segs.push({ kind: 'slash', t0: t + windup, t1: t + windup + fly, from, to });
+      segs.push({ kind: 'flash', t0: t + windup + fly, t1: t + windup + fly + 0.45 });
+      segs.push({ kind: 'jolt', t0: t + windup + fly, t1: t + windup + fly + 0.7, amp: 8 });
+      segs.push({ kind: 'boom', t0: t + windup + fly, t1: t + windup + fly });
+      t += windup + fly;
+    } else if (step.hole) {
+      // a hole torn in a banner, where someone went through it
+      segs.push({ kind: 'hole', t0: t, t1: t, at: step.hole });
+    } else if (step.cot) {
+      // the medics roll them onto cots (Episode 14)
+      segs.push({ kind: 'cot', t0: t, t1: t, ids: step.cot });
+      t += 0.25;
+    } else if (step.stomp) {
+      // a giant's footfall (Aurek the Tall): the screen jumps, hard, and STOMP (assets/audio/stomp.wav); then a beat
+      segs.push({ kind: 'jolt', t0: t, t1: t + 0.4, amp: 5 });
+      segs.push({ kind: 'stomp', t0: t, t1: t });
+      t += step.stomp;
+    } else if (step.rise) {
+      // someone climbs up out of the floor (a trapdoor), feet last: `dur` seconds, and there they stand
+      segs.push({ kind: 'show', t0: t, t1: t, id: step.rise });
+      segs.push({ kind: 'rise', t0: t, t1: t + step.dur, id: step.rise });
+      if (!step.together) t += step.dur;
     } else if (step.vanish) {
       // someone's simply gone (Gary, while you weren't looking)
       segs.push({ kind: 'vanish', t0: t, t1: t, id: step.vanish });
@@ -1056,6 +1098,18 @@ function stateAt(ep, compiled, t) {
   const shrugs = {};
   /** Who's fainted, by id: how far over they've gone (0 standing, 1 flat). */
   const fainted = {};
+  // out cold from the start (`ep.out`: where the last episode left them)
+  for (const id of ep.out ?? []) fainted[id] = 1;
+  /** Who's climbing up out of the floor, by id: how far up (0 under it, 1 out). */
+  const rising = {};
+  /** Who's been rolled onto a cot (the Kaloseum's medics), by id. */
+  const onCot = new Set();
+  /** Blows landing, a blade's gleam, a slash in flight, the white of its hit, and torn banners (Episode 15). */
+  const strikes = [];
+  let gleam = null;
+  let slash = null;
+  let flash = 0;
+  const holes = [];
   for (const s of compiled.segs) {
     if (s.t0 > t) break;
     if (s.kind === 'scene') {
@@ -1118,7 +1172,7 @@ function stateAt(ep, compiled, t) {
       const k = Math.min(1, (d - leg.d0) / leg.len);
       const done = t >= s.t1;
       // up over a quarter of a second, a bob with every step, and down again at the end
-      const LIFT = 10;
+      const LIFT = s.lift ?? 10;
       const up = Math.min(1, (t - s.t0) / 0.25, Math.max(0, 1 - (t - s.t1) / 0.25));
       npcAt[s.id] = {
         x: leg.a[0] + (leg.b[0] - leg.a[0]) * k,
@@ -1129,6 +1183,7 @@ function stateAt(ep, compiled, t) {
         gone: done && s.hide,
         tears: s.tears && !done,
         dash: s.dash && !done ? { from: s.legs[0].a, since: t - s.t0, dir: leg.dir } : null,
+        spin: s.spin ? (t - s.t0) * 900 : 0,
       };
     } else if (s.kind === 'laugh' && t < s.t1) {
       laughing[s.id] = t - s.t0;
@@ -1163,7 +1218,18 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'vanish') hide = [...hide, s.id];
     else if (s.kind === 'shrug' && t < s.t1) shrugs[s.id] = t - s.t0;
     else if (s.kind === 'faint') fainted[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
-    else if (s.kind === 'jolt' && t < s.t1) shake = 2.5 * (1 - (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'jolt' && t < s.t1) shake = (s.amp ?? 2.5) * (1 - (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'rise') rising[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'cot') for (const id of s.ids) onCot.add(id);
+    else if (s.kind === 'stand') {
+      const k = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      if (k >= 1) delete fainted[s.id];
+      else fainted[s.id] = 1 - k;
+    } else if (s.kind === 'strike' && t < s.t1) strikes.push({ at: s.at, k: (t - s.t0) / (s.t1 - s.t0) });
+    else if (s.kind === 'gleam' && t < s.t1) gleam = { at: s.at, k: (t - s.t0) / (s.t1 - s.t0) };
+    else if (s.kind === 'slash' && t < s.t1 + 0.35) slash = { from: s.from, to: s.to, k: (t - s.t0) / (s.t1 - s.t0) };
+    else if (s.kind === 'flash' && t < s.t1) flash = 1 - (t - s.t0) / (s.t1 - s.t0);
+    else if (s.kind === 'hole') holes.push(s.at);
     else if (s.kind === 'drop') {
       sink = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
       hole = [hx, hy];
@@ -1178,6 +1244,13 @@ function stateAt(ep, compiled, t) {
     look,
     shrugs,
     fainted,
+    rising,
+    onCot,
+    strikes,
+    gleam,
+    slash,
+    flash,
+    holes,
     shake,
     sink,
     hole,
@@ -1215,6 +1288,78 @@ function walkFrame(distance, moving) {
 // ---- the World, at K px per art pixel
 const VIEW_W = W / K;
 const VIEW_H = H / K;
+/**
+ * Blows and their light (Episode 15): white bursts where hits land; a gleam on Brannoc's blade as he winds up; the
+ * slash of light he throws, a crescent that grows as it flies, white at its heart and edged in pale blue, with a wake
+ * of sparks; and the holes torn in banners. In art pixels, over everyone.
+ */
+function drawBlows(canvas, st) {
+  for (const { at, k } of st.strikes) {
+    const [x, y] = center(...at);
+    // (on his chest, a little to whichever side the blow came from)
+    const r = 4 + k * 10;
+    const p = paint('#FFFFFF', 1 - k);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + 0.4;
+      const len = i % 2 ? 2 : 3;
+      for (let j = 0; j < len; j++)
+        canvas.drawRect(CK.XYWHRect(Math.round(x + Math.cos(a) * (r + j * 2)), Math.round(y - 26 + Math.sin(a) * (r + j * 2)), 2, 2), p);
+    }
+    canvas.drawRect(CK.XYWHRect(Math.round(x) - 3, Math.round(y) - 29, 6, 6), paint('#FFF4C0', 1 - k));
+  }
+  if (st.gleam) {
+    // a star of light on the blade, swelling
+    const [x, y] = center(...st.gleam.at);
+    const s = 3 + st.gleam.k * 12;
+    const p = paint('#FFFFFF', 0.4 + 0.6 * st.gleam.k);
+    const gx = Math.round(x - 6);
+    const gy = Math.round(y - 24);
+    canvas.drawRect(CK.XYWHRect(gx - s, gy, s * 2 + 1, 1), p);
+    canvas.drawRect(CK.XYWHRect(gx, gy - s, 1, s * 2 + 1), p);
+    canvas.drawRect(CK.XYWHRect(gx - 1, gy - 1, 3, 3), paint('#B8ECFF', 0.4 + 0.6 * st.gleam.k));
+  }
+  if (st.slash) {
+    const { from, to, k } = st.slash;
+    const [ax, ay] = center(...from);
+    const [bx, by] = center(...to);
+    const kk = Math.min(1, k);
+    const x = ax + (bx - ax) * kk;
+    const y = ay - 14 + (by - ay) * kk;
+    const dir = Math.sign(bx - ax) || 1;
+    const fade = k > 1 ? Math.max(0, 1 - (k - 1) * 3) : 1;
+    const r = 16 + kk * 34;
+    // the crescent: arcs bulging the way it flies, the outer ones pale blue and faint, the heart white
+    const arc = (radius, width, colour, alpha) => {
+      // (a paint of its own: the shared ones are fills)
+      const p = new CK.Paint();
+      p.setColor(color(colour, alpha * fade));
+      p.setAntiAlias(false);
+      p.setStyle(CK.PaintStyle.Stroke);
+      p.setStrokeWidth(width);
+      const ox = x - dir * radius * 0.55;
+      canvas.drawArc(CK.XYWHRect(ox - radius, y - radius, radius * 2, radius * 2), dir > 0 ? -70 : 110, 140, false, p);
+      p.delete();
+    };
+    // a glow, a pale blue edge, a white heart, and a second, fainter crescent close behind
+    arc(r + 6, 12, '#7FD8FF', 0.25);
+    arc(r + 2, 7, '#B8ECFF', 0.6);
+    arc(r, 3, '#FFFFFF', 1);
+    arc(r * 0.7, 3, '#B8ECFF', 0.55);
+    // a wake of sparks behind it
+    for (let i = 0; i < 28; i++) {
+      const back = (i / 28) * 60 * kk;
+      const sx = x - dir * (back + 6);
+      const sy = y + Math.sin(i * 2.3 + kk * 9) * r * 0.7;
+      canvas.drawRect(CK.XYWHRect(Math.round(sx), Math.round(sy), 2, 2), paint(i % 3 ? '#FFFFFF' : '#7FD8FF', (1 - i / 28) * fade));
+    }
+  }
+  for (const [hx, hy] of st.holes) {
+    // the banner torn through: a ragged dark hole, and the sky beyond
+    canvas.drawRect(CK.XYWHRect(hx - 3, hy - 3, 7, 7), paint('#1A1012'));
+    canvas.drawRect(CK.XYWHRect(hx - 2, hy - 2, 5, 5), paint('#8AB8E8'));
+  }
+}
+
 function drawWorld(canvas, ep, st, t) {
   const map = st.map ?? ep.map;
   const mapW = map.image.width();
@@ -1340,9 +1485,17 @@ function drawWorld(canvas, ep, st, t) {
       // carried: held up at their hands, drawn in front of whoever's carrying them
       if (over !== undefined) {
         const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
-        return [over >= 1 ? out : row, DIRS.down, 0, x, y - (at?.lift ?? 0), 0, { lie: over, sortY: y + 1 }];
+        return [
+          over >= 1 ? out : row,
+          DIRS.down,
+          0,
+          x,
+          y - (at?.lift ?? 0),
+          0,
+          { lie: over, sortY: y + 1, cot: st.onCot.has(n.id) },
+        ];
       }
-      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y];
+      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y, 0, { size: n.size, spin: at.spin }];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
       const sh = st.shrugs[n.id];
@@ -1359,7 +1512,9 @@ function drawWorld(canvas, ep, st, t) {
           y - (beat % 3 === 0 ? 2 : 0),
         ];
       }
-      return [row, DIRS[st.npcFacing[n.id]], 0, x, y, 0, { size: n.size }];
+      // climbing out of the floor: cut off below it, less and less
+      const up = st.rising[n.id];
+      return [row, DIRS[st.npcFacing[n.id]], 0, x, y, up === undefined ? 0 : 1 - up, { size: n.size }];
     });
   // the hole you went down: dark, with a lip of broken flagstone
   if (st.hole) {
@@ -1395,10 +1550,22 @@ function drawWorld(canvas, ep, st, t) {
       canvas.translate(-x, -(y + 2 - lift));
     }
     // bigger than everyone (the Warden), from the feet up, as the game draws him
+    // tumbling end over end, about the middle of them
+    if (fx.spin) {
+      const mid = y - (FEET - FH / 2) * (fx.size ?? 1);
+      canvas.translate(x, mid);
+      canvas.rotate(fx.spin, 0, 0);
+      canvas.translate(-x, -mid);
+    }
     if (fx.size && fx.size !== 1) {
       canvas.translate(x, y + FH - FEET);
       canvas.scale(fx.size, fx.size);
       canvas.translate(-x, -(y + FH - FEET));
+    }
+    // on a cot: canvas under them, a pole along each side, the ends sticking out for the bearers' hands
+    if (fx.cot) {
+      canvas.drawRect(CK.XYWHRect(Math.round(x) - 5, Math.round(y) - 7, 30, 15), paint('#D8CDB0'));
+      for (const py of [-8, 8]) canvas.drawRect(CK.XYWHRect(Math.round(x) - 10, Math.round(y) + py, 40, 1), paint('#6A4A2A'));
     }
     // fainting: tipping over backwards, pivoting on the feet, until flat
     if (fx.lie) {
@@ -1436,17 +1603,28 @@ function drawWorld(canvas, ep, st, t) {
   }
   // asleep where they stand (Gary): Zs floating up off the head, as the game draws them
   const zPaint = paint('#DCE8FF', 0.85);
+  // (wherever they are now: walking in their sleep, say; and with a snot bubble at the nose, if they have one: Brannoc)
   Object.values(map.npcs)
     .filter(
       (n) =>
         dozing(ep, n) &&
+        st.fainted[n.id] === undefined &&
         !(st.hide ?? ep.hide)?.includes(n.id) &&
-        !st.npcAt[n.id] &&
+        !st.npcAt[n.id]?.gone &&
         !(n.comesAfter && !st.shown.includes(n.id)),
     )
     .forEach((n, i) => {
-      const [x, y] = center(n.x, n.y);
+      const at = st.npcAt[n.id];
+      const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       for (const [zx, zy] of sleepZs(t + i * 0.37, x, y)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+      if (n.snot) {
+        // at the nose, on whichever side they face
+        const left = (at?.dir ?? st.npcFacing[n.id] ?? n.facing) === 'left';
+        const b = bubbleAt(t + i * 0.5, x + (left ? -8 : 2), y - 12);
+        const sp = paint('#B8E0C8', 0.8);
+        for (const [bx, by] of b.cells) canvas.drawRect(CK.XYWHRect(bx, by, 1, 1), sp);
+        if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), paint('#FFFFFF'));
+      }
     });
   // out cold (fainted, flat on their back, head to the right): Zs rising off the head, a snot bubble at the nose
   const snot = paint('#B8E0C8', 0.8);
@@ -1456,13 +1634,17 @@ function drawWorld(canvas, ep, st, t) {
     if (!n || over < 1) continue;
     // (wherever they are: carried off, say)
     const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y - st.npcAt[id].lift] : center(n.x, n.y);
-    for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
+    // (knocked out cold, `ko`: no Zs, just the bubble)
+    if (!n.ko) for (const [zx, zy] of sleepZs(t, x + 12, y + 18)) canvas.drawRect(CK.XYWHRect(zx, zy, 1, 1), zPaint);
     if (n.snot) {
-      const b = bubbleAt(t, x + 13, y - 4);
+      // (each on its own breath, not all together)
+      // (a knocked-out guard's off the end of his nose, clear of his X eyes)
+      const b = bubbleAt(t + [...id].reduce((h, c) => h + c.charCodeAt(0), 0) * 0.13, x + (n.ko ? 16 : 13), y - (n.ko ? 7 : 4));
       for (const [bx, by] of b.cells) canvas.drawRect(CK.XYWHRect(bx, by, 1, 1), snot);
       if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), shine);
     }
   }
+  drawBlows(canvas, st);
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
@@ -1703,7 +1885,8 @@ const HALL = ['brannoc', 'ysolde', 'quill', 'wren', 'oren', 'pip', 'tamsin', 'mo
  * The short-form template (EPISODES.md, measured from Episode 10): text at 20 ms a letter with half the
  * punctuation pauses, setups gone almost as soon as they're typed, a quick walk, no title card, no end card.
  */
-const SHORT = { letterMs: 24, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
+// (a touch slower from Episode 14 on, author, Oct 8, 2026: "it reads way too fast")
+const SHORT = { letterMs: 28, pause: 0.7, hold: 0.45, gapAfter: 0.2, speed: 160, titleDur: 0, endDur: 0 };
 /** Episode 10 as posted, before the author slowed the template a touch (Oct 6, 2026: "a little too fast"). */
 const SHORT_10 = { ...SHORT, letterMs: 20, pause: 0.5, hold: 0.3, gapAfter: 0.12, speed: 190 };
 
@@ -1719,6 +1902,26 @@ const gameLines = (name) => {
 /** "WARDEN: Well, well, well." → "Well, well, well." */
 const unnamed = (l) => l.replace(/^[A-Z][A-Z ']+: /, '');
 /** The excuses on offer (dungeon.ts ARENA_EXCUSES), as the menu shows them. */
+/**
+ * The Warden's entrance, from PRISON_INTROS['pit-warden'] in dungeon.ts: its lines, the menu as the game shows it
+ * (questions, then choices), and what Balderek says back to a choice.
+ */
+const wardenIntro = () => {
+  const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
+  const block = src.slice(src.indexOf("'pit-warden': {"));
+  const body = block.slice(0, block.indexOf('\n  },\n'));
+  const quoted = (t) => [...t.matchAll(/(['"])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2].replace(/\\(['"])/g, '$1'));
+  const section = (name) => body.slice(body.indexOf(`${name}: [`), body.indexOf(`\n    ],`, body.indexOf(`${name}: [`)));
+  const lines = quoted(section('lines'));
+  const asks = [...section('questions').matchAll(/ask: (['"])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]);
+  const choices = section('choices');
+  const labels = [...choices.matchAll(/label: (['"])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2].replace(/\\(['"])/g, '$1'));
+  const reply = (label) => {
+    const at = choices.indexOf(label);
+    return quoted(/lines: \[([^\]]*)\]/.exec(choices.slice(at))[1]);
+  };
+  return { lines, menu: [...asks, ...labels], reply };
+};
 const arenaExcuses = () => {
   const src = readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8');
   const block = src.slice(src.indexOf('export const ARENA_EXCUSES'));
@@ -2440,6 +2643,205 @@ const EPISODES = {
       ],
     };
   },
+  // Episode 14 (author, Oct 8, 2026): the fifth guard goes down; Barnaby gives the five of them 100 life sentences
+  // EACH; the Kaloseum shakes, STOMP, STOMP, and up out of the trapdoor comes the Warden: BALDEREK (who was Aurek the
+  // Tall, but nobody says so yet). You answer him (the menu), and he answers back. Same sand, everyone where Episode
+  // 13 left them. All of it from the game.
+  14: () => {
+    const pit = loadMap('the-pit', 'arena');
+    const down = gameLines('PRISON_GUARDS_DOWN');
+    const warden = wardenIntro();
+    const WEATHER = "How's the weather up there?";
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    const [announce, name] = by(warden.lines, 'BARNABY');
+    // where Episode 13 left them: your three at the side of the sand, Brannoc out cold between Old Mott and Nails
+    Object.assign(pit.npcs['arena-mott'], { x: 21.7, y: 10, facing: 'left' });
+    Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
+    Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
+    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'up' });
+    // the five guards, all of them flat on the sand round you: little Xs for eyes, and snot bubbles, so you know they're
+    // out cold, not dead (author, Oct 8, 2026). Three above you, two below, with room round each for a cot and its
+    // bearers; the last is the one who answers Barnaby back.
+    const guards = [[10, 7], [17, 7], [11, 12], [16.5, 12], [13.5, 7]];
+    guards.forEach(([x, y], i) => {
+      pit.npcs[`guard-${i + 1}`] = {
+        id: `guard-${i + 1}`,
+        type: 'npc',
+        x,
+        y,
+        sprite: 'raiderko',
+        facing: 'down',
+        name: 'Guard',
+        lines: [],
+        snot: true,
+        ko: true,
+      };
+    });
+    // ...and the Kaloseum's tiny medics (author, Oct 8, 2026), two to a cot: one at the guard's feet, one at his head.
+    // They run on in single file along an empty row (above the top three, below the bottom two), roll them onto cots, and
+    // carry them off left, out of the way of whatever's coming.
+    const SMALL = 0.7;
+    const bearers = guards.flatMap(([x, y], i) => [
+      { id: `medic-${i}-a`, x: x - 0.6, y, faces: 'right', row: y < 10 ? 6 : 14 },
+      { id: `medic-${i}-b`, x: x + 1.8, y, faces: 'left', row: y < 10 ? 6 : 14 },
+    ]);
+    for (const m of bearers)
+      pit.npcs[m.id] = { id: m.id, type: 'npc', x: -3, y: m.row, sprite: 'medic', facing: 'right', name: 'Medic', size: SMALL, lines: [] };
+    const runOn = ['above', 'below'].flatMap((side) => {
+      const line = bearers.filter((m) => (m.row === 6) === (side === 'above')).sort((a, b) => b.x - a.x);
+      // the one going furthest runs at the front; a step and a bit between each, so nobody runs into anybody
+      return line.map((m, k) => ({
+        npcWalk: m.id,
+        from: center(2 - k * 1.1, m.row),
+        to: [[m.x, m.row], [m.x, m.y]],
+        speed: 150,
+        turn: m.faces,
+        together: true,
+      }));
+    });
+    // off into the fighters' tunnel (author, Oct 8, 2026), each cot and its two bearers moving as one, in single file:
+    // the top three along their row, down into the tunnel's upper lane; the bottom two along theirs, up into its lower
+    const lane = (y) => (y < 10 ? 9.2 : 10.6);
+    const offPath = (x, y, o) => [[4 + o, y], [4 + o, lane(y)], [-3 + o, lane(y)]];
+    const carryOff = [
+      ...bearers.map((m) => ({
+        npcWalk: m.id,
+        from: center(m.x, m.y),
+        to: offPath(m.x, m.y, m.faces === 'right' ? -0.6 : 1.8),
+        speed: 125,
+        hide: true,
+        together: true,
+      })),
+      ...guards.map(([x, y], i) => ({
+        npcWalk: `guard-${i + 1}`,
+        from: center(x, y),
+        to: offPath(x, y, 0),
+        speed: 125,
+        carried: true,
+        lift: 4,
+        hide: true,
+        together: true,
+      })),
+    ];
+    // Balderek, twice anyone's size: out of the fighters' tunnel, out of the dark
+    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: -2, y: 10, sprite: 'warden', facing: 'right', name: 'Balderek', size: 2, lines: [] };
+    // fixed shots, cut between, never panned
+    const RING = [{ look: [15, 9.5] }, { zoom: 1 }];
+    const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
+    // the tunnel's mouth, and the sand in front of it; and wide, Balderek and you both
+    const TUNNEL = [{ look: [6, 10] }, { zoom: 1 }];
+    const WIDE = [{ look: [10.5, 10] }, { zoom: 1 }];
+    return {
+      ...SHORT,
+      read: 1.4,
+      gapAfter: 0.12,
+      number: 14,
+      title: 'THE WARDEN',
+      map: pit,
+      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      awake: ['brannoc-pit'],
+      out: ['brannoc-pit', 'guard-1', 'guard-2', 'guard-3', 'guard-4', 'guard-5'],
+      hide: ['balderek'],
+      hero: { sprite: 'quill', at: [15, 10], facing: 'up' },
+      // the hook: five of the king's finest, out cold all round you, snot bubbles going
+      look: [15, 9.5],
+      zoom: 1,
+      script: [
+        { wait: 0.6 },
+        ...BOX,
+        { jolt: 0.45 },
+        { say: 'barnaby-box', lines: by(down, 'BARNABY'), punch: 0.4, letterMs: 20, pause: 0.25, read: 1.1 },
+        // the one in front of you gets it out, slowly: he's hurt; the medics run on while he does
+        ...RING,
+        ...runOn,
+        { say: 'guard-5', lines: by(down, 'GUARD'), punch: 0.5, letterMs: 70 },
+        { cot: guards.map((_, i) => `guard-${i + 1}`) },
+        // and off they go with them, as the ground starts to shake
+        // the ground answers: STOMP. STOMP.
+        ...carryOff,
+        ...TUNNEL,
+        { face: 'left' },
+        { stomp: 0.45 },
+        { stomp: 0.5 },
+        ...BOX,
+        { say: 'barnaby-box', lines: [announce], punch: 0.05, letterMs: 20, pause: 0.25, read: 1.1 },
+        // cut off mid-word: STOMP, and out of the dark of the tunnel he comes, a stomp at every stride
+        ...TUNNEL,
+        { show: 'balderek' },
+        { stomp: 0.1 },
+        { npcWalk: 'balderek', to: [[1.5, 10]], speed: 45, together: true },
+        { say: 'barnaby-box', lines: [name], punch: 0.2, letterMs: 34, read: 1.1 },
+        { stomp: 0.1 },
+        { npcWalk: 'balderek', from: center(1.5, 10), to: [[4.5, 10]], speed: 45 },
+        { stomp: 0.35 },
+        ...WIDE,
+        // (cut along the way: Balderek and Barnaby's words about the horn and the vacation)
+        { menu: { speaker: 'Balderek', options: warden.menu, pick: warden.menu.indexOf(WEATHER), hold: 0.35 } },
+        { say: 'balderek', lines: warden.reply(WEATHER).map(unnamed), punch: 0.8 },
+      ],
+    };
+  },
+  // Episode 15 (author, Oct 8, 2026): twenty strikes, and Balderek hasn't noticed; he's had enough. Behind you Brannoc
+  // gets up, still asleep, snot bubble and all, shuffles over and, without a word, swings: a slash of light as big as a
+  // house, a flash, and Balderek goes up, up, over the banners and out of the Kaloseum. Barnaby gasps: that move, he
+  // thought it was a fairytale. All of it from the game (SNOT_SWING, SNOT_SWING_HIT in dungeon.ts).
+  15: () => {
+    const pit = loadMap('the-pit', 'arena');
+    const lead = gameLines('SNOT_SWING');
+    const hit = gameLines('SNOT_SWING_HIT');
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    // where Episode 14 left them: your three by Brannoc at the side of the sand, Brannoc out cold; Balderek out of
+    // his tunnel, and you up against him, hitting
+    // (Old Mott a step back from his feet: Brannoc's about to stand up there)
+    Object.assign(pit.npcs['arena-mott'], { x: 20.5, y: 10, facing: 'right' });
+    Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
+    Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
+    // (still fast asleep, the whole way: eyes shut, Zs, the snot bubble going)
+    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'left', snot: true, asleep: true });
+    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 9, sprite: 'warden', facing: 'down', name: 'Balderek', size: 2, lines: [] };
+    // the banner he goes through: the near one, top left (swing.ts PIT_BANNERS), its cloth's middle in art pixels
+    const BANNER = [143, 29];
+    const bannerTile = [(BANNER[0] - 8) / 16, (BANNER[1] + 10 - 14) / 16];
+    const FIGHT = [{ look: [8.5, 9] }, { zoom: 1 }];
+    const SIDE = [{ look: [21, 9.5] }, { zoom: 1 }];
+    const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
+    const strikes = Array.from({ length: 6 }, () => ({ strike: [7, 9], gap: 0.17 }));
+    return {
+      ...SHORT,
+      read: 1.4,
+      gapAfter: 0.12,
+      number: 15,
+      title: 'THAT MOVE',
+      map: pit,
+      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
+      out: ['brannoc-pit'],
+      hero: { sprite: 'quill', at: [7, 11.4], facing: 'up' },
+      // the hook: you, flat out hitting him, and he hasn't noticed
+      look: [8.5, 9],
+      zoom: 1,
+      script: [
+        ...strikes,
+        { narrate: true, lines: [lead[0]], punch: 0.3 },
+        { say: 'balderek', lines: by(lead, 'BALDEREK'), punch: 0.4 },
+        // behind you: Brannoc gets up, eyes shut, snot bubble going
+        ...SIDE,
+        { stand: 'brannoc-pit' },
+        { wait: 0.5 },
+        // and shuffles over, asleep, to stand off from him; then, without a word, swings
+        ...FIGHT,
+        { npcWalk: 'brannoc-pit', from: center(14, 9), to: [[10.6, 9]], speed: 40, turn: 'left' },
+        { slash: { from: [10.6, 9], to: [7, 9], windup: 0.45, fly: 0.3 } },
+        // up, up, tumbling, over the banners and out of the Kaloseum
+        { npcWalk: 'balderek', to: [bannerTile], speed: 260, spin: true },
+        { hole: BANNER },
+        { npcWalk: 'balderek', from: center(...bannerTile), to: [[bannerTile[0] + 0.5, -5]], speed: 260, spin: true, hide: true },
+        { wait: 0.9 },
+        // Barnaby has heard of that move
+        ...BOX,
+        { say: 'barnaby-box', lines: by(hit, 'BARNABY'), punch: 1.0, letterMs: 30 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -2479,6 +2881,7 @@ if (process.env.STILLS) {
     else if (st) {
       drawWorld(canvas, ep, st, s);
       drawOverlays(canvas, st);
+      if (st.flash > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', st.flash * 0.85));
       if (st.blackout > 0)
         canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint(st.white ? '#FFFFFF' : '#000000', Math.min(1, st.blackout)));
     } else drawEnd(canvas, ep, s - compiled.end);
@@ -2609,6 +3012,8 @@ async function renderPicture() {
       }
       drawWorld(canvas, ep, st, t);
       drawOverlays(canvas, st);
+      // the white of a great blow landing (Episode 15)
+      if (st.flash > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', st.flash * 0.85));
       if (st.white) {
         if (st.blackout > 0) canvas.drawRect(CK.XYWHRect(0, 0, W, H), paint('#FFFFFF', Math.min(1, st.blackout)));
       } else black(st.blackout);
@@ -2655,6 +3060,12 @@ const SELECT = (() => {
   return out;
 })();
 const LAUGH = laugh(RATE);
+/** A giant's footfall (scripts/stomp-sound.mjs), as the game plays it. */
+const STOMP = pcm(join(ROOT, 'assets/audio/stomp.wav'));
+/** The game's own blows: a hit landing, a sword swung, a slam (Episode 15). */
+const HIT = pcm(join(ROOT, 'assets/audio/hit.wav'));
+const SWING = pcm(join(ROOT, 'assets/audio/swing.wav'));
+const SLAM = pcm(join(ROOT, 'assets/audio/slam.wav'));
 const mix = new Float32Array(Math.ceil(total * RATE));
 const place = (sound, at, gain) => {
   const start = Math.round(at * RATE);
@@ -2663,6 +3074,14 @@ const place = (sound, at, gain) => {
 for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
+  if (s.kind === 'stomp') place(STOMP, s.t0, 1);
+  if (s.kind === 'strike') place(HIT, s.t0, 0.6);
+  if (s.kind === 'gleam') place(SWING, s.t0 + 0.2, 0.9);
+  if (s.kind === 'boom') {
+    place(SLAM, s.t0, 1);
+    // ...and far off in town, a moment later, a roof giving way
+    place(SLAM, s.t0 + 1.5, 0.35);
+  }
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {
     const start = Math.round(s.t0 * RATE);

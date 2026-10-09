@@ -73,6 +73,8 @@ const VOICES: Partial<Record<WalkerId, Voice>> = {
   garyasleep: 2,
   silasseen: 3,
   nails: 4,
+  // Balderek, the Kaloseum's Warden: as low as he is big
+  warden: 1,
 };
 
 /** A speaker's voice, lowest (1) to highest (5): set for some, otherwise one of the middle three, fixed by their name. */

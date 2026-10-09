@@ -1669,7 +1669,7 @@ function World({
                         else if (FREED_ENDING.includes(line) && freedHere().length > 0) {
                           if (/scramble up the stands/.test(line)) freedRun();
                           else sim.focus.set(freedCentre());
-                        } else if (!/SUPER SUPER SWING/.test(line))
+                        } else if (!/slash of light as big as a house/.test(line))
                           sim.focus.set([(ex + wx) / 2, Math.min(ey, wy) - 8]);
                       },
                       then: () => {
@@ -2366,7 +2366,7 @@ function World({
         playSound('hit');
         lie();
       }
-      if (/SUPER SUPER SWING/.test(line)) {
+      if (/slash of light as big as a house/.test(line)) {
         // up, fast asleep, and swing
         march([{ row: asleep, path: [[tx, ty]], face, snot: true }], () => {}, 3, true);
         setTimeout(() => {
