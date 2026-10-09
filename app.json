@@ -3,6 +3,12 @@
     "name": "Eight Paths",
     "slug": "eight-paths",
     "version": "1.1.1",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fed23284-5679-49f5-9ac0-39f0e560c53c"
+    },
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "eightpaths",

@@ -52,3 +52,21 @@ The first build walks you through creating signing credentials and the App Store
 To try a build on the simulator without Apple credentials: `npx eas-cli@latest build --platform ios --profile simulator`.
 
 The bundle ID is `com.hezekiahhopkins.eightpaths`; change `ios.bundleIdentifier` in `app.json` before the first build if you want a different one.
+
+## Ship a fix without a new build (EAS Update)
+
+Builds made since `expo-updates` was added check for new game code each time they open. Any change that's only
+JavaScript, maps, text or art (most changes) can go out over the air, no build and no TestFlight wait:
+
+```bash
+npx eas-cli@latest update --channel preview --message "what changed"     # only your own preview builds
+npx eas-cli@latest update --channel production --message "what changed"  # TestFlight AND App Store players
+```
+
+Each build profile listens on its own channel (`preview`, `simulator`, `production`, in `eas.json`). To test on
+your own iPhone without reaching players, register it once (`npx eas-cli@latest device:create`), make one
+`--profile preview` build, install it from the link EAS gives you, then publish to `preview` as often as you like.
+
+The app downloads an update when it opens and switches to it the next time it opens: close it fully and reopen it
+twice. A new build is still needed when you add or upgrade a library with native code; the runtime version
+(`fingerprint` policy) changes then, so an update can never reach a build it doesn't fit.
