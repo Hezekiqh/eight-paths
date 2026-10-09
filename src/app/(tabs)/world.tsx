@@ -2108,7 +2108,13 @@ function World({
       if (cocoonWall && tile % map.width === COCOON_WALL.x) {
         const row = Math.floor(tile / map.width);
         let x = COCOON_WALL.x;
-        while (x > COCOON_WALL.x - COCOON_WALL.back && x > 0 && !map.solid[row * map.width + x - 1]) x--;
+        while (
+          x > COCOON_WALL.x - COCOON_WALL.back &&
+          x > 0 &&
+          !map.solid[row * map.width + x - 1] &&
+          !stepTiles.includes(row * map.width + x - 1)
+        )
+          x--;
         sim.x.set(x * TILE + TILE / 2);
         const lines = COCOON_WALL.lines;
         if (dialogueRef.current === null)
@@ -2167,7 +2173,7 @@ function World({
         travel(to);
       }
     },
-    [map, ways, shutGates, travel, setFlag, guardScene, cocoonWall, sim],
+    [map, ways, shutGates, travel, setFlag, guardScene, cocoonWall, stepTiles, sim],
   );
   // Never over a scene, a cutscene, a boss fight or a phone call (read as the guard's lines close).
   const busyRef = useRef(false);
@@ -2190,7 +2196,8 @@ function World({
         return;
       }
       if (bump !== null) {
-        // back the way you came, a tile, like the cocoon wall
+        // back the way you came, three tiles (fewer if something's in the way), like the cocoon wall: one tile and,
+        // with the stick still held, you're straight back into the gate
         const gx = bump % map.width;
         const gy = Math.floor(bump / map.width);
         const steps = [
@@ -2205,13 +2212,17 @@ function World({
           x < map.width &&
           y < map.height &&
           !map.solid[y * map.width + x] &&
-          map.tiles[y][x] !== exit.tile;
-        const back = [OPPOSITE[sim.facing.get()], UP, DOWN, LEFT, RIGHT]
-          .map((d) => [gx + steps[d][0], gy + steps[d][1]] as const)
-          .find(([x, y]) => open(x, y));
-        if (back) {
-          sim.x.set(back[0] * TILE + TILE / 2);
-          sim.y.set(back[1] * TILE + TILE - 4);
+          map.tiles[y][x] !== exit.tile &&
+          !ways.some((e) => e.tile === map.tiles[y][x]);
+        const way = [OPPOSITE[sim.facing.get()], UP, DOWN, LEFT, RIGHT].find((d) =>
+          open(gx + steps[d][0], gy + steps[d][1]),
+        );
+        if (way !== undefined) {
+          const [dx, dy] = steps[way];
+          let n = 1;
+          while (n < GATE_BACK && open(gx + dx * (n + 1), gy + dy * (n + 1))) n++;
+          sim.x.set((gx + dx * n) * TILE + TILE / 2);
+          sim.y.set((gy + dy * n) * TILE + TILE - 4);
         }
       }
       if (dialogueRef.current !== null) return;
@@ -2246,7 +2257,7 @@ function World({
         },
       });
     };
-  }, [map, sim, travel]);
+  }, [map, sim, travel, ways]);
   const board = map.objects.find((o) => o.type === 'board');
   // A Mage of Lv 6 sees the hidden passage by Felix's maze twinkle.
   const passageSeen = map.id === MAZE && standing(PASSAGE, xp).met;
@@ -3108,6 +3119,8 @@ function World({
 }
 
 const OPPOSITE = [UP, DOWN, RIGHT, LEFT];
+/** How many tiles a shut gate's guard sends you back. */
+const GATE_BACK = 3;
 
 /** A memory playing (memories.ts): the World washed out, old-photograph warm, or gone black where the memory does. */
 function MemoryWash({ shade }: { shade: Shade }) {
