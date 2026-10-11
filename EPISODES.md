@@ -109,13 +109,23 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   horn and the vacation.) All dialogue a touch slower from here on (author: "it reads way too fast": 28 ms a letter, 1.4×
   holds). In the game, the same: `PRISON_GUARDS_DOWN`, the `pit-warden` entrance and menu in `dungeon.ts`; a line that
   says STOMP thumps the phone and plays the stomp, every time (`rumbles.ts`).
-- **Episode 15, "That Move"** (`node scripts/episode-video.mjs 15`, 14.3 s): six blows land on Balderek (white bursts,
-  the game's hit sound); "Twenty strikes." Balderek: "Alright. Enough. Time to finish this and get back to work." Behind
-  you, Brannoc gets up, still fast asleep the whole way (eyes shut, Zs, snot bubble), shuffles over and, without a word
-  (author: he doesn't shout it), swings: a gleam on the blade, a crescent of light as big as a house across the sand, a
-  white flash, a huge jolt. Balderek tumbles up through a banner and out of the Kaloseum; a roof gives way in town. Barnaby:
-  "*GASP*" / "That move... I thought it was a fairytale." Cut. In the game, the same (`SNOT_SWING`, `SNOT_SWING_HIT` in
-  `dungeon.ts`), and the game's swing throws the same crescent (`slashPath`, world-view.tsx).
+- **Episode 15, "That Move"** (`node scripts/episode-video.mjs 15`, 18.1 s; rewritten Oct 11, 2026 by the author,
+  after cuts that read choppy and too fast). Text at Undertale's pace (33 ms a letter, `read: 1.3`), a beat of
+  silence before each punchline. One shot, no cuts until Barnaby, the camera up a little so the banner and the sky
+  over it are in it. Frame one: your blow lands on Balderek and does nothing. Balderek: "That's enough!" / "My show is
+  on in 5 minutes..." / "Will Komugi-chan realize her love for Satoru-kun?" (he's a fan of Japanese dramas). Brannoc
+  walks into the shot from the right as that line finishes, fast asleep (eyes shut, Zs, snot bubble), and Balderek
+  turns to him: "Is he asleep?" (beat) "Good for him..." / "HE WON'T BE CONSCIOUS FOR HIS FINAL MOM—", cut off by the
+  swing (the gleam starts as the dash types). The slash, a short flash, no boom, and Balderek tumbles up through the
+  banner, slow enough to see, finishing the word, "MENTTTTTTTTTTTTTT", out of the top of the shot: a star twinkles
+  there, with a ding (`assets/audio/ding.wav`, `scripts/ding-sound.mjs`). A beat on the empty sky; cut to Barnaby in his
+  box: "FAHHHHHHHHHHHH" (typed, in his own voice; cut: "That was not supposed to happen."). End. In the game, the same (`SNOT_SWING`, `SNOT_SWING_HIT` in `dungeon.ts`,
+  after "Twenty strikes."; the star is world-view `starPath` from swing.ts `starSize`/`STAR_AT`, and the ding plays
+  then; no slam on the blow, only the phone's rumble; the camera goes to Barnaby's box for his line).
+  Cut along the way: "Time to finish this and get back to work" (author: he's already at work), "You fight well. But
+  it's time I end this.", Barnaby's "What the?" with a "!" (`alert`, still in the script), the crowd going silent
+  (`hush`, still in the script), "AHHHH", both booms (the slam on the blow and the roof in town), and Barnaby's
+  "*GASP*" / "That move... I thought it was a fairytale."
 - **Next:** Episode 16.
 
 ## In the episode script

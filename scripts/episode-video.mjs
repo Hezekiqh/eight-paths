@@ -936,7 +936,9 @@ function compile(ep) {
         const dx = pos[0] - nx;
         const dy = pos[1] - ny;
         // a diagonal turns them sideways, so they face you rather than show their back
-        const dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+        // (`towards`: they face that way instead, talking to someone else)
+        const dir =
+          step.towards ?? (Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up');
         segs.push({ kind: 'npcFace', t0: t, t1: t, id: step.say, dir });
       }
       const lines = step.you ?? step.lines ?? (npc ? npc.lines : []);
@@ -1000,16 +1002,21 @@ function compile(ep) {
     } else if (step.slash) {
       // a sword swung so hard it throws a slash of light (Brannoc, Episode 15, author: "extravagant"): a gleam on the
       // blade as he winds up, the crescent flying across the sand, growing, and on the hit a white flash, a huge jolt
-      const { from, to, windup = 0.35, fly = 0.4 } = step.slash;
+      const { from, to, windup = 0.35, fly = 0.4, flash = 0.45 } = step.slash;
       segs.push({ kind: 'gleam', t0: t, t1: t + windup, at: from });
       segs.push({ kind: 'slash', t0: t + windup, t1: t + windup + fly, from, to });
-      segs.push({ kind: 'flash', t0: t + windup + fly, t1: t + windup + fly + 0.45 });
+      segs.push({ kind: 'flash', t0: t + windup + fly, t1: t + windup + fly + flash });
       segs.push({ kind: 'jolt', t0: t + windup + fly, t1: t + windup + fly + 0.7, amp: 8 });
       segs.push({ kind: 'boom', t0: t + windup + fly, t1: t + windup + fly });
       t += windup + fly;
     } else if (step.hole) {
-      // a hole torn in a banner, where someone went through it
-      segs.push({ kind: 'hole', t0: t, t1: t, at: step.hole });
+      // a hole torn in a banner, where someone went through it (`delay`: this long from now)
+      segs.push({ kind: 'hole', t0: t + (step.delay ?? 0), t1: t + (step.delay ?? 0), at: step.hole });
+    } else if (step.star) {
+      // gone, with a twinkle (Balderek, Episode 15): a star glints in the sky at `at` (art pixels) and a ding, `delay`
+      // from now, as the game's swing.ts starSize
+      const t0 = t + (step.delay ?? 0);
+      segs.push({ kind: 'star', t0, t1: t0 + 0.7, at: step.star });
     } else if (step.cot) {
       // the medics roll them onto cots (Episode 14)
       segs.push({ kind: 'cot', t0: t, t1: t, ids: step.cot });
@@ -1034,6 +1041,13 @@ function compile(ep) {
       // the floor gives way: you sink out of sight into a hole (the Maze Ward's pothole); `together` with what's said
       segs.push({ kind: 'drop', t0: t, t1: t + step.drop });
       if (!step.together) t += step.drop;
+    } else if (step.alert) {
+      // a "!" pops up over someone's head, caught off guard (Barnaby, Episode 15), and stays `dur` seconds
+      segs.push({ kind: 'alert', t0: t, t1: t + (step.dur ?? 0.8), id: step.alert });
+      if (!step.together) t += step.dur ?? 0.8;
+    } else if (step.hush) {
+      // the crowd stops cheering: still and silent from here on
+      segs.push({ kind: 'hush', t0: t, t1: t });
     } else if (step.zoom) {
       // a cut to closer in (or back out, 1): the template's hook opens close on whoever's talking
       segs.push({ kind: 'zoom', t0: t, t1: t, z: step.zoom });
@@ -1076,6 +1090,12 @@ function stateAt(ep, compiled, t) {
   /** Who's laughing, by id: seconds into it; and who's only shaking (a cower), no HA. */
   let laughing = {};
   const quiet = new Set();
+  /** Who has a "!" over their head, by id: seconds into it. */
+  let alerts = {};
+  /** The crowd's stopped cheering. */
+  let hushed = false;
+  /** A star twinkling in the sky: { at, k } (k: 0 to 1 through it). */
+  let star = null;
   let hatch = null;
   /** People hidden at the start who have since appeared (someone hatched), and cocoons broken open. */
   let shown = [...(ep.shown ?? [])];
@@ -1185,6 +1205,12 @@ function stateAt(ep, compiled, t) {
         dash: s.dash && !done ? { from: s.legs[0].a, since: t - s.t0, dir: leg.dir } : null,
         spin: s.spin ? (t - s.t0) * 900 : 0,
       };
+    } else if (s.kind === 'alert' && t < s.t1) {
+      alerts[s.id] = t - s.t0;
+    } else if (s.kind === 'hush') {
+      hushed = true;
+    } else if (s.kind === 'star' && t < s.t1) {
+      star = { at: s.at, k: (t - s.t0) / (s.t1 - s.t0) };
     } else if (s.kind === 'laugh' && t < s.t1) {
       laughing[s.id] = t - s.t0;
       if (s.quiet) quiet.add(s.id);
@@ -1263,6 +1289,9 @@ function stateAt(ep, compiled, t) {
     npcAt,
     laughing,
     quiet,
+    alerts,
+    hushed,
+    star,
     line,
     menu,
     cards,
@@ -1384,7 +1413,7 @@ function drawWorld(canvas, ep, st, t) {
   const shook = st.shake ? [Math.sin(t * 90) * st.shake, Math.cos(t * 77) * st.shake] : [0, 0];
   canvas.translate(-Math.round((camX + shook[0]) * sk) / sk, -Math.round((camY + shook[1]) * sk) / sk);
   canvas.drawImageRectOptions(
-    map.cheer && Math.floor(t * 2.5) % 2 === 1 ? map.cheer : map.image,
+    map.cheer && !st.hushed && Math.floor(t * 2.5) % 2 === 1 ? map.cheer : map.image,
     CK.XYWHRect(0, 0, mapW, mapH),
     CK.XYWHRect(0, 0, mapW, mapH),
     NEAREST.filter,
@@ -1646,6 +1675,38 @@ function drawWorld(canvas, ep, st, t) {
   }
   drawBlows(canvas, st);
   if (st.cards) drawCardsOnFloor(canvas, ep, st);
+  // a four-point star glinting in the sky: quick in, slow out (world-view starPath)
+  if (st.star) {
+    const { k, at } = st.star;
+    const sz = k < 0.25 ? k / 0.25 : 1 - (k - 0.25) / 0.75;
+    const [x, y] = at;
+    const long = 3 + 14 * sz;
+    const thin = 1 + 1.6 * sz;
+    // in pixels: a bright middle and four arms tapering out
+    const sp = paint('#FFFBE6');
+    const r = Math.max(1, Math.round(thin));
+    canvas.drawRect(CK.XYWHRect(Math.round(x - r), Math.round(y - r), r * 2, r * 2), sp);
+    for (let d = 1; d <= Math.round(long); d++) {
+      const w = d < long * 0.25 ? 3 : d < long * 0.55 ? 2 : 1;
+      canvas.drawRect(CK.XYWHRect(Math.round(x) - w / 2, Math.round(y - d), w, 1), sp);
+      canvas.drawRect(CK.XYWHRect(Math.round(x) - w / 2, Math.round(y + d) - 1, w, 1), sp);
+      canvas.drawRect(CK.XYWHRect(Math.round(x - d), Math.round(y) - w / 2, 1, w), sp);
+      canvas.drawRect(CK.XYWHRect(Math.round(x + d) - 1, Math.round(y) - w / 2, 1, w), sp);
+    }
+  }
+  // "!": popping up over a head with a little bounce, white with a dark edge so it reads on anything
+  for (const [id, at] of Object.entries(st.alerts)) {
+    const [x, y] = st.npcAt[id] ? [st.npcAt[id].x, st.npcAt[id].y] : center(map.npcs[id].x, map.npcs[id].y);
+    const rise = at < 0.08 ? 4 * (1 - at / 0.08) : at < 0.16 ? -1 : 0;
+    const bx = Math.round(x) - 1;
+    const by = Math.round(y - 34 + rise);
+    const edge = paint('#2A1A10');
+    const fill = paint('#FFFFFF');
+    canvas.drawRect(CK.XYWHRect(bx - 1, by - 1, 4, 8), edge);
+    canvas.drawRect(CK.XYWHRect(bx - 1, by + 8, 4, 4), edge);
+    canvas.drawRect(CK.XYWHRect(bx, by, 2, 6), fill);
+    canvas.drawRect(CK.XYWHRect(bx, by + 9, 2, 2), fill);
+  }
   // HA! HA! popping out over a laughing head, rising and fading
   for (const [id, lt] of Object.entries(st.laughing)) {
     if (st.quiet?.has(id)) continue;
@@ -2790,55 +2851,63 @@ const EPISODES = {
     const lead = gameLines('SNOT_SWING');
     const hit = gameLines('SNOT_SWING_HIT');
     const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
-    // where Episode 14 left them: your three by Brannoc at the side of the sand, Brannoc out cold; Balderek out of
-    // his tunnel, and you up against him, hitting
-    // (Old Mott a step back from his feet: Brannoc's about to stand up there)
-    Object.assign(pit.npcs['arena-mott'], { x: 20.5, y: 10, facing: 'right' });
-    Object.assign(pit.npcs['arena-nails'], { x: 23.6, y: 10, facing: 'left' });
-    Object.assign(pit.npcs['arena-silas'], { x: 24, y: 8, facing: 'left' });
-    // (still fast asleep, the whole way: eyes shut, Zs, the snot bubble going)
-    Object.assign(pit.npcs['brannoc-pit'], { x: 22, y: 10, facing: 'left', snot: true, asleep: true });
+    // (author, Oct 11, 2026) one shot, no cuts until Barnaby, the text at Undertale's pace (about 33 ms a letter) with
+    // room to read, and a beat of silence before each punchline. Balderek has had enough: his show's on. Brannoc
+    // shuffles in from the right, fast asleep (eyes shut, Zs, snot bubble); the swing cuts Balderek off mid-word, and
+    // he finishes the word all the way out of the Kaloseum, gone with a twinkle like a star. Then Barnaby.
+    Object.assign(pit.npcs['brannoc-pit'], { x: 15.5, y: 9, facing: 'left', snot: true, asleep: true });
     pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 9, sprite: 'warden', facing: 'down', name: 'Balderek', size: 2, lines: [] };
     // the banner he goes through: the near one, top left (swing.ts PIT_BANNERS), its cloth's middle in art pixels
     const BANNER = [143, 29];
     const bannerTile = [(BANNER[0] - 8) / 16, (BANNER[1] + 10 - 14) / 16];
-    const FIGHT = [{ look: [8.5, 9] }, { zoom: 1 }];
-    const SIDE = [{ look: [21, 9.5] }, { zoom: 1 }];
+    // the flight: up to the banner, through it, and out of the top of the shot, slow enough to see
+    const FLIGHT = 150;
+    const toBanner = (Math.hypot(bannerTile[0] - 7, bannerTile[1] - 9) * 16) / FLIGHT;
+    const out = (Math.hypot(0.5, bannerTile[1] + 1) * 16) / FLIGHT;
     const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
-    const strikes = Array.from({ length: 6 }, () => ({ strike: [7, 9], gap: 0.17 }));
+    const [enough, show, drama] = by(lead, 'BALDEREK');
+    const [asleep, goodForHim, finalMom, ment] = by(hit, 'BALDEREK');
+    const LETTER = 33;
+    // how long the drama line is up (typing at LETTER, with its hold), for Brannoc's entrance
+    const DRAMA = letterTimes(drama, LETTER, SHORT.pause).at(-1) + HOLD(drama) * SHORT.hold * 1.3;
     return {
       ...SHORT,
-      read: 1.4,
-      gapAfter: 0.12,
+      letterMs: LETTER,
+      read: 1.3,
+      gapAfter: 0.15,
       number: 15,
       title: 'THAT MOVE',
       map: pit,
-      shown: ['arena-mott', 'arena-nails', 'arena-silas', 'brannoc-pit'],
-      out: ['brannoc-pit'],
+      shown: ['brannoc-pit'],
       hero: { sprite: 'quill', at: [7, 11.4], facing: 'up' },
-      // the hook: you, flat out hitting him, and he hasn't noticed
-      look: [8.5, 9],
+      // up a little, so the banner he goes through, and the sky over it, are in the shot
+      look: [9.5, 6.5],
       zoom: 1,
       script: [
-        ...strikes,
-        { narrate: true, lines: [lead[0]], punch: 0.3 },
-        { say: 'balderek', lines: by(lead, 'BALDEREK'), punch: 0.4 },
-        // behind you: Brannoc gets up, eyes shut, snot bubble going
-        ...SIDE,
-        { stand: 'brannoc-pit' },
-        { wait: 0.5 },
-        // and shuffles over, asleep, to stand off from him; then, without a word, swings
-        ...FIGHT,
-        { npcWalk: 'brannoc-pit', from: center(14, 9), to: [[10.6, 9]], speed: 40, turn: 'left' },
-        { slash: { from: [10.6, 9], to: [7, 9], windup: 0.45, fly: 0.3 } },
-        // up, up, tumbling, over the banners and out of the Kaloseum
-        { npcWalk: 'balderek', to: [bannerTile], speed: 260, spin: true },
-        { hole: BANNER },
-        { npcWalk: 'balderek', from: center(...bannerTile), to: [[bannerTile[0] + 0.5, -5]], speed: 260, spin: true, hide: true },
-        { wait: 0.9 },
-        // Barnaby has heard of that move
+        // frame one: your blow lands, and does nothing
+        { strike: [7, 9], gap: 0.1 },
+        { say: 'balderek', lines: [enough, show] },
+        // in from the right, asleep, setting off off-screen so he walks into the shot as the drama line finishes
+        { npcWalk: 'brannoc-pit', to: [[10.6, 9]], speed: 30, turn: 'left', together: true, delay: DRAMA - 0.4 },
+        { say: 'balderek', lines: [drama] },
+        // he turns to watch him come
+        { wait: 0.3 },
+        { say: 'balderek', lines: [asleep], towards: 'right' },
+        { wait: 0.4 },
+        { say: 'balderek', lines: [goodForHim], towards: 'right' },
+        // cut off: the gleam starts as the dash types, so the line hangs there, unfinished
+        { say: 'balderek', lines: [finalMom], towards: 'right', punch: 0.45, gapAfter: -0.5 },
+        { slash: { from: [10.6, 9], to: [7, 9], windup: 0.45, fly: 0.3, flash: 0.22 } },
+        // up, up, finishing the word, through the banner and out of the top; a twinkle in the sky, and a ding
+        { npcWalk: 'balderek', to: [bannerTile, [bannerTile[0] + 0.5, -1]], speed: FLIGHT, spin: true, hide: true, together: true },
+        { hole: BANNER, delay: toBanner },
+        { star: [BANNER[0], BANNER[1] - 4], delay: toBanner + out },
+        { say: 'balderek', lines: [ment], letterMs: 50, punch: Math.max(0.1, toBanner + out - ment.length * 0.05), read: 1, gapAfter: 0 },
+        // the star, then a beat on the empty sky
+        { wait: 0.7 + 0.6 },
+        // Barnaby
         ...BOX,
-        { say: 'barnaby-box', lines: by(hit, 'BARNABY'), punch: 1.0, letterMs: 30 },
+        { say: 'barnaby-box', lines: by(hit, 'BARNABY'), punch: 1.2 },
       ],
     };
   },
@@ -3062,10 +3131,11 @@ const SELECT = (() => {
 const LAUGH = laugh(RATE);
 /** A giant's footfall (scripts/stomp-sound.mjs), as the game plays it. */
 const STOMP = pcm(join(ROOT, 'assets/audio/stomp.wav'));
-/** The game's own blows: a hit landing, a sword swung, a slam (Episode 15). */
+/** A star twinkling far off (scripts/ding-sound.mjs), as the game plays it. */
+const DING = pcm(join(ROOT, 'assets/audio/ding.wav'));
+/** The game's own blows: a hit landing, a sword swung (Episode 15). */
 const HIT = pcm(join(ROOT, 'assets/audio/hit.wav'));
 const SWING = pcm(join(ROOT, 'assets/audio/swing.wav'));
-const SLAM = pcm(join(ROOT, 'assets/audio/slam.wav'));
 const mix = new Float32Array(Math.ceil(total * RATE));
 const place = (sound, at, gain) => {
   const start = Math.round(at * RATE);
@@ -3075,13 +3145,10 @@ for (const s of compiled.segs) {
   if (s.kind === 'line') for (const a of s.blips) place(VOICE_SOUNDS[s.voice], s.t0 + a, s.voice === 0 ? 0.7 : 0.5); // EFFECT_VOLUME
   if (s.kind === 'menu') place(SELECT, s.pressAt, 0.5);
   if (s.kind === 'stomp') place(STOMP, s.t0, 1);
+  if (s.kind === 'star') place(DING, s.t0, 0.6);
   if (s.kind === 'strike') place(HIT, s.t0, 0.6);
   if (s.kind === 'gleam') place(SWING, s.t0 + 0.2, 0.9);
-  if (s.kind === 'boom') {
-    place(SLAM, s.t0, 1);
-    // ...and far off in town, a moment later, a roof giving way
-    place(SLAM, s.t0 + 1.5, 0.35);
-  }
+  // (the blow lands without a boom, author, Oct 11, 2026: Episode 15's two slams were cut)
   // a laugh out loud, as in the game (a quiet one is only a cower)
   if (s.kind === 'laugh' && !s.quiet) {
     const start = Math.round(s.t0 * RATE);

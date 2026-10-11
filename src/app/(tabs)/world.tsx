@@ -252,6 +252,7 @@ import { WALKER_ROWS } from '@/world/walkers';
 import {
   STAND_OFF,
   SLEEPWALK_PACE,
+  STAR_AT,
   SWING_DELAY,
   SWING_STRIKE,
   WARDEN_HOLE,
@@ -1652,20 +1653,18 @@ function World({
                       playSound('swing');
                       haptics.kill();
                     }, SWING_DELAY * 1000);
-                    setTimeout(
-                      () => {
-                        playSound('slam');
-                        haptics.rumble('crash');
-                      },
-                      (SWING_DELAY + SWING_STRIKE) * 1000,
-                    );
+                    // (no boom on the blow, author, Oct 11, 2026: just the phone's rumble)
+                    setTimeout(() => haptics.rumble('crash'), (SWING_DELAY + SWING_STRIKE) * 1000);
+                    // gone, with a twinkle in the sky (swing.ts STAR_AT)
+                    setTimeout(() => playSound('ding'), (SWING_DELAY + SWING_STRIKE + STAR_AT) * 1000);
                     setDialogue({
                       // the prisoners you freed come to, and go free too (dungeon.ts)
                       lines: [...SNOT_SWING_HIT.slice(SWING_LINE), ...(freedNow() ? FREED_ENDING : [])],
                       // up, up, over the banners: the camera stays on the hole he left while that's said; then
                       // the prisoners you freed get up and shout, with the camera on them, and run out through it
                       onLine: (_, line) => {
-                        if (/over the banners/.test(line)) sim.focus.set([hx, hy + 40]);
+                        if (/over the banners|^BALDEREK: MENT/.test(line)) sim.focus.set([hx, hy + 40]);
+                        else if (/^BARNABY:/.test(line)) sim.focus.set(BARNABY_BOX);
                         else if (FREED_ENDING.includes(line) && freedHere().length > 0) {
                           if (/scramble up the stands/.test(line)) freedRun();
                           else sim.focus.set(freedCentre());
@@ -2374,13 +2373,8 @@ function World({
           playSound('swing');
           haptics.kill();
         }, SWING_DELAY * 1000);
-        setTimeout(
-          () => {
-            playSound('slam');
-            haptics.rumble('crash');
-          },
-          (SWING_DELAY + SWING_STRIKE) * 1000,
-        );
+        // (no boom on the blow, author, Oct 11, 2026: just the phone's rumble)
+        setTimeout(() => haptics.rumble('crash'), (SWING_DELAY + SWING_STRIKE) * 1000);
       }
       // and down again, till you come to
       if (line === '...' && i >= 5) lie();

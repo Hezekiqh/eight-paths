@@ -94,6 +94,7 @@ import {
   SW_T,
   SW_WX,
   SW_WY,
+  starSize,
   wardenFlight,
 } from '@/world/swing';
 
@@ -1617,6 +1618,28 @@ export function WorldView({
     const k = slashK(sim.swing.get());
     return k < 0 || k > 1 ? 0 : k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4;
   });
+  // gone, with a twinkle: a four-point star glinting in the sky over the hole he went through (swing.ts starSize)
+  const starPath = useDerivedValue(() => {
+    const path = Skia.Path.Make();
+    const w = sim.swing.get();
+    if (w.length === 0 || w[SW_RUN] === 0) return path;
+    const s = starSize(w[SW_T] - SWING_STRIKE);
+    if (s <= 0) return path;
+    const x = w[SW_HX];
+    const y = Math.max(8, w[SW_HY] - 10);
+    const long = 3 + 14 * s;
+    const thin = 1 + 1.6 * s;
+    path.moveTo(x, y - long);
+    path.lineTo(x + thin, y - thin);
+    path.lineTo(x + long, y);
+    path.lineTo(x + thin, y + thin);
+    path.lineTo(x, y + long);
+    path.lineTo(x - thin, y + thin);
+    path.lineTo(x - long, y);
+    path.lineTo(x - thin, y - thin);
+    path.close();
+    return path;
+  });
   // where the blade meets him: a star of white and gold bursting out, then gone
   const impactPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
@@ -1826,6 +1849,7 @@ export function WorldView({
         <Path path={bladePath} color="#4A4E58" style="stroke" strokeWidth={0.75} />
         <Path path={hiltPath} color="#8A6A3A" />
         <Path path={impactPath} color="#FFF4C0" style="stroke" strokeWidth={2.5} strokeCap="round" opacity={impactO} />
+        <Path path={starPath} color="#FFFBE6" />
         {ambience.darkness > 0 && (
           <Group layer>
             <Rect x={0} y={0} width={mapW} height={mapH} color="#05030A" opacity={darkness} />

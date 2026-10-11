@@ -327,9 +327,12 @@ export const PRISON_GUARDS_DOWN = [
 ];
 
 /** Twenty strikes in: Balderek has had enough, and Brannoc gets up, asleep. */
+// (author, Oct 11, 2026: Balderek has somewhere to be; he's a fan of Japanese dramas)
 export const SNOT_SWING = [
   'Twenty strikes.',
-  'BALDEREK: Alright. Enough. Time to finish this and get back to work.',
+  "BALDEREK: That's enough!",
+  'BALDEREK: My show is on in 5 minutes...',
+  'BALDEREK: Will Komugi-chan realize her love for Satoru-kun?',
   "Behind you, Brannoc stands up. He's still asleep.",
 ];
 // Brannoc's sleepwalk to the warden, the swing and the flight are in swing.ts (they follow the warden, wherever
@@ -393,14 +396,18 @@ export const arenaCarry = (r: Carriers): Actor[] => [
 ];
 // Balderek goes over the banners, not through the wall (STORY.md: he lands on the bakery, and the swing kills him);
 // the hole he leaves is drawn in the banner he went through (swing.ts, world-view Breach).
-// (author, Oct 8, 2026, Episode 15: he doesn't shout it; he just swings, and the slash says it for him; and Barnaby has
-// heard of that move)
+// (author, Oct 8, 2026, Episode 15: he doesn't shout it; he just swings, and the slash says it for him. Oct 11: Balderek
+// watches him come, asleep, and is cut off mid-word by the swing, finishing the word all the way out of the Kaloseum,
+// gone with a twinkle like a star (swing.ts STAR_AT); and Barnaby: FAHHHH)
 export const SNOT_SWING_HIT = [
   'His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
+  'BALDEREK: Is he asleep?',
+  'BALDEREK: Good for him...',
+  "BALDEREK: HE WON'T BE CONSCIOUS FOR HIS FINAL MOM—",
   '* Brannoc swings his sword, without a word, and a slash of light as big as a house tears across the sand.',
-  'Balderek goes up, up, over the banners, and out of the Kaloseum. Somewhere in town, a roof gives way.',
-  'BARNABY: *GASP*',
-  'BARNABY: That move... I thought it was a fairytale.',
+  'BALDEREK: MENTTTTTTTTTTTTTT',
+  'Balderek goes up, up, over the banners, and out of the Kaloseum. Far off in the sky, a star twinkles.',
+  'BARNABY: FAHHHHHHHHHHHH',
 ];
 
 /**

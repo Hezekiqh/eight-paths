@@ -34,6 +34,8 @@ export const EFFECTS = {
   ring: require('../../assets/audio/ring.wav'),
   /** A giant's footfall: Aurek the Tall walking up into the Kaloseum (scripts/stomp-sound.mjs). */
   stomp: require('../../assets/audio/stomp.wav'),
+  /** A star twinkling far off: Balderek, blasted out of the Kaloseum (scripts/ding-sound.mjs). */
+  ding: require('../../assets/audio/ding.wav'),
   /** Dialogue voices, lowest to highest (see voiceFor in portraits.ts); blip0 is the Keeper's alone. */
   blip0: require('../../assets/audio/blip-0.wav'),
   blip1: require('../../assets/audio/blip-1.wav'),
@@ -87,6 +89,7 @@ export const EFFECT_VOLUME: Record<Effect, number> = {
   laugh: 0.5,
   ring: 0.6,
   stomp: 1,
+  ding: 0.6,
   blip0: 0.7,
   blip1: 0.5,
   blip2: 0.5,

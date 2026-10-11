@@ -31,6 +31,19 @@ export const IMPACT_TIME = 0.3;
 /** How long the warden takes to fly up through the banners and out of sight, and how far through it he hits them. */
 export const FLY_TIME = 1.8;
 export const BREACH_AT = 0.55;
+/**
+ * Gone, with a twinkle (author, Oct 11, 2026): a star glints in the sky above the hole he went through, STAR_AT after
+ * the blow (the moment he's out of sight), for STAR_TIME, and a ding.
+ */
+export const STAR_AT = FLY_TIME;
+export const STAR_TIME = 0.7;
+/** The star's size at `t` seconds after the blow: 0 before and after, up to 1 and back, quick in and slow out. */
+export function starSize(t: number): number {
+  'worklet';
+  const k = (t - STAR_AT) / STAR_TIME;
+  if (k <= 0 || k >= 1) return 0;
+  return k < 0.25 ? k / 0.25 : 1 - (k - 0.25) / 0.75;
+}
 /** After he's gone, the camera holds on the hole for a beat before it comes back down. */
 export const HOLE_HOLD = 1.4;
 /** Where the warden's flight ends: above the top of the map, out of the Kaloseum. */
