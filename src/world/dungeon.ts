@@ -221,23 +221,6 @@ export type PrisonIntro = {
   questions?: { ask: string; answer: string[] }[];
   choices?: { label: string; lines: string[]; deed?: 'good' | 'bad' }[];
 };
-const LAST_FIGHT = [
-  'BARNABY: Enough idle chat.',
-  'BARNABY: Guards! Last fight before we go to the tavern! Free drinks for whoever brings me {his} head!',
-  'The guards roar.',
-];
-const BARNABY_MENU = [
-  {
-    label: 'Who are you?',
-    lines: [
-      'BARNABY: I am the assistant warden and part-time announcer for the Kaloseum!',
-      "BARNABY: Sponsored by Bettor. There's no better way to bet than Bettor.",
-      ...LAST_FIGHT,
-    ],
-  },
-  { label: "You're too loud.", deed: 'bad' as const, lines: ['BARNABY: ...', ...LAST_FIGHT] },
-];
-const REALLY = "BARNABY: Really? You haven't been here twenty minutes, and you're causing this much trouble?";
 export const PRISON_INTROS: Record<string, PrisonIntro> = {
   'pit-guards': {
     lines: [
@@ -294,15 +277,6 @@ export const PRISON_INTROS: Record<string, PrisonIntro> = {
         ],
       },
     ],
-  },
-  // the prisoners went up ahead of you (author, Oct 4, 2026): they didn't get far, and neither did Brannoc
-  'pit-guards-freed': {
-    lines: ['Brannoc lies collapsed in the sand. Nails, Old Mott and Silas lie beside him, beaten.', REALLY],
-    choices: BARNABY_MENU,
-  },
-  'pit-guards-freed-alone': {
-    lines: ['Nails, Old Mott and Silas lie in the sand, beaten.', REALLY],
-    choices: BARNABY_MENU,
   },
   // walking as Brannoc: nobody on the sand but you
   'pit-guards-alone': {
@@ -445,7 +419,7 @@ export const BRANNOC_BLINKED = 'brannoc-blinked';
 export const BRANNOC_OFFER = [
   'Brannoc wakes up.',
   'BRANNOC: Where am I!? What happened?',
-  'He looks at the crowd. At the hole in the wall. At you.',
+  'He looks at the crowd. At the hole in the banners. At you.',
   'BRANNOC: Did YOU do that? By the saints, you are mighty.',
   'BRANNOC: I know not what is happening in this strange land. But if I kept to your side, I might yet live through it.',
   'BRANNOC: I am no great warrior. But my sword is yours, if you will have it.',

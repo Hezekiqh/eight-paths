@@ -14,6 +14,8 @@ for (const map of Object.values(MAPS)) {
     if (npc.sprite in WALKER_ROWS && npc.sprite !== 'brannocbare') BY_NAME.set(npc.name.toUpperCase(), npc.sprite);
   }
 }
+// people who talk but stand on no map as a person: Balderek, the Kaloseum's Warden, is a boss (the-pit.json `boss`)
+BY_NAME.set('BALDEREK', 'warden');
 
 /** The walker to draw for a speaker, matched on their full name, then on one word of it ("VARGA" is Captain Varga). */
 export function portraitFor(name: string | undefined): WalkerId | undefined {

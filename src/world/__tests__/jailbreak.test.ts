@@ -1,5 +1,6 @@
 import { FREED_FLAG, PRISONERS, PRISON_INTROS, garyWanders, prisonersBolt } from '../dungeon';
 import { MAPS } from '../maps';
+import { splitSpeaker, voiceFor } from '../portraits';
 
 const cells = MAPS['kingdom-dungeon'];
 const floor = ([x, y]: [number, number]) => cells.walkable.includes(cells.tiles[y][x]) || cells.tiles[y][x] === '1';
@@ -19,15 +20,15 @@ describe("Gary's keys and the jailbreak", () => {
     }
   });
 
-  it('has the Kaloseum waiting for them, with or without Brannoc: Barnaby, his menu, and the guards', () => {
-    for (const key of ['pit-guards-freed', 'pit-guards-freed-alone']) {
-      const intro = PRISON_INTROS[key];
-      expect(intro.lines.join(' ')).toContain("You haven't been here twenty minutes");
-      expect(intro.choices?.map((c) => c.label)).toEqual(['Who are you?', "You're too loud."]);
-      for (const c of intro.choices!) expect(c.lines.join(' ')).toContain('brings me {his} head');
-      expect(intro.choices!.filter((c) => c.deed === 'bad')).toHaveLength(1);
-    }
-    expect(PRISON_INTROS['pit-guards-freed-alone'].lines.join(' ')).not.toContain('Brannoc');
+  it("lets the Kaloseum's welcome play (Episode 13): no menu put up over it, freed prisoners or not", () => {
+    for (const key of ['pit-guards', 'pit-guards-alone']) expect(PRISON_INTROS[key].choices).toBeUndefined();
+    expect(Object.keys(PRISON_INTROS).filter((k) => k.startsWith('pit-guards-freed'))).toEqual([]);
+  });
+
+  it('gives Balderek his face and his low voice, so his lines never show a bare "BALDEREK:"', () => {
+    const said = splitSpeaker("BALDEREK: That's enough!");
+    expect(said).toMatchObject({ speaker: 'Balderek', sprite: 'warden', text: "That's enough!" });
+    expect(voiceFor(said.speaker, said.sprite)).toBe(1);
   });
 
   it("has the Warden's menu: one to ask, three that start the fight (Episode 14's first), one of them mean", () => {

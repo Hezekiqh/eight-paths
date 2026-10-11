@@ -5085,6 +5085,14 @@ for (const id of MAPS) {
   );
   // the Kaloseum's crowd, on its feet: a second picture the game and the episodes switch to and back
   if (map.floor === 'sand') writeFileSync(`assets/world/${id}-cheer.png`, toPng(drawArena(map, true)));
+  // how part of it looked before the story got to it (maps.ts MapData.before: Warrior City's bakery, whole)
+  if (map.before) {
+    const b = map.before;
+    const tiles = map.tiles.map((row, y) =>
+      [...row].map((c, x) => (b.tiles[y - b.y]?.[x - b.x] && b.tiles[y - b.y][x - b.x] !== '?' ? b.tiles[y - b.y][x - b.x] : c)).join(''),
+    );
+    writeFileSync(`assets/world/${id}-before.png`, toPng(drawOutdoor({ ...map, tiles })));
+  }
 }
 const { g, ids } = drawWalkers();
 writeFileSync('assets/world/walkers.png', toPng(g));

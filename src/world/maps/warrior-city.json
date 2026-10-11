@@ -10,6 +10,19 @@
     "z",
     "i"
   ],
+  "before": {
+    "flag": "pit-champion",
+    "x": 34,
+    "y": 4,
+    "tiles": [
+      "?IIIIIII",
+      "?IIIIIII",
+      "?IIIIIII",
+      "?IIIIIII",
+      "?IIIhIII",
+      ".?."
+    ]
+  },
   "art": {
     "1": ".",
     "2": ".",
@@ -923,6 +936,7 @@
     {
       "type": "npc",
       "id": "ambrose",
+      "comesAfter": "pit-champion",
       "x": 40,
       "y": 9,
       "sprite": "chisk",
@@ -981,6 +995,7 @@
     {
       "type": "npc",
       "id": "hettie",
+      "comesAfter": "pit-champion",
       "x": 34,
       "y": 8,
       "sprite": "hesper",
@@ -1020,6 +1035,7 @@
     {
       "type": "npc",
       "id": "dot",
+      "comesAfter": "pit-champion",
       "x": 42,
       "y": 9,
       "sprite": "kids",
@@ -1058,6 +1074,7 @@
     {
       "type": "sign",
       "id": "bakery-sign",
+      "comesAfter": "pit-champion",
       "x": 35,
       "y": 8,
       "inArt": true,
@@ -1069,6 +1086,7 @@
     {
       "type": "npc",
       "id": "bryony",
+      "comesAfter": "pit-champion",
       "x": 37,
       "y": 9,
       "sprite": "tessa",

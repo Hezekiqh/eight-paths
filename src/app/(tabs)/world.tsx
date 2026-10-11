@@ -43,6 +43,7 @@ import {
   withLadder,
   withOpenTiles,
   withoutCharacter,
+  withBefore,
   withoutGone,
   withoutShadows,
   withStoryPoses,
@@ -522,7 +523,7 @@ function startFor(
     // someone who isn't there yet (or any more) doesn't stand in your way: only those who are here now
     // (Kaldor's spot in the cells, before he's jailed, is where you stand to talk to Brannoc; you, on the throne
     // he's left)
-    if (!withoutGone(map, flags).solid[tile]) return { ...saved, map };
+    if (!withoutGone(withBefore(map, flags), flags).solid[tile]) return { ...saved, map };
   }
   const map = withoutCharacter(MAPS.archive, hero);
   const [x, y] = npcFeet(map.spawn);
@@ -643,8 +644,12 @@ function World({
   }, [start, ways, shutGates, arrivalFlags, pitOpen]);
   // Someone who leaves for good (Nib, if you're mean to him) is gone as soon as the talk ends, not on the next visit.
   const flagsNow = useWorldStore((s) => s.flags);
-  // ...and everyone as the story's left them: fainted, carried off (maps.ts)
-  const map = useMemo(() => withStoryPoses(withoutGone(roomMap, flagsNow), flagsNow), [roomMap, flagsNow]);
+  // ...and everyone as the story's left them: fainted, carried off; and places as they were before (maps.ts: the
+  // bakery, whole until the Warden comes down on it)
+  const map = useMemo(
+    () => withStoryPoses(withoutGone(withBefore(roomMap, flagsNow), flagsNow), flagsNow),
+    [roomMap, flagsNow],
+  );
   /** Narration to show once the conversation closes, from a question that has one (see Question.then). */
   const afterTalk = useRef<string[] | null>(null);
   /** A flag to set once that narration's been read (Question.after). */
@@ -816,8 +821,9 @@ function World({
     bossOn && prison && start.map.boss
       ? PRISON_INTROS[
           start.map.boss.flag === 'pit-guards'
-            ? // the prisoners you freed went up ahead of you, and didn't get far (author, Oct 4, 2026)
-              `pit-guards${arrivalFlags.includes(FREED_FLAG) ? '-freed' : ''}${hero === 'brannoc' ? '-alone' : ''}`
+            ? // (no menu: the arena welcome below plays, freed prisoners or not, Episode 13; the old Barnaby menu that
+              // used to cover it when you'd freed them is gone)
+              `pit-guards${hero === 'brannoc' ? '-alone' : ''}`
             : 'pit-warden'
         ]
       : undefined;

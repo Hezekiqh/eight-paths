@@ -245,7 +245,28 @@ type MapData = {
   objects: { type: string }[];
   /** Said the first time you walk in (the castle's empty hall). */
   firstVisit?: string[];
+  /** How part of the map looked before something happened to it: see Before. */
+  before?: BeforePatch;
 };
+
+/**
+ * Part of a map as it was until a story flag was set (Warrior City's bakery, whole until the Warden comes down on it,
+ * `pit-champion`): rows of tile letters laid over the map from (x, y), where "?" keeps the tile underneath. The
+ * picture for it is baked alongside the map's own (scripts/world-art.mjs: `<id>-before.png`).
+ */
+type BeforePatch = { flag: string; x: number; y: number; tiles: string[] };
+/** The map's tiles with a Before patch laid over them. */
+export function patchTiles(tiles: string[], p: BeforePatch): string[] {
+  return tiles.map((row, y) => {
+    const over = p.tiles[y - p.y];
+    if (!over) return row;
+    const cells = [...row];
+    [...over].forEach((c, i) => {
+      if (c !== '?' && cells[p.x + i] !== undefined) cells[p.x + i] = c;
+    });
+    return cells.join('');
+  });
+}
 
 export type WorldMap = {
   id: string;
@@ -278,6 +299,8 @@ export type WorldMap = {
   image: number;
   /** A second picture to flick to and back, a few times a second: the Kaloseum's crowd, on its feet, cheering. */
   cheer?: number;
+  /** The map as it was until a story flag was set: its tiles and picture then (MapData.before, withBefore). */
+  before?: { flag: string; tiles: string[]; image: number };
   /** Where a new game starts, in tiles. */
   spawn: { x: number; y: number; facing: Facing };
   /** What the player reads on examining a tile, by its letter in `tiles`. */
@@ -311,7 +334,7 @@ function solidFor(tiles: string[], walkable: string[], standing: Standing[]): nu
 const blocking = (objects: MapObject[]): Standing[] =>
   objects.filter((o) => o.type !== 'board' && !(o.type === 'npc' && o.passable));
 
-function build(data: MapData, image: number, cheer?: number): WorldMap {
+function build(data: MapData, image: number, cheer?: number, beforeImage?: number): WorldMap {
   const width = data.tiles[0].length;
   const height = data.tiles.length;
   const objects = data.objects as MapObject[];
@@ -339,6 +362,10 @@ function build(data: MapData, image: number, cheer?: number): WorldMap {
     ),
     image,
     cheer,
+    before:
+      data.before && beforeImage !== undefined
+        ? { flag: data.before.flag, tiles: patchTiles(data.tiles, data.before), image: beforeImage }
+        : undefined,
     spawn: { ...data.spawn, facing: data.spawn.facing as Facing },
     examine: data.examine,
     objects,
@@ -378,6 +405,23 @@ export function withoutCharacter(map: WorldMap, id: string): WorldMap {
   const objects = map.objects.filter((o) => o.type !== 'npc' || o.character !== id);
   const npcs = objects.filter((o): o is NpcObject => o.type === 'npc');
   return { ...map, objects, npcs, solid: solidFor(map.tiles, map.walkable, blocking(objects)) };
+}
+
+/**
+ * The map as it was before its story flag (MapData.before): the old tiles, their picture, and what's solid in them.
+ * The same map once the flag's set, or if it has no before.
+ */
+export function withBefore(map: WorldMap, flags: string[]): WorldMap {
+  if (!map.before || flags.includes(map.before.flag)) return map;
+  const { tiles, image } = map.before;
+  // only the patched tiles change what's solid (anything else a room has opened or shut stays as it is)
+  const solid = map.solid.slice();
+  tiles.forEach((row, y) =>
+    [...row].forEach((c, x) => {
+      if (c !== map.tiles[y][x]) solid[y * map.width + x] = map.walkable.includes(c) ? 0 : 1;
+    }),
+  );
+  return { ...map, tiles, image, solid };
 }
 
 const away = (n: { goneAfter?: string; comesAfter?: string }, flags: string[]) =>
@@ -499,7 +543,12 @@ export const MAPS = {
   'dungeon-mind': build(dungeonMindData as MapData, require('@/assets/world/dungeon-mind.png')),
   'dungeon-might': build(dungeonMightData as MapData, require('@/assets/world/dungeon-might.png')),
   'dungeon-lore': build(dungeonLoreData as MapData, require('@/assets/world/dungeon-lore.png')),
-  'warrior-city': build(warriorCityData as MapData, require('@/assets/world/warrior-city.png')),
+  'warrior-city': build(
+    warriorCityData as MapData,
+    require('@/assets/world/warrior-city.png'),
+    undefined,
+    require('@/assets/world/warrior-city-before.png'),
+  ),
   'south-road': build(southRoadData as MapData, require('@/assets/world/south-road.png')),
   'old-mine': build(oldMineData as MapData, require('@/assets/world/old-mine.png')),
   'royal-forest': build(royalForestData as MapData, require('@/assets/world/royal-forest.png')),
