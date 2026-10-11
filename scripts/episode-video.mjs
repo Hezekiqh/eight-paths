@@ -11,7 +11,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -772,8 +772,11 @@ function sleepZs(t, x, y) {
 }
 
 /** Someone asleep at their post (Gary) is drawn eyes shut unless the episode has them awake (`ep.awake`). */
-const dozing = (ep, n) => !!n.asleep && !(ep.awake ?? []).includes(n.id);
-const spriteOf = (ep, n) => (dozing(ep, n) && WALKER_ROWS[`${n.sprite}asleep`] !== undefined ? `${n.sprite}asleep` : n.sprite);
+// (`woke`: who's woken up since, by id: a set, or an object of seconds since (stateAt), Brannoc's bubble popping)
+const dozing = (ep, n, woke) =>
+  !!n.asleep && !(ep.awake ?? []).includes(n.id) && !(woke instanceof Set ? woke.has(n.id) : woke && n.id in woke);
+const spriteOf = (ep, n, woke) =>
+  dozing(ep, n, woke) && WALKER_ROWS[`${n.sprite}asleep`] !== undefined ? `${n.sprite}asleep` : n.sprite;
 
 const BUBBLE_EVERY = 1.6;
 /** A snot bubble at a nose (sleep.ts snotBubble, the same swell and shrink), and its shine. */
@@ -801,6 +804,8 @@ function compile(ep) {
   let pos = center(...ep.hero.at);
   let facing = ep.hero.facing;
   let map = ep.map;
+  /** Who's woken up so far (a `wake` step): their face in the dialogue box has its eyes open. */
+  const woke = new Set();
   for (const step of ep.script) {
     if (step.walk) {
       const pts = [pos, ...step.walk.map((p) => center(...p))];
@@ -928,7 +933,7 @@ function compile(ep) {
       // `as`: someone heard but not on the map (Barnaby, announcing from the stands): { name, sprite }
       // your hero's thoughts are a plain box, as in the game: no name, no face
       const speaker = npc ? npc.name : step.as?.name;
-      const sprite = npc ? spriteOf(ep, npc) : step.as?.sprite;
+      const sprite = npc ? spriteOf(ep, npc, woke) : step.as?.sprite;
       const voice = voiceFor(speaker, sprite);
       // the person turns to face you, as in the game
       if (npc) {
@@ -1041,6 +1046,21 @@ function compile(ep) {
       // the floor gives way: you sink out of sight into a hole (the Maze Ward's pothole); `together` with what's said
       segs.push({ kind: 'drop', t0: t, t1: t + step.drop });
       if (!step.together) t += step.drop;
+    } else if (step.wake) {
+      // someone asleep on their feet wakes: the snot bubble swells up and POPS, the Zs stop, the eyes open (Brannoc)
+      segs.push({ kind: 'wake', t0: t, t1: t, id: step.wake });
+      woke.add(step.wake);
+      t += step.dur ?? 0.5;
+    } else if (step.turn) {
+      // someone else turns to look somewhere (`dir`), and holds it a moment (`dur`)
+      segs.push({ kind: 'npcFace', t0: t, t1: t, id: step.turn, dir: step.dir });
+      t += step.dur ?? 0.5;
+    } else if (step.descend) {
+      // someone climbs down out of sight, through a trapdoor where they stand: `rise` the other way, then gone
+      const dur = step.dur ?? 0.8;
+      segs.push({ kind: 'descend', t0: t, t1: t + dur, id: step.descend });
+      segs.push({ kind: 'vanish', t0: t + dur, t1: t + dur, id: step.descend });
+      t += dur;
     } else if (step.alert) {
       // a "!" pops up over someone's head, caught off guard (Barnaby, Episode 15), and stays `dur` seconds
       segs.push({ kind: 'alert', t0: t, t1: t + (step.dur ?? 0.8), id: step.alert });
@@ -1122,6 +1142,8 @@ function stateAt(ep, compiled, t) {
   for (const id of ep.out ?? []) fainted[id] = 1;
   /** Who's climbing up out of the floor, by id: how far up (0 under it, 1 out). */
   const rising = {};
+  /** Who's woken (a `wake`), by id: seconds since. */
+  const woke = {};
   /** Who's been rolled onto a cot (the Kaloseum's medics), by id. */
   const onCot = new Set();
   /** Blows landing, a blade's gleam, a slash in flight, the white of its hit, and torn banners (Episode 15). */
@@ -1185,7 +1207,11 @@ function stateAt(ep, compiled, t) {
       moving = t < s.t1;
       walked = d;
     } else if (s.kind === 'face') facing = s.dir;
-    else if (s.kind === 'npcFace') npcFacing[s.id] = s.dir;
+    else if (s.kind === 'npcFace') {
+      npcFacing[s.id] = s.dir;
+      // (someone who's walked somewhere turns where they stand: Brannoc, looking back from the trapdoor)
+      if (npcAt[s.id]) npcAt[s.id] = { ...npcAt[s.id], dir: s.dir };
+    }
     else if (s.kind === 'npcWalk') {
       const d = Math.max(0, Math.min(s.dist, (t - s.t0) * s.speed));
       const leg = s.legs.findLast((l) => l.d0 <= d) ?? s.legs[0];
@@ -1201,7 +1227,7 @@ function stateAt(ep, compiled, t) {
         lift: s.carried ? Math.round(up * LIFT + (done ? 0 : Math.abs(Math.sin(d / 5)) * 1.5)) : 0,
         frame: walkFrame(d, !done),
         gone: done && s.hide,
-        tears: s.tears && !done,
+        tears: !done && s.tears,
         dash: s.dash && !done ? { from: s.legs[0].a, since: t - s.t0, dir: leg.dir } : null,
         spin: s.spin ? (t - s.t0) * 900 : 0,
       };
@@ -1246,6 +1272,8 @@ function stateAt(ep, compiled, t) {
     else if (s.kind === 'faint') fainted[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'jolt' && t < s.t1) shake = (s.amp ?? 2.5) * (1 - (t - s.t0) / (s.t1 - s.t0));
     else if (s.kind === 'rise') rising[s.id] = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'descend') rising[s.id] = 1 - Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+    else if (s.kind === 'wake') woke[s.id] = t - s.t0;
     else if (s.kind === 'cot') for (const id of s.ids) onCot.add(id);
     else if (s.kind === 'stand') {
       const k = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
@@ -1271,6 +1299,7 @@ function stateAt(ep, compiled, t) {
     shrugs,
     fainted,
     rising,
+    woke,
     onCot,
     strikes,
     gleam,
@@ -1507,7 +1536,7 @@ function drawWorld(canvas, ep, st, t) {
     .map((n) => {
       const at = st.npcAt[n.id];
       const lt = st.laughing[n.id];
-      const row = WALKER_ROWS[spriteOf(ep, n)];
+      const row = WALKER_ROWS[spriteOf(ep, n, st.woke)];
       const over = st.fainted[n.id];
       // fainted: tipped over onto their back, feet where they stood, eyes shut
       const out = WALKER_ROWS[`${n.sprite}asleep`] ?? row;
@@ -1524,7 +1553,17 @@ function drawWorld(canvas, ep, st, t) {
           { lie: over, sortY: y + 1, cot: st.onCot.has(n.id) },
         ];
       }
-      if (at && lt === undefined) return [row, DIRS[at.dir], at.frame, at.x, at.y, 0, { size: n.size, spin: at.spin }];
+      // (climbing down a trapdoor after walking to it: cut off below the floor, as `rise` in reverse)
+      if (at && lt === undefined)
+        return [
+          row,
+          DIRS[at.dir],
+          at.frame,
+          at.x,
+          at.y,
+          st.rising[n.id] === undefined ? 0 : 1 - st.rising[n.id],
+          { size: n.size, spin: at.spin },
+        ];
       const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
       // a shrug: up on the shoulders a moment
       const sh = st.shrugs[n.id];
@@ -1636,7 +1675,7 @@ function drawWorld(canvas, ep, st, t) {
   Object.values(map.npcs)
     .filter(
       (n) =>
-        dozing(ep, n) &&
+        dozing(ep, n, st.woke) &&
         st.fainted[n.id] === undefined &&
         !(st.hide ?? ep.hide)?.includes(n.id) &&
         !st.npcAt[n.id]?.gone &&
@@ -1655,6 +1694,32 @@ function drawWorld(canvas, ep, st, t) {
         if (b.shine) canvas.drawRect(CK.XYWHRect(b.shine[0], b.shine[1], 1, 1), paint('#FFFFFF'));
       }
     });
+  // a snot bubble popping as they wake (`wake`): it swells big for a moment, then bursts into droplets
+  for (const [id, age] of Object.entries(st.woke)) {
+    const n = map.npcs[id];
+    if (!n?.snot || age > 0.5) continue;
+    const at = st.npcAt[id];
+    const [x, y] = at ? [at.x, at.y] : center(n.x, n.y);
+    const left = (at?.dir ?? st.npcFacing[id] ?? n.facing) === 'left';
+    const [bx, by] = [x + (left ? -8 : 2) + (left ? -4 : 4), y - 12];
+    if (age < 0.12) {
+      const r = 3.5 + age * 10;
+      for (let dy = -5; dy <= 5; dy++)
+        for (let dx = -5; dx <= 5; dx++)
+          if (dx * dx + dy * dy <= r * r) canvas.drawRect(CK.XYWHRect(Math.round(bx + dx), Math.round(by + dy), 1, 1), paint('#B8E0C8', 0.8));
+      canvas.drawRect(CK.XYWHRect(Math.round(bx - r / 2), Math.round(by - r / 2), 1, 1), paint('#FFFFFF'));
+    } else {
+      const k = (age - 0.12) / 0.38;
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI * 2) / 6 + 0.3;
+        const d = 3 + k * 7;
+        canvas.drawRect(
+          CK.XYWHRect(Math.round(bx + Math.cos(a) * d), Math.round(by + Math.sin(a) * d + k * k * 4), 1, 1),
+          paint('#B8E0C8', 0.85 * (1 - k)),
+        );
+      }
+    }
+  }
   // out cold (fainted, flat on their back, head to the right): Zs rising off the head, a snot bubble at the nose
   const snot = paint('#B8E0C8', 0.8);
   const shine = paint('#FFFFFF');
@@ -1750,6 +1815,21 @@ function drawWorld(canvas, ep, st, t) {
     if (!at.tears || at.gone) continue;
     const back = at.dir === 'left' ? 1 : at.dir === 'right' ? -1 : 0;
     const tear = paint('#7FC8FF');
+    if (at.tears === 'big') {
+      // big ones (author, Episode 16: Brannoc, walking off in tears): fat drops flung off both sides of the face,
+      // each with a glint
+      const shine = paint('#FFFFFF');
+      for (const side of [-1, 1])
+        for (let i = 0; i < 3; i++) {
+          const k = (t * 2.4 + i / 3 + (side > 0 ? 0.5 : 0)) % 1;
+          const x = at.x + side * (4 + k * 9);
+          const y = at.y - 17 + k * k * 12;
+          canvas.drawRect(CK.XYWHRect(Math.round(x) - 1, Math.round(y), 3, 3), tear);
+          canvas.drawRect(CK.XYWHRect(Math.round(x), Math.round(y) - 1, 1, 1), tear);
+          canvas.drawRect(CK.XYWHRect(Math.round(x) - 1, Math.round(y), 1, 1), shine);
+        }
+      continue;
+    }
     for (let i = 0; i < 3; i++) {
       const k = (t * 3 + i / 3) % 1;
       const x = at.x + back * (3 + k * 8) + (i - 1);
@@ -2911,6 +2991,89 @@ const EPISODES = {
       ],
     };
   },
+  16: () => {
+    const pit = loadMap('the-pit', 'arena');
+    const offer = gameLines('BRANNOC_OFFER');
+    const mean = gameLines('BRANNOC_MEAN');
+    const hit = gameLines('SNOT_SWING_HIT');
+    // (one string, not a list: the mean answer as the menu shows it)
+    const ask = [
+      readFileSync(join(ROOT, 'src/world/dungeon.ts'), 'utf8')
+        .match(/export const BRANNOC_MEAN_ASK = '((?:\\.|[^'])*)'/)[1]
+        .replace(/\\(['"])/g, '$1'),
+    ];
+    const by = (lines, name) => lines.filter((l) => l.startsWith(`${name}: `)).map(unnamed);
+    // (author, Oct 11, 2026) one shot on the sand, straight after Episode 15: the prisoners have already run free. Frame
+    // one, Brannoc's snot bubble POPS. He looks round (the crowd, the hole in the banners, you), offers his sword, and you
+    // pick the mean answer. He takes it on the chin, shuffles off to the trapdoor, looks back once, and climbs down: back
+    // to his cell, for the next episode to go and fetch him. All of it the game's (BRANNOC_OFFER, BRANNOC_MEAN).
+    Object.assign(pit.npcs['brannoc-pit'], { x: 12.4, y: 9, facing: 'left', snot: true, asleep: true });
+    // the hook (author, Oct 11, 2026): the episodes overlap a little. Episode 15's swing, Balderek slashed up and off the
+    // top of the screen still finishing his word, and then this one's story
+    pit.npcs.balderek = { id: 'balderek', type: 'npc', x: 7, y: 9, sprite: 'warden', facing: 'right', name: 'Balderek', size: 2, lines: [] };
+    const [isHeAsleep, goodForHim, finalMom, ment] = by(hit, 'BALDEREK');
+    const BANNER = [143, 29];
+    const bannerTile = [(BANNER[0] - 8) / 16, (BANNER[1] + 10 - 14) / 16];
+    const [whereAmI, didYou, strange, sword] = by(offer, 'BRANNOC');
+    const BOX = [{ look: [15.5, 4] }, { zoom: 1.6 }];
+    const SAND = [{ look: [9.5, 9.5] }, { zoom: 1 }];
+    const [dots, fair] = by(mean, 'BRANNOC');
+    const LETTER = 33;
+    return {
+      ...SHORT,
+      letterMs: LETTER,
+      read: 1.15,
+      gapAfter: 0.12,
+      number: 16,
+      title: 'MY SWORD IS YOURS',
+      map: pit,
+      shown: ['brannoc-pit'],
+      // (the finished cut is played 1.3x faster, author: see `speed` below the episodes)
+      speed: 1.3,
+      hero: { sprite: 'quill', at: [7, 11.4], facing: 'right' },
+      look: [9.5, 9.5],
+      zoom: 1,
+      script: [
+        // frame one (author: "start with is he asleep"): Brannoc shuffling the last steps in, asleep; Balderek turns to
+        // him, and is cut off mid-word by the swing, as in Episode 15
+        { npcWalk: 'brannoc-pit', to: [[10.6, 9]], speed: 30, turn: 'left', together: true },
+        { say: 'balderek', lines: [isHeAsleep], towards: 'right' },
+        { wait: 0.3 },
+        { say: 'balderek', lines: [goodForHim], towards: 'right' },
+        { say: 'balderek', lines: [finalMom], towards: 'right', punch: 0.45, gapAfter: -0.5 },
+        { slash: { from: [10.6, 9], to: [7, 9], windup: 0.45, fly: 0.3, flash: 0.22 } },
+        { npcWalk: 'balderek', to: [bannerTile, [bannerTile[0] + 0.5, -1]], speed: 170, spin: true, hide: true, together: true },
+        { hole: BANNER, delay: (Math.hypot(bannerTile[0] - 7, bannerTile[1] - 9) * 16) / 170 },
+        { say: 'balderek', lines: [ment], letterMs: 40, punch: 0.15, read: 1, gapAfter: 0 },
+        { wait: 0.3 },
+        // Barnaby, as in Episode 15 and the game (author: skip nothing)
+        ...BOX,
+        { say: 'barnaby-box', lines: by(hit, 'BARNABY'), punch: 0.6 },
+        ...SAND,
+        { wait: 0.25 },
+        // then: POP
+        { wake: 'brannoc-pit', dur: 0.45 },
+        { say: 'brannoc-pit', lines: [whereAmI] },
+        // he looks round: the crowd, the hole in the banners, you
+        { turn: 'brannoc-pit', dir: 'right', dur: 0.35 },
+        { turn: 'brannoc-pit', dir: 'up', dur: 0.5 },
+        { turn: 'brannoc-pit', dir: 'left', dur: 0.25 },
+        { say: 'brannoc-pit', lines: [didYou, strange, sword] },
+        // the game's menu, and the mean one
+        { menu: { speaker: 'Brannoc', options: ['Yes.', 'No.', ask[0]], pick: 2, hold: 0.7 } },
+        { wait: 0.15 },
+        { say: 'brannoc-pit', lines: [dots] },
+        // and off he shuffles to the trapdoor while he says it, crying (author); he doesn't look back. Then he does, once. And down he goes.
+        { npcWalk: 'brannoc-pit', to: [[7, 14]], speed: 48, turn: 'left', together: true, delay: 1.2, tears: 'big' },
+        { say: 'brannoc-pit', lines: [fair], punch: 0.5 },
+        { wait: 0.25 },
+        { turn: 'brannoc-pit', dir: 'up', dur: 0.75 },
+        { turn: 'brannoc-pit', dir: 'down', dur: 0.2 },
+        { descend: 'brannoc-pit', dur: 0.8 },
+        { wait: 0.7 },
+      ],
+    };
+  },
 };
 
 if (!EPISODES[episode]) throw new Error(`No episode ${episode} yet: ${Object.keys(EPISODES).join(', ')}`);
@@ -3214,4 +3377,46 @@ const r = spawnSync(
   { stdio: 'inherit' },
 );
 if (r.status !== 0) throw new Error('ffmpeg mux failed');
-console.log(`${out}: ${total.toFixed(1)}s`);
+// `speed`: the finished cut played faster (author, Episode 16: 1.3x), voices and all, at their own pitch
+if (ep.speed && ep.speed !== 1) {
+  const fast = out.replace(/\.mp4$/, '.fast.mp4');
+  const f = spawnSync(
+    'ffmpeg',
+    [
+      '-y',
+      '-loglevel',
+      'error',
+      '-i',
+      out,
+      '-filter_complex',
+      `[0:v]setpts=PTS/${ep.speed}[v];[0:a]atempo=${ep.speed}[a]`,
+      '-map',
+      '[v]',
+      '-map',
+      '[a]',
+      '-c:v',
+      'libx264',
+      '-crf',
+      '16',
+      '-pix_fmt',
+      'yuv420p',
+      '-bsf:v',
+      'h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '192k',
+      '-ar',
+      '48000',
+      '-ac',
+      '2',
+      '-movflags',
+      '+faststart',
+      fast,
+    ],
+    { stdio: 'inherit' },
+  );
+  if (f.status !== 0) throw new Error('ffmpeg speed-up failed');
+  renameSync(fast, out);
+}
+console.log(`${out}: ${(total / (ep.speed ?? 1)).toFixed(1)}s`);

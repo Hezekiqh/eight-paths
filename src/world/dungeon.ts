@@ -372,7 +372,7 @@ export const arenaCarry = (r: Carriers): Actor[] => [
 // the hole he leaves is drawn in the banner he went through (swing.ts, world-view Breach).
 // (author, Oct 8, 2026, Episode 15: he doesn't shout it; he just swings, and the slash says it for him. Oct 11: Balderek
 // watches him come, asleep, and is cut off mid-word by the swing, finishing the word all the way out of the Kaloseum,
-// gone with a twinkle like a star (swing.ts STAR_AT); and Barnaby: FAHHHH)
+// gone with a twinkle like a star (swing.ts STAR_AT); and Barnaby: FAHHHH, and that was not supposed to happen)
 export const SNOT_SWING_HIT = [
   'His eyes are shut. A snot bubble swells from his nose, and shrinks, and swells.',
   'BALDEREK: Is he asleep?',
@@ -382,6 +382,7 @@ export const SNOT_SWING_HIT = [
   'BALDEREK: MENTTTTTTTTTTTTTT',
   'Balderek goes up, up, over the banners, and out of the Kaloseum. Far off in the sky, a star twinkles.',
   'BARNABY: FAHHHHHHHHHHHH',
+  'BARNABY: That was not supposed to happen.',
 ];
 
 /**

@@ -126,7 +126,21 @@ don't follow the crime (twenty, then *one*, then fifty), and the last one gets a
   it's time I end this.", Barnaby's "What the?" with a "!" (`alert`, still in the script), the crowd going silent
   (`hush`, still in the script), "AHHHH", both booms (the slam on the blow and the roof in town), and Barnaby's
   "*GASP*" / "That move... I thought it was a fairytale."
-- **Next:** Episode 16.
+- **Episode 16, "My Sword Is Yours"** (`node scripts/episode-video.mjs 16`, 26.4 s; author, Oct 11, 2026). The whole
+  cut plays at 1.3x (`speed: 1.3`, voices kept at pitch). Nothing from the game is skipped (author: "do not skip
+  anything for the ads"). One shot on the sand, overlapping Episode 15 (author: "start with is he asleep"). Frame one,
+  Brannoc shuffling the last steps in, asleep. Balderek, turned to him: "Is he asleep?" / "Good for him..." / "HE WON'T BE
+  CONSCIOUS FOR HIS FINAL MOM—", cut off by the swing, then "MENTTTTTTTTTTTTTT" up and off the top of the screen. Cut
+  close on Barnaby: "FAHHHHHHHHHHHH" / "That was not supposed to happen." Back to the sand: Brannoc's snot bubble POPS
+  (`wake`). "Where am I!? What happened?" He looks round (`turn`): the crowd, the banners, you. "Did YOU do that? By the
+  saints, you are mighty." / "I know not what is happening in this strange land..." / "I am no great warrior. But my
+  sword is yours, if you will have it." The menu, and the mean one: "A knight who faints? Hard pass." "..." / "No. No,
+  that is fair. I have heard worse. From myself, mostly.", shuffling off to the trapdoor in tears while he says it
+  (author). At the trapdoor he looks back once, then climbs down (`descend`). Hold on the empty trapdoor. All the game's
+  lines (`SNOT_SWING_HIT`, `BRANNOC_OFFER`, `BRANNOC_MEAN`). The prisoners have already run free. Barnaby says both lines
+  in the game too now (FAHHH did not replace "That was not supposed to happen."). Episode-only so far: the tears, the
+  look back and the climb down (the game narrates the look back).
+- **Next:** Episode 17: back down to the cells for Brannoc ("Come with me.").
 
 ## In the episode script
 
