@@ -131,8 +131,8 @@ export function RadarChart({ size, color, current, ghost, opacity }: Props) {
               { left: p.x - LABEL_WIDTH / 2, top: p.y - 20, opacity: pressed ? 0.5 : opacity[d] },
             ]}>
             <SymbolView name={info.symbol} tintColor={info.color} size={16} />
-            <Text style={styles.labelText} numberOfLines={1}>
-              {info.className}
+            <Text style={styles.labelText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+              {info.dimensionLabel}
             </Text>
           </Pressable>
         );

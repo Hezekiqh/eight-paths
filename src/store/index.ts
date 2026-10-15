@@ -34,6 +34,7 @@ import {
   type Goal,
   type XpGrant,
   type Player,
+  type PlayerLook,
   type Quest,
   type RestDay,
   type XpGain,
@@ -143,6 +144,8 @@ type Actions = {
   setHapticsEnabled: (on: boolean) => void;
   /** Renames the player (the name the Keeper and the Today card use). Blank keeps the old name. */
   setPlayerName: (name: string) => void;
+  /** Saves how the player looks, from the character creator. */
+  setLook: (look: PlayerLook) => void;
   /** Today's quests in the player's own order, or null to go back to their usual order. */
   /** Saves a dragged order (and switches to it), or null to go back to auto ordering. */
   setQuestOrder: (ids: string[] | null) => void;
@@ -464,6 +467,8 @@ export const useGameStore = create<GameState>()(
       setHapticsEnabled: (hapticsEnabled) => set((s) => (s.player ? { player: { ...s.player, hapticsEnabled } } : s)),
       setPlayerName: (name) =>
         set((s) => (s.player && name.trim() ? { player: { ...s.player, name: name.trim() } } : s)),
+
+      setLook: (look) => set((s) => (s.player ? { player: { ...s.player, look } } : s)),
 
       setObjectivesLandscape: (objectivesLandscape) =>
         set((s) => (s.player ? { player: { ...s.player, objectivesLandscape } } : s)),

@@ -34,6 +34,9 @@ type Session = {
   /** Test builds only (world/test-tools.ts): every Path at Lv 20, and the hero walking to the guide's mark. */
   testLevels: boolean;
   testWalk: boolean;
+  /** The last level-up this launch (overall or a Path): your character's victory dance on Today. */
+  victory: { at: number; date: string } | null;
+  celebrate: (date: string) => void;
 };
 
 export const useSession = create<Session>((set) => ({
@@ -55,4 +58,6 @@ export const useSession = create<Session>((set) => ({
   // on from the start in a test build, so a fresh test account can walk straight in (test-tools.ts)
   testLevels: process.env.EXPO_PUBLIC_TEST_TOOLS === '1',
   testWalk: false,
+  victory: null,
+  celebrate: (date) => set({ victory: { at: Date.now(), date } }),
 }));

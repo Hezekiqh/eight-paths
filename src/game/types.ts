@@ -1,4 +1,6 @@
 import type { CharacterId } from '@/story/companions';
+
+import type { PlayerLook } from './look';
 export const DIMENSIONS = [
   'physical',
   'financial',
@@ -20,6 +22,8 @@ export type Player = {
    * Other World. It wakes with the first habit and never changes.
    */
   origin?: CharacterId;
+  /** Their own hero from the character creator on Today; unset until they make one. */
+  look?: PlayerLook;
   classDimension: Dimension;
   restTokens: number;
   onboardedAt: string;

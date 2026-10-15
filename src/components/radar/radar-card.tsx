@@ -20,14 +20,14 @@ const CAPTIONS: Record<RadarFilter, string> = {
   all: 'How your party leans across all time',
 };
 
-type Props = { today: string; classInfo: ClassInfo };
+type Props = { today: string; classInfo: ClassInfo; /** The chart's size; by default as wide as the screen allows, up to 380. */ size?: number };
 
-export function RadarCard({ today, classInfo }: Props) {
+export function RadarCard({ today, classInfo, size: fixedSize }: Props) {
   const [filter, setFilter] = useState<RadarFilter>('week');
   const radar = useRadar(filter, today);
   const stats = useDimensionStats(today);
   const { width } = useWindowDimensions();
-  const size = Math.min(width - spacing.lg * 2, 380);
+  const size = fixedSize ?? Math.min(width - spacing.lg * 2, 380);
 
   const opacity = Object.fromEntries(stats.map((s) => [s.dimension, s.opacity])) as Record<Dimension, number>;
   const windowXp = DIMENSIONS.reduce((sum, d) => sum + radar.xp[d], 0);

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { playSound } from '@/audio';
 import { haptics } from '@/haptics';
+import { HomePager } from '@/components/home/home-pager';
 import { PlayerCard } from '@/components/player-card';
 import { QuestCard } from '@/components/quest-card';
 import { RadarCard } from '@/components/radar/radar-card';
@@ -83,6 +84,8 @@ export default function TodayScreen() {
       else haptics.nudge();
       // A companion's level-up plays its own fanfare over the top.
       const leveled = outcome.gain.leveledUp || outcome.overallLevelUp !== null;
+      // Your character on Today does a victory dance for it.
+      if (leveled) useSession.getState().celebrate(today);
       playSound(leveled && !outcome.characterLevelUp ? 'levelUp' : 'quest');
       setBanner({
         key: outcome.completionId,
@@ -176,8 +179,9 @@ export default function TodayScreen() {
             {/* You: name, level, XP and (with the Dopamine Regulator on) Dopamine Baseline, over your graph and habits. */}
             <PlayerCard today={today} />
             <SurveyPrompt today={today} />
+            {/* Swipe between your hero's mood, the eight-Path web and your top ten habits. */}
             <View ref={radarRef} collapsable={false}>
-              <RadarCard today={today} classInfo={classInfo} />
+              <HomePager today={today} classInfo={classInfo} />
             </View>
           </>
         )}

@@ -1,5 +1,6 @@
 import {
   BOOST_HABITS,
+  cleanLook,
   DAY_REMINDERS,
   DIMENSIONS,
   MAX_REST_TOKENS,
@@ -78,6 +79,7 @@ function cleanPlayer(raw: unknown): Player | null {
   return {
     name: typeof raw.name === 'string' && raw.name.trim() ? raw.name : 'Adventurer',
     ...(isCharacterId(raw.origin) && STARTERS.includes(raw.origin) ? { origin: raw.origin } : {}),
+    ...(cleanLook(raw.look) ? { look: cleanLook(raw.look)! } : {}),
     classDimension: raw.classDimension,
     restTokens: Math.min(MAX_REST_TOKENS, Math.max(0, Math.round(tokens))),
     onboardedAt: isDateKey(raw.onboardedAt) ? raw.onboardedAt : '1970-01-01',
